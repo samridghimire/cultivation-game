@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-06 (planner, 12:10 UTC)
+- 13 tasks landed (WU-462, GFX-078, WU-463, GUIDE-212, WU-464, C-309, WILD-018, C-272, GFX-079, SEASON-006, GFX-081,
+  FEST-012, C-315). Review 5b5b907..dd1e14a filed C-315 (landed 11:25). Live claims: MISSION-003, QA-198.
+- Planner shots (`--great --shrine=2 --region=qingshi_village,azure_peak,misty_forest`, `--calendar --book`): calendar,
+  Festivals page and Azure steps good. Azure ground blocky + pine on the gate -> GFX-082 (spec file). Arrival line posted
+  twice and vague, in-season line every arrival -> TODAY-002 (spec file). Foundation sees "Great Old Tusker (Weak)" and a
+  Deadly leopard -> WILD-019 (spec file) -> C-317, C-312 (3). HUD panel cuts lines -> WU-468.
+- New: WU-466 season board (spec file), GUIDE-214, SEASON-007 shrine incense (planner default, spec file) -> GFX-084,
+  GFX-083 festival stalls (spec file), FOLK-013 friend scenes -> WU-467, C-316, QA-200 settings leak + calendar months.
+- Next planner: view GFX-082/GFX-083/WU-466 shots when they land; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-06 (planner, 06:10 UTC)
 - 14 tasks landed (QA-197, GFX-076, WILD-017, FEST-009, FEST-010, WU-458, WU-459, FOLK-012, SEASON-005, QA-196, GFX-077,
   MARKET-012, WU-460, C-308). Review d8b322a..5b5b907 fixed two things inline; notes -> FEST-011. Live claim: WU-462.

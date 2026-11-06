@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-06 [C-315] Foundation hunters can still find a Mist Fox in Misty Forest each autumn.
+- 2026-11-06 [FEST-012] Festival days bring their own stalls to Qingshi, Azure Peak and the market.
+- 2026-11-06 [GFX-081] Qingshi's old shrine is drawn coming back stage by stage.
+- 2026-11-06 [SEASON-006] Finishing a season's village tasks restores a stage of the old shrine; a restored shrine raises Qingshi's qi.
+- 2026-11-06 [GFX-079] Azure Peak looks like a sect mountain: alpine ground, stone steps, pines, boulders and a cloud sea.
+- 2026-11-06 [C-272] Heart visions for the five later realms.
+- 2026-11-06 [WILD-018] A Foundation cultivator meets beasts of their own realm in Misty Forest and Azure Peak.
+- 2026-11-06 [C-309] The village hunt runs in every season, led by Hunter Ma.
+- 2026-11-06 [WU-464] The message log no longer repeats the same line on the same day.
+- 2026-11-06 [GUIDE-212] The HUD tells an even fight from an easy one.
+- 2026-11-06 [WU-463] The contest card says who cheered you on and marks your rival; keepsakes have their own icons.
+- 2026-11-06 [GFX-078] The calendar reads at a glance: a 7-day week, clear icons and labels.
+- 2026-11-06 [WU-462] The season's village tasks show on the Today page and the HUD, with a banner when done.
 - 2026-11-06 [C-308] Foundation players meet foes worth fighting in the forest, peak, marsh and market.
 - 2026-11-06 [WU-460] The village book has a Festivals page with your placings, the champion and your keepsakes.
 - 2026-11-06 [MARKET-012] A market regular hears the day before what the stall will want.
