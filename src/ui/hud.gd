@@ -130,6 +130,8 @@ static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
+var _friend_card: FriendSceneCard  # WU-467
+var _pending_friend_scenes: Array = []
 var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
 var _recent_notices: Array = []
@@ -252,10 +254,15 @@ func _ready() -> void:
 	_contest_card = ContestCard.new()
 	_contest_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_contest_card))
+	_friend_card = FriendSceneCard.new()
+	_friend_card.closed.connect(_update_modal)
+	_friend_card.closed.connect(_flush_friend_scenes)
+	add_child(UIStyle.centered(_friend_card))
 	_season_board = SeasonBoard.new()
 	_season_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
+	EventBus.friend_scene.connect(_on_friend_scene)
 	_banner = Banner.new()
 	add_child(_banner)
 	_digest_card = DigestCard.new()
@@ -340,7 +347,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1187,7 +1194,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1761,6 +1768,35 @@ func _on_contest_finished(result: Dictionary) -> void:
 		_show_contest_card.call_deferred(result)
 
 
+## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
+func _on_friend_scene(npc_name: String, text: String) -> void:
+	_pending_friend_scenes.append([npc_name, text])
+	if _dialogue.visible:
+		if not _dialogue.closed.is_connected(_flush_friend_scenes):
+			_dialogue.closed.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
+	elif is_instance_valid(RoadCard.current):
+		if not RoadCard.current.finished.is_connected(_flush_friend_scenes):
+			RoadCard.current.finished.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
+	else:
+		_flush_friend_scenes.call_deferred()
+
+
+func _flush_friend_scenes() -> void:
+	if _pending_friend_scenes.is_empty() or _friend_card.visible or _dialogue.visible or _contest_card.visible:
+		return
+	if GameState.player == null or not GameState.player.alive:
+		_pending_friend_scenes.clear()
+		return
+	var scene: Array = _pending_friend_scenes.pop_front()
+	var npc_id := ""
+	for id: String in GameState.npcs:
+		if String(GameState.npcs[id].name) == scene[0]:
+			npc_id = id
+			break
+	_friend_card.open(npc_id, scene[0], scene[1])
+	_update_modal()
+
+
 func _show_contest_card(result: Dictionary) -> void:
 	if GameState.player == null or not GameState.player.alive:
 		return
@@ -1932,7 +1968,7 @@ func digest_blocked() -> bool:
 
 
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	if blocking and _digest_card != null:
@@ -1949,7 +1985,7 @@ func _update_modal() -> void:
 
 ## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
