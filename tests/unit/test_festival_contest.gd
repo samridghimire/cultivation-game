@@ -415,6 +415,10 @@ func test_cheerers_cap_and_tier() -> void:
 	assert_eq(who.size(), 3, "capped at 3")
 	assert_eq(who[0].id, (folk[3] as CharacterData).id, "best friend first")
 	assert_true(FestivalContest.cheer_line(who).contains("cheer you on (+3)"))
+	var entrants: Array[CharacterData] = [folk[3] as CharacterData]
+	var others := FestivalContest.cheerers(gs.npcs, gs.data, favor, "qingshi_village", entrants)
+	assert_eq(others.size(), 3, "the next friend steps in")
+	assert_false(others.has(folk[3]), "a friend who enters the contest does not cheer")
 	gs.end_session()
 
 
@@ -446,11 +450,13 @@ func test_attending_with_inviter_gives_favor_and_line() -> void:
 	var setup := _friend_setup()
 	var gs: Node = setup[0]
 	var folk: Array = setup[1]
-	var friend: CharacterData = folk[0]
+	var friend: CharacterData = folk[folk.size() - 1]  # the last villager: not one of the entrants
+	assert_true(folk.size() > int(FestivalContest.contest_of(gs.data, "lantern_festival")["rivals"]))
 	gs.npc_favor[friend.id] = 70
 	_root().get_node("GameClock").total_days = LANTERN_START
 	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": LANTERN_START, "end_day": LANTERN_START + 8}]
 	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == friend.name), "the friend watches")
 	assert_eq(int(result["cheer"]), 1)
 	assert_eq(int(gs.npc_favor[friend.id]), 74 + (int((result["prize"] as Dictionary).get("favor_all", 0))))
 	gs.end_session()

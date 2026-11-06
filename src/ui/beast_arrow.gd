@@ -2,7 +2,7 @@ class_name BeastArrow
 extends Control
 ## GFX-075: while a great beast walks in this region and is off screen, a small arrow at the screen edge
 ## points at it, tinted with its danger colour, with its short name under it. Hidden once it is on screen,
-## beaten or gone. The arrow keeps clear of the HUD panels. reduce_motion: no pulse.
+## beaten or gone. The arrow keeps clear of the HUD panels and hides behind open menus. reduce_motion: no pulse.
 
 const MARGIN := 36.0
 const ARROW_SIZE := 14.0
@@ -48,6 +48,12 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_to_group("beast_arrow")
+	# It sits on a layer above the HUD, so it hides while a menu or report is open.
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
+
+
+func _on_modal_changed(is_open: bool) -> void:
+	visible = not is_open
 
 
 func _process(delta: float) -> void:

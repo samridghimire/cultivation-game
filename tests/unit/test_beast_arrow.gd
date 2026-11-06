@@ -39,3 +39,13 @@ func test_clear_of_hud_rect_slides_along_edge() -> void:
 	assert_true(VIEW.encloses(placed))
 	var none: Array[Rect2] = []
 	assert_eq(BeastArrow.clear_of(box, none, VIEW), box)
+
+
+func test_hides_while_a_modal_is_open() -> void:
+	var arrow := BeastArrow.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(arrow)
+	EventBus.ui_modal_changed.emit(true)
+	assert_false(arrow.visible, "hidden behind an open menu")
+	EventBus.ui_modal_changed.emit(false)
+	assert_true(arrow.visible)
+	arrow.free()

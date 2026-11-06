@@ -290,12 +290,15 @@ static func friends_of(npcs: Dictionary, data: GameData, favor: Dictionary, regi
 	return out
 
 
-## FOLK-012: friends who cheer (max CHEER_MAX, +1 each).
-static func cheerers(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String) -> Array[CharacterData]:
-	var all := friends_of(npcs, data, favor, region_id, 1)
-	if all.size() > CHEER_MAX:
-		all.resize(CHEER_MAX)
-	return all
+## FOLK-012: friends who cheer (max CHEER_MAX, +1 each). Friends in `competing` (the contest's entrants) do not cheer.
+static func cheerers(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String, competing: Array = []) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for npc in friends_of(npcs, data, favor, region_id, 1):
+		if out.size() >= CHEER_MAX:
+			break
+		if not competing.has(npc):
+			out.append(npc)
+	return out
 
 
 static func cheer_line(who: Array[CharacterData]) -> String:

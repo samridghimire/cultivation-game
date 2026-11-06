@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d8b322a
+Last reviewed commit: 5b5b907
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1532,3 +1532,18 @@ Last reviewed commit: d8b322a
   - Notes, not filed: WILD-016 fights the Misty Forest beast from Qingshi's board without travelling, marks the
     season's hunt used before the fight (a loss spends it), and its "spoils come twice over" line is not reflected in
     the combat report's spoils list; TODAY-001 calls VillageCalendar's private `_reminder_line`.
+- 2026-11-06 (reviewer): reviewed d8b322a..5b5b907 (CAL-006, MARKET-011, FEST-008, GFX-075, C-303, C-273, WU-457, QA-197,
+  GFX-076, WILD-017, ebae72c, FEST-009, FEST-010, WU-458, WU-459, FOLK-012; [PLAN]/[REVIEW] skipped). Main green before
+  and after (3282 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`marked_days` defaults to {};
+  `market_sold`, practice, contest history and rival festival tally are world flags); no binary assets. Commits after
+  ebae72c follow the new authorship rule (owner-authored, no Co-Authored-By).
+  - Fixed (cross-feature, FOLK-012 x FEST-006): contest entrants are the region's first villagers and friends cheer by
+    favor, so a friend could compete against you *and* cheer you on (+1). `FestivalContest.cheerers` now skips the
+    entrants (the next friend steps in); tests updated.
+  - Fixed (GFX-075): the beast arrow lives on CanvasLayer 5, above the HUD (layer 1), so it and the beast's name were
+    drawn over open menus, the combat report and the death screen. It now hides on `EventBus.ui_modal_changed`; test added.
+  - CAL-006, WU-459 (focus returns to the cell), MARKET-011 (wanted units exempt, per-unit pricing), FEST-008 (place
+    `tags` reach Interactable through the generic place setter), WU-457, WILD-017 (fixes the last review's notes),
+    FEST-009, FEST-010, WU-458 (Tab switches pages, focus on the tab), GFX-076, QA-197, C-273, C-303 OK.
+  - Notes, not filed: FOLK-012's invite reminder is posted in any region; the invited friend may also be an entrant;
+    FEST-009 marks the rival in the standings by name, so a villager sharing the rival's name would be marked too.
