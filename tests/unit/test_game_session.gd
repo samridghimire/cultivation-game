@@ -3334,6 +3334,32 @@ func test_village_hunt() -> void:
 	gs.end_session()
 
 
+## WILD-017: the hunt takes its days, doubles the report's spoils, favours the hunter, shows on Today.
+func test_village_hunt_days_and_hunter() -> void:
+	_start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	gs.player.realm_index = 3
+	GameClock.total_days = 189
+	var today := Guidance.today_lines(gs.player, gs.data, gs.world_flags, gs.world_events, 189, "qingshi_village", gs.npcs, gs.npc_favor)
+	assert_true(" ".join(today).contains("The village hunt rides out after the"), "today line")
+	var hunter_id := ""
+	for id: String in gs.npcs:
+		if gs.npcs[id].alive and gs.npcs[id].home_region == "qingshi_village":
+			hunter_id = id
+			break
+	gs.data.npcs[hunter_id] = {"id": hunter_id, "hunter": true}
+	gs.npc_favor[hunter_id] = 0
+	var days := int(VillageHunt.def(gs.data, "qingshi_village")["days"])
+	var won: bool = gs.join_village_hunt()
+	assert_true(GameClock.total_days >= 189 + days, "the hunt takes its days")
+	assert_eq(gs.current_region, "qingshi_village")
+	assert_eq(int(gs.world_flags[VillageHunt.FLAG]), 180, "spent win or lose")
+	if won and gs.npcs[hunter_id].alive:
+		assert_eq(int(gs.npc_favor[hunter_id]), 3, "+1 village, +2 hunter")
+	gs.end_session()
+
+
 ## TODAY-001: the wrapper reads the live session.
 func test_today_lines_wrapper() -> void:
 	var gs := _game_state()

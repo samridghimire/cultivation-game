@@ -3391,25 +3391,38 @@ func join_village_hunt() -> bool:
 		EventBus.post("No hunt leaves from here today.", "warning")
 		return false
 	var region := current_region
-	VillageHunt.mark_done(world_flags, GameClock.total_days)
-	EventBus.post(VillageHunt.notice(data, region, GameClock.total_days), "world")
+	var day0 := GameClock.total_days
+	var hunter := VillageHunt.hunter_of(npcs, data, region)
+	EventBus.post(VillageHunt.notice(data, region, day0, npcs), "world")
 	var before := player.inventory.duplicate()
 	hunt_ally = VillageHunt.ally(player, data, float(VillageHunt.def(data, region)["bonus"]))
 	var won := fight(enemy_id)
 	hunt_ally = {}
+	# The season's hunt is spent win or lose, and it takes its posted days (the fight's own time counts).
+	VillageHunt.mark_done(world_flags, day0)
+	if not _can_act():
+		return false
+	var extra := int(VillageHunt.def(data, region)["days"]) - (GameClock.total_days - day0)
+	if extra > 0:
+		_pass_time(extra)
 	if won:
 		Wildlife.record_hunt(player, enemy_id)
 		var spoils := Wildlife.inventory_gain(before, player.inventory)
 		for item_id: String in spoils:
-			player.add_item(item_id, int(spoils[item_id]))
-			spoils[item_id] = int(spoils[item_id]) * 2
+			var n := int(spoils[item_id])
+			player.add_item(item_id, n)
+			spoils[item_id] = n * 2
+			last_fight_spoils.append("+%d %s (the hunters' share)" % [n, data.items.get(item_id, {}).get("name", item_id)])
 		Wildlife.record_spoils(player, enemy_id, spoils)
 		if not spoils.is_empty():
 			EventBus.post("Shared with the hunters, the %s's spoils come twice over." % String(data.enemies[enemy_id]["name"]).to_lower(), "progress")
 		for npc_id: String in npcs:
 			if npcs[npc_id].alive and npcs[npc_id].home_region == region:
-				npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + 1, -100, 100)
+				var gain := 1 + (2 if hunter != null and npc_id == hunter.id else 0)
+				npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, -100, 100)
 		EventBus.post("A share of the meat goes to the village. People remember it.", "world")
+	else:
+		EventBus.post("The beast breaks away; the hunters carry you home. The next hunt rides out next season.", "danger")
 	EventBus.player_changed.emit()
 	return won
 

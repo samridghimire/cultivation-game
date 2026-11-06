@@ -34,3 +34,36 @@ func test_ally_and_validate() -> void:
 	assert_true(int(a["damage"]) >= 1)
 	assert_eq(VillageHunt.validate(gd).size(), 0)
 	assert_true(VillageHunt.notice(gd, "qingshi_village", 190).contains("mist fox"))
+
+
+## WILD-017: calendar entry, hunter, notice.
+func test_calendar_hunt_and_hunter() -> void:
+	var gd := _gd()
+	var flags := {}
+	var e := VillageHunt.calendar_entry(gd, "qingshi_village", 189, flags)
+	assert_eq(String(e.get("kind", "")), "hunt")
+	assert_true(String(e["text"]).begins_with("Village hunt ("))
+	assert_true(VillageHunt.calendar_entry(gd, "qingshi_village", 190, flags).is_empty(), "only on the hunt day")
+	assert_true(VillageHunt.calendar_entry(gd, "misty_forest", 189, flags).is_empty(), "no hunt there")
+	VillageHunt.mark_done(flags, 189)
+	assert_true(VillageHunt.calendar_entry(gd, "qingshi_village", 189, flags).is_empty(), "done")
+	var up := VillageCalendar.upcoming(gd, {}, {}, [], "qingshi_village", 188, 3, null, {})
+	var found := false
+	for x: Dictionary in up:
+		if String(x["kind"]) == "hunt":
+			found = true
+	assert_true(found, "upcoming lists the hunt")
+	var rem := VillageCalendar.reminders(gd, {}, {}, [], "qingshi_village", 188, null, {})
+	assert_true(" ".join(rem).contains("Village hunt"), "reminder the day before")
+	var npc := CharacterData.new()
+	npc.id = "villager_x"
+	npc.name = "Old Bo"
+	npc.home_region = "qingshi_village"
+	var npcs := {"villager_x": npc}
+	assert_true(VillageHunt.hunter_of(npcs, gd, "qingshi_village") == null, "no flag, no hunter")
+	gd.npcs["villager_x"] = {"id": "villager_x", "hunter": true}
+	assert_true(VillageHunt.hunter_of(npcs, gd, "qingshi_village") == npc)
+	assert_true(VillageHunt.notice(gd, "qingshi_village", 190, npcs).contains("Hunter Old Bo leads the village hunters"))
+	npc.alive = false
+	assert_true(VillageHunt.hunter_of(npcs, gd, "qingshi_village") == null, "dead hunters do not lead")
+	gd.npcs.erase("villager_x")

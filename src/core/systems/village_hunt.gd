@@ -55,9 +55,33 @@ static func mark_done(flags: Dictionary, day: int) -> void:
 
 
 ## The notice the village posts on the first day of the window.
-static func notice(data: GameData, region_id: String, day: int) -> String:
+static func notice(data: GameData, region_id: String, day: int, npcs: Dictionary = {}) -> String:
 	var q := String(data.enemies.get(quarry(data, region_id, day), {}).get("name", "beast")).to_lower()
-	return "The %s hunt leaves at dawn: the village hunters ride out after the %s." % [Calendar.season_of(day).to_lower(), q]
+	var text := "The %s hunt leaves at dawn: the village hunters ride out after the %s." % [Calendar.season_of(day).to_lower(), q]
+	var hunter := hunter_of(npcs, data, region_id)
+	if hunter != null:
+		text += " Hunter %s leads the village hunters." % hunter.name
+	return text
+
+
+## WILD-017: the first living NPC of the region whose npcs.json entry has "hunter": true (null when none).
+static func hunter_of(npcs: Dictionary, data: GameData, region_id: String) -> CharacterData:
+	for npc_id: String in npcs:
+		var npc: CharacterData = npcs[npc_id]
+		if npc.alive and npc.home_region == region_id and bool(data.npcs.get(npc_id, {}).get("hunter", false)):
+			return npc
+	return null
+
+
+## WILD-017: the calendar entry for the hunt of the season `day` falls in, {} when none (no hunt here,
+## no beast in season, already joined). `day` is the hunt day (the first market day).
+static func calendar_entry(data: GameData, region_id: String, day: int, flags: Dictionary) -> Dictionary:
+	var d := def(data, region_id)
+	var q := quarry(data, region_id, day)
+	if d.is_empty() or q == "" or int(flags.get(FLAG, -1)) == season_start(day) or window_start(data, region_id, day) != day:
+		return {}
+	var beast := String(data.enemies.get(q, {}).get("name", "beast"))
+	return {"day": day, "kind": "hunt", "region": region_id, "text": "Village hunt (%s)" % beast}
 
 
 ## The village hunters' strike: `bonus` of the player's attack, as a combat ally.

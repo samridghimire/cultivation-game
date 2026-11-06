@@ -290,9 +290,14 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		out.append("%s: %s." % [rname, ", ".join(bits)])
 	# 6. Calendar reminders for today and tomorrow.
 	for e: Dictionary in VillageCalendar.upcoming(data, npcs, favor, active_events, region_id, day, 1, c, flags):
+		if String(e["kind"]) == "hunt":
+			if int(e["day"]) == day:
+				var q := String(data.enemies.get(VillageHunt.quarry(data, region_id, day), {}).get("name", "beast"))
+				out.append("The village hunt rides out after the %s today (bounty board)." % q)
+			continue
 		if ["market", "great_beast", "festival_active", "festival_month", "forage", "season"].has(String(e["kind"])):
 			continue
-		var rem := VillageCalendar._reminder_line(data, npcs, flags, e)
+		var rem := VillageCalendar.reminder_line(data, npcs, flags, e)
 		if rem != "":
 			out.append(rem.replace("Tomorrow: ", "Today: "))
 	for rem in VillageCalendar.reminders(data, npcs, favor, active_events, region_id, day, c, flags):

@@ -12,7 +12,7 @@ const GOLD := Color("e8c76a")
 const MAX_ICONS := 3
 const ICON_PX := 12
 const KIND_NAMES := {"market": "Market", "festival_active": "Festival", "festival_month": "Festival month", "birthday": "Birthday",
-	"field": "Crop", "rent": "Rent", "request": "Request", "secret_realm": "Secret realm", "event": "Event", "great_beast": "Great beast", "forage": "Forage", "season": "Season"}
+	"field": "Crop", "rent": "Rent", "request": "Request", "secret_realm": "Secret realm", "event": "Event", "great_beast": "Great beast", "hunt": "Village hunt", "forage": "Forage", "season": "Season"}
 const SEASON_TINT := {"Spring": Color("f2a7c3"), "Summer": Color("f0c33c"), "Autumn": Color("e0873a"), "Winter": Color("9fd0f0")}
 const DIM := Color(0.5, 0.5, 0.55)
 

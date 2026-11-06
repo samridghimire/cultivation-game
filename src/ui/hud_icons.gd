@@ -123,7 +123,7 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return season(season_name)
 		"field", "rent", "request", "secret_realm", "event", "forage":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
-		"great_beast":
+		"great_beast", "hunt":  # WILD-017: the hunt shares the beast glyph
 			return _glyph("cal_great_beast", CALENDAR_MORE, "great_beast")
 	return null
 

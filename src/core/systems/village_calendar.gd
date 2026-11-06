@@ -4,7 +4,7 @@ extends RefCounted
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
 const MAX_REMINDERS := 3
-const KIND_ORDER := ["market", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
+const KIND_ORDER := ["market", "hunt", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
 
 
 ## Every dated thing in [start, start + span) days, soonest first.
@@ -21,6 +21,11 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		for day in range(start, end):
 			if Places.is_open(place, day):
 				out.append({"day": day, "kind": "market", "text": "Market: %s%s" % [String(place.get("display_name", "stall")), " (new wares each time)" if place.has("rotating_stock") else ""], "region": region_id})
+	# WILD-017: the season's village hunt, on its first day.
+	for day in range(start, end):
+		var hunt := VillageHunt.calendar_entry(data, region_id, day, flags)
+		if not hunt.is_empty():
+			out.append(hunt)
 	# Birthdays of villagers you know.
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, start, favor, span - 1):
 		var npc: CharacterData = b["npc"]
@@ -182,7 +187,7 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"]))
 				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
 			continue
-		var line := _reminder_line(data, npcs, flags, e)
+		var line := reminder_line(data, npcs, flags, e)
 		if line != "":
 			out.append(line)
 	return out
@@ -233,7 +238,7 @@ static func _near(data: GameData, here: String, rid: String) -> bool:
 	return false
 
 
-static func _reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e: Dictionary) -> String:
+static func reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e: Dictionary) -> String:
 	var text := String(e["text"])
 	match String(e["kind"]):
 		"great_beast":
