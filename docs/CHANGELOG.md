@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-06 [C-308] Foundation players meet foes worth fighting in the forest, peak, marsh and market.
+- 2026-11-06 [WU-460] The village book has a Festivals page with your placings, the champion and your keepsakes.
+- 2026-11-06 [MARKET-012] A market regular hears the day before what the stall will want.
+- 2026-11-06 [GFX-077] Great beasts are drawn big, with a shadow and a danger aura.
+- 2026-11-06 [QA-196] The balance baseline is refreshed after roads, return beasts, regulars and contests.
+- 2026-11-06 [SEASON-005] Each season Qingshi posts three village tasks with a reward for finishing them.
+- 2026-11-06 [FOLK-012] Friends cheer you on at festival contests, and a close friend invites you along.
+- 2026-11-06 [WU-459] Mark or unmark a day straight from the calendar.
+- 2026-11-06 [WU-458] The journal opens on a Today page with the date, weather and what the day holds.
+- 2026-11-06 [FEST-010] Festival contests remember your placings, streaks and keepsakes.
+- 2026-11-06 [FEST-009] Your rival turns up at festival contests and has something to say about the result.
+- 2026-11-06 [WILD-017] The village hunt takes its days, shows on the calendar and is led by a village hunter.
+- 2026-11-06 [GFX-076] The sect gate reads as a gate: two posts, a roof and a name board.
+- 2026-11-06 [QA-197] The screenshot scripts run all the way through again.
 - 2026-11-05 [WU-457] On a festival day the stall announces its contest and villagers gather round it.
 - 2026-11-05 [C-273] Eighteen neighbourly asks, tied to each region and season.
 - 2026-11-05 [C-303] Ten more road encounters on the market and ridge routes, in fog, snow, spring and winter.

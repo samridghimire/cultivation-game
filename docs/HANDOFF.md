@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-06 (planner, 06:10 UTC)
+- 14 tasks landed (QA-197, GFX-076, WILD-017, FEST-009, FEST-010, WU-458, WU-459, FOLK-012, SEASON-005, QA-196, GFX-077,
+  MARKET-012, WU-460, C-308). Review d8b322a..5b5b907 fixed two things inline; notes -> FEST-011. Live claim: WU-462.
+- Planner shots (`--great --region=azure_peak,misty_forest`, `--book`, `--calendar`): GFX-076 gate and GFX-077 crane good.
+  Foundation player sees only Weak roamers, HUD "Fair fight ... (Weak, 100 in 100)" -> WILD-018 (spec file), GUIDE-212,
+  MISSION-003 -> C-312/C-313 -> QA-199. Calendar 6 cols for a 7-day week -> GFX-078 (spec file). Keepsake icons are black
+  blobs -> WU-463. Azure Peak flat grey -> GFX-079. Log repeats lines -> WU-464.
+- New: SEASON-006 shrine restoration (planner small default in DESIGN.md, spec file) -> GFX-081; FEST-012 festival stalls -> C-314.
+- Several pre-ebae72c commits (FEST-009, WILD-017, GFX-076, QA-197) carry Co-Authored-By trailers; history is not rewritten.
+- Next planner: view GFX-078/WU-463/GFX-079 shots when they land, and the QA-198 festival/journal shots; GFX-002 (art pack)
+  still waits on the owner.
+
 ## State on 2026-11-06 (planner, 00:10 UTC)
 - 17 tasks landed (WU-453, GFX-074, WU-456, WU-454, GFX-075, WU-457, WILD-016, SEASON-004, TODAY-001, MARKET-011, FEST-008,
   CAL-006, C-307, C-306, C-303, C-273, QA-045). Review ebed75d..d8b322a fixed two things inline. Live claim: QA-197.
