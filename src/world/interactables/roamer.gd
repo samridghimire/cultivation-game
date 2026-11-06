@@ -14,7 +14,8 @@ const NOTICE_RANGE := 160.0
 const CHARGE_SPEED := 110.0
 const TOUCH_RANGE := 44.0
 const GREAT_GOLD := Color("f2c94c")
-const GREAT_SCALE := 1.5
+const GREAT_SCALE := 1.6  # GFX-077
+const GREAT_LABEL_GAP := 6.0
 const WORLD_SCRIPT := preload("res://src/world/world.gd")
 
 var slot := 0
@@ -33,7 +34,7 @@ var player_ref: Node2D
 var map_bounds := Vector2(100000, 100000)
 var blocked_rects: Array[Rect2] = []  # WU-429: houses, ponds and paths a fleeing beast will not enter
 var noticed := false
-var great := false  # WU-430: the WILD-006 great beast: 1.5x, gold ring, gold "(great)" name
+var great := false  # WU-430: the WILD-006 great beast: 1.6x, aura ring, gold "(great)" name
 var charged := false  # WU-426: the open menu came from this beast's own charge
 var asked := false  # a bold beast opens its menu once per beast per day (nodes are rebuilt daily)
 
@@ -50,7 +51,7 @@ func setup(p_slot: int, p_enemy: String, pos: Vector2, seed_value: int, p_great:
 	_target = pos
 	_rng.seed = seed_value
 	_wait = _rng.randf_range(0.5, 3.0)
-	size = Vector2(48, 32)
+	size = box_size(great)
 	reach = 22.0
 	art_kind = "roamer"
 	_update_name()
@@ -70,6 +71,19 @@ func _update_name() -> void:
 		threat = Wildlife.threat(GameState.player, GameState.data, enemy_id)
 	display_name = label_for(String(def.get("name", enemy_id)), threat, great)
 	_redraw_label()
+
+
+## GFX-077: the interaction/highlight box; a great beast's matches its larger drawn sprite.
+static func box_size(is_great: bool) -> Vector2:
+	return Vector2(48, 32) * (GREAT_SCALE if is_great else 1.0)
+
+
+## GFX-077: a great beast's label sits GREAT_LABEL_GAP higher so it never touches a neighbour's.
+func label_rect(text: String = "") -> Rect2:
+	var r := super.label_rect(text)
+	if great:
+		r.position.y -= GREAT_LABEL_GAP
+	return r
 
 
 ## GFX-057: "Wolf (Easy)"; a great beast reads "Great Cloud Crane (Deadly)" (the threat stays in one bracket).
@@ -234,8 +248,11 @@ func draw_generated_art() -> bool:
 	var s := tex.get_size() * k
 	draw_set_transform(Vector2(0, 10), 0.0, Vector2(1.0, 0.4))
 	if great:
-		draw_arc(Vector2.ZERO, 30.0, 0.0, TAU, 40, Color(GREAT_GOLD, 0.7), 2.5)
-		draw_circle(Vector2.ZERO, 30.0, Color(GREAT_GOLD, 0.12))
+		var tint := danger_color()
+		var pulse := 0.0 if MotionFx.reduced() else sin(_pulse_time * 1.2) * 0.5 + 0.5
+		draw_circle(Vector2.ZERO, 40.0, Color(tint, 0.06 + 0.05 * pulse))
+		draw_arc(Vector2.ZERO, 40.0 + 3.0 * pulse, 0.0, TAU, 48, Color(tint, 0.35 + 0.2 * pulse), 2.0)
+		draw_circle(Vector2.ZERO, 30.0, Color(0, 0, 0, 0.22))
 	draw_circle(Vector2.ZERO, 16.0 * (GREAT_SCALE if great else 1.0), Color(0, 0, 0, 0.3))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1.0))
 	draw_texture_rect(tex, Rect2(-s.x / 2.0, 12.0 - s.y, s.x, s.y), false)
