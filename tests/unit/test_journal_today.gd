@@ -49,3 +49,36 @@ func test_opens_on_today_with_focus_and_switches() -> void:
 	s.set_page("journal")
 	assert_true(s._cards.visible)
 	s.queue_free()
+
+
+## WU-462: the season's tasks on the Today page and the HUD's one-left line.
+func _tasks(done: Array) -> Array:
+	var out: Array = []
+	for i in done.size():
+		out.append({"text": "Task %d." % i, "n": 1 if done[i] else 0, "count": 1, "done": done[i]})
+	return out
+
+
+func test_season_rows_and_check() -> void:
+	var s := _screen()
+	s._build_today(PackedStringArray(), _tasks([true, false, false]), "")
+	assert_eq(s._today.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool: return n.has_meta("season_row")).size(), 3)
+	assert_true(s._today.find_child("SeasonHeader", true, false) != null)
+	assert_true(s._today.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool: return n.has_meta("season_reward")).is_empty())
+	s._build_today(PackedStringArray(), _tasks([true, true, true]), "The village thanks you.")
+	assert_eq(s._today.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool: return n.has_meta("season_reward")).size(), 1)
+	assert_true(HudIcons.today_glyph("check") != null)
+	s.queue_free()
+
+
+func test_season_task_text_counts() -> void:
+	assert_eq(JournalScreen.season_task_text({"text": "Gather 3.", "n": 1, "count": 3}), "Gather 3. (1/3)")
+	assert_eq(JournalScreen.season_task_text({"text": "Catch one.", "n": 0, "count": 1}), "Catch one.")
+
+
+func test_one_left_line() -> void:
+	const HUD := preload("res://src/ui/hud.gd")
+	assert_eq(HUD.season_one_left_line(_tasks([true, true, false]), "spring"), "One more for spring: Task 2.")
+	assert_eq(HUD.season_one_left_line(_tasks([true, false, false]), "spring"), "")
+	assert_eq(HUD.season_one_left_line(_tasks([true, true, true]), "spring"), "")
+	assert_eq(HUD.season_one_left_line([], "spring"), "")

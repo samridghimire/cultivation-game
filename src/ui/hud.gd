@@ -41,6 +41,7 @@ var _hint_full := ""  ## GFX-016: the hint text before the line cap.
 var _goal: Label
 var _hunt: Label
 var _fair: Label
+var _season_task: Label  ## WU-462: "One more for spring: ..." when one season task is left.
 var _fair_queued := false
 var _log: RichTextLabel
 var _last_text: String = ""
@@ -305,6 +306,7 @@ func _ready() -> void:
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
+	EventBus.season_tasks_done.connect(_on_season_tasks_done)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
 	EventBus.festival_started.connect(_on_festival_started)
 	EventBus.bounty_claimed.connect(_on_bounty_claimed)
@@ -535,6 +537,11 @@ func _build_guide_panel() -> void:
 	_fair.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-435: the whole line, on two lines when needed
 	_fair.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_fair)
+	_season_task = UIStyle.label("", 14, Color("a8e08a"))
+	_season_task.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_season_task.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_season_task)
+	_season_task.visible = false
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.custom_minimum_size = Vector2(316, 0)
@@ -697,6 +704,9 @@ func _refresh() -> void:
 	_hunt.text = hunt
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
+	var one_left := season_one_left_line(GameState.season_tasks(), SeasonTasks.season_name(GameClock.total_days)) if hint_count > 0 else ""
+	_season_task.text = one_left
+	_season_task.visible = one_left != ""
 	_hint_lines = hints
 	hints_changed.emit()
 	_set_hint_text(hints)
@@ -924,7 +934,7 @@ func _fit_panels() -> void:
 	var limit := height - _status_panel.position.y
 	_status_panel.reset_size()
 	var glimit := height - _guide_panel.position.y
-	for label: Label in [_fair, _hint, _goal]:
+	for label: Label in [_season_task, _fair, _hint, _goal]:
 		_guide_panel.reset_size()
 		if _guide_panel.size.y <= glimit:
 			break
@@ -944,9 +954,9 @@ func _apply_line_cap() -> void:
 		return
 	var font := _hint.get_theme_font("font")
 	var used := 0
-	for label: Label in [_goal, _hunt, _fair]:
+	for label: Label in [_goal, _hunt, _fair, _season_task]:
 		if label.visible:
-			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal or label == _fair else 1
+			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label != _hunt else 1
 	var budget := maxi(1, GUIDE_MAX_LINES - used)
 	var cut := cut_entries(_hint_full.split("\n"), font, 14, 316.0, budget)
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
@@ -956,7 +966,7 @@ func _apply_line_cap() -> void:
 ## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
 ## bounty's deadline is state, not a hint, and showed with hints off before GFX-010).
 func _update_guide_visibility() -> void:
-	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _hint.visible
+	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _season_task.visible or _hint.visible
 	_guide_panel.visible = any_line and _status_panel.visible
 
 
@@ -1296,6 +1306,19 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 ## A long action skipped time: show the overlay unless fast skips are on or
 ## another window (combat report, encounter, death...) has taken the screen.
 ## Several milestones in one step: each call replaces the banner, so the last one shows (the log lists all).
+## WU-462: "One more for spring: <task>" when exactly one of the season's tasks is left, "" otherwise.
+static func season_one_left_line(tasks: Array, season_name: String) -> String:
+	var left: Array = tasks.filter(func(t: Dictionary) -> bool: return not bool(t["done"]))
+	if tasks.is_empty() or left.size() != 1:
+		return ""
+	return "One more for %s: %s" % [season_name, left[0]["text"]]
+
+
+## WU-462: a banner when the season's set is complete.
+func _on_season_tasks_done(season_name: String, reward: String) -> void:
+	_banner.announce("The %s tasks are done" % season_name, reward, UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
+
+
 func _on_milestone(_id: String, milestone_name: String) -> void:
 	_banner.announce("Milestone", milestone_name, UIStyle.ACCENT, 1.2)
 

@@ -97,6 +97,8 @@ signal renown_tier_reached(region_id: String, title: String)
 signal region_mastered(region_id: String)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
+## WU-462: the season's village tasks are all done (season name, reward text).
+signal season_tasks_done(season: String, reward: String)
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).
 var last_notice_id: String = ""
 

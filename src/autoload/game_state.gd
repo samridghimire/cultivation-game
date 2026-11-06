@@ -3434,11 +3434,20 @@ func _season_note(kind: String, target: String, n: int) -> void:
 		for npc in Npcs.in_region(npcs, data, SeasonTasks.REGION):
 			if npc.id != player.id:
 				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
+	EventBus.season_tasks_done.emit(SeasonTasks.season_name(day), SeasonTasks.reward_text(data, day))
 
 
 ## SEASON-005: this season's village tasks as [{text, n, count, done}] (for the journal).
 func season_tasks() -> Array[Dictionary]:
 	return SeasonTasks.list(player, data, GameClock.total_days)
+
+
+## WU-462: "" or the season's reward text once all tasks are done (for the journal), by today's season.
+func season_reward_line() -> String:
+	var tasks := season_tasks()
+	if tasks.is_empty() or tasks.any(func(t: Dictionary) -> bool: return not bool(t["done"])):
+		return ""
+	return "The village thanks you for the %s: %s." % [SeasonTasks.season_name(GameClock.total_days), SeasonTasks.reward_text(data, GameClock.total_days)]
 
 
 ## WILD-016: the beast of the village hunt posted here today, "" when none is.

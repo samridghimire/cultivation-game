@@ -101,7 +101,7 @@ func open() -> void:
 	_text.clear()
 	_text.append_text(format_entries(list))
 	_build_cards(list)
-	_build_today(GameState.today_lines())
+	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line())
 	set_page("today")
 	visible = true
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
@@ -160,7 +160,7 @@ static func parse_goal(text: String) -> Dictionary:
 
 
 ## WU-458: the date, weather and one icon row per Today line (a quiet-day line when there are none).
-func _build_today(lines: PackedStringArray) -> void:
+func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: String = "") -> void:
 	for c in _today.get_children():
 		_today.remove_child(c)
 		c.queue_free()
@@ -174,31 +174,53 @@ func _build_today(lines: PackedStringArray) -> void:
 	var head := UIStyle.label("%s · %s" % [Calendar.format_date_weekday(day), Weather.label(weather)], 18, UIStyle.ACCENT)
 	head.name = "TodayHeader"
 	inner.add_child(head)
+	# WU-462: the season's village tasks sit at the top; a done task gets a check.
+	if not tasks.is_empty():
+		var sh := UIStyle.label("The season's tasks", 15, UIStyle.ACCENT)
+		sh.name = "SeasonHeader"
+		inner.add_child(sh)
+		for t: Dictionary in tasks:
+			inner.add_child(_today_row(season_task_text(t), HudIcons.today_glyph("check" if bool(t["done"]) else "dot"), "season_row"))
+		if reward_line != "":
+			inner.add_child(_today_row(reward_line, HudIcons.today_glyph("leaf"), "season_reward"))
 	if lines.is_empty():
 		var quiet := UIStyle.label(QUIET_DAY, 15, DIM)
 		quiet.name = "TodayQuiet"
 		inner.add_child(quiet)
 	for line in lines:
-		var row := HBoxContainer.new()
-		row.set_meta("today_row", true)
-		row.add_theme_constant_override("separation", 8)
-		var icon := TextureRect.new()
-		icon.texture = HudIcons.today_glyph(HudIcons.today_icon(line))
-		icon.custom_minimum_size = Vector2(24, 24)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		row.add_child(icon)
-		var text := RichTextLabel.new()
-		text.bbcode_enabled = false
-		text.fit_content = true
-		text.scroll_active = false
-		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text.add_theme_font_size_override("normal_font_size", 15)
-		text.text = line
-		row.add_child(text)
-		inner.add_child(row)
+		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
 	_today.add_child(card)
+
+
+## "<text> (n/count)" for a season task row (the count only when more than one is needed).
+static func season_task_text(t: Dictionary) -> String:
+	if int(t.get("count", 1)) > 1:
+		return "%s (%d/%d)" % [t["text"], t["n"], t["count"]]
+	return String(t["text"])
+
+
+func _today_row(line: String, tex: Texture2D, meta: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.set_meta(meta, true)
+	if meta != "today_row":
+		row.set_meta("today_row", true)
+	row.add_theme_constant_override("separation", 8)
+	var icon := TextureRect.new()
+	icon.texture = tex
+	icon.custom_minimum_size = Vector2(24, 24)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	row.add_child(icon)
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = false
+	text.fit_content = true
+	text.scroll_active = false
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_font_size_override("normal_font_size", 15)
+	text.text = line
+	row.add_child(text)
+	return row
 
 
 func _build_cards(list: Array) -> void:

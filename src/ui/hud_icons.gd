@@ -73,6 +73,7 @@ const HEART_EMPTY := Color("3a2f33")
 ## WU-458: a small calendar page for reminders on the Today page.
 const TODAY_EXTRA := {
 	"calendar": {"colors": {"a": Color("f4e9d0"), "b": Color("d9534f"), "c": Color("b8a98a")}, "rows": ["............", ".oooooooooo.", ".obbbbbbbbo.", ".oooooooooo.", ".oaaaaaaaao.", ".oacacacaao.", ".oaaaaaaaao.", ".oacacacaao.", ".oaaaaaaaao.", ".oooooooooo.", "............", "............"]},
+	"check": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a")}, "rows": ["............", "............", "..........o.", ".........oao", "........oabo", "..o....oabo.", ".oao..oabo..", "..oaooabo...", "...oaabo....", "....oao.....", ".....o......", "............"]},
 	"dot": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8")}, "rows": ["............", "............", "............", "....oooo....", "...oabba....", "...oabaao...", "...oaaaao...", "....oooo....", "............", "............", "............", "............"]},
 	"fish": {"colors": {"a": Color("6fa8d6"), "b": Color("b9dcf2"), "c": Color("3a6a9a")}, "rows": ["............", "............", "............", "....oooo..o.", "..ooabbaooco", ".oabaaaaaaco", ".oaoaaaaaaco", "..ooaaaaooco", "...ooooo..o.", "............", "............", "............"]},
 }
@@ -135,7 +136,7 @@ static func today_glyph(name: String) -> Texture2D:
 			return _glyph("mark_leaf", MARKS, "leaf")
 		"snow":
 			return season("Winter")
-		"calendar", "dot", "fish":
+		"calendar", "dot", "fish", "check":
 			return _glyph("today_" + name, TODAY_EXTRA, name)
 	return null
 
