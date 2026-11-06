@@ -425,7 +425,7 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_false(Wildlife.in_season_now(d, "misty_forest", "mist_fox", summer_day))
 	assert_false(Wildlife.in_season_now(d, "misty_forest", "wild_boar", autumn_day))
 	assert_eq(Wildlife.season_clause(d, "misty_forest", autumn_day), "Fat Mist Foxes run in Misty Forest this autumn.")
-	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "")
+	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "Fat Wild Boars run in Misty Forest this summer.")
 	assert_eq(Wildlife.season_clause(d, "misty_forest", 9 * 30), "Fat Den Wolves run in Misty Forest this winter.")
 	assert_true(Wildlife.season_clause(d, "withered_bone_marsh", summer_day).begins_with("Fat Mist Pythons"))
 	var old: Dictionary = d.regions["misty_forest"]["roamers"]
@@ -437,7 +437,7 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_eq(Wildlife.validate(d).size(), 0)
 
 
-## C-300: at most two in-season beasts per region, each in a season it can appear in.
+## C-300: at most four in-season beasts per region, each in a season it can appear in.
 func test_in_season_limits() -> void:
 	var d := _gdata()
 	var old: Dictionary = d.regions["misty_forest"]["roamers"]
@@ -446,8 +446,10 @@ func test_in_season_limits() -> void:
 	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [
 		{"enemy": "mist_fox", "weight": 1, "in_season": ["autumn"]},
 		{"enemy": "wild_boar", "weight": 1, "in_season": ["spring"]},
-		{"enemy": "den_wolf", "weight": 1, "in_season": ["winter"]}]}
-	assert_eq(Wildlife.validate(d).size(), 1, "three in-season beasts")
+		{"enemy": "den_wolf", "weight": 1, "in_season": ["winter"]},
+		{"enemy": "mist_python", "weight": 1, "in_season": ["summer"]},
+		{"enemy": "fog_antler_stag", "weight": 1, "in_season": ["summer"]}]}
+	assert_eq(Wildlife.validate(d).size(), 1, "five in-season beasts")
 	d.regions["misty_forest"]["roamers"] = old
 	assert_eq(Wildlife.validate(d).size(), 0)
 	for rid: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
@@ -455,7 +457,7 @@ func test_in_season_limits() -> void:
 		for e: Dictionary in d.regions[rid]["roamers"]["enemies"]:
 			if e.has("in_season"):
 				n += 1
-		assert_true(n >= 1 and n <= 2, rid)
+		assert_true(n >= 1 and n <= 4, rid)
 
 
 func test_in_season_spoils_double_only_in_season() -> void:

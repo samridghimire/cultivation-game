@@ -450,6 +450,6 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s enemy '%s' in_season '%s' is not one of its seasons" % [where, e["enemy"], s])
 			if e.get("in_season") is Array and not (e["in_season"] as Array).is_empty():
 				in_season_count += 1
-		if in_season_count > 2:
-			errors.append("%s has %d in_season beasts (max 2)" % [where, in_season_count])
+		if in_season_count > 4:
+			errors.append("%s has %d in_season beasts (max 4)" % [where, in_season_count])
 	return errors

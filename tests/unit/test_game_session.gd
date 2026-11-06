@@ -3325,8 +3325,8 @@ func test_village_hunt() -> void:
 		assert_eq(int(gs.npc_favor.get(npc_id, 0)), mini(100, favor_before + 1))
 	GameClock.total_days = 189 + 90  # winter day 10
 	assert_eq(gs.village_hunt_quarry(), "den_wolf", "next season again")
-	GameClock.total_days = 189 + 180  # spring: nothing in season in the forest
-	assert_eq(gs.village_hunt_quarry(), "")
+	GameClock.total_days = 189 + 180  # spring
+	assert_eq(gs.village_hunt_quarry(), "fog_antler_stag")
 	gs.current_region = "misty_forest"
 	GameClock.total_days = 189
 	assert_eq(gs.village_hunt_quarry(), "", "only where the hunt is posted")

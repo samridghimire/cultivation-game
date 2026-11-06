@@ -1,0 +1,25 @@
+{
+  "id": "hunter_ma",
+  "entries": [
+    {"node": "friend", "if": {"min_favor": 30}},
+    {"node": "greet"}
+  ],
+  "nodes": {
+    "greet": {"text": "Mind your step on the forest road, {player}. I lead the village hunt each season; the boars do not care whether you cultivate or not.",
+      "choices": [
+        {"label": "How does the village hunt work?", "next": "hunt"},
+        {"label": "Any advice for the forest?", "next": "advice"},
+        {"label": "Later, Hunter Ma.", "next": "end"}
+      ]},
+    "friend": {"text": "{player}! Good. A steady arm is worth more than a clever tongue when a stag is charging. Sit, the venison is nearly done.",
+      "choices": [
+        {"label": "How does the village hunt work?", "next": "hunt"},
+        {"label": "Any advice for the forest?", "next": "advice"},
+        {"label": "Later, Hunter Ma.", "next": "end"}
+      ]},
+    "hunt": {"text": "Each season, on the first market day, we ride out after whatever runs fat in Misty Forest: the stag in spring, the boar in summer, the fox in autumn, the wolf in winter. Join us, and the beast's spoils come doubled.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "advice": {"text": "Listen for the birds. When they stop all at once, something big is walking. Better to be downwind of it, and better still to be somewhere else.",
+      "choices": [{"label": "...", "next": "greet"}]}
+  }
+}

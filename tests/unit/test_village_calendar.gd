@@ -164,7 +164,7 @@ func test_one_region_festival_month_has_region() -> void:
 ## CAL-003: tomorrow's reminders.
 func test_reminder_market_tomorrow() -> void:
 	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, null)
-	assert_eq(r.size(), 1)
+	assert_eq(r.size(), 2, "market day and the spring hunt (C-309)")
 	assert_true(r[0].begins_with("Tomorrow: market day at "), r[0])
 	assert_eq(VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 10, null).size(), 0)
 

@@ -21,7 +21,7 @@ func test_window_and_flags() -> void:
 	assert_true(VillageHunt.active(gd, "qingshi_village", 189, flags))
 	assert_true(VillageHunt.active(gd, "qingshi_village", 191, flags))
 	assert_false(VillageHunt.active(gd, "qingshi_village", 192, flags))
-	assert_false(VillageHunt.active(gd, "qingshi_village", 360 + 9, flags), "spring: no in_season beast")
+	assert_true(VillageHunt.active(gd, "qingshi_village", 360 + 9, flags), "spring: the stag")
 	VillageHunt.mark_done(flags, 190)
 	assert_false(VillageHunt.active(gd, "qingshi_village", 190, flags))
 	assert_true(VillageHunt.active(gd, "qingshi_village", 279, flags), "winter day 10 is a new season")
@@ -67,3 +67,19 @@ func test_calendar_hunt_and_hunter() -> void:
 	npc.alive = false
 	assert_true(VillageHunt.hunter_of(npcs, gd, "qingshi_village") == null, "dead hunters do not lead")
 	gd.npcs.erase("villager_x")
+
+
+## C-309: every season has a hunt quarry on its first market day, led by a named hunter.
+func test_every_season_has_a_quarry() -> void:
+	var gd := _gd()
+	var want := ["fog_antler_stag", "wild_boar", "mist_fox", "den_wolf"]
+	for i in 4:
+		var day := i * 90
+		var ws := VillageHunt.window_start(gd, "qingshi_village", day)
+		assert_true(ws >= day and ws < day + 90, "market day in season %d" % i)
+		assert_eq(VillageHunt.quarry(gd, "qingshi_village", ws), want[i])
+	var hunters := 0
+	for n: Dictionary in gd.npcs.values():
+		if n.get("region") == "qingshi_village" and bool(n.get("hunter", false)):
+			hunters += 1
+	assert_eq(hunters, 1)
