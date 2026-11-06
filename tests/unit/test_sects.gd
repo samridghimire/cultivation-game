@@ -281,3 +281,38 @@ func test_rank_needs_lists_every_unmet_need() -> void:
 	assert_eq(Sects.rank_needs(c, d).size(), 0)
 	c.sect["rank"] = (d.sects["azure_cloud_sect"] as SectDef).ranks.size() - 1
 	assert_eq(Sects.rank_needs(c, d).size(), 0, "highest rank")
+
+
+## MISSION-003: a mission with max_realm is offered up to that realm and not above it.
+func test_mission_max_realm() -> void:
+	var d := GameData.load_from_dir()
+	var c := new_character()
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var id: String = d.sect_missions.keys()[0]
+	d.sect_missions[id] = (d.sect_missions[id] as Dictionary).duplicate()
+	d.sect_missions[id]["max_realm"] = "qi_refining"
+	d.sect_missions[id]["sects"] = []
+	d.sect_missions[id].erase("min_realm")
+	d.sect_missions[id].erase("min_stage")
+	d.sect_missions[id].erase("requires_flag")
+	assert_true(Sects.available_missions(c, d).has(id))
+	c.realm_index = d.realm_index_of("qi_refining") + 1
+	assert_false(Sects.available_missions(c, d).has(id))
+	assert_true(Sects.check_mission(c, d, id).begins_with("Beneath you now") or Sects.check_mission(c, d, id) != "")
+	assert_true(Sects.mission_rank_realm_reason(c, d, d.sect_missions[id]).begins_with("Beneath you now"))
+
+
+func test_mission_max_realm_validation() -> void:
+	var d := GameData.load_from_dir()
+	var id: String = d.sect_missions.keys()[0]
+	d.sect_missions[id] = (d.sect_missions[id] as Dictionary).duplicate()
+	d.sect_missions[id]["max_realm"] = "nowhere"
+	d.load_errors.clear()
+	d._validate()
+	assert_true(d.load_errors.size() > 0)
+	d.sect_missions[id]["max_realm"] = "mortal"
+	d.sect_missions[id]["min_realm"] = "qi_refining"
+	d.load_errors.clear()
+	d._validate()
+	assert_true(d.load_errors.size() > 0)
