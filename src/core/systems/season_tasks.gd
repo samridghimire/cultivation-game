@@ -175,7 +175,7 @@ static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary
 ## GUIDE-214: where to do a task ("at Village Pond Jetty", "Misty Forest Pond in Misty Forest", "" when nothing fits).
 ## Pure. Qingshi's places come first, then regions by travel days from Qingshi.
 static func where(task: Dictionary, c: CharacterData, data: GameData, day: int) -> String:
-	var key := "%s|%s|%s|%d|%d" % [String(task.get("id", "")), String(task.get("kind", "")), String(task.get("target", "")), day, c.realm_index if c != null else 0]
+	var key := "%d|%s|%s|%s|%d|%d" % [data.get_instance_id(), String(task.get("id", "")), String(task.get("kind", "")), String(task.get("target", "")), day, c.realm_index if c != null else 0]
 	if _where_day != day:
 		_where_cache.clear()
 		_where_day = day

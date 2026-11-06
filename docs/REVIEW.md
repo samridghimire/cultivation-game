@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e3e2aa0
+Last reviewed commit: 3f308f5
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1577,3 +1577,22 @@ Last reviewed commit: e3e2aa0
   - Notes, not filed: FOLK-013's "any_villager" scene can play with any NPC you talk to (sect elders, far-region NPCs),
     not only villagers; `SeasonTasks.where` for hunt tasks scans 90 days x every region of roamers and runs on each HUD
     refresh via `SeasonTasks.list` (cache it if the HUD stutters); MISSION-003 adds `max_realm` but no mission uses it yet.
+- 2026-11-06 (reviewer, 4th run): reviewed e3e2aa0..3f308f5 (WU-468, GFX-084, WU-467, GFX-085, FOLK-014, QA-201, C-317 +
+  baseline, QI-003, WU-471, WU-469, GFX-086, CAL-007; [PLAN]/[REVIEW] skipped). Main green (3383 -> 3384 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (no new persistent state); no binary assets (critters,
+  hint icons and shrine glow are code-drawn). C-317's empty `claim C-317` commit landed on main (rebase without
+  --no-keep-empty); harmless.
+  - Fixed (QI-003): the world map's qi line called `effective_density` without the character, so it left out the
+    weather that the HUD and the travel note include and quoted a different number on rain/storm/fog days.
+    `WorldMapScreen.qi_line` takes the character (the map passes the player); test compares map line and travel note on
+    a day whose weather moves qi.
+  - Fixed (FOLK-014): `SeasonTasks.where`'s static memo was keyed by task/day/realm only, so a different GameData
+    (tests, a reloaded data set) could get another data set's answer on the same day. The key now includes the data's
+    instance id.
+  - CAL-007 (end_day is exclusive; "day 3 of 8" arithmetic checks out), GFX-086 (seeded by region+day, validated,
+    no collision), GFX-085 (validated square, crowd avoids stalls/caption), C-317 (outgrown first beast hands the slot to
+    the Foundation return; baseline refreshed), WU-467 (focus, Esc/accept close, queued behind dialogue/road card),
+    QA-201, WU-471, WU-469, GFX-084, WU-468 OK.
+  - Notes, not filed: a Qi Refining player who beat a capped first beast has no great beast there until Foundation (by
+    C-317's design); WU-467 picks the card's figure by NPC name (a namesake shows the wrong look) and a scene arriving
+    while the contest card is up waits until the next dialogue closes; the "(J)" journal hints are keyboard-only labels.

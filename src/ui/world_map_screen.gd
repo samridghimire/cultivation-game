@@ -479,8 +479,9 @@ static func foes_bbcode(foes: Array) -> String:
 
 
 ## "Qi density x2.75 (the valley guardian's seed)": the region's qi with the reasons its flags enrich it.
-static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array) -> String:
-	var qi := Exploration.effective_density(data, region_id, flags, GameClock.total_days, events)
+## With `c` the weather for their root counts too, so the map quotes the HUD's and the travel note's number (QI-003).
+static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array, c: CharacterData = null) -> String:
+	var qi := Exploration.effective_density(data, region_id, flags, GameClock.total_days, events, c)
 	var text := "Qi density x%s" % Exploration.format_density(qi)
 	var reasons := Exploration.qi_flag_reasons(data, region_id, flags, GameClock.total_days)
 	if not reasons.is_empty():
@@ -707,7 +708,7 @@ func _show_details() -> void:
 	if region.is_empty():
 		return
 	_name.text = String(region.get("name", _selected))
-	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
+	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events, GameState.player), danger_name(data, _selected)]
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
 		_hint_note.text = "Your road goal points here."

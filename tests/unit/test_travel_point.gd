@@ -63,3 +63,25 @@ func test_format_density() -> void:
 	assert_eq(Exploration.format_density(2.0), "2")
 	assert_eq(Exploration.format_density(2.7500001), "2.75")
 	assert_eq(Exploration.format_density(1.049), "1.05")
+
+
+## [REVIEW] the world map line counts the weather for the player's root, like the HUD and the travel note.
+func test_map_line_counts_weather_like_travel_note() -> void:
+	var d := data()
+	var c := new_character()
+	var old_day := GameClock.total_days
+	var found := false
+	for rid: String in d.regions:
+		for day in range(0, 200):
+			if absf(Weather.mean_qi_mult(d, rid, c, day, 1) - 1.0) < 0.01:
+				continue
+			GameClock.total_days = day
+			var shown := Exploration.format_density(Exploration.effective_density(d, rid, {}, day, [], c))
+			assert_true(WorldMapScreen.qi_line(d, rid, {}, [], c).begins_with("Qi density x%s" % shown), "%s day %d" % [rid, day])
+			assert_true(TravelPoint.destination_note(c, d, rid, {}).begins_with("Qi x%s" % shown), "%s day %d" % [rid, day])
+			found = true
+			break
+		if found:
+			break
+	GameClock.total_days = old_day
+	assert_true(found, "some day's weather changes qi")
