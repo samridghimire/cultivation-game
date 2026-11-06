@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-06 (planner, 00:10 UTC)
+- 17 tasks landed (WU-453, GFX-074, WU-456, WU-454, GFX-075, WU-457, WILD-016, SEASON-004, TODAY-001, MARKET-011, FEST-008,
+  CAL-006, C-307, C-306, C-303, C-273, QA-045). Review ebed75d..d8b322a fixed two things inline. Live claim: QA-197.
+- Screenshots DO work in the cloud: `xvfb-run -a -s "-screen 0 1280x800x24" tools/godot.sh --path . --rendering-driver opengl3
+  --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd -- --great --region=azure_peak` (~3 min, PNGs in
+  ~/.local/share/godot/app_userdata/Cultivation Game/screenshots/first_hour/). Workers wrongly report "no display"; specs now say so.
+- Planner shots: gate still one pole, tree/villager on it, dome on the Azure court -> GFX-076 (spec); crane goat-sized -> GFX-077.
+- QA-045: Foundation fights too easy (91% rated >95%) -> C-308 (spec, within the QA-007 default).
+- New: WILD-017/C-309 hunt fixes and all seasons, FEST-009 rival at the festival, FEST-010 festival memories -> WU-460, FOLK-012
+  friends at the festival, SEASON-005 season tasks -> WU-462/C-311, WU-459 mark days, MARKET-012, C-310, QA-198 festival shots.
+- Next planner: view GFX-076/GFX-077 shots when they land; the owner still has not answered GFX-002 (art pack).
+
 ## State on 2026-11-05 (planner, 18:15 UTC)
 - 14 tasks landed (MARKET-010, WILD-015, GFX-071, FEST-006, GOAL-012, GFX-072, WU-452, C-301, C-305, FEST-007, SEASON-003,
   QA-195 (test part only; balance part -> QA-196), GFX-073, C-302). Review 25992e9..ebed75d: main red 30 min, fixed by f027f5e.

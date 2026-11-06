@@ -2,6 +2,23 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-05 [WU-457] On a festival day the stall announces its contest and villagers gather round it.
+- 2026-11-05 [C-273] Eighteen neighbourly asks, tied to each region and season.
+- 2026-11-05 [C-303] Ten more road encounters on the market and ridge routes, in fog, snow, spring and winter.
+- 2026-11-05 [CAL-006] You can mark up to five days on the calendar and get a reminder.
+- 2026-11-05 [GFX-075] An arrow at the screen edge points to a great beast off screen.
+- 2026-11-05 [MARKET-011] Selling the same thing to one stall over and over lowers its price for a while.
+- 2026-11-05 [FEST-008] Practise for a festival contest in the week before it.
+- 2026-11-05 [WU-454] A podium card shows the contest standings and your prize.
+- 2026-11-05 [WU-453] The shop says what being a regular gets you, or how far you are from it.
+- 2026-11-05 [WU-456] Set bait on a great beast's trail from the explore menu.
+- 2026-11-05 [QA-045] The Foundation-year sim measures fight odds: the first Foundation year is too easy.
+- 2026-11-05 [TODAY-001] One list of what today holds, ready for the journal.
+- 2026-11-05 [C-306] Festival contests pay keepsakes, village favor and renown.
+- 2026-11-05 [C-307] Qingming moves to spring, so every season has a festival.
+- 2026-11-05 [SEASON-004] The season's end names what leaves in plural and the festivals you missed.
+- 2026-11-05 [GFX-074] The mountain gate stands clear of the exit sign and the marsh hall gets a proper court.
+- 2026-11-05 [WILD-016] Qingshi's hunters ride out once a season and you can join them.
 - 2026-11-05 [QA-195] The road-goal integration test follows the HUD goal from Foundation Middle to the great beast.
 - 2026-11-05 [GFX-073] World labels stay on screen and clear of the HUD panels.
 - 2026-11-05 [SEASON-003] Three days before a season ends, a line names what goes with it.
