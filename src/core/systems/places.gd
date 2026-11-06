@@ -213,6 +213,16 @@ static func wanted_phrase(place: Dictionary, today: int, data: GameData) -> Stri
 	return "%s (x%s)" % [String(data.items.get(w["item"], {}).get("name", w["item"])), String.num(float(w["mult"]), 2).trim_suffix("0")]
 
 
+## MARKET-012: a regular's early word: "Tomorrow Name wants Boar Hide (x1.5); you have 3." ("" if not a regular or nothing wanted).
+static func regular_tomorrow_line(place: Dictionary, days_sold: int, tomorrow: int, data: GameData, held: int) -> String:
+	if not is_regular(place, days_sold):
+		return ""
+	var phrase := wanted_phrase(place, tomorrow, data)
+	if phrase == "":
+		return ""
+	return "Tomorrow %s wants %s%s." % [String(place.get("display_name", "a stall")), phrase, "; you have %d" % held if held > 0 else ""]
+
+
 ## Load-time check of a `wanted` value on a place that has `rotating_stock`.
 static func validate_wanted(wanted: Variant, place: Dictionary, items: Dictionary, where: String) -> Array[String]:
 	var problems: Array[String] = []

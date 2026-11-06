@@ -20,7 +20,15 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			continue
 		for day in range(start, end):
 			if Places.is_open(place, day):
-				out.append({"day": day, "kind": "market", "text": "Market: %s%s" % [String(place.get("display_name", "stall")), " (new wares each time)" if place.has("rotating_stock") else ""], "region": region_id})
+				var base := "Market: %s%s" % [String(place.get("display_name", "stall")), " (new wares each time)" if place.has("rotating_stock") else ""]
+				var entry := {"day": day, "kind": "market", "text": base, "region": region_id}
+				# MARKET-012: a regular hears what the stall wants.
+				if c != null and Places.is_regular(place, int(c.market_regular.get(Places.place_key(String(place.get("display_name", ""))), 0))):
+					var wp := Places.wanted_phrase(place, day, data)
+					if wp != "":
+						entry["text"] = "%s, wants %s" % [base, wp]
+						entry["plain"] = base
+				out.append(entry)
 	# WILD-017: the season's village hunt, on its first day.
 	for day in range(start, end):
 		var hunt := VillageHunt.calendar_entry(data, region_id, day, flags)
@@ -193,6 +201,14 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		var line := reminder_line(data, npcs, flags, e)
 		if line != "":
 			out.append(line)
+	# MARKET-012: a regular learns the stall's wanted item a day early.
+	if c != null and out.size() < MAX_REMINDERS:
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			var item_id := String(Places.wanted_today(place, today + 1).get("item", ""))
+			var line := Places.regular_tomorrow_line(place, int(c.market_regular.get(Places.place_key(String(place.get("display_name", ""))), 0)), today + 1, data, c.item_count(item_id) if item_id != "" else 0)
+			if line != "":
+				out.append(line)
+				break
 	return out
 
 
@@ -242,7 +258,7 @@ static func _near(data: GameData, here: String, rid: String) -> bool:
 
 
 static func reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e: Dictionary) -> String:
-	var text := String(e["text"])
+	var text := String(e.get("plain", e["text"]))
 	match String(e["kind"]):
 		"great_beast":
 			return "Tomorrow: %s." % text.replace("A great", "a great")

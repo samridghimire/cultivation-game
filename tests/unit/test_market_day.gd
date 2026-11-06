@@ -385,3 +385,37 @@ func test_flood_curve_recovery_and_prune() -> void:
 	Items.validate_merchants({"flood_after": 0}, errors)
 	Items.validate_merchants({"bogus": 1}, errors)
 	assert_eq(errors.size(), 2)
+
+
+# --- MARKET-012: a regular hears what is wanted ---
+
+func test_regular_hears_tomorrows_wanted_item() -> void:
+	var d := _gd()
+	var place := _stall()
+	var key := Places.place_key(String(place["display_name"]))
+	var c := new_character()
+	var want: String = Places.wanted_today(place, DAY_10)["item"]
+	var name := String(d.items[want]["name"])
+	# Not a regular: silence.
+	assert_eq(Places.regular_tomorrow_line(place, 0, DAY_10, d, 0), "")
+	var line := Places.regular_tomorrow_line(place, 3, DAY_10, d, 0)
+	assert_true(line.begins_with("Tomorrow Travelling Market Stall wants %s" % name), line)
+	assert_false(line.contains("you have"), "no held count at 0")
+	assert_true(Places.regular_tomorrow_line(place, 3, DAY_10, d, 4).contains("; you have 4."))
+	assert_eq(Places.regular_tomorrow_line(place, 3, DAY_10 + 1, d, 0), "", "closed day")
+	# Reminders and the calendar entry only for regulars.
+	var rem := VillageCalendar.reminders(d, {}, {}, [], "qingshi_village", DAY_10 - 1, c)
+	assert_false(" ".join(rem).contains("wants"))
+	c.market_regular[key] = 3
+	c.add_item(want, 2)
+	rem = VillageCalendar.reminders(d, {}, {}, [], "qingshi_village", DAY_10 - 1, c)
+	var joined := " ".join(rem)
+	assert_true(joined.contains("wants %s" % name) and joined.contains("you have 2"), joined)
+	var entries := VillageCalendar.upcoming(d, {}, {}, [], "qingshi_village", DAY_10, 1, c)
+	var market: Dictionary = entries.filter(func(e: Dictionary) -> bool: return e["kind"] == "market")[0]
+	assert_true(String(market["text"]).contains("wants %s" % name))
+	var plain: Array[Dictionary] = VillageCalendar.upcoming(d, {}, {}, [], "qingshi_village", DAY_10, 1, new_character())
+	assert_false(String(plain.filter(func(e: Dictionary) -> bool: return e["kind"] == "market")[0]["text"]).contains("wants"))
+	# Today's page for a regular (the day before) carries it too.
+	var today := Guidance.today_lines(c, d, {}, [], DAY_10 - 1, "qingshi_village")
+	assert_true(" ".join(today).contains("wants %s" % name), " ".join(today))
