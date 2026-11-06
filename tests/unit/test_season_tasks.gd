@@ -242,3 +242,15 @@ func test_list_carries_where_and_hud_line() -> void:
 	const HUD := preload("res://src/ui/hud.gd")
 	var line: String = HUD.season_one_left_line([{"text": "Catch a fish.", "where": "at Village Pond Jetty", "done": false}], "spring")
 	assert_eq(line, "One more for spring: Catch a fish at Village Pond Jetty.")
+
+
+func test_where_is_memoized_per_day() -> void:
+	var gd := data()
+	var c := CharacterData.new()
+	var task: Dictionary = SeasonTasks.def(gd, 5)["tasks"][0]
+	var first := SeasonTasks.where(task, c, gd, 5)
+	var scans := SeasonTasks.where_scans
+	assert_eq(SeasonTasks.where(task, c, gd, 5), first)
+	assert_eq(SeasonTasks.where_scans, scans, "the second call does not rescan")
+	SeasonTasks.where(task, c, gd, 6)
+	assert_eq(SeasonTasks.where_scans, scans + 1, "a new day recomputes")

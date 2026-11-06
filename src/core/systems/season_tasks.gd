@@ -175,6 +175,25 @@ static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary
 ## GUIDE-214: where to do a task ("at Village Pond Jetty", "Misty Forest Pond in Misty Forest", "" when nothing fits).
 ## Pure. Qingshi's places come first, then regions by travel days from Qingshi.
 static func where(task: Dictionary, c: CharacterData, data: GameData, day: int) -> String:
+	var key := "%s|%s|%s|%d|%d" % [String(task.get("id", "")), String(task.get("kind", "")), String(task.get("target", "")), day, c.realm_index if c != null else 0]
+	if _where_day != day:
+		_where_cache.clear()
+		_where_day = day
+	if _where_cache.has(key):
+		return _where_cache[key]
+	where_scans += 1
+	var text := _where(task, c, data, day)
+	_where_cache[key] = text
+	return text
+
+
+## FOLK-014: memoized `where` results for _where_day, and how many were really computed (test hook).
+static var _where_cache: Dictionary = {}
+static var _where_day := -1
+static var where_scans := 0
+
+
+static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int) -> String:
 	var season := Calendar.season_of(day).to_lower()
 	var target := String(task.get("target", ""))
 	var kind := String(task.get("kind", ""))

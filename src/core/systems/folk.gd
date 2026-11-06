@@ -1223,16 +1223,25 @@ static func finish_companion(c: CharacterData, people: Dictionary, favors: Dicti
 
 ## FOLK-013: the first unseen scene due for `npc_id` at `favor` ({} = none). A scene for this villager comes
 ## before an "any_villager" one. Pure.
-static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int) -> Dictionary:
+static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int, npc: CharacterData = null, region_id: String = "") -> Dictionary:
 	var generic := {}
+	var villager := is_villager(npc, data, region_id)
 	for scene: Dictionary in data.scenes:
 		if c.scenes_seen.has(String(scene["id"])) or favor < int(scene["min_favor"]):
 			continue
 		if String(scene["npc"]) == npc_id:
 			return scene
-		if generic.is_empty() and String(scene["npc"]) == "any_villager":
+		if villager and generic.is_empty() and String(scene["npc"]) == "any_villager":
 			generic = scene
 	return generic
+
+
+## FOLK-014: whether `npc` is an ordinary villager of `region_id`: a living generated NPC (no data/npcs.json
+## entry, so no role such as elder or merchant) who lives there and belongs to no sect. Pure.
+static func is_villager(npc: CharacterData, data: GameData, region_id: String) -> bool:
+	if npc == null or not npc.alive or data.npcs.has(npc.id) or not npc.sect.is_empty():
+		return false
+	return Npcs.region_of(npc, data) == region_id
 
 
 ## FOLK-013: remember that `scene_id` played on `day`.

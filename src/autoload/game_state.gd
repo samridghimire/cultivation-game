@@ -1680,15 +1680,15 @@ func _friend_scene(npc_id: String) -> void:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null or player.scene_day == GameClock.total_days:
 		return
-	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)))
+	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)), npc, current_region)
 	if scene.is_empty():
 		return
 	Folk.mark_scene(player, String(scene["id"]), GameClock.total_days)
 	var text := String(scene["text"]).replace("{name}", String(npc.name))
-	EventBus.post(text, "progress")
+	EventBus.post(text, "people")
 	if scene.has("gift"):
 		player.add_item(String(scene["gift"]), 1)
-		EventBus.post("%s gives you %s." % [npc.name, data.items[String(scene["gift"])].name], "progress")
+		EventBus.post("%s gives you %s." % [npc.name, data.items[String(scene["gift"])].name], "people")
 	EventBus.friend_scene.emit(String(npc.name), text)
 
 

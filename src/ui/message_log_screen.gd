@@ -15,6 +15,7 @@ const FILTERS := [
 	["Warnings", "warning"],
 	["Danger", "danger"],
 	["Karma", "karma"],
+	["People", "people"],
 ]
 ## [label, topic] pairs (EventBus.TOPICS); "" shows every topic.
 const TOPIC_FILTERS := [

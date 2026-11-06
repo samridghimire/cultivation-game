@@ -2,7 +2,7 @@ extends Node
 ## Global signal hub. Gameplay systems emit here and UI listens, so neither
 ## needs a direct reference to the other.
 
-## A line for the in-game message log. category: info, progress, warning, danger, karma.
+## A line for the in-game message log. category: info, progress, warning, danger, karma, people.
 signal message_posted(text: String, category: String)
 ## Any player state changed; UI should refresh.
 signal player_changed
