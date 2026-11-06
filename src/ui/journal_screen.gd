@@ -9,10 +9,16 @@ signal book_requested
 signal calendar_requested
 
 const SCROLL_SPEED := 900.0
+const QUIET_DAY := "A quiet day. Meditate, gather, or walk the roads."
 const DIM := Color(0.6, 0.6, 0.6)
 
 var _scroll: ScrollContainer
 var _cards: VBoxContainer
+## WU-458: the Today page (first) and which page shows.
+const PAGES: Array[String] = ["today", "journal"]
+var _page := "today"
+var _today: VBoxContainer
+var _tabs: HBoxContainer
 ## Every card's text joined, for tests and search.
 var _text: RichTextLabel
 var _close_button: Button
@@ -26,6 +32,13 @@ func _init() -> void:
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
 	box.add_child(UIStyle.label("Journal", 24, UIStyle.ACCENT))
+	_tabs = HBoxContainer.new()
+	_tabs.add_theme_constant_override("separation", 8)
+	box.add_child(_tabs)
+	for page: String in PAGES:
+		var tab := UIStyle.button(page.capitalize(), func() -> void: set_page(page))
+		tab.name = "Tab_" + page
+		_tabs.add_child(tab)
 	_scroll = ScrollContainer.new()
 	_scroll.custom_minimum_size = Vector2(736, 440)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -34,10 +47,16 @@ func _init() -> void:
 	_text.bbcode_enabled = true
 	_text.visible = false
 	add_child(_text)
+	var pages := VBoxContainer.new()
+	pages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(pages)
+	_today = VBoxContainer.new()
+	_today.add_theme_constant_override("separation", 8)
+	pages.add_child(_today)
 	_cards = VBoxContainer.new()
 	_cards.add_theme_constant_override("separation", 8)
 	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.add_child(_cards)
+	pages.add_child(_cards)
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 16)
 	box.add_child(footer)
@@ -47,9 +66,26 @@ func _init() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
+	if not visible:
+		return
+	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
+	elif event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
+		get_viewport().set_input_as_handled()
+		var step := 1 if event.is_action_pressed("ui_focus_next") else -1
+		set_page(PAGES[posmod(PAGES.find(_page) + step, PAGES.size())])
+		(_tabs.get_node("Tab_" + _page) as Button).grab_focus()
+
+
+## Shows "today" or "journal".
+func set_page(page: String) -> void:
+	_page = page
+	_today.visible = page == "today"
+	_cards.visible = page == "journal"
+	for tab in _tabs.get_children():
+		(tab as Button).modulate = Color.WHITE if tab.name == "Tab_" + page else DIM
+	_scroll.scroll_vertical = 0
 
 
 func _process(delta: float) -> void:
@@ -65,9 +101,10 @@ func open() -> void:
 	_text.clear()
 	_text.append_text(format_entries(list))
 	_build_cards(list)
-	_scroll.scroll_vertical = 0
+	_build_today(GameState.today_lines())
+	set_page("today")
 	visible = true
-	_close_button.grab_focus.call_deferred()
+	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
 
 
 ## The journal for the current session.
@@ -120,6 +157,48 @@ static func parse_goal(text: String) -> Dictionary:
 	if text.begins_with("[ ] "):
 		return {"done": false, "text": text.substr(4)}
 	return {}
+
+
+## WU-458: the date, weather and one icon row per Today line (a quiet-day line when there are none).
+func _build_today(lines: PackedStringArray) -> void:
+	for c in _today.get_children():
+		_today.remove_child(c)
+		c.queue_free()
+	var card := UIStyle.panel()
+	card.name = "TodayCard"
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 6)
+	card.add_child(inner)
+	var day: int = GameClock.total_days
+	var weather := Weather.of(GameState.data, GameState.current_region, day)
+	var head := UIStyle.label("%s · %s" % [Calendar.format_date_weekday(day), Weather.label(weather)], 18, UIStyle.ACCENT)
+	head.name = "TodayHeader"
+	inner.add_child(head)
+	if lines.is_empty():
+		var quiet := UIStyle.label(QUIET_DAY, 15, DIM)
+		quiet.name = "TodayQuiet"
+		inner.add_child(quiet)
+	for line in lines:
+		var row := HBoxContainer.new()
+		row.set_meta("today_row", true)
+		row.add_theme_constant_override("separation", 8)
+		var icon := TextureRect.new()
+		icon.texture = HudIcons.today_glyph(HudIcons.today_icon(line))
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		row.add_child(icon)
+		var text := RichTextLabel.new()
+		text.bbcode_enabled = false
+		text.fit_content = true
+		text.scroll_active = false
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text.add_theme_font_size_override("normal_font_size", 15)
+		text.text = line
+		row.add_child(text)
+		inner.add_child(row)
+	_today.add_child(card)
 
 
 func _build_cards(list: Array) -> void:
