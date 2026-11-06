@@ -210,7 +210,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
   seed  5 m9   respawn mist_wolf (78%) lives=2 stones=146 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
       | You grab the rope and walk the sullen beast back. The merchant presses a few stones into y
-      | Tomorrow: Lantern Festival in Qingshi Village (until Year 1, Month 10, Day 15) (contest: L
+      | Tomorrow: Lantern Festival in Qingshi Village (until Year 1, Month 10, Day 15, festival st
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 60 atk. Foe: 228
       | You fall. (6 rounds, 0/240 hp left)
       | You were slain by a Mist Wolf at age 16.
@@ -291,9 +291,9 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 100% (10 of 10), attempts under 50%: 0 of 10
 Foundation entry gap (QA-114): curious player right after the breakthrough vs the typical player (Foundation, stage 0)
   typical: hp 890 atk 224 def 159 spd 11 | techniques iron_fist L5, stone_skin L5 | gear weapon=profound_iron_spear, armor=profound_iron_lamellar
-  typical odds: roadside_rogue_cultivator 73%, broken_crown_crane 100%, mist_shrouded_leopard 86%
-  seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 62% / 2%
-  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 62% / 2%
+  typical odds: roadside_rogue_cultivator 73%, mist_shrouded_leopard 86%, moon_ridge_elk 81%
+  seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 3%
+  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 3%
     HUD hints for seed 1 at that moment:
       - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4407). Claim it at the sect treasury and learn it there.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4407). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
@@ -303,24 +303,24 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
       - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
       - The best pays 80 contribution and 100 qi: Cull the Mist Wolves (5 days), one of 4 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
-  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 27% / 0%
-  seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 27% / 0%
-  seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 40% / 0%
-  seed  3 +60 days stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 40% / 0%
-  seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 25% / 1%
-  seed  4 +60 days stage 0: hp 396 atk 223 def 49 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 32% / 1%
-  seed  5 at entry stage 0: hp 450 atk 180 def 54 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 21% / 0%
-  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 42% / 2%
-  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 68% / 4%
-  seed  6 +60 days stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 68% / 4%
-  seed  7 at entry stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 38% / 2%
-  seed  7 +60 days stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 38% / 2%
-  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 39% / 0%
-  seed  8 +60 days stage 0: hp 522 atk 205 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 49% / 3%
-  seed  9 at entry stage 0: hp 504 atk 209 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 50% / 0%
-  seed  9 +60 days stage 0: hp 504 atk 227 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 61% / 6%
-  seed 10 at entry stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 22% / 0%
-  seed 10 +60 days stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 22% / 0%
+  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  3 +60 days stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 1%
+  seed  4 +60 days stage 0: hp 396 atk 223 def 49 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 1% / 1%
+  seed  5 at entry stage 0: hp 450 atk 180 def 54 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 0% / 0%
+  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 2% / 2%
+  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 4% / 3%
+  seed  6 +60 days stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 4% / 3%
+  seed  7 at entry stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  7 +60 days stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  8 +60 days stage 0: hp 522 atk 205 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 3% / 2%
+  seed  9 at entry stage 0: hp 504 atk 209 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
+  seed  9 +60 days stage 0: hp 504 atk 227 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 3%
+  seed 10 at entry stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed 10 +60 days stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
   at +60 days (10 seeds with a snapshot): rated >= 50% against all three foes in 0, against the roadside rogue in 0
   QA-125 levers at +60 days vs roadside_rogue_cultivator (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
     seed  1:   0 |   0 |  53 |  17 |   0 |   2
@@ -334,18 +334,18 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
     seed  9:   0 |   0 |  52 |  20 |   0 |   5
     seed 10:   0 |   0 |  42 |   2 |   0 |   0
     median :   0 |   0 |  52 |   8 |   0 |   2
-  QA-125 levers at +60 days vs broken_crown_crane (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:  62 |  62 | 100 |  89 |  54 |  86
-    seed  2:  27 |  27 |  72 |  72 |  46 |  42
-    seed  3:  40 |  40 | 100 |  80 |  30 |  71
-    seed  4:  32 |  32 | 100 |  78 |  54 |  68
-    seed  5:  42 |  42 | 100 |  84 |  40 |  78
-    seed  6:  68 |  68 | 100 |  92 |  46 |  97
-    seed  7:  38 |  38 | 100 |  79 |  46 |  73
-    seed  8:  49 |  49 | 100 |  92 |  46 |  88
-    seed  9:  61 |  61 | 100 |  93 |  54 |  88
-    seed 10:  22 |  22 | 100 |  72 |  30 |  53
-    median :  42 |  42 | 100 |  84 |  46 |  78
+  QA-125 levers at +60 days vs mist_shrouded_leopard (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
+    seed  1:   2 |   2 |  78 |  22 |   2 |  14
+    seed  2:   0 |   0 |   2 |   3 |   1 |   1
+    seed  3:   0 |   0 |  82 |   9 |   0 |   8
+    seed  4:   1 |   1 |  63 |   8 |   2 |   7
+    seed  5:   2 |   2 |  98 |  18 |   0 |  10
+    seed  6:   4 |   4 |  95 |  28 |   1 |  23
+    seed  7:   2 |   2 |  77 |  18 |   1 |   9
+    seed  8:   3 |   3 |  81 |  25 |   1 |  12
+    seed  9:   6 |   6 |  79 |  26 |   2 |  22
+    seed 10:   0 |   0 |  70 |   4 |   0 |   2
+    median :   2 |   2 |  79 |  18 |   1 |  10
   mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 45%, gear 9%, attributes 0%, all three (injuries cleared) 88%
 Pacing (QA-156): QR9 median day 1612 (10 seeds), Foundation median day 1612 (10 seeds); Foundation by m12 1/10, m24 8/10, m36 10/10; artifact lives bought 34, injuries at the end 0
 
@@ -467,7 +467,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
   seed  5 m9   respawn mist_wolf (78%) lives=2 stones=146 qingshi_village
       cause: You were slain by a Mist Wolf at age 16.
       | You grab the rope and walk the sullen beast back. The merchant presses a few stones into y
-      | Tomorrow: Lantern Festival in Qingshi Village (until Year 1, Month 10, Day 15) (contest: L
+      | Tomorrow: Lantern Festival in Qingshi Village (until Year 1, Month 10, Day 15, festival st
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 60 atk. Foe: 228
       | You fall. (6 rounds, 0/240 hp left)
       | You were slain by a Mist Wolf at age 16.
@@ -548,9 +548,9 @@ First Foundation breakthrough (QA-066): seed, bottleneck day, attempts [day chan
   medians: days stuck at the bottleneck 0 (10 seeds that succeeded), attempts 1, share of attempts with a pill 100% (10 of 10), attempts under 50%: 0 of 10
 Foundation entry gap (QA-114): curious player right after the breakthrough vs the typical player (Foundation, stage 0)
   typical: hp 890 atk 224 def 159 spd 11 | techniques iron_fist L5, stone_skin L5 | gear weapon=profound_iron_spear, armor=profound_iron_lamellar
-  typical odds: roadside_rogue_cultivator 73%, broken_crown_crane 100%, mist_shrouded_leopard 86%
-  seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 62% / 2%
-  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 62% / 2%
+  typical odds: roadside_rogue_cultivator 73%, mist_shrouded_leopard 86%, moon_ridge_elk 81%
+  seed  1 at entry stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 3%
+  seed  1 +60 days stage 0: hp 450 atk 241 def 54 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 2% / 3%
     HUD hints for seed 1 at that moment:
       - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4407). Claim it at the sect treasury and learn it there.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4407). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
@@ -560,24 +560,24 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
       - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
       - The best pays 80 contribution and 100 qi: Cull the Mist Wolves (5 days), one of 4 missions ready at the Sect Recruitment Hall here.
       - Your sect's elder lectures this month; attend at the sect hall.
-  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 27% / 0%
-  seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 27% / 0%
-  seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 40% / 0%
-  seed  3 +60 days stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 40% / 0%
-  seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 25% / 1%
-  seed  4 +60 days stage 0: hp 396 atk 223 def 49 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 32% / 1%
-  seed  5 at entry stage 0: hp 450 atk 180 def 54 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 21% / 0%
-  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 42% / 2%
-  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 68% / 4%
-  seed  6 +60 days stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 68% / 4%
-  seed  7 at entry stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 38% / 2%
-  seed  7 +60 days stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 38% / 2%
-  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 39% / 0%
-  seed  8 +60 days stage 0: hp 522 atk 205 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 49% / 3%
-  seed  9 at entry stage 0: hp 504 atk 209 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 50% / 0%
-  seed  9 +60 days stage 0: hp 504 atk 227 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 61% / 6%
-  seed 10 at entry stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 22% / 0%
-  seed 10 +60 days stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 22% / 0%
+  seed  2 at entry stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
+  seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  3 +60 days stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  4 at entry stage 0: hp 396 atk 205 def 49 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 1% / 1%
+  seed  4 +60 days stage 0: hp 396 atk 223 def 49 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 1% / 1%
+  seed  5 at entry stage 0: hp 450 atk 180 def 54 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 0% / 0%
+  seed  5 +60 days stage 1: hp 495 atk 198 def 59 spd 10 | techniques iron_fist L4 | gear none | rated 0% / 2% / 2%
+  seed  6 at entry stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 4% / 3%
+  seed  6 +60 days stage 0: hp 522 atk 234 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 4% / 3%
+  seed  7 at entry stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  7 +60 days stage 0: hp 432 atk 216 def 52 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 2% / 2%
+  seed  8 at entry stage 0: hp 522 atk 187 def 61 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed  8 +60 days stage 0: hp 522 atk 205 def 61 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 3% / 2%
+  seed  9 at entry stage 0: hp 504 atk 209 def 59 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 1%
+  seed  9 +60 days stage 0: hp 504 atk 227 def 59 spd 10 | techniques iron_fist L7 | gear none | rated 0% / 6% / 3%
+  seed 10 at entry stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
+  seed 10 +60 days stage 0: hp 468 atk 180 def 56 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 0%
   at +60 days (10 seeds with a snapshot): rated >= 50% against all three foes in 0, against the roadside rogue in 0
   QA-125 levers at +60 days vs roadside_rogue_cultivator (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
     seed  1:   0 |   0 |  53 |  17 |   0 |   2
@@ -591,18 +591,18 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
     seed  9:   0 |   0 |  52 |  20 |   0 |   5
     seed 10:   0 |   0 |  42 |   2 |   0 |   0
     median :   0 |   0 |  52 |   8 |   0 |   2
-  QA-125 levers at +60 days vs broken_crown_crane (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
-    seed  1:  62 |  62 | 100 |  89 |  54 |  86
-    seed  2:  27 |  27 |  72 |  72 |  46 |  42
-    seed  3:  40 |  40 | 100 |  80 |  30 |  71
-    seed  4:  32 |  32 | 100 |  78 |  54 |  68
-    seed  5:  42 |  42 | 100 |  84 |  40 |  78
-    seed  6:  68 |  68 | 100 |  92 |  46 |  97
-    seed  7:  38 |  38 | 100 |  79 |  46 |  73
-    seed  8:  49 |  49 | 100 |  92 |  46 |  88
-    seed  9:  61 |  61 | 100 |  93 |  54 |  88
-    seed 10:  22 |  22 | 100 |  72 |  30 |  53
-    median :  42 |  42 | 100 |  84 |  46 |  78
+  QA-125 levers at +60 days vs mist_shrouded_leopard (rated %): base | a_healed | b_techs | c_gear | d_attrs | e_stone_skin
+    seed  1:   2 |   2 |  78 |  22 |   2 |  14
+    seed  2:   0 |   0 |   2 |   3 |   1 |   1
+    seed  3:   0 |   0 |  82 |   9 |   0 |   8
+    seed  4:   1 |   1 |  63 |   8 |   2 |   7
+    seed  5:   2 |   2 |  98 |  18 |   0 |  10
+    seed  6:   4 |   4 |  95 |  28 |   1 |  23
+    seed  7:   2 |   2 |  77 |  18 |   1 |   9
+    seed  8:   3 |   3 |  81 |  25 |   1 |  12
+    seed  9:   6 |   6 |  79 |  26 |   2 |  22
+    seed 10:   0 |   0 |  70 |   4 |   0 |   2
+    median :   2 |   2 |  79 |  18 |   1 |  10
   mean rated odds vs roadside_rogue_cultivator over 10 seeds: curious 0%; with the typical player's techniques 45%, gear 9%, attributes 0%, all three (injuries cleared) 88%
 Pacing (QA-156): QR9 median day 1612 (10 seeds), Foundation median day 1612 (10 seeds); Foundation by m12 1/10, m24 8/10, m36 10/10; artifact lives bought 34, injuries at the end 0
 
@@ -802,7 +802,6 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission escort_mortal_villag forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        mission guard_pavilion_carav forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
-  Qi Refini old_bog_king_toad      great roamer return withered evadable                 entry   6%  peak 100%  talisman  51%  bare   0%  veteran on appearance  18%  HARD
   Qi Refini outer_disciple_bully   choice mountain_bullied_juni forced                   entry  78%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini pavilion_vault_guard   trial myriad_treasure_pavili forced                   entry  53%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
   Qi Refini reed_hermit_shade      trial reed_hermit_hut stage  forced                   entry   1%  peak  91%  talisman  12%  bare   0%  veteran on appearance   1%  HARD
@@ -811,7 +810,6 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini rogue_cultivator       encounter marsh_corpse_refin evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
   Qi Refini rogue_cultivator       encounter wild_rogue         evadable                 entry  56%  peak  92%  talisman  90%  bare   0%  veteran on appearance  95%  OK
   Qi Refini salt_road_captain      bounty salt_road_captain_bou evadable                 entry 100%  peak 100%  talisman 100%  bare  10%  veteran on appearance 100%  TRIVIAL
-  Qi Refini scarred_old_tusker     great roamer return misty_fo evadable                 entry   6%  peak 100%  talisman  65%  bare   0%  veteran on appearance  29%  HARD
   Qi Refini sect_senior_tester     choice village_sect_senior_t forced                   entry 100%  peak 100%  talisman 100%  bare   4%  veteran on appearance 100%  TRIVIAL
   Qi Refini stone_ape              bounty ridge_stone_ape_bount evadable                 entry   0%  peak  77%  talisman   3%  bare   0%  veteran on appearance   0%  HARD
   Qi Refini stone_ape              encounter mountain_ape       evadable                 entry  72%  peak  77%  talisman  92%  bare   0%  veteran on appearance  84%  OK
@@ -834,7 +832,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio blood_lotus_executioner encounter incursion_raiders  evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
   Foundatio blood_lotus_executioner encounter wild_blood_lotus_e evadable                 entry  48%  peak  48%  talisman  95%  bare   0%  veteran on appearance  96%  HARD
   Foundatio blood_pit_champion     trial blood_lotus_sect rank  forced                   entry  55%  peak  99%  talisman  97%  bare   0%  veteran on appearance  98%  OK
-  Foundatio broken_crown_crane     great roamer return azure_pe evadable                 entry 100%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  TRIVIAL
+  Foundatio broken_crown_crane     great roamer return azure_pe evadable                 entry  66%  peak 100%  talisman  99%  bare   0%  veteran on appearance  99%  OK
   Foundatio bronze_corpse_puppet   encounter ruins_bronze_puppe evadable                 entry  53%  peak  75%  talisman  92%  bare   0%  veteran on appearance  98%  OK
   Foundatio bronze_corpse_puppet   realm fallen_star_vault floo forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
   Foundatio bronze_corpse_puppet   trial corpse_lord_altar stag forced                   entry   7%  peak  75%  talisman  51%  bare   0%  veteran on appearance  73%  HARD
@@ -846,7 +844,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio corpse_refiner_puppets choice marsh_corpse_refiner_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio corpse_refiner_puppets choice marsh_villagers_plea/ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio corpse_refiner_puppets encounter marsh_bone_puppet_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
-  Foundatio cracked_horn_ram       great roamer return myriad_p evadable                 entry  19%  peak  84%  talisman  75%  bare   0%  veteran on appearance  79%  HARD
+  Foundatio cracked_horn_ram       great roamer return myriad_p evadable                 entry  67%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Foundatio demonic_cultivator     encounter forest_demonic_amb evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     encounter marsh_demonic_hunt evadable                 entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
   Foundatio demonic_cultivator     mission harvest_rogue_cultiv forced                   entry  69%  peak  95%  talisman  98%  bare   0%  veteran on appearance  98%  OK
@@ -871,14 +869,17 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio market_debt_collector  encounter city_debt_collecto forced                   entry  14%  peak  80%  talisman  76%  bare   0%  veteran on appearance  82%  HARD
   Foundatio mist_crowned_tiger     encounter forest_crowned_tig forced                   entry  19%  peak  84%  talisman  75%  bare   0%  veteran on appearance  79%  HARD
+  Foundatio mist_fox               roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Foundatio mist_shrouded_leopard  encounter forest_mist_leopar forced                   entry  83%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio mist_shrouded_leopard  roamer misty_forest          evadable                 entry  83%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         choice village_beast_at_the_ forced                   entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         encounter forest_moon_elk    forced                   entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         roamer azure_peak            evadable                 entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio old_bog_king_toad      great roamer return withered evadable                 entry  66%  peak 100%  talisman  99%  bare   0%  veteran on appearance  99%  OK
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio roadside_rogue_cultivator bounty roadside_rogue_bounty evadable                 entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio roadside_rogue_cultivator encounter village_roadside_r forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio scarred_old_tusker     great roamer return misty_fo evadable                 entry  66%  peak 100%  talisman  99%  bare   0%  veteran on appearance  99%  OK
   Foundatio star_vault_warden      realm fallen_star_vault floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio stone_hide_boar_king   bounty stone_hide_boar_king_ evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
   Foundatio stone_hide_boar_king   encounter forest_boar_king   evadable                 entry  70%  peak 100%  talisman 100%  bare   0%  veteran on appearance  98%  OK
@@ -1079,13 +1080,13 @@ Win rate at stage 0 of each realm (no talismans):
   lightning_tithe_sovereign         0%         0%         0%         0%         0%
   final_stair_vow_guardian         0%         0%         0%         0%         0%
   old_tusker_boar                0%        23%       100%       100%       100%
-  scarred_old_tusker             0%         6%       100%       100%       100%
+  scarred_old_tusker             0%         0%        66%       100%       100%
   bog_king_toad                  0%        14%       100%       100%       100%
   cloud_crane                    0%         1%       100%       100%       100%
   thunder_horn_ram               0%         0%        71%       100%       100%
-  old_bog_king_toad              0%         6%       100%       100%       100%
-  broken_crown_crane             0%         0%       100%       100%       100%
-  cracked_horn_ram               0%         0%        19%       100%       100%
+  old_bog_king_toad              0%         0%        66%       100%       100%
+  broken_crown_crane             0%         0%        66%       100%       100%
+  cracked_horn_ram               0%         0%        67%       100%       100%
   mist_shrouded_leopard          0%         0%        83%       100%       100%
   mist_crowned_tiger             0%         0%        19%       100%       100%
   grey_fang_alpha                0%         0%        57%       100%       100%
@@ -1156,7 +1157,7 @@ flagged: 0
 
 Peak curve, 100 fights per foe. Typical player vs the realm's own foes at their data stage.
   realm                      foes  Early   Peak  | player hp/atk/def at Peak | plain foe hp/atk/def at Peak | training atk/def/hp
-  foundation_establishment     32   31%   93%  |  1133/ 283/ 202 |  1053/ 257/ 187 | 10/10/40
+  foundation_establishment     35   32%   96%  |  1133/ 283/ 202 |  1053/ 257/ 187 | 10/10/40
   core_formation               13   49%   96%  |  3891/ 953/ 727 |  3580/ 878/ 667 | 13/13/52
   nascent_soul                  8   41%   98%  | 13087/3219/2562 | 12004/2948/2317 | 16/16/64
   soul_formation                6   31%   91%  | 41397/10194/8261 | 39803/9793/7898 | 19/19/76
