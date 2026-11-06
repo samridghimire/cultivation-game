@@ -149,16 +149,24 @@ static func qi_density(data: GameData, region_id: String, flags: Dictionary = {}
 static func qi_flag_bonus(data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> float:
 	var total := 0.0
 	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
-		if Effects.flag_active(flags, String(entry.get("flag", "")), today):
+		if _qi_flag_on(flags, String(entry.get("flag", "")), today):
 			total += float(entry.get("bonus", 0.0))
 	return total
+
+
+## A qi_flags world flag is on. A timed flag ({"until": day}, e.g. SEASON-007's shrine incense) only counts when
+## `today` is given: without a day it would count forever after it was set.
+static func _qi_flag_on(flags: Dictionary, key: String, today: int) -> bool:
+	if today < 0 and flags.get(key) is Dictionary:
+		return false
+	return Effects.flag_active(flags, key, today)
 
 
 ## The `text` of each active qi_flags entry (empty texts skipped), e.g. "the valley guardian's seed".
 static func qi_flag_reasons(data: GameData, region_id: String, flags: Dictionary, today: int = -1) -> PackedStringArray:
 	var out := PackedStringArray()
 	for entry: Dictionary in data.regions.get(region_id, {}).get("qi_flags", []):
-		if Effects.flag_active(flags, String(entry.get("flag", "")), today) and String(entry.get("text", "")) != "":
+		if _qi_flag_on(flags, String(entry.get("flag", "")), today) and String(entry.get("text", "")) != "":
 			out.append(String(entry["text"]))
 	return out
 

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: dd1e14a
+Last reviewed commit: e3e2aa0
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1561,3 +1561,19 @@ Last reviewed commit: dd1e14a
     the HUD's "One more for <season>" and Today's task list show in every region, though tasks pay in Qingshi;
     `SeasonTasks.list` (called each HUD refresh) resets stale progress as a side effect; Hunter Ma (C-309) now also
     counts for favor_all and cheering.
+- 2026-11-06 (reviewer, 3rd run): reviewed dd1e14a..e3e2aa0 (GFX-081, FEST-012, C-315, MISSION-003, FEST-011, QA-198,
+  GFX-082, TODAY-002, WILD-019, SEASON-007, GUIDE-214, WU-466, GFX-083, QA-200, FOLK-013; [PLAN]/[REVIEW] skipped).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`scenes_seen`/`scene_day` default in from_dict;
+  incense, arrival and season-line state are world flags); no binary assets.
+  - Fixed (cross-feature, SEASON-007 x QI-001): the shrine incense is the first *timed* qi_flag ({"until": day}), and
+    `Exploration.qi_flag_bonus/qi_flag_reasons` with no day (NPC and child cultivation, `best_qi_in_region`, the abode
+    hint) treated it as on forever after one stick was lit (`Effects.flag_active` with today = -1). Timed qi flags now
+    only count when a day is given; test added.
+  - Fixed (GUIDE-214): `SeasonTasks.where` read `GameClock` (an autoload) from src/core as its default day; `day` is
+    now required (its only caller passes it).
+  - FEST-012 (stalls skipped as haunts/shelters and merchant spots), FEST-011, MISSION-003, WILD-019 (`_great_pick`
+    keeps the old behaviour without max_realm), TODAY-002, GFX-082, GFX-083, WU-466 (focus, Esc, modal lists), QA-198,
+    QA-200, GFX-081, C-315, FOLK-013 OK.
+  - Notes, not filed: FOLK-013's "any_villager" scene can play with any NPC you talk to (sect elders, far-region NPCs),
+    not only villagers; `SeasonTasks.where` for hunt tasks scans 90 days x every region of roamers and runs on each HUD
+    refresh via `SeasonTasks.list` (cache it if the HUD stutters); MISSION-003 adds `max_realm` but no mission uses it yet.
