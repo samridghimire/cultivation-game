@@ -37,6 +37,11 @@ func _run() -> void:
 	var passed := 0
 	var failed: PackedStringArray = []
 	var timings: Array = []  # [ms, "file::method"]
+	# Settings are saved to the real user://settings.cfg on every set_value, so a test
+	# that forgets to restore one poisons the next run (QA-200). Snapshot and compare.
+	var settings: Node = root.get_node("Settings")
+	var settings_before: Dictionary = settings._values.duplicate()
+	var cfg_before := FileAccess.get_file_as_bytes(settings.path)
 
 	for file_name in DirAccess.get_files_at(TEST_DIR):
 		if not (file_name.begins_with("test_") and file_name.ends_with(".gd")):
@@ -63,6 +68,14 @@ func _run() -> void:
 			var started := Time.get_ticks_msec()
 			await instance.call(method_name)
 			timings.append([Time.get_ticks_msec() - started, file_name + "::" + method_name])
+			var changed: PackedStringArray = []
+			for key in settings._values:
+				if settings._values[key] != settings_before.get(key):
+					changed.append(String(key))
+					settings._values[key] = settings_before.get(key)
+			if not changed.is_empty():
+				settings.save_settings()
+				instance.failures.append("left Settings changed (restore them): " + ", ".join(changed))
 			if errors.count > errors_before:
 				instance.failures.append("engine logged %d error(s) (see output above)" % (errors.count - errors_before))
 			if instance.failures.is_empty():
@@ -71,6 +84,8 @@ func _run() -> void:
 				for f in instance.failures:
 					failed.append("%s::%s: %s" % [file_name, method_name, f])
 
+	if not cfg_before.is_empty() and FileAccess.get_file_as_bytes(settings.path) != cfg_before:
+		failed.append("run: user://settings.cfg differs from before the run")
 	print("")
 	for f in failed:
 		print("FAIL  " + f)

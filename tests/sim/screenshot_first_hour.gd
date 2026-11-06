@@ -24,6 +24,7 @@ extends SceneTree
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
 ## QA-198: `-- --festival` (festival_qingshi), `--contest` (contest_card), `--practice` (practice_menu), `--regular` (shop_regular), `--journal` (journal_today); one flag per run.
+## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -158,6 +159,13 @@ func _start() -> void:
 			hud.get("_banner").visible = false
 			cal.open(), "close": cal.close})
 		special = true
+	for a in OS.get_cmdline_user_args():  # QA-200: the calendar paged to month N (see _festival_clock)
+		if a.begins_with("--calendar-month="):
+			var month_cal: Control = hud.get("_screens")["open_calendar"]
+			shots.append({"name": "calendar_month_" + a.substr(17), "open": func() -> void:
+				hud.get("_banner").visible = false
+				month_cal.open(), "close": month_cal.close})
+			special = true
 	if OS.get_cmdline_user_args().has("--digest"):  # WU-416: the "While you were away" card
 		shots.append({"name": "digest_card", "open": func() -> void:
 			hud.get("_banner").visible = false
@@ -539,6 +547,10 @@ func _festival_clock(gs: Node) -> void:
 			var month := int(ev["months"][0])
 			clock.total_days = (month - 1) * Calendar.DAYS_PER_MONTH
 			gs.world_events = [{"id": a.substr(17), "region": region_id, "start_day": clock.total_days, "end_day": clock.total_days + int(ev["min_days"]), "done": false}]
+	for a in args:  # QA-200: --calendar-month=N opens the calendar on month N of year 1
+		if a.begins_with("--calendar-month="):
+			clock.total_days = (clampi(int(a.substr(17)), 1, 12) - 1) * Calendar.DAYS_PER_MONTH
+			gs.call("_world_events_month")
 	if args.has("--festival") or args.has("--contest"):
 		clock.total_days = may_first
 		gs.call("_world_events_month")
