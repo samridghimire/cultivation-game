@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-06 [GFX-084] The restored shrine smokes and glows only while your incense burns, and a restored stage bursts into confetti.
+- 2026-11-06 [WU-468] The Next steps panel no longer cuts lines off or pushes hints out.
+- 2026-11-06 [FOLK-013] Close villagers share a small moment with you, sometimes with a gift.
+- 2026-11-06 [QA-200] Tests no longer leave settings changed behind them; calendar months can be screenshotted.
+- 2026-11-06 [GFX-083] Festival stalls are decorated for their festival.
+- 2026-11-06 [WU-466] The village board lists this season's village tasks, where to do them and the reward.
+- 2026-11-06 [GUIDE-214] Season tasks say where to do them.
+- 2026-11-06 [SEASON-007] Light incense at the restored shrine for a day of better qi in Qingshi.
+- 2026-11-06 [WILD-019] Great beasts you have outgrown no longer roam for you.
+- 2026-11-06 [TODAY-002] Arriving in a region says what is there once, by name.
+- 2026-11-06 [GFX-082] Smoother ground and clear gates in every region.
+- 2026-11-06 [QA-198] Screenshots of the festival, contest, practice, regular's shop and journal.
+- 2026-11-06 [FEST-011] Festival reminders only near the festival; your invited friend stays by your side instead of entering the contest.
+- 2026-11-06 [MISSION-003] Sect missions can be limited to lower realms.
 - 2026-11-06 [C-315] Foundation hunters can still find a Mist Fox in Misty Forest each autumn.
 - 2026-11-06 [FEST-012] Festival days bring their own stalls to Qingshi, Azure Peak and the market.
 - 2026-11-06 [GFX-081] Qingshi's old shrine is drawn coming back stage by stage.
