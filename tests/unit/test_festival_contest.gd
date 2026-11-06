@@ -272,3 +272,72 @@ func test_game_state_practice_then_contest() -> void:
 	var result: Dictionary = gs.festival_contest("lantern_festival")
 	assert_eq(int(result["practice"]), 4)
 	gs.end_session()
+
+
+## FEST-009: the rival at the festival.
+func test_rival_flag_in_scores_and_standings() -> void:
+	var p := new_character()
+	var rivals: Array[CharacterData] = [_npc("Mei Lan", 8), _npc("Old Wu", 8)]
+	var r := FestivalContest.run(data(), p, "lantern_festival", rivals, seeded_rng(3), "", 0, "Old Wu")
+	var flagged := 0
+	for s: Dictionary in r["scores"]:
+		if bool(s.get("rival", false)):
+			flagged += 1
+			assert_eq(s["name"], "Old Wu")
+	assert_eq(flagged, 1)
+	assert_true("\n".join(FestivalContest.standings_lines(r)).contains("Old Wu (your rival)"))
+
+
+func test_rival_enters_rules_and_tally() -> void:
+	var p := new_character()
+	var rv := _npc("Zhou", 8)
+	rv.realm_index = p.realm_index + 1
+	var met := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_true(Rivals.enters_festival(p, rv, met))
+	assert_false(Rivals.enters_festival(p, rv, {}), "unmet")
+	rv.realm_index = p.realm_index + 2
+	assert_false(Rivals.enters_festival(p, rv, met), "two realms apart")
+	rv.realm_index = p.realm_index
+	rv.alive = false
+	assert_false(Rivals.enters_festival(p, rv, met), "dead")
+	assert_false(Rivals.enters_festival(p, null, met))
+	var flags := {}
+	Rivals.note_festival(flags, true)
+	Rivals.note_festival(flags, true)
+	Rivals.note_festival(flags, false)
+	assert_eq(Rivals.bout_record_text(flags), "bouts 0 won, 0 lost, festivals 2-1")
+	assert_eq(Rivals.bout_record_text({Rivals.BOUTS_WON_FLAG: 1}), "bouts 1 won, 0 lost")
+
+
+func test_rival_festival_lines_and_validation() -> void:
+	var rv := _npc("Zhou", 8)
+	for won in [true, false]:
+		for y in 4:
+			var line := Rivals.festival_line(data(), rv, won, y)
+			assert_true(line.contains("Zhou"), line)
+	assert_eq(Rivals.validate(data()).size(), 0, ", ".join(Rivals.validate(data())))
+	var d := GameData.load_from_dir()
+	d.karma["rival"]["festival"] = {"win": [], "lose": ["x"]}
+	assert_eq(Rivals.validate(d).size(), 1)
+
+
+func test_game_state_rival_enters_festival() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	var rival := Rivals.spawn(gs.player, gs.npcs, gs.data, gs.rng, "azure_peak")
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	rival.realm_index = gs.player.realm_index
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	var found := false
+	for s: Dictionary in result["scores"]:
+		if bool(s.get("rival", false)):
+			found = true
+			assert_eq(s["name"], rival.name)
+	assert_true(found, "the rival enters from another region")
+	assert_eq(result["scores"].size(), int(FestivalContest.contest_of(gs.data, "lantern_festival")["rivals"]) + 1)
+	var t := Rivals.festival_tally(gs.world_flags)
+	assert_eq(int(t["won"]) + int(t["lost"]), 1)
+	gs.end_session()

@@ -17,6 +17,7 @@ const SUCCESSOR_DAY_FLAG := "rival_successor_day"  # RIVAL-014: day a new rival 
 const MEETING_FROM_FLAG := "rival_meeting_from"  # RIVAL-014: first meeting window starts here
 const BOUTS_WON_FLAG := "rival_bouts_won"  # RIVAL-016: bouts against the current rival (a successor starts at 0)
 const BOUTS_LOST_FLAG := "rival_bouts_lost"
+const CONTESTS_FLAG := "rival_contests"  # FEST-009: {won, lost} festival placings against the current rival
 const QUIET_UNTIL_FLAG := "rival_quiet_until"  # RIVAL-021: no rival encounter rolls before this day
 const SPUR_CAP := 0.95
 
@@ -222,9 +223,42 @@ static func relation_text(c: CharacterData, rival: CharacterData) -> String:
 static func bout_record_text(flags: Dictionary) -> String:
 	var won := int(flags.get(BOUTS_WON_FLAG, 0))
 	var lost := int(flags.get(BOUTS_LOST_FLAG, 0))
-	if won == 0 and lost == 0:
+	var fest0 := festival_tally(flags)
+	if won == 0 and lost == 0 and int(fest0["won"]) + int(fest0["lost"]) == 0:
 		return ""
-	return "bouts %d won, %d lost" % [won, lost]
+	var text := "bouts %d won, %d lost" % [won, lost]
+	var fest := festival_tally(flags)
+	if int(fest["won"]) + int(fest["lost"]) > 0:
+		text += ", festivals %d-%d" % [int(fest["won"]), int(fest["lost"])]
+	return text
+
+
+## FEST-009: {won, lost} festival contests against the current rival.
+static func festival_tally(flags: Dictionary) -> Dictionary:
+	var t: Variant = flags.get(CONTESTS_FLAG, {})
+	if t is Dictionary:
+		return {"won": int((t as Dictionary).get("won", 0)), "lost": int((t as Dictionary).get("lost", 0))}
+	return {"won": 0, "lost": 0}
+
+
+## FEST-009: true when the (met, living) rival comes down for a festival contest: within one major realm of `c`.
+static func enters_festival(c: CharacterData, rival: CharacterData, flags: Dictionary) -> bool:
+	return rival != null and rival.alive and bool(flags.get(FIRST_MEETING_FLAG, false)) and absi(rival.realm_index - c.realm_index) <= 1
+
+
+## FEST-009: tallies the placing against the rival (`you_won` = you placed above them).
+static func note_festival(flags: Dictionary, you_won: bool) -> void:
+	var t := festival_tally(flags)
+	t["won" if you_won else "lost"] = int(t["won" if you_won else "lost"]) + 1
+	flags[CONTESTS_FLAG] = t
+
+
+## FEST-009: the rival's festival remark (picked by year), "" without data.
+static func festival_line(data: GameData, rival: CharacterData, you_won: bool, year: int) -> String:
+	var lines: Array = (rules(data).get("festival", {}) as Dictionary).get("win" if you_won else "lose", [])
+	if lines.is_empty() or rival == null:
+		return ""
+	return String(lines[year % lines.size()]).replace("{rival}", rival.name)
 
 
 ## YEAR-010: the year-in-review line on where the rival stands, "" before the first meeting
@@ -278,6 +312,12 @@ static func validate(data: GameData) -> PackedStringArray:
 		errors.append("karma.json rival successor_delay_days must be a whole number >= 0")
 	if r.has("bitter_grudge") and (not (r["bitter_grudge"] is int or r["bitter_grudge"] is float) or int(r["bitter_grudge"]) < 1):
 		errors.append("karma.json rival bitter_grudge must be a whole number >= 1")
+	if r.has("festival"):
+		var fest: Variant = r["festival"]
+		for key: String in ["win", "lose"]:
+			var list: Variant = (fest as Dictionary).get(key, []) if fest is Dictionary else []
+			if not list is Array or (list as Array).is_empty() or not (list as Array).all(func(x: Variant) -> bool: return x is String and String(x) != ""):
+				errors.append("karma.json rival festival.%s must be a non-empty list of strings" % key)
 	for e: Dictionary in data.encounters.values():
 		if e.has("rival") and not RELATIONS.has(String(e["rival"])):
 			errors.append("Encounter '%s' has unknown rival condition '%s'" % [e["id"], e["rival"]])

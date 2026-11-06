@@ -3213,8 +3213,18 @@ func festival_contest(event_id: String) -> Dictionary:
 		rivals.resize(int(contest["rivals"]))
 	if champ_name != "" and (rivals.is_empty() or rivals[0].name != champ_name):
 		champ_name = ""  # not in this village any more
+	# FEST-009: your rival came down for the festival.
+	var rival := Rivals.rival_of(player, npcs)
+	var rival_name := ""
+	if Rivals.enters_festival(player, rival, world_flags):
+		rivals.erase(rival)
+		var at := 1 if champ_name != "" and not rivals.is_empty() else 0
+		rivals.insert(at, rival)
+		if rivals.size() > int(contest["rivals"]):
+			rivals.resize(int(contest["rivals"]))
+		rival_name = rival.name if rivals.has(rival) else ""
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice)
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name)
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
@@ -3231,6 +3241,18 @@ func festival_contest(event_id: String) -> Dictionary:
 				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
 	if int(prize.get("renown", 0)) > 0:
 		Renown.add(player, data, current_region, int(prize["renown"]))
+	if rival_name != "":
+		var above := true
+		for sc: Dictionary in result["scores"]:
+			if bool(sc.get("rival", false)):
+				above = false
+				break
+			if bool(sc["you"]):
+				break
+		Rivals.note_festival(world_flags, above)
+		var rline := Rivals.festival_line(data, rival, above, year)
+		if rline != "":
+			EventBus.post(rline, "world")
 	var streak := FestivalContest.record(world_flags, event_id, year, result)
 	if streak == FestivalContest.MASTER_STREAK:
 		EventBus.post("Three years running: the %s is yours." % String(contest["name"]), "progress")
@@ -4334,7 +4356,7 @@ func _on_days_advanced(days: int) -> void:
 func _rival_news() -> void:
 	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
 		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)
-		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news", Rivals.BOUTS_WON_FLAG, Rivals.BOUTS_LOST_FLAG]:
+		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news", Rivals.BOUTS_WON_FLAG, Rivals.BOUTS_LOST_FLAG, Rivals.CONTESTS_FLAG]:
 			world_flags.erase(flag)
 		world_flags[Rivals.MEETING_FROM_FLAG] = GameClock.total_days
 		EventBus.post(Rivals.successor_line(heir, String(world_flags.get("rival_predecessor", "your old rival"))), "world")

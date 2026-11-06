@@ -134,7 +134,7 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0) -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "") -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
@@ -155,7 +155,10 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 		var score := base + rng.randi_range(0, 10)
 		if champion_name != "" and name == champion_name:
 			score += CHAMPION_BONUS
-		scores.append({"name": name, "score": score, "you": false})
+		var entry := {"name": name, "score": score, "you": false}
+		if rival_name != "" and name == rival_name:
+			entry["rival"] = true  # FEST-009
+		scores.append(entry)
 	# Stable sort high to low; the player is first in the list, so ties go to the player.
 	var order: Array[Dictionary] = []
 	for s in scores:
@@ -179,7 +182,8 @@ static func standings_lines(result: Dictionary) -> PackedStringArray:
 	var out := PackedStringArray()
 	var scores: Array = result.get("scores", [])
 	for i in mini(5, scores.size()):
-		out.append("%d. %s %d" % [i + 1, scores[i]["name"], int(scores[i]["score"])])
+		var tag := " (your rival)" if bool(scores[i].get("rival", false)) else ""
+		out.append("%d. %s%s %d" % [i + 1, scores[i]["name"], tag, int(scores[i]["score"])])
 	return out
 
 
