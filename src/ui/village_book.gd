@@ -1,13 +1,13 @@
 class_name VillageBook
 extends PanelContainer
-## WU-414/WU-417: the village book, two pages (Fish, Herbs), each a grid of everything the village yields. Found ones show
+## WU-414/WU-417/WU-460: the village book, pages (Fish, Hunts, Herbs, People, Festivals), each a grid of everything the village yields. Found ones show
 ## in colour with a count, missing ones as dark silhouettes with a hint. Opened from the journal or the character sheet;
 ## Esc/B closes; Tab / Shift+Tab (ui_focus_next/prev) switch pages.
 
 signal closed
 
 const COLUMNS := 6
-const PAGES: Array[String] = ["fish", "hunts", "herbs", "people"]
+const PAGES: Array[String] = ["fish", "hunts", "herbs", "people", "festivals"]
 const PEOPLE_COLUMNS := 3
 const CARD_SIZE := Vector2(320, 120)
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
@@ -95,6 +95,11 @@ func set_page(page: String) -> void:
 func page_ids() -> PackedStringArray:
 	if _page == "hunts":
 		return Wildlife.huntable(GameState.data)
+	if _page == "festivals":
+		var fids: PackedStringArray = []
+		for h in _festival_rows():
+			fids.append(String(h["event_id"]))
+		return fids
 	if _page == "people":
 		var ids: PackedStringArray = []
 		for e in GameState.people_entries():
@@ -216,6 +221,9 @@ func _build() -> void:
 	if _page == "hunts":
 		_build_hunts()
 		return
+	if _page == "festivals":
+		_build_festivals()
+		return
 	_grid.columns = COLUMNS
 	var herbs := _page == "herbs"
 	var summary := HerbLore.log_summary(c, data) if herbs else Fishing.log_summary(c, data)
@@ -265,6 +273,70 @@ func _build_people() -> void:
 		_detail.text = "You have not got to know anyone here yet."
 	for e in entries:
 		_grid.add_child(_card(e))
+
+
+func _festival_rows() -> Array[Dictionary]:
+	return FestivalContest.history(GameState.data, GameState.world_flags, GameState.player, Calendar.year_of(GameClock.total_days))
+
+
+## WU-460: the card text for one `FestivalContest.history` row: festival and month/region, contest, your last placing,
+## the reigning champion and your streak. Pure.
+static func festival_card_lines(h: Dictionary, region_name: String) -> PackedStringArray:
+	var lines := PackedStringArray()
+	lines.append(String(h["festival"]))
+	lines.append("Month %d · %s" % [int(h["month"]), region_name] if int(h["month"]) > 0 else region_name)
+	lines.append(String(h["contest"]))
+	if int(h["last_place"]) == 0:
+		lines.append("Not entered yet")
+	else:
+		lines.append("Last: %s, year %d" % [FestivalContest.ordinal(int(h["last_place"])), int(h["last_year"])])
+	lines.append("Champion: %s" % h["champion"] if String(h["champion"]) != "" else "Champion: not yet crowned")
+	var streak := int(h["streak"])
+	if streak > 0:
+		lines.append("%d years running" % streak if streak > 1 else "Won last time")
+	return lines
+
+
+## WU-460: one card per contest festival in month order, with the 1st-place keepsake icon (dim until held or held once).
+func _build_festivals() -> void:
+	var data: GameData = GameState.data
+	var rows := _festival_rows()
+	_grid.columns = 3
+	_header.text = "Festival contests: %d" % rows.size() if not rows.is_empty() else "Festivals"
+	if rows.is_empty():
+		_detail.text = "No festival contests are held yet."
+	for h in rows:
+		var region_name := String(data.regions.get(h["region"], {}).get("name", h["region"]))
+		var b := UIStyle.button("\n".join(festival_card_lines(h, region_name)), Callable())
+		b.name = String(h["event_id"])
+		b.custom_minimum_size = Vector2(310, 150)
+		b.add_theme_font_size_override("font_size", 15)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var tex := ItemIcon.for_id(data, String(h["keepsake"])) if String(h["keepsake"]) != "" else null
+		if tex != null:
+			var icon := TextureRect.new()
+			icon.name = "Keepsake"
+			icon.texture = tex
+			icon.custom_minimum_size = Vector2(40, 40)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			icon.offset_left = -48.0
+			icon.offset_right = -8.0
+			icon.offset_top = 8.0
+			icon.offset_bottom = 48.0
+			icon.modulate = Color.WHITE if bool(h["keepsake_owned"]) else Color(0.1, 0.1, 0.12, 0.8)
+			icon.set_meta("owned", bool(h["keepsake_owned"]))
+			b.add_child(icon)
+		var line := ""
+		if String(h["keepsake"]) != "":
+			line = "1st prize keepsake: %s (%s)" % [data.items[h["keepsake"]].get("name", h["keepsake"]), "won" if bool(h["keepsake_owned"]) else "not yet won"]
+		var show := func() -> void: _detail.text = line
+		b.focus_entered.connect(show)
+		b.mouse_entered.connect(show)
+		_grid.add_child(b)
 
 
 func _birthday_line(e: Dictionary) -> String:

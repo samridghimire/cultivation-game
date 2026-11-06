@@ -143,7 +143,7 @@ func test_people_page_cards_and_unknown_tastes() -> void:
 	book.open()
 	book.set_page("people")
 	await _frames()
-	assert_eq(VillageBook.PAGES.size(), 4, "four pages")
+	assert_eq(VillageBook.PAGES.size(), 5, "five pages")
 	var grid := book.get("_grid") as GridContainer
 	assert_eq(grid.get_child_count(), 0, "nobody known yet")
 	assert_eq(book.get("_detail").text, "You have not got to know anyone here yet.")
@@ -232,3 +232,40 @@ func test_return_slot_sits_beside_the_first_and_opens_after_it() -> void:
 	rows = VillageBook.trophy_rows(c, data())
 	assert_true(bool(rows[1]["won"]))
 	assert_true(String(rows[1]["text"]).contains("Scarred Old Tusker"), String(rows[1]["text"]))
+
+
+func test_festival_card_lines_from_a_fixed_history_row() -> void:
+	var h := {"event_id": "lantern_festival", "festival": "Lantern Festival", "month": 1, "region": "qingshi_village",
+		"contest": "Lantern Riddles", "last_place": 1, "last_year": 3, "champion": "You", "streak": 2,
+		"keepsake": "", "keepsake_owned": false}
+	var lines := VillageBook.festival_card_lines(h, "Qingshi Village")
+	assert_eq(lines[0], "Lantern Festival")
+	assert_true(lines[1].contains("Qingshi Village"))
+	assert_true(lines.has("Last: 1st, year 3"), str(lines))
+	assert_true(lines.has("Champion: You"))
+	assert_true(lines.has("2 years running"))
+	h["last_place"] = 0
+	h["champion"] = ""
+	h["streak"] = 0
+	var fresh := VillageBook.festival_card_lines(h, "Qingshi Village")
+	assert_true(fresh.has("Not entered yet"))
+	assert_true(fresh.has("Champion: not yet crowned"))
+
+
+func test_festivals_page_builds_a_card_per_contest_and_focuses_first() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var book := VillageBook.new()
+	root.add_child(book)
+	book.open()
+	book.set_page("festivals")
+	await _frames()
+	var rows := FestivalContest.history(gs.data, gs.world_flags, gs.player, 1)
+	assert_true(rows.size() >= 1, "data has contest festivals")
+	var grid := book.get("_grid") as GridContainer
+	assert_eq(grid.get_child_count(), rows.size())
+	assert_true(grid.get_child(0).has_focus(), "first card focused")
+	book.free()
+	gs.end_session()

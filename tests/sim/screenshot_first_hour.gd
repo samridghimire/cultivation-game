@@ -155,6 +155,10 @@ func _start() -> void:
 			hud.get("_banner").visible = false
 			book.open()
 			book.get("_detail").text = book.call("hint_for", "mist_koi", gs.data, gs.player), "close": book.close})
+		shots.append({"name": "village_book_festivals", "open": func() -> void:
+			hud.get("_banner").visible = false
+			book.open()
+			book.call("set_page", "festivals"), "close": book.close})
 		var herbs := HerbLore.findable(gs.data)
 		HerbLore.record_find(gs.player, herbs[0], 4)
 		HerbLore.record_find(gs.player, herbs[1], 1)
