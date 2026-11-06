@@ -3224,7 +3224,7 @@ func festival_contest(event_id: String) -> Dictionary:
 			rivals.resize(int(contest["rivals"]))
 		rival_name = rival.name if rivals.has(rival) else ""
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name)
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year)
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":

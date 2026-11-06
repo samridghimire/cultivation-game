@@ -341,3 +341,53 @@ func test_game_state_rival_enters_festival() -> void:
 	var t := Rivals.festival_tally(gs.world_flags)
 	assert_eq(int(t["won"]) + int(t["lost"]), 1)
 	gs.end_session()
+
+
+## FEST-010: festival memories.
+func test_history_empty_and_ordered() -> void:
+	var h := FestivalContest.history(data(), {}, new_character(), 1)
+	assert_eq(h.size(), 4)
+	for i in h.size() - 1:
+		assert_true(int(h[i]["month"]) <= int(h[i + 1]["month"]))
+	for e in h:
+		assert_eq(int(e["last_place"]), 0)
+		assert_false(bool(e["keepsake_owned"]))
+		assert_true(String(e["keepsake"]) != "", e["event_id"])
+	assert_true("\n".join(FestivalContest.history_lines(data(), {}, new_character(), 1)).contains("not yet entered"))
+
+
+func test_record_stores_history_and_streak() -> void:
+	var flags := {}
+	var win := {"place": 1, "scores": [{"name": "You", "score": 9, "you": true}]}
+	var lose := {"place": 2, "scores": [{"name": "Mei", "score": 9, "you": false}, {"name": "You", "score": 5, "you": true}]}
+	FestivalContest.record(flags, "lantern_festival", 1, lose)
+	var h := FestivalContest.history(data(), flags, new_character(), 2)
+	var lantern: Dictionary = h.filter(func(e: Dictionary) -> bool: return e["event_id"] == "lantern_festival")[0]
+	assert_eq(int(lantern["last_place"]), 2)
+	assert_eq(lantern["champion"], "Mei")
+	assert_false(bool(lantern["keepsake_owned"]))
+	for y in [2, 3, 4]:
+		FestivalContest.record(flags, "lantern_festival", y, win)
+	h = FestivalContest.history(data(), flags, new_character(), 5)
+	lantern = h.filter(func(e: Dictionary) -> bool: return e["event_id"] == "lantern_festival")[0]
+	assert_eq(int(lantern["streak"]), 3)
+	assert_eq(lantern["champion"], "You")
+	assert_true(bool(lantern["keepsake_owned"]), "a 1st place flags the keepsake")
+	for y in range(5, 20):
+		FestivalContest.record(flags, "lantern_festival", y, win)
+	assert_eq((flags[FestivalContest.history_key("lantern_festival")] as Dictionary).size(), FestivalContest.HISTORY_YEARS)
+
+
+func test_text_lists_pick_by_year_and_validate() -> void:
+	assert_eq(FestivalContest.pick_text(["a", "b", "c"], 4), "b")
+	assert_eq(FestivalContest.pick_text("solo", 7), "solo")
+	var d := GameData.load_from_dir()
+	var c: Dictionary = (d.world_events["lantern_festival"]["contest"] as Dictionary).duplicate(true)
+	c["win_text"] = ["one", "two"]
+	c["lose_text"] = ["lost to {winner}", "beaten by {winner}"]
+	d.world_events["lantern_festival"]["contest"] = c
+	assert_eq(FestivalContest.validate(d).size(), 0, ", ".join(FestivalContest.validate(d)))
+	c["win_text"] = []
+	assert_true(FestivalContest.validate(d).size() >= 1)
+	c["win_text"] = [3]
+	assert_true(FestivalContest.validate(d).size() >= 1)
