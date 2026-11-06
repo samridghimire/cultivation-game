@@ -50,3 +50,43 @@ func test_hud_opens_card_on_contest_finished() -> void:
 	assert_true(card.visible)
 	card.close()
 	hud.queue_free()
+
+
+func test_cheer_and_remark_text() -> void:
+	assert_eq(ContestCard.cheer_text({}), "")
+	assert_eq(ContestCard.cheer_text({"cheerers": []}), "")
+	assert_eq(ContestCard.cheer_text({"cheerers": ["Lan"]}), "Lan cheered you on (+1).")
+	assert_eq(ContestCard.cheer_text({"cheerers": ["Lan", "Wei"]}), "Lan and Wei cheered you on (+2).")
+	assert_eq(ContestCard.cheer_text({"cheerers": ["A", "B", "C"]}), "A, B and C cheered you on (+3).")
+	assert_eq(ContestCard.remark_text({}), "")
+	assert_eq(ContestCard.remark_text({"rival_remark": "Next year."}), "\"Next year.\"")
+
+
+func test_card_shows_cheer_rival_row_and_remark() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var r := _result()
+	r["cheerers"] = ["Lan", "Wei"]
+	r["rival_remark"] = "Not bad."
+	(r["scores"][0] as Dictionary)["rival"] = true
+	var card := ContestCard.new()
+	root.add_child(card)
+	card.open(r, gs.data)
+	assert_true(card.rows_text()[0].contains("(your rival)"))
+	assert_true(card.find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.visible and l.text == "Lan and Wei cheered you on (+2)."))
+	assert_true(card.find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.visible and l.text == "\"Not bad.\""))
+	card.open(_result(), gs.data)
+	assert_false(card.find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.visible and l.text.contains("cheered")))
+	card.queue_free()
+
+
+func test_keepsakes_have_distinct_icons() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var kinds := {}
+	for id in ["ribbon_of_the_ridge_kite", "champions_drumstick", "paper_moon_crown", "riddle_masters_lantern"]:
+		var k := ItemIcon.kind_of(gs.data.items[id])
+		assert_false(kinds.has(k), id)
+		kinds[k] = true
+		assert_true(ItemIcon.for_id(gs.data, id) != null)
+		var grey := ItemIcon.greyscale(ItemIcon.for_id(gs.data, id))
+	assert_eq(kinds.size(), 4)

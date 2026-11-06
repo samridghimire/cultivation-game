@@ -3229,6 +3229,10 @@ func festival_contest(event_id: String) -> Dictionary:
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
 	var cheerers := FestivalContest.cheerers(npcs, data, npc_favor, current_region, rivals)  # FOLK-012: entrants compete, not cheer
 	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year, cheerers.size())
+	var cheer_names: Array = []
+	for n in cheerers:
+		cheer_names.append(n.name)
+	result["cheerers"] = cheer_names  # WU-463
 	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
 	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
@@ -3267,6 +3271,7 @@ func festival_contest(event_id: String) -> Dictionary:
 		var rline := Rivals.festival_line(data, rival, above, year)
 		if rline != "":
 			EventBus.post(rline, "world")
+			result["rival_remark"] = rline  # WU-463
 	var streak := FestivalContest.record(world_flags, event_id, year, result)
 	if streak == FestivalContest.MASTER_STREAK:
 		EventBus.post("Three years running: the %s is yours." % String(contest["name"]), "progress")

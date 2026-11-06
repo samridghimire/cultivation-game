@@ -22,6 +22,10 @@ const GLYPHS := {
 	"manual": ["............", "..ooooooo...", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", ".oabbbbbao..", ".oaaaaaaao..", "..ooooooo...", "............", "............"],
 	"scroll": ["............", ".ooooooooo..", "oabaaaaabo..", "oaaoooooao..", ".oaabbbaao..", ".oaaaaaaao..", ".oaabbbaao..", "oaaoooooao..", "oabaaaaabo..", ".ooooooooo..", "............", "............"],
 	"fish": ["............", "............", "....oooo..o.", "..ooabaaoooo", ".oabaaaaaaao", ".oaaaoaaaaao", ".oaaaaaaaaao", "..oooaaaoooo", "....oooo..o.", "............", "............", "............"],
+	"ribbon_of_the_ridge_kite": ["............", "..oo....oo..", ".oaao..oaao.", ".oabaooabao.", "..oaaaaaao..", "...ooaaoo...", "...oaaaao...", "..oabaabao..", "..oaao.oaao.", "..ooo...ooo.", "............", "............"],
+	"champions_drumstick": ["............", ".........oo.", "........oaao", ".......oabao", "......oaaao.", ".....oaao...", "....oaao....", "...oaao.....", "..obao......", ".oabo.......", ".ooo........", "............"],
+	"paper_moon_crown": ["............", "o...o..o...o", "oo.oao.oao.o", "oaooabooabao", "oabaaaaaaabo", "oaaaabbaaaao", "oaaabbbbaaao", "oaaaabbbaaao", ".oooooooooo.", "............", "............", "............"],
+	"riddle_masters_lantern": ["............", ".....oo.....", "....oaao....", "..oooooooo..", ".oabaaaaabo.", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oooooooo..", "....oaao....", "....o..o....", "............"],
 	"pouch": ["............", "....o..o....", "....oooo....", "...oabbao...", "..oaaaaaao..", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............", "............"],
 }
 
@@ -29,6 +33,7 @@ const BODY := {
 	"pill": Color("e8b04a"), "herb": Color("5aa65a"), "ore": Color("8a8f9c"), "beast_material": Color("c9b18a"),
 	"spirit_stone": Color("7cc8e8"), "weapon": Color("b8c0cc"), "armor": Color("9a7a52"), "accessory": Color("d9a441"),
 	"fish": Color("c88a5a"), "talisman": Color("e8d27a"), "manual": Color("8a5a3a"), "scroll": Color("e8dcc0"), "pouch": Color("a8784a"),
+	"ribbon_of_the_ridge_kite": Color("c8403c"), "champions_drumstick": Color("b8863f"), "paper_moon_crown": Color("e8dcc0"), "riddle_masters_lantern": Color("d9453a"),
 }
 
 static var _cache: Dictionary = {}
@@ -38,6 +43,8 @@ static var _cache: Dictionary = {}
 static func kind_of(item: Dictionary) -> String:
 	var tags: Array = item.get("tags", [])
 	var effects: Dictionary = item.get("effects", {})
+	if GLYPHS.has(str(item.get("id", ""))):
+		return str(item["id"])  # WU-463: a keepsake with a glyph of its own
 	if str(item.get("id", "")) == "spirit_stone":
 		return "spirit_stone"
 	if item.has("equip"):
@@ -103,6 +110,21 @@ static func for_id(data: GameData, item_id: String) -> Texture2D:
 	if not data.items.has(item_id):
 		return null
 	return texture(item_id, data.items[item_id])
+
+
+## WU-463: a greyscale copy of `tex` (shape kept, colour gone) for things not yet owned.
+static func greyscale(tex: Texture2D) -> Texture2D:
+	var img := tex.get_image()
+	if img == null:
+		return tex
+	img.convert(Image.FORMAT_RGBA8)
+	for y in img.get_height():
+		for x in img.get_width():
+			var c := img.get_pixel(x, y)
+			if c.a > 0.0:
+				var g := c.get_luminance() * 0.8 + 0.1
+				img.set_pixel(x, y, Color(g, g, g, c.a))
+	return ImageTexture.create_from_image(img)
 
 
 ## Gives a list button its icon (generated glyphs are already x2) with a nearest filter (focus and navigation are unchanged).

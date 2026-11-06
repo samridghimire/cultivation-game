@@ -327,7 +327,9 @@ func _build_festivals() -> void:
 			icon.offset_right = -8.0
 			icon.offset_top = 8.0
 			icon.offset_bottom = 48.0
-			icon.modulate = Color.WHITE if bool(h["keepsake_owned"]) else Color(0.1, 0.1, 0.12, 0.8)
+			if not bool(h["keepsake_owned"]):
+				icon.texture = ItemIcon.greyscale(tex)  # WU-463: the shape stays readable
+				icon.modulate = Color(1, 1, 1, 0.4)
 			icon.set_meta("owned", bool(h["keepsake_owned"]))
 			b.add_child(icon)
 		var line := ""

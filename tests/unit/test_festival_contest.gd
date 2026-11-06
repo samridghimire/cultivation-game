@@ -340,6 +340,8 @@ func test_game_state_rival_enters_festival() -> void:
 	assert_eq(result["scores"].size(), int(FestivalContest.contest_of(gs.data, "lantern_festival")["rivals"]) + 1)
 	var t := Rivals.festival_tally(gs.world_flags)
 	assert_eq(int(t["won"]) + int(t["lost"]), 1)
+	assert_true(String(result.get("rival_remark", "")) != "", "WU-463: the rival's remark is in the result")
+	assert_true(result.has("cheerers"))
 	gs.end_session()
 
 
