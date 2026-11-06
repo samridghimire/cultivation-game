@@ -101,7 +101,10 @@ func _start() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--road-card"):  # WU-452: the road card mid-fill; with --road-encounter, then the encounter after it
 		var card_script: GDScript = load("res://src/ui/road_card.gd")  # loaded late: it needs the autoloads
-		shots.append({"name": "road_card", "open": func() -> void: card_script.show_over(self, card_script.text_for("Qingshi Village", "Misty Forest", 3, 0), false, card_script.detail_for("Lost Child")), "close": func() -> void: pass})
+		shots.append({"name": "road_card", "open": func() -> void:
+			var card: Node = card_script.show_over(self, card_script.text_for("Qingshi Village", "Misty Forest", 3, 0), false, card_script.detail_for("Lost Child"))
+			card.set("_elapsed", 1.2)  # QA-197: dots filled, fade-out (1.5 s) not begun
+			card.call("_apply", 1.2), "close": func() -> void: pass})
 		if OS.get_cmdline_user_args().has("--road-encounter"):
 			shots.append({"name": "road_encounter", "open": func() -> void:
 				if is_instance_valid(card_script.current):
@@ -192,9 +195,6 @@ func _start() -> void:
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	if region_list.size() == 1:
 		shots.append({"name": "region_" + region_list[0], "open": func() -> void: pass, "close": func() -> void: pass})
-	if OS.get_cmdline_user_args().has("--great"):  # GFX-060
-		var rid: String = gs.current_region
-		shots.append({"name": "great_" + rid, "open": func() -> void: _great_closeup(rid), "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:
@@ -277,6 +277,9 @@ func _start() -> void:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
 			shots.append({"name": action.trim_prefix("toggle_"), "open": s.open, "close": s.close, "wait_banner": true})
+	if OS.get_cmdline_user_args().has("--great"):  # GFX-060; QA-197: last, since it may rebuild the world and free the HUD the shots above captured
+		var rid: String = gs.current_region
+		shots.append({"name": "great_" + rid, "open": func() -> void: _great_closeup(rid), "close": func() -> void: pass})
 
 
 ## The generated (non-data) villager of the world standing nearest the player's start, so the shot
