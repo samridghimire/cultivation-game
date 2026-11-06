@@ -553,3 +553,53 @@ func test_return_beast_own_min_realm() -> void:
 	assert_eq(Wildlife.next_great_day(d, "misty_forest", 0, 0, c), -1, "not below it")
 	assert_true(day >= 0)
 	d.regions["misty_forest"]["roamers"] = old
+
+
+## WILD-019: great beasts you have outgrown step aside.
+func test_great_max_realm_hands_slot_to_return_beast() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	great["max_realm"] = "qi_refining"
+	var wd := Wildlife.great_day("misty_forest", great)
+	var day := 7 * 40 + wd
+	var qr := _player(1)
+	var fe := _player(1)
+	fe.realm_index = d.realm_index_of("foundation_establishment")
+	assert_eq(Wildlife.great_enemy_for(qr, d, "misty_forest"), "old_tusker_boar")
+	assert_eq(Wildlife.great_enemy_for(fe, d, "misty_forest"), "scarred_old_tusker", "outgrown: the return beast walks")
+	assert_eq(Wildlife.great_enemy_for(null, d, "misty_forest"), "old_tusker_boar", "no character: unchanged")
+	assert_eq(String(Wildlife.great_roamer(fe, d, "misty_forest", day, {})["enemy"]), "scarred_old_tusker")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day, fe.realm_index, fe), day)
+	assert_true(Wildlife.tracks_today(d, "misty_forest", day - 1, fe.realm_index, fe))
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", fe), String(great["return"]["rumor"]))
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", qr), String(great["rumor"]))
+	# Beaten the first beast and above the return's max_realm: nothing walks.
+	great["return"]["max_realm"] = "qi_refining"
+	fe.great_beasts["old_tusker_boar"] = 1
+	assert_eq(Wildlife.great_enemy_for(fe, d, "misty_forest"), "")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day, fe.realm_index, fe), -1)
+	assert_true(Wildlife.great_roamer(fe, d, "misty_forest", day, {}).is_empty())
+	var line := Guidance.arrival_line(fe, d, "misty_forest", day, {}, "")
+	assert_false(line.contains("roams"), line)
+	d.regions["misty_forest"]["roamers"] = old
+
+
+func test_great_max_realm_validation() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	great["max_realm"] = "nope"
+	assert_false(Wildlife.validate(d).is_empty(), "unknown max_realm")
+	great["min_realm"] = "foundation_establishment"
+	great["max_realm"] = "qi_refining"
+	assert_false(Wildlife.validate(d).is_empty(), "max below min")
+	great.erase("min_realm")
+	great["max_realm"] = "foundation_establishment"
+	great["return"]["min_realm"] = "foundation_establishment"
+	great["return"]["max_realm"] = "qi_refining"
+	assert_false(Wildlife.validate(d).is_empty(), "return max below min")
+	great["return"]["max_realm"] = "nope"
+	assert_false(Wildlife.validate(d).is_empty(), "return unknown max_realm")
+	d.regions["misty_forest"]["roamers"] = old
+	assert_true(Wildlife.validate(d).is_empty())
