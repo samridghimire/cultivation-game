@@ -26,7 +26,7 @@ static func bait_options() -> Array[Dictionary]:
 	var item_id := GameState.bait_offer()
 	if item_id != "":
 		out.append({"label": "Set bait on the trail", "description": Wildlife.bait_line(GameState.data, region, item_id, GameState.player), "action": GameState.set_bait, "keep_open": true})
-	elif Wildlife.tracks_today(GameState.data, region, GameClock.total_days, GameState.player.realm_index) \
+	elif Wildlife.tracks_today(GameState.data, region, GameClock.total_days, GameState.player.realm_index, GameState.player) \
 			and int(GameState.world_flags.get(Wildlife.bait_flag(region), -1)) != GameClock.total_days + 1:
 		var reason := Wildlife.bait_line(GameState.data, region, "", GameState.player)
 		if reason != "":

@@ -2967,6 +2967,7 @@ func test_great_beast_calendar_and_reminder() -> void:
 	var gs := _game_state()
 	_start()
 	gs.current_region = "misty_forest"
+	gs.player.realm_index = 1  # WILD-018: the return beast walks from Qi Refining
 	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
 	var wd := Wildlife.great_day("misty_forest", def)
 	var day := 7 * 50 + wd

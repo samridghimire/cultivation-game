@@ -108,13 +108,13 @@ static func _forage_seasons(out: Array[Dictionary], data: GameData, c: Character
 ## WILD-006: days a great beast walks an explored region, inside [start, end).
 static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterData, start: int, end: int) -> void:
 	for rid: String in c.visited_regions:
-		var day := Wildlife.next_great_day(data, rid, start, c.realm_index)
+		var day := Wildlife.next_great_day(data, rid, start, c.realm_index, c)
 		while day >= 0 and day < end:
 			var enemy := Wildlife.active_great_enemy(c, data, rid)
 			var beast := Wildlife.display_name(data, enemy, true)
 			out.append({"day": day, "kind": "great_beast", "region": rid, "enemy": enemy,
 				"text": "The %s walks %s" % [beast, Exploration.region_name(data, rid)]})
-			day = Wildlife.next_great_day(data, rid, day + 1, c.realm_index)
+			day = Wildlife.next_great_day(data, rid, day + 1, c.realm_index, c)
 
 
 ## CAL-002: the player's own dated things inside [start, end).

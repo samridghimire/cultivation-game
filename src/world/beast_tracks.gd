@@ -32,7 +32,7 @@ static func beast_for(data: GameData, c: CharacterData, region_id: String, day: 
 	var def: Dictionary = data.regions.get(region_id, {}).get("roamers", {}).get("great", {})
 	if def.is_empty():
 		return ""
-	if not (Wildlife.tracks_today(data, region_id, day, c.realm_index) or Wildlife.next_great_day(data, region_id, day, c.realm_index) == day):
+	if not (Wildlife.tracks_today(data, region_id, day, c.realm_index, c) or Wildlife.next_great_day(data, region_id, day, c.realm_index, c) == day):
 		return ""
 	var enemy := Wildlife.active_great_enemy(c, data, region_id)
 	if enemy == "" or c.great_beasts.has(enemy):

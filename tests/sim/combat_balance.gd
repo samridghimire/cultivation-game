@@ -331,4 +331,4 @@ static func _add_roamers(data: GameData, out: Array[Dictionary]) -> void:
 			out.append({"enemy": String(great["enemy"]), "source": "great roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})
 		var ret: Dictionary = great.get("return", {})
 		if data.enemies.has(String(ret.get("enemy", ""))):
-			out.append({"enemy": String(ret["enemy"]), "source": "great roamer return " + region_id, "realm_index": maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})
+			out.append({"enemy": String(ret["enemy"]), "source": "great roamer return " + region_id, "realm_index": maxi(0, data.realm_index_of(String(ret.get("min_realm", great.get("min_realm", "mortal"))))), "stage": 0, "forced": false, "optional": true})

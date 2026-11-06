@@ -28,6 +28,8 @@ static func roamers(data: GameData, region_id: String, day: int, realm_index: in
 			continue
 		if entry.has("min_realm") and realm_index < data.realm_index_of(String(entry["min_realm"])):
 			continue
+		if entry.has("max_realm") and realm_index > data.realm_index_of(String(entry["max_realm"])):
+			continue
 		pool.append(entry)
 		total += float(entry["weight"])
 	if pool.is_empty():
@@ -77,18 +79,23 @@ static func _great_def(data: GameData, region_id: String) -> Dictionary:
 
 
 ## True when the region's great beast may walk on `day` for a player at `realm_index` (weekday, season, realm).
-static func _great_walks(data: GameData, region_id: String, def: Dictionary, day: int, realm_index: int) -> bool:
+static func _great_walks(data: GameData, region_id: String, def: Dictionary, day: int, realm_index: int, c: CharacterData = null) -> bool:
 	if def.is_empty() or day % 7 != great_day(region_id, def):
 		return false
 	if not Exploration.in_season(def, Calendar.season_of(day)):
 		return false
-	return not (def.has("min_realm") and realm_index < data.realm_index_of(String(def["min_realm"])))
+	var need: Variant = def.get("min_realm")
+	var ret: Variant = def.get("return")
+	# WILD-018: the return beast may carry its own min_realm; it gates the slot once the first beast is beaten.
+	if ret is Dictionary and ret.has("min_realm") and c != null and c.great_beasts.has(String(def.get("enemy", ""))):
+		need = ret["min_realm"]
+	return not (need != null and realm_index < data.realm_index_of(String(need)))
 
 
 ## The region's great beast ({slot 101, enemy, temper "wary", great true}) on its weekday, unless it is down today. Pure.
 static func great_roamer(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> Dictionary:
 	var def := _great_def(data, region_id)
-	if not _great_walks(data, region_id, def, day, c.realm_index):
+	if not _great_walks(data, region_id, def, day, c.realm_index, c):
 		return {}
 	if Effects.flag_active(flags, flag_key(region_id, GREAT_SLOT), day):
 		return {}
@@ -114,20 +121,20 @@ static func rumor_of(data: GameData, region_id: String, c: CharacterData = null)
 
 
 ## The first day >= from_day the region's great beast walks (for a player at `realm_index`); -1 when it has none.
-static func next_great_day(data: GameData, region_id: String, from_day: int, realm_index: int) -> int:
+static func next_great_day(data: GameData, region_id: String, from_day: int, realm_index: int, c: CharacterData = null) -> int:
 	var def := _great_def(data, region_id)
 	if def.is_empty():
 		return -1
 	for day in range(from_day, from_day + GREAT_LOOKAHEAD):
-		if _great_walks(data, region_id, def, day, realm_index):
+		if _great_walks(data, region_id, def, day, realm_index, c):
 			return day
 	return -1
 
 
 ## WILD-012: true on the day before the region's great beast walks (for a player at `realm_index`).
-static func tracks_today(data: GameData, region_id: String, day: int, realm_index: int) -> bool:
+static func tracks_today(data: GameData, region_id: String, day: int, realm_index: int, c: CharacterData = null) -> bool:
 	var def := _great_def(data, region_id)
-	return _great_walks(data, region_id, def, day + 1, realm_index)
+	return _great_walks(data, region_id, def, day + 1, realm_index, c)
 
 
 ## WILD-015: the bait item the player would spend on the region's great-beast trail: a `great.bait` id they hold,
@@ -411,6 +418,8 @@ static func validate(data: GameData) -> PackedStringArray:
 						var rti: Variant = data.items.get(String(rt.get("trophy", "")))
 						if rti == null or not (rti.get("tags", []) as Array).has("trophy"):
 							errors.append("%s great return trophy must be an item tagged trophy" % where)
+						if rt.has("min_realm") and data.realm_index_of(String(rt["min_realm"])) < 0:
+							errors.append("%s great return has unknown min_realm" % where)
 						if rt.has("rumor") and not (rt["rumor"] is String and not String(rt["rumor"]).is_empty() and String(rt["rumor"]).length() <= 140):
 							errors.append("%s great return rumor must be a string of at most 140 characters" % where)
 				for gs: Variant in great.get("seasons", []):
@@ -441,6 +450,11 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s enemy '%s' has unknown season '%s'" % [where, e["enemy"], s])
 			if e.has("min_realm") and data.realm_index_of(String(e["min_realm"])) < 0:
 				errors.append("%s enemy '%s' has unknown min_realm" % [where, e["enemy"]])
+			if e.has("max_realm"):
+				if data.realm_index_of(String(e["max_realm"])) < 0:
+					errors.append("%s enemy '%s' has unknown max_realm" % [where, e["enemy"]])
+				elif e.has("min_realm") and data.realm_index_of(String(e["max_realm"])) < data.realm_index_of(String(e["min_realm"])):
+					errors.append("%s enemy '%s' max_realm is below its min_realm" % [where, e["enemy"]])
 			if e.has("in_season") and not e["in_season"] is Array:
 				errors.append("%s enemy '%s' in_season must be a list of seasons" % [where, e["enemy"]])
 			for s: Variant in e.get("in_season", []) if e.get("in_season") is Array else []:

@@ -56,6 +56,7 @@ func test_beast_for_only_on_tracks_and_beast_days() -> void:
 	assert_eq(BeastTracks.beast_for(gs.data, c, "misty_forest", beast_day), "old_tusker_boar")
 	assert_eq(BeastTracks.beast_for(gs.data, c, "misty_forest", beast_day - 3), "")
 	assert_eq(BeastTracks.beast_for(gs.data, c, "qingshi_village", beast_day), "")
+	c.realm_index = 1  # WILD-018: the return beast walks from Qi Refining
 	c.great_beasts["old_tusker_boar"] = 1  # beaten: the return beast walks, so prints show for it
 	assert_eq(BeastTracks.beast_for(gs.data, c, "misty_forest", beast_day), "scarred_old_tusker")
 	c.great_beasts["scarred_old_tusker"] = 1

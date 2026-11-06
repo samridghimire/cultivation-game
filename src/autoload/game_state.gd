@@ -777,7 +777,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		if not quiet:  # explore_many would repeat it every storm day
 			EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
 		_storm_strike()
-	if Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index) \
+	if Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index, player) \
 			and int(world_flags.get("tracks_day_" + current_region, -1)) != GameClock.total_days:
 		world_flags["tracks_day_" + current_region] = GameClock.total_days
 		EventBus.post(Wildlife.TRACKS_LINE, "world")
@@ -813,7 +813,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 ## WILD-015: the bait item the player could set on today's trail, "" when it is not a tracks day, the trail is
 ## already baited, or they hold none.
 func bait_offer() -> String:
-	if not _can_act() or not Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index):
+	if not _can_act() or not Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index, player):
 		return ""
 	if int(world_flags.get(Wildlife.bait_flag(current_region), -1)) == GameClock.total_days + 1:
 		return ""

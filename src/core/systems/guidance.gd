@@ -263,7 +263,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	if not great.is_empty():
 		var bn := String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast"))
 		out.append("The %s walks %s today%s." % [bn, rname, " (you baited its trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day else ""])
-	elif Wildlife.tracks_today(data, region_id, day, c.realm_index):
+	elif Wildlife.tracks_today(data, region_id, day, c.realm_index, c):
 		out.append("Fresh tracks in %s: a great beast walks tomorrow%s." % [rname, " (you baited the trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day + 1 else ""])
 	# 3. Market day here, or the next within 3 days.
 	var market := _market_today_line(data, region_id, day)
@@ -3501,7 +3501,7 @@ static func _next_great(c: CharacterData, data: GameData, today: int, min_realm:
 			continue
 		if min_realm != "" and String(def.get("min_realm", "")) != min_realm:
 			continue
-		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
+		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index, c)
 		if nd < 0:
 			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
 		if best_day < 0 or nd < best_day:

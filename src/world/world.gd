@@ -429,7 +429,7 @@ func _build_tracks(blocked: Array[Rect2], great_spot: Vector2) -> void:
 	if enemy != "":
 		var spot := great_spot
 		if spot.x < 0.0:
-			if Wildlife.next_great_day(GameState.data, GameState.current_region, day, GameState.player.realm_index) == day:
+			if Wildlife.next_great_day(GameState.data, GameState.current_region, day, GameState.player.realm_index, GameState.player) == day:
 				enemy = ""  # beast day, but it is down or gone: no prints
 			else:
 				var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
@@ -506,7 +506,7 @@ func _on_roamers_changed() -> void:
 	var alive := {}
 	for r: Dictionary in GameState.roamers_here():
 		alive[int(r["slot"])] = true
-	if not alive.has(Wildlife.GREAT_SLOT) and not _tracks.is_empty() and Wildlife.next_great_day(GameState.data, GameState.current_region, GameClock.total_days, GameState.player.realm_index) == GameClock.total_days:
+	if not alive.has(Wildlife.GREAT_SLOT) and not _tracks.is_empty() and Wildlife.next_great_day(GameState.data, GameState.current_region, GameClock.total_days, GameState.player.realm_index, GameState.player) == GameClock.total_days:
 		_tracks = []  # WU-450: the beast was beaten today; its prints go with it
 		queue_redraw()
 	var present := {}
