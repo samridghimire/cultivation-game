@@ -140,6 +140,24 @@ static func quiet_line(data: GameData, region_id: String, day: int) -> String:
 	return String(lines[posmod(day, lines.size())])
 
 
+## QI-003: the one qi number shown for a region: base density, deed/season flags, world events and, with a
+## character, the weather over `days` days from `day`. GameState.region_qi_density, the arrival card, travel
+## notes, the map and the Today lines all go through it.
+static func effective_density(data: GameData, region_id: String, flags: Dictionary, day: int, events: Array = [], c: CharacterData = null, days: int = 1) -> float:
+	var v := qi_density(data, region_id, flags, day) * WorldEvents.qi_multiplier(data, events, region_id)
+	if c != null:
+		v *= Weather.mean_qi_mult(data, region_id, c, maxi(day, 0), days)
+	return v
+
+
+## QI-003: "1.05", "1.5", "2": at most 2 decimals, no trailing zeros. Callers write "Qi x" + this.
+static func format_density(v: float) -> String:
+	var s := String.num(snappedf(v, 0.01), 2)
+	if s.contains("."):
+		s = s.rstrip("0").trim_suffix(".")
+	return s
+
+
 ## The region's qi density. `flags` (the world flags) applies the region's `qi_flags` deed bonuses (QI-001).
 static func qi_density(data: GameData, region_id: String, flags: Dictionary = {}, today: int = -1) -> float:
 	return float(data.regions.get(region_id, {}).get("qi_density", 1.0)) * (1.0 + qi_flag_bonus(data, region_id, flags, today))

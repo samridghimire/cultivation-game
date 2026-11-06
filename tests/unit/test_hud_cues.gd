@@ -203,7 +203,7 @@ func test_arrival_subtitle() -> void:
 	var c := new_character()
 	var region: String = d.start_region
 	assert_eq(HUD.arrival_subtitle(c, d, region, 1.5, "Calm", false), "Qi x1.5 · Danger: Calm")
-	assert_eq(HUD.arrival_subtitle(null, d, region, 1.0, "Calm", true), "First visit · Qi x1.0 · Danger: Calm")
+	assert_eq(HUD.arrival_subtitle(null, d, region, 1.0, "Calm", true), "First visit · Qi x1 · Danger: Calm")
 	var tiers: Array = d.renown["tiers"]
 	var t: Dictionary = tiers[1]
 	c.renown[region] = int(t["min"])

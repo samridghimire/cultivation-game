@@ -3007,7 +3007,7 @@ static func _abode_seat_clause(c: CharacterData, data: GameData, region_id: Stri
 static func _abode_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
 	if c.abode != "":
 		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
-		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
+		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), Exploration.format_density(density)]
 	if c.realm_index < 1 or data.abodes.is_empty():
 		return ""
 	var stones := c.item_count("spirit_stone")
@@ -3024,7 +3024,7 @@ static func _abode_hint(c: CharacterData, data: GameData, region_id: String = ""
 	var cost := int(abode.get("cost", 0))
 	var short := "" if stones >= cost else " (you have %d)" % stones
 	var seclusion := float(abode.get("qi_density", 1.0))
-	var qi_clause := "qi x%s in seclusion" % String.num(seclusion, 2)
+	var qi_clause := "qi x%s in seclusion" % Exploration.format_density(seclusion)
 	var has_anchor := String(abode.get("anchor_id", "")) != ""
 	if region_id != "" and data.regions.has(region_id):
 		var here := best_qi_in_region(c, data, region_id, flags)

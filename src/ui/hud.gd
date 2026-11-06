@@ -696,7 +696,7 @@ func _refresh() -> void:
 	_refresh_date_row(data)
 	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
-	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
+	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), Exploration.format_density(density), ", " + qi_why if qi_why != "" else ""]
 	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
 		region += "   (Secret realm open)"
@@ -1696,7 +1696,7 @@ func _show_waiting_arrival() -> void:
 ## Arrival banner subtitle (WU-192): "First visit · Qi x1.5 · Danger: Calm · Known here: Respected".
 ## `c` may be null (no title).
 static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool) -> String:
-	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), danger]
+	var sub := "Qi x%s · Danger: %s" % [Exploration.format_density(qi), danger]
 	if first_visit:
 		sub = "First visit · " + sub
 	var title := Renown.title(c, data, region_id) if c != null else ""
@@ -1709,7 +1709,7 @@ func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return
-	var qi := Exploration.qi_density(data, region_id, GameState.world_flags, GameClock.total_days)
+	var qi := Exploration.effective_density(data, region_id, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.player)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
 	var extra := arrival_extra(GameState.world_flags, region_id)

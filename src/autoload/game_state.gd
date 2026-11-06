@@ -2933,7 +2933,7 @@ func journal_entries() -> Array[Dictionary]:
 ## Qi density of the current region, including active world events (LW-001) and today's weather for the player's root (WEATHER-003).
 ## With `days` > 1 the weather factor is the mean over those days (RV-016).
 func region_qi_density(days: int = 1) -> float:
-	return Exploration.qi_density(data, current_region, world_flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.mean_qi_mult(data, current_region, player, GameClock.total_days, days)
+	return Exploration.effective_density(data, current_region, world_flags, GameClock.total_days, world_events, player, days)
 
 
 ## Merchant price multiplier of the current region's active world events.

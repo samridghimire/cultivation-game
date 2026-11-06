@@ -480,8 +480,8 @@ static func foes_bbcode(foes: Array) -> String:
 
 ## "Qi density x2.75 (the valley guardian's seed)": the region's qi with the reasons its flags enrich it.
 static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array) -> String:
-	var qi := Exploration.qi_density(data, region_id, flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, events, region_id)
-	var text := "Qi density x%s" % String.num(qi, 2)
+	var qi := Exploration.effective_density(data, region_id, flags, GameClock.total_days, events)
+	var text := "Qi density x%s" % Exploration.format_density(qi)
 	var reasons := Exploration.qi_flag_reasons(data, region_id, flags, GameClock.total_days)
 	if not reasons.is_empty():
 		text += " (%s)" % ", ".join(reasons)
