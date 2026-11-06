@@ -57,3 +57,37 @@ func test_board_option_on_bounty_board_in_qingshi() -> void:
 	var opts: Array[Dictionary] = board.get_options()
 	assert_true(String(opts[0]["label"]).begins_with("Village tasks this"))
 	board.free()
+
+
+func test_where_line_only_when_text_lacks_the_place() -> void:
+	assert_eq(SeasonBoard.where_line("Sell herbs at the Herb Stall", "herb stall"), "")
+	assert_eq(SeasonBoard.where_line("Win a contest", "Qingshi Village"), "at Qingshi Village")
+	assert_eq(SeasonBoard.where_line("Win a contest", ""), "")
+
+
+func test_done_row_has_checked_box_and_where_line() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	root.get_node("GameState").start_session(new_character())
+	var board := SeasonBoard.new()
+	root.add_child(board)
+	var tasks := _tasks([true, false])
+	tasks[0]["where"] = "Old Well"
+	board.build(tasks, "spring", "", "", "5 stones")
+	assert_true(board.row_check(0).checked)
+	assert_false(board.row_check(1).checked)
+	assert_eq(board.row_button(0).get_parent().get_child_count(), 2, "where on its own line")
+	assert_eq(board.row_button(1).get_parent().get_child_count(), 1)
+	board.queue_free()
+
+
+func test_shop_title_is_one_line_with_notes_in_another_label() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	var shop := ShopScreen.new()
+	root.add_child(shop)
+	shop.open("Wandering Merchant")
+	assert_eq(shop._title.text, "Wandering Merchant")
+	assert_true(shop._title_notes != null)
+	assert_false(shop._title_notes.text.begins_with(" "))
+	shop.queue_free()
