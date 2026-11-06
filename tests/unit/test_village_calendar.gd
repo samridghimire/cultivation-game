@@ -320,3 +320,27 @@ func test_today_line_names_festival_day() -> void:
 	assert_true(l3[0].contains("(day 3 of 8)"), l3[0])
 	var l1 := Guidance.today_lines(c, data(), {}, [inst], ms, "qingshi_village")
 	assert_false(l1[0].contains("(day"), l1[0])
+
+
+## WILD-020: a wild region still has something to plan in a 40-day window.
+func test_wild_region_has_great_beast_and_season_entries() -> void:
+	var c := CharacterFactory.create("Lin Feng", data(), seeded_rng(), "male")
+	c.visited_regions = ["misty_forest"]
+	var start := 0  # spring, no season change inside 40 days
+	var e := VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", start, 40, c)
+	assert_eq(_kinds(e, "great_beast").size() > 0, true, "great beast")
+	assert_true(_kinds(e, "forage").size() >= 1, "forage/season entry")
+	assert_true(String(_kinds(e, "forage")[0]["text"]).contains("in season now"))
+
+
+func test_foundation_sees_the_return_beast() -> void:
+	var c := CharacterFactory.create("Lin Feng", data(), seeded_rng(), "male")
+	c.visited_regions = ["misty_forest"]
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", 0, 40, c), "great_beast")
+	assert_true(e.size() > 0)
+	assert_eq(e[0]["enemy"], "old_tusker_boar")
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.great_beasts["old_tusker_boar"] = 1
+	var f := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", 0, 40, c), "great_beast")
+	assert_true(f.size() > 0)
+	assert_eq(f[0]["enemy"], "scarred_old_tusker")

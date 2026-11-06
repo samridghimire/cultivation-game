@@ -85,24 +85,41 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 
 
 ## FORAGE-003: the first day in the window a visited region's seasonal forage comes into season (one line per region).
+## WILD-020: a wild region (no timed places) with a season already under way lists what is in season on `start`, and
+## its in-season beasts get their own line the same way.
 static func _forage_seasons(out: Array[Dictionary], data: GameData, c: CharacterData, start: int, end: int) -> void:
 	for rid: String in c.visited_regions:
-		var items: Array = data.regions.get(rid, {}).get("forage", {}).get("items", [])
-		if items.is_empty():
-			continue
-		for day in range(maxi(start, 1), end):
-			var season := Calendar.season_of(day)
-			if season == Calendar.season_of(day - 1):
+		var def: Dictionary = data.regions.get(rid, {})
+		var wild := true
+		for place: Dictionary in def.get("places", []):
+			if place.has("open_days"):
+				wild = false
+		var items: Array = def.get("forage", {}).get("items", [])
+		var forage_done := items.is_empty()
+		var beast_done := false
+		for day in range(start, end):
+			var boundary := day > 0 and Calendar.season_of(day) != Calendar.season_of(day - 1)
+			if not boundary and not (wild and day == start):
 				continue
-			var names: PackedStringArray = []
-			for e: Dictionary in items:
-				if e.has("seasons") and (e["seasons"] as Array).has(season.to_lower()):
-					var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
-					if not names.has(nm):
-						names.append(nm)
-			if not names.is_empty():
-				out.append({"day": day, "kind": "forage", "region": rid,
-					"text": "%s forage on the %s paths: %s" % [season, Exploration.region_name(data, rid), ", ".join(names)]})
+			var season := Calendar.season_of(day)
+			var now := "" if boundary else " (in season now)"
+			if not forage_done:
+				var names: PackedStringArray = []
+				for e: Dictionary in items:
+					if e.has("seasons") and (e["seasons"] as Array).has(season.to_lower()):
+						var nm := String(data.items.get(String(e["item"]), {}).get("name", e["item"]))
+						if not names.has(nm):
+							names.append(nm)
+				if not names.is_empty():
+					forage_done = true
+					out.append({"day": day, "kind": "forage", "region": rid,
+						"text": "%s forage on the %s paths: %s%s" % [season, Exploration.region_name(data, rid), ", ".join(names), now], "ongoing": not boundary})
+			if wild and not beast_done:
+				var clause := Wildlife.season_clause(data, rid, day)
+				if clause != "":
+					beast_done = true
+					out.append({"day": day, "kind": "forage", "region": rid, "text": clause.trim_suffix(".") + now, "ongoing": not boundary})
+			if forage_done and (beast_done or not wild):
 				break
 
 
@@ -205,6 +222,8 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"]))
 				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
 			continue
+		if bool(e.get("ongoing", false)):
+			continue  # WILD-020: "in season now" is for the calendar, not a "Tomorrow" reminder
 		var line := reminder_line(data, npcs, flags, e)
 		if line != "":
 			out.append(line)
