@@ -429,3 +429,42 @@ func test_scree_density_thins_the_speckle() -> void:
 			if thin.get_pixel(x, y) != base:
 				diff_thin += 1
 	assert_true(diff_thin < diff)
+
+
+func test_ground_variants_have_matching_luminance() -> void:
+	var base := Color("7a8c74")
+	var lums: Array[float] = []
+	for v in 4:
+		var img := GroundTiles.make_variant(base, "azure_peak", v, true).get_image()
+		var total := 0.0
+		for y in img.get_height():
+			for x in img.get_width():
+				total += img.get_pixel(x, y).get_luminance()
+		lums.append(total / float(img.get_width() * img.get_height()))
+	for a in lums:
+		for b in lums:
+			assert_true(absf(a - b) <= base.get_luminance() * 0.03, "variants differ by more than 3%% (%s vs %s)" % [a, b])
+
+
+func test_no_decor_near_gates_or_travel_places() -> void:
+	var gd := GameData.load_from_dir()
+	for rid: String in gd.regions:
+		var region: Dictionary = gd.regions[rid]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(rid)
+		var decor := SectCourt.filter_decor(region, Scenery.place(region, rng))
+		var rects: Array[Rect2] = []
+		var g := SectCourt.gate(region)
+		if not g.is_empty():
+			rects.append(SectCourt.gate_rect(g))
+		for p: Dictionary in region.get("places", []):
+			if String(p.get("type", "")) == "travel":
+				var sz: Array = p.get("size", [64, 64])
+				var size := Vector2(float(sz[0]), float(sz[1]))
+				rects.append(Rect2(Vector2(float(p["pos"][0]), float(p["pos"][1])) - size / 2.0, size))
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if String(lm.get("kind", "")) == "pine":  # landmark trees are data, so check them too
+				decor.append({"kind": "pine landmark", "pos": Vector2(float(lm["pos"][0]), float(lm["pos"][1]))})
+		for d in decor:
+			for r in rects:
+				assert_true(r.grow(SectCourt.DECOR_KEEP - 1.0).has_point(d["pos"]) == false, "%s: %s at %s within 40 px of a gate or travel place" % [rid, d["kind"], d["pos"]])

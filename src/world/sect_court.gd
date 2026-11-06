@@ -182,6 +182,34 @@ const POST_H := 64.0  ## post height above its foot line (GFX-076)
 const POST_BASE := 8.0  ## plinth below the foot line
 const ROOF_W := 40.0
 const GATE_KEEP := 24.0  ## decor and idle villagers stay this far off the gate
+const DECOR_KEEP := 40.0  ## GFX-082: trees and rocks stay this far off the gate and every travel place
+
+
+## GFX-082: `decor` (Scenery.place output) without anything within DECOR_KEEP px of the gate's rect or of a travel
+## place's rect, or whose tree footprint touches the gate. One rule for every region.
+static func filter_decor(region: Dictionary, decor: Array[Dictionary]) -> Array[Dictionary]:
+	var keeps: Array[Rect2] = []
+	var g := gate(region)
+	if not g.is_empty():
+		keeps.append(gate_rect(g).grow(DECOR_KEEP))
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) != "travel":
+			continue
+		var pos: Array = place.get("pos", [0, 0])
+		var sz: Array = place.get("size", [64, 64])
+		var size := Vector2(float(sz[0]), float(sz[1]))
+		keeps.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size).grow(DECOR_KEEP))
+	var out: Array[Dictionary] = []
+	for d in decor:
+		var foot := Rect2(d["pos"] - Vector2(16, 44), Vector2(32, 60))
+		var hit := false
+		for k in keeps:
+			if k.has_point(d["pos"]) or k.intersects(foot):
+				hit = true
+				break
+		if not hit:
+			out.append(d)
+	return out
 
 
 ## GFX-076: the gate in 3/4 view. Posts stand on the north and south road verges (feet 4 px off the path); the roof

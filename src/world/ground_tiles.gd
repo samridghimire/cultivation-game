@@ -68,7 +68,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 				img.fill_rect(Rect2i(x, y, 2, 2), clover)
 				img.set_pixel(x, y, base.lightened(0.22))
 		2:
-			var dark := base.darkened(0.1)
+			# GFX-082: a barely darker tint (mean luminance within 3% of the plain cell), so cells never meet in hard blocks.
+			var dark := base.darkened(0.03)
 			for y in SIZE:
 				for x in SIZE:
 					if rng.randf() < 0.55:
