@@ -54,6 +54,7 @@ const CALENDAR_MORE := {
 	"secret_realm": {"colors": {"a": Color("7a5cd6"), "b": Color("c9b8ff"), "c": Color("3a2a7a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oooooooooo.", "............", "............"]},
 	"forage": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("8a5a2c")}, "rows": ["............", "......oo....", "....ooabo...", "...oabbao...", "..oabaaao...", "..oaaaao.o..", "...oaaoooao.", "....ooabao..", "....oc.oo...", "...oc.......", "..oc........", "............"]},
 	"great_beast": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "o..oo..oo..o", "oo.oaooao.oo", ".oooabbaooo.", "..oaabbaao..", ".oabaaaabao.", ".oaoacccaoao", ".oao.oaao.oa", "..o..oaao..o", "....oaoao...", "....ooooo...", "............"]},
+	"hunt": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("d9d9e0")}, "rows": ["............", ".occ....cco.", "..oab..bao..", "...oabbao...", "....oaao....", ".....oo.....", "....oaao....", "...oabbao...", "..oab..bao..", ".occ....cco.", "............", "............"]},
 	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
 }
 
@@ -172,8 +173,8 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return season(season_name)
 		"field", "rent", "request", "secret_realm", "event", "forage":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
-		"great_beast", "hunt":  # WILD-017: the hunt shares the beast glyph
-			return _glyph("cal_great_beast", CALENDAR_MORE, "great_beast")
+		"great_beast", "hunt":  # GFX-078: the hunt has its own crossed-spears glyph
+			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 	return null
 
 

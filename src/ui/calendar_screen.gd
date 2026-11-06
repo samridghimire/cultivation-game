@@ -1,17 +1,19 @@
 class_name CalendarScreen
 extends PanelContainer
-## WU-419: the village calendar. A 6x5 grid of the current month (or the next): today framed in gold, past days dimmed,
-## up to three 12 px kind icons per day, and the focused day's entries listed in full below. PgUp/PgDn, LB/RB or Tab switch
+## WU-419: the village calendar. A 7-column week grid (GFX-078: weekday header, spacers before day 1) of the current month
+## (or the next): today framed in gold, past days dimmed, up to two 20 px kind icons and a short label per day, and the
+## focused day's entries listed in full below. PgUp/PgDn, LB/RB or Tab switch
 ## between this month and the next; Enter/A on a day with entries marks it (WU-459, a ChoiceMenu of that day's labels; a marked
 ## day shows a red seal and offers Unmark); Esc/B closes. Logic lives in VillageCalendar; this only draws it.
 
 signal closed
 
-const COLUMNS := 6
-const CELL_SIZE := Vector2(150, 64)
+const COLUMNS := Calendar.DAYS_PER_WEEK
+const CELL_SIZE := Vector2(126, 58)
 const GOLD := Color("e8c76a")
-const MAX_ICONS := 3
-const ICON_PX := 12
+const MAX_ICONS := 2
+const ICON_PX := 20
+const LEGEND_PX := 12
 const KIND_NAMES := {"market": "Market", "festival_active": "Festival", "festival_month": "Festival month", "birthday": "Birthday",
 	"field": "Crop", "rent": "Rent", "request": "Request", "secret_realm": "Secret realm", "event": "Event", "great_beast": "Great beast", "hunt": "Village hunt", "forage": "Forage", "season": "Season"}
 const SEASON_TINT := {"Spring": Color("f2a7c3"), "Summer": Color("f0c33c"), "Autumn": Color("e0873a"), "Winter": Color("9fd0f0")}
@@ -20,6 +22,8 @@ const SEAL := Color("c8372d")
 
 var _title: Label
 var _grid: GridContainer
+var _header: GridContainer
+var _cells: Dictionary = {}  ## day of month -> its Button (the grid also holds spacers)
 var _detail: Label
 var _legend: HBoxContainer
 var _close_button: Button
@@ -39,6 +43,16 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("Calendar", 24, UIStyle.ACCENT)
 	box.add_child(_title)
+	_header = GridContainer.new()
+	_header.name = "WeekdayHeader"
+	_header.columns = COLUMNS
+	_header.add_theme_constant_override("h_separation", 8)
+	for i in COLUMNS:
+		var wd := UIStyle.label(Calendar.weekday_label(i), 14, DIM)
+		wd.custom_minimum_size = Vector2(CELL_SIZE.x, 0)
+		wd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_header.add_child(wd)
+	box.add_child(_header)
 	_grid = GridContainer.new()
 	_grid.columns = COLUMNS
 	_grid.add_theme_constant_override("h_separation", 8)
@@ -114,13 +128,19 @@ func _grab_focus_day() -> void:
 		return
 	var today := GameClock.total_days
 	var day := Calendar.day_of(today) if _offset == 0 else 1
-	(_grid.get_child(day - 1) as Control).grab_focus()
+	_cell(day).grab_focus()
+
+
+## The Button of day `d` of the shown month.
+func _cell(d: int) -> Button:
+	return _cells[d] as Button
 
 
 func _build() -> void:
 	for c in _grid.get_children():
 		_grid.remove_child(c)
 		c.queue_free()
+	_cells.clear()
 	var today := GameClock.total_days
 	var start := _month_start()
 	# 30 days of this month plus the window that reaches the end of the displayed month.
@@ -129,32 +149,43 @@ func _build() -> void:
 	var season := Calendar.season_of(start)
 	_title.add_theme_color_override("font_color", SEASON_TINT.get(season, UIStyle.ACCENT))
 	_title.text = "Calendar: Year %d, Month %d (%s)" % [Calendar.year_of(start), Calendar.month_of(start), season]
+	for i in lead_spacers(start):
+		var spacer := Control.new()
+		spacer.name = "Spacer_%d" % i
+		spacer.custom_minimum_size = CELL_SIZE
+		spacer.focus_mode = Control.FOCUS_NONE
+		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_grid.add_child(spacer)
 	for d in range(1, Calendar.DAYS_PER_MONTH + 1):
 		var total := start + d - 1
 		var cell := Button.new()
 		cell.name = "Day_%d" % d
 		cell.custom_minimum_size = CELL_SIZE
-		cell.text = "%d %s" % [d, Calendar.weekday_short(start + d - 1)]
-		cell.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		cell.add_theme_font_size_override("font_size", 18)
 		cell.set_meta("day", d)
 		var is_today := total == today
 		var past := total < today
-		if past:
-			cell.add_theme_color_override("font_color", DIM)
+		var body := VBoxContainer.new()
+		body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		body.set_anchors_preset(Control.PRESET_FULL_RECT)
+		body.offset_left = 8
+		body.offset_top = 3
+		body.offset_right = -4
+		body.add_theme_constant_override("separation", 0)
+		cell.add_child(body)
+		var num := UIStyle.label(str(d), 18, GOLD if is_today else (DIM if past else Color.WHITE))
+		num.name = "DayNumber"
+		num.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		body.add_child(num)
 		if is_today:
 			cell.add_theme_stylebox_override("normal", _today_style())
-			cell.add_theme_color_override("font_color", GOLD)
 		var icons := HBoxContainer.new()
+		icons.name = "Icons"
 		icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icons.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		icons.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		icons.offset_right = -6
-		icons.offset_top = 4
 		icons.add_theme_constant_override("separation", 2)
-		cell.add_child(icons)
+		body.add_child(icons)
+		var day_entries: Array = _grid_entries.get(d, [])
 		var shown := 0
-		for e: Dictionary in _grid_entries.get(d, []):
+		for e: Dictionary in day_entries:
 			if shown >= MAX_ICONS:
 				break
 			var tex := HudIcons.calendar_kind(String(e["kind"]), season)
@@ -171,6 +202,18 @@ func _build() -> void:
 			rect.set_meta("kind", e["kind"])
 			icons.add_child(rect)
 			shown += 1
+		if not day_entries.is_empty():
+			var more := day_entries.size() - shown
+			if more > 0:
+				var plus := UIStyle.label("+%d" % more, 12, DIM)
+				plus.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				icons.add_child(plus)
+			var lbl := UIStyle.label(short_label(String(day_entries[0]["kind"])), 12, DIM if past else Color(0.82, 0.84, 0.9))
+			lbl.name = "ShortLabel"
+			lbl.clip_text = true
+			lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			body.add_child(lbl)
 		cell.set_meta("icons", shown)
 		cell.focus_entered.connect(_show_day.bind(d))
 		cell.pressed.connect(_on_cell_pressed.bind(d))
@@ -178,6 +221,7 @@ func _build() -> void:
 			cell.set_meta("marked", true)
 			cell.add_child(_seal())
 		_grid.add_child(cell)
+		_cells[d] = cell
 	_build_legend(season)
 	_show_day(Calendar.day_of(today) if _offset == 0 else 1)
 
@@ -204,13 +248,49 @@ func _build_legend(season: String) -> void:
 		item.add_theme_constant_override("separation", 4)
 		var rect := TextureRect.new()
 		rect.texture = HudIcons.calendar_kind(kind, season)
-		rect.custom_minimum_size = Vector2(ICON_PX, ICON_PX)
+		rect.custom_minimum_size = Vector2(LEGEND_PX, LEGEND_PX)
 		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		item.add_child(rect)
 		item.add_child(UIStyle.label(nm, 13, DIM))
 		item.set_meta("kind", kind)
 		_legend.add_child(item)
+
+
+## Empty grid cells before day 1 so each column is one weekday every month.
+static func lead_spacers(month_start_day: int) -> int:
+	return Calendar.weekday_of(month_start_day)
+
+
+## The short word a cell prints under its icons for an entry kind.
+static func short_label(kind: String) -> String:
+	if kind.begins_with("festival"):
+		return "Festival"
+	return String(KIND_NAMES.get(kind, kind.capitalize()))
+
+
+## "Next: <label> on days 10 and 25; <other> on day 12." for entries [{day, text}] (day of month), identical labels grouped.
+static func next_summary(entries: Array) -> String:
+	var order: Array[String] = []
+	var days: Dictionary = {}
+	for e: Dictionary in entries:
+		var t := String(e["text"])
+		if not days.has(t):
+			days[t] = []
+			order.append(t)
+		if not (days[t] as Array).has(int(e["day"])):
+			(days[t] as Array).append(int(e["day"]))
+	if order.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	for t in order:
+		var ds: Array = days[t]
+		var strs: PackedStringArray = []
+		for d in ds:
+			strs.append(str(d))
+		var when := strs[0] if strs.size() == 1 else "%s and %s" % [", ".join(strs.slice(0, strs.size() - 1)), strs[strs.size() - 1]]
+		parts.append("%s on day%s %s" % [t, "" if strs.size() == 1 else "s", when])
+	return "Next: " + "; ".join(parts) + "."
 
 
 func _today_style() -> StyleBoxFlat:
@@ -280,8 +360,8 @@ func _refresh_keep_focus(d: int) -> void:
 
 
 func _on_menu_closed() -> void:
-	if visible and _grid.get_child_count() >= _focus_day:
-		(_grid.get_child(_focus_day - 1) as Control).grab_focus.call_deferred()
+	if visible and _cells.has(_focus_day):
+		_cell(_focus_day).grab_focus.call_deferred()
 
 
 ## ChoiceMenu source for the mark / unmark choice.
@@ -311,14 +391,13 @@ func _show_day(d: int) -> void:
 	_detail.text = "\n".join(lines)
 
 
-## "Next: ..." for an empty day: the first 3 entries after it, with dates (this month's window only).
+## "Next: ..." for an empty day: the next entries after it, identical labels grouped (this month's window only).
 func _next_text(total: int) -> String:
-	var found: Array[String] = []
+	var found: Array = []
 	var start := _month_start()
 	for d in range(total - start + 2, Calendar.DAYS_PER_MONTH + 1):
 		for e: Dictionary in _grid_entries.get(d, []):
-			if found.size() < 3:
-				found.append("%s (%s)" % [String(e["text"]), Calendar.format_date(start + d - 1)])
+			found.append({"day": d, "text": String(e["text"])})
 	if found.is_empty():
 		return "Nothing planned."
-	return "Next: " + "; ".join(found)
+	return next_summary(found)
