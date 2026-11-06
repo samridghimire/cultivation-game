@@ -10,7 +10,7 @@ const QI_FILL := Color("6fd3c1")
 const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
 const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
 const LOG_IDLE_ALPHA := 0.55
-const HINT_MAX_CHARS := 120  ## WU-305: a status-panel hint line is cut past this (about three wrapped lines).
+const HINT_MAX_CHARS := 84  ## WU-468: a status-panel hint line is cut past this (about two wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
 const LIFESPAN_WARNING := 0.15
@@ -1036,13 +1036,33 @@ func _shrink_hint(limit: float) -> bool:
 ## WU-305: a hint line longer than `max_chars` is cut at a word boundary and ends with "… (J)" (about three wrapped
 ## lines in the status panel); the journal keeps the full text.
 static func cap_hint(text: String, max_chars: int = HINT_MAX_CHARS) -> String:
+	text = short_today(text)
 	if text.length() <= max_chars:
 		return text
 	var cut := text.substr(0, max_chars)
-	var sp := cut.rfind(" ")
-	if sp > max_chars / 2:
-		cut = cut.substr(0, sp)
+	# WU-468: prefer a clause boundary (", " or ": " or "; "), else a word boundary.
+	var best := -1
+	for sep in [", ", ": ", "; "]:
+		best = maxi(best, cut.rfind(sep))
+	if best <= max_chars / 3:
+		best = cut.rfind(" ")
+	if best > max_chars / 3:
+		cut = cut.substr(0, best)
 	return cut.rstrip(" ,;:.") + "\u2026 (J)"
+
+
+## WU-468: "Today in Azure Peak: the Cloud Crane roams, 3 things by the path." -> "Today: the Cloud Crane roams (J)".
+## Other lines are unchanged.
+static func short_today(text: String) -> String:
+	if not text.begins_with("Today in "):
+		return text
+	var colon := text.find(": ")
+	if colon < 0:
+		return text
+	var body := text.substr(colon + 2)
+	var comma := body.find(", ")
+	var first := body.substr(0, comma) if comma >= 0 else body
+	return "Today: " + first.rstrip(".") + " (J)"
 
 
 ## The text up to the first ". ", plus " (J)" so the player knows the journal has the rest. Unchanged without one.
