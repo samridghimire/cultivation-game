@@ -32,7 +32,7 @@ func _ready() -> void:
 	add_to_group("player")
 	EventBus.player_changed.connect(refresh_look)
 	EventBus.session_started.connect(refresh_look)
-	EventBus.breakthrough_attempted.connect(func(success: bool, _realm: String) -> void: celebrate(success))
+	EventBus.breakthrough_attempted.connect(_on_breakthrough_attempted)
 	refresh_look.call_deferred()
 
 
@@ -64,6 +64,10 @@ func _update_camera_shake(delta: float) -> void:
 
 ## Breakthrough effect (WU-063): a gold ring and rays on success, a dull
 ## contracting ring and a sideways shake on failure. Drawn only; never moves `position`.
+func _on_breakthrough_attempted(success: bool, _realm: String) -> void:
+	celebrate(success)
+
+
 func celebrate(success: bool) -> void:
 	_celebrate_ok = success
 	if success and not MotionFx.reduced():

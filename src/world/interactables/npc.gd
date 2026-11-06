@@ -58,6 +58,10 @@ func sprite_keys() -> PackedStringArray:
 	return PackedStringArray(["npc_" + npc_id, "npc", "place_" + art_kind])
 
 
+func _on_modal_changed(is_open: bool) -> void:
+	_modal_open = is_open
+
+
 func _ready() -> void:
 	super._ready()
 	home = position
@@ -66,7 +70,7 @@ func _ready() -> void:
 	_rng.seed = h
 	_phase = float(absi(h) % 628) / 100.0
 	_wait = _rng.randf_range(1.0, 4.0)
-	EventBus.ui_modal_changed.connect(func(is_open: bool): _modal_open = is_open)
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
 	var notifier := VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-size / 2.0 - Vector2(MAX_DRIFT, MAX_DRIFT), size + Vector2(MAX_DRIFT, MAX_DRIFT) * 2.0)
 	notifier.screen_entered.connect(func(): _on_screen = true)

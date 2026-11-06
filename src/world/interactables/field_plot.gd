@@ -41,10 +41,14 @@ func get_options() -> Array[Dictionary]:
 	return options
 
 
+func _on_days_advanced(_days: int) -> void:
+	queue_redraw()
+
+
 func _ready() -> void:
 	super()
 	EventBus.player_changed.connect(queue_redraw)
-	GameClock.days_advanced.connect(func(_days: int) -> void: queue_redraw())
+	GameClock.days_advanced.connect(_on_days_advanced)
 
 
 ## Soil by state (bare tilled / rented with a rope marker), a plant per crop by growth stage, frost in a frozen season.

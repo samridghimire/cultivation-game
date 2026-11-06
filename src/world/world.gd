@@ -109,9 +109,7 @@ func _ready() -> void:
 	if hud != null:
 		hud.hints_changed.connect(_mark_hinted.bind(hud))
 		_mark_hinted(hud)
-	EventBus.ui_modal_changed.connect(func(is_open: bool):
-		player.input_enabled = not is_open
-		_greet_modal = is_open)
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
 	EventBus.region_changed.connect(_on_region_changed)
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
@@ -347,6 +345,11 @@ func _notification(what: int) -> void:
 
 ## Travel or an artifact respawn moved the player: rebuild the world for the
 ## new region (only when this world is the running scene, not a preview or test).
+func _on_modal_changed(is_open: bool) -> void:
+	player.input_enabled = not is_open
+	_greet_modal = is_open
+
+
 func _on_region_changed(region_id: String) -> void:
 	if get_tree().current_scene == self:
 		if GameState.last_travel_from != "" and GameState.last_travel_from != region_id and GameState.player != null and GameState.player.alive:
