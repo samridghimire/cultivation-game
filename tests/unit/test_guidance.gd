@@ -6330,3 +6330,25 @@ func test_today_lines_market_wanted_beast_and_cap() -> void:
 	var end := Guidance.today_lines(c, d, {}, [], 268, "misty_forest")
 	assert_true(end[end.size() - 1].begins_with("Autumn ends"), str(end))
 	assert_eq(Guidance.today_lines(c, d, {}, [], 0, "no_such_region").size(), 0)
+
+
+func test_forage_phrase_names_pickups_rarest_first() -> void:  # TODAY-002
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("F", d, seeded_rng(1))
+	var seen := {}
+	for day in range(0, 120):
+		var n := Foraging.unpicked(d, "qingshi_village", day, c.realm_index, {}).size()
+		var phrase := Guidance._forage_phrase(c, d, "qingshi_village", day, {})
+		if n == 0:
+			assert_eq(phrase, "")
+			continue
+		assert_true(phrase.ends_with(" by the path"), phrase)
+		assert_false(phrase.begins_with("%d thing" % n), phrase)
+		assert_true(phrase.length() <= 60, phrase)
+		seen[n] = true
+	assert_true(seen.size() > 0)
+	# every pickup picked: nothing to name
+	var flags := {}
+	for node: Dictionary in Foraging.unpicked(d, "qingshi_village", 10, c.realm_index, {}):
+		flags[Foraging.flag_key("qingshi_village", int(node["slot"]))] = {"day": 10}
+	assert_true(Guidance._forage_phrase(c, d, "no_such_region", 10, {}) == "")

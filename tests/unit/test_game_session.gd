@@ -3391,3 +3391,56 @@ func test_arrival_never_posts_a_season_line_twice() -> void:  # WU-464
 			if String(m["text"]).contains(sc):
 				n += 1
 		assert_eq(n, 1, "in-season sentence appears in one message")
+
+
+func _today_lines_count() -> int:  # TODAY-002
+	var n := 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).begins_with("Today in"):
+			n += 1
+	return n
+
+
+func test_new_session_posts_arrival_line_once() -> void:  # TODAY-002
+	_start()
+	var gs := _game_state()
+	gs.call("_post_arrival_line")  # a second caller on the same day and region posts nothing more
+	gs.call("_post_arrival_line")
+	assert_true(_today_lines_count() <= 1, "the arrival line is posted at most once")
+
+
+func test_season_line_posted_once_per_season_and_region() -> void:  # TODAY-002
+	_start()
+	var gs := _game_state()
+	var region := "misty_forest"
+	var season_day := -1
+	for d in range(0, Calendar.DAYS_PER_YEAR):
+		if Wildlife.season_clause(gs.data, region, d) != "":
+			season_day = d
+			break
+	assert_true(season_day >= 0, "misty forest has an in-season beast")
+	GameClock.total_days = season_day
+	gs.current_region = region
+	gs.world_flags.erase("season_line_seen")
+	EventBus.clear_history()
+	var clause := Wildlife.season_clause(gs.data, region, season_day)
+	gs.call("_post_arrival_line")
+	gs.current_region = "qingshi_village"
+	gs.call("_post_arrival_line")
+	gs.current_region = region
+	gs.call("_post_arrival_line")
+	var count := 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(clause):
+			count += 1
+	assert_eq(count, 1, "the in-season line is posted once for the season")
+	GameClock.total_days = season_day + Calendar.DAYS_PER_YEAR
+	gs.current_region = "qingshi_village"
+	gs.call("_post_arrival_line")
+	gs.current_region = region
+	gs.call("_post_arrival_line")
+	count = 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(clause):
+			count += 1
+	assert_eq(count, 2, "and again the next year's season")

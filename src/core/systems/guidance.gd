@@ -216,12 +216,40 @@ static func _festival_today(data: GameData, events: Array, region_id: String, da
 	return ""
 
 
-## "3 things by the path", "" when nothing is unpicked.
+## TODAY-002: what lies by the path, by name: "Village Mugwort and Dew Grass by the path", "" when nothing is unpicked.
+## Names are distinct, rarest (lowest forage weight in the region) first; 3+ names give "A, B and N more".
 static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
-	var forage := Foraging.unpicked(data, region_id, day, c.realm_index, flags).size()
-	if forage <= 0:
+	var nodes := Foraging.unpicked(data, region_id, day, c.realm_index, flags)
+	if nodes.is_empty():
 		return ""
-	return "%d %s by the path" % [forage, "thing" if forage == 1 else "things"]
+	var weights := {}
+	for entry: Dictionary in data.regions.get(region_id, {}).get("forage", {}).get("items", []):
+		var id := String(entry.get("item", ""))
+		weights[id] = minf(float(weights.get(id, 1e9)), float(entry.get("weight", 1.0)))
+	var names: Array[String] = []
+	for n: Dictionary in nodes:
+		var nm := String(data.items.get(String(n["item"]), {}).get("name", n["item"]))
+		if not names.has(nm):
+			names.append(nm)
+	var rank := {}
+	for n: Dictionary in nodes:
+		var nm2 := String(data.items.get(String(n["item"]), {}).get("name", n["item"]))
+		rank[nm2] = float(weights.get(String(n["item"]), 1e9))
+	names.sort_custom(func(a: String, b: String) -> bool:
+		if rank[a] != rank[b]:
+			return rank[a] < rank[b]
+		return a < b)
+	var more := nodes.size() - mini(names.size(), 2) if names.size() > 2 else 0
+	var phrase: String
+	if names.size() == 1:
+		phrase = names[0]
+	elif names.size() == 2:
+		phrase = "%s and %s" % [names[0], names[1]]
+	else:
+		phrase = "%s, %s and %d more" % [names[0], names[1], more]
+	if phrase.length() + 12 > 60:
+		phrase = "%s and %d more" % [names[0], nodes.size() - 1] if nodes.size() > 1 else names[0]
+	return phrase + " by the path"
 
 
 ## "rain-fish biting" when the weather helps the region's fishing place, else "".

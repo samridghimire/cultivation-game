@@ -680,15 +680,24 @@ func today_lines() -> PackedStringArray:
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
 func _post_arrival_line() -> void:
 	var day := GameClock.total_days
+	# TODAY-002: once per day and region (the line was posted again by any second caller).
+	if int(world_flags.get("arrival_day", -1)) == day and String(world_flags.get("arrival_region", "")) == current_region:
+		return
 	var line := Guidance.arrival_line(player, data, current_region, day, world_flags, Weather.of(data, current_region, day), world_events)
 	world_flags["arrival_day"] = day
 	world_flags["arrival_region"] = current_region
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")
-	var season_line := Wildlife.season_clause(data, current_region, day)  # WILD-013
-	if season_line != "" and not line.contains(season_line):  # WU-464: the arrival line may already say it
-		EventBus.post(season_line, "travel")
+	# WILD-013 / TODAY-002: the in-season line once a season per region.
+	var season_line := Wildlife.season_clause(data, current_region, day)
+	var season_key := "%d-%s" % [Calendar.year_of(day), Calendar.season_of(day)]
+	var seen: Dictionary = world_flags.get("season_line_seen", {})
+	if season_line != "" and String(seen.get(current_region, "")) != season_key:
+		seen[current_region] = season_key
+		world_flags["season_line_seen"] = seen
+		if not line.contains(season_line):  # WU-464: the arrival line may already say it
+			EventBus.post(season_line, "travel")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
