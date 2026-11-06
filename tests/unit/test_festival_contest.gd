@@ -470,3 +470,53 @@ func test_festival_company_validation() -> void:
 	assert_true((d.family["festival_company"] as Array).size() >= 4)
 	d.family["festival_company"] = ["no placeholder"]
 	assert_eq(Folk.validate(d).size(), 1)
+
+
+## FEST-011 (1): the invitation reminder is only posted near the festival's region.
+func test_invitation_reminder_only_nearby() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var favor := {(folk[1] as CharacterData).id: 90}
+	var far := ""
+	for rid: String in gs.data.regions:
+		if not Exploration.is_nearby(gs.data, rid, "qingshi_village"):
+			far = rid
+			break
+	assert_true(far != "", "some region is more than a route away")
+	var here := VillageCalendar.reminders(gs.data, gs.npcs, favor, [], "qingshi_village", LANTERN_START - 1, gs.player)
+	assert_true(here.size() > 0 and here[0].contains("asked you to the"))
+	var away := VillageCalendar.reminders(gs.data, gs.npcs, favor, [], far, LANTERN_START - 1, gs.player)
+	assert_false(Array(away).any(func(l: String) -> bool: return l.contains("asked you to the")))
+	gs.end_session()
+
+
+## FEST-011 (2): the invited friend never enters the contest; the next villager steps in.
+func test_invited_friend_is_not_an_entrant() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var friend: CharacterData = folk[0]  # the first candidate would otherwise enter
+	gs.npc_favor[friend.id] = 95
+	_root().get_node("GameClock").total_days = LANTERN_START
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": LANTERN_START, "end_day": LANTERN_START + 8}]
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == friend.name))
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == "a stranger"), "the next villager stepped in")
+	gs.end_session()
+
+
+## FEST-011 (3): the rival is marked by character id, not by name.
+func test_rival_marked_by_id() -> void:
+	var p := new_character()
+	var a := _npc("Old Wu", 8)
+	var b := _npc("Old Wu", 8)
+	a.id = "npc_a"
+	b.id = "npc_b"
+	var rivals: Array[CharacterData] = [a, b]
+	var r := FestivalContest.run(data(), p, "lantern_festival", rivals, seeded_rng(3), "", 0, "Old Wu", 0, 0, "npc_b")
+	var flagged := 0
+	for s: Dictionary in r["scores"]:
+		if bool(s.get("rival", false)):
+			flagged += 1
+	assert_eq(flagged, 1, "only the rival by id, not the namesake")

@@ -233,7 +233,7 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "", text_year: int = 0, cheer: int = 0) -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "", text_year: int = 0, cheer: int = 0, rival_id: String = "") -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
@@ -247,16 +247,19 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 	var wanted := int(contest.get("rivals", 2))
 	for i in wanted:
 		var name := "a stranger"
+		var entrant_id := ""
 		var base := DEFAULT_RIVAL_ATTRIBUTE
 		if i < rivals.size():
 			name = rivals[i].name
+			entrant_id = rivals[i].id
 			base = rivals[i].attribute(attribute) if rivals[i].attributes.has(attribute) else DEFAULT_RIVAL_ATTRIBUTE
 		var score := base + rng.randi_range(0, 10)
 		if champion_name != "" and name == champion_name:
 			score += CHAMPION_BONUS
 		var entry := {"name": name, "score": score, "you": false}
-		if rival_name != "" and name == rival_name:
-			entry["rival"] = true  # FEST-009
+		# FEST-009 / FEST-011: the rival is marked by character id (a namesake is not the rival).
+		if (rival_id != "" and entrant_id == rival_id) or (rival_id == "" and rival_name != "" and name == rival_name):
+			entry["rival"] = true
 		scores.append(entry)
 	# Stable sort high to low; the player is first in the list, so ties go to the player.
 	var order: Array[Dictionary] = []

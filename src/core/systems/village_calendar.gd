@@ -189,7 +189,13 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
 		region_id: String, today: int, c: CharacterData, flags: Dictionary = {}) -> PackedStringArray:
 	var out := PackedStringArray()
-	var invite := FestivalContest.invitation_line(data, FestivalContest.invitation(data, npcs, favor, today + 1))
+	var inv := FestivalContest.invitation(data, npcs, favor, today + 1)
+	var invite := ""
+	if not inv.is_empty():
+		# FEST-011: only when the player is in the festival's region or one route away.
+		var fest_regions: Array = data.world_events[String(inv["event_id"])].get("regions", [])
+		if not fest_regions.is_empty() and Exploration.is_nearby(data, region_id, String(fest_regions[0])):
+			invite = FestivalContest.invitation_line(data, inv)
 	if invite != "":
 		out.append(invite)  # FOLK-012
 	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, today + 1, 1, c):

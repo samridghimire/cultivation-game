@@ -3207,7 +3207,11 @@ func festival_contest(event_id: String) -> Dictionary:
 	var year := Calendar.year_of(GameClock.total_days)
 	var champ_name := FestivalContest.champion_rival(world_flags, event_id, year)
 	var rivals: Array[CharacterData] = []
+	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
+	var invited: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id else null
 	for npc in Folk.candidates(npcs, data, player, current_region):
+		if invited != null and npc.id == invited.id:
+			continue  # FEST-011: the invited friend comes as your guest, not as an entrant
 		if npc.name == champ_name:
 			rivals.push_front(npc)  # last year's champion always enters
 		else:
@@ -3219,6 +3223,7 @@ func festival_contest(event_id: String) -> Dictionary:
 	# FEST-009: your rival came down for the festival.
 	var rival := Rivals.rival_of(player, npcs)
 	var rival_name := ""
+	var rival_id := ""
 	if Rivals.enters_festival(player, rival, world_flags):
 		rivals.erase(rival)
 		var at := 1 if champ_name != "" and not rivals.is_empty() else 0
@@ -3226,14 +3231,14 @@ func festival_contest(event_id: String) -> Dictionary:
 		if rivals.size() > int(contest["rivals"]):
 			rivals.resize(int(contest["rivals"]))
 		rival_name = rival.name if rivals.has(rival) else ""
+		rival_id = rival.id if rivals.has(rival) else ""
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
 	var cheerers := FestivalContest.cheerers(npcs, data, npc_favor, current_region, rivals)  # FOLK-012: entrants compete, not cheer
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year, cheerers.size())
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year, cheerers.size(), rival_id)
 	var cheer_names: Array = []
 	for n in cheerers:
 		cheer_names.append(n.name)
 	result["cheerers"] = cheer_names  # WU-463
-	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
 	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	_season_note("contest", event_id, 1)
