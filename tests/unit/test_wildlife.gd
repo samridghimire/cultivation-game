@@ -58,14 +58,14 @@ func test_validation() -> void:
 	_with(d, old)
 
 
-## C-287: every wild region has roamers, 3-5 entries, a non-lethal beast, at least one seasonal entry.
+## C-287: every wild region has roamers, 3-7 entries, a non-lethal beast, at least one seasonal entry.
 func test_wild_regions_have_roamers() -> void:
 	var d := _gdata()
 	assert_true(Wildlife.validate(d).is_empty())
 	for id: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
 		var def: Dictionary = d.regions[id].get("roamers", {})
 		var entries: Array = def.get("enemies", [])
-		assert_true(entries.size() >= 3 and entries.size() <= 6, "%s entries" % id)
+		assert_true(entries.size() >= 3 and entries.size() <= 7, "%s entries" % id)
 		var seasonal := false
 		for e: Dictionary in entries:
 			assert_false(bool(d.enemies[e["enemy"]].get("lethal", false)))

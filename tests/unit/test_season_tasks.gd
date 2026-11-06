@@ -130,3 +130,22 @@ func test_restoration_validation_and_save() -> void:
 	var d := c.to_dict()
 	d.erase("seasons_completed")
 	assert_true(CharacterData.from_dict(d).seasons_completed.is_empty())
+
+
+## C-315: every hunt task of every season can be met roaming by a Qi Refining and a Foundation player.
+func test_hunt_targets_roam_for_both_realms() -> void:
+	var gd: GameData = _gs().data
+	var realms: Array[int] = [gd.realm_index_of("qi_refining"), gd.realm_index_of("foundation_establishment")]
+	for season: String in gd.season_tasks["seasons"]:
+		var first_day: int = {"spring": 5, "summer": 95, "autumn": 185, "winter": 275}[season]
+		for task: Dictionary in gd.season_tasks["seasons"][season]["tasks"]:
+			if String(task["kind"]) != "hunt":
+				continue
+			for realm_index in realms:
+				var found := false
+				for region_id: String in gd.regions:
+					for d in range(first_day, first_day + 60):
+						for r in Wildlife.roamers(gd, region_id, d, realm_index, {}):
+							if String(r["enemy"]) == String(task["target"]):
+								found = true
+				assert_true(found, "%s hunt %s roams for realm %d" % [season, task["target"], realm_index])
