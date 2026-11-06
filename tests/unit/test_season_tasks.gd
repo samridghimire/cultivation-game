@@ -149,3 +149,68 @@ func test_hunt_targets_roam_for_both_realms() -> void:
 							if String(r["enemy"]) == String(task["target"]):
 								found = true
 				assert_true(found, "%s hunt %s roams for realm %d" % [season, task["target"], realm_index])
+
+
+## SEASON-007: incense at the restored shrine.
+func _restore(gs: Node, c: CharacterData) -> void:
+	for day in [5, 95, 185, 275]:
+		GameClock.total_days = day
+		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
+
+
+func test_incense_reasons_and_offer() -> void:
+	var gs := _gs()
+	var c := _start()
+	var flags := {}
+	assert_eq(SeasonTasks.can_offer_incense(c, gs.data, flags, 5), "The shrine is not restored yet.")
+	_restore(gs, c)
+	GameClock.total_days = 300
+	assert_eq(SeasonTasks.can_offer_incense(c, gs.data, flags, 300), "You have no Mugwort.")
+	c.add_item("village_mugwort", 2)
+	assert_eq(SeasonTasks.can_offer_incense(c, gs.data, flags, 300), "")
+	assert_true(SeasonTasks.offer_incense(c, gs.data, flags, 300) != "")
+	assert_eq(c.item_count("village_mugwort"), 1)
+	assert_eq(SeasonTasks.can_offer_incense(c, gs.data, flags, 300), "Incense already burns today.")
+	assert_true(SeasonTasks.incense_line(c, gs.data, flags, 300).begins_with("Incense burns"))
+	assert_true(SeasonTasks.incense_line(c, gs.data, flags, 301).begins_with("The old shrine is restored"))
+
+
+func test_incense_qi_one_day() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	GameClock.total_days = 300
+	c.add_item("village_mugwort", 1)
+	var base: float = gs.region_qi_density()
+	assert_true(gs.offer_incense())
+	assert_true(absf(gs.region_qi_density() - base * 1.05 / 1.0) < 0.03 * base, "x1.05 on top")
+	GameClock.total_days = 301
+	assert_true(absf(gs.region_qi_density() - base) < 0.001 * base, "back the next day")
+	assert_eq(c.item_count("village_mugwort"), 0)
+
+
+func test_offer_incense_twice_fails() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	GameClock.total_days = 300
+	c.add_item("village_mugwort", 2)
+	assert_true(gs.offer_incense())
+	assert_false(gs.offer_incense())
+	assert_eq(c.item_count("village_mugwort"), 1)
+
+
+func test_incense_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["incense"]["item"] = "no_such_item"
+	assert_false(SeasonTasks.validate(gd).is_empty(), "unknown item")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["restoration"]["incense"]["bonus"] = 0.2
+	assert_false(SeasonTasks.validate(gd).is_empty(), "bonus 0.2")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["restoration"]["incense"]["flag"] = "not_in_qi_flags"
+	assert_false(SeasonTasks.validate(gd).is_empty(), "flag missing from qi_flags")
+	gd.season_tasks = saved
+	assert_true(SeasonTasks.validate(gd).is_empty())

@@ -52,6 +52,11 @@ func label_text() -> String:
 
 
 func get_options() -> Array[Dictionary]:
+	var inc := SeasonTasks.incense(GameState.data)
+	if GameState.player != null and not inc.is_empty() and stage_total() > 0 and stage_now() >= stage_total():
+		var why := SeasonTasks.can_offer_incense(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days)
+		var item_name := String(GameState.data.items.get(String(inc["item"]), {}).get("name", "incense"))
+		return [{"label": "Light incense (1 %s)" % item_name, "action": GameState.offer_incense, "disabled": why != "", "reason": why}]
 	return [{"label": need_line(stage_now(), stage_total()), "action": func(): pass, "disabled": true}]
 
 

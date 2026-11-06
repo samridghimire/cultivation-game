@@ -3432,6 +3432,17 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 	return false
 
 
+## SEASON-007: light incense at the restored shrine (takes no time).
+func offer_incense() -> bool:
+	var why := SeasonTasks.can_offer_incense(player, data, world_flags, GameClock.total_days)
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	EventBus.post(SeasonTasks.offer_incense(player, data, world_flags, GameClock.total_days), "progress")
+	EventBus.player_changed.emit()
+	return true
+
+
 ## SEASON-005: counts progress on the season's village tasks, posts the lines and pays the reward once.
 func _season_note(kind: String, target: String, n: int) -> void:
 	var day := GameClock.total_days

@@ -91,6 +91,49 @@ static func restoration_flags(c: CharacterData, data: GameData) -> Array[String]
 	return out
 
 
+## SEASON-007: the incense block ({} when absent).
+static func incense(data: GameData) -> Dictionary:
+	return restoration(data).get("incense", {})
+
+
+static func _incense_item_name(data: GameData, item_id: String) -> String:
+	return String(data.items.get(item_id, {}).get("name", item_id))
+
+
+## "" when incense can be lit now, else why not.
+static func can_offer_incense(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	var inc := incense(data)
+	if inc.is_empty() or restoration_stage(c, data) < (restoration(data).get("stages", []) as Array).size():
+		return "The shrine is not restored yet."
+	var item := String(inc["item"])
+	if Effects.flag_active(flags, String(inc["flag"]), day):
+		return "Incense already burns today."
+	if c.item_count(item) < 1:
+		return "You have no %s." % _incense_item_name(data, item)
+	return ""
+
+
+## Spends one incense item and sets the timed flag; returns the line to post ("" when it cannot be lit).
+static func offer_incense(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	if can_offer_incense(c, data, flags, day) != "":
+		return ""
+	var inc := incense(data)
+	c.add_item(String(inc["item"]), -1)
+	flags[String(inc["flag"])] = {"until": day + int(inc["days"])}
+	return "%s (+%d%% qi in %s today)" % [String(inc["text"]), roundi(float(inc["bonus"]) * 100.0), String(data.regions.get(REGION, {}).get("name", "Qingshi"))]
+
+
+## SEASON-007: the Today line for the restored shrine ("" before it is restored).
+static func incense_line(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	var inc := incense(data)
+	if inc.is_empty() or can_offer_incense(c, data, flags, day) == "The shrine is not restored yet.":
+		return ""
+	var pct := roundi(float(inc["bonus"]) * 100.0)
+	if Effects.flag_active(flags, String(inc["flag"]), day):
+		return "Incense burns at the old shrine (+%d%% qi)." % pct
+	return "The old shrine is restored: light incense for +%d%% qi today." % pct
+
+
 ## "The old shrine: 1 of 4 stages repaired." while unfinished, else "".
 static func restoration_line(c: CharacterData, data: GameData) -> String:
 	var rest := restoration(data)
@@ -219,4 +262,20 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 				listed = true
 		if not listed:
 			errs.append("region '%s' qi_flags must list restoration flag '%s' with bonus %s" % [region, qflag, bonus])
+	var inc: Dictionary = rest.get("incense", {})
+	if not inc.is_empty():
+		var iflag := String(inc.get("flag", ""))
+		var ibonus := float(inc.get("bonus", 0.0))
+		var idays: Variant = inc.get("days", 0)
+		if not data.items.has(String(inc.get("item", ""))):
+			errs.append("season_tasks.json restoration incense has unknown item '%s'" % inc.get("item", ""))
+		if iflag == "" or seen.has(iflag) or iflag == qflag or ibonus <= 0.0 or ibonus > 0.1 or String(inc.get("text", "")) == "" or not (idays is int or idays is float) or int(idays) < 1 or int(idays) > 3:
+			errs.append("season_tasks.json restoration incense needs a unique flag, text, days 1..3 and a bonus in (0, 0.1]")
+		elif data.regions.has(region):
+			var ilisted := false
+			for e: Dictionary in data.regions[region].get("qi_flags", []):
+				if String(e.get("flag", "")) == iflag and is_equal_approx(float(e.get("bonus", 0.0)), ibonus):
+					ilisted = true
+			if not ilisted:
+				errs.append("region '%s' qi_flags must list incense flag '%s' with bonus %s" % [region, iflag, ibonus])
 	return errs

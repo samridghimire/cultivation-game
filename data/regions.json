@@ -30,7 +30,7 @@
       "discovery": "qingshi_village_well_offering", "discovery_rumor": "Old folk say the founders left something at the village well, if you know to look past the last house.",
       "description": "A sleepy mortal village where your journey begins.",
       "first_visit": "Smoke curls from a few thatched roofs and a dog barks once, then loses interest. The old elder watches from his doorstep, and the green slope behind the houses is thick with common herbs.",
-      "qi_density": 1.0, "danger": 0, "qi_flags": [{"flag": "shrine_restored", "bonus": 0.05, "text": "the restored shrine"}],
+      "qi_density": 1.0, "danger": 0, "qi_flags": [{"flag": "shrine_restored", "bonus": 0.05, "text": "the restored shrine"}, {"flag": "shrine_incense", "bonus": 0.05, "text": "incense at the old shrine"}],
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350", "ambient": {"spring": "petals", "autumn": "leaves"}, "decor": {"trees": 22, "rocks": 8, "grass": 40, "flowers": 16}, "landmarks": [{"kind": "jetty", "pos": [680, 314], "size": [88, 28]}, {"kind": "house", "pos": [180, 340], "size": [100, 80]}, {"kind": "house", "pos": [1400, 380], "size": [100, 80]}, {"kind": "house", "pos": [1330, 900], "size": [100, 70]}, {"kind": "house", "pos": [400, 790], "size": [100, 80]}, {"kind": "field", "pos": [170, 760], "size": [200, 120]}, {"kind": "field", "pos": [1350, 620], "size": [160, 100]}, {"kind": "pond", "pos": [680, 230], "size": [150, 100]}, {"kind": "fence", "pos": [960, 320], "size": [160, 40]}, {"kind": "well", "pos": [1030, 600], "size": [40, 40]}]},
       "spawn": [800, 500],
       "family_home": {"pos": [380, 580], "size": [90, 64]},
