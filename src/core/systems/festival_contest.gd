@@ -6,6 +6,9 @@ extends RefCounted
 const DEFAULT_RIVAL_ATTRIBUTE := 8
 const CHAMPION_BONUS := 2
 const MASTER_STREAK := 3
+## FOLK-012: friends cheering from the crowd.
+const CHEER_MAX := 3
+const COMPANY_FAVOR := 4
 ## FEST-008: practice in the week before the festival.
 const PRACTICE_WINDOW := 7
 const PRACTICE_PER_DAY := 2
@@ -230,13 +233,13 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "", text_year: int = 0) -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "", text_year: int = 0, cheer: int = 0) -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
 	var attribute := String(contest.get("attribute", ""))
 	var mine := c.attribute(attribute) + rng.randi_range(0, 10)
-	mine += practice
+	mine += practice + cheer
 	var profession := String(contest.get("profession", ""))
 	if profession != "":
 		mine += 2 * Professions.rank_of(c, profession)
@@ -271,7 +274,70 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 	var prizes: Array = contest.get("prizes", [])
 	var prize: Dictionary = prizes[place - 1] if place - 1 < prizes.size() else {}
 	var text := pick_text(contest.get("win_text", ""), text_year) if place == 1 else pick_text(contest.get("lose_text", ""), text_year).replace("{winner}", String(order[0]["name"]))
-	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text, "practice": practice}
+	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text, "practice": practice, "cheer": cheer}
+
+
+## FOLK-012: villagers of `region_id` at friendship tier Friend or better, best friends first (name tiebreak).
+static func friends_of(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String, min_tier: int = 1) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for npc in Npcs.generated_in_region(npcs, data, region_id):
+		if Folk.tier_index(data, int(favor.get(npc.id, 0))) >= min_tier:
+			out.append(npc)
+	out.sort_custom(func(a: CharacterData, b: CharacterData) -> bool:
+		var fa := int(favor.get(a.id, 0))
+		var fb := int(favor.get(b.id, 0))
+		return fa > fb if fa != fb else a.id.naturalnocasecmp_to(b.id) < 0)
+	return out
+
+
+## FOLK-012: friends who cheer (max CHEER_MAX, +1 each).
+static func cheerers(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String) -> Array[CharacterData]:
+	var all := friends_of(npcs, data, favor, region_id, 1)
+	if all.size() > CHEER_MAX:
+		all.resize(CHEER_MAX)
+	return all
+
+
+static func cheer_line(who: Array[CharacterData]) -> String:
+	if who.is_empty():
+		return ""
+	var names: Array[String] = []
+	for n in who:
+		names.append(n.name)
+	var joined := names[0] if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1]
+	return "%s cheer%s you on (+%d)." % [joined, "s" if names.size() == 1 else "", who.size()]
+
+
+## FOLK-012: the festival (event id) whose first day is `day` and the friend (Close friend or better, best favor)
+## of its region who invites the player: {event_id, npc} or {}. Pure.
+static func invitation(data: GameData, npcs: Dictionary, favor: Dictionary, day: int) -> Dictionary:
+	if Calendar.day_of(day) != 1:
+		return {}
+	for event_id: String in data.world_events:
+		if contest_of(data, event_id).is_empty():
+			continue
+		var def: Dictionary = data.world_events[event_id]
+		if not (def.get("months", []) as Array).any(func(m: Variant) -> bool: return int(m) == Calendar.month_of(day)):
+			continue
+		var regions: Array = def.get("regions", [])
+		if regions.is_empty():
+			continue
+		var friends := friends_of(npcs, data, favor, String(regions[0]), 2)
+		if not friends.is_empty():
+			return {"event_id": event_id, "npc": friends[0]}
+	return {}
+
+
+static func invitation_line(data: GameData, inv: Dictionary) -> String:
+	if inv.is_empty():
+		return ""
+	return "%s asked you to the %s tomorrow." % [(inv["npc"] as CharacterData).name, WorldEvents.event_name(data, String(inv["event_id"]))]
+
+
+## FOLK-012: a line from family.json `festival_company`, picked by year ("" if none).
+static func company_line(data: GameData, who: String, year: int) -> String:
+	var list: Array = data.family.get("festival_company", [])
+	return "" if list.is_empty() else String(list[year % list.size()]).replace("{name}", who)
 
 
 static func standings_lines(result: Dictionary) -> PackedStringArray:

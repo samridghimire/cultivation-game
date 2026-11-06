@@ -180,6 +180,9 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
 		region_id: String, today: int, c: CharacterData, flags: Dictionary = {}) -> PackedStringArray:
 	var out := PackedStringArray()
+	var invite := FestivalContest.invitation_line(data, FestivalContest.invitation(data, npcs, favor, today + 1))
+	if invite != "":
+		out.append(invite)  # FOLK-012
 	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, today + 1, 1, c):
 		if out.size() >= MAX_REMINDERS:
 			break

@@ -3224,12 +3224,22 @@ func festival_contest(event_id: String) -> Dictionary:
 			rivals.resize(int(contest["rivals"]))
 		rival_name = rival.name if rivals.has(rival) else ""
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year)
+	var cheerers := FestivalContest.cheerers(npcs, data, npc_favor, current_region)  # FOLK-012
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year, cheerers.size())
+	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
+	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
 		EventBus.post("%s: %s" % [champ_name, String(contest.get("champion_greeting", "")).replace("{player}", player.name)], "world")
 	EventBus.post("%s You place %s of %d.%s" % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"]), (" Your practice told (+%d)." % practice) if practice > 0 else ""], "world")
+	if not cheerers.is_empty():
+		EventBus.post(FestivalContest.cheer_line(cheerers), "world")
+	if companion != null:
+		npc_favor[companion.id] = clampi(int(npc_favor.get(companion.id, 0)) + FestivalContest.COMPANY_FAVOR, -100, 100)
+		var company := FestivalContest.company_line(data, companion.name, year)
+		if company != "":
+			EventBus.post(company, "world")
 	var prize: Dictionary = result["prize"]
 	for item_id: String in prize.get("items", {}):
 		player.add_item(item_id, int(prize["items"][item_id]))

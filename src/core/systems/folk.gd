@@ -339,6 +339,13 @@ static func validate_tastes(data: GameData) -> PackedStringArray:
 				errors.append("family.json folk_tastes %s_pool entries must be non-empty strings" % key)
 		if t.has(key) and (int(t[key]) < 0 or int(t[key]) > pool.size()):
 			errors.append("family.json folk_tastes %s must be 0..%d" % [key, pool.size()])
+	var company: Variant = data.family.get("festival_company", [])
+	if not (company is Array):
+		errors.append("family.json festival_company must be a list")
+	else:
+		for line in company:
+			if typeof(line) != TYPE_STRING or not String(line).contains("{name}"):
+				errors.append("family.json festival_company lines must be strings with {name}")
 	return errors
 
 
