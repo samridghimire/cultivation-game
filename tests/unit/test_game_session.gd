@@ -3368,3 +3368,25 @@ func test_today_lines_wrapper() -> void:
 	gs.current_region = "misty_forest"
 	assert_eq(gs.today_lines(), Guidance.today_lines(gs.player, gs.data, gs.world_flags, gs.world_events, 268, "misty_forest", gs.npcs, gs.npc_favor))
 	assert_true(gs.today_lines().size() <= Guidance.TODAY_MAX)
+
+
+func test_arrival_never_posts_a_season_line_twice() -> void:  # WU-464
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.data.road = {}
+	EventBus.clear_history()
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	gs.travel(String(route["to"]))
+	var seen := {}
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(" run in "):
+			assert_false(seen.has(m["text"]), "season sentence posted once")
+			seen[m["text"]] = true
+	var sc := Wildlife.season_clause(gs.data, gs.current_region, GameClock.total_days)
+	if sc != "":
+		var n := 0
+		for m: Dictionary in EventBus.history:
+			if String(m["text"]).contains(sc):
+				n += 1
+		assert_eq(n, 1, "in-season sentence appears in one message")

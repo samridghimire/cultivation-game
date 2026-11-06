@@ -687,7 +687,7 @@ func _post_arrival_line() -> void:
 	if line != "":
 		EventBus.post(line, "travel")
 	var season_line := Wildlife.season_clause(data, current_region, day)  # WILD-013
-	if season_line != "":
+	if season_line != "" and not line.contains(season_line):  # WU-464: the arrival line may already say it
 		EventBus.post(season_line, "travel")
 
 
