@@ -963,3 +963,53 @@ func test_people_entries_named_npc_has_no_birthday() -> void:
 	assert_eq(rows[0]["birthday_text"], "")
 	assert_eq(rows[0]["birthday_in"], -1)
 	assert_true(int(rows[0]["likes_total"]) > 0)
+
+
+func test_news_line_fresh_local_villager_only() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	assert_eq(Folk.news_line(npc, flags, data(), "qingshi_village", 10), "")
+	Folk.record_news(flags, "great_beast", "Great Wolf", "qingshi_village", 10)
+	var line := Folk.news_line(npc, flags, data(), "qingshi_village", 11)
+	assert_true(line.contains("Great Wolf"))
+	assert_false(line.contains("{subject}"))
+	assert_eq(Folk.news_line(npc, flags, data(), "qingshi_village", 17), "", "stale after news_days")
+	for rid: String in data().regions:
+		if rid != "qingshi_village" and not Exploration.is_nearby(data(), "qingshi_village", rid):
+			assert_eq(Folk.news_line(npc, flags, data(), rid, 11), "", "far region " + rid)
+	var elder := CharacterData.new()
+	elder.id = "elder_x"
+	elder.sect = {"id": "azure_cloud"}
+	assert_eq(Folk.news_line(elder, flags, data(), "qingshi_village", 11), "")
+
+
+func test_news_beats_warm_but_not_birthday_or_cool() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	var day := Folk.birthday_day(npc, data()) + Calendar.DAYS_PER_YEAR
+	Folk.record_news(flags, "breakthrough", "Foundation Establishment", "qingshi_village", day - 1)
+	var cake: Array = data().family["folk_greetings"]["birthday"]
+	assert_true(cake.has(Folk.greeting(npc, 50, day, data(), flags, "", "qingshi_village")))
+	var news := Folk.greeting(npc, 50, day + 1, data(), flags, "", "qingshi_village")
+	assert_true(news.contains("Foundation Establishment"))
+	assert_eq(Folk.greeting(npc, 0, day + 1, data(), flags, "", "qingshi_village"), news, "neutral villagers talk too")
+	var cool: Array = data().family["folk_greetings"]["cool"]["lines"]
+	assert_true(cool.has(Folk.greeting(npc, -50, day + 1, data(), flags, "", "qingshi_village")))
+	assert_false(Folk.greeting(npc, 50, day + 1, data(), flags).contains("Foundation"), "no region, no news")
+
+
+func test_news_validation() -> void:
+	var d := data()
+	var saved: Variant = d.family["folk_greetings"].get("news")
+	d.family["folk_greetings"]["news"] = {"news_days": 7, "bogus": ["x"]}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = {"contest_win": [""]}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = {"news_days": 31}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = saved
+	assert_true(Folk.validate_greetings(d).is_empty())

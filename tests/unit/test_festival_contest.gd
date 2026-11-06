@@ -520,3 +520,17 @@ func test_rival_marked_by_id() -> void:
 		if bool(s.get("rival", false)):
 			flagged += 1
 	assert_eq(flagged, 1, "only the rival by id, not the namesake")
+
+
+func test_contest_win_becomes_village_news() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.player.attributes["comprehension"] = 40
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_eq(int(result["place"]), 1)
+	assert_eq(String(gs.world_flags["village_news"]["kind"]), "contest_win")
+	assert_true(gs.greeting_for(npc.id).contains(String(gs.world_flags["village_news"]["subject"])))

@@ -95,7 +95,7 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 ## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
 ## WEATHER-006: with today's `weather` and a warm villager, `folk_greetings.weather[weather]` lines come first.
-static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "") -> String:
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "", region_id: String = "") -> String:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
@@ -106,6 +106,10 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	var shunned: Array = bands.get("shunned", [])
 	if not shunned.is_empty() and shunned_by_mark(flags, npc.id, day):
 		return String(shunned[absi(hash(npc.id + str(day))) % shunned.size()])
+	if region_id != "" and favor > int(bands.get("cool", {}).get("max_favor", -1000)):
+		var news := news_line(npc, flags, data, region_id, day)
+		if news != "":
+			return news
 	var band: Dictionary = {}
 	var rainy: Array = bands.get("weather", {}).get(weather, [])
 	if weather != "" and not rainy.is_empty() and favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
@@ -118,6 +122,34 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	if lines.is_empty():
 		return ""
 	return String(lines[absi(hash(npc.id + str(day))) % lines.size()])
+
+
+const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "shrine_stage", "season_done", "breakthrough"]
+
+
+## FOLK-015: remember the newest notable deed (a newer one replaces it).
+static func record_news(flags: Dictionary, kind: String, subject: String, region_id: String, day: int) -> void:
+	flags["village_news"] = {"kind": kind, "subject": subject, "region": region_id, "day": day}
+
+
+## FOLK-015: the line a villager says about the newest deed ({player} left for the caller), or "" when there is no
+## fresh news, it happened far away, `npc` is not a villager here, or the kind has no lines. Pure.
+static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, region_id: String, day: int) -> String:
+	var news: Variant = flags.get("village_news")
+	if not (news is Dictionary) or region_id == "":
+		return ""
+	var bands: Dictionary = data.family.get("folk_greetings", {}).get("news", {})
+	if bands.is_empty() or day - int(news.get("day", -9999)) >= int(bands.get("news_days", 7)) or day < int(news.get("day", 0)):
+		return ""
+	var where := String(news.get("region", ""))
+	if where != region_id and not Exploration.is_nearby(data, where, region_id):
+		return ""
+	if not is_villager(npc, data, Npcs.region_of(npc, data)):
+		return ""
+	var lines: Array = bands.get(String(news.get("kind", "")), [])
+	if lines.is_empty():
+		return ""
+	return String(lines[absi(hash(npc.id + str(day))) % lines.size()]).replace("{subject}", String(news.get("subject", "")))
 
 
 ## Load errors in folk_greetings: both bands, non-empty string lines, min_favor above max_favor.
@@ -138,6 +170,18 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 			for line: Variant in plines:
 				if not (line is String) or String(line) == "":
 					errors.append("family.json folk_greetings.celebration.%s: lines must be non-empty strings" % kind)
+	var tidings: Variant = bands.get("news", {})
+	if not (tidings is Dictionary):
+		errors.append("family.json folk_greetings.news must be an object")
+	else:
+		for kind: String in tidings:
+			if kind == "news_days":
+				if not (tidings[kind] is int or tidings[kind] is float) or int(tidings[kind]) < 1 or int(tidings[kind]) > 30:
+					errors.append("family.json folk_greetings.news.news_days must be 1..30")
+			elif not NEWS_KINDS.has(kind):
+				errors.append("family.json folk_greetings.news: unknown kind %s" % kind)
+			elif not (tidings[kind] is Array) or tidings[kind].is_empty() or not (tidings[kind] as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+				errors.append("family.json folk_greetings.news.%s: lines must be a non-empty array of strings" % kind)
 	var cake: Variant = bands.get("birthday", [])
 	if not (cake is Array) or not (cake as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday must be an array of non-empty strings")

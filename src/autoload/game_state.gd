@@ -357,6 +357,7 @@ func attempt_breakthrough() -> void:
 	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		Folk.record_news(world_flags, "breakthrough", String(result["realm_name"]), current_region, GameClock.total_days)
 		var lifespan_gain := Cultivation.lifespan_years(player, data) - lifespan_before
 		if lifespan_gain > 0:
 			EventBus.post("Your lifespan grows to %d years (+%d)." % [Cultivation.lifespan_years(player, data), lifespan_gain], "progress")
@@ -1697,7 +1698,7 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
-	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days)).replace("{player}", player.name)
+	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")
 	if line.contains("{child}"):
@@ -3269,6 +3270,8 @@ func festival_contest(event_id: String) -> Dictionary:
 	result["cheerers"] = cheer_names  # WU-463
 	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
+	if int(result["place"]) == 1:
+		Folk.record_news(world_flags, "contest_win", String(data.world_events[event_id].get("name", event_id)), current_region, GameClock.total_days)
 	_season_note("contest", event_id, 1)
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
@@ -3432,6 +3435,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
 				LifeStats.add(player, "great_beasts")
+				Folk.record_news(world_flags, "great_beast", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				_gain_renown("great_beast")  # WILD-010: the hunter is known (the beast walks and falls once a day)
 				var trophy := Wildlife.record_great(player, data, String(r["enemy"]), region, GameClock.total_days)
 				if trophy != "":
@@ -3466,6 +3470,7 @@ func offer_incense() -> bool:
 func _season_note(kind: String, target: String, n: int) -> void:
 	var day := GameClock.total_days
 	var was_done := bool(player.season_tasks.get("done", false)) and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)
+	var stage_before := SeasonTasks.restoration_stage(player, data)
 	var lines := SeasonTasks.note(player, data, kind, target, n, day)
 	for flag in SeasonTasks.restoration_flags(player, data):
 		world_flags[flag] = true
@@ -3475,6 +3480,10 @@ func _season_note(kind: String, target: String, n: int) -> void:
 		EventBus.player_changed.emit()  # GFX-081: the shrine redraws at its new stage
 	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):
 		return
+	if SeasonTasks.restoration_stage(player, data) > stage_before:
+		Folk.record_news(world_flags, "shrine_stage", "the old shrine", SeasonTasks.REGION, day)
+	else:
+		Folk.record_news(world_flags, "season_done", SeasonTasks.season_name(day).to_lower(), SeasonTasks.REGION, day)
 	var reward: Dictionary = SeasonTasks.def(data, day).get("payout", {})
 	if int(reward.get("stones", 0)) > 0:
 		player.add_item("spirit_stone", int(reward["stones"]))
