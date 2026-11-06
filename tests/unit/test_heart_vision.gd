@@ -183,3 +183,18 @@ func test_validation_flags_bad_alignment_ranges() -> void:
 	assert_gt(HeartVision.validate(d).size(), 0)
 	realm.heart_vision = saved
 	assert_eq(HeartVision.validate(d).size(), 0)
+
+
+## C-272: every realm from Foundation up has a valid vision, with a demonic-only and a righteous-only choice.
+func test_every_realm_from_foundation_has_a_vision() -> void:
+	for i in range(2, data().realms.size()):
+		var v: Dictionary = data().realms[i].heart_vision
+		assert_false(v.is_empty(), data().realms[i].id)
+		if i >= 5:
+			var demonic := false
+			var righteous := false
+			for ch: Dictionary in v["choices"]:
+				demonic = demonic or ch.has("max_alignment")
+				righteous = righteous or ch.has("min_alignment")
+			assert_true(demonic and righteous, data().realms[i].id)
+	assert_eq(HeartVision.validate(data()).size(), 0)
