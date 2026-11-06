@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 5b5b907
+Last reviewed commit: dd1e14a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1547,3 +1547,17 @@ Last reviewed commit: 5b5b907
     FEST-009, FEST-010, WU-458 (Tab switches pages, focus on the tab), GFX-076, QA-197, C-273, C-303 OK.
   - Notes, not filed: FOLK-012's invite reminder is posted in any region; the invited friend may also be an entrant;
     FEST-009 marks the rival in the standings by name, so a villager sharing the rival's name would be marked too.
+- 2026-11-06 (reviewer, 2nd run): reviewed 5b5b907..dd1e14a (SEASON-005, QA-196, GFX-077, MARKET-012, WU-460, C-308,
+  WU-462, GFX-078, WU-463, GUIDE-212, WU-464, C-309 + baseline, WILD-018 + baseline, C-272, GFX-079, SEASON-006;
+  [PLAN]/[REVIEW] skipped). Main green (3314 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`season_tasks` and `seasons_completed` default in from_dict; shrine stages are world flags); no binary assets.
+  - Filed C-315 (cross-feature, SEASON-005 x WILD-018/C-308): autumn's "Hunt a Mist Fox" task can only be done at
+    Foundation through the season's single village hunt, since every Mist Fox roamer and encounter is now capped at
+    qi_refining; losing that hunt costs autumn's set and a shrine stage.
+  - WILD-018 (every tracks_today/next_great_day caller passes the character), GUIDE-212, WU-464, MARKET-012 (tomorrow line
+    respects open days), GFX-079 (steps/clouds are not solid), GFX-078 (spacers unfocusable, focus by day), WU-462,
+    WU-463, WU-460, GFX-077, C-308, C-309, C-272, SEASON-006, QA-196 OK.
+  - Notes, not filed: test_save_data's every-field test does not set `seasons_completed` (covered in test_season_tasks);
+    the HUD's "One more for <season>" and Today's task list show in every region, though tasks pay in Qingshi;
+    `SeasonTasks.list` (called each HUD refresh) resets stale progress as a side effect; Hunter Ma (C-309) now also
+    counts for favor_all and cheering.

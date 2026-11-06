@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| C-315 | content | todo | (REVIEW 2026-11-06, SEASON-005 x WILD-018.) **The autumn fox task at Foundation.** `data/season_tasks.json` `autumn_fox` needs a Mist Fox hunt win, but WILD-018 capped every `mist_fox` roamer (misty_forest, azure_peak) and C-308 the `forest_mist_fox` encounter at `max_realm: qi_refining`. A Foundation player can only finish autumn's set through the one village hunt of the season (`VillageHunt.quarry` ignores realm caps), and a lost hunt spends it, so autumn's set and a shrine stage (SEASON-006) are gone for the year. Fix: give the autumn hunt task a beast a Foundation player also meets in autumn (or add an uncapped autumn-only Mist Fox entry somewhere near Qingshi); add a test in test_season_tasks.gd that every hunt target of every season can roam (`Wildlife.roamers` over that season's days) for a qi_refining *and* a foundation_establishment player in some region. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-11-06 06:10): 14 tasks landed since 00:10 (QA-197, GFX-076, WILD-017, FEST-009, FEST-010, WU-458,
