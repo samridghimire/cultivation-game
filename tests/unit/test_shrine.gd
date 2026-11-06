@@ -40,3 +40,12 @@ func test_place_is_in_qingshi_and_label_counts() -> void:
 	c.seasons_completed.assign(["a", "b", "c", "d"])
 	assert_eq(node.label_text(), "Old Shrine")
 	node.free()
+
+
+func test_incense_state_follows_flag() -> void:
+	var gs := _gs()
+	var flags := {}
+	assert_eq(Shrine.incense_state(gs.data, flags, 10), "cold")
+	flags["shrine_incense"] = {"until": 11}
+	assert_eq(Shrine.incense_state(gs.data, flags, 10), "burning")
+	assert_eq(Shrine.incense_state(gs.data, flags, 11), "cold", "the day after it is out")

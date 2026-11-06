@@ -2,7 +2,7 @@ class_name Shrine
 extends Interactable
 ## GFX-081: Qingshi's old shrine, repaired one stage per finished season (SeasonTasks.restoration_stage, 0..4).
 ## Stage 0 a broken roof and fallen stones, 1 cleared stones, 2 new posts, 3 the roof back, 4 painted and lit with
-## incense smoke (static under reduce_motion). Redraws whenever the player or the day changes.
+## incense smoke and a warm glow only while the incense burns (GFX-084; static under reduce_motion). Redraws whenever the player or the day changes.
 
 const STONE := Color("8a8478")
 const DARK := Color("3a342c")
@@ -14,11 +14,30 @@ const GOLD := Color("e0b84a")
 const OUTLINE := Color("2a2018")
 
 var _time := 0.0
+var _last_stage := -1
+
+
+## GFX-084: "burning" while SEASON-007's incense flag is on today, else "cold" (before the shrine is lit or after the day).
+static func incense_state(data: GameData, flags: Dictionary, day: int) -> String:
+	var inc := SeasonTasks.incense(data)
+	if inc.is_empty() or not Effects.flag_active(flags, String(inc.get("flag", "")), day):
+		return "cold"
+	return "burning"
+
+
+static func burning_now() -> bool:
+	return GameState.player != null and incense_state(GameState.data, GameState.world_flags, GameClock.total_days) == "burning"
 
 
 func _refresh() -> void:
 	super()
-	set_process(highlighted or (stage_now() >= 4 and not MotionFx.reduced()))
+	var stage := stage_now()
+	if _last_stage >= 0 and stage > _last_stage and is_inside_tree() and not MotionFx.reduced():
+		var puff := ConfettiPuff.new()  # GFX-084: a stage was restored
+		puff.position = position + Vector2(0, -size.y * 0.3)
+		get_parent().add_child(puff)
+	_last_stage = stage
+	set_process(highlighted or (burning_now() and not MotionFx.reduced()))
 
 
 ## The restoration stage reached (0 with no session).
@@ -66,12 +85,12 @@ func _process(delta: float) -> void:
 
 
 func draw_generated_art() -> bool:
-	draw_stage(self, size / 2.0, stage_now(), 0.0 if MotionFx.reduced() else _time)
+	draw_stage(self, size / 2.0, stage_now(), 0.0 if MotionFx.reduced() else _time, burning_now())
 	return true
 
 
 ## Draws the shrine for `stage` into `ci`; `h` is half the footprint; `t` animates the incense smoke.
-static func draw_stage(ci: CanvasItem, h: Vector2, stage: int, t: float) -> void:
+static func draw_stage(ci: CanvasItem, h: Vector2, stage: int, t: float, burning: bool = true) -> void:
 	PlaceArt.ellipse(ci, Vector2(0, h.y * 0.8), Vector2(h.x * 0.9, h.y * 0.2), Color(0, 0, 0, 0.3))
 	var altar := Rect2(-h.x * 0.35, h.y * 0.25, h.x * 0.7, h.y * 0.55)
 	ci.draw_rect(altar, STONE)
@@ -99,6 +118,11 @@ static func draw_stage(ci: CanvasItem, h: Vector2, stage: int, t: float) -> void
 		ci.draw_rect(Rect2(-h.x * 0.12, h.y * 0.05, h.x * 0.24, h.y * 0.2), GOLD)
 		for x in [-0.6, 0.6]:
 			ci.draw_circle(Vector2(x * h.x, -h.y * 0.2), 4.0, Color("d9503a"))
+		if not burning:
+			ci.draw_circle(Vector2(0, h.y * 0.15), 3.0, Color("4a4540"))  # a cold censer
+			return
+		for r in 3:  # a soft warm glow on the altar
+			ci.draw_circle(Vector2(0, h.y * 0.4), h.x * (0.5 - r * 0.12), Color(1.0, 0.72, 0.35, 0.1))
 		for i in 3:
 			var rise := fmod(t * 14.0 + i * 12.0, 36.0)
 			var p := Vector2(sin(t * 1.5 + i) * 4.0, h.y * 0.2 - rise)

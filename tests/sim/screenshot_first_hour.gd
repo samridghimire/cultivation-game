@@ -75,6 +75,8 @@ func _start() -> void:
 			gs.player.seasons_completed.clear()
 			for i in clampi(int(arg.substr(9)), 0, 4):
 				gs.player.seasons_completed.append("shot_%d" % i)
+	if OS.get_cmdline_user_args().has("--incense"):  # GFX-084: the incense burns today
+		gs.world_flags["shrine_incense"] = {"until": gs.get_node("/root/GameClock").total_days + 1}
 	if OS.get_cmdline_user_args().has("--great") or OS.get_cmdline_user_args().has("--tracks"):  # WU-430: jump to the region's next great-beast day
 		var clock: Node = root.get_node("GameClock")
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
