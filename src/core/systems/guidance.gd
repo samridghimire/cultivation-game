@@ -216,6 +216,19 @@ static func _festival_today(data: GameData, events: Array, region_id: String, da
 	return ""
 
 
+## CAL-007: " (day 3 of 8)" on days 2..N of a festival running in `region_id`, "" on day 1.
+static func _festival_day_note(data: GameData, events: Array, region_id: String, day: int) -> String:
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		if not WorldEvents.is_festival(data, String(instance.get("id", ""))) or int(instance.get("end_day", -1)) < day:
+			continue
+		var first := int(instance.get("start_day", day))
+		var total := int(instance.get("end_day", day)) - first
+		if day > first and total > 1:
+			return " (day %d of %d)" % [day - first + 1, total]
+		return ""
+	return ""
+
+
 ## TODAY-002: what lies by the path, by name: "Village Mugwort and Dew Grass by the path", "" when nothing is unpicked.
 ## Names are distinct, rarest (lowest forage weight in the region) first; 3+ names give "A, B and N more".
 static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
@@ -274,7 +287,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	# 1. Festival and its contest.
 	var fest := _festival_today(data, active_events, region_id, day)
 	if fest != "":
-		var line := "The %s is on in %s" % [fest, rname]
+		var line := "The %s%s is on in %s" % [fest, _festival_day_note(data, active_events, region_id, day), rname]
 		for instance: Dictionary in WorldEvents.active_in(active_events, region_id):
 			var eid := String(instance.get("id", ""))
 			if not WorldEvents.is_festival(data, eid):

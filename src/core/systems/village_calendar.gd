@@ -4,7 +4,7 @@ extends RefCounted
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
 const MAX_REMINDERS := 3
-const KIND_ORDER := ["market", "hunt", "festival_active", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
+const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
 
 
 ## Every dated thing in [start, start + span) days, soonest first.
@@ -49,7 +49,7 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		var rid := String(inst.get("region", ""))
 		var until := Calendar.format_date(int(inst.get("end_day", 0)))
 		var stall := ", festival stall open" if not Places.festival_stalls_open(data, [inst], rid, first).is_empty() else ""  # FEST-012
-		out.append({"day": first, "kind": "festival_active", "region": rid,
+		out.append({"day": first, "kind": "festival_active", "region": rid, "last_day": last, "festival_id": String(inst["id"]), "name": WorldEvents.event_name(data, String(inst["id"])),
 			"text": "%s in %s (until %s%s)%s" % [WorldEvents.event_name(data, String(inst["id"])), Exploration.region_name(data, rid), until, stall, _contest_suffix(data, String(inst["id"]), flags, start)]})
 	# Festival months inside the window that are not under way.
 	var seen_months := {}
@@ -322,6 +322,18 @@ static func month_grid(entries: Array, month_start_day: int) -> Dictionary:
 		if not grid.has(d):
 			grid[d] = []
 		grid[d].append(e)
+	# CAL-007: the other days of a festival's span inside the month get a light festival_day entry.
+	var month_end := month_start_day + Calendar.DAYS_PER_MONTH - 1
+	for e: Dictionary in entries:
+		if String(e["kind"]) != "festival_active" or not e.has("last_day"):
+			continue
+		for day in range(maxi(int(e["day"]) + 1, month_start_day), mini(int(e["last_day"]), month_end) + 1):
+			var d2 := Calendar.day_of(day)
+			if not grid.has(d2):
+				grid[d2] = []
+			grid[d2].append({"day": day, "kind": "festival_day", "text": String(e.get("name", e.get("text", ""))), "region": e.get("region", ""), "first": false})
+	for d3: int in grid:
+		(grid[d3] as Array).sort_custom(_before)
 	return grid
 
 

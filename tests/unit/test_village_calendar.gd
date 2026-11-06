@@ -285,3 +285,38 @@ func test_game_state_mark_day() -> void:
 	gs.player.marked_days[day] = "Market: Qingshi"
 	assert_eq(Array(VillageCalendar.mark_lines(gs.player, day - 1)), ["Tomorrow: Market: Qingshi."])
 	gs.end_session()
+
+
+func test_festival_fills_every_day_cell() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms, "end_day": ms + 8}
+	var g := VillageCalendar.month_grid(VillageCalendar.upcoming(data(), {}, {}, [inst], "qingshi_village", ms), ms)
+	for d in range(1, 9):
+		var kinds: Array = (g[d] as Array).map(func(x: Dictionary) -> String: return String(x["kind"]))
+		assert_true(kinds.has("festival_active" if d == 1 else "festival_day"), "day %d" % d)
+	assert_false(g.has(9) and ((g[9] as Array).any(func(x: Dictionary) -> bool: return String(x["kind"]) == "festival_day")))
+	var full := 0
+	for d in g:
+		for x: Dictionary in g[d]:
+			if x["kind"] == "festival_active":
+				full += 1
+	assert_eq(full, 1)
+
+
+func test_festival_from_last_month_fills_from_day_one() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms - 3, "end_day": ms + 4}
+	var g := VillageCalendar.month_grid(VillageCalendar.upcoming(data(), {}, {}, [inst], "qingshi_village", ms - 3), ms)
+	for d in range(1, 5):
+		assert_true((g[d] as Array).any(func(x: Dictionary) -> bool: return x["kind"] == "festival_day"), "day %d" % d)
+	assert_false(g.has(5) and ((g[5] as Array).any(func(x: Dictionary) -> bool: return String(x["kind"]) == "festival_day")))
+
+
+func test_today_line_names_festival_day() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms, "end_day": ms + 8}
+	var c := CharacterData.new()
+	var l3 := Guidance.today_lines(c, data(), {}, [inst], ms + 2, "qingshi_village")
+	assert_true(l3[0].contains("(day 3 of 8)"), l3[0])
+	var l1 := Guidance.today_lines(c, data(), {}, [inst], ms, "qingshi_village")
+	assert_false(l1[0].contains("(day"), l1[0])

@@ -188,7 +188,7 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return _glyph("cal_market", CALENDAR, "market")
 		"birthday":
 			return _glyph("cal_birthday", CALENDAR, "birthday")
-		"festival_active", "festival_month":
+		"festival_active", "festival_day", "festival_month":
 			return _glyph("cal_festival", CALENDAR, "festival")
 		"season":
 			return season(season_name)
