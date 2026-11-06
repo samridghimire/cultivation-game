@@ -1219,3 +1219,24 @@ static func finish_companion(c: CharacterData, people: Dictionary, favors: Dicti
 	if not won and people.has(npc_id) and rng.randf() < float(r["injury_chance"]):
 		Injuries.inflict(people[npc_id], data, String(r["injury"]))
 	return delta
+
+
+## FOLK-013: the first unseen scene due for `npc_id` at `favor` ({} = none). A scene for this villager comes
+## before an "any_villager" one. Pure.
+static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int) -> Dictionary:
+	var generic := {}
+	for scene: Dictionary in data.scenes:
+		if c.scenes_seen.has(String(scene["id"])) or favor < int(scene["min_favor"]):
+			continue
+		if String(scene["npc"]) == npc_id:
+			return scene
+		if generic.is_empty() and String(scene["npc"]) == "any_villager":
+			generic = scene
+	return generic
+
+
+## FOLK-013: remember that `scene_id` played on `day`.
+static func mark_scene(c: CharacterData, scene_id: String, day: int) -> void:
+	if not c.scenes_seen.has(scene_id):
+		c.scenes_seen.append(scene_id)
+	c.scene_day = day

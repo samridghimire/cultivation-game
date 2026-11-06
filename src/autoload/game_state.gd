@@ -1549,6 +1549,7 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_event = ""
 	dialogue_node = node
 	_greet_renowned(npc_id)
+	_friend_scene(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
 
 
@@ -1672,6 +1673,23 @@ func court(npc_id: String) -> void:
 	EventBus.post("You spend days in %s's company. They warm to you. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
 	_post_attitude_change(before)
 	_pass_time(result["days"])
+
+
+## FOLK-013: when you talk to a villager and a friend scene is due (one a day), play it once.
+func _friend_scene(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or player.scene_day == GameClock.total_days:
+		return
+	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)))
+	if scene.is_empty():
+		return
+	Folk.mark_scene(player, String(scene["id"]), GameClock.total_days)
+	var text := String(scene["text"]).replace("{name}", String(npc.name))
+	EventBus.post(text, "progress")
+	if scene.has("gift"):
+		player.add_item(String(scene["gift"]), 1)
+		EventBus.post("%s gives you %s." % [npc.name, data.items[String(scene["gift"])].name], "progress")
+	EventBus.friend_scene.emit(String(npc.name), text)
 
 
 ## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).
@@ -1925,6 +1943,7 @@ func chat(npc_id: String) -> void:
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
+	_friend_scene(npc_id)
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true

@@ -63,6 +63,7 @@ var bounties: Dictionary = {}
 var rumors: Dictionary = {}
 var rumor_rules: Dictionary = {"max_per_visit": 2}
 var bounty_config: Dictionary = {"hunt_chance": 0.3, "max_active": 1, "offers": 3}
+var scenes: Array = []  # data/npcs.json "scenes" (FOLK-013)
 var errands: Array = []  # data/npcs.json "errands" (journal reminders, GUIDE-003)
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
@@ -301,6 +302,7 @@ func _load(dir: String) -> void:
 	for npc in npc_file.get("npcs", []):
 		npcs[npc["id"]] = npc
 	errands = npc_file.get("errands", [])
+	scenes = npc_file.get("scenes", [])
 
 	names = _read(dir, "names.json")
 	family = _read(dir, "family.json")
@@ -755,6 +757,24 @@ func _validate_world() -> void:
 		for key in ["asked_flag", "done_flag", "text"]:
 			if String(errand.get(key, "")) == "":
 				load_errors.append("Errand of '%s' has no %s" % [errand.get("npc", ""), key])
+	var scene_ids := {}
+	var tier_mins: Array = []
+	for tier: Dictionary in family.get("folk_tiers", []):
+		tier_mins.append(int(tier["min"]))
+	for scene: Dictionary in scenes:
+		var sid := String(scene.get("id", ""))
+		if sid == "" or scene_ids.has(sid):
+			load_errors.append("Scene '%s' has a missing or duplicate id" % sid)
+		scene_ids[sid] = true
+		var who := String(scene.get("npc", ""))
+		if who != "any_villager" and not npcs.has(who):
+			load_errors.append("Scene '%s' has unknown npc '%s'" % [sid, who])
+		if not tier_mins.has(int(scene.get("min_favor", -1))):
+			load_errors.append("Scene '%s' min_favor must be a folk_tiers min" % sid)
+		if String(scene.get("text", "")) == "":
+			load_errors.append("Scene '%s' has no text" % sid)
+		if scene.has("gift") and not items.has(String(scene["gift"])):
+			load_errors.append("Scene '%s' has unknown gift '%s'" % [sid, scene["gift"]])
 	for dialogue: Dictionary in dialogues.values():
 		load_errors.append_array(Dialogue.validate(dialogue, self))
 
