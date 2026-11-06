@@ -181,3 +181,72 @@ func test_cells_carry_weekday_and_great_beast_mark() -> void:
 func test_date_string_names_the_weekday() -> void:
 	assert_eq(Calendar.format_date_weekday(1), "Year 1, Month 1, Day 2, Moonday")
 	assert_true(GameClock.date_string().ends_with(Calendar.weekday_name(GameClock.total_days)), "HUD date ends with the weekday")
+
+
+func test_mark_options_lists_that_days_labels() -> void:
+	var entries: Array = [{"day": 12, "text": "Market"}, {"day": 12, "text": "Birthday"}, {"day": 12, "text": "Market"}, {"day": 13, "text": "Rent"}]
+	assert_eq(CalendarScreen.mark_options(entries, 12), PackedStringArray(["Market", "Birthday"]), "that day's labels, no repeats")
+	assert_eq(CalendarScreen.mark_options(entries, 14).size(), 0, "none for an empty day")
+
+
+func test_mark_and_unmark_from_the_grid() -> void:
+	var s := _screen()
+	var gs: Node = s[0]
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var today := GameClock.total_days
+	var grid := screen.get("_grid") as GridContainer
+	# Find a future day with an entry.
+	var d := 0
+	for i in range(Calendar.day_of(today) + 1, 31):
+		if not (screen.get("_grid_entries") as Dictionary).get(i, []).is_empty():
+			d = i
+			break
+	assert_true(d > 0, "a future day has an entry")
+	var total := VillageCalendar.month_start(today) + d - 1
+	var cell := grid.get_child(d - 1) as Button
+	cell.grab_focus()
+	cell.pressed.emit()
+	await _frames()
+	var menu := screen.get("_menu") as ChoiceMenu
+	assert_true(menu.visible, "accept opens the mark menu")
+	var first: Button = null
+	for b in menu.find_children("*", "Button", true, false):
+		first = b
+		break
+	first.pressed.emit()
+	await _frames()
+	assert_true(gs.player.marked_days.has(total), "the day is marked")
+	assert_true(not menu.visible, "menu closed")
+	cell = grid.get_child(d - 1) as Button
+	assert_true(cell.has_meta("marked"), "marked cell flagged")
+	assert_true(cell.find_child("Seal", true, false) != null, "seal drawn")
+	assert_true(cell.has_focus(), "focus returns to the cell")
+	assert_true((screen.get("_detail") as Label).text.contains("Marked:"), "detail names the mark")
+	# Unmark.
+	cell.pressed.emit()
+	await _frames()
+	assert_true(menu.visible, "accept on a marked day offers Unmark")
+	for b in menu.find_children("*", "Button", true, false):
+		if (b as Button).text == "Unmark":
+			(b as Button).pressed.emit()
+			break
+	await _frames()
+	assert_true(not gs.player.marked_days.has(total), "unmarked")
+	screen.queue_free()
+	await _frames()
+
+
+func test_today_cannot_be_marked() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var grid := screen.get("_grid") as GridContainer
+	(grid.get_child(Calendar.day_of(GameClock.total_days) - 1) as Button).pressed.emit()
+	await _frames()
+	assert_true(not (screen.get("_menu") as ChoiceMenu).visible, "no menu for today")
+	assert_true((screen.get("_detail") as Label).text.contains("future day"), "reason shown")
+	screen.queue_free()
+	await _frames()

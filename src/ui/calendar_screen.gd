@@ -2,7 +2,8 @@ class_name CalendarScreen
 extends PanelContainer
 ## WU-419: the village calendar. A 6x5 grid of the current month (or the next): today framed in gold, past days dimmed,
 ## up to three 12 px kind icons per day, and the focused day's entries listed in full below. PgUp/PgDn, LB/RB or Tab switch
-## between this month and the next; Esc/B closes. Logic lives in VillageCalendar; this only draws it.
+## between this month and the next; Enter/A on a day with entries marks it (WU-459, a ChoiceMenu of that day's labels; a marked
+## day shows a red seal and offers Unmark); Esc/B closes. Logic lives in VillageCalendar; this only draws it.
 
 signal closed
 
@@ -15,6 +16,7 @@ const KIND_NAMES := {"market": "Market", "festival_active": "Festival", "festiva
 	"field": "Crop", "rent": "Rent", "request": "Request", "secret_realm": "Secret realm", "event": "Event", "great_beast": "Great beast", "hunt": "Village hunt", "forage": "Forage", "season": "Season"}
 const SEASON_TINT := {"Spring": Color("f2a7c3"), "Summer": Color("f0c33c"), "Autumn": Color("e0873a"), "Winter": Color("9fd0f0")}
 const DIM := Color(0.5, 0.5, 0.55)
+const SEAL := Color("c8372d")
 
 var _title: Label
 var _grid: GridContainer
@@ -23,6 +25,9 @@ var _legend: HBoxContainer
 var _close_button: Button
 var _offset := 0  ## 0 = this month, 1 = next month
 var _grid_entries: Dictionary = {}
+var _menu: ChoiceMenu
+var _mark_source: MarkSource
+var _focus_day := 1  ## the day cell last focused
 
 
 func _init() -> void:
@@ -50,10 +55,16 @@ func _init() -> void:
 	box.add_child(hint)
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
+	_mark_source = MarkSource.new()
+	add_child(_mark_source)
+	_menu = ChoiceMenu.new()
+	_menu.closed.connect(_on_menu_closed)
+	add_child(_menu)
+	_menu.set_anchors_preset(Control.PRESET_CENTER)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not visible or _menu.visible:
 		return
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -162,7 +173,10 @@ func _build() -> void:
 			shown += 1
 		cell.set_meta("icons", shown)
 		cell.focus_entered.connect(_show_day.bind(d))
-		cell.pressed.connect(_show_day.bind(d))
+		cell.pressed.connect(_on_cell_pressed.bind(d))
+		if GameState.player.marked_days.has(total):
+			cell.set_meta("marked", true)
+			cell.add_child(_seal())
 		_grid.add_child(cell)
 	_build_legend(season)
 	_show_day(Calendar.day_of(today) if _offset == 0 else 1)
@@ -209,7 +223,78 @@ func _today_style() -> StyleBoxFlat:
 	return sb
 
 
+## A small red ring in the cell's lower right (draw-only).
+func _seal() -> Control:
+	var seal := Control.new()
+	seal.name = "Seal"
+	seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	seal.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	seal.position = Vector2(CELL_SIZE.x - 20, CELL_SIZE.y - 20)
+	seal.size = Vector2(14, 14)
+	seal.draw.connect(func() -> void:
+		seal.draw_arc(Vector2(7, 7), 6, 0.0, TAU, 20, SEAL, 2.0)
+		seal.draw_circle(Vector2(7, 7), 2.5, SEAL))
+	return seal
+
+
+## The labels one can mark `day` (a total-day number) with: the texts of that day's entries, without repeats.
+static func mark_options(entries: Array, day: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	for e: Dictionary in entries:
+		var text := String(e["text"])
+		if int(e["day"]) == day and not out.has(text):
+			out.append(text)
+	return out
+
+
+func _on_cell_pressed(d: int) -> void:
+	_show_day(d)
+	var total := _month_start() + d - 1
+	var marks: Dictionary = GameState.player.marked_days
+	var opts: Array[Dictionary] = []
+	if marks.has(total):
+		_mark_source.display_name = "Marked: %s" % String(marks[total])
+		opts.append({"label": "Unmark", "action": func() -> void:
+			GameState.unmark_day(total)
+			_refresh_keep_focus(d)})
+	elif total <= GameClock.total_days:
+		_detail.text += "\nOnly a future day can be marked."
+		return
+	else:
+		var labels := mark_options(_grid_entries.get(d, []), total)
+		if labels.is_empty():
+			return
+		_mark_source.display_name = "Mark %s" % Calendar.format_date(total)
+		for label in labels:
+			opts.append({"label": label, "action": func() -> void:
+				GameState.mark_day(total, label)
+				_refresh_keep_focus(d)})
+	_mark_source.options = opts
+	_menu.open_for(_mark_source)
+
+
+func _refresh_keep_focus(d: int) -> void:
+	_focus_day = d
+	_build()
+	_show_day(d)
+
+
+func _on_menu_closed() -> void:
+	if visible and _grid.get_child_count() >= _focus_day:
+		(_grid.get_child(_focus_day - 1) as Control).grab_focus.call_deferred()
+
+
+## ChoiceMenu source for the mark / unmark choice.
+class MarkSource extends Node:
+	var display_name := ""
+	var options: Array[Dictionary] = []
+
+	func menu_options() -> Array[Dictionary]:
+		return options
+
+
 func _show_day(d: int) -> void:
+	_focus_day = d
 	var total := _month_start() + d - 1
 	var lines: Array[String] = [Calendar.format_date_weekday(total) + ("  (today)" if total == GameClock.total_days else "")]
 	var entries: Array = _grid_entries.get(d, [])
@@ -218,6 +303,11 @@ func _show_day(d: int) -> void:
 			lines.append(_next_text(total))
 	for e: Dictionary in entries:
 		lines.append("- " + String(e["text"]))
+	var marked: Dictionary = GameState.player.marked_days
+	if marked.has(total):
+		lines.append("Marked: %s  [Enter] Unmark" % String(marked[total]))
+	elif total > GameClock.total_days and not _grid_entries.get(d, []).is_empty():
+		lines.append("[Enter] Mark")
 	_detail.text = "\n".join(lines)
 
 
