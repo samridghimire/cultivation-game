@@ -525,7 +525,7 @@ static func activity_line(_npc: CharacterData, place: Dictionary, sheltering: St
 static func _shelters(region: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for p: Dictionary in region.get("places", []):
-		if HAUNT_SHELTER_PLACES.has(String(p.get("type", ""))):
+		if HAUNT_SHELTER_PLACES.has(String(p.get("type", ""))) and not p.has("festival_only"):
 			out.append(p)
 	return out
 
@@ -534,7 +534,7 @@ static func _haunt_anchors(region: Dictionary, adult: bool) -> Array[Dictionary]
 	var out: Array[Dictionary] = []
 	if adult:
 		for p: Dictionary in region.get("places", []):
-			if HAUNT_ADULT_PLACES.has(String(p.get("type", ""))):
+			if HAUNT_ADULT_PLACES.has(String(p.get("type", ""))) and not p.has("festival_only"):  # FEST-012: not there off-festival
 				out.append(p)
 		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
 			if ["field", "well", "pond", "stall"].has(String(lm.get("kind", ""))):

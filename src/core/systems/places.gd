@@ -10,6 +10,39 @@ static func is_open(place: Dictionary, today: int) -> bool:
 	return days.is_empty() or _has_day(days, Calendar.day_of(today))
 
 
+## FEST-012: true when `place` is there for the festival it names (`festival_only`, a world event id) on `today`:
+## a running instance of that event in `region_id` (WorldEvents.instance_in). A place without `festival_only` is true.
+static func festival_open(place: Dictionary, events: Array, region_id: String, today: int) -> bool:
+	var event_id := String(place.get("festival_only", ""))
+	if event_id == "":
+		return true
+	var instance := WorldEvents.instance_in(events, event_id, region_id)
+	return not instance.is_empty() and int(instance.get("start_day", 0)) <= today and int(instance.get("end_day", -1)) >= today
+
+
+## FEST-012: names of the festival stalls of `region_id` that are open today (for Today lines and the calendar).
+static func festival_stalls_open(data: GameData, events: Array, region_id: String, today: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("festival_only") and festival_open(place, events, region_id, today):
+			out.append(String(place.get("display_name", "stall")))
+	return out
+
+
+## Load-time check of a `festival_only` value: a known festival event that runs in `region_id`.
+static func validate_festival_only(value: Variant, region_id: String, data: GameData, where: String) -> Array[String]:
+	var problems: Array[String] = []
+	if not value is String or not data.world_events.has(String(value)):
+		problems.append("%s festival_only '%s' is not a known world event" % [where, str(value)])
+		return problems
+	var def: Dictionary = data.world_events[String(value)]
+	if not bool(def.get("festival", false)):
+		problems.append("%s festival_only '%s' is not a festival" % [where, str(value)])
+	if not (def.get("regions", []) as Array).has(region_id):
+		problems.append("%s festival_only '%s' does not run in this region" % [where, str(value)])
+	return problems
+
+
 ## Days from `today` until the place is next open (0 = today); -1 if it never is.
 static func days_until_open(place: Dictionary, today: int) -> int:
 	var days: Array = place.get("open_days", [])

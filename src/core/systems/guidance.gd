@@ -257,6 +257,9 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 				if champ != "":
 					line += " (%s)" % champ
 			break
+		var stalls := Places.festival_stalls_open(data, active_events, region_id, day)  # FEST-012
+		if not stalls.is_empty():
+			line += "; festival stall open"
 		out.append(line + ".")
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)

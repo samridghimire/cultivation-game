@@ -534,7 +534,7 @@ func _on_roamers_changed() -> void:
 func _build_places() -> void:
 	_timed_places.clear()
 	for place: Dictionary in _region.get("places", []):
-		if place.has("open_days"):
+		if place.has("open_days") or place.has("festival_only"):
 			continue  # MARKET-002: _refresh_timed_places() adds it on its open days
 		_make_place(place)
 	_refresh_timed_places()
@@ -545,11 +545,11 @@ func _build_places() -> void:
 ## MARKET-002: adds the places with `open_days` that are open today and removes the ones that closed.
 func _refresh_timed_places() -> void:
 	for place: Dictionary in _region.get("places", []):
-		if not place.has("open_days"):
+		if not place.has("open_days") and not place.has("festival_only"):
 			continue
 		var place_name := String(place.get("display_name", ""))
 		var existing: Node = _timed_places.get(place_name)
-		var open := Places.is_open(place, GameClock.total_days)
+		var open := Places.is_open(place, GameClock.total_days) and Places.festival_open(place, GameState.world_events, GameState.current_region, GameClock.total_days)
 		if open and existing == null:
 			_timed_places[place_name] = _make_place(place)
 		elif not open and existing != null:
@@ -568,7 +568,7 @@ func _make_place(place: Dictionary) -> Interactable:
 	# Add before the player so the player draws on top.
 	add_child(node)
 	move_child(node, player.get_index())
-	if place["type"] == "merchant" and not place.has("open_days"):
+	if place["type"] == "merchant" and not place.has("open_days") and not place.has("festival_only"):
 		_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
 	return node
 

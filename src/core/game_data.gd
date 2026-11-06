@@ -652,6 +652,10 @@ func _validate_world() -> void:
 			if place.has("open_days"):
 				for problem in Places.validate(place["open_days"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)
+			if place.has("festival_only"):
+				if place.get("type", "") != "merchant":
+					load_errors.append("Region '%s' place '%s' festival_only is for merchants" % [region["id"], place.get("display_name", "")])
+				load_errors.append_array(Places.validate_festival_only(place["festival_only"], String(region["id"]), self, "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]))
 			if place.has("rotating_stock"):
 				for problem in Places.validate_rotating(place["rotating_stock"], place, items, restricted_item_tags, "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)

@@ -1526,7 +1526,7 @@ func test_every_region_with_a_merchant_sells_a_fighting_style() -> void:
 	for region_id: String in d.regions.keys():
 		var has_merchant := false
 		for place: Dictionary in d.regions[region_id].get("places", []):
-			if place.get("type", "") == "merchant":
+			if place.get("type", "") == "merchant" and not place.has("festival_only"):  # FEST-012
 				has_merchant = true
 		if not has_merchant:
 			continue
