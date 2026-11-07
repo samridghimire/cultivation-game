@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-07 [WU-474] The interact prompt sits beside the person as a small chip.
+- 2026-11-07 [QA-202] The HUD no longer leaks signal connections when the world is rebuilt.
+- 2026-11-07 [FOLK-017] Elder Mo, Xiao Ling and Hunter Ma keep their own days: work, market, shelter from rain, the festival, a day of rest.
+- 2026-11-07 [C-316] Every named Qingshi villager has friend scenes of their own.
+- 2026-11-07 [WU-473] Fights show damage numbers and technique names as each blow lands.
+- 2026-11-07 [C-318] The village talks about your wins, beasts, the shrine and your breakthroughs in many voices.
+- 2026-11-07 [GFX-088] Hens scatter, ducks paddle off and butterflies rise when you walk close.
+- 2026-11-07 [GFX-089] Misty Forest looks like a forest: dark pines closing in and mist all year.
+- 2026-11-07 [FOLK-018] Villagers remember your last gift and mention it.
+- 2026-11-07 [SEASON-009] Village season tasks can change from year to year.
+- 2026-11-07 [WU-472] You are never lost behind the HUD: the key bar fades and the camera can scroll past it.
+- 2026-11-07 [GUIDE-215] Next steps point to the nearest fight you can win and say the odds once.
+- 2026-11-07 [FOLK-016] Friend scene cards say who it is and what they give you.
+- 2026-11-07 [SEASON-008] The next village project: restore the Founder's Old Well for better crops and daily well water.
+- 2026-11-07 [C-312] Foundation-level beasts roam the marsh and the ridge too.
 - 2026-11-07 [WU-470] The calendar shows every festival day and its labels fit their cells.
 - 2026-11-06 [WILD-020] The calendar and Today in a wild region say what comes into season there.
 - 2026-11-06 [FOLK-015] Villagers talk about what you did lately: contest wins, great beasts, the shrine, breakthroughs.

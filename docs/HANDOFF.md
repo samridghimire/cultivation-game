@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-07 (planner, 12:10 UTC)
+- 15 tasks landed (WU-472, GFX-088, GFX-089, WU-473, WU-474, FOLK-016, GUIDE-215, SEASON-009, FOLK-017, FOLK-018,
+  SEASON-008, C-312, C-318, C-316, QA-202). Review 3f308f5..aa54fa8 filed RV-018 (claimed 11:50).
+- Planner shots (`--festival --friend-scene --critters`, `--region=qingshi_village,misty_forest`, 1280x800): GFX-089
+  forest good. Festival crowd labels pile up and the [E] chip draws at the screen top -> WU-475 (spec file); square on
+  the south edge -> GFX-090; friend card face tiny -> WU-476. "Founder's Old Well" is the inheritance place drawn as a
+  stele (the landmark well by the workshop is a plain village well) -> note on RV-018, GFX-087 spec.
+- New: FOLK-019, FOLK-020 friends who teach (spec file) -> C-321/WU-477, GUIDE-216, SEASON-010 -> C-322, CRIT-001 hen eggs,
+  C-319 spots, C-320 tiger choices, GFX-091 mist bands. Systems has 5 ready tasks (no 6th worth writing yet).
+- Next planner: view RV-018/GFX-087 well shots and WU-475/GFX-090 festival shots; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-06 (planner, 12:10 UTC)
 - 13 tasks landed (WU-462, GFX-078, WU-463, GUIDE-212, WU-464, C-309, WILD-018, C-272, GFX-079, SEASON-006, GFX-081,
   FEST-012, C-315). Review 5b5b907..dd1e14a filed C-315 (landed 11:25). Live claims: MISSION-003, QA-198.
