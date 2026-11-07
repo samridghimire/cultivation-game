@@ -159,3 +159,16 @@ func test_shorten_injury_note_only_when_injured() -> void:
 	var c := new_character()
 	var notes := Effects.apply(c, data(), {"shorten_injury": 3}, {})
 	assert_false(", ".join(notes).contains("injuries ease"), str(notes))
+
+
+## REVIEW: a save from before COOK-001 that already cooked a now-taught dish keeps it.
+func test_cooked_dish_from_old_save_stays_known() -> void:
+	var c := new_character()
+	var d := c.to_dict()
+	d.erase("known_dishes")
+	d["cooked_meals"] = {"boar_roast": 2}
+	var old := CharacterData.from_dict(d)
+	assert_true(Cooking.is_known(old, data(), "boar_roast"))
+	assert_false(Cooking.is_known(old, data(), "egg_custard"))
+	assert_false(Cooking.learn(old, data(), "boar_roast"), "already known")
+	assert_true(Effects.check(old, data(), {"learn_dish": "boar_roast"}) != "")

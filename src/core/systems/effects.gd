@@ -77,7 +77,7 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		var reason := Alchemy.can_learn(c, data, effects["learn_recipe"])
 		if reason != "":
 			return reason
-	if effects.has("learn_dish") and c.known_dishes.has(String(effects["learn_dish"])):
+	if effects.has("learn_dish") and Cooking.is_known(c, data, String(effects["learn_dish"])):
 		return "You already know how to cook %s." % String(Cooking.meal(data, String(effects["learn_dish"])).get("name", effects["learn_dish"]))
 	return ""
 

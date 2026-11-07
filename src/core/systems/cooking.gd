@@ -12,16 +12,17 @@ static func meal(data: GameData, meal_id: String) -> Dictionary:
 	return {}
 
 
-## COOK-001: true when the meal is not `taught` or `c` has learned it.
+## COOK-001: true when the meal is not `taught` or `c` has learned it. A dish already cooked (cooked_meals,
+## e.g. in a save from before it became taught) counts as known.
 static func is_known(c: CharacterData, data: GameData, meal_id: String) -> bool:
 	var m := meal(data, meal_id)
-	return not bool(m.get("taught", false)) or c.known_dishes.has(meal_id)
+	return not bool(m.get("taught", false)) or c.known_dishes.has(meal_id) or int(c.cooked_meals.get(meal_id, 0)) > 0
 
 
 ## COOK-001: learns a taught meal. False if it does not exist, is not taught, or is already known.
 static func learn(c: CharacterData, data: GameData, meal_id: String) -> bool:
 	var m := meal(data, meal_id)
-	if m.is_empty() or not bool(m.get("taught", false)) or c.known_dishes.has(meal_id):
+	if m.is_empty() or not bool(m.get("taught", false)) or is_known(c, data, meal_id):
 		return false
 	c.known_dishes.append(meal_id)
 	return true

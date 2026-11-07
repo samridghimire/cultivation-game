@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d56a580
+Last reviewed commit: d259ccc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1645,3 +1645,16 @@ Last reviewed commit: d56a580
   - Notes, not filed: C-320's tiger offering names venison only (C-324 will move it to ENC-012's `offer`); its on_fail text
     says "half a day" but costs 1 day; C-322 added recipes without a test that they cook (home_meals validation covers
     the data); `shorten_injury` still posts "injuries ease" for Clear Well Tea drunk while healthy.
+- 2026-11-07 (reviewer, 4th run): reviewed d56a580..d259ccc (GFX-094, C-323, FOLK-022, GUIDE-218, COOK-001, C-324, GFX-095,
+  WU-480; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`known_dishes` defaults to []); no binary assets (forage sprites and explore looks are code-drawn).
+  - Fixed (COOK-001 save compat): four existing home meals became `taught`, so a save that had already cooked Boar Roast
+    etc. lost the dish with no way to relearn it (no teacher until C-325). `Cooking.is_known` now also counts a dish in
+    `cooked_meals`; `learn` / the `learn_dish` check use it. Test added.
+  - FOLK-022 (named birthdays, day 1..30 = DAYS_PER_MONTH), GUIDE-218, C-324 (torn_shoulder, offer tags), C-323,
+    GFX-094/095, WU-480 OK.
+  - Notes, not filed: until C-325 lands, the four taught dishes have no source on main (C-325 is queued); GUIDE-211
+    `find_note` still names taught dishes the player does not know; GameData (core) reads `PixelPlace.EXPLORE_LOOKS`
+    from src/world (a RefCounted const, works, but belongs in PlaceLooks); GUIDE-218's "has something to show you" also
+    shows on a day the NPC already taught one lesson (one a day), so it can promise the next tier a day early; C-324's
+    balance drift vs the baseline is unexplained (its Follow-up asks QA to refresh docs/balance_baseline.txt).
