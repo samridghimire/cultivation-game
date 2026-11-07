@@ -195,7 +195,7 @@ static func record_news(flags: Dictionary, kind: String, subject: String, region
 
 ## FOLK-015: the line a villager says about the newest deed ({player} left for the caller), or "" when there is no
 ## fresh news, it happened far away, `npc` is not a villager here, or the kind has no lines. Pure.
-static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, region_id: String, day: int) -> String:
+static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, region_id: String, day: int, named: bool = false) -> String:
 	var news: Variant = flags.get("village_news")
 	if not (news is Dictionary) or region_id == "":
 		return ""
@@ -205,7 +205,10 @@ static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, reg
 	var where := String(news.get("region", ""))
 	if where != region_id and not Exploration.is_nearby(data, where, region_id):
 		return ""
-	if not is_villager(npc, data, Npcs.region_of(npc, data)):
+	if named:  # FOLK-019: a named NPC with a dialogue file hears the news too
+		if npc == null or not npc.alive or Npcs.region_of(npc, data) != region_id:
+			return ""
+	elif not is_villager(npc, data, Npcs.region_of(npc, data)):
 		return ""
 	var lines: Array = bands.get(String(news.get("kind", "")), [])
 	if lines.is_empty():

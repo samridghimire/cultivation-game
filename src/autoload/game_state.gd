@@ -1551,7 +1551,31 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_node = node
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
+	_named_remembers(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
+
+
+## FOLK-019: a named villager opening their dialogue says at most one remembered line: the gift
+## memory if due (consumed), else the village news once per NPC per news item.
+func _named_remembers(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return
+	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)
+	if remembered != "":
+		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
+		return
+	var news: Variant = world_flags.get("village_news")
+	if not (news is Dictionary):
+		return
+	var key := "news_told_" + npc_id
+	if world_flags.has(key) and int(world_flags[key]) == int(news.get("day", -1)):
+		return
+	var line := Folk.news_line(npc, world_flags, data, current_region, GameClock.total_days, true)
+	if line == "":
+		return
+	world_flags[key] = int(news.get("day", -1))
+	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
 
 
 ## Start a story event: a dialogue file (data/dialogue/) not bound to an NPC.

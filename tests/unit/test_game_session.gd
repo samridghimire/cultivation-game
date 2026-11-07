@@ -3474,3 +3474,28 @@ func test_gift_memory_line_posts_once_then_expires() -> void:
 	gs.chat(npc.id)
 	EventBus.message_posted.disconnect(_collect_post)
 	assert_false("\n".join(_zero_round_posts).contains(npc.name + ": \""), "once only")
+
+
+## FOLK-019: named villagers with a dialogue file remember gifts and news too, one line per talk.
+func test_named_npc_remembers_gift_then_news() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	c.add_item("venison", 1)
+	gs.npc_favor["hunter_ma"] = 0
+	gs.give_gift("hunter_ma", "venison")
+	gs.world_flags["gift_memory"]["hunter_ma"]["day"] = GameClock.total_days - 1
+	Folk.record_news(gs.world_flags, "contest_win", "the festival", "qingshi_village", GameClock.total_days)
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.start_dialogue("hunter_ma")
+	var first := "\n".join(_zero_round_posts)
+	assert_true(first.contains("Hunter Ma: \""), "gift memory line: " + first)
+	assert_eq(first.count("Hunter Ma: \""), 1, "only one line per talk")
+	_zero_round_posts.clear()
+	gs.start_dialogue("hunter_ma")  # news now, once
+	assert_eq("\n".join(_zero_round_posts).count("Hunter Ma: \""), 1, "news line next talk")
+	_zero_round_posts.clear()
+	gs.start_dialogue("hunter_ma")
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_false("\n".join(_zero_round_posts).contains("Hunter Ma: \""), "nothing the third time")
