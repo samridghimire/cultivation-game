@@ -49,6 +49,7 @@ var screen_lift := 0.0
 var label_fade := 1.0
 ## Set by spread_on_screen when a HUD panel covers the label and it cannot move clear: drawn dimmed.
 var label_covered := false
+var crowd_hidden := false  ## WU-475: another label in a crowd keeps the screen; this one is not drawn
 ## GFX-073: sideways slide (px) that keeps the label clear of HUD panels, and whether the anchor is off screen / under a panel.
 var screen_shift_x := 0.0
 var label_offscreen := false
@@ -265,7 +266,7 @@ func label_drawn_ignoring_target() -> bool:
 
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
-	return visible and not label_offscreen and label_visible(highlighted) and label_fade > 0.0
+	return visible and not label_offscreen and not crowd_hidden and label_visible(highlighted) and label_fade > 0.0
 
 
 ## How visible the name label is for a player standing at `player_pos` (parent coordinates).
@@ -331,6 +332,9 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		var was_off: bool = node.label_offscreen
 		node.screen_shift_x = 0.0
 		node.label_offscreen = anchor_hidden(node.position, view, occupied)
+		if node.crowd_hidden:  # WU-475: re-decided below
+			node.crowd_hidden = false
+			node._redraw_label()
 		if node.label_offscreen != was_off or was_shift != 0.0:
 			node._redraw_label()
 		if node.label_drawn():
@@ -350,6 +354,22 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if an != bn:
 			return not an
 		return a.position.distance_to(player_pos) < b.position.distance_to(player_pos))
+	var crowd_rects: Array[Rect2] = []
+	var crowd_prio: Array[int] = []
+	for node: Interactable in ranked:
+		crowd_rects.append(node.drawn_label_rect(view))
+		crowd_prio.append(2 if node.get("npc_id") != null else 1)
+	var keep := LabelLayout.crowd_keep(crowd_rects, crowd_prio, -1)
+	var kept: Array = []
+	for i in ranked.size():
+		if keep[i]:
+			kept.append(ranked[i])
+		else:
+			(ranked[i] as Interactable).crowd_hidden = true
+			(ranked[i] as Interactable).screen_lift = 0.0
+			(ranked[i] as Interactable).label_covered = false
+			(ranked[i] as Interactable)._redraw_label()
+	ranked = kept
 	var rects: Array[Rect2] = []
 	for node: Interactable in ranked:
 		var r := node.drawn_label_rect(view)
@@ -520,7 +540,7 @@ func _draw_label() -> void:
 		_label_node.draw_arc(center, 10.0, 0.0, TAU, 24, Color(0.1, 0.08, 0.04), 1.5)
 		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
-	if not label_visible(highlighted):
+	if not label_visible(highlighted) or crowd_hidden:
 		return
 	var fade := minf(label_fade, PLACE_FAR_ALPHA) if label_covered else label_fade
 	if fade <= 0.0:

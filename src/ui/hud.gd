@@ -906,7 +906,7 @@ func current_prompt_rect() -> Rect2:
 
 ## WU-441: where the "[E] <name>" chip goes: just above the target's name label, else just below it, clamped
 ## inside `screen` and clear of `avoid` rects whenever a free spot exists (else the clamped spot above).
-static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30)) -> Rect2:
+static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30), figure: Vector2 = NO_FIGURE) -> Rect2:
 	var x := target_label_rect.get_center().x - chip_size.x / 2.0
 	var above_y := target_label_rect.position.y - chip_size.y - 2.0
 	var below_y := target_label_rect.end.y + 2.0
@@ -923,9 +923,23 @@ static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Re
 			if r.intersects(a):
 				hit = true
 				break
-		if not hit:
+		if not hit and _near_figure(r, figure):
 			return r
+	# WU-475: no free spot by the label: sit just above the figure (may overlap faded labels).
+	if figure != NO_FIGURE:
+		var r := Rect2(figure + Vector2(-chip_size.x / 2.0, -chip_size.y - 24.0), chip_size)
+		r.position.x = clampf(r.position.x, screen.position.x, maxf(screen.position.x, screen.end.x - chip_size.x))
+		r.position.y = clampf(r.position.y, screen.position.y, maxf(screen.position.y, screen.end.y - chip_size.y))
+		return r
 	return first
+
+
+const NO_FIGURE := Vector2(-1.0e9, -1.0e9)
+const PROMPT_MAX_FROM_FIGURE := 120.0
+
+
+static func _near_figure(chip: Rect2, figure: Vector2) -> bool:
+	return figure == NO_FIGURE or chip.get_center().distance_to(figure) <= PROMPT_MAX_FROM_FIGURE
 
 
 ## WU-441: moves the prompt next to its target's label; the bottom-centre spot stays the fallback.
@@ -943,7 +957,11 @@ func _place_prompt() -> void:
 	var label_rect: Rect2 = xf * target.label_rect("" if target.label_drawn_ignoring_target() else _target_name)
 	var screen := get_viewport().get_visible_rect()
 	var chip := _prompt.get_combined_minimum_size()
-	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip)
+	var figure: Vector2 = xf * target.position
+	if not screen.grow(40.0).has_point(figure):  # WU-475: target off screen
+		_prompt_to_bottom()
+		return
+	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip, figure)
 	if _prompt_floating == false:
 		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		_prompt_floating = true

@@ -76,6 +76,38 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 	return out
 
 
+## WU-475: which labels stay in a crowd. A label whose neighbourhood (rect centres within `radius`, itself
+## included) holds more than `max_shown` labels is kept only if fewer than `max_shown` of those neighbours
+## outrank it: the `focus` index first, then a lower `priority` number, then the earlier index (callers sort
+## by distance to the player). Labels in a thin neighbourhood are always kept.
+static func crowd_keep(rects: Array[Rect2], priority: Array[int], focus: int, radius: float = 160.0, max_shown: int = 3) -> Array[bool]:
+	var keep: Array[bool] = []
+	for i in rects.size():
+		var near: Array[int] = []
+		for j in rects.size():
+			if rects[i].get_center().distance_to(rects[j].get_center()) <= radius:
+				near.append(j)
+		if near.size() <= max_shown:
+			keep.append(true)
+			continue
+		var outranking := 0
+		for j in near:
+			if j != i and _outranks(j, i, priority, focus):
+				outranking += 1
+		keep.append(outranking < max_shown)
+	return keep
+
+
+static func _outranks(a: int, b: int, priority: Array[int], focus: int) -> bool:
+	if (a == focus) != (b == focus):
+		return a == focus
+	var pa: int = priority[a] if a < priority.size() else 0
+	var pb: int = priority[b] if b < priority.size() else 0
+	if pa != pb:
+		return pa < pb
+	return a < b
+
+
 static func _hits(rect: Rect2, others: Array[Rect2], skip: int = -1) -> bool:
 	for i in others.size():
 		if i != skip and rect.intersects(others[i]):

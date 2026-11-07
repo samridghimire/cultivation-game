@@ -66,3 +66,13 @@ func test_prompt_rect_near_bottom_keeps_chip_width() -> void:
 	var r: Rect2 = HUD.prompt_rect(Rect2(600, 780, 120, 18), screen, [], chip)
 	assert_eq(r.size.x, 310.0, "chip width tracks its text")
 	assert_true(screen.encloses(r), "chip inside the screen")
+
+
+## WU-475: with every spot blocked the chip still sits within 120 px of the figure.
+func test_prompt_rect_blocked_stays_near_figure() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var figure := Vector2(640, 600)
+	var label := Rect2(600, 560, 80, 14)
+	var avoid: Array[Rect2] = [Rect2(0, 400, 1280, 400)]
+	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(180, 30), figure)
+	assert_true(r.get_center().distance_to(figure) < 120.0)
