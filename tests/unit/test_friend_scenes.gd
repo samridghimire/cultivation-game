@@ -25,10 +25,13 @@ func test_scene_due_orders_specific_before_generic() -> void:
 func test_scene_seen_once() -> void:
 	var c := CharacterData.new()
 	Folk.mark_scene(c, "xiao_ling_old_swing", 5)
+	Folk.mark_scene(c, "xiao_ling_lantern_wish", 5)
 	var v := _villager("qingshi_village")
 	assert_true(Folk.scene_due(c, data(), "xiao_ling", 90).is_empty())
 	assert_eq(String(Folk.scene_due(c, data(), v.id, 90, v, "qingshi_village")["id"]), "villager_shared_bowl")
-	Folk.mark_scene(c, "villager_shared_bowl", 5)
+	for scene: Dictionary in data().scenes:
+		if String(scene["npc"]) == "any_villager":
+			Folk.mark_scene(c, String(scene["id"]), 5)
 	assert_true(Folk.scene_due(c, data(), v.id, 90, v, "qingshi_village").is_empty())
 
 
@@ -88,10 +91,10 @@ func test_any_villager_scene_needs_a_real_villager() -> void:
 	sect_member.sect = {"id": "x", "rank": 0, "contribution": 0}
 	assert_false(Folk.is_villager(sect_member, data(), "qingshi_village"))
 	var elder := CharacterData.new()
-	elder.id = "elder_mo"
+	elder.id = "broker_qian"
 	elder.home_region = "qingshi_village"
 	assert_false(Folk.is_villager(elder, data(), "qingshi_village"))
-	assert_true(Folk.scene_due(c, data(), "elder_mo", 90, elder, "qingshi_village").is_empty())
+	assert_true(Folk.scene_due(c, data(), "broker_qian", 90, elder, "qingshi_village").is_empty())
 	assert_true(Folk.scene_due(c, data(), v.id, 90, v, "misty_forest").is_empty())
 
 

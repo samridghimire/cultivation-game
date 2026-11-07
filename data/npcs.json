@@ -72,6 +72,15 @@
   ],
   "scenes": [
     {"id": "xiao_ling_old_swing", "npc": "xiao_ling", "min_favor": 40, "text": "{name} leads you to the rope swing behind her family's house, grey with rain now. \"We were smaller than the knots, then,\" she laughs, and pushes you once, as she used to.", "gift": "sweet_rice_ball"},
-    {"id": "villager_shared_bowl", "npc": "any_villager", "min_favor": 40, "text": "{name} insists you stay for supper. Nothing is said about why; the bowl is simply set down in front of you, full."}
+    {"id": "villager_shared_bowl", "npc": "any_villager", "min_favor": 40, "text": "{name} insists you stay for supper. Nothing is said about why; the bowl is simply set down in front of you, full."},
+    {"id": "elder_mo_tea_lesson", "npc": "elder_mo", "min_favor": 40, "text": "{name} pours you tea and, for once, does not lecture. \"I spent sixty years chasing the heavens,\" the old cultivator says. \"Sit. The kettle teaches patience better than I ever did.\"", "gift": "dew_grass"},
+    {"id": "elder_mo_old_scar", "npc": "elder_mo", "min_favor": 60, "text": "{name} shows you a pale scar across the wrist and tells how it was earned, and what it cost a friend. \"Do not repeat my mistakes. Make your own, smaller ones.\"", "gift": "qi_gathering_pill"},
+    {"id": "xiao_ling_lantern_wish", "npc": "xiao_ling", "min_favor": 60, "text": "{name} hangs a paper lantern at her gate and writes your name beside hers on it. \"For a good road,\" she says, a little pink, and presses a second lantern into your hands.", "gift": "paper_lantern"},
+    {"id": "hunter_ma_first_snare", "npc": "hunter_ma", "min_favor": 40, "text": "{name} walks you along the ridge path and shows how he sets a snare: patient hands, no hurry. \"The wood tells you everything, if you stop talking,\" he grunts, and hands you a strip of smoked meat.", "gift": "venison"},
+    {"id": "hunter_ma_scarred_bow", "npc": "hunter_ma", "min_favor": 60, "text": "{name} lets you hold his old bow, the grip worn smooth by twenty winters. \"I never lent it to anyone,\" he mutters, then nods once, which from him is a speech."},
+    {"id": "villager_mended_roof", "npc": "any_villager", "min_favor": 40, "text": "{name} sees you passing and calls up from the ladder. You hold it steady while the thatch is patched, and nobody mentions payment, only a nod of thanks."},
+    {"id": "villager_old_story", "npc": "any_villager", "min_favor": 40, "text": "{name} tells you how the village looked before the stone road: wolves in the barley and a sky full of crows. \"We got by,\" they say. \"People do.\"", "gift": "rain_loach"},
+    {"id": "villager_harvest_share", "npc": "any_villager", "min_favor": 60, "text": "{name} presses a bundle into your arms at the lane's end. \"You came when the well ran dry and when the fever came. This is the least of it.\"", "gift": "herb_porridge"},
+    {"id": "villager_night_watch", "npc": "any_villager", "min_favor": 60, "text": "{name} brings a lamp and sits with you through the dark hours, saying little. At dawn the lamp is trimmed and the tea is hot: that is how friends are made here."}
   ]
 }
