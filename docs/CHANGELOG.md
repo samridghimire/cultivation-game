@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-07 [WU-470] The calendar shows every festival day and its labels fit their cells.
+- 2026-11-06 [WILD-020] The calendar and Today in a wild region say what comes into season there.
+- 2026-11-06 [FOLK-015] Villagers talk about what you did lately: contest wins, great beasts, the shrine, breakthroughs.
+- 2026-11-06 [CAL-007] A festival marks every one of its days on the calendar.
+- 2026-11-06 [GFX-086] Hens, ducks and butterflies live in Qingshi.
+- 2026-11-06 [WU-469] The village tasks board reads cleanly, with drawn check boxes.
+- 2026-11-06 [WU-471] Next steps lines have icons by kind.
+- 2026-11-06 [QI-003] The qi number is the same in the HUD, the arrival card, the map and the travel note.
+- 2026-11-06 [C-317] Outgrown great beasts make way: their angrier returns are now Foundation fights.
+- 2026-11-06 [QA-201] World nodes no longer leave stale signal connections behind when the world is rebuilt.
+- 2026-11-06 [FOLK-014] Friend scene fixes and a rose-coloured "people" message category.
+- 2026-11-06 [GFX-085] Qingshi has a festival square, so the contest crowd no longer piles up at the start.
+- 2026-11-06 [WU-467] A card shows a moment with a friend, with their figure.
 - 2026-11-06 [GFX-084] The restored shrine smokes and glows only while your incense burns, and a restored stage bursts into confetti.
 - 2026-11-06 [WU-468] The Next steps panel no longer cuts lines off or pushes hints out.
 - 2026-11-06 [FOLK-013] Close villagers share a small moment with you, sometimes with a gift.
