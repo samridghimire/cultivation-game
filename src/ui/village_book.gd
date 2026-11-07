@@ -420,6 +420,10 @@ func _card(e: Dictionary) -> Button:
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
+	for line in lesson_lines(id, GameState.lessons_for(id), data):
+		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else DIM)
+		lesson_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(lesson_label)
 	if String(e.get("last_gift", "")) != "":
 		var gift_label := UIStyle.label(String(e["last_gift"]), 12, DIM)
 		gift_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -443,6 +447,38 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 	if String(e.get("last_gift", "")) != "":
 		parts.append(String(e["last_gift"]) + ".")
 	return " ".join(parts)
+
+
+## WU-477: a short phrase for a lesson's effects, e.g. "5 days of practice".
+static func effect_short(effects: Dictionary, data: GameData) -> String:
+	var bits: PackedStringArray = []
+	if effects.has("practice_days"):
+		bits.append("%d days of practice" % int(effects["practice_days"]))
+	if effects.has("dao_insight"):
+		bits.append("Dao insight")
+	if effects.has("learn_recipe"):
+		bits.append("a recipe")
+	if effects.has("learn_technique"):
+		bits.append("a technique")
+	if effects.has("profession_xp"):
+		bits.append("craft experience")
+	if effects.has("attributes"):
+		bits.append("better " + ", ".join(PackedStringArray((effects["attributes"] as Dictionary).keys())))
+	if effects.has("items"):
+		bits.append("a keepsake")
+	return ", ".join(bits) if not bits.is_empty() else "something useful"
+
+
+## WU-477: one text line per lesson of `npc_id`: "Taught you: <effect>" or "At <tier>: ???".
+static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var lessons := Folk.lessons_of(data, npc_id)
+	for i in rows.size():
+		if bool(rows[i]["taught"]):
+			lines.append("Taught you: " + effect_short(lessons[i].get("effects", {}), data))
+		else:
+			lines.append("At %s: ???" % rows[i]["tier_name"])
+	return lines
 
 
 ## WU-425: the regions whose roamer rosters can field `enemy_id`, by name.

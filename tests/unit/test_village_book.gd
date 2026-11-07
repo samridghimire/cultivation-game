@@ -269,3 +269,15 @@ func test_festivals_page_builds_a_card_per_contest_and_focuses_first() -> void:
 	assert_true(grid.get_child(0).has_focus(), "first card focused")
 	book.free()
 	gs.end_session()
+
+
+func test_lesson_lines_taught_and_unknown() -> void:
+	var gs: Node = _tree().root.get_node("GameState")
+	gs.start_session(new_character())
+	var rows: Array[Dictionary] = gs.lessons_for("hunter_ma")
+	assert_eq(rows.size(), 1, "Hunter Ma has one lesson")
+	var lines: PackedStringArray = VillageBook.lesson_lines("hunter_ma", rows, gs.data)
+	assert_true(String(lines[0]).begins_with("At ") and String(lines[0]).ends_with(": ???"), lines[0])
+	gs.player.lessons_taught["hunter_ma:0"] = 1
+	lines = VillageBook.lesson_lines("hunter_ma", gs.lessons_for("hunter_ma"), gs.data)
+	assert_eq(lines[0], "Taught you: 5 days of practice")
