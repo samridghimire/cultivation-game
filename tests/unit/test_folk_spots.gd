@@ -29,7 +29,8 @@ func test_festival_beats_rain() -> void:
 	var r := Folk.spot_for(data(), _def(), MARKET_DAY, "rain", _festival())
 	assert_eq(r["why"], "festival")
 	var square := Vector2(660, 800)
-	assert_true((r["pos"] as Vector2).distance_to(square) <= 111.0)
+	assert_eq(r["pos"], Vector2(680, 660))  # C-323: Elder Mo's own festival spot
+	assert_true((r["pos"] as Vector2).distance_to(square) <= 160.0)
 
 
 func test_festival_offset_is_deterministic() -> void:
@@ -144,3 +145,20 @@ func test_festival_ring_keeps_clear_of_player() -> void:
 	assert_eq(ring.size(), 12)
 	for p in ring:
 		assert_true(p.distance_to(player[0]) >= Folk.FESTIVAL_GAP, "clear of the player")
+
+
+## C-323: Elder Mo, Xiao Ling and Hunter Ma have festival spots beyond the ring, 28+ px from each other and every ring slot.
+func test_named_festival_spots_clear_ring_and_each_other() -> void:
+	var square := Vector2(660, 800)
+	var slots := Folk.festival_ring(square, Folk.FESTIVAL_SLOTS, Folk.festival_blockers(data(), "qingshi_village"))
+	var spots: Array[Vector2] = []
+	for id: String in ["elder_mo", "xiao_ling", "hunter_ma"]:
+		var s: Array = data().npcs[id]["spots"]["festival"]
+		var p := Vector2(float(s[0]), float(s[1]))
+		assert_true(p.distance_to(square) >= 120.0, "%s is outside the ring" % id)
+		for q in slots:
+			assert_true(p.distance_to(q) >= 28.0, "%s keeps off ring slot" % id)
+		for o in spots:
+			assert_true(p.distance_to(o) >= 28.0, "%s keeps off the others" % id)
+		spots.append(p)
+		assert_eq(Folk.spot_for(data(), data().npcs[id], 5, "clear", _festival())["pos"], p)
