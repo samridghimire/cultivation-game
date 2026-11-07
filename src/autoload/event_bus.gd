@@ -102,7 +102,7 @@ signal season_tasks_done(season: String, reward: String)
 ## WU-466: the village bounty board asks for the season's task card.
 signal season_board_requested
 ## FOLK-013: a friend scene played (for a card).
-signal friend_scene(npc_name: String, text: String)
+signal friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String)
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).
 var last_notice_id: String = ""
 

@@ -256,6 +256,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_realm_card))
 	_contest_card = ContestCard.new()
 	_contest_card.closed.connect(_update_modal)
+	_contest_card.closed.connect(_flush_friend_scenes, CONNECT_DEFERRED)  # FOLK-016
 	add_child(UIStyle.centered(_contest_card))
 	_friend_card = FriendSceneCard.new()
 	_friend_card.closed.connect(_update_modal)
@@ -1816,9 +1817,11 @@ func _on_contest_finished(result: Dictionary) -> void:
 
 
 ## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
-func _on_friend_scene(npc_name: String, text: String) -> void:
-	_pending_friend_scenes.append([npc_name, text])
-	if _dialogue.visible:
+func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String) -> void:
+	_pending_friend_scenes.append([npc_id, npc_name, text, gift_name])
+	if _contest_card.visible:
+		pass  # FOLK-016: shown when the contest card closes (_flush_friend_scenes is connected to its `closed`)
+	elif _dialogue.visible:
 		if not _dialogue.closed.is_connected(_flush_friend_scenes):
 			_dialogue.closed.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
 	elif is_instance_valid(RoadCard.current):
@@ -1835,12 +1838,7 @@ func _flush_friend_scenes() -> void:
 		_pending_friend_scenes.clear()
 		return
 	var scene: Array = _pending_friend_scenes.pop_front()
-	var npc_id := ""
-	for id: String in GameState.npcs:
-		if String(GameState.npcs[id].name) == scene[0]:
-			npc_id = id
-			break
-	_friend_card.open(npc_id, scene[0], scene[1])
+	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]))
 	_update_modal()
 
 

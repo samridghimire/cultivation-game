@@ -36,13 +36,15 @@ func test_talking_plays_scene_gift_once_and_one_per_day() -> void:
 	var c := _start()
 	var gs := _root().get_node("GameState")
 	var got: Array = []
-	var cb := func(n: String, t: String) -> void: got.append(n)
+	var cb := func(id: String, n: String, t: String, g: String) -> void: got.append([id, n, g])
 	EventBus.friend_scene.connect(cb)
 	gs.npc_favor["xiao_ling"] = 45
 	var rice := c.item_count("sweet_rice_ball")
 	gs.start_dialogue("xiao_ling")
 	EventBus.friend_scene.disconnect(cb)
 	assert_eq(got.size(), 1)
+	assert_eq(got[0][0], "xiao_ling", "the signal carries the id")
+	assert_eq(got[0][2], String(gs.data.items["sweet_rice_ball"]["name"]), "and the gift's name")
 	assert_true(c.scenes_seen.has("xiao_ling_old_swing"))
 	assert_eq(c.item_count("sweet_rice_ball"), rice + 1)
 	# Same day: no second scene even though the generic one is due for another villager.

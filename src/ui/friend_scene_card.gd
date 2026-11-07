@@ -12,6 +12,7 @@ const ZOOM := 5
 var _face: TextureRect
 var _name: Label
 var _text: Label
+var _gift: Label
 var _button: Button
 
 
@@ -35,15 +36,21 @@ func _init() -> void:
 	_text = UIStyle.label("", 17)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_text)
+	_gift = UIStyle.label("", 17, Color(0.95, 0.8, 0.35))
+	_gift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_gift.visible = false
+	box.add_child(_gift)
 	_button = UIStyle.button("Close", close)
 	box.add_child(_button)
 
 
 ## `npc_id` picks the figure's look ("" = a plain villager).
-func open(npc_id: String, npc_name: String, text: String) -> void:
+func open(npc_id: String, npc_name: String, text: String, gift_name: String = "") -> void:
 	_face.texture = PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("9a8f7a")), "down", 0)
 	_name.text = npc_name
 	_text.text = text
+	_gift.text = "They give you %s." % gift_name if gift_name != "" else ""
+	_gift.visible = gift_name != ""
 	visible = true
 	_button.grab_focus.call_deferred()
 
@@ -57,6 +64,10 @@ func close() -> void:
 
 func button() -> Button:
 	return _button
+
+
+func gift_text() -> String:
+	return _gift.text if _gift.visible else ""
 
 
 func scene_text() -> String:

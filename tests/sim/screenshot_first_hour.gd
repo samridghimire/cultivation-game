@@ -18,6 +18,7 @@ extends SceneTree
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
+## FOLK-016: append `-- --friend-scene` for friend_scene.png (a friend scene card with a gift line).
 ## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
 ## field_menu.png (the rented field's menu with the tool icons).
 ## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
@@ -145,6 +146,14 @@ func _start() -> void:
 		special = true
 	if OS.get_cmdline_user_args().has("--friend"):  # WU-418: a Qingshi villager at favor 65 and their menu
 		_friend_shots(gs)
+		special = true
+	if OS.get_cmdline_user_args().has("--friend-scene"):  # FOLK-016: Xiao Ling's scene card with its gift line
+		shots.append({"name": "friend_scene", "open": func() -> void:
+			hud.get("_banner").visible = false
+			gs.current_region = "qingshi_village"
+			gs.npc_favor["xiao_ling"] = 45
+			c.scene_day = -1
+			gs._friend_scene("xiao_ling"), "close": func() -> void: hud.get("_friend_card").close()})
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)

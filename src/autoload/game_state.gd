@@ -1687,10 +1687,12 @@ func _friend_scene(npc_id: String) -> void:
 	Folk.mark_scene(player, String(scene["id"]), GameClock.total_days)
 	var text := String(scene["text"]).replace("{name}", String(npc.name))
 	EventBus.post(text, "people")
+	var gift_name := ""
 	if scene.has("gift"):
 		player.add_item(String(scene["gift"]), 1)
-		EventBus.post("%s gives you %s." % [npc.name, data.items[String(scene["gift"])].name], "people")
-	EventBus.friend_scene.emit(String(npc.name), text)
+		gift_name = String(data.items[String(scene["gift"])].name)
+		EventBus.post("%s gives you %s." % [npc.name, gift_name], "people")
+	EventBus.friend_scene.emit(npc_id, String(npc.name), text, gift_name)
 
 
 ## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).
