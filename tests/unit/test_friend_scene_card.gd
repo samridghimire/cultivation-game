@@ -103,3 +103,46 @@ func test_face_is_drawn_at_five_times_and_card_is_short() -> void:
 	assert_eq(face.stretch_mode, TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 	assert_true(card.get_combined_minimum_size().y < 300.0, "card height %s" % card.get_combined_minimum_size().y)
 	card.queue_free()
+
+
+func test_lesson_line_and_queue_after_contest_and_scene() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var plain := FriendSceneCard.new()
+	root.add_child(plain)
+	plain.open("xiao_ling", "Xiao Ling", "Text.", "", "", "+2 hp")
+	assert_eq(plain.learned_text(), "You learned: +2 hp")
+	plain.open("xiao_ling", "Xiao Ling", "Text.")
+	assert_eq(plain.learned_text(), "", "omitted when empty")
+	plain.queue_free()
+
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var contest: ContestCard = hud.get("_contest_card")
+	var card: FriendSceneCard = hud.get("_friend_card")
+	var dialogue = hud.get("_dialogue")
+	if dialogue.visible:
+		dialogue.close()
+	contest.visible = true
+	EventBus.lesson_taught.emit("xiao_ling", "Xiao Ling", "She teaches you a knot.", "+1 luck")
+	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "Same day scene.", "", "")
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_false(card.visible, "lesson held behind the contest card")
+	contest.visible = false
+	contest.closed.emit()
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(card.visible)
+	assert_eq(card.learned_text(), "You learned: +1 luck")
+	card.close()
+	assert_true(card.visible, "the scene follows the lesson")
+	assert_eq(card.scene_text(), "Same day scene.")
+	assert_eq(card.learned_text(), "")
+	card.close()
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()

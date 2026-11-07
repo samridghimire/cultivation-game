@@ -268,6 +268,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.friend_scene.connect(_on_friend_scene)
+	EventBus.lesson_taught.connect(_on_lesson_taught)
 	_banner = Banner.new()
 	add_child(_banner)
 	_digest_card = DigestCard.new()
@@ -1847,7 +1848,16 @@ func _on_contest_finished(result: Dictionary) -> void:
 
 ## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
 func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, gift_id: String = "") -> void:
-	_pending_friend_scenes.append([npc_id, npc_name, text, gift_name, gift_id])
+	_queue_friend_card([npc_id, npc_name, text, gift_name, gift_id, ""])
+
+
+## WU-479: a friend's lesson shows on the same card, queued exactly like a scene.
+func _on_lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String) -> void:
+	_queue_friend_card([npc_id, npc_name, text, "", "", effect_line])
+
+
+func _queue_friend_card(entry: Array) -> void:
+	_pending_friend_scenes.append(entry)
 	if _contest_card.visible:
 		pass  # FOLK-016: shown when the contest card closes (_flush_friend_scenes is connected to its `closed`)
 	elif _dialogue.visible:
@@ -1867,7 +1877,7 @@ func _flush_friend_scenes() -> void:
 		_pending_friend_scenes.clear()
 		return
 	var scene: Array = _pending_friend_scenes.pop_front()
-	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "")
+	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "", String(scene[5]) if scene.size() > 5 else "")
 	_update_modal()
 
 

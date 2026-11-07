@@ -15,6 +15,7 @@ var _text: Label
 var _gift: Label
 var _gift_row: HBoxContainer
 var _gift_icon: TextureRect
+var _learned: Label
 var _button: Button
 
 
@@ -51,12 +52,16 @@ func _init() -> void:
 	_gift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_gift.custom_minimum_size = Vector2(WRAP_WIDTH - 32, 0)
 	_gift_row.add_child(_gift)
+	_learned = UIStyle.label("", 17, Color(0.95, 0.8, 0.35))  # WU-479: "You learned: ..." for a lesson
+	_learned.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_learned.visible = false
+	box.add_child(_learned)
 	_button = UIStyle.button("Close", close)
 	box.add_child(_button)
 
 
 ## `npc_id` picks the figure's look ("" = a plain villager).
-func open(npc_id: String, npc_name: String, text: String, gift_name: String = "", gift_id: String = "") -> void:
+func open(npc_id: String, npc_name: String, text: String, gift_name: String = "", gift_id: String = "", learned: String = "") -> void:
 	_portrait.set_portrait(PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("9a8f7a")), "down", 0))
 	_name.text = npc_name
 	_text.text = text
@@ -65,6 +70,8 @@ func open(npc_id: String, npc_name: String, text: String, gift_name: String = ""
 	var tex: Texture2D = ItemIcon.for_id(GameState.data, gift_id) if gift_id != "" and GameState.data != null else null
 	_gift_icon.texture = tex
 	_gift_icon.visible = tex != null
+	_learned.text = "You learned: %s" % learned if learned != "" else ""
+	_learned.visible = learned != ""
 	visible = true
 	_button.grab_focus.call_deferred()
 
@@ -92,6 +99,11 @@ func gift_text() -> String:
 ## True when the gift row shows an item icon (GFX-092 test).
 func has_gift_icon() -> bool:
 	return _gift_row.visible and _gift_icon.visible
+
+
+## The gold "You learned: ..." line, or "" when hidden (WU-479 test).
+func learned_text() -> String:
+	return _learned.text if _learned.visible else ""
 
 
 func scene_text() -> String:
