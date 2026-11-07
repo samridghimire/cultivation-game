@@ -1871,7 +1871,11 @@ func _queue_friend_card(entry: Array) -> void:
 
 
 func _flush_friend_scenes() -> void:
-	if _pending_friend_scenes.is_empty() or _friend_card.visible or _dialogue.visible or _contest_card.visible:
+	if _pending_friend_scenes.is_empty() or _friend_card.visible or _contest_card.visible:
+		return
+	if _dialogue.visible:  # review: queued just before start_dialogue opened it; show once it closes
+		if not _dialogue.closed.is_connected(_flush_friend_scenes):
+			_dialogue.closed.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
 		return
 	if GameState.player == null or not GameState.player.alive:
 		_pending_friend_scenes.clear()

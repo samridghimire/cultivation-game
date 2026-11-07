@@ -146,3 +146,32 @@ func test_lesson_line_and_queue_after_contest_and_scene() -> void:
 	root.remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## Review: a scene or lesson emitted by start_dialogue arrives just before the conversation opens (same frame); the
+## deferred flush then finds the dialogue up and must wait for it to close, not drop the card until a later flush.
+func test_card_emitted_before_dialogue_opens_shows_after_it_closes() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: FriendSceneCard = hud.get("_friend_card")
+	var dialogue = hud.get("_dialogue")
+	if dialogue.visible:
+		dialogue.close()
+	EventBus.lesson_taught.emit("hunter_ma", "Hunter Ma", "Read the track.", "5 days of practice")
+	dialogue.open()  # what dialogue_requested does right after _teach_lessons
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_false(card.visible, "held behind the conversation")
+	dialogue.close()
+	for i in 4:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(card.visible, "shown when the conversation closes (pending=%s)" % [hud.get("_pending_friend_scenes")])
+	card.close()
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()

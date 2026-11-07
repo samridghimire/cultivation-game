@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ac23991
+Last reviewed commit: d56a580
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1630,3 +1630,18 @@ Last reviewed commit: ac23991
   - Notes, not filed: FOLK-020 does not queue a lesson behind the festival contest card (spec asked for it), and
     `check_friendships` tries every lesson NPC, so a lesson can arrive while the teacher is in another region; WU-475
     skipped the 0.15 s fade; GFX-087/GFX-090/WU-475 shots were never rendered.
+- 2026-11-07 (reviewer, 3rd run): reviewed ac23991..d56a580 (SEASON-010, WU-476, CRIT-001, C-320, GFX-091, WU-478, C-321,
+  WU-477, FOLK-021, ENC-012, QA-205, GUIDE-217, GFX-092, GFX-093, WU-479, C-322; [PLAN]/[REVIEW] skipped). Main green
+  (3485 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (eggs and `project_done_*` are world flags);
+  no binary assets (egg, bunting, mist and pickup float are code-drawn).
+  - Fixed (WU-467 x WU-479, lost card): `start_dialogue` runs `_friend_scene` / `_teach_lessons` before it emits
+    `dialogue_requested`, so the HUD queued the card with the dialogue still closed and flushed it deferred; by then the
+    conversation was open, `_flush_friend_scenes` returned, and nothing re-flushed when it closed. The scene or lesson
+    card stayed pending until some later card closed. The flush now waits on `dialogue.closed`; test added.
+  - FOLK-021 (weather scenes, lessons only where the teacher stands, gift_id/lesson_taught signals), ENC-012 (offer taken
+    only on success, cheapest first; injury validated also in on_fail), CRIT-001 (seeded per region/day/hen, taken list
+    survives JSON floats), SEASON-010 (done_line once per project), C-321/C-322 (home meals, lesson effects allowed),
+    GUIDE-217, WU-476..479, GFX-091..093, QA-205, C-320 OK.
+  - Notes, not filed: C-320's tiger offering names venison only (C-324 will move it to ENC-012's `offer`); its on_fail text
+    says "half a day" but costs 1 day; C-322 added recipes without a test that they cook (home_meals validation covers
+    the data); `shorten_injury` still posts "injuries ease" for Clear Well Tea drunk while healthy.
