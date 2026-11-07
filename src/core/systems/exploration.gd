@@ -609,6 +609,9 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 		return "You are too soft-hearted for that."
 	if req.has("flag") and not Effects.flag_active(flags, String(req["flag"]), today):
 		return "You lack the knowledge for that."
+	var offer: Dictionary = choice.get("offer", {})
+	if not offer.is_empty() and offer_stacks(c, data, offer).size() == 0:
+		return "You carry nothing to offer (%s)." % String(offer["tag"])
 	var min_attrs: Dictionary = req.get("min_attributes", {})
 	for attr_id: String in min_attrs:
 		if c.attribute(attr_id) < int(min_attrs[attr_id]):
@@ -623,6 +626,31 @@ static func check_choice(c: CharacterData, data: GameData, choice: Dictionary, f
 		if Professions.rank_of(c, prof_id) < rank:
 			return "You need to be %s %s for that." % [Text.a(data.profession_rank_names[clampi(rank, 0, Professions.max_rank(data))]), data.professions[prof_id].name]
 	return Effects.check(c, data, choice.get("effects", {}))
+
+
+## ENC-012: the items a choice's `offer` {tag, count} would take, cheapest first (price, then id):
+## [{id, count}]. Empty when the player does not hold `count` items with that tag.
+static func offer_stacks(c: CharacterData, data: GameData, offer: Dictionary) -> Array[Dictionary]:
+	var need := int(offer.get("count", 1))
+	var held: Array[Dictionary] = []
+	var total := 0
+	for item_id: String in c.inventory:
+		var n := c.item_count(item_id)
+		if n > 0 and (data.items.get(item_id, {}).get("tags", []) as Array).has(String(offer.get("tag", ""))):
+			held.append({"id": item_id, "count": n, "price": int(data.items[item_id].get("price", 0))})
+			total += n
+	var out: Array[Dictionary] = []
+	if total < need:
+		return out
+	held.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["price"]) < int(b["price"]) or (int(a["price"]) == int(b["price"]) and String(a["id"]) < String(b["id"])))
+	for h in held:
+		if need <= 0:
+			break
+		var take := mini(int(h["count"]), need)
+		out.append({"id": h["id"], "count": take})
+		need -= take
+	return out
 
 
 ## Short tag naming what a choice checks or costs ("Comprehension 12", "Doctor, Apprentice",
@@ -642,6 +670,9 @@ static func check_tag(data: GameData, choice: Dictionary) -> String:
 		parts.append(Alignment.tier_name(int(req["min_alignment"]), data))
 	if req.has("max_alignment"):
 		parts.append(Alignment.tier_name(int(req["max_alignment"]), data))
+	var offer: Dictionary = choice.get("offer", {})
+	if not offer.is_empty():
+		parts.append("%d %s" % [int(offer["count"]), String(offer["tag"])])
 	var items: Dictionary = choice.get("effects", {}).get("items", {})
 	for item_id: String in items:
 		var delta := int(items[item_id])
@@ -710,13 +741,21 @@ static func resolve_choice(c: CharacterData, data: GameData, encounter: Dictiona
 	var reason := check_choice(c, data, choice, flags, today)
 	if reason != "":
 		return {"ok": false, "reason": reason, "text": "", "notes": PackedStringArray(), "days": 0, "enemy": "", "karma": false}
+	var original := choice
 	var failed := choice.has("check") and rng != null and rng.randf() >= check_chance(c, choice)
 	var verdict := check_verdict(choice, failed)
 	if failed:
 		choice = choice["on_fail"]
 	var effects: Dictionary = choice.get("effects", {})
 	var notes := Effects.apply(c, data, effects, flags, region_id, today) if not effects.is_empty() else PackedStringArray()
-	return {"ok": true, "reason": "", "text": String(choice.get("text", "")), "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed, "verdict": verdict}
+	var text := String(choice.get("text", ""))
+	if not failed and original.has("offer"):  # ENC-012: the offering is taken
+		var given: PackedStringArray = []
+		for stack in offer_stacks(c, data, original["offer"]):
+			c.add_item(String(stack["id"]), -int(stack["count"]))
+			given.append("%d %s" % [int(stack["count"]), Items.item_plural(data, String(stack["id"]), int(stack["count"]))])
+		text = (text + " " if text != "" else "") + "You leave %s." % ", ".join(given)
+	return {"ok": true, "reason": "", "text": text, "notes": notes, "days": int(choice.get("days", 0)), "enemy": String(choice.get("enemy", "")), "karma": effects.has("alignment"), "failed": failed, "verdict": verdict}
 
 
 ## WU-300: the line saying whether an attribute `check` choice passed ("Your Comprehension carried it." /
@@ -752,6 +791,8 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 			for item_id in choice.get("effects", {}).get("items", {}):
 				if not data.items.has(item_id):
 					errors.append("Encounter '%s' choice '%s' references unknown item '%s'" % [e["id"], label, item_id])
+			if choice.get("effects") is Dictionary and (choice["effects"] as Dictionary).has("injury"):
+				errors.append_array(Effects.validate(data, {"injury": choice["effects"]["injury"]}, "Encounter '%s' choice '%s'" % [e["id"], label]))
 			var req: Dictionary = choice.get("requires", {})
 			if req.has("min_realm") and data.realm_index_of(String(req["min_realm"])) < 0:
 				errors.append("Encounter '%s' choice '%s' has unknown min_realm '%s'" % [e["id"], label, req["min_realm"]])
@@ -768,6 +809,17 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 					errors.append("Encounter '%s' choice '%s' min_profession has unknown profession '%s'" % [e["id"], label, prof_id])
 				if not (min_profs[prof_id] is int or min_profs[prof_id] is float) or int(min_profs[prof_id]) < 0 or int(min_profs[prof_id]) > Professions.max_rank(data):
 					errors.append("Encounter '%s' choice '%s' min_profession '%s' needs a rank from 0 to %d" % [e["id"], label, prof_id, Professions.max_rank(data)])
+			if choice.has("offer"):
+				var offer: Variant = choice["offer"]
+				var tag_used := false
+				if offer is Dictionary:
+					for item: Dictionary in data.items.values():
+						if (item.get("tags", []) as Array).has(String(offer.get("tag", ""))):
+							tag_used = true
+				if not tag_used:
+					errors.append("Encounter '%s' choice '%s' offer needs a tag that some item has" % [e["id"], label])
+				if not (offer is Dictionary and (offer.get("count") is int or offer.get("count") is float) and int(offer["count"]) >= 1 and int(offer["count"]) <= 10):
+					errors.append("Encounter '%s' choice '%s' offer count must be 1..10" % [e["id"], label])
 			if int(choice.get("days", 0)) < 0:
 				errors.append("Encounter '%s' choice '%s' needs days >= 0" % [e["id"], label])
 			if choice.has("renown"):
@@ -786,6 +838,7 @@ static func validate_choices(data: GameData) -> PackedStringArray:
 					var fail_enemy := String(choice["on_fail"].get("enemy", ""))
 					if fail_enemy != "" and not data.enemies.has(fail_enemy):
 						errors.append("Encounter '%s' choice '%s' on_fail has unknown enemy '%s'" % [e["id"], label, fail_enemy])
+					errors.append_array(Effects.validate(data, choice["on_fail"].get("effects", {}), "Encounter '%s' choice '%s' on_fail" % [e["id"], label]))
 					for item_id in choice["on_fail"].get("effects", {}).get("items", {}):
 						if not data.items.has(item_id):
 							errors.append("Encounter '%s' choice '%s' on_fail references unknown item '%s'" % [e["id"], label, item_id])

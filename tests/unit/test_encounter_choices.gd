@@ -1177,3 +1177,59 @@ func test_qingshi_fifth_layer_encounters() -> void:
 		var odds := Combat.win_chance(c, d, foe)
 		print("senior_test odds QR%d Iron Fist L3: %.2f" % [stage + 1, odds])
 		assert_true(odds > 0.3 and odds < 0.95, "stage %d odds %.2f" % [stage, odds])
+
+
+## ENC-012: the `injury` effect and the `offer` choice field.
+func _offer_encounter(extra: Dictionary = {}) -> Dictionary:
+	var choice := {"label": "Leave an offering", "offer": {"tag": "meat", "count": 2}, "text": "The beast withdraws.", "effects": {"alignment": 1}}
+	choice.merge(extra, true)
+	return {"id": "t_offer", "choices": [choice, {"label": "Walk away"}]}
+
+
+func test_injury_effect_inflicts_and_validates() -> void:
+	var c := new_character()
+	var notes := Effects.apply(c, data(), {"injury": "broken_bones"}, {})
+	assert_true(c.injuries.has("broken_bones"))
+	assert_true(notes.has(Injuries.injury_name(data(), "broken_bones")))
+	assert_true(Effects.validate(data(), {"injury": "broken_bones"}, "t").is_empty())
+	assert_eq(Effects.validate(data(), {"injury": "nope"}, "t").size(), 1)
+
+
+func test_offer_disabled_without_goods_label_and_cheapest_first() -> void:
+	var enc := _offer_encounter()
+	var c := new_character()
+	var list := Exploration.choices(c, data(), enc, {})
+	assert_true(list[0]["disabled"])
+	assert_true(String(list[0]["reason"]).contains("nothing to offer (meat)"))
+	assert_eq(list[0]["check"], "2 meat")
+	c.add_item("venison", 1)
+	assert_true(Exploration.choices(c, data(), enc, {})[0]["disabled"], "one is not enough")
+	c.add_item("boar_meat", 1)
+	assert_false(Exploration.choices(c, data(), enc, {})[0]["disabled"])
+	c.add_item("boar_meat", 1)  # boar x2 (price 4) and venison x1 (price 7)
+	var r := Exploration.resolve_choice(c, data(), enc, 0, {})
+	assert_true(r["ok"])
+	assert_eq(c.item_count("boar_meat"), 0, "cheapest first")
+	assert_eq(c.item_count("venison"), 1)
+	assert_true(String(r["text"]).ends_with("You leave 2 Boar Meat."), String(r["text"]))
+
+
+func test_offer_validation() -> void:
+	var d := GameData.new()
+	d.realms = data().realms
+	d.items = data().items
+	d.enemies = data().enemies
+	d.injuries = data().injuries
+	d.encounters = {"a": _offer_encounter({"offer": {"tag": "nonsense", "count": 11}})}
+	assert_eq(Exploration.validate_choices(d).size(), 2, str(Exploration.validate_choices(d)))
+	d.encounters = {"a": _offer_encounter()}
+	assert_true(Exploration.validate_choices(d).is_empty(), str(Exploration.validate_choices(d)))
+
+
+func test_failed_check_on_fail_injury() -> void:
+	var enc := {"id": "t_fail", "choices": [{"label": "Dare", "check": {"attribute": "comprehension", "target": 1000},
+		"effects": {"alignment": 1}, "on_fail": {"text": "It bites.", "effects": {"injury": "broken_bones"}}}]}
+	var c := new_character()
+	var r := Exploration.resolve_choice(c, data(), enc, 0, {}, "", seeded_rng(3))
+	assert_true(r["failed"])
+	assert_true(c.injuries.has("broken_bones"))
