@@ -727,6 +727,11 @@ func _build_generated_npcs() -> void:
 			if stall.caption != "":
 				crowd_avoid.append(stall.position + Vector2(0, -40))
 		var crowd := FestivalContest.crowd_positions(centre as Vector2, neighbours.size(), crowd_avoid)
+		if festival_square() != null:  # GFX-090: the square's crowd stands on the ring, off stalls and solid landmarks
+			var blockers := Folk.festival_blockers(GameState.data, GameState.current_region)
+			for stall in _stalls:
+				blockers.append(Rect2(stall.position - Vector2(35, 30), Vector2(70, 60)))
+			crowd = Folk.festival_ring(centre as Vector2 - Vector2(0, 20), mini(neighbours.size(), FestivalContest.CROWD_MAX), blockers)
 		for k in crowd.size():
 			stands[neighbours[k].id] = crowd[k]
 	for i in people.size():

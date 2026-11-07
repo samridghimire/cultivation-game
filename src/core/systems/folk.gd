@@ -1438,10 +1438,9 @@ static func spot_for(data: GameData, npc_def: Dictionary, day: int, weather: Str
 				return {"pos": _point(spots["festival"]), "why": "festival"}
 			var square: Variant = data.regions.get(region_id, {}).get("festival_square")
 			if square is Array:
-				var rng := RandomNumberGenerator.new()
-				rng.seed = hash(String(npc_def.get("id", ""))) + day
-				var offset := Vector2(rng.randf_range(-70.0, 70.0), rng.randf_range(-50.0, 50.0))
-				return {"pos": _point(square) + offset, "why": "festival"}
+				var ring := festival_ring(_point(square), FESTIVAL_SLOTS, festival_blockers(data, region_id))
+				var slot := posmod(hash(String(npc_def.get("id", ""))), maxi(ring.size(), 1))
+				return {"pos": _point(square) if ring.is_empty() else ring[slot], "why": "festival"}
 			break
 	if (weather == "rain" or weather == "storm") and spots.has("rain"):
 		return {"pos": _point(spots["rain"]), "why": "rain"}
@@ -1452,6 +1451,56 @@ static func spot_for(data: GameData, npc_def: Dictionary, day: int, weather: Str
 	if spots.has("work"):
 		return {"pos": _point(spots["work"]), "why": "work"}
 	return {"pos": home, "why": "home"}
+
+
+## GFX-090: slots on the festival ring a named villager picks from.
+const FESTIVAL_SLOTS := 24
+const FESTIVAL_RADII: Array[float] = [70.0, 90.0, 110.0]
+const FESTIVAL_GAP := 28.0
+const FESTIVAL_CLEAR := 24.0
+const SOLID_LANDMARKS: Array[String] = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
+
+
+## GFX-090: `count` spots on rings (radius 70-110 px) around `center`, evenly spaced, at least 28 px apart and
+## 24 px clear of every blocker rect. Pure and deterministic; may return fewer if the rings are crowded out.
+static func festival_ring(center: Vector2, count: int, blockers: Array[Rect2]) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for ring in FESTIVAL_RADII.size():
+		var radius := FESTIVAL_RADII[ring]
+		var slots := clampi(count, 1, int(TAU * radius / (FESTIVAL_GAP + 2.0)))
+		for k in slots:
+			if out.size() >= count:
+				return out
+			var pos := center + Vector2.from_angle(TAU * float(k) / float(slots) + 0.5 * float(ring)) * radius
+			var ok := true
+			for b in blockers:
+				if b.grow(FESTIVAL_CLEAR).has_point(pos):
+					ok = false
+					break
+			for o in out:
+				if ok and pos.distance_to(o) < FESTIVAL_GAP:
+					ok = false
+			if ok:
+				out.append(pos)
+	return out
+
+
+## GFX-090: rects festival villagers must keep off in `region_id`: festival stalls and solid landmarks.
+static func festival_blockers(data: GameData, region_id: String) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var region: Dictionary = data.regions.get(region_id, {})
+	for place: Dictionary in region.get("places", []):
+		if place.has("festival_only"):
+			out.append(_rect(place))
+	for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+		if SOLID_LANDMARKS.has(String(lm.get("kind", ""))):
+			out.append(_rect(lm))
+	return out
+
+
+static func _rect(d: Dictionary) -> Rect2:
+	var size := _point(d.get("size", [0, 0]))
+	return Rect2(_point(d.get("pos", [0, 0])) - size / 2.0, size)
 
 
 static func _market_day(data: GameData, region_id: String, day: int) -> bool:

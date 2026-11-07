@@ -1110,7 +1110,7 @@ func _validate_recipes() -> void:
 			load_errors.append("Item '%s' teaches unknown recipe '%s'" % [item["id"], recipe_id])
 
 
-## GFX-085: a region's festival_square must be [x, y] inside the map and 80 px clear of every place.
+## GFX-085: a region's festival_square must be [x, y] inside the map, 160 px clear of the map edges and 80 px clear of every place.
 static func _festival_square_errors(region: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	var sq: Variant = region["festival_square"]
@@ -1122,6 +1122,8 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 	var size: Array = region.get("map", {}).get("size", [1600, 1000])
 	if pos.x < 0.0 or pos.y < 0.0 or pos.x > float(size[0]) or pos.y > float(size[1]):
 		errors.append("Region '%s' festival_square is outside the map" % rid)
+	elif pos.x < 160.0 or pos.y < 160.0 or pos.x > float(size[0]) - 160.0 or pos.y > float(size[1]) - 160.0:
+		errors.append("Region '%s' festival_square is within 160 px of the map edge" % rid)
 	for place: Dictionary in region.get("places", []):
 		var pp: Array = place.get("pos", [0, 0])
 		if pos.distance_to(Vector2(float(pp[0]), float(pp[1]))) < 80.0:

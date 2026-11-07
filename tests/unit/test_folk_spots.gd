@@ -28,8 +28,8 @@ func test_plain_day_works_and_rain_beats_market() -> void:
 func test_festival_beats_rain() -> void:
 	var r := Folk.spot_for(data(), _def(), MARKET_DAY, "rain", _festival())
 	assert_eq(r["why"], "festival")
-	var square := Vector2(1100, 900)
-	assert_true((r["pos"] as Vector2).distance_to(square) <= 90.0)
+	var square := Vector2(660, 800)
+	assert_true((r["pos"] as Vector2).distance_to(square) <= 111.0)
 
 
 func test_festival_offset_is_deterministic() -> void:
@@ -114,3 +114,21 @@ func test_every_named_npc_has_spots_and_clear_ground() -> void:
 				var h := Vector2(float(lm["size"][0]), float(lm["size"][1])) / 2.0
 				var d := Vector2(maxf(absf(p.x - c.x) - h.x, 0.0), maxf(absf(p.y - c.y) - h.y, 0.0)).length()
 				assert_true(d >= (1.0 if k == "rain" else 40.0), "%s %s is near a %s" % [npc["id"], k, lm["kind"]])
+
+
+func test_festival_ring_spacing_and_blockers() -> void:
+	var blockers: Array[Rect2] = [Rect2(640, 700, 60, 40)]
+	var ring := Folk.festival_ring(Vector2(660, 800), 24, blockers)
+	assert_eq(ring.size(), 24)
+	for i in ring.size():
+		assert_true(not blockers[0].grow(24.0).has_point(ring[i]), "outside the blocker")
+		var d := ring[i].distance_to(Vector2(660, 800))
+		assert_true(d >= 69.0 and d <= 111.0, "on the ring")
+		for j in range(i + 1, ring.size()):
+			assert_true(ring[i].distance_to(ring[j]) >= 28.0, "28 px apart")
+	assert_eq(Folk.festival_ring(Vector2(660, 800), 24, blockers), ring)
+
+
+func test_qingshi_square_is_clear() -> void:
+	var sq: Array = data().regions["qingshi_village"]["festival_square"]
+	assert_true(float(sq[0]) >= 160.0 and float(sq[1]) >= 160.0 and float(sq[0]) <= 1440.0 and float(sq[1]) <= 840.0)

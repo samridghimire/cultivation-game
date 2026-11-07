@@ -4,11 +4,12 @@ extends TestCase
 
 func test_square_validation() -> void:
 	var base := {"id": "r", "map": {"size": [1000, 800]}, "places": [{"display_name": "Well", "pos": [500, 400]}]}
-	var ok := base.merged({"festival_square": [100, 100]})
+	var ok := base.merged({"festival_square": [200, 200]})
 	assert_eq(GameData._festival_square_errors(ok).size(), 0)
 	assert_eq(GameData._festival_square_errors(base.merged({"festival_square": [2000, 100]})).size(), 1)
 	assert_eq(GameData._festival_square_errors(base.merged({"festival_square": [520, 410]})).size(), 1)
 	assert_eq(GameData._festival_square_errors(base.merged({"festival_square": [1]})).size(), 1)
+	assert_eq(GameData._festival_square_errors(base.merged({"festival_square": [100, 200]})).size(), 1)  # GFX-090: 100 px from the edge
 
 
 func test_stall_and_crowd_at_the_square() -> void:
