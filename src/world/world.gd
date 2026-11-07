@@ -49,6 +49,7 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
+var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
@@ -187,6 +188,7 @@ func _mist_strength() -> float:
 ## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
 func _refresh_ambient() -> void:
 	_refresh_village_life()
+	_refresh_mist_bands()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -208,6 +210,18 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_emitter(kind, map_size, _mist_strength())
 	add_child(_ambient)
 	_start_lightning()
+
+
+## GFX-091: soft mist bands above the ground, under figures; off with Ambient effects.
+func _refresh_mist_bands() -> void:
+	if _mist_bands == null:
+		_mist_bands = MistBands.new()
+		_mist_bands.name = "MistBands"
+		add_child(_mist_bands)
+		move_child(_mist_bands, 0)
+	# Only regions that name map.mist are misty; the 1.0 default of _mist_strength() is for fog sheets.
+	var on: bool = bool(Settings.get_value("ambient_effects")) and _region.get("map", {}).has("mist")
+	_mist_bands.setup(GameState.current_region, _mist_strength() if on else 0.0, map_size, not MotionFx.reduced())
 
 
 ## GFX-040: chimney smoke, pond ripples, jumping fish and birds, rebuilt on season/weather change.
