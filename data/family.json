@@ -153,7 +153,13 @@
    ],
    "project_stage": [
     "{player}, have you seen {project}? We are mending it at last, and it is your doing.",
-    "Good day, {player}. The masons are back at {project}. Folk say you started it."
+    "Good day, {player}. The masons are back at {project}. Folk say you started it.",
+    "{player}, I walked past {project} this morning and stood there like a fool, smiling. Thank you.",
+    "Look at you, {player}, ordering masons about at {project} as if you were the village elder!",
+    "Good day, {player}. How goes {project}? Mind, a task half done is only half a blessing.",
+    "{player}, they are saying {project} will outlast us all. I hope it outlasts the squabbling over it.",
+    "Good day, {player}. I worry about {project}. Stone is dear and the rains are early.",
+    "{player}, my grandchildren ask about {project} every day. Do not let them down, hm?"
    ],
    "season_done": [
     "{player}, the village is grateful for all you did this {subject}.",
