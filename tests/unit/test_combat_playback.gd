@@ -121,3 +121,34 @@ func test_rating_line_skips_friendly_spars() -> void:
 	assert_true(CombatReport.rating_line(c, gd, enemy).begins_with("Rated: "))
 	enemy["friendly"] = true
 	assert_eq(CombatReport.rating_line(c, gd, enemy), "")
+
+
+func test_blow_info_from_trace() -> void:
+	var hit := DuelStage.blow_info([20, 10], [20, 5], "You strike for 5. (Foe: 5 hp)")
+	assert_eq(hit, {"side": 1, "amount": 5, "kind": "hit"})
+	var crit := DuelStage.blow_info([20, 10], [14, 10], "Foe hits you critically for 6.")
+	assert_eq(crit, {"side": -1, "amount": 6, "kind": "crit"})
+	assert_eq(DuelStage.blow_info([20, 10], [20, 9], "You strike for 1: a glancing blow")["kind"], "glance")
+	assert_eq(DuelStage.blow_info([20, 10], [20, 6], "You strike for 4: a solid blow")["kind"], "solid")
+	assert_eq(DuelStage.blow_info([20, 10], [20, 10], "Foe evades your strike.")["side"], 0)
+
+
+func test_technique_of_line() -> void:
+	assert_eq(DuelStage.technique_of("You strike with Cloud Palm critically: a solid blow for 9. (Boar: 3 hp)"), "Cloud Palm")
+	assert_eq(DuelStage.technique_of("Wolf attacks with Pounce for 4. (You: 5 hp)"), "Pounce")
+	assert_eq(DuelStage.technique_of("You strike for 5."), "")
+
+
+func test_blow_floats_numbers_and_skip_clears() -> void:
+	var r := _report(true)
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10)
+	r.tick()
+	r.tick()
+	assert_gt(r._stage.floater_count(), 0)
+	r.skip()
+	assert_eq(r._stage.floater_count(), 0)
+	_done(r)
+
+
+func test_five_blow_report_is_shorter() -> void:
+	assert_true(CombatReport.log_height(8) < 8 * 26.0 + 20.0)

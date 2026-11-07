@@ -103,7 +103,7 @@ static func companion_line(friend: String) -> String:
 
 ## Height of the fight log for `rows` lines: short fights get a short panel (WU-087).
 static func log_height(rows: int) -> float:
-	return clampf(rows * 26.0 + 20.0, 120.0, 360.0)
+	return clampf(rows * 22.0 + 14.0, 96.0, 360.0)
 
 
 ## The most the log may take so the stage, bars and buttons still fit a viewport `height` px tall (GFX-028).
@@ -225,6 +225,7 @@ func _reveal(i: int, sound: bool = true) -> void:
 			var struck := 1 if side == 1 else 0
 			var heavy := side != 0 and MotionFx.is_heavy_hit(int(prev[struck]) - int(_trace[i][struck]), int(_player_bar.get_meta("max") if struck == 0 else _enemy_bar.get_meta("max")))
 			_stage.blow(side, _lines[i].contains("critically"), heavy)
+			_stage.show_blow(DuelStage.blow_info(prev, _trace[i], _lines[i]), DuelStage.technique_of(_lines[i]))
 	if sound and _is_hit(_lines[i]):
 		Audio.play(_sound_for_line(_lines[i]))
 
@@ -267,6 +268,7 @@ func _is_hit(line: String) -> bool:
 func skip() -> void:
 	if not visible:
 		return
+	_stage.clear_floaters()
 	if _shown < _lines.size():
 		while _shown < _lines.size():
 			_reveal(_shown, false)

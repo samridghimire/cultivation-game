@@ -58,6 +58,14 @@ const STAGE_SHAKE_SECONDS := 0.15
 const STAGE_SHAKE_PIXELS := 3.0
 
 
+## WU-473: blows you can see. `_floaters`: [{who (struck 0 you / 1 foe), text, color, size, start (s), life (s),
+## rise (px), banner (bool: a technique name over the attacker)}].
+var _floaters: Array[Dictionary] = []
+const NUMBER_RISE := 24.0
+const NUMBER_SECONDS := 0.6
+const BANNER_SECONDS := 0.8
+
+
 func _init() -> void:
 	custom_minimum_size = Vector2(0, STAGE_HEIGHT)
 	clip_contents = true
@@ -75,12 +83,103 @@ static func blow_side(prev: Array, cur: Array) -> int:
 	return 0
 
 
+## The numbers behind a revealed blow: {side, amount, kind}. `side` as blow_side, `amount` the hp the
+## struck figure lost (from the trace, not the text), `kind` crit | solid | glance | hit. `line` only
+## classifies the weight. Pure.
+static func blow_info(prev: Array, cur: Array, line: String) -> Dictionary:
+	var side := blow_side(prev, cur)
+	if side == 0:
+		return {"side": 0, "amount": 0, "kind": "hit"}
+	var struck := 1 if side == 1 else 0
+	var kind := "hit"
+	if line.contains("critically") or line.contains(Combat.BLOW_WORD_CRUSHING) or line.contains(Combat.BLOW_WORD_SOLID):
+		kind = "crit" if line.contains("critically") or line.contains(Combat.BLOW_WORD_CRUSHING) else "solid"
+	elif line.contains(Combat.BLOW_WORD_GLANCING):
+		kind = "glance"
+	return {"side": side, "amount": int(prev[struck]) - int(cur[struck]), "kind": kind}
+
+
+## The technique a log line names ("You strike with Cloud Palm for 9", "Wolf attacks with Pounce for 4"), or "".
+static func technique_of(line: String) -> String:
+	for lead in [" strike with ", " attacks with "]:
+		var at := line.find(lead)
+		if at < 0:
+			continue
+		var rest := line.substr(at + lead.length())
+		var end := rest.length()
+		for stop in [" critically", ":", " for "]:
+			var k := rest.find(stop)
+			if k >= 0:
+				end = mini(end, k)
+		return rest.substr(0, end).strip_edges()
+	return ""
+
+
+## Floats a damage number over the struck figure and, when `technique` is set, its name over the attacker.
+func show_blow(info: Dictionary, technique: String = "") -> void:
+	var side := int(info.get("side", 0))
+	if side == 0:
+		return
+	var struck := 1 if side == 1 else 0
+	var kind := String(info["kind"])
+	var color := Color.WHITE
+	var font_size := 16
+	if kind == "crit" or kind == "solid":
+		color = UIStyle.ACCENT
+		font_size = 22
+	elif kind == "glance":
+		color = Color("9a9a9a")
+	var now := Time.get_ticks_msec() / 1000.0
+	_floaters.append({"who": struck, "text": str(int(info["amount"])), "color": color, "size": font_size, "start": now, "life": NUMBER_SECONDS, "banner": false})
+	if technique != "":
+		_floaters.append({"who": 1 - struck, "text": technique, "color": Color("e8d9b0"), "size": 13, "start": now, "life": BANNER_SECONDS, "banner": true})
+	set_process(true)
+
+
+func clear_floaters() -> void:
+	_floaters.clear()
+	set_process(false)
+	queue_redraw()
+
+
+func floater_count() -> int:
+	return _floaters.size()
+
+
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	_floaters = _floaters.filter(func(f: Dictionary) -> bool: return now - float(f["start"]) < float(f["life"]))
+	if _floaters.is_empty():
+		set_process(false)
+	queue_redraw()
+
+
+func _draw_floaters(base_y: float, dx: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	var font := ThemeDB.fallback_font
+	for f in _floaters:
+		var t := clampf((now - float(f["start"])) / float(f["life"]), 0.0, 1.0)
+		var cx := size.x * (0.25 if int(f["who"]) == 0 else 0.75) + dx
+		var rise := 0.0 if (MotionFx.reduced() or bool(f["banner"])) else NUMBER_RISE * t
+		var y := base_y - _body_size(int(f["who"])).y - 8.0 - rise
+		if bool(f["banner"]):
+			y = base_y - _body_size(int(f["who"])).y - 24.0
+		var col: Color = f["color"]
+		col.a = 1.0 - t * t
+		var fs := int(f["size"])
+		var w := font.get_string_size(String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var pos := Vector2(cx - w / 2.0, maxf(y, float(fs)))
+		draw_string_outline(font, pos, String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(0, 0, 0, col.a))
+		draw_string(font, pos, String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+
 ## Picks the foe's art: a mapped `enemy_<id>`/`enemy` sprite, a beast silhouette for
 ## enemies tagged "beast", otherwise a robed cultivator. Resets both fighters.
 func setup(enemy_id: String, tags: Array) -> void:
 	_foe_beast = tags.has("beast")
 	_foe_id = enemy_id
 	_foe_texture = null
+	clear_floaters()
 	if enemy_id != "":
 		_foe_texture = Sprites.first(PackedStringArray(["enemy_" + enemy_id, "enemy"]))
 	reset_pose()
@@ -235,6 +334,7 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
+	_draw_floaters(base_y, dx)
 	for who in 2:
 		if is_fallen(who):
 			var font := ThemeDB.fallback_font

@@ -325,6 +325,10 @@ func _start() -> void:
 	shots.append({"name": "combat_report" + ("_cultivator" if _fight_foe() != "wild_boar" else ""), "open": func() -> void:
 		gs.rng.seed = 11
 		gs.fight(_fight_foe())
+		if OS.get_cmdline_user_args().has("--blows"):  # WU-473: capture mid-playback with the numbers up
+			for _i in 4:
+				report.tick()
+			return
 		report.skip(),  # WU-262: close() refuses while the playback runs, so the report covered later shots
 		"close": report.close})
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
