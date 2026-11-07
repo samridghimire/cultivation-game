@@ -6437,3 +6437,24 @@ func test_today_lines_coop_festival_and_well() -> void:
 	assert_true(fl[0].contains(Guidance.ends_phrase(day + 1, day)), str(fl))
 	events[0]["end_day"] = day + 5
 	assert_false(Guidance.today_lines(c, d, {}, events, day, "qingshi_village")[0].contains("ends today"))
+
+
+func test_today_knows_your_friends() -> void:
+	var d := data()
+	var npcs := {}
+	Npcs.ensure_all(npcs, d, seeded_rng(3))
+	var c := CharacterData.new()
+	var favor := {"elder_mo": 60}
+	var b := Folk.birthday_day(npcs["elder_mo"], d)
+	var quiet := Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, {})
+	assert_false("\n".join(quiet).contains("something to show you"))
+	var lines := Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, favor)
+	var text := "\n".join(lines)
+	assert_true(text.contains("Elder Mo has something to show you (find them at "), text)
+	assert_false(text.contains("birthday"), "not their birthday yet")
+	var party := "\n".join(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR, "qingshi_village", npcs, favor))
+	assert_true(party.contains("It is Elder Mo's birthday (find them at "), party)
+	assert_eq(party.count("birthday"), 1, "one birthday line")
+	c.lessons_taught["elder_mo:0"] = 1
+	assert_false("\n".join(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, favor)).contains("something to show you"))
+	assert_true(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR, "qingshi_village", npcs, favor).size() <= Guidance.TODAY_MAX)

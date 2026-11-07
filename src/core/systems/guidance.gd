@@ -326,6 +326,14 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		if ends != "":
 			line += "; " + ends
 		out.append(line + ".")
+	# 1b. Named friends (GUIDE-218): a birthday today, and a lesson waiting.
+	var named_birthday := {}
+	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
+		if data.npcs.has(b["npc"].id):
+			named_birthday[b["npc"].id] = true
+			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
+	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught):
+		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
 	if not great.is_empty():
@@ -364,6 +372,8 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 				out.append("The village hunt rides out after the %s today (bounty board)." % q)
 			continue
 		if ["market", "great_beast", "festival_active", "festival_month", "forage", "season"].has(String(e["kind"])):
+			continue
+		if String(e["kind"]) == "birthday" and named_birthday.has(String(e.get("npc_id", ""))) and int(e["day"]) == day:
 			continue
 		var rem := VillageCalendar.reminder_line(data, npcs, flags, e)
 		if rem != "":
@@ -4328,6 +4338,8 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("%s: %s" % [npc.name, Folk.celebration_label(flags, npc.id, data)])
 	for b: Dictionary in Folk.birthdays_soon(people, data, region_id, today, favor):
 		out.append("%s's birthday is today: a gift counts double." % b["npc"].name if int(b["in_days"]) == 0 else "%s's birthday in %s." % [b["npc"].name, Calendar.format_duration(int(b["in_days"]))])
+	for w: Dictionary in Folk.lessons_waiting(people, data, region_id, favor, c.lessons_taught):  # GUIDE-218
+		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, maxi(today, 0), [])])
 	var friends := Folk.friends_line(people, data, region_id, favor)
 	if friends != "":
 		out.append(friends)

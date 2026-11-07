@@ -436,6 +436,39 @@ static func due_lessons(data: GameData, npc_id: String, tier: int, taught: Dicti
 	return result
 
 
+## GUIDE-218: named villagers of `region_id` with a lesson due at their friendship tier, as [{npc, key}] by name.
+static func lessons_waiting(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, taught: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for npc in Npcs.in_region(npcs, data, region_id):
+		if not data.npcs.has(npc.id):
+			continue
+		var due := due_lessons(data, npc.id, tier_index(data, int(favor.get(npc.id, 0))), taught)
+		if not due.is_empty():
+			out.append({"npc": npc, "key": String(due[0]["key"])})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["npc"].name) < String(b["npc"].name))
+	return out
+
+
+## GUIDE-218: where named villager `npc_id` stands today in words: the nearest place on their region map (within 200 px)
+## by display name, else the region's name. "" for a generated villager.
+static func stand_phrase(data: GameData, npc_id: String, day: int, events: Array) -> String:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	if def.is_empty():
+		return ""
+	var region_id := String(def.get("region", ""))
+	var spot := spot_for(data, def, day, Weather.of(data, region_id, day), events)
+	var best := ""
+	var best_d := 200.0
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("festival_only") or not place.has("pos"):
+			continue
+		var d: float = _point(place["pos"]).distance_to(spot["pos"])
+		if d < best_d:
+			best_d = d
+			best = String(place.get("display_name", ""))
+	return best if best != "" else Exploration.region_name(data, region_id)
+
+
 static func lesson_line(lesson: Dictionary, npc_name: String, player_name: String) -> String:
 	return String(lesson.get("text", "")).replace("{name}", npc_name).replace("{player}", player_name)
 
