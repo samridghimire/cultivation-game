@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "field_plot", "explore", "deed_giver", "npc",
-	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine"]
+	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine", "well"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -59,6 +59,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_stele(ci, h, color)
 		"shrine":
 			_stele(ci, h, color)  # the live stage art is Shrine.draw_generated_art (GFX-081)
+		"well":
+			_bucket(ci, h, color)  # the well itself is the solid landmark beside it
 		"abode":
 			_cave_dwelling(ci, h, color)
 		"family_home":
@@ -299,6 +301,16 @@ static func _notice_board(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	for i in 3:
 		var x := -h.x * 0.75 + i * h.x * 0.55
 		ci.draw_rect(Rect2(Vector2(x, -h.y * 0.8 + (i % 2) * h.y * 0.25), Vector2(h.x * 0.4, h.y * 0.6)), Color("e8dcc0"))
+
+
+## RV-018: a wooden bucket and a coil of rope on the well's apron.
+static func _bucket(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.6), Vector2(h.x * 0.8, h.y * 0.4), Color(0, 0, 0, 0.25))
+	var tub := Rect2(-h.x * 0.25, -h.y * 0.6, h.x * 0.5, h.y * 1.2)
+	ci.draw_rect(tub, WOOD)
+	ci.draw_rect(tub, OUTLINE, false, 1.5)
+	ci.draw_line(Vector2(-h.x * 0.25, 0), Vector2(h.x * 0.25, 0), c.lightened(0.3), 2.0)
+	ellipse(ci, Vector2(h.x * 0.55, h.y * 0.2), Vector2(h.x * 0.2, h.y * 0.3), Color("b59b6a"), 2.0)
 
 
 ## A weathered stone stele carved with runes in the place color.

@@ -23,6 +23,7 @@ const PLACE_SCRIPTS := {
 	"bounty_board": preload("res://src/world/interactables/bounty_board.gd"),
 	"inheritance": preload("res://src/world/interactables/inheritance_grounds.gd"),
 	"shrine": preload("res://src/world/interactables/shrine.gd"),
+	"well": preload("res://src/world/interactables/well.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]

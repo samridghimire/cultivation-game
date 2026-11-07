@@ -49,14 +49,17 @@ static func option_label(tasks: Array, season_name: String) -> String:
 	return "Village tasks this %s (%d of %d done)" % [season_name, done, tasks.size()]
 
 
-## "Old shrine: 2 of 4 stages restored", "" when the data has no shrine.
+## The current village project's line, e.g. "Old shrine: 2 of 4 stages restored" or "The Founder's Old Well: 1 of 3 stages restored";
+## "all whole" when every project stands, "" when the data has none.
 static func shrine_line(c: CharacterData, data: GameData) -> String:
-	var rest := SeasonTasks.restoration(data)
-	var total := (rest.get("stages", []) as Array).size()
-	if total == 0:
+	if SeasonTasks.project_list(data).is_empty():
 		return ""
-	var name := String(rest.get("name", "Shrine"))
-	return "%s: %d of %d stages restored" % [name.substr(0, 1).to_upper() + name.substr(1), SeasonTasks.restoration_stage(c, data), total]
+	var cur := SeasonTasks.current_project(c, data)
+	if cur.is_empty():
+		return "The village projects are whole"
+	var proj: Dictionary = cur["project"]
+	var name := String(proj.get("name", "Project"))
+	return "%s: %d of %d stages restored" % [name.substr(0, 1).to_upper() + name.substr(1), int(cur["stage"]), (proj.get("stages", []) as Array).size()]
 
 
 ## True where the season's one-left line belongs: Qingshi or a region one road away (WU-466).

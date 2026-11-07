@@ -63,6 +63,7 @@
         {"type": "bounty_board", "display_name": "Hunters' Bounty Board", "pos": [700, 450], "size": [70, 60], "color": "9c7a4a"},
         {"type": "inheritance", "display_name": "Founder's Old Well", "pos": [1250, 350], "size": [90, 60], "color": "7d8a7a"},
         {"type": "secret_realm", "display_name": "Blossom Crack in the Hill", "pos": [1000, 760], "size": [90, 80], "color": "e8a0c0"},
+        {"type": "well", "display_name": "Old Well", "pos": [1030, 548], "size": [40, 24], "color": "7d7a72"},
         {"type": "shrine", "display_name": "Old Shrine", "pos": [1180, 430], "size": [70, 70], "color": "8a8478"},
         {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
       ]
