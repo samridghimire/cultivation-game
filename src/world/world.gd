@@ -33,6 +33,8 @@ const FAMILY_HOME_SCRIPT := preload("res://src/world/interactables/family_home.g
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
+const CAMERA_MARGIN_TOP := 40
+const CAMERA_MARGIN_BOTTOM := 60
 var map_size := Vector2(1600, 1000)
 ## Canvas origin last seen by _process (WU-269).
 var _last_canvas_origin := Vector2.INF
@@ -890,9 +892,9 @@ func _limit_camera() -> void:
 	if camera == null:
 		return
 	camera.limit_left = 0
-	camera.limit_top = 0
+	camera.limit_top = -CAMERA_MARGIN_TOP
 	camera.limit_right = int(map_size.x)
-	camera.limit_bottom = int(map_size.y)
+	camera.limit_bottom = int(map_size.y) + CAMERA_MARGIN_BOTTOM  # WU-472: scroll clear of the HUD bars (the border draws past the edge)
 
 
 ## The camera zoom that makes one sprite pixel a whole number of screen pixels (GFX-009).

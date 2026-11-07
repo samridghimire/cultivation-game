@@ -58,6 +58,7 @@ var _companion_label: Label
 var _log_panel: Control
 var _fade_timer := 0.0
 var _fade_targets := Vector3.ONE  # status, log, guide
+var _key_bar_fade := 1.0  ## WU-472: the key-hint bar's target alpha.
 var _guide_panel: Control
 var _realm: Label
 var _qi_text: Label
@@ -1957,11 +1958,22 @@ func _process(delta: float) -> void:
 	_status_panel.modulate.a = lerpf(_status_panel.modulate.a, _fade_targets.x, k)
 	_log_panel.modulate.a = lerpf(_log_panel.modulate.a, log_target, k)
 	_guide_panel.modulate.a = lerpf(_guide_panel.modulate.a, _fade_targets.z, k)
+	if _key_bar != null:
+		_key_bar.modulate.a = lerpf(_key_bar.modulate.a, _key_bar_fade, k)
 
 
 ## GFX-010: the log's target alpha after `seconds_since` seconds without a new message.
 static func log_idle_alpha(seconds_since: float) -> float:
 	return LOG_IDLE_ALPHA if seconds_since >= LOG_IDLE_SECONDS else 1.0
+
+
+## WU-472: names of the panels (keys of panel_rects) whose rect touches the player's rect.
+static func fade_targets(panel_rects: Dictionary, player_rect: Rect2) -> Array[String]:
+	var out: Array[String] = []
+	for key: String in panel_rects:
+		if (panel_rects[key] as Rect2).intersects(player_rect):
+			out.append(key)
+	return out
 
 
 ## Target alphas (status, log, guide). Always 1 while a modal is open or no player is in the world.
@@ -1974,6 +1986,11 @@ func _compute_fade_targets() -> Vector3:
 	var xf := get_viewport().get_canvas_transform()
 	var covered: Array[Rect2] = []
 	var pp := xf * player.global_position
+	_key_bar_fade = 1.0
+	if _key_bar != null and _key_bar.visible:
+		var behind := fade_targets({"key_bar": _key_bar.get_global_rect()}, Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
+		if not behind.is_empty():
+			_key_bar_fade = 0.3
 	covered.append(Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
 	var parent := player.get_parent()
 	if parent != null:
