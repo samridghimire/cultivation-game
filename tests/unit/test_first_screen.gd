@@ -57,3 +57,12 @@ func test_chip_replaces_bottom_prompt_for_a_labelled_target() -> void:
 	assert_false(hud.get("_prompt_floating"), "bottom-centre fallback with no target")
 	hud.free()
 	gs.end_session()
+
+
+## WU-474: a target near the bottom edge still gets a chip of its own width, inside the screen.
+func test_prompt_rect_near_bottom_keeps_chip_width() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var chip := Vector2(310, 30)
+	var r: Rect2 = HUD.prompt_rect(Rect2(600, 780, 120, 18), screen, [], chip)
+	assert_eq(r.size.x, 310.0, "chip width tracks its text")
+	assert_true(screen.encloses(r), "chip inside the screen")

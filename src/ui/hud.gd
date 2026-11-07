@@ -935,11 +935,12 @@ func _place_prompt() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var target: Interactable = player.current_target() if player != null and player.has_method("current_target") else null
 	var parent := target.get_parent() as CanvasItem if target != null else null
-	if target == null or parent == null or not target.label_drawn_ignoring_target():
+	if target == null or parent == null:
 		_prompt_to_bottom()
 		return
 	var xf := parent.get_global_transform_with_canvas()
-	var label_rect: Rect2 = xf * target.label_rect()
+	# WU-474: a target whose own label is hidden still gets a chip beside its (virtual) label spot.
+	var label_rect: Rect2 = xf * target.label_rect("" if target.label_drawn_ignoring_target() else _target_name)
 	var screen := get_viewport().get_visible_rect()
 	var chip := _prompt.get_combined_minimum_size()
 	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip)
@@ -950,10 +951,15 @@ func _place_prompt() -> void:
 	_prompt.size = chip
 
 
+## WU-474: the fallback is still a compact chip sized to its text, centred above the bottom HUD.
 func _prompt_to_bottom() -> void:
-	if _prompt_floating:
-		_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -170, 300, -132))
-		_prompt_floating = false
+	var chip := _prompt.get_combined_minimum_size()
+	var screen := get_viewport().get_visible_rect()
+	if not _prompt_floating:
+		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_prompt_floating = true
+	_prompt.position = Vector2((screen.size.x - chip.x) / 2.0, screen.end.y - 170.0)
+	_prompt.size = chip
 
 
 ## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
