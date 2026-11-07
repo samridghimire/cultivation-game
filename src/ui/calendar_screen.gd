@@ -18,6 +18,8 @@ const KIND_NAMES := {"market": "Market", "festival_active": "Festival", "festiva
 	"field": "Crop", "rent": "Rent", "request": "Request", "secret_realm": "Secret realm", "event": "Event", "great_beast": "Great beast", "hunt": "Village hunt", "forage": "Forage", "season": "Season"}
 const SEASON_TINT := {"Spring": Color("f2a7c3"), "Summer": Color("f0c33c"), "Autumn": Color("e0873a"), "Winter": Color("9fd0f0")}
 const DIM := Color(0.5, 0.5, 0.55)
+const FESTIVAL_BG := Color(0.55, 0.22, 0.2, 0.35)
+const FESTIVAL_BAND := Color("d9553f")
 const SEAL := Color("c8372d")
 
 var _title: Label
@@ -172,18 +174,34 @@ func _build() -> void:
 		body.offset_right = -4
 		body.add_theme_constant_override("separation", 0)
 		cell.add_child(body)
+		var top := HBoxContainer.new()  # WU-470: number and icons share one row so the label below fits whole
+		top.name = "TopRow"
+		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top.add_theme_constant_override("separation", 6)
+		body.add_child(top)
 		var num := UIStyle.label(str(d), 18, GOLD if is_today else (DIM if past else Color.WHITE))
 		num.name = "DayNumber"
 		num.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		body.add_child(num)
+		top.add_child(num)
+		var day_entries: Array = _grid_entries.get(d, [])
+		var in_festival := festival_in_span(day_entries)
 		if is_today:
 			cell.add_theme_stylebox_override("normal", _today_style())
+		elif in_festival:
+			cell.add_theme_stylebox_override("normal", _festival_style())
+			cell.set_meta("festival", true)
+			var band := ColorRect.new()
+			band.name = "FestivalBand"
+			band.color = FESTIVAL_BAND
+			band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			band.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+			band.offset_top = -3
+			cell.add_child(band)
 		var icons := HBoxContainer.new()
 		icons.name = "Icons"
 		icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icons.add_theme_constant_override("separation", 2)
-		body.add_child(icons)
-		var day_entries: Array = _grid_entries.get(d, [])
+		top.add_child(icons)
 		var shown := 0
 		for e: Dictionary in day_entries:
 			if shown >= MAX_ICONS:
@@ -208,12 +226,14 @@ func _build() -> void:
 				var plus := UIStyle.label("+%d" % more, 12, DIM)
 				plus.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				icons.add_child(plus)
-			var lbl := UIStyle.label(short_label(String(day_entries[0]["kind"])), 12, DIM if past else Color(0.82, 0.84, 0.9))
-			lbl.name = "ShortLabel"
-			lbl.clip_text = true
-			lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			body.add_child(lbl)
+			var text := day_label(day_entries)
+			if text != "":
+				var lbl := UIStyle.label(text, 12, DIM if past else Color(0.82, 0.84, 0.9))
+				lbl.name = "ShortLabel"
+				lbl.clip_text = true
+				lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				body.add_child(lbl)
 		cell.set_meta("icons", shown)
 		cell.focus_entered.connect(_show_day.bind(d))
 		cell.pressed.connect(_on_cell_pressed.bind(d))
@@ -260,6 +280,31 @@ func _build_legend(season: String) -> void:
 ## Empty grid cells before day 1 so each column is one weekday every month.
 static func lead_spacers(month_start_day: int) -> int:
 	return Calendar.weekday_of(month_start_day)
+
+
+## True when any entry belongs to a festival's span (its first day or a later day, CAL-007).
+static func festival_in_span(entries: Array) -> bool:
+	for e: Dictionary in entries:
+		var k := String(e.get("kind", ""))
+		if k == "festival_active" or k == "festival_day":
+			return true
+	return false
+
+
+## The label a cell prints: the first entry's short word, but nothing for a later day of a running festival
+## (WU-470: the name sits on the first day only; the tint and band join the rest).
+static func day_label(entries: Array) -> String:
+	for e: Dictionary in entries:
+		if String(e.get("kind", "")) != "festival_day":
+			return short_label(String(e["kind"]))
+	return ""
+
+
+func _festival_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = FESTIVAL_BG
+	sb.set_corner_radius_all(3)
+	return sb
 
 
 ## The short word a cell prints under its icons for an entry kind.

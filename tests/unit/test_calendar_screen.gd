@@ -284,3 +284,26 @@ func test_next_summary_groups_same_labels() -> void:
 func test_hunt_has_its_own_glyph() -> void:
 	assert_true(HudIcons.calendar_kind("hunt", "Spring") != HudIcons.calendar_kind("great_beast", "Spring"))
 	assert_eq(CalendarScreen.short_label("market"), "Market")
+
+
+func test_festival_span_tints_every_day_and_labels_the_first() -> void:
+	var entries_first := [{"day": 1, "kind": "festival_active", "text": "Dragon Boat"}]
+	var entries_later := [{"day": 2, "kind": "festival_day", "text": "Dragon Boat", "first": false}]
+	assert_true(CalendarScreen.festival_in_span(entries_first), "first day is in the span")
+	assert_true(CalendarScreen.festival_in_span(entries_later), "later day is in the span")
+	assert_eq(CalendarScreen.day_label(entries_first), "Festival", "first day is labelled")
+	assert_eq(CalendarScreen.day_label(entries_later), "", "later days carry no label")
+	assert_eq(CalendarScreen.day_label([{"day": 3, "kind": "market"}]), "Market", "other kinds keep their label")
+
+
+func test_cell_label_fits_inside_the_cell() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames(3)
+	var grid := screen.get("_grid") as GridContainer
+	var cell := grid.find_child("Day_10", false, false) as Button
+	var body := cell.get_child(0) as Control
+	assert_true(body.get_combined_minimum_size().y <= CalendarScreen.CELL_SIZE.y, "number row + label fit the cell height")
+	screen.queue_free()
+	await _frames()
