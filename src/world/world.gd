@@ -120,6 +120,7 @@ func _ready() -> void:
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
 	EventBus.forage_changed.connect(_build_forage)
+	EventBus.pickup_noted.connect(_on_pickup_noted)
 	EventBus.forage_changed.connect(_build_eggs)
 	get_tree().auto_accept_quit = false
 
@@ -374,6 +375,12 @@ func _notification(what: int) -> void:
 func _on_modal_changed(is_open: bool) -> void:
 	player.input_enabled = not is_open
 	_greet_modal = is_open
+
+
+## GFX-092: "+1 <item>" with its icon floats above the player.
+func _on_pickup_noted(item_id: String, amount: int) -> void:
+	if player != null:
+		PickupFloat.spawn(self, GameState.data, item_id, amount, player.position)
 
 
 func _on_region_changed(region_id: String) -> void:

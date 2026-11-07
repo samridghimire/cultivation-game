@@ -3435,6 +3435,7 @@ func pick_egg(index: int) -> bool:
 		player.add_item(item_id, 1)
 		Critters.mark_egg(world_flags, current_region, index, GameClock.total_days)
 		EventBus.post("You pick up a %s from the grass." % String(data.items.get(item_id, {}).get("name", item_id)).to_lower(), "world")
+		EventBus.pickup_noted.emit(item_id, 1)
 		EventBus.forage_changed.emit()
 		EventBus.player_changed.emit()
 		return true
@@ -3573,7 +3574,9 @@ func draw_well_water() -> bool:
 	if why != "":
 		EventBus.post(why, "warning")
 		return false
+	var water := String(SeasonTasks.daily_project(data).get("daily", {}).get("item", ""))
 	EventBus.post(SeasonTasks.draw_daily(player, data, world_flags, GameClock.total_days), "progress")
+	EventBus.pickup_noted.emit(water, 1)
 	EventBus.player_changed.emit()
 	return true
 

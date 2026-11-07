@@ -13,6 +13,8 @@ var _portrait: PortraitBox
 var _name: Label
 var _text: Label
 var _gift: Label
+var _gift_row: HBoxContainer
+var _gift_icon: TextureRect
 var _button: Button
 
 
@@ -35,21 +37,34 @@ func _init() -> void:
 	_text = UIStyle.label("", 17)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_text)
+	_gift_row = HBoxContainer.new()  # GFX-092: the gift's icon before the line
+	_gift_row.add_theme_constant_override("separation", 6)
+	_gift_row.visible = false
+	box.add_child(_gift_row)
+	_gift_icon = TextureRect.new()
+	_gift_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_gift_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	_gift_icon.custom_minimum_size = Vector2(24, 24)
+	_gift_icon.visible = false
+	_gift_row.add_child(_gift_icon)
 	_gift = UIStyle.label("", 17, Color(0.95, 0.8, 0.35))
 	_gift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_gift.visible = false
-	box.add_child(_gift)
+	_gift.custom_minimum_size = Vector2(WRAP_WIDTH - 32, 0)
+	_gift_row.add_child(_gift)
 	_button = UIStyle.button("Close", close)
 	box.add_child(_button)
 
 
 ## `npc_id` picks the figure's look ("" = a plain villager).
-func open(npc_id: String, npc_name: String, text: String, gift_name: String = "") -> void:
+func open(npc_id: String, npc_name: String, text: String, gift_name: String = "", gift_id: String = "") -> void:
 	_portrait.set_portrait(PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("9a8f7a")), "down", 0))
 	_name.text = npc_name
 	_text.text = text
 	_gift.text = "They give you %s." % gift_name if gift_name != "" else ""
-	_gift.visible = gift_name != ""
+	_gift_row.visible = gift_name != ""
+	var tex: Texture2D = ItemIcon.for_id(GameState.data, gift_id) if gift_id != "" and GameState.data != null else null
+	_gift_icon.texture = tex
+	_gift_icon.visible = tex != null
 	visible = true
 	_button.grab_focus.call_deferred()
 
@@ -71,7 +86,12 @@ func button() -> Button:
 
 
 func gift_text() -> String:
-	return _gift.text if _gift.visible else ""
+	return _gift.text if _gift_row.visible else ""
+
+
+## True when the gift row shows an item icon (GFX-092 test).
+func has_gift_icon() -> bool:
+	return _gift_row.visible and _gift_icon.visible
 
 
 func scene_text() -> String:

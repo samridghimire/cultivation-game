@@ -1846,8 +1846,8 @@ func _on_contest_finished(result: Dictionary) -> void:
 
 
 ## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
-func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, _gift_id: String = "") -> void:
-	_pending_friend_scenes.append([npc_id, npc_name, text, gift_name])
+func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, gift_id: String = "") -> void:
+	_pending_friend_scenes.append([npc_id, npc_name, text, gift_name, gift_id])
 	if _contest_card.visible:
 		pass  # FOLK-016: shown when the contest card closes (_flush_friend_scenes is connected to its `closed`)
 	elif _dialogue.visible:
@@ -1867,7 +1867,7 @@ func _flush_friend_scenes() -> void:
 		_pending_friend_scenes.clear()
 		return
 	var scene: Array = _pending_friend_scenes.pop_front()
-	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]))
+	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "")
 	_update_modal()
 
 

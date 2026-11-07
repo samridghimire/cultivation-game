@@ -32,7 +32,7 @@ func is_available() -> bool:
 func use_directly() -> bool:
 	if taken:
 		return true
-	if GameState.pick_egg(index):
+	if GameState.pick_egg(index):  # GFX-092: the world floats "+1 ..." over the player
 		taken = true
 		queue_free()
 	return true
