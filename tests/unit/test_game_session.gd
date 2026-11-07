@@ -3542,3 +3542,15 @@ func test_close_friend_teaches_lesson_once() -> void:
 	assert_eq(int(c.lessons_taught["hunter_ma:0"]), day, "not taught twice")
 	assert_eq(gs.lessons_for("hunter_ma").size(), 2)
 	assert_true(gs.lessons_for("hunter_ma")[0]["taught"])
+
+
+## COOK-001: a lesson with learn_dish adds the dish.
+func test_lesson_teaches_a_dish() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	var lessons: Array = gs.data.npcs["hunter_ma"]["lessons"]
+	lessons[0]["effects"] = {"learn_dish": "boar_roast"}
+	gs.npc_favor["hunter_ma"] = 62
+	gs.start_dialogue("hunter_ma")
+	assert_true(c.known_dishes.has("boar_roast"))

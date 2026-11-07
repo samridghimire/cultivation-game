@@ -84,7 +84,7 @@ func test_meal_buff_validation() -> void:
 func test_cook_options_list_every_meal_with_its_effect() -> void:
 	var c := new_character()
 	var options := Workshop.cook_options(c, data())
-	assert_eq(options.size(), data().home_meals.size())
+	assert_eq(options.size(), Cooking.known_meals(c, data()).size())
 	for option in options:
 		assert_true(option["disabled"], "no ingredients yet")
 		assert_true(String(option["description"]).contains("for 3 days"), option["description"])
@@ -104,6 +104,7 @@ func test_c302_weather_herb_dishes() -> void:
 	for pair: Array in [["rain_cap_mushroom", "rain_cap_broth"], ["fogbloom_moss", "fogbloom_tonic"], ["frostbell_herb", "frostbell_tea"]]:
 		var c := new_character()
 		c.add_item(pair[0], 2)
+		Cooking.learn(c, data(), pair[1])
 		assert_true(Cooking.cook(c, data(), pair[1])["ok"], pair[1])
 		assert_eq(c.item_count(pair[1]), 1)
 		assert_true(String(data().items[pair[0]]["description"]).contains("cook") or String(data().items[pair[0]]["description"]).contains("brew") or String(data().items[pair[0]]["description"]).contains("steep"), pair[0])
@@ -112,3 +113,49 @@ func test_c302_weather_herb_dishes() -> void:
 	Cooking.cook(c2, data(), "rain_cap_broth")
 	Items.use(c2, data(), "rain_cap_broth", {})
 	assert_gt(Buffs.multiplier(c2, "max_hp"), 1.0)
+
+
+## COOK-001: dishes friends teach.
+func test_taught_meal_hidden_until_learned() -> void:
+	var c := new_character()
+	assert_false(Cooking.is_known(c, data(), "honey_egg_cake"))
+	assert_true(Cooking.is_known(c, data(), "fish_stew"))
+	assert_eq(Cooking.known_meals(c, data()).size(), data().home_meals.size() - 4)
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 4)
+	for item_id: Variant in Cooking.meal(data(), "honey_egg_cake")["ingredients"]:
+		c.add_item(String(item_id), 9)
+	assert_eq(Cooking.check(c, data(), "honey_egg_cake"), "You have not learned to cook that.")
+	assert_true(Cooking.learn(c, data(), "honey_egg_cake"))
+	assert_false(Cooking.learn(c, data(), "honey_egg_cake"), "twice")
+	assert_false(Cooking.learn(c, data(), "fish_stew"), "not taught")
+	assert_false(Cooking.learn(c, data(), "nonsense"))
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 3)
+	assert_true(Cooking.cook(c, data(), "honey_egg_cake")["ok"])
+
+
+func test_known_dishes_round_trip() -> void:
+	var c := new_character()
+	Cooking.learn(c, data(), "egg_custard")
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(back.known_dishes, ["egg_custard"] as Array[String])
+	var d := c.to_dict()
+	d.erase("known_dishes")
+	assert_eq(CharacterData.from_dict(d).known_dishes.size(), 0)
+
+
+func test_learn_dish_effect() -> void:
+	var c := new_character()
+	var fx := {"learn_dish": "boar_roast"}
+	assert_eq(Effects.check(c, data(), fx), "")
+	var notes := Effects.apply(c, data(), fx, {})
+	assert_true(", ".join(notes).contains("Learned to cook Boar Roast"), str(notes))
+	assert_true(Effects.check(c, data(), fx).contains("already know"))
+	assert_eq(Effects.validate(data(), fx, "t").size(), 0)
+	assert_gt(Effects.validate(data(), {"learn_dish": "nope"}, "t").size(), 0)
+	assert_gt(Effects.validate(data(), {"learn_dish": "fish_stew"}, "t").size(), 0)
+
+
+func test_shorten_injury_note_only_when_injured() -> void:
+	var c := new_character()
+	var notes := Effects.apply(c, data(), {"shorten_injury": 3}, {})
+	assert_false(", ".join(notes).contains("injuries ease"), str(notes))

@@ -12,11 +12,37 @@ static func meal(data: GameData, meal_id: String) -> Dictionary:
 	return {}
 
 
+## COOK-001: true when the meal is not `taught` or `c` has learned it.
+static func is_known(c: CharacterData, data: GameData, meal_id: String) -> bool:
+	var m := meal(data, meal_id)
+	return not bool(m.get("taught", false)) or c.known_dishes.has(meal_id)
+
+
+## COOK-001: learns a taught meal. False if it does not exist, is not taught, or is already known.
+static func learn(c: CharacterData, data: GameData, meal_id: String) -> bool:
+	var m := meal(data, meal_id)
+	if m.is_empty() or not bool(m.get("taught", false)) or c.known_dishes.has(meal_id):
+		return false
+	c.known_dishes.append(meal_id)
+	return true
+
+
+## COOK-001: the home meals `c` can cook (or see), in data order.
+static func known_meals(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for m: Dictionary in data.home_meals:
+		if is_known(c, data, String(m["id"])):
+			out.append(m)
+	return out
+
+
 ## "" if `c` can cook the meal now, else why not.
 static func check(c: CharacterData, data: GameData, meal_id: String) -> String:
 	var m := meal(data, meal_id)
 	if m.is_empty():
 		return "You do not know that dish."
+	if not is_known(c, data, meal_id):
+		return "You have not learned to cook that."
 	var ingredients: Dictionary = m["ingredients"]
 	for item_id: Variant in ingredients:
 		var need := int(ingredients[item_id])

@@ -34,7 +34,7 @@ func get_options() -> Array[Dictionary]:
 ## COOK-002: the "Cook ..." entries, shared with the Family Home.
 static func cook_options(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
-	for m: Dictionary in data.home_meals:
+	for m: Dictionary in Cooking.known_meals(c, data):
 		var meal_reason := Cooking.check(c, data, String(m["id"]))
 		options.append({"label": "Cook: %s" % m["name"], "description": "No profession needed. %s" % Cooking.describe(data, String(m["id"])), "reason": meal_reason, "action": GameState.cook_meal.bind(String(m["id"])), "disabled": meal_reason != "", "keep_open": true})
 	return options

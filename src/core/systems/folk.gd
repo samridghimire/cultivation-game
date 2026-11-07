@@ -473,7 +473,7 @@ static func lesson_line(lesson: Dictionary, npc_name: String, player_name: Strin
 	return String(lesson.get("text", "")).replace("{name}", npc_name).replace("{player}", player_name)
 
 
-const LESSON_EFFECT_KEYS: Array[String] = ["learn_recipe", "learn_technique", "profession_xp", "attributes", "dao_insight", "practice_days", "items"]
+const LESSON_EFFECT_KEYS: Array[String] = ["learn_recipe", "learn_dish", "learn_technique", "profession_xp", "attributes", "dao_insight", "practice_days", "items"]
 
 
 ## FOLK-020: load errors in npcs.json lessons.

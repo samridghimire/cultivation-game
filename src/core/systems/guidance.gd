@@ -4426,7 +4426,7 @@ static func _field_line(out: PackedStringArray, c: CharacterData, data: GameData
 ## GUIDE-203: before a foe rated Even or harder (a taken bounty, else a fair fight) a buff dish is held or cookable.
 static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData, people: Dictionary, region_id: String, today: int, fights: Array) -> void:
 	if Injuries.has_any(c):
-		for m: Dictionary in data.home_meals:
+		for m: Dictionary in Cooking.known_meals(c, data):
 			var days := int(data.items.get(String(m["output"]["item"]), {}).get("effects", {}).get("shorten_injury", 0))
 			if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
 				out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
@@ -4460,7 +4460,7 @@ static func meal_before_fight(c: CharacterData, data: GameData, region_id: Strin
 	var can_cook_here := workshop != "" or FamilyHome.has_home(c, people, data, region_id)
 	var best_held := {}
 	var best_cook := {}
-	for m: Dictionary in data.home_meals:
+	for m: Dictionary in Cooking.known_meals(c, data):
 		var item_id := String(m["output"]["item"])
 		var item: Dictionary = data.items.get(item_id, {})
 		var buff: Dictionary = item.get("effects", {}).get("buff", {})

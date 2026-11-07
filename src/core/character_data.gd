@@ -186,6 +186,8 @@ var great_beast_realms: Dictionary = {}
 var market_regular: Dictionary = {}
 ## Home meals cooked (GOAL-006): meal id -> times cooked.
 var cooked_meals: Dictionary = {}
+## COOK-001: ids of taught home meals (recipes.json `taught`) the character has learned.
+var known_dishes: Array[String] = []
 ## Forage pickups taken in a lifetime (FORAGE-005): drives the forager's eye tiers.
 var forage_picks: int = 0
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
@@ -323,6 +325,7 @@ func to_dict() -> Dictionary:
 		"great_beast_realms": great_beast_realms.duplicate(),
 		"market_regular": market_regular.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
+		"known_dishes": known_dishes.duplicate(),
 		"forage_picks": forage_picks,
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
@@ -486,6 +489,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.hunt_log = _int_values(d.get("hunt_log", {}))
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
+	for dish: Variant in d.get("known_dishes", []):
+		c.known_dishes.append(String(dish))
 	c.forage_picks = int(d.get("forage_picks", 0))
 	c.great_beasts = _int_values(d.get("great_beasts", {}))
 	var saved_marks: Dictionary = d.get("marked_days", {})
