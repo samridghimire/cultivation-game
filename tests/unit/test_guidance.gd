@@ -1594,7 +1594,7 @@ func test_fair_fights_list_an_open_sect_trial() -> void:
 	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "")
 	var trials := fights.filter(func(f: Dictionary) -> bool: return f["kind"] == "trial")
 	assert_eq(trials.size(), 1, "the open trial is listed")
-	assert_true(String(trials[0]["text"]).begins_with("Sect trial: Inner Disciple"))
+	assert_true(String(trials[0]["text"]).contains("Sect trial: Inner Disciple"))
 	assert_true(String(trials[0]["short"]).contains("sect trial"), "GUIDE-207: the trial carries a where-label")
 
 
@@ -1650,7 +1650,7 @@ func test_active_hunt_shows_as_your_hunt() -> void:
 	var id: String = data().bounties.keys()[0]
 	Bounties.take(c, data(), id, c.age_days)
 	var texts: Array = Guidance.fair_fights(c, data(), {}, c.age_days, String(data().bounties[id]["region"])).map(func(f: Dictionary) -> String: return f["text"])
-	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Your hunt:")), str(texts))
+	assert_true(texts.any(func(t: String) -> bool: return t.contains("Your hunt:")), str(texts))
 
 
 ## GUIDE-028: an unfair first bounty offer does not hide a fair one behind it.
@@ -1965,7 +1965,7 @@ func test_fair_fights_include_open_chore_fights() -> void:
 	c.sect = {}
 	var texts := _deed_texts(c, {})
 	assert_eq(texts.size(), 1)
-	assert_true(String(texts[0]).begins_with("Headman Zhou: Drive off the wild boar"))
+	assert_true(String(texts[0]).contains("Headman Zhou: Drive off the wild boar"))
 	assert_true(_deed_texts(c, {"chore_boar_done": true}).is_empty(), "done chore is gone")
 
 
@@ -2130,7 +2130,7 @@ func test_fair_fights_list_exploration_foes_when_little_else() -> void:
 	var foes := Exploration.eligible_fights(c, data(), data().regions["misty_forest"]["encounter_tags"], {}, Calendar.season_of(c.age_days), "misty_forest")
 	assert_false(foes.is_empty(), "the forest has fight encounters")
 	for f in explore:
-		assert_true(String(f["text"]).begins_with("Explore here: "))
+		assert_true(String(f["text"]).contains("Explore here: "))
 		assert_true(float(f["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
 
 
@@ -2550,7 +2550,7 @@ func test_fair_fights_list_a_fair_rival_bout() -> void:
 	assert_true(_rival_kinds(fights).has("rival"), "fair bout listed")
 	for f in fights:
 		if f["kind"] == "rival":
-			assert_true(String(f["text"]).begins_with("Challenge %s" % rival.name))
+			assert_true(String(f["text"]).contains("Challenge %s" % rival.name))
 	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village")).has("rival"), "no people: none")
 
 
@@ -6373,3 +6373,33 @@ func test_goal_trip_note() -> void:
 	assert_eq(Guidance.goal_trip_note(c, data(), goal, "qingshi_village"), "")
 	assert_eq(Guidance.goal_trip_note(c, data(), goal, "misty_forest"), " (3 days)")
 	assert_eq(Guidance.goal_trip_note(c, data(), "Reach Qi Refining", "misty_forest"), "")
+
+
+## GUIDE-216: the shared fight text and festival-end wording.
+func test_fight_text_has_the_rating_word_once() -> void:
+	assert_eq(Guidance.fight_text({"chance": 0.99}, "Mission: Boar"), "Easy fight: Mission: Boar (99 in 100)")
+	assert_eq(Guidance.fight_text({"chance": 0.55}, "Bounty: Wolf"), "Fair fight: Bounty: Wolf (55 in 100)")
+
+
+func test_ends_phrase_last_day_wording() -> void:
+	assert_eq(Guidance.ends_phrase(11, 10), "ends today")
+	assert_eq(Guidance.ends_phrase(12, 10), "last day tomorrow")
+	assert_eq(Guidance.ends_phrase(13, 10), "3 days left")
+	assert_eq(Guidance.ends_phrase(10, 10), "ends today")
+
+
+func test_journal_festival_lines_use_last_day_wording() -> void:
+	var d := data()
+	var festival_id := ""
+	for id: String in d.world_events:
+		if WorldEvents.is_festival(d, id):
+			festival_id = id
+			break
+	var events: Array = [{"id": festival_id, "region": "qingshi_village", "start_day": 10, "end_day": 13}]
+	var texts: Array[String] = []
+	for today in [11, 12]:
+		var out: Array[Dictionary] = []
+		Guidance._festival_entries(out, d, today, "qingshi_village", events, {})
+		texts.append(String(out[0]["text"]))
+	assert_true(texts[0].ends_with("last day tomorrow"), texts[0])
+	assert_true(texts[1].ends_with("ends today"), texts[1])

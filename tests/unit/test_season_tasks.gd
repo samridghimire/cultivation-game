@@ -294,6 +294,7 @@ func test_well_crop_bonus_and_draw() -> void:
 	assert_true(gs.draw_well_water())
 	assert_eq(c.item_count("well_water"), 1)
 	assert_false(gs.draw_well_water(), "once a day")
+	assert_eq(SeasonTasks.project_line(c, gs.data, gs.world_flags, 600), "", "GUIDE-216: no draw line after drawing")
 	GameClock.total_days = 601
 	assert_true(gs.draw_well_water())
 	assert_eq(c.item_count("well_water"), 2)

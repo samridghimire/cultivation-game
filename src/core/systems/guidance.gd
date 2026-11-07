@@ -4219,8 +4219,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	for instance in WorldEvents.active_in(events, region_id):
 		var event_id := String(instance["id"])
 		var def := WorldEvents.def_of(data, event_id)
-		var days_left := maxi(0, int(instance["end_day"]) - today)
-		_add(out, "World events", "%s here (%d days left)" % [WorldEvents.event_name(data, event_id), days_left], "normal")
+		_add(out, "World events", "%s here (%s)" % [WorldEvents.event_name(data, event_id), ends_phrase(int(instance["end_day"]), today)], "normal")
 		for kind in ["tournament", "defence"]:
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
@@ -4657,6 +4656,22 @@ static func fair_fight_prefix(entry: Dictionary) -> String:
 	return "Fair fight"
 
 
+## GUIDE-216: "Fair fight: <label> (80 in 100)": the one wording for the journal text, so HUD and journal agree.
+static func fight_text(entry: Dictionary, label: String) -> String:
+	return "%s: %s (%d in 100)" % [fair_fight_prefix(entry), label, roundi(float(entry.get("chance", 0.0)) * 100.0)]
+
+
+## GUIDE-216: how long an event lasts from `end_day` (first day after it): "ends today" on its last day,
+## "last day tomorrow", else "N days left". Never "0 days left".
+static func ends_phrase(end_day: int, today: int) -> String:
+	var n := end_day - today
+	if n <= 1:
+		return "ends today"
+	if n == 2:
+		return "last day tomorrow"
+	return "%d days left" % n
+
+
 ## fair_fights order: an even fight (chance below EASY_FIGHT_CHANCE) before an easy one, then within each band
 ## stones paid (most first), then win chance, then text.
 static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
@@ -4681,7 +4696,7 @@ static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameDa
 	var chance := Combat.win_chance(c, data, enemy)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here")})
+	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here")})
 
 
 ## Spirit stones in a reward/effects dict's `items`, 0 when none.
@@ -4702,7 +4717,7 @@ static func pill_gap_note(c: CharacterData, data: GameData, fights: Array) -> St
 			best = f
 	if best.is_empty():
 		return "%d stones short. Bounties, sect missions and selling herbs and ore pay best." % short
-	return "%d stones short. %s pays %d." % [short, String(best["text"]).get_slice(" (", 0), int(best["stones"])]
+	return "%d stones short. %s pays %d." % [short, String(best["text"]).get_slice(" (", 0).trim_prefix("Fair fight: ").trim_prefix("Easy fight: "), int(best["stones"])]
 
 
 ## " A fairer fight: <text>." for the best fair fight, "" when there is none or it is the foe just lost to.
@@ -4731,13 +4746,12 @@ static func _other_region_event_entries(out: Array[Dictionary], c: CharacterData
 			continue
 		var event_id := String(instance["id"])
 		var def := WorldEvents.def_of(data, event_id)
-		var days_left := maxi(0, int(instance["end_day"]) - today)
 		var label := "%s in %s" % [WorldEvents.event_name(data, event_id), _region_name(data, where)]
 		for kind in ["tournament", "defence"]:
 			if not def.has(kind):
 				continue
 			var reason := WorldEvents.check_join(data, events, c, event_id, kind, where)
-			_add(out, "World events", "%s: you can enter, %d days left" % [label, days_left] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
+			_add(out, "World events", "%s: you can enter, %s" % [label, ends_phrase(int(instance["end_day"]), today)] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
 
 
 ## Festivals in this region or a neighbouring one.
@@ -4746,7 +4760,7 @@ static func _festival_entries(out: Array[Dictionary], data: GameData, today: int
 		var event_id := String(instance["id"])
 		var where := String(instance.get("region", ""))
 		if WorldEvents.is_festival(data, event_id) and Exploration.is_nearby(data, region_id, where):
-			_add(out, "Opportunities", "%s in %s: %d days left" % [WorldEvents.event_name(data, event_id), _region_name(data, where), maxi(0, int(instance["end_day"]) - today)], "normal")
+			_add(out, "Opportunities", "%s in %s: %s" % [WorldEvents.event_name(data, event_id), _region_name(data, where), ends_phrase(int(instance["end_day"]), today)], "normal")
 		var activity := WorldEvents.activity_of(data, event_id)
 		if where == region_id and not activity.is_empty() and not bool(instance.get("activity_done", false)):
 			_add(out, "Opportunities", "Festival: %s at %s (ask a merchant; once this festival)." % [activity["name"], _region_name(data, where)], "normal")
