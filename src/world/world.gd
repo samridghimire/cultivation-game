@@ -65,6 +65,8 @@ var _lightning_timer: Timer
 var _strikes := 0
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
 var _stalls: Array[Node2D] = []
+## GFX-093: bunting and lanterns around the festival square.
+var _festival_decor: FestivalDecor = null
 var _merchant_spots: Array[Vector2] = []
 var _timed_places: Dictionary = {}  # display_name -> node, places with open_days (MARKET-002)
 
@@ -281,6 +283,9 @@ func _refresh_stalls() -> void:
 	for stall in _stalls:
 		stall.queue_free()
 	_stalls.clear()
+	if _festival_decor != null:
+		_festival_decor.queue_free()
+		_festival_decor = null
 	var festival := ""
 	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, GameState.current_region):
 		if WorldEvents.is_festival(GameState.data, String(instance["id"])):
@@ -290,6 +295,12 @@ func _refresh_stalls() -> void:
 		return
 	var caption := FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
 	var spots: Array[Vector2] = []
+	var decor_square: Variant = festival_square()
+	if decor_square != null:
+		_festival_decor = FestivalDecor.new()
+		add_child(_festival_decor)
+		move_child(_festival_decor, player.get_index())
+		_festival_decor.setup(festival, decor_square as Vector2, Folk.festival_blockers(GameState.data, GameState.current_region), map_size)
 	# GFX-085: a region with a festival_square holds its contest stall (and crowd) there.
 	var square: Variant = festival_square()
 	if square != null and GameState.data.world_events.get(festival, {}).has("contest"):
