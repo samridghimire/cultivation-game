@@ -780,6 +780,7 @@ func _validate_world() -> void:
 			load_errors.append("Scene '%s' has no text" % sid)
 		if scene.has("gift") and not items.has(String(scene["gift"])):
 			load_errors.append("Scene '%s' has unknown gift '%s'" % [sid, scene["gift"]])
+	load_errors.append_array(Folk.validate_lessons(self))
 	for dialogue: Dictionary in dialogues.values():
 		load_errors.append_array(Dialogue.validate(dialogue, self))
 

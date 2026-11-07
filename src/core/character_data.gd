@@ -159,6 +159,7 @@ var letter_requests: Array[Dictionary] = []
 var folk_gift_day: Dictionary = {}
 ## Highest friendship tier already celebrated per villager (FOLK-007): npc id -> tier index; seeded once on old saves.
 var folk_tier_seen: Dictionary = {}
+var lessons_taught: Dictionary = {}  # FOLK-020: "<npc_id>:<index>" -> day
 ## Friend scenes already shown (FOLK-013) and the day the last one played.
 var scenes_seen: Array[String] = []
 var scene_day: int = -1
@@ -327,6 +328,7 @@ func to_dict() -> Dictionary:
 		"herb_log": herb_log.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
 		"folk_tier_seen": folk_tier_seen.duplicate(),
+		"lessons_taught": lessons_taught.duplicate(),
 		"scenes_seen": scenes_seen.duplicate(),
 		"scene_day": scene_day,
 		"folk_tiers_seeded": folk_tiers_seeded,
@@ -500,6 +502,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.herb_log = _int_values(d.get("herb_log", {}))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
 	c.folk_tier_seen = _int_values(d.get("folk_tier_seen", {}))
+	c.lessons_taught = _int_values(d.get("lessons_taught", {}))
 	for sid in d.get("scenes_seen", []):
 		c.scenes_seen.append(String(sid))
 	c.scene_day = int(d.get("scene_day", -1))

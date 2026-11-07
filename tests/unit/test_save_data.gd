@@ -92,6 +92,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.gratitude = {"npc_test_friend": 25}
 	c.folk_gift_day = {"npc_test_friend": 77}
 	c.folk_tier_seen = {"npc_test_friend": 1}
+	c.lessons_taught = {"hunter_ma:0": 12}
 	c.folk_tiers_seeded = true
 	c.catch_log = {"silver_carp": 3}
 	c.herb_log = {"dew_grass": 2}

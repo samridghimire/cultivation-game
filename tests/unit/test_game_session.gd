@@ -3499,3 +3499,30 @@ func test_named_npc_remembers_gift_then_news() -> void:
 	gs.start_dialogue("hunter_ma")
 	EventBus.message_posted.disconnect(_collect_post)
 	assert_false("\n".join(_zero_round_posts).contains("Hunter Ma: \""), "nothing the third time")
+
+
+## FOLK-020: Hunter Ma teaches once when you are close; saved; old saves teach on the next talk.
+func test_close_friend_teaches_lesson_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["hunter_ma"] = 59
+	gs.start_dialogue("hunter_ma")
+	assert_false(c.lessons_taught.has("hunter_ma:0"), "not yet close")
+	gs.npc_favor["hunter_ma"] = 62
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.start_dialogue("hunter_ma")
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_true(c.lessons_taught.has("hunter_ma:0"), "taught")
+	assert_true("\n".join(_zero_round_posts).contains("read a track"), "line posted")
+	var reloaded := CharacterData.from_dict(c.to_dict())
+	assert_true(reloaded.lessons_taught.has("hunter_ma:0"), "saved")
+	c.lessons_taught.clear()  # a save from before the feature
+	gs.start_dialogue("hunter_ma")
+	assert_true(c.lessons_taught.has("hunter_ma:0"), "taught on next talk")
+	var day: int = c.lessons_taught["hunter_ma:0"]
+	gs.start_dialogue("hunter_ma")
+	assert_eq(int(c.lessons_taught["hunter_ma:0"]), day, "not taught twice")
+	assert_eq(gs.lessons_for("hunter_ma").size(), 1)
+	assert_true(gs.lessons_for("hunter_ma")[0]["taught"])

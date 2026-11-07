@@ -414,6 +414,68 @@ static func new_tiers(data: GameData, seen: Dictionary, favor_by_id: Dictionary,
 	return result
 
 
+## FOLK-020: the lessons a named villager teaches (npcs.json `lessons`), [] when none. Pure.
+static func lessons_of(data: GameData, npc_id: String) -> Array:
+	var raw: Variant = data.npcs.get(npc_id, {}).get("lessons", [])
+	return raw if raw is Array else []
+
+
+## FOLK-020: lessons with tier <= `tier` not yet in `taught` ("<npc_id>:<index>" -> day): [{key, index, lesson}]. Pure.
+static func due_lessons(data: GameData, npc_id: String, tier: int, taught: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var lessons := lessons_of(data, npc_id)
+	for i in lessons.size():
+		var key := "%s:%d" % [npc_id, i]
+		if int(lessons[i].get("tier", 99)) <= tier and not taught.has(key):
+			result.append({"key": key, "index": i, "lesson": lessons[i]})
+	return result
+
+
+static func lesson_line(lesson: Dictionary, npc_name: String, player_name: String) -> String:
+	return String(lesson.get("text", "")).replace("{name}", npc_name).replace("{player}", player_name)
+
+
+const LESSON_EFFECT_KEYS: Array[String] = ["learn_recipe", "learn_technique", "profession_xp", "attributes", "dao_insight", "practice_days", "items"]
+
+
+## FOLK-020: load errors in npcs.json lessons.
+static func validate_lessons(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var tier_count: int = data.family.get("folk_tiers", []).size()
+	for npc_id: String in data.npcs:
+		var lessons := lessons_of(data, npc_id)
+		if lessons.size() > 2:
+			errors.append("npc %s: at most 2 lessons" % npc_id)
+		var last := 0
+		for i in lessons.size():
+			var l: Dictionary = lessons[i]
+			var where := "npc %s lesson %d" % [npc_id, i]
+			var t := int(l.get("tier", 0))
+			if t < 1 or t >= tier_count:
+				errors.append("%s: tier must be 1..%d" % [where, tier_count - 1])
+			if t <= last:
+				errors.append("%s: tiers must rise strictly" % where)
+			last = t
+			var text := String(l.get("text", ""))
+			if text.is_empty() or text.length() > 220:
+				errors.append("%s: text must be 1..220 characters" % where)
+			var fx: Variant = l.get("effects", {})
+			if not (fx is Dictionary) or fx.is_empty():
+				errors.append("%s: effects must be a non-empty Dictionary" % where)
+				continue
+			for key: Variant in fx:
+				if not LESSON_EFFECT_KEYS.has(String(key)):
+					errors.append("%s: effect '%s' is not allowed in a lesson" % [where, key])
+			if fx.has("attributes"):
+				for v: Variant in fx["attributes"].values():
+					if int(v) < 1 or int(v) > 2:
+						errors.append("%s: attributes values must be 1..2" % where)
+			if fx.has("practice_days") and (int(fx["practice_days"]) < 1 or int(fx["practice_days"]) > 10):
+				errors.append("%s: practice_days must be 1..10" % where)
+			errors.append_array(Effects.validate(data, fx, where))
+	return errors
+
+
 ## Load errors in folk_tiers: strictly rising mins 1..100, names, known gift items with count 1..3.
 static func validate_tiers(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []

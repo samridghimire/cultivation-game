@@ -1552,7 +1552,41 @@ func start_dialogue(npc_id: String) -> void:
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
 	_named_remembers(npc_id)
+	_teach_lessons(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
+
+
+## FOLK-020: a close named villager teaches one lasting lesson (at most one per NPC per day), once.
+func _teach_lessons(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not npc.alive or player == null:
+		return
+	var today := GameClock.total_days
+	for key: String in player.lessons_taught:
+		if key.begins_with(npc_id + ":") and int(player.lessons_taught[key]) == today:
+			return
+	var due := Folk.due_lessons(data, npc_id, Folk.tier_index(data, int(npc_favor.get(npc_id, 0))), player.lessons_taught)
+	if due.is_empty():
+		return
+	var lesson: Dictionary = due[0]["lesson"]
+	var notes := Effects.apply(player, data, lesson.get("effects", {}), world_flags, current_region, today)
+	player.lessons_taught[String(due[0]["key"])] = today
+	EventBus.post("%s: \"%s\"" % [npc.name, Folk.lesson_line(lesson, npc.name, player.name)], "people")
+	for note in notes:
+		EventBus.post(note, "progress")
+	EventBus.player_changed.emit()
+
+
+## FOLK-020: lessons of a named villager for the UI: [{tier_name, taught, text_if_taught}].
+func lessons_for(npc_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var npc: CharacterData = npcs.get(npc_id)
+	var lessons := Folk.lessons_of(data, npc_id)
+	for i in lessons.size():
+		var taught := player != null and player.lessons_taught.has("%s:%d" % [npc_id, i])
+		result.append({"tier_name": String(data.family["folk_tiers"][int(lessons[i]["tier"])]["name"]), "taught": taught,
+			"text_if_taught": Folk.lesson_line(lessons[i], npc.name if npc != null else npc_id, player.name if player != null else "") if taught else ""})
+	return result
 
 
 ## FOLK-019: a named villager opening their dialogue says at most one remembered line: the gift
@@ -1979,6 +2013,7 @@ func chat(npc_id: String) -> void:
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
+	_teach_lessons(npc_id)
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
@@ -4312,6 +4347,9 @@ func check_friendships() -> void:
 			player.folk_tier_seen[id] = maxi(int(player.folk_tier_seen.get(id, -1)), Folk.tier_index(data, int(npc_favor.get(id, 0))))
 		player.folk_tiers_seeded = true
 		return
+	for id: String in data.npcs:
+		if not Folk.lessons_of(data, id).is_empty():
+			_teach_lessons(id)
 	for hit in Folk.new_tiers(data, player.folk_tier_seen, npc_favor, ids):
 		var tier: Dictionary = data.family["folk_tiers"][int(hit["tier"])]
 		var npc: CharacterData = npcs[hit["id"]]
