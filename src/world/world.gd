@@ -99,6 +99,7 @@ func _ready() -> void:
 	_build_npcs()
 	_build_roamers()
 	_build_forage()
+	_build_eggs()
 	_build_bounds()
 	_build_landmark_bodies()
 	_limit_camera()
@@ -118,6 +119,7 @@ func _ready() -> void:
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
 	EventBus.forage_changed.connect(_build_forage)
+	EventBus.forage_changed.connect(_build_eggs)
 	get_tree().auto_accept_quit = false
 
 
@@ -133,6 +135,7 @@ func _build_season_tint() -> void:
 func _on_days_advanced(_days: int) -> void:
 	_build_roamers()
 	_build_forage()
+	_build_eggs()
 	_refresh_stalls()
 	_refresh_timed_places()
 	var season := Calendar.season_of(GameClock.total_days)
@@ -526,6 +529,28 @@ func _build_forage() -> void:
 		pickup.setup(slot, String(n["item"]), int(n["amount"]), spots[slot])
 		add_child(pickup)
 		move_child(pickup, player.get_index())
+
+
+## CRIT-001: one egg node per unpicked egg of today (the hens' spots are fixed, the eggs are seeded per day).
+func _build_eggs() -> void:
+	if not GameState.has_session():
+		return
+	var wanted := {}
+	for e: Dictionary in GameState.eggs_here():
+		wanted[int(e["index"])] = e
+	for node in get_children():
+		if node is EggPickup and not node.is_queued_for_deletion():
+			if wanted.has(node.index):
+				wanted.erase(node.index)
+			else:
+				node.queue_free()
+	for index: int in wanted:
+		var e: Dictionary = wanted[index]
+		var item_name := String(GameState.data.items.get(String(e["item"]), {}).get("name", "Egg"))
+		var egg := EggPickup.new()
+		egg.setup(index, item_name, e["pos"])
+		add_child(egg)
+		move_child(egg, player.get_index())
 
 
 ## An engaged beast fades away; the rest stay.

@@ -15,8 +15,52 @@ const SEASONS := {
 const WATER_MARGIN := 6.0
 
 
+## CRIT-001: world flag key holding {day, taken: [entry indexes]} of the eggs picked today.
+static func egg_flag(region_id: String) -> String:
+	return "eggs_" + region_id
+
+
+## CRIT-001: today's eggs for a region's `entries` (its map.ambient_critters): [{index, pos, item}], at most one per
+## hen that has `lays`, near the hen's pos. Pure, seeded by region id and day; hens only lay in season.
+static func eggs_today(region_id: String, entries: Array, day: int, season: String = "spring") -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in entries.size():
+		var e: Dictionary = entries[i]
+		if String(e.get("kind", "")) != "hen" or not e.has("lays") or not in_season("hen", season):
+			continue
+		var lays: Dictionary = e["lays"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("egg:%s:%d:%d" % [region_id, day, i])
+		if rng.randf() >= float(lays.get("chance", 0.0)):
+			continue
+		var pos := Vector2(float(e["pos"][0]), float(e["pos"][1])) + Vector2(rng.randf_range(-26.0, 26.0), rng.randf_range(10.0, 26.0))
+		out.append({"index": i, "pos": pos, "item": String(lays["item"])})
+	return out
+
+
+## Eggs not yet picked today, given the world flags.
+static func eggs_left(region_id: String, entries: Array, day: int, flags: Dictionary, season: String = "spring") -> Array[Dictionary]:
+	var rec: Variant = flags.get(egg_flag(region_id))
+	var taken: Array = []
+	if rec is Dictionary and int(rec.get("day", -1)) == day:
+		for t: Variant in rec.get("taken", []):
+			taken.append(int(t))  # JSON saves hand back floats
+	return eggs_today(region_id, entries, day, season).filter(func(e: Dictionary) -> bool: return not taken.has(int(e["index"])))
+
+
+## Marks entry `index` picked today (the record is overwritten on a new day).
+static func mark_egg(flags: Dictionary, region_id: String, index: int, day: int) -> void:
+	var rec: Variant = flags.get(egg_flag(region_id))
+	var taken: Array = []
+	if rec is Dictionary and int(rec.get("day", -1)) == day:
+		for t: Variant in rec.get("taken", []):
+			taken.append(int(t))
+	taken.append(index)
+	flags[egg_flag(region_id)] = {"day": day, "taken": taken}
+
+
 ## Errors for one region's `map.ambient_critters` (empty when fine).
-static func validate(region: Dictionary) -> PackedStringArray:
+static func validate(region: Dictionary, items: Dictionary = {}) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var map: Dictionary = region.get("map", {})
 	if not map.has("ambient_critters"):
@@ -42,6 +86,16 @@ static func validate(region: Dictionary) -> PackedStringArray:
 		if not (pos is Array and (pos as Array).size() == 2 and (pos[0] is float or pos[0] is int) and (pos[1] is float or pos[1] is int)):
 			errors.append("Region '%s' map.ambient_critters[%d] pos must be [x, y]" % [rid, i])
 			continue
+		if e.has("lays"):
+			var lays: Variant = e["lays"]
+			if kind != "hen" or not (lays is Dictionary):
+				errors.append("Region '%s' map.ambient_critters[%d] lays is only for a hen, as {item, chance}" % [rid, i])
+			else:
+				var ch: Variant = lays.get("chance")
+				if not (ch is float or ch is int) or float(ch) < 0.0 or float(ch) > 1.0:
+					errors.append("Region '%s' map.ambient_critters[%d] lays.chance must be 0..1" % [rid, i])
+				if not items.is_empty() and not items.has(String(lays.get("item", ""))):
+					errors.append("Region '%s' map.ambient_critters[%d] lays.item '%s' is not an item" % [rid, i, lays.get("item", "")])
 		var p := Vector2(float(pos[0]), float(pos[1]))
 		if p.x < 0.0 or p.y < 0.0 or p.x > size.x or p.y > size.y:
 			errors.append("Region '%s' map.ambient_critters[%d] pos is outside the map" % [rid, i])

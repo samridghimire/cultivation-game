@@ -128,6 +128,9 @@ func _collect_grants(granted: Dictionary) -> void:
 				var item_id: String = entry.get("item", "")
 				if item_id != "":
 					granted[item_id] = "regions.json catch_table"
+		for crit: Dictionary in region.get("map", {}).get("ambient_critters", []):
+			if crit.has("lays"):
+				granted[String(crit["lays"]["item"])] = "regions.json ambient_critters lays"
 		var great: Dictionary = (region.get("roamers", {}) as Dictionary).get("great", {})
 		if great.has("trophy"):
 			granted[String(great["trophy"])] = "regions.json roamers.great.trophy"

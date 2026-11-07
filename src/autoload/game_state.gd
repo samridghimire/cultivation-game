@@ -3413,6 +3413,29 @@ func forage_today(region_id: String) -> Array[Dictionary]:
 	return Foraging.unpicked(data, region_id, GameClock.total_days, player.realm_index, world_flags, Foraging.tier_for(player.forage_picks))
 
 
+## CRIT-001: today's unpicked hen eggs here, [{index, pos, item}].
+func eggs_here() -> Array[Dictionary]:
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	return Critters.eggs_left(current_region, entries, GameClock.total_days, world_flags, Calendar.season_of(GameClock.total_days).to_lower())
+
+
+## CRIT-001: pick up the egg of ambient critter `index`. Takes no time; it is gone until the next day.
+func pick_egg(index: int) -> bool:
+	if not _can_act():
+		return false
+	for e in eggs_here():
+		if int(e["index"]) != index:
+			continue
+		var item_id := String(e["item"])
+		player.add_item(item_id, 1)
+		Critters.mark_egg(world_flags, current_region, index, GameClock.total_days)
+		EventBus.post("You pick up a %s from the grass." % String(data.items.get(item_id, {}).get("name", item_id)).to_lower(), "world")
+		EventBus.forage_changed.emit()
+		EventBus.player_changed.emit()
+		return true
+	return false
+
+
 ## Pick up the forage in `slot`. Takes no time (a stoop, not an action).
 func pick_forage(slot: int) -> bool:
 	if not _can_act():
