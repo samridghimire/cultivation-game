@@ -6403,3 +6403,37 @@ func test_journal_festival_lines_use_last_day_wording() -> void:
 		texts.append(String(out[0]["text"]))
 	assert_true(texts[0].ends_with("last day tomorrow"), texts[0])
 	assert_true(texts[1].ends_with("ends today"), texts[1])
+
+
+## GUIDE-217: Today names unpicked hen eggs by the coop, drops them once picked; a festival's last days use ends_phrase;
+## the well's draw line is gone after the draw.
+func test_today_lines_coop_festival_and_well() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var entries: Array = d.regions["qingshi_village"]["map"]["ambient_critters"]
+	var day := -1
+	for t in range(1, 400):
+		if Critters.eggs_today("qingshi_village", entries, t, Calendar.season_of(t).to_lower()).size() >= 1:
+			day = t
+			break
+	assert_true(day > 0, "some day has an egg")
+	var flags := {}
+	var eggs := Critters.eggs_left("qingshi_village", entries, day, flags, Calendar.season_of(day).to_lower())
+	var line := "%s by the coop (%d left)" % [String(d.items[String(eggs[0]["item"])]["name"]), eggs.size()]
+	assert_true(Guidance.today_lines(c, d, flags, [], day, "qingshi_village").has(line), str(Guidance.today_lines(c, d, flags, [], day, "qingshi_village")))
+	for e in eggs:
+		Critters.mark_egg(flags, "qingshi_village", int(e["index"]), day)
+	for l in Guidance.today_lines(c, d, flags, [], day, "qingshi_village"):
+		assert_false(l.contains("by the coop"), l)
+	# Festival ends wording matches ends_phrase.
+	var festival_id := ""
+	for id: String in d.world_events:
+		if WorldEvents.is_festival(d, id):
+			festival_id = id
+			break
+	var events: Array = [{"id": festival_id, "region": "qingshi_village", "start_day": day - 3, "end_day": day + 1}]
+	var fl := Guidance.today_lines(c, d, {}, events, day, "qingshi_village")
+	assert_true(fl[0].contains(Guidance.ends_phrase(day + 1, day)), str(fl))
+	events[0]["end_day"] = day + 5
+	assert_false(Guidance.today_lines(c, d, {}, events, day, "qingshi_village")[0].contains("ends today"))

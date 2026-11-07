@@ -229,6 +229,25 @@ static func _festival_day_note(data: GameData, events: Array, region_id: String,
 	return ""
 
 
+## GUIDE-217: the shared "ends today" / "last day tomorrow" wording for a festival on its last two days, else "".
+static func _festival_ends_note(data: GameData, events: Array, region_id: String, day: int) -> String:
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		if WorldEvents.is_festival(data, String(instance.get("id", ""))) and int(instance.get("end_day", -1)) >= day:
+			var end_day := int(instance["end_day"])
+			return ends_phrase(end_day, day) if end_day - day <= 2 else ""
+	return ""
+
+
+## GUIDE-217: "Hen's Egg by the coop (2 left)" while today's hens' eggs here are unpicked, else "".
+static func _egg_line(data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
+	var entries: Array = data.regions.get(region_id, {}).get("map", {}).get("ambient_critters", [])
+	var left := Critters.eggs_left(region_id, entries, day, flags, Calendar.season_of(day).to_lower())
+	if left.is_empty():
+		return ""
+	var nm := String(data.items.get(String(left[0]["item"]), {}).get("name", "Egg"))
+	return "%s by the coop (%d left)" % [nm, left.size()]
+
+
 ## TODAY-002: what lies by the path, by name: "Village Mugwort and Dew Grass by the path", "" when nothing is unpicked.
 ## Names are distinct, rarest (lowest forage weight in the region) first; 3+ names give "A, B and N more".
 static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
@@ -303,6 +322,9 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		var stalls := Places.festival_stalls_open(data, active_events, region_id, day)  # FEST-012
 		if not stalls.is_empty():
 			line += "; festival stall open"
+		var ends := _festival_ends_note(data, active_events, region_id, day)
+		if ends != "":
+			line += "; " + ends
 		out.append(line + ".")
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
@@ -366,6 +388,10 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var ending := season_ending(c, data, day, flags)
 	if ending != "":
 		out.append(ending)
+	# 8. Eggs by the coop: lowest priority, cut first when the list is full.
+	var egg := _egg_line(data, region_id, day, flags)
+	if egg != "":
+		out.append(egg)
 	if out.size() > TODAY_MAX:
 		out.resize(TODAY_MAX)
 	return out
