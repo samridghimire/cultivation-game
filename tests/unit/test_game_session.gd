@@ -2779,6 +2779,22 @@ func test_birthday_gift_counts_double_once() -> void:
 	assert_true(other != null)
 
 
+func test_named_friend_birthday_gift_doubles() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(5))
+	GameClock.total_days = Folk.birthday_day(gs.npcs["elder_mo"], gs.data) + Calendar.DAYS_PER_YEAR
+	c.add_item("qi_gathering_pill", 2)
+	var worth := Family.gift_value(gs.data, "qi_gathering_pill") * int(gs.data.family["acquaintance"]["gift_like_mult"])
+	gs.npc_favor["elder_mo"] = 0
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	var first := int(gs.npc_favor["elder_mo"])
+	assert_true(first >= worth, "doubled on the birthday")
+	GameClock.total_days = Folk.birthday_day(gs.npcs["elder_mo"], gs.data) + Calendar.DAYS_PER_YEAR
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	assert_true(int(gs.npc_favor["elder_mo"]) - first < first, "second gift is not doubled")
+
+
 func test_liked_gift_to_generated_villager_sets_taste_flag() -> void:
 	var c := _start()
 	var gs := _game_state()

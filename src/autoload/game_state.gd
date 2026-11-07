@@ -2137,7 +2137,13 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var gain := int(result["favor"])
 	if taste >= 0:
 		gain *= Folk.gift_multiplier(world_flags, npc_id, GameClock.total_days, data, true)
-		gain *= Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
+		var cake := Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
+		gain *= cake
+		if cake > 1 and taste > 0 and data.npcs.has(npc_id):  # FOLK-022
+			var thanks: Array = data.family.get("folk_greetings", {}).get("birthday_thanks", [])
+			if not thanks.is_empty():
+				var item_label: String = String(data.items[item_id].get("name", item_id)).to_lower()
+				EventBus.post(String(thanks[absi(hash(npc_id + str(GameClock.total_days))) % thanks.size()]).replace("{name}", npcs[npc_id].name).replace("{item}", item_label), "progress")
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	var before := _rival_attitude()

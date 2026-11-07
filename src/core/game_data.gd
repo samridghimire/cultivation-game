@@ -754,6 +754,13 @@ func _validate_world() -> void:
 		if realm_index_of(npc.get("realm", "mortal")) < 0:
 			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
 		load_errors.append_array(Folk.validate_spots(npc, self))
+		if npc.has("birthday"):
+			var bd: Variant = npc["birthday"]
+			if not (bd is Dictionary) or not (bd.get("month") is int or bd.get("month") is float) or not (bd.get("day") is int or bd.get("day") is float) \
+					or int(bd["month"]) < 1 or int(bd["month"]) > 12 or int(bd["day"]) < 1 or int(bd["day"]) > 30:
+				load_errors.append("NPC '%s' birthday must be {month 1..12, day 1..30}" % npc["id"])
+		if npc.has("birthday_line") and (not npc["birthday_line"] is String or String(npc["birthday_line"]) == "" or String(npc["birthday_line"]).length() > 160):
+			load_errors.append("NPC '%s' birthday_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("hunter") and not npc["hunter"] is bool:
 			load_errors.append("NPC '%s' hunter must be a bool" % npc["id"])
 		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):

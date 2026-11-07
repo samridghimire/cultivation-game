@@ -894,8 +894,37 @@ func test_birthday_is_stable_and_generated_only() -> void:
 	assert_false(Folk.birthday_today(npc, data(), b + 1))
 	assert_eq(Folk.days_to_birthday(npc, data(), b + 1), Calendar.DAYS_PER_YEAR - 1)
 	var named := CharacterData.new()
-	named.id = data().npcs.keys()[0]
-	assert_eq(Folk.birthday_day(named, data()), -1)
+	named.id = "elder_mo"
+	assert_eq(Folk.birthday_day(named, data()), (3 - 1) * Calendar.DAYS_PER_MONTH + 11)
+	for id: String in data().npcs:
+		if not data().npcs[id].has("birthday"):
+			named.id = id
+			assert_eq(Folk.birthday_day(named, data()), -1)
+			break
+
+
+func test_named_birthday_line_gift_and_validation() -> void:
+	var npcs := {}
+	Npcs.ensure_all(npcs, data(), seeded_rng(3))
+	var mo: CharacterData = npcs["elder_mo"]
+	var day := Folk.birthday_day(mo, data()) + Calendar.DAYS_PER_YEAR
+	assert_eq(Folk.greeting(mo, 50, day, data()), String(data().npcs["elder_mo"]["birthday_line"]))
+	var flags := {}
+	assert_eq(Folk.birthday_gift_multiplier(flags, mo, data(), day, true), 2)
+	assert_eq(Folk.birthday_gift_multiplier(flags, mo, data(), day, true), 1)
+	assert_eq(Folk.birthdays_soon(npcs, data(), "qingshi_village", day - 2, {"elder_mo": 20})[0]["npc"].id, "elder_mo")
+	var d := data()
+	var original: Variant = d.npcs["elder_mo"]["birthday"]
+	d.npcs["elder_mo"]["birthday"] = {"month": 13, "day": 1}
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("birthday"))
+	d.npcs["elder_mo"]["birthday"] = {"month": 3, "day": 0}
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("birthday"))
+	d.npcs["elder_mo"]["birthday"] = original
+	d.load_errors.clear()
 
 
 func test_birthday_greeting_uses_birthday_line() -> void:
@@ -956,12 +985,12 @@ func test_people_entries_filter_order_and_tastes() -> void:
 	assert_eq(Folk.people_entries(npcs, data(), "qingshi_village", favor, flags, 0)[0]["id"], ids[2], "favor desc")
 
 
-func test_people_entries_named_npc_has_no_birthday() -> void:
+func test_people_entries_named_npc_birthday() -> void:
 	var npcs := {}
 	Npcs.ensure_all(npcs, data(), seeded_rng(3))
 	var rows := Folk.people_entries(npcs, data(), "qingshi_village", {"elder_mo": 20}, {}, 0)
-	assert_eq(rows[0]["birthday_text"], "")
-	assert_eq(rows[0]["birthday_in"], -1)
+	assert_eq(rows[0]["birthday_text"], "Month 3, Day 12")
+	assert_true(int(rows[0]["birthday_in"]) >= 0)
 	assert_true(int(rows[0]["likes_total"]) > 0)
 
 

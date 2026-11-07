@@ -101,6 +101,8 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
 		return String(party[absi(hash(npc.id + str(day))) % party.size()])
 	var cake: Array = bands.get("birthday", [])
+	if birthday_today(npc, data, day) and data.npcs.has(npc.id) and String(data.npcs[npc.id].get("birthday_line", "")) != "":
+		return String(data.npcs[npc.id]["birthday_line"])  # FOLK-022
 	if not cake.is_empty() and birthday_today(npc, data, day):
 		return String(cake[absi(hash(npc.id + str(day))) % cake.size()])
 	var shunned: Array = bands.get("shunned", [])
@@ -249,6 +251,9 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	var cake: Variant = bands.get("birthday", [])
 	if not (cake is Array) or not (cake as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday must be an array of non-empty strings")
+	var thanks: Variant = bands.get("birthday_thanks", [])
+	if not (thanks is Array) or not (thanks as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+		errors.append("family.json folk_greetings.birthday_thanks must be an array of non-empty strings")
 	var skies: Variant = bands.get("weather", {})
 	if not (skies is Dictionary):
 		errors.append("family.json folk_greetings.weather must be an object")
@@ -752,7 +757,12 @@ static func attend(flags: Dictionary, npc_id: String, partner_id: String, today:
 ## FOLK-008: the day of the year (0..DAYS_PER_YEAR-1) of a generated villager's birthday: a stable hash of the id, never rng.
 ## Named story NPCs have none (-1).
 static func birthday_day(npc: CharacterData, data: GameData) -> int:
-	if npc == null or data.npcs.has(npc.id):
+	if npc == null:
+		return -1
+	if data.npcs.has(npc.id):  # FOLK-022: a named NPC has a birthday only when npcs.json gives one
+		var bd: Variant = data.npcs[npc.id].get("birthday", null)
+		if bd is Dictionary:
+			return (int(bd["month"]) - 1) * Calendar.DAYS_PER_MONTH + int(bd["day"]) - 1
 		return -1
 	return absi(hash("birthday:" + npc.id)) % Calendar.DAYS_PER_YEAR
 
@@ -774,7 +784,7 @@ static func days_to_birthday(npc: CharacterData, data: GameData, day: int) -> in
 ## `span` days of `day`, as [{npc, in_days}] soonest first (ties by id). Pure.
 static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, day: int, favor: Dictionary, span: int = 7, min_favor: int = 10) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for npc in Npcs.generated_in_region(npcs, data, region_id):
+	for npc in Npcs.in_region(npcs, data, region_id):
 		if int(favor.get(npc.id, 0)) < min_favor:
 			continue
 		var n := days_to_birthday(npc, data, day)
