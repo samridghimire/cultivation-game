@@ -3524,5 +3524,5 @@ func test_close_friend_teaches_lesson_once() -> void:
 	var day: int = c.lessons_taught["hunter_ma:0"]
 	gs.start_dialogue("hunter_ma")
 	assert_eq(int(c.lessons_taught["hunter_ma:0"]), day, "not taught twice")
-	assert_eq(gs.lessons_for("hunter_ma").size(), 1)
+	assert_eq(gs.lessons_for("hunter_ma").size(), 2)
 	assert_true(gs.lessons_for("hunter_ma")[0]["taught"])

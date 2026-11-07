@@ -9,7 +9,8 @@ func test_due_lessons_by_tier() -> void:
 	var due := Folk.due_lessons(d, "hunter_ma", 2, taught)
 	assert_eq(due.size(), 1, "at the tier")
 	taught[String(due[0]["key"])] = 5
-	assert_eq(Folk.due_lessons(d, "hunter_ma", 3, taught).size(), 0, "once taught")
+	assert_eq(Folk.due_lessons(d, "hunter_ma", 2, taught).size(), 0, "once taught")
+	assert_eq(Folk.due_lessons(d, "hunter_ma", 3, taught).size(), 1, "the Sworn friend lesson follows")
 	assert_eq(Folk.due_lessons(d, "nobody", 3, {}).size(), 0)
 
 
