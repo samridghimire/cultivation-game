@@ -20,10 +20,15 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters", "edge_belt"]
 ## map.decor.rock_clusters (GFX-053): boulder groups of 3-6 rocks in 2-3 sizes, seeded before the scatter.
 const MAX_ROCK_CLUSTERS := 12
 const ROCK_CLUSTER_RADIUS := 45.0
+## map.decor.edge_belt (GFX-089): 0..MAX_EDGE_BELT rows of dense trees along the map edges, EDGE_ROW_GAP px apart,
+## EDGE_STEP px between trees; blocked rects (paths, places) leave gaps.
+const MAX_EDGE_BELT := 3
+const EDGE_ROW_GAP := 26.0
+const EDGE_STEP := 34.0
 ## Decor keeps this far from a path rect (GFX-053).
 const PATH_CLEARANCE := 12.0
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
@@ -82,7 +87,31 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 				if is_clear(pos, blocked, spots):
 					out.append(_decor_item(kind, pos, color, cfg, rng))
 					break
+	var rows := clampi(int(cfg.get("edge_belt", 0)), 0, MAX_EDGE_BELT)
+	if rows > 0:
+		_place_edge_belt(out, cfg, Color(String(cfg["tree_color"])), rows, size, blocked, spots, rng)
 	return out
+
+
+## GFX-089: rows of trees hugging all four map edges so a forest closes in; skips blocked spots (path gaps).
+static func _place_edge_belt(out: Array[Dictionary], cfg: Dictionary, color: Color, rows: int, size: Vector2,
+		blocked: Array[Rect2], spots: Array[Vector2], rng: RandomNumberGenerator) -> void:
+	for r in rows:
+		var inset := EDGE + 10.0 + float(r) * EDGE_ROW_GAP
+		var x := inset
+		while x <= size.x - inset:
+			for y: float in [inset, size.y - inset]:
+				var pos := Vector2(x + rng.randf_range(-6.0, 6.0), y + rng.randf_range(-5.0, 5.0))
+				if is_clear(pos, blocked, spots):
+					out.append(_decor_item("tree", pos, color, cfg, rng))
+			x += EDGE_STEP
+		var y2 := inset + EDGE_STEP
+		while y2 <= size.y - inset - EDGE_STEP * 0.5:
+			for x2: float in [inset, size.x - inset]:
+				var pos2 := Vector2(x2 + rng.randf_range(-5.0, 5.0), y2 + rng.randf_range(-6.0, 6.0))
+				if is_clear(pos2, blocked, spots):
+					out.append(_decor_item("tree", pos2, color, cfg, rng))
+			y2 += EDGE_STEP
 
 
 static func _decor_item(kind: String, pos: Vector2, color: Color, cfg: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
@@ -345,6 +374,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CLUSTERS:
 					errors.append("Region '%s' map.decor.clusters must be 0-%d" % [region["id"], MAX_CLUSTERS])
+			elif key == "edge_belt":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_EDGE_BELT:
+					errors.append("Region '%s' map.decor.edge_belt must be 0-%d" % [region["id"], MAX_EDGE_BELT])
 			elif key == "rock_clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_ROCK_CLUSTERS:
 					errors.append("Region '%s' map.decor.rock_clusters must be 0-%d" % [region["id"], MAX_ROCK_CLUSTERS])

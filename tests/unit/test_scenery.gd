@@ -468,3 +468,40 @@ func test_no_decor_near_gates_or_travel_places() -> void:
 		for d in decor:
 			for r in rects:
 				assert_true(r.grow(SectCourt.DECOR_KEEP - 1.0).has_point(d["pos"]) == false, "%s: %s at %s within 40 px of a gate or travel place" % [rid, d["kind"], d["pos"]])
+
+
+func test_edge_belt_validation() -> void:
+	var d := GameData.new()
+	d.regions = {"bad": {"id": "bad", "map": {"decor": {"edge_belt": 4}}}, "ok": {"id": "ok", "map": {"decor": {"edge_belt": 3}}}}
+	assert_eq(Scenery.validate(d).size(), 1)
+
+
+func test_edge_belt_hugs_edges_and_leaves_path_gaps() -> void:
+	var region := _region()
+	region["map"]["decor"] = {"trees": 0, "rocks": 0, "grass": 0, "flowers": 0, "edge_belt": 2}
+	var blocked := Scenery.blocked_rects(region)
+	var near_edge := 0
+	for d in Scenery.place(region, seeded_rng(2)):
+		var pos: Vector2 = d["pos"]
+		for r in blocked:
+			assert_false(r.has_point(pos), "belt tree on a blocked rect")
+		if pos.x < 70.0 or pos.y < 70.0 or pos.x > 730.0 or pos.y > 530.0:
+			near_edge += 1
+	assert_gt(near_edge, 40, "a dense belt")
+
+
+func test_misty_forest_is_denser_than_qingshi_and_clear_of_places() -> void:
+	var misty: Dictionary = data().regions["misty_forest"]
+	var trees := 0
+	var blocked := Scenery.blocked_rects(misty)
+	for d in Scenery.place(misty, seeded_rng(1)):
+		if d["kind"] != "tree":
+			continue
+		trees += 1
+		for r in blocked:
+			assert_false(r.has_point(d["pos"]), "tree on a path or place")
+	var qingshi := 0
+	for d in Scenery.place(data().regions["qingshi_village"], seeded_rng(1)):
+		if d["kind"] == "tree":
+			qingshi += 1
+	assert_gt(trees, qingshi * 3)
