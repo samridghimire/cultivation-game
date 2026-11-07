@@ -66,3 +66,40 @@ func test_sprite_kinds_by_tag() -> void:
 	assert_eq(ForagePickup.sprite_kind(["ore"]), "ore")
 	assert_eq(ForagePickup.sprite_kind(["fish"]), "sack")
 	assert_true(ForagePickup.texture_for("herb") != null)
+
+
+func test_sprites_are_16x16_with_known_palette_keys() -> void:
+	for kind: String in ForagePickup.KINDS:
+		var def: Dictionary = ForagePickup.KINDS[kind]
+		var rows: Array = def["rows"]
+		assert_eq(rows.size(), 16, kind)
+		for r: String in rows:
+			assert_eq(r.length(), 16, kind)
+			for i in r.length():
+				var ch := r.substr(i, 1)
+				assert_true(ch == "." or (def["colors"] as Dictionary).has(ch), "%s uses unknown key %s" % [kind, ch])
+		assert_true(ForagePickup.texture_for(kind).get_width() == 16)
+
+
+func test_herb_tint_changes_texture_and_is_cached() -> void:
+	var plain := ForagePickup.texture_for("herb")
+	var tinted := ForagePickup.texture_for("herb", "#8fb6c8")
+	assert_true(plain != tinted)
+	assert_true(tinted == ForagePickup.texture_for("herb", "#8fb6c8"))
+	assert_true(ForagePickup.texture_for("ore", "#8fb6c8") == ForagePickup.texture_for("ore"))
+
+
+func test_forage_tint_validated() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var d: Dictionary = gs.data.items["dew_grass"]
+	assert_true(Color.html_is_valid(String(d.get("forage_tint", ""))))
+	d["forage_tint"] = "notacolour"
+	gs.data.load_errors.clear()
+	gs.data._validate()
+	var found := false
+	for e: String in gs.data.load_errors:
+		if e.contains("forage_tint"):
+			found = true
+	d["forage_tint"] = "#8fc8c0"
+	gs.data.load_errors.clear()
+	assert_true(found)

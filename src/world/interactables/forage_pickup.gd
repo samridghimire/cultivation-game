@@ -3,17 +3,37 @@ extends Interactable
 ## WU-427: a small pickup on the map (GameState.forage_here). Walking up shows "[E] Pick Dew Grass"; interact
 ## picks it directly (no menu) through GameState.pick_forage. It sparkles every ~3 s (static with reduce_motion).
 
-const PX := 4  # each sprite pixel is drawn 4x4: 8x8 art becomes 32 px (GFX-049: finds you can see)
+const PX := 2  # GFX-094: each sprite pixel is drawn 2x2: 16x16 art keeps the 32 px footprint
+const SIZE := 16
 const SPARKLE_PERIOD := 3.0
 const SPARKLE_LEN := 0.3
 const POP_SECONDS := 0.25
 const MIN_GAP := 40.0
 const OUTLINE := Color("2a2018")
+const SHADOW := Color("1c2a1a")
+const TINT_MIX := 0.55  # how far herb leaf colours move toward an item's forage_tint
 const KINDS := {
-	"herb": {"colors": {"a": Color("4fae5c"), "b": Color("8fd684")}, "rows": ["....b...", "..b.ab..", "..ab.a..", "...aab..", "..baa...", "...ab...", "...a....", "........"]},
-	"mushroom": {"colors": {"a": Color("c4503c"), "b": Color("f0e4c8")}, "rows": ["........", "..aaaa..", ".abaaba.", ".aaaaaa.", "..bbbb..", "...bb...", "...bb...", "........"]},
-	"ore": {"colors": {"a": Color("8a93a3"), "b": Color("e8f2ff")}, "rows": ["........", "........", "...aa...", "..abaa..", ".aabaaa.", ".aaaaaa.", "..aaaa..", "........"]},
-	"sack": {"colors": {"a": Color("b8925a"), "b": Color("8a6a3a")}, "rows": ["........", "...bb...", "..abba..", "..aaaa..", ".aaaaaa.", ".aaaaaa.", "..aaaa..", "........"]},
+	"herb": {"colors": {"a": Color("3f9a4e"), "b": Color("8fd684"), "s": Color("2f7a3c"), "d": SHADOW},
+		"tinted": ["a", "b"], "rows": [
+		"................", "......bb........", "....bbbab..bb...", "...baaaab.baab..",
+		"....baab.baab...", "..bb.baabbab.bb.", "..baabsabsaabaab", "...baabsssabaab.",
+		"....bbbsssbbb...", "......ssss......", "......sss.......", "......ss........",
+		"......ss........", ".....dssdd......", "...dddddddddd...", "................"]},
+	"mushroom": {"colors": {"a": Color("c4503c"), "b": Color("f0e4c8"), "c": Color("b8a888"), "d": SHADOW}, "rows": [
+		"................", "................", "...aaaa.........", "..abaaaa....aa..",
+		"..aaabaaa..abaa.", "..aaaaaaa.aaaaaa", "...bbbbb...bbbb.", "....bcb.....bc..",
+		"....bcb.....bc..", "....bcb....bbc..", "...dbcbdd..dbcdd", ".dddddddddddddd.",
+		"................", "................", "................", "................"]},
+	"ore": {"colors": {"a": Color("8a93a3"), "b": Color("e8f2ff"), "c": Color("5e6674"), "d": SHADOW}, "rows": [
+		"................", "................", "................", "......bb........",
+		"....bbbaa.......", "...bbaaaaa......", "..baaaacaaa.....", "..baaaaccaaa....",
+		".baaaacccaaaa...", ".baaaaccccaaa...", ".caaaacccaaaac..", "..cccccccccccc..",
+		"...dddddddddd...", "................", "................", "................"]},
+	"sack": {"colors": {"a": Color("b8925a"), "b": Color("d8b87c"), "c": Color("8a6a3a"), "s": Color("6a4a28"), "d": SHADOW}, "rows": [
+		"................", "................", "......ss........", "....ssbbss......",
+		"......bb........", "....aaaaaa......", "...aaaaaaaa.....", "..aabaaaaaaa....",
+		"..abbaaaaacaa...", "..abaaaaaaacc...", "..aaaaaaaaacc...", "..acaaaaaaccc...",
+		"...ccccccccc....", "..dddddddddddd..", "................", "................"]},
 }
 
 var slot := 0
@@ -50,30 +70,41 @@ static func sprite_kind(tags: Array) -> String:
 	return "sack"
 
 
-static func texture_for(kind: String) -> Texture2D:
-	if not _cache.has(kind):
-		var def: Dictionary = KINDS[kind]
-		var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
-		var pal: Dictionary = def["colors"]
+## Texture for a sprite kind; `tint` (a hex colour, herbs only) shifts the leaf colours toward it. Cached per (kind, tint).
+static func texture_for(kind: String, tint: String = "") -> Texture2D:
+	var def: Dictionary = KINDS[kind]
+	var tint_color := Color.WHITE
+	var use_tint: bool = tint != "" and (def.get("tinted", []) as Array).size() > 0 and Color.html_is_valid(tint)
+	if use_tint:
+		tint_color = Color(tint)
+	else:
+		tint = ""
+	var key := "%s|%s" % [kind, tint]
+	if not _cache.has(key):
+		var pal: Dictionary = (def["colors"] as Dictionary).duplicate()
+		if use_tint:
+			for k: String in def["tinted"]:
+				pal[k] = (pal[k] as Color).lerp(tint_color, TINT_MIX)
 		var rows: Array = def["rows"]
-		for y in 8:
-			for x in 8:
+		var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+		for y in SIZE:
+			for x in SIZE:
 				var ch: String = (rows[y] as String).substr(x, 1)
 				if pal.has(ch):
 					img.set_pixel(x, y, pal[ch])
 		# 1 px outline around the painted pixels (drawn only where the neighbour is empty).
 		var out := img.duplicate() as Image
-		for y in 8:
-			for x in 8:
+		for y in SIZE:
+			for x in SIZE:
 				if img.get_pixel(x, y).a > 0.0:
 					continue
 				for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 					var n := Vector2i(x, y) + d
-					if n.x >= 0 and n.y >= 0 and n.x < 8 and n.y < 8 and img.get_pixel(n.x, n.y).a > 0.0:
+					if n.x >= 0 and n.y >= 0 and n.x < SIZE and n.y < SIZE and img.get_pixel(n.x, n.y).a > 0.0:
 						out.set_pixel(x, y, OUTLINE)
 						break
-		_cache[kind] = ImageTexture.create_from_image(out)
-	return _cache[kind]
+		_cache[key] = ImageTexture.create_from_image(out)
+	return _cache[key]
 
 
 func label_text() -> String:
@@ -144,15 +175,15 @@ func _physics_process(delta: float) -> void:
 
 
 func draw_generated_art() -> bool:
-	var tags: Array = GameState.data.items.get(item_id, {}).get("tags", []) if GameState.data != null else []
-	var tex := texture_for(sprite_kind(tags))
-	var half := 4.0 * PX
+	var def: Dictionary = GameState.data.items.get(item_id, {}) if GameState.data != null else {}
+	var tex := texture_for(sprite_kind(def.get("tags", [])), String(def.get("forage_tint", "")))
+	var half := float(SIZE) / 2.0 * PX
 	var disc := PackedVector2Array()
 	for i in 20:
 		var a := TAU * float(i) / 20.0
 		disc.append(Vector2(0, half * 0.55) + Vector2(cos(a) * 10.0, sin(a) * 4.0))
 	draw_colored_polygon(disc, Color(1, 0.95, 0.7, 0.28))
-	draw_texture_rect(tex, Rect2(Vector2(-half, -half), Vector2(8 * PX, 8 * PX)), false)
+	draw_texture_rect(tex, Rect2(Vector2(-half, -half), Vector2(SIZE * PX, SIZE * PX)), false)
 	if _sparkle:
 		var c := Color(1, 1, 0.8, 0.9)
 		draw_rect(Rect2(8, -16, 2, 2), c)

@@ -495,6 +495,8 @@ func _validate() -> void:
 	for item: Dictionary in items.values():
 		if (item.get("tags", []) as Array).has("untagged"):
 			load_errors.append("Item '%s': 'untagged' is a reserved stock tag" % item["id"])
+		if item.has("forage_tint") and not (item["forage_tint"] is String and Color.html_is_valid(item["forage_tint"])):
+			load_errors.append("Item '%s': forage_tint must be a hex colour like '#8fb6c8'" % item["id"])
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
 				load_errors.append("Item '%s': %s" % [item["id"], error])
