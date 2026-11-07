@@ -1013,3 +1013,29 @@ func test_news_validation() -> void:
 	assert_false(Folk.validate_greetings(d).is_empty())
 	d.family["folk_greetings"]["news"] = saved
 	assert_true(Folk.validate_greetings(d).is_empty())
+
+
+func test_gift_memory_window_and_once() -> void:
+	var d := data()
+	var flags := {}
+	Folk.record_gift(flags, "x", "spirit_herb", 100, 1)
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 100, true), "", "same day: nothing")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 101, false).contains("spirit herb"), "next day")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 101, true) != "")
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 102, true), "", "once")
+	Folk.record_gift(flags, "x", "spirit_herb", 100, -1)
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 131, true), "", "after 30 days")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 130, true) != "", "day 30 still counts")
+	assert_eq(Folk.last_gift_text(flags, "x", d), "Last gift: Spirit Herb (disliked)")
+	assert_eq(Folk.last_gift_text({}, "x", d), "", "old save without the flag")
+
+
+func test_gift_memory_validation() -> void:
+	var d := data()
+	var saved: Variant = d.family["gift_memory"]
+	d.family["gift_memory"] = {"days": 30, "liked": ["no placeholder"], "neutral": ["{item}"], "disliked": ["{item}"]}
+	assert_false(Folk.validate_gift_memory(d).is_empty())
+	d.family["gift_memory"] = {"days": 0, "liked": ["{item}"], "neutral": ["{item}"], "disliked": ["{item}"]}
+	assert_false(Folk.validate_gift_memory(d).is_empty())
+	d.family["gift_memory"] = saved
+	assert_true(Folk.validate_gift_memory(d).is_empty())

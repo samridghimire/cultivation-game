@@ -420,6 +420,10 @@ func _card(e: Dictionary) -> Button:
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
+	if String(e.get("last_gift", "")) != "":
+		var gift_label := UIStyle.label(String(e["last_gift"]), 12, DIM)
+		gift_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(gift_label)
 	var show := func() -> void: _detail.text = people_detail(e, data)
 	b.focus_entered.connect(show)
 	b.mouse_entered.connect(show)
@@ -436,6 +440,8 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 	var dislikes: Array = e["dislikes_known"]
 	if not dislikes.is_empty():
 		parts.append("Dislikes: %s." % names.call(dislikes))
+	if String(e.get("last_gift", "")) != "":
+		parts.append(String(e["last_gift"]) + ".")
 	return " ".join(parts)
 
 

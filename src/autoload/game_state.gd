@@ -1947,6 +1947,9 @@ func chat(npc_id: String) -> void:
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
+	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
+	if remembered != "":
+		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true
@@ -2069,6 +2072,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
 	if taste >= 0:
 		Karma.on_kindness(player, data, npc_id, "gift")
+	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018
 	var item_name: String = data.items[item_id].get("name", item_id)
 	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else ""))
 	if taste != 0:

@@ -124,6 +124,67 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	return String(lines[absi(hash(npc.id + str(day))) % lines.size()])
 
 
+## FOLK-018: remember `npc_id`'s newest gift from the player (taste 1 liked, 0 neutral, -1 disliked).
+static func record_gift(flags: Dictionary, npc_id: String, item_id: String, day: int, taste: int) -> void:
+	var memory: Dictionary = flags.get("gift_memory", {})
+	memory[npc_id] = {"item": item_id, "day": day, "taste": taste, "told": false}
+	flags["gift_memory"] = memory
+
+
+static func _taste_key(taste: int) -> String:
+	return "liked" if taste > 0 else ("disliked" if taste < 0 else "neutral")
+
+
+## FOLK-018: the line `npc_id` says about the last gift (once, from the day after, within gift_memory.days), or "".
+## With `consume` the line is marked told. Pure apart from that mark.
+static func gift_memory_line(flags: Dictionary, npc_id: String, data: GameData, day: int, consume: bool) -> String:
+	var rules: Dictionary = data.family.get("gift_memory", {})
+	var memory: Variant = flags.get("gift_memory", {})
+	if rules.is_empty() or not (memory is Dictionary) or not (memory as Dictionary).has(npc_id):
+		return ""
+	var m: Dictionary = memory[npc_id]
+	var age := day - int(m.get("day", -9999))
+	if bool(m.get("told", false)) or age < 1 or age > int(rules.get("days", 30)):
+		return ""
+	var lines: Array = rules.get(_taste_key(int(m.get("taste", 0))), [])
+	if lines.is_empty():
+		return ""
+	if consume:
+		m["told"] = true
+	var item_name := String(data.items.get(String(m["item"]), {}).get("name", m["item"])).to_lower()
+	return String(lines[absi(hash(npc_id + str(day))) % lines.size()]).replace("{item}", item_name)
+
+
+## FOLK-018: "Last gift: Mugwort (liked)" for the village book, "" when nothing was given.
+static func last_gift_text(flags: Dictionary, npc_id: String, data: GameData) -> String:
+	var memory: Variant = flags.get("gift_memory", {})
+	if not (memory is Dictionary) or not (memory as Dictionary).has(npc_id):
+		return ""
+	var m: Dictionary = memory[npc_id]
+	var item_name := String(data.items.get(String(m.get("item", "")), {}).get("name", m.get("item", "")))
+	return "Last gift: %s (%s)" % [item_name, _taste_key(int(m.get("taste", 0)))]
+
+
+## Load errors in family.json gift_memory.
+static func validate_gift_memory(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if not data.family.has("gift_memory"):
+		return errors
+	var rules: Dictionary = data.family["gift_memory"]
+	var days: Variant = rules.get("days", 0)
+	if not (days is int or days is float) or int(days) < 1 or int(days) > 90:
+		errors.append("family.json gift_memory.days must be 1..90")
+	for key in ["liked", "neutral", "disliked"]:
+		var lines: Variant = rules.get(key, [])
+		if not (lines is Array) or (lines as Array).is_empty():
+			errors.append("family.json gift_memory.%s must be a non-empty array" % key)
+			continue
+		for line: Variant in lines:
+			if not (line is String) or not String(line).contains("{item}"):
+				errors.append("family.json gift_memory.%s lines need {item}" % key)
+	return errors
+
+
 const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "shrine_stage", "season_done", "breakthrough"]
 
 
@@ -302,7 +363,7 @@ static func friends_line(npcs: Dictionary, data: GameData, region_id: String, fa
 
 ## FOLK-009: the people page. Every living NPC of `region_id` (generated villagers and named story NPCs) with favor >= 10,
 ## favor desc then name. Entry: {id, name, favor, tier_index, tier_name, birthday_text, birthday_in, likes_known,
-## dislikes_known, likes_total}. Tastes come from the `taste_<npc>_<item>` world flags a gift leaves. Pure.
+## dislikes_known, likes_total, last_gift}. Tastes come from the `taste_<npc>_<item>` world flags a gift leaves. Pure.
 static func people_entries(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, flags: Dictionary, today: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for c in Npcs.in_region(npcs, data, region_id):
@@ -323,7 +384,8 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),
 			"birthday_text": "" if b < 0 else "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)],
 			"birthday_in": days_to_birthday(c, data, today), "likes_known": likes, "dislikes_known": dislikes,
-			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size()})
+			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size(),
+			"last_gift": last_gift_text(flags, c.id, data)})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a["favor"] != b["favor"]:
 			return int(a["favor"]) > int(b["favor"])
@@ -475,6 +537,7 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 ## Load errors: favor effects are ints within +-FAVOR_LIMIT and need their placeholder in the encounter's texts.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
+	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))

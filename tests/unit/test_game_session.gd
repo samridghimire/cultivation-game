@@ -3447,3 +3447,30 @@ func test_season_line_posted_once_per_season_and_region() -> void:  # TODAY-002
 		if String(m["text"]).contains(clause):
 			count += 1
 	assert_eq(count, 2, "and again the next year's season")
+
+
+## FOLK-018: a gift is remembered: next chat within 30 days posts one line, once.
+func test_gift_memory_line_posts_once_then_expires() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(8), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, npc.id, item_id) > 0 and Family.gift_value(gs.data, item_id) > 0:
+			liked = item_id
+			break
+	c.add_item(liked, 1)
+	gs.npc_favor[npc.id] = 0
+	gs.give_gift(npc.id, liked)
+	var entry_text := Folk.last_gift_text(gs.world_flags, npc.id, gs.data)
+	assert_true(entry_text.begins_with("Last gift: ") and entry_text.ends_with("(liked)"), entry_text)
+	gs.world_flags["gift_memory"][npc.id]["day"] = GameClock.total_days - 1  # "the next day"
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.chat(npc.id)
+	var first := "\n".join(_zero_round_posts)
+	assert_true(first.contains(npc.name + ": \""), first)
+	_zero_round_posts.clear()
+	gs.chat(npc.id)
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_false("\n".join(_zero_round_posts).contains(npc.name + ": \""), "once only")
