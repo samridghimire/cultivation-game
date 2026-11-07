@@ -129,23 +129,43 @@
    "news_days": 7,
    "contest_win": [
     "{player}! The whole lane is talking about how you won {subject}.",
-    "Good day, {player}. They say you took {subject}. Well done."
+    "Good day, {player}. They say you took {subject}. Well done.",
+    "Won {subject}, did you, {player}? Don't let it go to your head. Much.",
+    "{player}, my boy still talks of how you took {subject}. Teach him something!",
+    "So {subject} is yours, {player}. Mind you, a ribbon won't fill a rice bowl.",
+    "Good day, {player}. Half the market bet against you at {subject}. I did not."
    ],
    "great_beast": [
     "{player}, they say you brought down {subject}. We sleep easier.",
-    "Good day, {player}. The {subject}, felled! Hunters talk of nothing else."
+    "Good day, {player}. The {subject}, felled! Hunters talk of nothing else.",
+    "{subject}, {player}? Fine work, but you'll get yourself killed one day.",
+    "{player}, they say {subject} is dead. Eat something; you look worn thin.",
+    "Good day, {player}. Hunters tell it that {subject} fell to you. I'd not have dared.",
+    "Careful, {player}. Slaying {subject} makes you a name, and names get hunted."
    ],
    "shrine_stage": [
     "{player}, have you seen {subject}? Fresher than it has been in years, thanks to you.",
-    "Good day, {player}. Everyone says it is you who tended {subject}."
+    "Good day, {player}. Everyone says it is you who tended {subject}.",
+    "{player}, the old folk say {subject} has never looked so well.",
+    "Good day, {player}. Someone lit fresh incense at {subject}, and we all know who.",
+    "{player}, children play near {subject} again. We owe you for that.",
+    "They say you keep {subject}, {player}. Do you ever keep your own roof mended?"
    ],
    "season_done": [
     "{player}, the village is grateful for all you did this {subject}.",
-    "Good day, {player}. What a {subject} you gave us."
+    "Good day, {player}. What a {subject} you gave us.",
+    "{player}, this {subject} was kinder to us because of you.",
+    "Good day, {player}. Who works as hard as you did this {subject}? Rest a little.",
+    "You did well by us this {subject}, {player}. The elders noticed, too.",
+    "{player}, my cupboard is fuller this {subject} thanks to you. Come eat!"
    ],
    "breakthrough": [
     "{player}, word is you have reached the {subject} realm. Heaven smiles on you.",
-    "Good day, {player}. The {subject} realm! We are lucky to know you."
+    "Good day, {player}. The {subject} realm! We are lucky to know you.",
+    "{player}, the {subject} realm! Will you forget us humble folk now?",
+    "Good day, {player}. Reached the {subject} realm, they say. Mind the strain of it.",
+    "{player}, the {subject} realm already! I still remember you carrying water.",
+    "They whisper of the {subject} realm and your name, {player}. Walk carefully."
    ]
   },
   "birthday": ["{player}! Today I am a year older, and the tea is hot. Stay a moment.", "Good day, {player}. They tell me it is my birthday; I had nearly forgotten.", "{player}, you remember the day? Then sit, and share my rice cakes."],"weather": {"storm": ["{player}! Out in this? Come under the eaves, the thunder is walking the hills.", "Good day, {player}. Bar your door tonight; the sky is angry.", "{player}, mind the lightning. Friends are scarcer than rain."]}, "celebration": {"wedding": ["{player}! Come to the wedding feast, {partner} and I have wine enough for all.", "Good day, {player}. Such a happy day, the whole lane is dancing.", "{player}, stay for the toasts, {partner} will pour. Luck is better shared."], "full_month": ["{player}, have you seen the baby? Come, have a red egg.", "Welcome, {player}. We are celebrating the little one's full month.", "Good day, {player}. Wish {child} a long and healthy life."], "funeral": ["{player}. Thank you for coming; we have burned incense all morning.", "Quietly now, {player}. Our house is in mourning.", "Good day, {player}. Forgive me, my mind is on the funeral."]},
