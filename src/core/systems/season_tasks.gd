@@ -534,3 +534,12 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 			if not ilisted:
 				errs.append("region '%s' qi_flags must list incense flag '%s' with bonus %s" % [region, iflag, ibonus])
 	return errs
+
+
+## Index of project `id` in project_list (-1 when missing). Pure, so `-s` sim scripts can use it before autoloads exist.
+static func project_index(data: GameData, id: String) -> int:
+	var list := project_list(data)
+	for i in list.size():
+		if String(list[i].get("id", "")) == id:
+			return i
+	return -1

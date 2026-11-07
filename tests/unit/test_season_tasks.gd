@@ -425,3 +425,9 @@ func test_done_line_validation() -> void:
 	assert_false(SeasonTasks.validate(gd).is_empty())
 	gd.season_tasks = saved
 	assert_true(SeasonTasks.validate(gd).is_empty())
+
+
+func test_project_index_finds_projects_by_id() -> void:
+	var data: GameData = _gs().data
+	assert_true(SeasonTasks.project_index(data, "well") >= 0, "well project exists")
+	assert_eq(SeasonTasks.project_index(data, "no_such_project"), -1)

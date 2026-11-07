@@ -6,18 +6,9 @@ extends Interactable
 const PROJECT_ID := "well"
 
 
-## Index of the well in SeasonTasks.project_list (-1 without data).
-static func project_index(data: GameData) -> int:
-	var list := SeasonTasks.project_list(data)
-	for i in list.size():
-		if String(list[i].get("id", "")) == PROJECT_ID:
-			return i
-	return -1
-
-
 ## Stages reached and in total as [stage, total].
 static func progress(c: CharacterData, data: GameData) -> Array[int]:
-	var idx := project_index(data)
+	var idx := SeasonTasks.project_index(data, PROJECT_ID)
 	if idx < 0 or c == null:
 		return [0, 0]
 	var total := (SeasonTasks.project_list(data)[idx].get("stages", []) as Array).size()

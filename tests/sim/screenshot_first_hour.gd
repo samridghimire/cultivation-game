@@ -79,7 +79,7 @@ func _start() -> void:
 	for arg in OS.get_cmdline_user_args():  # GFX-087: --well=N sets the Founder's Old Well stage (0..3)
 		if arg.begins_with("--well="):
 			gs.player.seasons_completed.clear()
-			var idx := Well.project_index(gs.data)
+			var idx := SeasonTasks.project_index(gs.data, "well")
 			var before := 0
 			for i in idx:
 				before += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
@@ -167,8 +167,9 @@ func _start() -> void:
 			gs.current_region = "qingshi_village"
 			gs.npc_favor["xiao_ling"] = 45
 			c.scene_day = -1
-			while Weather.of(gs.data, "qingshi_village", GameClock.total_days) != "rain":  # FOLK-021
-				GameClock.total_days += 1
+			var gclock: Node = gs.get_node("/root/GameClock")  # autoloads are not compile-time names in a -s script
+			while Weather.of(gs.data, "qingshi_village", gclock.total_days) != "rain":  # FOLK-021
+				gclock.total_days += 1
 			gs._friend_scene("xiao_ling"), "close": func() -> void: hud.get("_friend_card").close()})
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep

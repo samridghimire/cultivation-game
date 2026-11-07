@@ -26,5 +26,16 @@ for scene in res://src/ui/main_menu.tscn res://src/ui/character_creation.tscn re
   fi
 done
 
+# QA-205: a `-s` script compiles before autoloads exist, so naming a class whose script uses one breaks it silently.
+echo "== Sim scripts compile"
+for f in tests/sim/*.gd; do
+  out="$("$RUN_GODOT" --headless --path . -s "res://$f" --check-only 2>&1)"
+  if grep -E "SCRIPT ERROR|Parse Error" <<<"$out" >/dev/null; then
+    echo "FAIL  $f"
+    echo "$out" | grep -E -A2 "SCRIPT ERROR|Parse Error"
+    status=1
+  fi
+done
+
 if [[ $status -eq 0 ]]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; fi
 exit $status
