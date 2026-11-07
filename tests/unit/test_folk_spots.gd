@@ -46,7 +46,8 @@ func test_rest_weekday_stays_home() -> void:
 
 
 func test_villager_without_spots_is_home() -> void:
-	var r := Folk.spot_for(data(), _def("herbalist_lan"), MARKET_DAY, "rain", _festival())
+	var bare := {"id": "bare", "region": "qingshi_village", "pos": [640, 720]}
+	var r := Folk.spot_for(data(), bare, MARKET_DAY, "rain", _festival())
 	assert_eq(r["why"], "home")
 	assert_eq(r["pos"], Vector2(640, 720))
 
@@ -61,6 +62,8 @@ func test_validation_rejects_bad_spots() -> void:
 func test_qingshi_spots_keep_40px_from_places() -> void:
 	var places: Array = data().regions["qingshi_village"]["places"]
 	for npc: Dictionary in data().npcs.values():
+		if String(npc.get("region", "")) != "qingshi_village":
+			continue
 		for key: String in npc.get("spots", {}):
 			if key == "rest_weekday":
 				continue
@@ -81,3 +84,33 @@ func test_game_state_places_villager_by_the_day() -> void:
 	else:
 		assert_eq(spot["why"], "market")
 	assert_eq(gs.npc_spot("nobody")["why"], "home")
+
+
+## C-319: every named NPC with a region has a day; spots keep clear of places and solid landmarks.
+func test_every_named_npc_has_spots_and_clear_ground() -> void:
+	var solid := ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
+	var work := {}
+	for npc: Dictionary in data().npcs.values():
+		if String(npc.get("region", "")) == "":
+			continue
+		assert_true(npc.has("spots"), "%s has spots" % npc["id"])
+		var spots: Dictionary = npc.get("spots", {})
+		assert_true(spots.has("work") and spots.has("rain") and spots.has("rest_weekday"), "%s has work/rain/rest" % npc["id"])
+		var key := "%s|%s" % [npc["region"], str(spots.get("work"))]
+		assert_false(work.has(key), "%s work spot is distinct" % npc["id"])
+		work[key] = true
+		var region: Dictionary = data().regions[String(npc["region"])]
+		for k: String in spots:
+			if k == "rest_weekday":
+				continue
+			var p := Vector2(float(spots[k][0]), float(spots[k][1]))
+			for place: Dictionary in region.get("places", []):
+				var pp := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+				assert_true(p.distance_to(pp) >= 40.0, "%s %s is near %s" % [npc["id"], k, place.get("display_name", "")])
+			for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+				if not solid.has(String(lm["kind"])):
+					continue
+				var c := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
+				var h := Vector2(float(lm["size"][0]), float(lm["size"][1])) / 2.0
+				var d := Vector2(maxf(absf(p.x - c.x) - h.x, 0.0), maxf(absf(p.y - c.y) - h.y, 0.0)).length()
+				assert_true(d >= (1.0 if k == "rain" else 40.0), "%s %s is near a %s" % [npc["id"], k, lm["kind"]])
