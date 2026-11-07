@@ -649,7 +649,7 @@ func _build_npcs() -> void:
 		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
-		node.position = _vec(def.get("pos", [0, 0]))
+		node.position = GameState.npc_spot(c.id)["pos"]  # FOLK-017
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)

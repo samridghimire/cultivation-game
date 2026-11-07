@@ -41,6 +41,8 @@ var _child_mode := ""
 var home := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 var _phase := 0.0
+## Where today's spot is (FOLK-017); `home` walks toward it.
+var _walk_to := Vector2.ZERO
 var _time := 0.0
 var _wander := Vector2.ZERO
 var _wander_target := Vector2.ZERO
@@ -65,12 +67,15 @@ func _on_modal_changed(is_open: bool) -> void:
 func _ready() -> void:
 	super._ready()
 	home = position
+	_walk_to = home
 	_visiting = GameState.player != null and npc_id != "" and GameState.visitor_today() == npc_id
 	var h := hash(npc_id)
 	_rng.seed = h
 	_phase = float(absi(h) % 628) / 100.0
 	_wait = _rng.randf_range(1.0, 4.0)
 	EventBus.ui_modal_changed.connect(_on_modal_changed)
+	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
+		GameClock.days_advanced.connect(_on_days_advanced)
 	var notifier := VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-size / 2.0 - Vector2(MAX_DRIFT, MAX_DRIFT), size + Vector2(MAX_DRIFT, MAX_DRIFT) * 2.0)
 	notifier.screen_entered.connect(func(): _on_screen = true)
@@ -78,9 +83,19 @@ func _ready() -> void:
 	add_child(notifier)
 
 
+## FOLK-017: a new day, a new spot (Folk.spot_for): walk there, or jump with reduce_motion.
+func _on_days_advanced(_days: int) -> void:
+	_walk_to = GameState.npc_spot(npc_id)["pos"]
+	if Settings.get_value("reduce_motion") or not _on_screen:
+		home = _walk_to
+		_walk_to = home
+
+
 func _physics_process(delta: float) -> void:
 	if _modal_open or not _on_screen:
 		return
+	if _walk_to != home:
+		home = home.move_toward(_walk_to, WALK_SPEED * 6.0 * delta)
 	_update_near()
 	breathe(delta)
 

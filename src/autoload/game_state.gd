@@ -1708,6 +1708,14 @@ func greeting_for(npc_id: String) -> String:
 	return line
 
 
+## FOLK-017: where named villager `npc_id` stands today ({pos, why}, Folk.spot_for with today's weather).
+func npc_spot(npc_id: String) -> Dictionary:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	if def.is_empty():
+		return {"pos": Vector2.ZERO, "why": "home"}
+	return Folk.spot_for(data, def, GameClock.total_days, Weather.of(data, String(def.get("region", "")), GameClock.total_days), world_events)
+
+
 ## WORLD-007: the generated villager dropping by today ("" = nobody). The world places them and the Look line reports it.
 func visitor_today() -> String:
 	if player == null:

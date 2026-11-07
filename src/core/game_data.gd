@@ -751,6 +751,7 @@ func _validate_world() -> void:
 			load_errors.append("NPC '%s' is in unknown region '%s'" % [npc["id"], npc.get("region", "")])
 		if realm_index_of(npc.get("realm", "mortal")) < 0:
 			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
+		load_errors.append_array(Folk.validate_spots(npc, self))
 		if npc.has("hunter") and not npc["hunter"] is bool:
 			load_errors.append("NPC '%s' hunter must be a bool" % npc["id"])
 		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):

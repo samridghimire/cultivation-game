@@ -1356,3 +1356,73 @@ static func mark_scene(c: CharacterData, scene_id: String, day: int) -> void:
 	if not c.scenes_seen.has(scene_id):
 		c.scenes_seen.append(scene_id)
 	c.scene_day = day
+
+
+## FOLK-017: where a named NPC stands on `day`: {pos: Vector2, why: String}, why one of "home", "work", "market",
+## "rain", "festival", "rest". `events` are the active world events. Priority: festival > rain/storm > rest weekday
+## > market day > work > home; a missing optional spot falls through. Pure, no randomness except a seeded offset.
+static func spot_for(data: GameData, npc_def: Dictionary, day: int, weather: String, events: Array) -> Dictionary:
+	var home := _point(npc_def.get("pos", [0, 0]))
+	var spots: Dictionary = npc_def.get("spots", {})
+	var region_id := String(npc_def.get("region", ""))
+	if spots.is_empty():
+		return {"pos": home, "why": "home"}
+	for e in WorldEvents.active_in(events, region_id):
+		if WorldEvents.is_festival(data, String(e.get("id", ""))):
+			if spots.has("festival"):
+				return {"pos": _point(spots["festival"]), "why": "festival"}
+			var square: Variant = data.regions.get(region_id, {}).get("festival_square")
+			if square is Array:
+				var rng := RandomNumberGenerator.new()
+				rng.seed = hash(String(npc_def.get("id", ""))) + day
+				var offset := Vector2(rng.randf_range(-70.0, 70.0), rng.randf_range(-50.0, 50.0))
+				return {"pos": _point(square) + offset, "why": "festival"}
+			break
+	if (weather == "rain" or weather == "storm") and spots.has("rain"):
+		return {"pos": _point(spots["rain"]), "why": "rain"}
+	if spots.has("rest_weekday") and Calendar.weekday_name(day) == String(spots["rest_weekday"]):
+		return {"pos": home, "why": "rest"}
+	if spots.has("market") and _market_day(data, region_id, day):
+		return {"pos": _point(spots["market"]), "why": "market"}
+	if spots.has("work"):
+		return {"pos": _point(spots["work"]), "why": "work"}
+	return {"pos": home, "why": "home"}
+
+
+static func _market_day(data: GameData, region_id: String, day: int) -> bool:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("open_days") and Places.is_open(place, day):
+			return true
+	return false
+
+
+static func _point(v: Variant) -> Vector2:
+	var a: Array = v
+	return Vector2(float(a[0]), float(a[1]))
+
+
+## Load-time errors for the optional `spots` of named NPC `npc` (FOLK-017).
+static func validate_spots(npc: Dictionary, data: GameData) -> Array[String]:
+	var errors: Array[String] = []
+	if not npc.has("spots"):
+		return errors
+	var who := String(npc.get("id", ""))
+	if not npc.get("spots") is Dictionary or String(npc.get("region", "")) == "":
+		errors.append("NPC '%s' spots must be an object on an NPC with a region" % who)
+		return errors
+	var size: Array = data.regions.get(String(npc["region"]), {}).get("map", {}).get("size", [1600, 1000])
+	for key: String in npc["spots"]:
+		var v: Variant = npc["spots"][key]
+		if key == "rest_weekday":
+			if not Calendar.WEEKDAY_NAMES.has(String(v)):
+				errors.append("NPC '%s' spots rest_weekday '%s' is not a weekday name" % [who, str(v)])
+		elif key in ["work", "market", "rain", "festival"]:
+			if not (v is Array and (v as Array).size() == 2 and ((v as Array)[0] is float or (v as Array)[0] is int) and ((v as Array)[1] is float or (v as Array)[1] is int)):
+				errors.append("NPC '%s' spots %s must be [x, y]" % [who, key])
+			else:
+				var p := _point(v)
+				if p.x < 0.0 or p.y < 0.0 or p.x > float(size[0]) or p.y > float(size[1]):
+					errors.append("NPC '%s' spots %s is outside the map" % [who, key])
+		else:
+			errors.append("NPC '%s' spots has unknown key '%s'" % [who, key])
+	return errors
