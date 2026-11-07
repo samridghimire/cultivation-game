@@ -6352,3 +6352,24 @@ func test_forage_phrase_names_pickups_rarest_first() -> void:  # TODAY-002
 	for node: Dictionary in Foraging.unpicked(d, "qingshi_village", 10, c.realm_index, {}):
 		flags[Foraging.flag_key("qingshi_village", int(node["slot"]))] = {"day": 10}
 	assert_true(Guidance._forage_phrase(c, d, "no_such_region", 10, {}) == "")
+
+
+## GUIDE-215: a nearer chore beats a far roamer; the goal names the trip; sort puts days first.
+func test_fair_fight_nearest_first() -> void:
+	var near := {"text": "a", "chance": 0.8, "stones": 0, "days": 0}
+	var far := {"text": "b", "chance": 0.99, "stones": 50, "days": 6}
+	assert_true(Guidance.fair_fight_before(near, far))
+	assert_false(Guidance.fair_fight_before(far, near))
+	var c := CharacterData.new()
+	c.realm_index = 0
+	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "misty_forest")
+	for i in range(1, fights.size()):
+		assert_true(int(fights[i - 1].get("days", 0)) <= int(fights[i].get("days", 0)), "days ascend")
+
+
+func test_goal_trip_note() -> void:
+	var c := CharacterData.new()
+	var goal := "Talk to Elder Mo in Qingshi Village"
+	assert_eq(Guidance.goal_trip_note(c, data(), goal, "qingshi_village"), "")
+	assert_eq(Guidance.goal_trip_note(c, data(), goal, "misty_forest"), " (3 days)")
+	assert_eq(Guidance.goal_trip_note(c, data(), "Reach Qi Refining", "misty_forest"), "")

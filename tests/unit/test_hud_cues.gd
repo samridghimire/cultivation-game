@@ -246,9 +246,11 @@ func test_fair_fight_line() -> void:
 	var one: Array[Dictionary] = [{"text": "Sect mission: Boar (80%)", "chance": 0.8, "kind": "mission"}, {"text": "Other", "chance": 0.6, "kind": "deed"}]
 	assert_eq(HUD.fair_fight_line(one), "Fair fight: Sect mission: Boar (80%)")
 	var named: Array[Dictionary] = [{"text": "Sect mission: Boar Hunt (Even, 80 in 100)", "chance": 0.8, "kind": "mission", "enemy": "Boar"}]
-	assert_eq(HUD.fair_fight_line(named), "Fair fight: Boar (Even, 80 in 100)")
+	assert_eq(HUD.fair_fight_line(named), "Fair fight: Boar (80 in 100)")
 	var here: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "short": "Wild Boar roams here"}]
-	assert_eq(HUD.fair_fight_line(here), "Easy fight: Wild Boar roams here (Weak, 99 in 100)")
+	assert_eq(HUD.fair_fight_line(here), "Easy fight: Wild Boar roams here (99 in 100)")
+	var far: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "short": "Wild Boar in Withered Bone Marsh (6 days)", "days": 6}]
+	assert_eq(HUD.fair_fight_line(far), "Easy fight: Wild Boar in Withered Bone Marsh (6 days, 99 in 100)")
 
 
 ## WU-150: the longest enemy name still fits the 316px label (percent dropped first).
@@ -262,11 +264,11 @@ func test_fair_fight_line_fits_longest_enemy() -> void:
 	var e: Array[Dictionary] = [{"text": "x", "chance": 0.55, "kind": "mission", "enemy": longest}]
 	var line: String = HUD.fair_fight_line(e, font, 14, 316.0)
 	assert_true(line.begins_with("Fair fight: " + longest), line)
-	var full := "Fair fight: %s (Even, 55 in 100)" % longest
+	var full := "Fair fight: %s (55 in 100)" % longest
 	if HUD.wrapped_lines(full, font, 14, 316.0).size() > 2:
 		assert_true(not line.ends_with("55)"), "percent dropped: " + line)
 	var short: Array[Dictionary] = [{"text": "x", "chance": 0.8, "kind": "mission", "enemy": "Boar"}]
-	assert_eq(HUD.fair_fight_line(short, font, 14, 316.0), "Fair fight: Boar (Even, 80 in 100)")
+	assert_eq(HUD.fair_fight_line(short, font, 14, 316.0), "Fair fight: Boar (80 in 100)")
 
 
 func test_quarry_note_only_in_the_bounty_region() -> void:

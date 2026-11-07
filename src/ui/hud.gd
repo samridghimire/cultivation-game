@@ -783,13 +783,16 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 	if enemy == "" or not best.has("chance"):
 		return "%s: %s" % [prefix, String(best.get("text", ""))]
 	var chance := float(best["chance"])
-	var label := Combat.label_for_chance(chance)
 	var named := String(best.get("short", ""))
 	if named == "":
 		named = enemy
-	var full := "%s: %s (%s, %d in 100)" % [prefix, named, label, roundi(chance * 100.0)]
+	# GUIDE-215: the odds once, no rating word after the prefix; "(6 days)" and the odds share one bracket.
+	var odds := "%d in 100" % roundi(chance * 100.0)
+	var full := "%s: %s (%s)" % [prefix, named, odds]
+	if named.ends_with(")"):
+		full = "%s: %s, %s)" % [prefix, named.trim_suffix(")"), odds]
 	if font != null and max_width > 0.0 and wrapped_lines(full, font, font_size, max_width).size() > 2:
-		full = "%s: %s (%s)" % [prefix, named, label]
+		full = "%s: %s" % [prefix, named]
 	return full
 
 
@@ -1138,7 +1141,7 @@ static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan:
 		return "Goal: " + lines[0] if not lines.is_empty() else ""
 	for goal in Guidance.first_goals(c, data, flags):
 		if not goal["done"]:
-			return "Goal: " + str(goal["text"])
+			return "Goal: " + str(goal["text"]) + Guidance.goal_trip_note(c, data, str(goal["text"]), region_id)
 	return ""
 
 

@@ -39,7 +39,7 @@ func test_active_festival_once_with_end_date() -> void:
 	var act := _kinds(e, "festival_active")
 	assert_eq(act.size(), 1)
 	assert_eq(int(act[0]["day"]), start)
-	assert_true(String(act[0]["text"]).contains("until " + Calendar.format_date(start + 5)))
+	assert_true(String(act[0]["text"]).contains("to " + Calendar.format_date(start + 4)))
 	assert_eq(_kinds(e, "festival_month").size(), 0)
 
 
