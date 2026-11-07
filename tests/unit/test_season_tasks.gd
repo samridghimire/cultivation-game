@@ -54,8 +54,8 @@ func test_validation() -> void:
 	assert_eq(_gs().data.load_errors.size(), 0)
 	var gd: GameData = _gs().data
 	var saved: Dictionary = gd.season_tasks.duplicate(true)
-	gd.season_tasks["seasons"]["spring"]["tasks"][0]["kind"] = "dance"
-	gd.season_tasks["seasons"]["winter"]["tasks"].pop_back()
+	gd.season_tasks["seasons"]["spring"]["sets"][0][0]["kind"] = "dance"
+	gd.season_tasks["seasons"]["winter"]["sets"][0].pop_back()
 	assert_eq(SeasonTasks.validate(gd).size(), 2)
 	gd.season_tasks = saved
 
@@ -80,7 +80,7 @@ func test_game_state_hooks_pay_reward() -> void:
 ## SEASON-006: the shrine restoration.
 func _finish_season(c: CharacterData, gd: GameData, day: int) -> Array[String]:
 	var lines: Array[String] = []
-	for t: Dictionary in SeasonTasks.def(gd, day)["tasks"]:
+	for t: Dictionary in SeasonTasks.tasks_for(gd, day):
 		lines.append_array(SeasonTasks.note(c, gd, String(t["kind"]), String(t["target"]), int(t["count"]), day))
 	return lines
 
@@ -105,7 +105,7 @@ func test_restoration_complete_and_qi() -> void:
 	var base: float = gs.region_qi_density()
 	for day in [5, 95, 185, 275]:
 		GameClock.total_days = day
-		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
 			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
 	assert_eq(SeasonTasks.restoration_stage(c, gs.data), 4)
 	assert_true(bool(gs.world_flags.get("shrine_restored", false)))
@@ -138,7 +138,7 @@ func test_hunt_targets_roam_for_both_realms() -> void:
 	var realms: Array[int] = [gd.realm_index_of("qi_refining"), gd.realm_index_of("foundation_establishment")]
 	for season: String in gd.season_tasks["seasons"]:
 		var first_day: int = {"spring": 5, "summer": 95, "autumn": 185, "winter": 275}[season]
-		for task: Dictionary in gd.season_tasks["seasons"][season]["tasks"]:
+		for task: Dictionary in SeasonTasks.tasks_for(gd, 5 + 90 * ["spring", "summer", "autumn", "winter"].find(season)):
 			if String(task["kind"]) != "hunt":
 				continue
 			for realm_index in realms:
@@ -155,7 +155,7 @@ func test_hunt_targets_roam_for_both_realms() -> void:
 func _restore(gs: Node, c: CharacterData) -> void:
 	for day in [5, 95, 185, 275]:
 		GameClock.total_days = day
-		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
 			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
 
 
@@ -247,7 +247,7 @@ func test_list_carries_where_and_hud_line() -> void:
 func test_where_is_memoized_per_day() -> void:
 	var gd := data()
 	var c := CharacterData.new()
-	var task: Dictionary = SeasonTasks.def(gd, 5)["tasks"][0]
+	var task: Dictionary = SeasonTasks.tasks_for(gd, 5)[0]
 	var first := SeasonTasks.where(task, c, gd, 5)
 	var scans := SeasonTasks.where_scans
 	assert_eq(SeasonTasks.where(task, c, gd, 5), first)
@@ -260,7 +260,7 @@ func test_where_is_memoized_per_day() -> void:
 func _finish_seasons(gs: Node, days: Array) -> void:
 	for day: int in days:
 		GameClock.total_days = day
-		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
 			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
 
 
@@ -340,3 +340,58 @@ func test_well_validation() -> void:
 	assert_false(SeasonTasks.validate(gd).is_empty(), "daily item")
 	gd.season_tasks = saved
 	assert_true(SeasonTasks.validate(gd).is_empty())
+
+
+func _two_set_data() -> GameData:
+	var gd: GameData = _gs().data
+	var spring: Dictionary = gd.season_tasks["seasons"]["spring"]
+	var set_a: Array = spring["sets"][0]
+	var set_b: Array = (set_a as Array).duplicate(true)
+	for t: Dictionary in set_b:
+		t["id"] = String(t["id"]) + "_b"
+	spring["sets"] = [set_a, set_b]
+	return gd
+
+
+func test_sets_rotate_by_year() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	_two_set_data()
+	var year_len: int = Calendar.year_of(400) - Calendar.year_of(5)
+	var y2 := 5
+	while Calendar.year_of(y2) < 2:
+		y2 += 30
+	var y3 := y2
+	while Calendar.year_of(y3) < 3:
+		y3 += 30
+	assert_eq(String(SeasonTasks.tasks_for(gd, 5)[0]["id"]), "spring_bream")
+	assert_eq(String(SeasonTasks.tasks_for(gd, y2)[0]["id"]), "spring_bream_b")
+	assert_eq(String(SeasonTasks.tasks_for(gd, y3)[0]["id"]), "spring_bream", "wraps")
+	gd.season_tasks = saved
+	assert_eq(String(SeasonTasks.tasks_for(gd, y2)[0]["id"]), "spring_bream", "one set repeats")
+	assert_true(year_len >= 0)
+
+
+func test_sets_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	_two_set_data()
+	assert_eq(SeasonTasks.validate(gd).size(), 0)
+	gd.season_tasks["seasons"]["spring"]["sets"][1].pop_back()
+	assert_true(SeasonTasks.validate(gd).size() > 0, "2-task set rejected")
+	gd.season_tasks = saved.duplicate(true)
+	_two_set_data()
+	gd.season_tasks["seasons"]["spring"]["sets"][1][0]["id"] = "spring_bream"
+	assert_true(SeasonTasks.validate(gd).size() > 0, "duplicate id across sets")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["seasons"]["spring"]["tasks"] = gd.season_tasks["seasons"]["spring"]["sets"][0]
+	assert_true(SeasonTasks.validate(gd).size() > 0, "both tasks and sets")
+	gd.season_tasks = saved
+
+
+func test_mid_season_progress_survives_save() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	SeasonTasks.note(c, gd, "gather", "peach_blossom_petal", 2, 5)
+	var c2 := CharacterData.from_dict(c.to_dict())
+	assert_eq(int(SeasonTasks.list(c2, gd, 6)[1]["n"]), 2)

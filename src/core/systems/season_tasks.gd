@@ -21,6 +21,23 @@ static func def(data: GameData, day: int) -> Dictionary:
 	return (data.season_tasks.get("seasons", {}) as Dictionary).get(season_name(day), {})
 
 
+## SEASON-009: the season's task sets (`sets`, or `tasks` as one set).
+static func sets_of(d: Dictionary) -> Array:
+	if d.has("sets"):
+		return d["sets"]
+	if d.has("tasks"):
+		return [d["tasks"]]
+	return []
+
+
+## SEASON-009: the three tasks of `day`'s season for its year: sets[(year - 1) % sets.size()].
+static func tasks_for(data: GameData, day: int) -> Array:
+	var sets := sets_of(def(data, day))
+	if sets.is_empty():
+		return []
+	return sets[(Calendar.year_of(day) - 1) % sets.size()]
+
+
 ## The character's progress record for `day`'s season, reset when the season changed.
 static func _state(c: CharacterData, day: int) -> Dictionary:
 	var key := season_key(day)
@@ -40,7 +57,7 @@ static func note(c: CharacterData, data: GameData, kind: String, target: String,
 	if bool(st["done"]):
 		return lines
 	var progress: Dictionary = st["progress"]
-	for t: Dictionary in d["tasks"]:
+	for t: Dictionary in tasks_for(data, day):
 		if String(t["kind"]) != kind or String(t["target"]) != target:
 			continue
 		var id := String(t["id"])
@@ -260,7 +277,7 @@ static func all_done(c: CharacterData, data: GameData, day: int) -> bool:
 	if d.is_empty():
 		return false
 	var progress: Dictionary = _state(c, day)["progress"]
-	for t: Dictionary in d["tasks"]:
+	for t: Dictionary in tasks_for(data, day):
 		if int(progress.get(String(t["id"]), 0)) < int(t["count"]):
 			return false
 	return true
@@ -273,7 +290,7 @@ static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary
 	if d.is_empty():
 		return out
 	var progress: Dictionary = _state(c, day)["progress"]
-	for t: Dictionary in d["tasks"]:
+	for t: Dictionary in tasks_for(data, day):
 		var n := int(progress.get(String(t["id"]), 0))
 		out.append({"text": String(t["text"]), "where": where(t, c, data, day), "n": n, "count": int(t["count"]), "done": n >= int(t["count"])})
 	return out
@@ -393,10 +410,14 @@ static func validate(data: GameData) -> Array[String]:
 	var ids := {}
 	for s in SEASONS:
 		var d: Dictionary = seasons.get(s, {})
-		var tasks: Array = d.get("tasks", [])
-		if tasks.size() != 3:
-			errs.append("season_tasks.json %s needs exactly 3 tasks" % s)
-		for t: Dictionary in tasks:
+		if d.has("tasks") == d.has("sets"):
+			errs.append("season_tasks.json %s needs exactly one of tasks/sets" % s)
+		var all_tasks: Array = []
+		for set_tasks: Array in sets_of(d):
+			if set_tasks.size() != 3:
+				errs.append("season_tasks.json %s needs exactly 3 tasks per set" % s)
+			all_tasks.append_array(set_tasks)
+		for t: Dictionary in all_tasks:
 			var id := String(t.get("id", ""))
 			if id == "" or ids.has(id) or String(t.get("text", "")) == "":
 				errs.append("season_tasks.json task needs a unique id and text (got '%s')" % id)
