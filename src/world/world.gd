@@ -648,6 +648,8 @@ func _make_place(place: Dictionary) -> Interactable:
 		if LAYOUT_KEYS.has(key):
 			continue
 		node.set(key, _convert(place[key], node.get(key)))
+	if place["type"] == "explore":
+		node.art_kind = PixelPlace.explore_kind(String(place.get("look", "cave")))
 	# Add before the player so the player draws on top.
 	add_child(node)
 	move_child(node, player.get_index())

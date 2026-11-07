@@ -11,6 +11,8 @@ extends RefCounted
 const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
 const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
+## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
+const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")
@@ -23,7 +25,18 @@ static var _cache: Dictionary = {}
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop")
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != ""
+
+
+## The art kind for an explore place with `look`: plain "explore" for cave or an unknown look.
+static func explore_kind(look: String) -> String:
+	return "explore_" + look if look != "cave" and EXPLORE_LOOKS.has(look) else "explore"
+
+
+static func _explore_look(kind: String) -> String:
+	if kind.begins_with("explore_") and EXPLORE_LOOKS.has(kind.substr(8)):
+		return kind.substr(8)
+	return ""
 
 
 ## Pixel size of the template for `kind` (travel flips with the gate's orientation).
@@ -122,6 +135,16 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _camp()
 		"fishing":
 			c = _jetty()
+		"explore_woods":
+			c = _woods()
+		"explore_ruins":
+			c = _ruins()
+		"explore_reeds":
+			c = _reeds()
+		"explore_ridge":
+			c = _ridge()
+		"explore_trail":
+			c = _trail()
 		_:
 			return []
 	outline(c)
@@ -452,6 +475,97 @@ static func _cave() -> Array:
 	rect(c, 23, 34, 8, 3, "S")
 	for p: Array in [[10, 10], [38, 8], [15, 5], [42, 15]]:
 		rect(c, p[0], p[1], 5, 2, "v")
+	return c
+
+
+## GFX-095: a dark clump of tree crowns with a narrow earth path into a gap.
+static func _woods() -> Array:
+	var c := canvas(54, 38)
+	rect(c, 0, 30, 54, 8, "v")
+	ell(c, 14, 18, 13, 12, "v")
+	ell(c, 40, 17, 13, 12, "v")
+	ell(c, 27, 12, 14, 11, "v")
+	for p: Array in [[8, 22], [20, 18], [34, 22], [44, 20], [24, 8]]:
+		ell(c, p[0], p[1], 5, 3, "S")
+	for p: Array in [[10, 12], [30, 6], [42, 10], [18, 14]]:
+		rect(c, p[0], p[1], 4, 2, "v")
+	rect(c, 22, 26, 10, 12, "e")
+	rect(c, 25, 20, 4, 6, "e")
+	rect(c, 25, 14, 4, 6, "d")
+	rect(c, 4, 34, 46, 3, "v")
+	rect(c, 22, 34, 10, 4, "e")
+	return c
+
+
+## GFX-095: broken wall stubs, a fallen pillar and a torn banner.
+static func _ruins() -> Array:
+	var c := canvas(54, 38)
+	box(c, 3, 18, 12, 16, "s", "S")
+	box(c, 18, 24, 14, 10, "s", "S")
+	box(c, 36, 14, 11, 20, "s", "S")
+	for p: Array in [[5, 21], [9, 26], [20, 27], [38, 18], [41, 24]]:
+		rect(c, p[0], p[1], 3, 1, "S")
+	rect(c, 4, 16, 4, 2, "s")
+	rect(c, 38, 12, 3, 2, "s")
+	box(c, 12, 33, 24, 4, "s", "S")
+	rect(c, 14, 34, 2, 1, "w")
+	rect(c, 27, 4, 2, 24, "t")
+	rect(c, 29, 5, 9, 7, "r")
+	rect(c, 29, 11, 5, 3, "r")
+	rect(c, 29, 5, 9, 1, "h")
+	rect(c, 0, 36, 54, 2, "e")
+	return c
+
+
+## GFX-095: a dark water patch ringed with reed stalks.
+static func _reeds() -> Array:
+	var c := canvas(54, 38)
+	ell(c, 27, 28, 22, 8, "e")
+	ell(c, 27, 28, 18, 6, "d")
+	for x: int in [4, 8, 12, 15, 38, 42, 46, 50, 22, 32]:
+		var top := 8 + (x * 7) % 11
+		rect(c, x, top, 1, 36 - top, "v")
+		rect(c, x - 1, top - 3, 3, 4, "t")
+	rect(c, 0, 36, 54, 2, "v")
+	return c
+
+
+## GFX-095: jagged grey crags with a thin trail between them.
+static func _ridge() -> Array:
+	var c := canvas(54, 38)
+	for spec: Array in [[2, 14, 16], [18, 4, 18], [36, 10, 16]]:
+		var x0: int = spec[0]
+		var top: int = spec[1]
+		var w: int = spec[2]
+		for y in range(top, 36):
+			var inset := clampi(w / 2 + 2 - (y - top) * 2 / 3, 0, w / 2)
+			rect(c, x0 + inset, y, w - 2 * inset, 1, "s")
+		rect(c, x0 + w / 2, top + 2, w / 2 - 1, 34 - top, "S")
+		rect(c, x0 + w / 2 - 1, top, 2, 3, "s")
+	rect(c, 0, 33, 54, 5, ".")
+	rect(c, 12, 30, 30, 8, "s")
+	rect(c, 24, 28, 6, 2, "e")
+	rect(c, 22, 30, 10, 3, "e")
+	rect(c, 20, 33, 14, 5, "e")
+	rect(c, 10, 34, 6, 3, "S")
+	return c
+
+
+## GFX-095: a trail marker post with a sign board beside a worn path patch and two shrubs.
+static func _trail() -> Array:
+	var c := canvas(54, 38)
+	ell(c, 30, 31, 22, 5, "e")
+	rect(c, 8, 33, 38, 2, "e")
+	rect(c, 14, 6, 3, 28, "t")
+	rect(c, 16, 6, 1, 28, "T")
+	box(c, 6, 8, 18, 8, "t", "T")
+	rect(c, 8, 10, 14, 1, "p")
+	rect(c, 8, 12, 9, 1, "p")
+	rect(c, 20, 18, 14, 6, "t")
+	rect(c, 22, 20, 10, 1, "p")
+	ell(c, 40, 26, 6, 5, "v")
+	ell(c, 47, 29, 5, 4, "v")
+	rect(c, 0, 36, 54, 2, "v")
 	return c
 
 

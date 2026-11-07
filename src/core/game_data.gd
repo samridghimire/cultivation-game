@@ -638,9 +638,13 @@ func _validate_world() -> void:
 		for place: Dictionary in region.get("places", []):
 			if place.has("look"):
 				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]
-				if place.get("type", "") != "deed_giver":
-					load_errors.append("%s: look is only for deed_giver places" % who)
-				load_errors.append_array(PlaceLooks.errors(place["look"], who))
+				if place.get("type", "") == "explore":
+					if not PixelPlace.EXPLORE_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown explore look '%s' (use %s)" % [who, place["look"], ", ".join(PixelPlace.EXPLORE_LOOKS)])
+				else:
+					if place.get("type", "") != "deed_giver":
+						load_errors.append("%s: look is only for deed_giver and explore places" % who)
+					load_errors.append_array(PlaceLooks.errors(place["look"], who))
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
 			load_errors.append_array(Fishing.validate_table(self, place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))

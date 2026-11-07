@@ -4,6 +4,8 @@ extends Interactable
 
 ## Encounter tags for this spot. Empty = the region's encounter_tags.
 @export var explore_tags: Array = []
+## GFX-095: which picture the site draws (regions.json `look`); the world sets art_kind from it.
+@export var look := "cave"
 
 
 func get_options() -> Array[Dictionary]:

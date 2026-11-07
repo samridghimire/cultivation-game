@@ -135,3 +135,45 @@ func test_big_shops_are_buildings() -> void:
 	assert_eq(smithy.get_size(), shop.get_size())
 	assert_true(Vector2(shop.get_size()) * float(Sprites.scale()) <= Vector2(118, 88), "110 px shop fits its rect")
 
+
+
+func test_explore_looks_are_well_formed() -> void:
+	for look: String in PixelPlace.EXPLORE_LOOKS:
+		var kind := PixelPlace.explore_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		var r := PixelPlace.rows(kind)
+		assert_true(r.size() > 8, look + " has rows")
+		for row in r:
+			assert_eq(row.length(), r[0].length(), look + " row width")
+			for ch in row:
+				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+	assert_eq(PixelPlace.explore_kind("cave"), "explore")
+	assert_eq(PixelPlace.explore_kind("bogus"), "explore")
+	assert_eq(PixelPlace.rows("explore"), PixelPlace.rows(PixelPlace.explore_kind("cave")))
+	var distinct := {}
+	for look: String in PixelPlace.EXPLORE_LOOKS:
+		distinct["".join(PixelPlace.rows(PixelPlace.explore_kind(look)))] = true
+	assert_eq(distinct.size(), PixelPlace.EXPLORE_LOOKS.size(), "every look is its own picture")
+
+
+func test_every_explore_place_has_a_valid_look() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "explore":
+				assert_true(PixelPlace.EXPLORE_LOOKS.has(String(place.get("look", ""))), "%s needs a look" % place.get("display_name", ""))
+
+
+func test_game_data_rejects_unknown_explore_look() -> void:
+	for look: String in PixelPlace.EXPLORE_LOOKS + ["swamp"]:
+		var data := GameData.load_from_dir()
+		var place: Dictionary = {}
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "explore":
+				place = p
+		place["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		var bad := look == "swamp"
+		assert_eq("\n".join(data.load_errors).contains("unknown explore look"), bad, look)
