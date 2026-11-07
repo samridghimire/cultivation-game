@@ -185,7 +185,7 @@ static func validate_gift_memory(data: GameData) -> PackedStringArray:
 	return errors
 
 
-const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "shrine_stage", "season_done", "breakthrough"]
+const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "shrine_stage", "project_stage", "season_done", "breakthrough"]
 
 
 ## FOLK-015: remember the newest notable deed (a newer one replaces it).
@@ -213,7 +213,7 @@ static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, reg
 	var lines: Array = bands.get(String(news.get("kind", "")), [])
 	if lines.is_empty():
 		return ""
-	return String(lines[absi(hash(npc.id + str(day))) % lines.size()]).replace("{subject}", String(news.get("subject", "")))
+	return String(lines[absi(hash(npc.id + str(day))) % lines.size()]).replace("{subject}", String(news.get("subject", ""))).replace("{project}", String(news.get("subject", "")))
 
 
 ## Load errors in folk_greetings: both bands, non-empty string lines, min_favor above max_favor.

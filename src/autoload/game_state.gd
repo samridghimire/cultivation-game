@@ -3555,6 +3555,7 @@ func _season_note(kind: String, target: String, n: int) -> void:
 	var day := GameClock.total_days
 	var was_done := bool(player.season_tasks.get("done", false)) and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)
 	var stage_before := SeasonTasks.restoration_stage(player, data)
+	var done_before := player.seasons_completed.size()
 	var lines := SeasonTasks.note(player, data, kind, target, n, day)
 	for flag in SeasonTasks.restoration_flags(player, data):
 		world_flags[flag] = true
@@ -3564,7 +3565,15 @@ func _season_note(kind: String, target: String, n: int) -> void:
 		EventBus.player_changed.emit()  # GFX-081: the shrine redraws at its new stage
 	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):
 		return
-	if SeasonTasks.restoration_stage(player, data) > stage_before:
+	var reached := SeasonTasks.stage_reached(data, player.seasons_completed.size()) if player.seasons_completed.size() > done_before else {}
+	if not reached.is_empty() and int(reached["index"]) > 0:
+		var proj: Dictionary = reached["project"]
+		Folk.record_news(world_flags, "project_stage", String(proj["name"]), String(proj.get("region", SeasonTasks.REGION)), day)
+		var flag := "project_done_" + String(proj["id"])
+		if bool(reached["final"]) and String(proj.get("done_line", "")) != "" and not world_flags.has(flag):
+			EventBus.post(String(proj["done_line"]), "people")
+			world_flags[flag] = true
+	elif SeasonTasks.restoration_stage(player, data) > stage_before:
 		Folk.record_news(world_flags, "shrine_stage", "the old shrine", SeasonTasks.REGION, day)
 	else:
 		Folk.record_news(world_flags, "season_done", SeasonTasks.season_name(day).to_lower(), SeasonTasks.REGION, day)

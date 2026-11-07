@@ -396,3 +396,32 @@ func test_mid_season_progress_survives_save() -> void:
 	SeasonTasks.note(c, gd, "gather", "peach_blossom_petal", 2, 5)
 	var c2 := CharacterData.from_dict(c.to_dict())
 	assert_eq(int(SeasonTasks.list(c2, gd, 6)[1]["n"]), 2)
+
+
+## SEASON-010: a well stage is "project_stage" news; the last stage posts the done_line once.
+func test_well_stage_is_project_news_and_done_line_once() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	_finish_seasons(gs, [365])
+	var news: Dictionary = gs.world_flags["village_news"]
+	assert_eq(String(news["kind"]), "project_stage")
+	assert_eq(String(news["subject"]), "the Founder's Old Well")
+	assert_false(bool(gs.world_flags.get("project_done_well", false)))
+	_finish_seasons(gs, [455, 545])
+	assert_true(bool(gs.world_flags.get("project_done_well", false)))
+	assert_eq(Folk.news_line(null, gs.world_flags, gs.data, "qingshi_village", 546, true), "")
+	assert_true(bool(SeasonTasks.stage_reached(gs.data, 7)["final"]))
+	var stage := SeasonTasks.stage_reached(gs.data, 6)
+	assert_true(int(stage["index"]) == 1 and not bool(stage["final"]))
+	assert_true(bool(SeasonTasks.stage_reached(gs.data, 4)["final"]) and int(SeasonTasks.stage_reached(gs.data, 4)["index"]) == 0)
+	assert_true(SeasonTasks.stage_reached(gs.data, 99).is_empty())
+
+
+func test_done_line_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][0]["done_line"] = ""
+	assert_false(SeasonTasks.validate(gd).is_empty())
+	gd.season_tasks = saved
+	assert_true(SeasonTasks.validate(gd).is_empty())

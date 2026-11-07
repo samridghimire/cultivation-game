@@ -122,6 +122,19 @@ static func project_stage(c: CharacterData, data: GameData, index: int) -> int:
 	return 0
 
 
+## SEASON-010: the project stage the season set that brought `c` to `done_count` finished sets just completed, as
+## {index, project, final} ({} when beyond every project). `final` is true for the last stage of its project.
+static func stage_reached(data: GameData, done_count: int) -> Dictionary:
+	var offset := 0
+	var list := project_list(data)
+	for i in list.size():
+		var total := (list[i].get("stages", []) as Array).size()
+		if done_count > offset and done_count <= offset + total:
+			return {"index": i, "project": list[i], "final": done_count == offset + total}
+		offset += total
+	return {}
+
+
 ## The project being worked on now (first unfinished) as {index, project, stage}; {} when all are whole.
 static func current_project(c: CharacterData, data: GameData) -> Dictionary:
 	var list := project_list(data)
@@ -496,6 +509,8 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 			if pf == "" or String(st.get("text", "")) == "" or seen.has(pf) or pf == qflag:
 				errs.append("season_tasks.json project '%s' stage needs a unique flag and text (got '%s')" % [pid, pf])
 			seen[pf] = true
+		if p.has("done_line") and String(p["done_line"]) == "":
+			errs.append("season_tasks.json project '%s' done_line must be non-empty" % pid)
 		if p.has("crop_bonus") and (float(p["crop_bonus"]) <= 0.0 or float(p["crop_bonus"]) > 0.1):
 			errs.append("season_tasks.json project '%s' crop_bonus must be in (0, 0.1]" % pid)
 		if p.has("daily"):

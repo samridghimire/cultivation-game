@@ -10,7 +10,7 @@
     ],
     "incense": {"item": "village_mugwort", "flag": "shrine_incense", "days": 1, "bonus": 0.05, "text": "Incense smoke curls from the old shrine."}, "qi_flag": {"flag": "shrine_restored", "bonus": 0.05, "text": "the restored shrine"},
     "projects": [
-      {"id": "well", "name": "the Founder's Old Well", "region": "qingshi_village", "crop_bonus": 0.05,
+      {"id": "well", "name": "the Founder's Old Well", "region": "qingshi_village", "done_line": "Old women weep and children cheer as the first bucket rises from the Founder's Old Well.", "crop_bonus": 0.05,
         "stages": [
           {"flag": "well_stage_1", "text": "Villagers haul the rotten cover off the Founder's Old Well and bail out the muck."},
           {"flag": "well_stage_2", "text": "Masons re-lay the well's fallen stones and hang a new windlass."},
