@@ -167,6 +167,8 @@ func _start() -> void:
 			gs.current_region = "qingshi_village"
 			gs.npc_favor["xiao_ling"] = 45
 			c.scene_day = -1
+			while Weather.of(gs.data, "qingshi_village", GameClock.total_days) != "rain":  # FOLK-021
+				GameClock.total_days += 1
 			gs._friend_scene("xiao_ling"), "close": func() -> void: hud.get("_friend_card").close()})
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep

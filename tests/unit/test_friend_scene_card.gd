@@ -26,8 +26,8 @@ func test_hud_shows_card_on_signal() -> void:
 	root.add_child(hud)
 	for i in 4:
 		await (Engine.get_main_loop() as SceneTree).process_frame
-	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "A quiet moment.", "")
-	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "A second moment.", "")
+	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "A quiet moment.", "", "")
+	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "A second moment.", "", "")
 	for i in 4:
 		await (Engine.get_main_loop() as SceneTree).process_frame
 	var card: FriendSceneCard = hud.get("_friend_card")
@@ -77,7 +77,7 @@ func test_scene_waits_for_the_contest_card() -> void:
 	if dialogue.visible:
 		dialogue.close()
 	contest.visible = true
-	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "After the race.", "")
+	EventBus.friend_scene.emit("xiao_ling", "Xiao Ling", "After the race.", "", "")
 	for i in 4:
 		await (Engine.get_main_loop() as SceneTree).process_frame
 	assert_false(card.visible, "held behind the contest card")

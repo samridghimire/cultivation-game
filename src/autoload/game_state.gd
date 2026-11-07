@@ -1561,6 +1561,8 @@ func _teach_lessons(npc_id: String) -> void:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null or not npc.alive or player == null:
 		return
+	if Npcs.region_of(npc, data) != current_region:  # FOLK-021: taught only where the teacher stands
+		return
 	var today := GameClock.total_days
 	for key: String in player.lessons_taught:
 		if key.begins_with(npc_id + ":") and int(player.lessons_taught[key]) == today:
@@ -1574,6 +1576,7 @@ func _teach_lessons(npc_id: String) -> void:
 	EventBus.post("%s: \"%s\"" % [npc.name, Folk.lesson_line(lesson, npc.name, player.name)], "people")
 	for note in notes:
 		EventBus.post(note, "progress")
+	EventBus.lesson_taught.emit(npc_id, String(npc.name), Folk.lesson_line(lesson, npc.name, player.name), ", ".join(notes))
 	EventBus.player_changed.emit()
 
 
@@ -1739,18 +1742,20 @@ func _friend_scene(npc_id: String) -> void:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null or player.scene_day == GameClock.total_days:
 		return
-	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)), npc, current_region)
+	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)), npc, current_region, Weather.of(data, current_region, GameClock.total_days))
 	if scene.is_empty():
 		return
 	Folk.mark_scene(player, String(scene["id"]), GameClock.total_days)
 	var text := String(scene["text"]).replace("{name}", String(npc.name))
 	EventBus.post(text, "people")
 	var gift_name := ""
+	var gift_id := ""
 	if scene.has("gift"):
+		gift_id = String(scene["gift"])
 		player.add_item(String(scene["gift"]), 1)
 		gift_name = String(data.items[String(scene["gift"])].name)
 		EventBus.post("%s gives you %s." % [npc.name, gift_name], "people")
-	EventBus.friend_scene.emit(npc_id, String(npc.name), text, gift_name)
+	EventBus.friend_scene.emit(npc_id, String(npc.name), text, gift_name, gift_id)
 
 
 ## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).

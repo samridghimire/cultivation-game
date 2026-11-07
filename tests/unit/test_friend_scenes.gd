@@ -13,10 +13,50 @@ func _start() -> CharacterData:
 	return c
 
 
+func _set_rain_day(gs: Node) -> void:
+	gs.current_region = "qingshi_village"
+	var clock := _root().get_node("GameClock")
+	while Weather.of(gs.data, "qingshi_village", clock.total_days) != "rain":
+		clock.total_days += 1
+
+
+func test_weather_scene_validates_and_does_not_block_later_ones() -> void:
+	var swing: Dictionary = {}
+	for scene: Dictionary in data().scenes:
+		if String(scene["id"]) == "xiao_ling_old_swing":
+			swing = scene
+	assert_eq(swing["weather"], ["rain"])
+	for kind: Variant in swing["weather"]:
+		assert_true(Weather.KINDS.has(String(kind)))
+	var c := CharacterData.new()
+	assert_eq(String(Folk.scene_due(c, data(), "xiao_ling", 60, null, "", "clear")["id"]), "xiao_ling_lantern_wish",
+		"a waiting rain scene never blocks the later ones")
+
+
+func test_lesson_only_where_teacher_stands() -> void:
+	var c := _start()
+	var gs := _root().get_node("GameState")
+	var got: Array = []
+	var cb := func(id: String, _n: String, _t: String, _e: String) -> void: got.append(id)
+	EventBus.lesson_taught.connect(cb)
+	gs.npc_favor["hunter_ma"] = 70
+	gs.current_region = "misty_forest"
+	gs.check_friendships()
+	assert_eq(got.size(), 0, "teacher is in another region")
+	assert_false(c.lessons_taught.has("hunter_ma:0"))
+	gs.current_region = "qingshi_village"
+	gs._teach_lessons("hunter_ma")
+	EventBus.lesson_taught.disconnect(cb)
+	assert_eq(got, ["hunter_ma"])
+	assert_eq(c.lessons_taught.size(), 1)
+
+
 func test_scene_due_orders_specific_before_generic() -> void:
 	var c := CharacterData.new()
 	assert_true(Folk.scene_due(c, data(), "xiao_ling", 39).is_empty())
-	assert_eq(String(Folk.scene_due(c, data(), "xiao_ling", 40)["id"]), "xiao_ling_old_swing")
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 40).is_empty(), "the swing scene waits for rain")
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 40, null, "", "clear").is_empty())
+	assert_eq(String(Folk.scene_due(c, data(), "xiao_ling", 40, null, "", "rain")["id"]), "xiao_ling_old_swing")
 	var v := _villager("qingshi_village")
 	assert_eq(String(Folk.scene_due(c, data(), v.id, 40, v, "qingshi_village")["id"]), "villager_shared_bowl")
 	assert_true(Folk.scene_due(c, data(), "some_villager", 40).is_empty(), "no npc given: not a villager")
@@ -39,9 +79,10 @@ func test_talking_plays_scene_gift_once_and_one_per_day() -> void:
 	var c := _start()
 	var gs := _root().get_node("GameState")
 	var got: Array = []
-	var cb := func(id: String, n: String, t: String, g: String) -> void: got.append([id, n, g])
+	var cb := func(id: String, n: String, _t: String, g: String, _gid: String) -> void: got.append([id, n, g])
 	EventBus.friend_scene.connect(cb)
 	gs.npc_favor["xiao_ling"] = 45
+	_set_rain_day(gs)
 	var rice := c.item_count("sweet_rice_ball")
 	gs.start_dialogue("xiao_ling")
 	EventBus.friend_scene.disconnect(cb)

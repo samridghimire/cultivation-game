@@ -1394,12 +1394,14 @@ static func finish_companion(c: CharacterData, people: Dictionary, favors: Dicti
 
 
 ## FOLK-013: the first unseen scene due for `npc_id` at `favor` ({} = none). A scene for this villager comes
-## before an "any_villager" one. Pure.
-static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int, npc: CharacterData = null, region_id: String = "") -> Dictionary:
+## before an "any_villager" one. A scene with `weather` waits for that weather (FOLK-021). Pure.
+static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int, npc: CharacterData = null, region_id: String = "", weather: String = "") -> Dictionary:
 	var generic := {}
 	var villager := is_villager(npc, data, region_id)
 	for scene: Dictionary in data.scenes:
 		if c.scenes_seen.has(String(scene["id"])) or favor < int(scene["min_favor"]):
+			continue
+		if scene.has("weather") and not (scene["weather"] as Array).has(weather):  # FOLK-021
 			continue
 		if String(scene["npc"]) == npc_id:
 			return scene

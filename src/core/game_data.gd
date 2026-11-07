@@ -778,6 +778,14 @@ func _validate_world() -> void:
 			load_errors.append("Scene '%s' min_favor must be a folk_tiers min" % sid)
 		if String(scene.get("text", "")) == "":
 			load_errors.append("Scene '%s' has no text" % sid)
+		if scene.has("weather"):
+			var kinds: Variant = scene["weather"]
+			if not kinds is Array or (kinds as Array).is_empty():
+				load_errors.append("Scene '%s' weather must be a non-empty array" % sid)
+			else:
+				for kind: Variant in kinds:
+					if not Weather.KINDS.has(String(kind)):
+						load_errors.append("Scene '%s' has unknown weather '%s'" % [sid, kind])
 		if scene.has("gift") and not items.has(String(scene["gift"])):
 			load_errors.append("Scene '%s' has unknown gift '%s'" % [sid, scene["gift"]])
 	load_errors.append_array(Folk.validate_lessons(self))

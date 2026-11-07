@@ -1846,7 +1846,7 @@ func _on_contest_finished(result: Dictionary) -> void:
 
 
 ## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
-func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String) -> void:
+func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, _gift_id: String = "") -> void:
 	_pending_friend_scenes.append([npc_id, npc_name, text, gift_name])
 	if _contest_card.visible:
 		pass  # FOLK-016: shown when the contest card closes (_flush_friend_scenes is connected to its `closed`)
