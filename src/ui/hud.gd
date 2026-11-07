@@ -286,9 +286,9 @@ func _ready() -> void:
 	EventBus.session_started.connect(_refresh)
 	EventBus.player_changed.connect(_queue_fair_fight)
 	EventBus.session_started.connect(_queue_fair_fight)
-	EventBus.region_changed.connect(func(_id): _queue_fair_fight())
-	GameClock.days_advanced.connect(func(_d): _queue_fair_fight())
-	EventBus.region_changed.connect(func(_id): _refresh())
+	EventBus.region_changed.connect(_on_region_changed_fair_fight)
+	GameClock.days_advanced.connect(_on_days_advanced_fair_fight)
+	EventBus.region_changed.connect(_on_region_changed_refresh)
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
 	Settings.changed.connect(_on_setting_changed)
@@ -305,16 +305,16 @@ func _ready() -> void:
 	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
-	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _refresh(); _open_pending_respawn())
+	EventBus.player_respawned.connect(_on_player_respawned)
 	EventBus.combat_started.connect(_on_combat_started)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.breakthrough_prepare_requested.connect(_on_breakthrough_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
-	EventBus.breakthrough_details.connect(func(text: String) -> void: _breakthrough_details = text)
+	EventBus.breakthrough_details.connect(_on_breakthrough_details)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
-	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
+	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	EventBus.quarrel_requested.connect(_on_quarrel_requested)
@@ -340,7 +340,7 @@ func _ready() -> void:
 	_sync_goals_done()
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
-	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
+	EventBus.session_started.connect(_on_session_started_season)
 	_refresh()
 	_refresh_fair_fight()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
@@ -2168,3 +2168,32 @@ static func key_bar_style() -> StyleBoxFlat:
 ## Alpha a card takes while the player (screen position) is within CARD_FADE_MARGIN of its rect.
 static func card_fade_target(card_rect: Rect2, player_screen_pos: Vector2) -> float:
 	return CARD_FADE_ALPHA if card_rect.grow(CARD_FADE_MARGIN).has_point(player_screen_pos) else 1.0
+
+
+func _on_region_changed_fair_fight(_id: String) -> void:
+	_queue_fair_fight()
+
+
+func _on_days_advanced_fair_fight(_d: int) -> void:
+	_queue_fair_fight()
+
+
+func _on_region_changed_refresh(_id: String) -> void:
+	_refresh()
+
+
+func _on_player_respawned(_anchor_id: String, _lives: int) -> void:
+	_refresh()
+	_open_pending_respawn()
+
+
+func _on_breakthrough_details(text: String) -> void:
+	_breakthrough_details = text
+
+
+func _on_dialogue_ended(_id: String) -> void:
+	_dialogue.close()
+
+
+func _on_session_started_season() -> void:
+	_season = Calendar.season_of(GameClock.total_days)

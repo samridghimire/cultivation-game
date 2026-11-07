@@ -54,7 +54,7 @@ func _init() -> void:
 	details.add_child(_sect_actions)
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -228,3 +228,8 @@ func _focus_selected() -> void:
 		b.grab_focus()
 	else:
 		_close_button.grab_focus()
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

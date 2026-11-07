@@ -54,7 +54,7 @@ func _init() -> void:
 	scroll.add_child(_rows)
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -317,3 +317,8 @@ static func _sorted_ids(items: Dictionary, data: GameData) -> Array:
 
 static func _item_name(data: GameData, item_id: String) -> String:
 	return String(data.items.get(item_id, {}).get("name", item_id))
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

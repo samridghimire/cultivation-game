@@ -92,7 +92,7 @@ func _init() -> void:
 	_family_button = UIStyle.button("Family tree", func(): EventBus.family_requested.emit())
 	_action_row.add_child(_family_button)
 	_action_row.add_child(UIStyle.button("Close", close))
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 func _build_left_column() -> VBoxContainer:
@@ -685,3 +685,8 @@ func _unequip(slot: String) -> void:
 	# The row was rebuilt by player_changed; keep gamepad focus inside the sheet.
 	var target: Button = _equip_row.get_child(0) if _equip_row.get_child_count() > 0 else _default_focus()
 	target.grab_focus.call_deferred()
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

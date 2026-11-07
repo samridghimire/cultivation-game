@@ -26,6 +26,28 @@ func test_world_has_no_lambdas_on_autoload_signals() -> void:
 	assert_eq(hits.size(), 0, "lambda connected to autoload signal: " + ", ".join(hits))
 
 
+func test_ui_has_no_lambdas_on_autoload_signals() -> void:
+	var hits := PackedStringArray()
+	_scan("res://src/ui", hits)
+	assert_eq(hits.size(), 0, "lambda connected to autoload signal: " + ", ".join(hits))
+
+
+func test_hud_freed_twice_leaves_no_dead_bus_connections() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs: Node = tree.root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	for i in 2:
+		var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+		tree.root.add_child(hud)
+		await tree.process_frame
+		hud.free()
+	await tree.process_frame
+	for sig in [EventBus.message_posted, EventBus.player_changed, EventBus.region_changed, EventBus.player_respawned, EventBus.dialogue_ended, EventBus.session_started, GameClock.days_advanced]:
+		for c in sig.get_connections():
+			assert_true(is_instance_valid(c["callable"].get_object()), "dead target on bus signal")
+
+
 func test_freed_npc_leaves_no_connections() -> void:
 	var npc: Node = load("res://src/world/interactables/npc.gd").new()
 	var before := EventBus.ui_modal_changed.get_connections().size()

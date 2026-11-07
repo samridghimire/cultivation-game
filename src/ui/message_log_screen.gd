@@ -94,7 +94,7 @@ func _init() -> void:
 	_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(_count)
 	footer.add_child(UIStyle.label("[PgUp/PgDn] or right stick: scroll", 14, DATE_COLOR))
-	EventBus.message_posted.connect(func(_t, _c): if visible: _rebuild())
+	EventBus.message_posted.connect(_on_message_posted_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -188,3 +188,8 @@ func _rebuild() -> void:
 
 func _scroll_to_end() -> void:
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+
+
+func _on_message_posted_rebuild(_t: String, _c: String) -> void:
+	if visible:
+		_rebuild()
