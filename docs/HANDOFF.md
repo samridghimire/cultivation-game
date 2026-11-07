@@ -2,6 +2,20 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-07 (planner, 18:10 UTC, 2nd run)
+- The entry below labelled 18:10 was really the 12:10 run (its commit is dated 12:16).
+- 12 tasks landed (GFX-091, WU-478, C-321, WU-477, FOLK-021, ENC-012, QA-205, GUIDE-217, GFX-092, GFX-093, WU-479, C-322).
+  Review ac23991..d56a580 fixed a lost friend/lesson card inline; notes -> C-324 (tiger text) and COOK-001 (shorten_injury).
+- Screenshots work on main again (QA-205). `--region=` runs skip the festival/book flags: use separate runs.
+- Planner shots (all six regions, `--festival --friend-scene --book`): forage herbs are an 8x8 green checkerboard at 4x ->
+  GFX-094; ten identical grey-dome explore places -> GFX-095 (spec file); People cards overflow -> WU-480; overlapping
+  labels in Fallen Star, the marsh, Misty Forest and the festival -> WU-481; static fields -> GFX-096; thin festival decor and
+  a grey band under the map -> GFX-097. Friend card, mist and pickup floats looked fine.
+- New systems: COOK-001 (spec file), FOLK-022 (named friends had no birthday at all), GUIDE-218. Systems has only 3 ready
+  tasks; candidates for more once these land: a Qi Refining great-beast step between the first beast and its Foundation
+  return (Misty Forest, Azure Peak, the marsh), a third village project if the owner keeps SEASON-008's default.
+- Next planner: view GFX-094/GFX-095/WU-480 shots when they land; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-07 (planner, 18:10 UTC)
 - 13 tasks landed (RV-018, WU-475, FOLK-019, C-311, C-319, FOLK-020, GFX-087, GFX-090, GUIDE-216, SEASON-010, WU-476,
   CRIT-001, C-320). Review aa54fa8..ac23991 merged RV-018's duplicate well into the Founder's Old Well inline.

@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-07 [GFX-091] Mist drifts through the Misty Forest.
+- 2026-11-07 [WU-478] At the festival the [E] prompt stays by its person and nobody stands on you.
+- 2026-11-07 [C-321] Five villagers and wanderers now teach real lessons as you become friends.
+- 2026-11-07 [WU-477] The village book shows what each friend taught you, and what they still might.
+- 2026-11-07 [FOLK-021] Rainy friend scenes wait for rain, and friends teach only when you are with them.
+- 2026-11-07 [ENC-012] Encounter choices can injure you, and offerings take any fitting goods.
+- 2026-11-07 [QA-205] The screenshot tool compiles again, and test.sh now catches broken sim scripts.
+- 2026-11-07 [GUIDE-217] Today reminds you of eggs by the coop and when a festival ends.
+- 2026-11-07 [GFX-092] Picking up an egg or drawing water pops a small "+1" with the item icon.
+- 2026-11-07 [GFX-093] On festival days Qingshi's square is hung with bunting and lanterns.
+- 2026-11-07 [WU-479] A friend's lesson shows on its own card so you notice what you learned.
+- 2026-11-07 [C-322] New dishes from well water and eggs: tea, custard, egg-drop soup and honey egg cake.
 - 2026-11-07 [C-320] The Mist-Crowned Tiger can be backed away from or paid off with venison, not only fought.
 - 2026-11-07 [CRIT-001] Qingshi's hens leave an egg by the coop some days; pick it up.
 - 2026-11-07 [WU-476] The friend scene card shows the villager's face in a framed portrait.
