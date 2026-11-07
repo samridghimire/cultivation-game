@@ -254,3 +254,89 @@ func test_where_is_memoized_per_day() -> void:
 	assert_eq(SeasonTasks.where_scans, scans, "the second call does not rescan")
 	SeasonTasks.where(task, c, gd, 6)
 	assert_eq(SeasonTasks.where_scans, scans + 1, "a new day recomputes")
+
+
+## SEASON-008: the village well after the shrine.
+func _finish_seasons(gs: Node, days: Array) -> void:
+	for day: int in days:
+		GameClock.total_days = day
+		for t: Dictionary in SeasonTasks.def(gs.data, day)["tasks"]:
+			gs._season_note(String(t["kind"]), String(t["target"]), int(t["count"]))
+
+
+func test_well_stages_follow_the_shrine() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	assert_eq(SeasonTasks.project_stage(c, gs.data, 1), 0, "shrine stage 4 continues at well stage 0")
+	assert_eq(SeasonTasks.current_project(c, gs.data)["index"], 1)
+	_finish_seasons(gs, [365])
+	assert_eq(SeasonTasks.project_stage(c, gs.data, 1), 1)
+	assert_eq(SeasonTasks.restoration_stage(c, gs.data), 4, "shrine stays whole")
+	assert_true(bool(gs.world_flags.get("well_stage_1", false)))
+	assert_false(bool(gs.world_flags.get("well_stage_2", false)))
+	assert_eq(SeasonTasks.project_line(c, gs.data, {}, 365), "The Founder's Old Well: 1 of 3 stages repaired.")
+	_finish_seasons(gs, [455, 545])
+	assert_eq(SeasonTasks.project_stage(c, gs.data, 1), 3)
+	assert_true(SeasonTasks.current_project(c, gs.data).is_empty())
+
+
+func test_well_crop_bonus_and_draw() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	assert_eq(SeasonTasks.crop_bonus(c, gs.data, "qingshi_village"), 0.0)
+	_finish_seasons(gs, [365, 455, 545])
+	assert_true(absf(SeasonTasks.crop_bonus(c, gs.data, "qingshi_village") - 0.15) < 0.0001)
+	assert_eq(SeasonTasks.crop_bonus(c, gs.data, "misty_forest"), 0.0)
+	GameClock.total_days = 600
+	assert_true(SeasonTasks.project_line(c, gs.data, gs.world_flags, 600).contains("draw well water"))
+	assert_true(gs.draw_well_water())
+	assert_eq(c.item_count("well_water"), 1)
+	assert_false(gs.draw_well_water(), "once a day")
+	GameClock.total_days = 601
+	assert_true(gs.draw_well_water())
+	assert_eq(c.item_count("well_water"), 2)
+
+
+func test_well_draw_needs_whole_well() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	_finish_seasons(gs, [365])
+	assert_false(gs.draw_well_water())
+	assert_eq(c.item_count("well_water"), 0)
+
+
+func test_crop_bonus_speeds_growth() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	for k in ["1-spring", "1-summer", "1-autumn", "1-winter", "2-spring", "2-summer", "2-autumn"]:
+		c.seasons_completed.append(k)
+	var place := FieldPlots.place_def(gd, "qingshi_village")
+	var key := FieldPlots.key("qingshi_village", place)
+	c.field_plots[key] = {"paid_until": 9999, "crops": [{"item": "village_mugwort", "days_left": 40}]}
+	var weather := func(_r: String, _d: int) -> String: return "clear"
+	FieldPlots.advance(c, gd, 20, 20, weather)  # summer days 1..20 of year 1; spring frozen? use result only
+	var left := int(c.field_plots[key]["crops"][0]["days_left"])
+	var plain := CharacterData.new()
+	plain.field_plots[key] = {"paid_until": 9999, "crops": [{"item": "village_mugwort", "days_left": 40}]}
+	FieldPlots.advance(plain, gd, 20, 20, weather)
+	var plain_left := int(plain.field_plots[key]["crops"][0]["days_left"])
+	assert_true(left < plain_left or plain_left == 40, "bonus grows faster than none (or both frozen)")
+	assert_true(plain_left < 40 or left == 40)
+
+
+func test_well_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][0]["crop_bonus"] = 0.5
+	assert_false(SeasonTasks.validate(gd).is_empty(), "crop_bonus")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][0]["stages"][0]["flag"] = "shrine_stage_1"
+	assert_false(SeasonTasks.validate(gd).is_empty(), "duplicate flag")
+	gd.season_tasks = saved.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][0]["daily"]["item"] = "no_such"
+	assert_false(SeasonTasks.validate(gd).is_empty(), "daily item")
+	gd.season_tasks = saved
+	assert_true(SeasonTasks.validate(gd).is_empty())

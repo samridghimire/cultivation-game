@@ -3466,6 +3466,17 @@ func offer_incense() -> bool:
 	return true
 
 
+## SEASON-008: draw the day's water from the restored village well (takes no time).
+func draw_well_water() -> bool:
+	var why := SeasonTasks.can_draw(player, data, world_flags, GameClock.total_days)
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	EventBus.post(SeasonTasks.draw_daily(player, data, world_flags, GameClock.total_days), "progress")
+	EventBus.player_changed.emit()
+	return true
+
+
 ## SEASON-005: counts progress on the season's village tasks, posts the lines and pays the reward once.
 func _season_note(kind: String, target: String, n: int) -> void:
 	var day := GameClock.total_days

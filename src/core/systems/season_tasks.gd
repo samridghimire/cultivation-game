@@ -57,15 +57,117 @@ static func note(c: CharacterData, data: GameData, kind: String, target: String,
 		var key := String(st["season_key"])
 		if not c.seasons_completed.has(key):
 			c.seasons_completed.append(key)
-			var rest := restoration(data)
-			var stages: Array = rest.get("stages", [])
-			if not stages.is_empty():
-				var idx := mini(c.seasons_completed.size(), stages.size()) - 1
-				lines.append(String(stages[idx]["text"]))
-				if c.seasons_completed.size() == stages.size():
-					var qf: Dictionary = rest.get("qi_flag", {})
-					lines.append("%s stands again: Qingshi's qi rises %d%%." % [_cap(String(rest.get("name", "The shrine"))), roundi(float(qf.get("bonus", 0.0)) * 100.0)])
+			var line := _stage_line(data, c.seasons_completed.size() - 1)
+			if line != "":
+				lines.append_array(line.split("\n"))
 	return lines
+
+
+## SEASON-008: the text for the project stage that season number `n` (0-based) completes ("" when all are whole).
+static func _stage_line(data: GameData, n: int) -> String:
+	var offset := 0
+	for i in project_list(data).size():
+		var proj: Dictionary = project_list(data)[i]
+		var stages: Array = proj.get("stages", [])
+		if n < offset + stages.size():
+			var k := n - offset
+			var out := String(stages[k]["text"])
+			if k == stages.size() - 1:
+				out += "\n" + String(proj.get("done_text", ""))
+			return out.strip_edges()
+		offset += stages.size()
+	return ""
+
+
+## SEASON-008: the village projects in order: the shrine (the restoration block itself), then restoration.projects.
+static func project_list(data: GameData) -> Array[Dictionary]:
+	var rest := restoration(data)
+	var out: Array[Dictionary] = []
+	if rest.is_empty():
+		return out
+	var shrine := {"id": "shrine", "name": rest.get("name", ""), "region": rest.get("region", REGION), "stages": rest.get("stages", []),
+		"done_text": "%s stands again: Qingshi's qi rises %d%%." % [_cap(String(rest.get("name", "The shrine"))), roundi(float((rest.get("qi_flag", {}) as Dictionary).get("bonus", 0.0)) * 100.0)]}
+	out.append(shrine)
+	for p: Dictionary in rest.get("projects", []):
+		out.append(p)
+	return out
+
+
+## Stages of project `index` (0 = the shrine) reached by `c`.
+static func project_stage(c: CharacterData, data: GameData, index: int) -> int:
+	var offset := 0
+	var list := project_list(data)
+	for i in list.size():
+		var total := (list[i].get("stages", []) as Array).size()
+		if i == index:
+			return clampi(c.seasons_completed.size() - offset, 0, total)
+		offset += total
+	return 0
+
+
+## The project being worked on now (first unfinished) as {index, project, stage}; {} when all are whole.
+static func current_project(c: CharacterData, data: GameData) -> Dictionary:
+	var list := project_list(data)
+	for i in list.size():
+		var total := (list[i].get("stages", []) as Array).size()
+		var st := project_stage(c, data, i)
+		if st < total:
+			return {"index": i, "project": list[i], "stage": st}
+	return {}
+
+
+## SEASON-008: crop growth bonus (fraction of an extra day per growing day) for fields in `region_id`.
+static func crop_bonus(c: CharacterData, data: GameData, region_id: String) -> float:
+	var total := 0.0
+	var list := project_list(data)
+	for i in list.size():
+		var proj: Dictionary = list[i]
+		if String(proj.get("region", "")) == region_id and proj.has("crop_bonus"):
+			total += float(proj["crop_bonus"]) * project_stage(c, data, i)
+	return total
+
+
+## The well-like project with a `daily` block ({} when absent) and whether it is whole.
+static func daily_project(data: GameData) -> Dictionary:
+	for p: Dictionary in project_list(data):
+		if p.has("daily"):
+			return p
+	return {}
+
+
+## "" when today's draw can be made, else why not.
+static func can_draw(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	var proj := daily_project(data)
+	if proj.is_empty():
+		return "There is nothing to draw."
+	var list := project_list(data)
+	if project_stage(c, data, list.find(proj)) < (proj["stages"] as Array).size():
+		return "The %s is not restored yet." % String(proj["name"]).trim_prefix("the ")
+	if Effects.flag_active(flags, String(proj["daily"]["flag"]), day):
+		return "You have drawn today's water already."
+	return ""
+
+
+## Draws the day's item; returns the line to post ("" when not possible).
+static func draw_daily(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	if can_draw(c, data, flags, day) != "":
+		return ""
+	var d: Dictionary = daily_project(data)["daily"]
+	c.add_item(String(d["item"]), 1)
+	flags[String(d["flag"])] = {"until": day + 1}
+	return String(d["text"])
+
+
+## The Today line for the current project ("" when all are whole or only the shrine is open).
+static func project_line(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	var cur := current_project(c, data)
+	if not cur.is_empty() and int(cur["index"]) > 0:
+		var proj: Dictionary = cur["project"]
+		return "%s: %d of %d stages repaired." % [_cap(String(proj["name"])), int(cur["stage"]), (proj["stages"] as Array).size()]
+	var dp := daily_project(data)
+	if cur.is_empty() and not dp.is_empty() and can_draw(c, data, flags, day) == "":
+		return "%s is whole: draw %s today." % [_cap(String(dp["name"])), _incense_item_name(data, String(dp["daily"]["item"])).to_lower()]
+	return ""
 
 
 ## The restoration block of data/season_tasks.json ({} when absent).
@@ -88,6 +190,11 @@ static func restoration_flags(c: CharacterData, data: GameData) -> Array[String]
 		out.append(String(stages[i]["flag"]))
 	if not stages.is_empty() and n >= stages.size():
 		out.append(String((rest.get("qi_flag", {}) as Dictionary).get("flag", "")))
+	var list := project_list(data)
+	for i in range(1, list.size()):
+		var pstages: Array = list[i].get("stages", [])
+		for k in project_stage(c, data, i):
+			out.append(String(pstages[k]["flag"]))
 	return out
 
 
@@ -356,6 +463,24 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 				listed = true
 		if not listed:
 			errs.append("region '%s' qi_flags must list restoration flag '%s' with bonus %s" % [region, qflag, bonus])
+	for p: Dictionary in rest.get("projects", []):
+		var pid := String(p.get("id", ""))
+		if pid == "" or String(p.get("name", "")) == "" or not data.regions.has(String(p.get("region", ""))):
+			errs.append("season_tasks.json project '%s' needs an id, a name and a known region" % pid)
+		var pst: Array = p.get("stages", [])
+		if pst.size() < 1 or pst.size() > 8:
+			errs.append("season_tasks.json project '%s' needs 1..8 stages" % pid)
+		for st: Dictionary in pst:
+			var pf := String(st.get("flag", ""))
+			if pf == "" or String(st.get("text", "")) == "" or seen.has(pf) or pf == qflag:
+				errs.append("season_tasks.json project '%s' stage needs a unique flag and text (got '%s')" % [pid, pf])
+			seen[pf] = true
+		if p.has("crop_bonus") and (float(p["crop_bonus"]) <= 0.0 or float(p["crop_bonus"]) > 0.1):
+			errs.append("season_tasks.json project '%s' crop_bonus must be in (0, 0.1]" % pid)
+		if p.has("daily"):
+			var dd: Dictionary = p["daily"]
+			if not data.items.has(String(dd.get("item", ""))) or String(dd.get("flag", "")) == "" or String(dd.get("text", "")) == "":
+				errs.append("season_tasks.json project '%s' daily needs a known item, a flag and text" % pid)
 	var inc: Dictionary = rest.get("incense", {})
 	if not inc.is_empty():
 		var iflag := String(inc.get("flag", ""))

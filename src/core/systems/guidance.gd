@@ -358,6 +358,10 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		var incense_text := SeasonTasks.incense_line(c, data, flags, day)
 		if incense_text != "":
 			out.append(incense_text)
+	if region_id == SeasonTasks.REGION:
+		var project_text := SeasonTasks.project_line(c, data, flags, day)
+		if project_text != "":
+			out.append(project_text)
 	# 7. The season ending.
 	var ending := season_ending(c, data, day, flags)
 	if ending != "":
