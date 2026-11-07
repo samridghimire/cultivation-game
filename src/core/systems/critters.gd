@@ -104,3 +104,37 @@ static func position_at(c: Dictionary, t: float, still: bool) -> Vector2:
 	if home.size != Vector2.ZERO:
 		p = Vector2(clampf(p.x, home.position.x, home.end.x), clampf(p.y, home.position.y, home.end.y))
 	return p
+
+
+## GFX-088: how close the player must be before a critter notices, by kind.
+const FLEE_RADIUS := {"hen": 48.0, "duck": 56.0, "butterfly": 32.0}
+## ...and how far it moves at contact (a hen runs 40-60 px, a duck paddles, a butterfly rises 20 px).
+const FLEE_DIST := {"hen": 60.0, "duck": 36.0, "butterfly": 20.0}
+
+
+## Offset a critter takes to get away from the player: zero beyond `radius`, pointing directly away,
+## `max_dist` long at contact and shrinking linearly to nothing at the radius. Pure.
+static func flee_offset(critter_pos: Vector2, player_pos: Vector2, radius: float, max_dist: float) -> Vector2:
+	var d := critter_pos - player_pos
+	var dist := d.length()
+	if radius <= 0.0 or dist >= radius:
+		return Vector2.ZERO
+	var dir := Vector2.RIGHT if dist < 0.001 else d / dist
+	return dir * max_dist * (1.0 - dist / radius)
+
+
+## `p` pulled inside a pond rect (a zero rect leaves it alone). Pure.
+static func clamp_to_pond(p: Vector2, pond: Rect2) -> Vector2:
+	if pond.size == Vector2.ZERO:
+		return p
+	return Vector2(clampf(p.x, pond.position.x, pond.end.x), clampf(p.y, pond.position.y, pond.end.y))
+
+
+## Offset for critter `c` (with its wander position `p`) given the player: ducks and hens flee away,
+## butterflies rise straight up by the same strength.
+static func startle_offset(c: Dictionary, p: Vector2, player_pos: Vector2) -> Vector2:
+	var kind := String(c["kind"])
+	var away := flee_offset(p, player_pos, float(FLEE_RADIUS.get(kind, 0.0)), float(FLEE_DIST.get(kind, 0.0)))
+	if kind == "butterfly":
+		return Vector2(0.0, -away.length())
+	return away

@@ -138,6 +138,11 @@ func _start() -> void:
 	if _has_festival_flag():  # QA-198
 		_festival_shots(gs)
 		special = true
+	if OS.get_cmdline_user_args().has("--critters"):  # GFX-088: stand beside the west farmhouse hens, wait 0.5 s
+		shots.append({"name": "critters_hens", "open": func() -> void:
+			hud.get("_banner").visible = false
+			_teleport_player(Vector2(180, 424)), "close": func() -> void: pass, "settle": 40})
+		special = true
 	if OS.get_cmdline_user_args().has("--field"):  # GFX-029: a rented field with a young and a nearly ripe crop
 		_field_shots(gs, c)
 		special = true
@@ -737,7 +742,7 @@ func _process(_d: float) -> bool:
 		frames = 0  # let a frame render without it before the capture
 		banner_wait_start = -1
 		return false
-	if frames >= SETTLE_FRAMES:
+	if frames >= int(shot.get("settle", SETTLE_FRAMES)):
 		banner_wait_start = -1
 		DirAccess.make_dir_recursive_absolute(OUT_DIR)
 		var file := "%s/%s.png" % [OUT_DIR, shot["name"]]

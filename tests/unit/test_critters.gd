@@ -49,5 +49,40 @@ func test_layer_hidden_without_critters_and_still_when_reduced() -> void:
 	assert_false(layer.visible)
 	layer.setup(_region(), "Spring", 1, true, true)
 	assert_true(layer.visible)
-	assert_false(layer.is_processing())
+	assert_true(layer.is_processing(), "processes so critters can startle, even when still")
+	layer.free()
+
+
+func test_flee_offset_math() -> void:
+	var beyond := Critters.flee_offset(Vector2(100, 0), Vector2.ZERO, 48.0, 60.0)
+	assert_eq(beyond, Vector2.ZERO)
+	var near := Critters.flee_offset(Vector2(20, 0), Vector2.ZERO, 48.0, 60.0)
+	assert_true(near.x > 0.0 and absf(near.y) < 0.001, "points away")
+	var nearer := Critters.flee_offset(Vector2(5, 0), Vector2.ZERO, 48.0, 60.0)
+	assert_true(nearer.length() > near.length(), "grows toward contact")
+	assert_almost_eq(Critters.flee_offset(Vector2.ZERO, Vector2.ZERO, 48.0, 60.0).length(), 60.0)
+
+
+func test_fleeing_duck_stays_in_pond() -> void:
+	var pond := Critters.pond_at(_region(), Vector2(400, 200))
+	var p := Critters.clamp_to_pond(Vector2(9999, -50), pond)
+	assert_true(pond.grow(0.01).has_point(p))
+	var duck: Dictionary = Critters.today(_region(), "Summer", 9, true)[1]
+	var layer := CritterLayer.new()
+	layer.setup(_region(), "Summer", 9, true, false)
+	layer.player_pos = duck["pos"] + Vector2(-10, 0)
+	for i in 30:
+		layer._process(0.05)
+	assert_true(pond.grow(0.01).has_point(layer.critter_pos(1)), "duck stays on the water")
+	layer.free()
+
+
+func test_hen_runs_from_player() -> void:
+	var layer := CritterLayer.new()
+	layer.setup(_region(), "Spring", 1, true, false)
+	var start: Vector2 = layer.critter_pos(0)
+	layer.player_pos = start + Vector2(-12, 0)
+	for i in 10:
+		layer._process(0.05)
+	assert_true(layer.critter_pos(0).x > start.x + 8.0, "hen moved away after 0.5 s")
 	layer.free()

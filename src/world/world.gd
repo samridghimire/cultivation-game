@@ -779,6 +779,8 @@ func _build_celebration_lanterns(people: Array[CharacterData], stands: Dictionar
 ## Labels stay on screen as the camera moves (WU-269).
 func _process(_delta: float) -> void:
 	var origin := get_canvas_transform().origin
+	if _critters != null and player != null:
+		_critters.player_pos = player.position  # GFX-088
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
 	_track_footprints()
 	if moved:
