@@ -90,3 +90,16 @@ func test_scene_waits_for_the_contest_card() -> void:
 	root.remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+func test_face_is_drawn_at_five_times_and_card_is_short() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var card := FriendSceneCard.new()
+	root.add_child(card)
+	card.open("xiao_ling", "Xiao Ling", "Xiao Ling shows you the old swing by the river. It was her grandfather's. She smiles and says you may use it whenever you like.", "Sweet Rice Ball")
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_eq(card.face_size(), Vector2(PixelFigure.SIZE * 5))
+	var face: TextureRect = card.get_child(0).get_child(0).get_child(0)
+	assert_eq(face.stretch_mode, TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
+	assert_true(card.get_combined_minimum_size().y < 300.0, "card height %s" % card.get_combined_minimum_size().y)
+	card.queue_free()
