@@ -4,6 +4,7 @@
   "medicine": {"self_treatment_days": 7, "heal_days_per_rank": 15, "clinic_days": 3, "patient_xp_multiplier": 1.5, "patient_alignment_per_month": 3, "npc_treatment_days": 3, "npc_treatment_favor": 5, "npc_healed_favor": 10, "npc_treatment_alignment": 5},
   "injuries": [
     {"id": "qi_deviation", "name": "Qi Deviation", "description": "Qi runs wild through your meridians. Cultivating is slow and painful.", "cultivation_mult": 0.5, "combat_mult": 0.9, "heal_days": 180, "treatment_cost": 80},
+    {"id": "torn_shoulder", "name": "Torn Shoulder", "description": "A wrenched, torn shoulder. It aches with every swing, but the qi flows as ever.", "cultivation_mult": 1.0, "combat_mult": 0.9, "heal_days": 21, "treatment_cost": 8},
     {"id": "damaged_meridians", "name": "Damaged Meridians", "description": "Your meridians are torn. Qi leaks out faster than you can gather it.", "cultivation_mult": 0.25, "combat_mult": 0.8, "heal_days": 365, "treatment_cost": 250},
     {"id": "broken_bones", "name": "Broken Bones", "description": "Several bones are broken. Fighting is out of the question.", "cultivation_mult": 0.9, "combat_mult": 0.5, "heal_days": 60, "treatment_cost": 20},
     {"id": "internal_injury", "name": "Internal Injury", "description": "A blow bruised your organs. You cough blood when you exert yourself.", "cultivation_mult": 0.7, "combat_mult": 0.7, "heal_days": 120, "treatment_cost": 50},

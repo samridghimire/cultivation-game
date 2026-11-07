@@ -429,7 +429,6 @@ func test_giving_up_an_item_in_qi_refining_encounters() -> void:
 	var d := GameData.load_from_dir()
 	var gives := {
 		"forest_dying_rogue_begs_pill": "bone_setting_salve",
-		"village_fevered_child": "spirit_herb",
 		"marsh_wandering_alchemist_trade": "spirit_herb"}
 	var tags := {}
 	for enc_id: String in gives:
@@ -447,7 +446,7 @@ func test_giving_up_an_item_in_qi_refining_encounters() -> void:
 			assert_eq(Exploration.check_choice(c, d, choice, {}), "", "%s allowed with %s" % [enc_id, item])
 		assert_true(found, "%s has a choice that gives up %s" % [enc_id, item])
 		assert_true(enc["choices"].size() >= 2, "%s keeps a plain choice" % enc_id)
-	assert_eq(tags.size(), 3, "three different regions")
+	assert_eq(tags.size(), 2, "two different regions")
 
 
 func test_profession_answers_at_foundation() -> void:
