@@ -284,3 +284,14 @@ func test_lesson_lines_taught_and_unknown() -> void:
 	assert_true(String(lines[0]).contains("practice"), "first lesson is practice days")
 	if lines.size() > 1:
 		assert_true(String(lines[1]).begins_with("At "), "second lesson still unknown")
+
+
+func test_lesson_lines_reached_untaught() -> void:
+	var gs: Node = _tree().root.get_node("GameState")
+	gs.start_session(new_character())
+	var rows: Array[Dictionary] = gs.lessons_for("hunter_ma")
+	var lines: PackedStringArray = VillageBook.lesson_lines("hunter_ma", rows, gs.data, 99, "Hunter Ma")
+	assert_eq(lines[0], "Talk to Hunter Ma to learn something")
+	lines = VillageBook.lesson_lines("hunter_ma", rows, gs.data, -1, "Hunter Ma")
+	assert_true(String(lines[0]).ends_with(": ???"), "unreached keeps ???")
+	gs.end_session()

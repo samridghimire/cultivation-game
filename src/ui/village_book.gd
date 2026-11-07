@@ -420,14 +420,16 @@ func _card(e: Dictionary) -> Button:
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
-	for line in lesson_lines(id, GameState.lessons_for(id), data):
-		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else DIM)
+	for line in lesson_lines(id, GameState.lessons_for(id), data, int(e["tier_index"]), String(e["name"])):
+		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else (UIStyle.ACCENT.darkened(0.3) if line.begins_with("Talk") else DIM))
 		lesson_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(lesson_label)
 	if String(e.get("last_gift", "")) != "":
 		var gift_label := UIStyle.label(String(e["last_gift"]), 12, DIM)
 		gift_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(gift_label)
+	# WU-480: the card grows to its content (never below CARD_SIZE) so no line spills out.
+	b.custom_minimum_size.y = maxf(CARD_SIZE.y, col.get_combined_minimum_size().y + 16.0)
 	var show := func() -> void: _detail.text = people_detail(e, data)
 	b.focus_entered.connect(show)
 	b.mouse_entered.connect(show)
@@ -470,12 +472,15 @@ static func effect_short(effects: Dictionary, data: GameData) -> String:
 
 
 ## WU-477: one text line per lesson of `npc_id`: "Taught you: <effect>" or "At <tier>: ???".
-static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData) -> PackedStringArray:
+## WU-480: a lesson whose tier is reached (`tier_index` >= its tier) but not yet taught reads "Talk to <name> to learn something".
+static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData, tier_index: int = -1, npc_name: String = "") -> PackedStringArray:
 	var lines: PackedStringArray = []
 	var lessons := Folk.lessons_of(data, npc_id)
 	for i in rows.size():
 		if bool(rows[i]["taught"]):
 			lines.append("Taught you: " + effect_short(lessons[i].get("effects", {}), data))
+		elif tier_index >= int(lessons[i].get("tier", 0)):
+			lines.append("Talk to %s to learn something" % (npc_name if npc_name != "" else "them"))
 		else:
 			lines.append("At %s: ???" % rows[i]["tier_name"])
 	return lines
