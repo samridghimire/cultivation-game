@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-07 [C-320] The Mist-Crowned Tiger can be backed away from or paid off with venison, not only fought.
+- 2026-11-07 [CRIT-001] Qingshi's hens leave an egg by the coop some days; pick it up.
+- 2026-11-07 [WU-476] The friend scene card shows the villager's face in a framed portrait.
+- 2026-11-07 [SEASON-010] The village talks about each stage of the Founder's Old Well.
+- 2026-11-07 [GUIDE-216] Journal fight and festival lines match the Next steps wording.
+- 2026-11-07 [GFX-090] The festival square sits in the middle of Qingshi with room for a ring of villagers.
+- 2026-11-07 [GFX-087] The Founder's Old Well is visibly rebuilt stage by stage.
+- 2026-11-07 [FOLK-020] Close friends in the village can teach you a lasting lesson.
+- 2026-11-07 [C-319] Every named person in the wider world keeps a daily routine of work, market, shelter and rest.
+- 2026-11-07 [C-311] Village season tasks have a second set each season and a seasonal keepsake reward.
+- 2026-11-07 [FOLK-019] Named villagers remember your gifts and the village news when you talk to them.
+- 2026-11-07 [WU-475] Crowds show only the nearest names, and the [E] prompt stays near its person.
+- 2026-11-07 [RV-018] Draw water at the Founder's Old Well once it is restored.
 - 2026-11-07 [WU-474] The interact prompt sits beside the person as a small chip.
 - 2026-11-07 [QA-202] The HUD no longer leaks signal connections when the world is rebuilt.
 - 2026-11-07 [FOLK-017] Elder Mo, Xiao Ling and Hunter Ma keep their own days: work, market, shelter from rain, the festival, a day of rest.

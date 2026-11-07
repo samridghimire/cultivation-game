@@ -2,6 +2,21 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-07 (planner, 18:10 UTC)
+- 13 tasks landed (RV-018, WU-475, FOLK-019, C-311, C-319, FOLK-020, GFX-087, GFX-090, GUIDE-216, SEASON-010, WU-476,
+  CRIT-001, C-320). Review aa54fa8..ac23991 merged RV-018's duplicate well into the Founder's Old Well inline.
+- **Screenshots are broken on main** since GFX-087: tests/sim/screenshot_first_hour.gd names `Well`, whose script uses the
+  GameState autoload, so the `-s` script fails to compile and the run exits 0 with no PNGs -> QA-205 (P0). Local workaround
+  (do not commit): replace `Well.project_index(gs.data)` with `load("res://src/world/interactables/well.gd").project_index(gs.data)`.
+  A fresh container also needs `tools/godot.sh --headless --path . --import` before the first shot.
+- Planner shots (`--festival --friend-scene --well=3`, 1280x800): friend card portrait good; whole well (roof, ribbon) good.
+  Festival: [E] chip at the top of the screen, a crowd figure on the player -> WU-478 (spec); square not festive -> GFX-093.
+  Xiao Ling's rain scene on a clear day -> FOLK-021 (spec file).
+- New: ENC-012 (injury effect, tag offerings) -> C-324, GUIDE-217 eggs in Today, GFX-092 pickup floats + gift icon, WU-479
+  lesson card, C-323 festival spots. Systems has 3 ready tasks; ideas for more: a Qi Refining great-beast step after the
+  capped first beast (C-317 note), a third village project once the owner answers SEASON-008.
+- Next planner: view WU-478/GFX-093 festival shots once QA-205 lands; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-07 (planner, 12:10 UTC)
 - 15 tasks landed (WU-472, GFX-088, GFX-089, WU-473, WU-474, FOLK-016, GUIDE-215, SEASON-009, FOLK-017, FOLK-018,
   SEASON-008, C-312, C-318, C-316, QA-202). Review 3f308f5..aa54fa8 filed RV-018 (claimed 11:50).
