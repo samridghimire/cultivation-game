@@ -1,7 +1,7 @@
 class_name Well
 extends Interactable
-## RV-018: Qingshi's Founder's Old Well (SEASON-008). The drawn well is the solid landmark just beside this bucket place; this place only
-## labels it "(n/3)" while the project is unfinished and, once whole, offers the daily "Draw water".
+## RV-018: helpers for the well project (SEASON-008). The Founder's Old Well is the `inheritance` place in Qingshi
+## (InheritanceGrounds draws it and adds `project_options()`); this script stays usable as a `well` place type for data.
 
 const PROJECT_ID := "well"
 
@@ -36,10 +36,13 @@ func label_text() -> String:
 
 
 func get_options() -> Array[Dictionary]:
+	return project_options()
+
+
+## A disabled need line while the well is unfinished, then the daily "Draw water" (disabled with can_draw's reason).
+static func project_options() -> Array[Dictionary]:
 	var p := progress(GameState.player, GameState.data)
 	if GameState.player == null or p[1] == 0 or p[0] < p[1]:
 		return [{"label": need_line(p[0], p[1]), "action": func(): pass, "disabled": true}]
 	var why := SeasonTasks.can_draw(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days)
 	return [{"label": "Draw water", "action": GameState.draw_well_water, "disabled": why != "", "reason": why}]
-
-

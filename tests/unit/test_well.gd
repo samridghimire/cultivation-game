@@ -1,5 +1,5 @@
 extends TestCase
-## RV-018: the Old Well place offers the daily draw once the well project is whole.
+## RV-018: the Founder's Old Well (inheritance place) offers the daily draw once the well project is whole.
 
 func _gs() -> Node:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
@@ -12,36 +12,31 @@ func _start() -> CharacterData:
 	return c
 
 
-func test_well_place_exists_clear_of_others() -> void:
-	var gs := _start()
-	var well := Vector2.ZERO
-	var found := false
+func test_draw_lives_on_the_founder_well_only() -> void:
+	_start()
+	var founder := 0
 	for p: Dictionary in _gs().data.regions["qingshi_village"]["places"]:
-		if p["type"] == "well":
-			found = true
-			well = Vector2(p["pos"][0], p["pos"][1])
-	assert_true(found, "well place in qingshi_village")
-	for p: Dictionary in _gs().data.regions["qingshi_village"]["places"]:
-		if p["type"] != "well":
-			var q := Vector2(p["pos"][0], p["pos"][1])
-			assert_true(q.distance_to(well) >= 80.0, "%s is clear of the well" % p["display_name"])
+		assert_true(p["type"] != "well", "no second well place beside the Founder's Old Well")
+		if p["type"] == "inheritance" and p["display_name"] == InheritanceGrounds.WELL_NAME:
+			founder += 1
+	assert_eq(founder, 1, "the Founder's Old Well is the inheritance place")
 
 
 func test_option_disabled_then_enabled_and_drawn_once() -> void:
 	var c := _start()
 	var gs := _gs()
-	var node := Well.new()
-	node.display_name = "Old Well"
+	var node := InheritanceGrounds.new()
+	node.display_name = InheritanceGrounds.WELL_NAME
 	var shrine_n := (SeasonTasks.restoration(gs.data).get("stages", []) as Array).size()
 	var seasons: Array = []
 	for i in shrine_n + 2:
 		seasons.append("s%d" % i)
 	c.seasons_completed.assign(seasons)
-	assert_eq(node.label_text(), "Old Well (2/3)")
+	assert_eq(node.label_text(), "Founder's Old Well (2/3)")
 	assert_true(node.get_options()[0]["disabled"], "no draw before stage 3")
 	seasons.append("last")
 	c.seasons_completed.assign(seasons)
-	assert_eq(node.label_text(), "Old Well")
+	assert_eq(node.label_text(), "Founder's Old Well")
 	var opt: Dictionary = node.get_options()[0]
 	assert_eq(opt["label"], "Draw water")
 	assert_false(opt["disabled"])

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: aa54fa8
+Last reviewed commit: ac23991
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1614,3 +1614,19 @@ Last reviewed commit: aa54fa8
     Headman Zhou too); festival offsets around the square are not checked against stalls; a well stage posts
     "season_done" news, not a project line; gift memory and village news reach only generated villagers who chat
     (named NPCs with dialogue files never say them, per FOLK-018's follow-up).
+- 2026-11-07 (reviewer, 2nd run): reviewed aa54fa8..ac23991 (RV-018, WU-475, FOLK-019, C-311, C-319, FOLK-020, GFX-087,
+  GFX-090, GUIDE-216; [PLAN] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (FOLK-020's `lessons_taught` defaults to {} and is in the every-field save test); no binary assets (well art is code-drawn).
+  - Fixed (RV-018 x GFX-087, duplicate work): RV-018 added a new `well` place "Old Well" by the workshop landmark, against
+    the planner note that the project lives on the Founder's Old Well (`inheritance` place); GFX-087 then labelled that one
+    "(n/3)" too, so Qingshi showed two "(n/3)" wells and only the wrong one could draw water. The extra place is removed
+    from regions.json; `Well.project_options()` (need line / Draw water) is now added at the top of the Founder's Old
+    Well's options (inheritance options kept). test_well checks there is no second well place and drives the draw
+    through InheritanceGrounds.
+  - FOLK-019 (one remembered line, news once per item per NPC), FOLK-020 (validation as specced, once per NPC per day,
+    taught from the tier hook and chat/dialogue), C-311 (payout items exist and are validated), C-319, GFX-090 (square
+    160 px from edges, ring off stalls), GUIDE-216 (ends_phrase matches exclusive end_day; pill gap trims the new prefix),
+    WU-475 OK.
+  - Notes, not filed: FOLK-020 does not queue a lesson behind the festival contest card (spec asked for it), and
+    `check_friendships` tries every lesson NPC, so a lesson can arrive while the teacher is in another region; WU-475
+    skipped the 0.15 s fade; GFX-087/GFX-090/WU-475 shots were never rendered.

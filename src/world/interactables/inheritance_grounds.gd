@@ -116,6 +116,8 @@ func get_options() -> Array[Dictionary]:
 	var c := GameState.player
 	var data := GameState.data
 	var today: int = GameClock.total_days
+	if is_founder_well() and Well.progress(c, data)[1] > 0:
+		options.append_array(Well.project_options())  # RV-018 review: the well project's draw lives on this place
 	for id in Inheritances.in_region(data, GameState.current_region):
 		var def := Inheritances.inheritance(data, id)
 		if today < int(def.get("appears_years", 0)) * Calendar.DAYS_PER_YEAR:
