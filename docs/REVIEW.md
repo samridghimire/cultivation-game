@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3f308f5
+Last reviewed commit: aa54fa8
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1596,3 +1596,21 @@ Last reviewed commit: 3f308f5
   - Notes, not filed: a Qi Refining player who beat a capped first beast has no great beast there until Foundation (by
     C-317's design); WU-467 picks the card's figure by NPC name (a namesake shows the wrong look) and a scene arriving
     while the contest card is up waits until the next dialogue closes; the "(J)" journal hints are keyboard-only labels.
+- 2026-11-07 (reviewer): reviewed 3f308f5..aa54fa8 (FOLK-015, WILD-020, WU-470, C-312 + baseline, SEASON-008, FOLK-016,
+  GUIDE-215, WU-472, SEASON-009, FOLK-018, GFX-089, GFX-088, C-318, WU-473, C-316, FOLK-017, QA-202; [PLAN]/[REVIEW]
+  skipped). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (news, gift memory and the well's daily draw are
+  world flags; project stages derive from `seasons_completed`); no binary assets.
+  - Fixed (SEASON-008, save): field crops keep a fractional `bonus_acc` for the well's growth bonus, but
+    `CharacterData.from_dict` rebuilt crops as {item, days_left} only, so every load threw the partial extra day away.
+    It is kept now; the every-field save test covers it.
+  - Filed RV-018 (SEASON-008): `GameState.draw_well_water` has no caller (the well is only a landmark), yet the Today
+    line tells the player to draw well water once the well is whole; and the season board still says "the old shrine:
+    4 of 4 stages restored" instead of naming the current project.
+  - SEASON-009 (no `["tasks"]` reader left), FOLK-017 (spot priority as specced; bound method on days_advanced),
+    FOLK-015/C-318 (news lines fit every subject kind), FOLK-016, FOLK-018, GUIDE-215 (nearest first, odds once), WILD-020
+    (ongoing lines skip Tomorrow reminders), C-312 (baseline rows OK), GFX-088, GFX-089, WU-470, WU-472, WU-473, QA-202,
+    C-316 OK.
+  - Notes, not filed: FOLK-017 gave spots only to Elder Mo, Xiao Ling and Hunter Ma (the spec named Farmer Tian and
+    Headman Zhou too); festival offsets around the square are not checked against stalls; a well stage posts
+    "season_done" news, not a project line; gift memory and village news reach only generated villagers who chat
+    (named NPCs with dialogue files never say them, per FOLK-018's follow-up).

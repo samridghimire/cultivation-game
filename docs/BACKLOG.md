@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-018 | world-ui | todo | (Review 3f308f5..aa54fa8, SEASON-008 follow-up.) **The well you can draw from.** `GameState.draw_well_water()` has no caller, yet once the Founder's Old Well is whole the Today line says "The Founder's Old Well is whole: draw well water today." and done_text promises a daily draw: the player cannot do it. Qingshi's well is only a `PixelLandmark` (data/regions.json landmark kind `well`). Fix: make the Qingshi well interactable (like src/world/interactables/shrine.gd: label "Old Well (n/3)" from `SeasonTasks.project_stage(player, data, 1)` while unfinished, a disabled need line until whole, then a "Draw water" option calling `GameState.draw_well_water`, disabled with `SeasonTasks.can_draw`'s reason), keep it solid and 40 px clear of other places, and make src/ui/season_board.gd's stage line name the current project (`SeasonTasks.current_project`) instead of "the old shrine: 4 of 4 stages restored" forever. *Tests:* option disabled before stage 3, enabled after, drawn once a day; board line names the well after the shrine is whole. Gamepad focus as other interactables. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-11-07 00:10): 13 tasks landed since 18:10 (GFX-085, WU-469, WU-471, GFX-086, WU-467, WU-470, FOLK-014,

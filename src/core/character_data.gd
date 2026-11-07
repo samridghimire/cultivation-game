@@ -432,7 +432,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			var crops: Array = []
 			for crop in saved.get("crops", []):
 				if crop is Dictionary:
-					crops.append({"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))})
+					var saved_crop := {"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))}
+					if crop.has("bonus_acc"):
+						saved_crop["bonus_acc"] = float(crop["bonus_acc"])  # SEASON-008: the well's partial extra growing day
+					crops.append(saved_crop)
 			var entry := {"paid_until": int(saved.get("paid_until", 0)), "crops": crops}
 			if saved.has("watered_day"):
 				entry["watered_day"] = int(saved["watered_day"])
