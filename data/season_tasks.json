@@ -27,9 +27,14 @@
           {"id": "spring_bream", "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
           {"id": "spring_petals", "text": "Gather 3 Peach Blossom Petals for the shrine.", "kind": "gather", "target": "peach_blossom_petal", "count": 3},
           {"id": "spring_stag", "text": "Drive off a Fog-Antler Stag that is trampling the fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1}
+        ],
+        [
+          {"id": "spring_carp", "text": "Land 2 Silver Carp for the Qingming offering table.", "kind": "catch", "target": "silver_carp", "count": 2},
+          {"id": "spring_mugwort", "text": "Gather 4 Village Mugwort for the Qingming rice cakes.", "kind": "gather", "target": "village_mugwort", "count": 4},
+          {"id": "spring_qingming", "text": "Join the Qingming Festival contest.", "kind": "contest", "target": "qingming_festival", "count": 1}
         ]
       ],
-      "payout": {"stones": 60, "renown": 2, "favor_all": 1}
+      "payout": {"stones": 60, "renown": 2, "favor_all": 1, "item": "paper_lantern"}
     },
     "summer": {
       "sets": [
@@ -37,9 +42,14 @@
           {"id": "summer_bass", "text": "Land a Lotus Bass from the forest pond.", "kind": "catch", "target": "lotus_bass", "count": 1},
           {"id": "summer_grass", "text": "Gather 2 Qi Condensing Grass for the elder's tonic.", "kind": "gather", "target": "qi_condensing_grass", "count": 2},
           {"id": "summer_boats", "text": "Race in the Dragon Boat Festival.", "kind": "contest", "target": "dragon_boat_festival", "count": 1}
+        ],
+        [
+          {"id": "summer_koi", "text": "Land a Mist Koi from the forest pond.", "kind": "catch", "target": "mist_koi", "count": 1},
+          {"id": "summer_herb", "text": "Gather 3 Spirit Herbs for the summer fever tea.", "kind": "gather", "target": "spirit_herb", "count": 3},
+          {"id": "summer_boar", "text": "Drive a Wild Boar out of the forest edge.", "kind": "hunt", "target": "wild_boar", "count": 1}
         ]
       ],
-      "payout": {"stones": 80, "renown": 2, "favor_all": 1}
+      "payout": {"stones": 80, "renown": 2, "favor_all": 1, "item": "realgar_wine"}
     },
     "autumn": {
       "sets": [
@@ -47,9 +57,14 @@
           {"id": "autumn_roach", "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
           {"id": "autumn_fox", "text": "Hunt a Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
           {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
+        ],
+        [
+          {"id": "autumn_eel", "text": "Land 2 Marsh Eels for the harvest soup.", "kind": "catch", "target": "marsh_eel", "count": 2},
+          {"id": "autumn_dew", "text": "Gather 3 Dew Grass before the first frost.", "kind": "gather", "target": "dew_grass", "count": 3},
+          {"id": "autumn_moon", "text": "Join the Mid-Autumn Festival contest.", "kind": "contest", "target": "mid_autumn_festival", "count": 1}
         ]
       ],
-      "payout": {"stones": 100, "renown": 2, "favor_all": 1}
+      "payout": {"stones": 100, "renown": 2, "favor_all": 1, "item": "moon_cake"}
     },
     "winter": {
       "sets": [
@@ -57,9 +72,14 @@
           {"id": "winter_perch", "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
           {"id": "winter_wolf", "text": "Hunt a Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},
           {"id": "winter_lanterns", "text": "Join the Lantern Festival contest.", "kind": "contest", "target": "lantern_festival", "count": 1}
+        ],
+        [
+          {"id": "winter_carp", "text": "Land 2 Silver Carp for the winter larder.", "kind": "catch", "target": "silver_carp", "count": 2},
+          {"id": "winter_iron", "text": "Gather 2 Iron Essence for the village smith.", "kind": "gather", "target": "iron_essence", "count": 2},
+          {"id": "winter_market", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
         ]
       ],
-      "payout": {"stones": 120, "renown": 2, "favor_all": 1}
+      "payout": {"stones": 120, "renown": 2, "favor_all": 1, "item": "osmanthus_wine"}
     }
   }
 }

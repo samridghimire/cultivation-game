@@ -368,7 +368,7 @@ func test_sets_rotate_by_year() -> void:
 	assert_eq(String(SeasonTasks.tasks_for(gd, y2)[0]["id"]), "spring_bream_b")
 	assert_eq(String(SeasonTasks.tasks_for(gd, y3)[0]["id"]), "spring_bream", "wraps")
 	gd.season_tasks = saved
-	assert_eq(String(SeasonTasks.tasks_for(gd, y2)[0]["id"]), "spring_bream", "one set repeats")
+	assert_eq(String(SeasonTasks.tasks_for(gd, y2)[0]["id"]), "spring_carp", "C-311: shipped data has a second set")
 	assert_true(year_len >= 0)
 
 
