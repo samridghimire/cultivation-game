@@ -76,3 +76,14 @@ func test_prompt_rect_blocked_stays_near_figure() -> void:
 	var avoid: Array[Rect2] = [Rect2(0, 400, 1280, 400)]
 	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(180, 30), figure)
 	assert_true(r.get_center().distance_to(figure) < 120.0)
+
+
+## WU-478: with every nearby spot occupied the chip is within 120 px of the figure (never the screen top).
+func test_prompt_rect_stays_near_figure_in_a_crowd() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var figure := Vector2(640, 610)
+	var label := Rect2(560, 520, 160, 20)
+	var avoid: Array[Rect2] = [Rect2(0, 0, 1280, 400), Rect2(400, 400, 500, 280)]
+	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(300, 30), figure)
+	assert_true(r.get_center().distance_to(figure) <= HUD.PROMPT_MAX_FROM_FIGURE + 1.0, "near the figure")
+	assert_true(r.position.y > 100.0, "not at the top")

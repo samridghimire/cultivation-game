@@ -132,3 +132,15 @@ func test_festival_ring_spacing_and_blockers() -> void:
 func test_qingshi_square_is_clear() -> void:
 	var sq: Array = data().regions["qingshi_village"]["festival_square"]
 	assert_true(float(sq[0]) >= 160.0 and float(sq[1]) >= 160.0 and float(sq[0]) <= 1440.0 and float(sq[1]) <= 840.0)
+
+
+## WU-478: nobody stands within 28 px of the player, even when the player stands on a ring slot.
+func test_festival_ring_keeps_clear_of_player() -> void:
+	var blockers: Array[Rect2] = []
+	var center := Vector2(660, 800)
+	var base := Folk.festival_ring(center, 12, blockers)
+	var player: Array[Vector2] = [base[3]]
+	var ring := Folk.festival_ring(center, 12, blockers, player)
+	assert_eq(ring.size(), 12)
+	for p in ring:
+		assert_true(p.distance_to(player[0]) >= Folk.FESTIVAL_GAP, "clear of the player")

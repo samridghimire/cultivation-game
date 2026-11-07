@@ -365,6 +365,19 @@ func _generated_villager() -> Node2D:
 
 
 ## Moves the player and snaps the smoothed camera there, so the shot frames the spot at once (WU-411).
+## WU-478: the first spot (scanning outward from `want`) at least 40 px from every villager.
+func _free_spot_near(want: Vector2) -> Vector2:
+	var figures: Array[Vector2] = []
+	for node in world.find_children("*", "Interactable", true, false):
+		figures.append((node as Node2D).position)
+	for r in [0.0, 40.0, 80.0, 120.0]:
+		for k in 8:
+			var p: Vector2 = want + Vector2.from_angle(TAU * k / 8.0) * r
+			if figures.all(func(f: Vector2) -> bool: return f.distance_to(p) >= 40.0):
+				return p
+	return want
+
+
 func _teleport_player(pos: Vector2) -> void:
 	var player: Node2D = world.get_node("Player")
 	player.position = pos
@@ -630,7 +643,7 @@ func _festival_shots(gs: Node) -> void:
 			var stalls: Array = world.get("_stalls")
 			print("festival: %d stall(s), caption=%s" % [stalls.size(), stalls[0].get("caption") if not stalls.is_empty() else "-"])
 			if not stalls.is_empty():
-				_teleport_player(stalls[0].position + Vector2(0, 90)), "close": func() -> void: pass})
+				_teleport_player(_free_spot_near(stalls[0].position + Vector2(0, 90))), "close": func() -> void: pass})
 	if args.has("--contest"):
 		shots.append({"name": "contest_card", "open": func() -> void:
 			hud.get("_banner").visible = false

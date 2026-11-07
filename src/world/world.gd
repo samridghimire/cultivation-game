@@ -770,7 +770,7 @@ func _build_generated_npcs() -> void:
 			var blockers := Folk.festival_blockers(GameState.data, GameState.current_region)
 			for stall in _stalls:
 				blockers.append(Rect2(stall.position - Vector2(35, 30), Vector2(70, 60)))
-			crowd = Folk.festival_ring(centre as Vector2 - Vector2(0, 20), mini(neighbours.size(), FestivalContest.CROWD_MAX), blockers)
+			crowd = Folk.festival_ring(centre as Vector2 - Vector2(0, 20), mini(neighbours.size(), FestivalContest.CROWD_MAX), blockers, [player.position] as Array[Vector2])
 		for k in crowd.size():
 			stands[neighbours[k].id] = crowd[k]
 	for i in people.size():

@@ -1249,6 +1249,7 @@ func _log_line(color: Color, text: String) -> String:
 func _on_target_changed(display_name: String) -> void:
 	_target_name = display_name
 	_refresh_key_hints()
+	_place_prompt()  # WU-478: the chip follows its target at once, not at the next modal change
 
 
 ## Rebuilds the key bar and the interact prompt from the current bindings.
@@ -1972,6 +1973,8 @@ func _process(delta: float) -> void:
 	if _fade_timer <= 0.0:
 		_fade_timer = 0.1
 		_fade_targets = _compute_fade_targets()
+		if _target_name != "" and _prompt != null and _prompt.visible:
+			_place_prompt()  # WU-478: the player and camera move; keep the chip beside its figure
 	if _status_panel == null or _log_panel == null:
 		return
 	var k := 1.0 if MotionFx.reduced() else minf(1.0, 8.0 * delta)

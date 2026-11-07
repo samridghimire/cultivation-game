@@ -1462,8 +1462,9 @@ const SOLID_LANDMARKS: Array[String] = ["house", "well", "wall", "cliff", "lante
 
 
 ## GFX-090: `count` spots on rings (radius 70-110 px) around `center`, evenly spaced, at least 28 px apart and
-## 24 px clear of every blocker rect. Pure and deterministic; may return fewer if the rings are crowded out.
-static func festival_ring(center: Vector2, count: int, blockers: Array[Rect2]) -> Array[Vector2]:
+## 24 px clear of every blocker rect. WU-478: `keep_clear` points (the player) get no slot within 28 px.
+## Pure and deterministic; may return fewer if the rings are crowded out.
+static func festival_ring(center: Vector2, count: int, blockers: Array[Rect2], keep_clear: Array[Vector2] = []) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	for ring in FESTIVAL_RADII.size():
 		var radius := FESTIVAL_RADII[ring]
@@ -1479,6 +1480,9 @@ static func festival_ring(center: Vector2, count: int, blockers: Array[Rect2]) -
 					break
 			for o in out:
 				if ok and pos.distance_to(o) < FESTIVAL_GAP:
+					ok = false
+			for q in keep_clear:
+				if ok and pos.distance_to(q) < FESTIVAL_GAP:
 					ok = false
 			if ok:
 				out.append(pos)
