@@ -858,6 +858,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio flame_tailed_fox       encounter wild_flame_fox     evadable                 entry  48%  peak  89%  talisman  96%  bare   0%  veteran on appearance 100%  HARD
   Foundatio grey_fang_alpha        encounter tide_alpha_pack    forced                   entry  57%  peak  98%  talisman  96%  bare   0%  veteran on appearance  97%  OK
   Foundatio grey_fang_alpha        encounter wild_ridge_wolf_al forced                   entry  57%  peak  98%  talisman  96%  bare   0%  veteran on appearance  97%  OK
+  Foundatio grey_fang_alpha        roamer myriad_peaks_ridge    evadable                 entry  57%  peak  98%  talisman  96%  bare   0%  veteran on appearance  97%  OK
   Foundatio ice_soul_spider        encounter forest_ice_spider  evadable                 entry  41%  peak  67%  talisman  93%  bare   0%  veteran on appearance  98%  HARD
   Foundatio iron_horn_rhino        bounty iron_horn_rhino_bount evadable                 entry  66%  peak  66%  talisman  97%  bare   0%  veteran on appearance  99%  OK
   Foundatio iron_horn_rhino        encounter mountain_iron_rhin evadable                 entry  42%  peak  66%  talisman  84%  bare   0%  veteran on appearance  97%  HARD
@@ -868,13 +869,16 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio jade_python            encounter marsh_sunken_serpe evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Foundatio jade_python            realm sunken_sword_tomb floo forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Foundatio market_debt_collector  encounter city_debt_collecto forced                   entry  14%  peak  80%  talisman  76%  bare   0%  veteran on appearance  82%  HARD
+  Foundatio mire_scale_caiman      roamer withered_bone_marsh   evadable                 entry  84%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio mist_crowned_tiger     encounter forest_crowned_tig forced                   entry  19%  peak  84%  talisman  75%  bare   0%  veteran on appearance  79%  HARD
   Foundatio mist_fox               roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Foundatio mist_shrouded_leopard  encounter forest_mist_leopar forced                   entry  83%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio mist_shrouded_leopard  roamer misty_forest          evadable                 entry  83%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio mist_shrouded_leopard  roamer withered_bone_marsh   evadable                 entry  83%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         choice village_beast_at_the_ forced                   entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         encounter forest_moon_elk    forced                   entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio moon_ridge_elk         roamer azure_peak            evadable                 entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Foundatio moon_ridge_elk         roamer myriad_peaks_ridge    evadable                 entry  79%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Foundatio old_bog_king_toad      great roamer return withered evadable                 entry  66%  peak 100%  talisman  99%  bare   0%  veteran on appearance  99%  OK
   Foundatio pavilion_treasure_guardian trial myriad_treasure_pavili forced                   entry  68%  peak  97%  talisman  99%  bare   0%  veteran on appearance  98%  OK
   Foundatio roadside_rogue_cultivator bounty roadside_rogue_bounty evadable                 entry  72%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
@@ -1087,6 +1091,7 @@ Win rate at stage 0 of each realm (no talismans):
   old_bog_king_toad              0%         0%        66%       100%       100%
   broken_crown_crane             0%         0%        66%       100%       100%
   cracked_horn_ram               0%         0%        67%       100%       100%
+  mire_scale_caiman              0%         0%        84%       100%       100%
   mist_shrouded_leopard          0%         0%        83%       100%       100%
   mist_crowned_tiger             0%         0%        19%       100%       100%
   grey_fang_alpha                0%         0%        57%       100%       100%

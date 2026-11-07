@@ -623,3 +623,30 @@ func test_great_beasts_for_every_realm() -> void:
 			assert_eq(String(g.get("max_realm", "")), "qi_refining", "%s: the first beast is Qi Refining only" % rid)
 		var ret: Dictionary = g.get("return", {})
 		assert_eq(String(d.enemies[String(ret["enemy"])]["realm"]), "foundation_establishment", "%s: the return beast is a Foundation foe" % rid)
+
+
+## C-312: every region with roamers keeps a Foundation roster; the weakest beasts step aside for it.
+func test_every_roaming_region_has_foundation_beasts() -> void:
+	var d := _gdata()
+	var fe := d.realm_index_of("foundation_establishment")
+	for region_id: String in d.regions:
+		var def: Dictionary = d.regions[region_id].get("roamers", {})
+		if def.is_empty():
+			continue
+		var has_foundation := false
+		for entry: Dictionary in def["enemies"]:
+			if String(d.enemies[String(entry["enemy"])].get("realm", "")) != "foundation_establishment":
+				continue
+			if entry.has("min_realm") and d.realm_index_of(String(entry["min_realm"])) > fe:
+				continue
+			if entry.has("max_realm") and d.realm_index_of(String(entry["max_realm"])) < fe:
+				continue
+			has_foundation = true
+		assert_true(has_foundation, "%s has a Foundation roamer entry" % region_id)
+		var seen := {}  # season -> Foundation-realm roamers met
+		for day in range(0, 360):
+			for r in Wildlife.roamers(d, region_id, day, fe, {}):
+				if String(d.enemies[String(r["enemy"])]["realm"]) == "foundation_establishment":
+					var season := Calendar.season_of(day)
+					seen[season] = int(seen.get(season, 0)) + 1
+		assert_true(seen.size() >= 1, "%s: a Foundation Early player meets Foundation beasts" % region_id)

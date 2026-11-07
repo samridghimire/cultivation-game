@@ -22,11 +22,11 @@ const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
 	["cloud_crane", "crane"], ["toad", "toad"], ["_ram", "ram"], ["ram_", "ram"],
-	["wolf", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
+	["wolf", "wolf"], ["alpha", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
 	["boar", "boar"], ["pig", "boar"],
 	["stag", "deer"], ["deer", "deer"], ["antler", "deer"], ["elk", "deer"], ["ape", "ape"], ["monkey", "ape"],
 	["tiger", "tiger"], ["leopard", "tiger"], ["cat", "tiger"],
-	["snake", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
+	["snake", "snake"], ["caiman", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
 	["bird", "bird"], ["crow", "bird"], ["hawk", "bird"], ["crane", "bird"], ["eagle", "bird"], ["roc", "bird"], ["condor", "bird"],
 ]
 
