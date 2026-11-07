@@ -34,6 +34,13 @@ static func well_label(base: String, stage: int, total: int) -> String:
 	return base if total == 0 or stage >= total else "%s (%d/%d)" % [base, stage, total]
 
 
+## WU-481: like well_label but safe for an empty or short progress array (no session): the plain name.
+static func well_label_for(base: String, progress: Array) -> String:
+	if progress.size() < 2:
+		return base
+	return well_label(base, int(progress[0]), int(progress[1]))
+
+
 ## Which drawing a stage uses: "choked", "rope", "roofed" or "ribboned".
 static func well_variant(stage: int) -> String:
 	return ["choked", "rope", "roofed", "ribboned"][clampi(stage, 0, 3)]
@@ -42,15 +49,15 @@ static func well_variant(stage: int) -> String:
 func label_text() -> String:
 	if not is_founder_well():
 		return super()
-	var p := well_progress()
-	return well_label(display_name, p[0], p[1])
+	return well_label_for(display_name, well_progress())
 
 
 func _refresh() -> void:
 	super()
 	if not is_founder_well():
 		return
-	var stage := well_progress()[0]
+	var prog := well_progress()
+	var stage: int = prog[0] if prog.size() > 0 else 0
 	if _last_stage >= 0 and stage > _last_stage and is_inside_tree() and not MotionFx.reduced():
 		var puff := ConfettiPuff.new()
 		puff.position = position + Vector2(0, -size.y * 0.3)
@@ -67,7 +74,7 @@ func _process(delta: float) -> void:
 func draw_generated_art() -> bool:
 	if not is_founder_well():
 		return false
-	draw_well(self, size / 2.0, well_progress()[0], 0.0 if MotionFx.reduced() else _time)
+	draw_well(self, size / 2.0, (well_progress() + [0])[0], 0.0 if MotionFx.reduced() else _time)
 	return true
 
 

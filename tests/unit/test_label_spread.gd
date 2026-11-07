@@ -31,6 +31,11 @@ func test_great_beast_outranks_a_villager_but_not_the_target() -> void:
 	assert_eq(Interactable.label_rank(plain, player), Interactable.label_rank(villager, player), "ordinary roamers rank with NPCs")
 	villager.highlighted = true
 	assert_true(Interactable.label_rank(villager, player) < Interactable.label_rank(great, player))
+	var place := Interactable.new()
+	place.display_name = "Hunters' Bounty Board"
+	place.position = Vector2(900, 300)
+	assert_true(Interactable.label_rank(place, player) < Interactable.label_rank(plain, player), "places outrank moving labels")
+	place.free()
 	for n: Node in [villager, great, plain]:
 		n.free()
 

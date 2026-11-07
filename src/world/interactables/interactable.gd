@@ -302,11 +302,19 @@ const RESPREAD_INTERVAL := 0.25
 const RESPREAD_MOVE := 4.0
 
 
-## GFX-069: 0 = highlighted (or faded and within FADED_NEAR of the player), 1 = a great beast, 2 = everything else.
+## GFX-069: 0 = highlighted (or faded and within FADED_NEAR of the player), 1 = a great beast, 2 = places, 3 = villagers and other beasts.
 static func label_rank(node: Interactable, player_pos: Vector2) -> int:
 	if node.highlighted or (node.label_covered and node.position.distance_to(player_pos) <= FADED_NEAR):
 		return 0
-	return 1 if node.get("great") == true else 2
+	if node.get("great") == true:
+		return 1
+	# WU-481: place labels never move; villagers and wandering beasts yield to them.
+	return 3 if is_moving_label(node) else 2
+
+
+## WU-481: whether a node's label belongs to something that walks (a villager or a wandering beast).
+static func is_moving_label(node: Interactable) -> bool:
+	return node.get("npc_id") != null or node is Roamer
 
 
 ## GFX-069: whether a label re-spread is due: something moved more than RESPREAD_MOVE and RESPREAD_INTERVAL passed.

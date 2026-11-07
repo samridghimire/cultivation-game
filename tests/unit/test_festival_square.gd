@@ -49,3 +49,11 @@ func test_mortal_label_drops_realm() -> void:
 	npc.display_name = "Qin Yan (Qi Refining, 1st Layer)"
 	assert_eq(npc.label_text(), "Qin Yan (Qi Refining, 1st Layer)")
 	npc.free()
+
+
+## WU-481: npc_spots keep clear of travel signposts.
+func test_signpost_clearance() -> void:
+	var region := {"id": "r", "npc_spots": [[100, 100], [500, 500]], "places": [{"type": "travel", "display_name": "Gate", "pos": [120, 110]}]}
+	assert_eq(GameData.signpost_clearance_errors(region).size(), 1)
+	region["npc_spots"] = [[300, 300]]
+	assert_eq(GameData.signpost_clearance_errors(region).size(), 0)

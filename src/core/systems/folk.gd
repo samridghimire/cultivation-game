@@ -1586,6 +1586,11 @@ static func validate_spots(npc: Dictionary, data: GameData) -> Array[String]:
 				var p := _point(v)
 				if p.x < 0.0 or p.y < 0.0 or p.x > float(size[0]) or p.y > float(size[1]):
 					errors.append("NPC '%s' spots %s is outside the map" % [who, key])
+				for place: Dictionary in data.regions.get(String(npc["region"]), {}).get("places", []):
+					if place.get("type", "") == "travel":
+						var pp: Array = place.get("pos", [0, 0])
+						if p.distance_to(Vector2(float(pp[0]), float(pp[1]))) < GameData.SIGNPOST_CLEAR:
+							errors.append("NPC '%s' spots %s is within %d px of signpost '%s'" % [who, key, int(GameData.SIGNPOST_CLEAR), place.get("display_name", "")])
 		else:
 			errors.append("NPC '%s' spots has unknown key '%s'" % [who, key])
 	return errors

@@ -15,6 +15,12 @@ func test_label_per_stage() -> void:
 	assert_eq(InheritanceGrounds.well_label("Founder's Old Well", 3, 3), "Founder's Old Well")
 
 
+func test_label_with_empty_progress() -> void:
+	assert_eq(InheritanceGrounds.well_label_for("Founder's Old Well", []), "Founder's Old Well")
+	assert_eq(InheritanceGrounds.well_label_for("Founder's Old Well", [1]), "Founder's Old Well")
+	assert_eq(InheritanceGrounds.well_label_for("Founder's Old Well", [1, 3]), "Founder's Old Well (1/3)")
+
+
 func test_node_label_follows_progress() -> void:
 	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
 	var c := CharacterFactory.create("Wellwisher", gs.data, seeded_rng(3))

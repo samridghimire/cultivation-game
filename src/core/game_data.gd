@@ -635,6 +635,7 @@ func _validate_world() -> void:
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
+		load_errors.append_array(signpost_clearance_errors(region))
 		for place: Dictionary in region.get("places", []):
 			if place.has("look"):
 				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]
@@ -1129,6 +1130,26 @@ func _validate_recipes() -> void:
 		var recipe_id: String = item.get("effects", {}).get("learn_recipe", "")
 		if recipe_id != "" and not recipes.has(recipe_id):
 			load_errors.append("Item '%s' teaches unknown recipe '%s'" % [item["id"], recipe_id])
+
+
+## WU-481: minimum distance from a travel signpost to any npc_spot.
+const SIGNPOST_CLEAR := 40.0
+
+
+## WU-481: npc_spots (and the npc spots of NPCs living in the region, checked by the caller) must be >= SIGNPOST_CLEAR from every travel place.
+static func signpost_clearance_errors(region: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	for spot: Variant in region.get("npc_spots", []):
+		if not (spot is Array and (spot as Array).size() == 2):
+			continue
+		var sp := Vector2(float(spot[0]), float(spot[1]))
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") != "travel":
+				continue
+			var pp: Array = place.get("pos", [0, 0])
+			if sp.distance_to(Vector2(float(pp[0]), float(pp[1]))) < SIGNPOST_CLEAR:
+				errors.append("Region '%s' npc_spot %s is within %d px of signpost '%s'" % [region["id"], spot, int(SIGNPOST_CLEAR), place.get("display_name", "")])
+	return errors
 
 
 ## GFX-085: a region's festival_square must be [x, y] inside the map, 160 px clear of the map edges and 80 px clear of every place.
