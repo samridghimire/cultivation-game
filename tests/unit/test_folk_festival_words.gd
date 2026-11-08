@@ -96,3 +96,27 @@ func test_dialogue_posts_the_line_once() -> void:
 	gs.start_dialogue("elder_mo")
 	assert_false(posts.any(func(p: String) -> bool: return p.contains(line)), "not told twice")
 	EventBus.message_posted.disconnect(sink)
+
+
+## C-328: every named villager with a region has their own line for each festival held there, none repeating a birthday line.
+func test_named_villagers_have_a_line_for_every_festival_in_their_region() -> void:
+	var d := data()
+	var birthday_lines := {}
+	for id: String in d.npcs:
+		birthday_lines[String(d.npcs[id].get("birthday_line", ""))] = true
+	for b: String in d.family["folk_greetings"].get("birthday", []):
+		birthday_lines[b] = true
+	var checked := 0
+	for id: String in d.npcs:
+		var region := String(d.npcs[id].get("region", ""))
+		if region == "":
+			continue
+		for fid: String in d.world_events:
+			if not WorldEvents.is_festival(d, fid) or not (d.world_events[fid].get("regions", []) as Array).has(region):
+				continue
+			var own: Dictionary = d.npcs[id].get("festival_lines", {})
+			assert_true(own.has(fid), "%s has a %s line" % [id, fid])
+			assert_false(birthday_lines.has(String(own.get(fid, "x"))), "%s: %s is not a birthday line" % [id, fid])
+			checked += 1
+	assert_true(checked >= 10, "checked %d villager-festival pairs" % checked)
+	assert_true((d.family["folk_greetings"]["festival"] as Array).size() >= 8, "shared festival pool")
