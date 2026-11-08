@@ -86,3 +86,30 @@ func test_hen_runs_from_player() -> void:
 		layer._process(0.05)
 	assert_true(layer.critter_pos(0).x > start.x + 8.0, "hen moved away after 0.5 s")
 	layer.free()
+
+
+func test_coop_cluster_inside_front_rect() -> void:
+	var coop := Rect2(60, 455, 80, 50)
+	var front := Critters.coop_front_rect(coop)
+	assert_true(front.position.y >= coop.end.y, "front is below the coop")
+	for n in [1, 3, 5]:
+		for i in n:
+			assert_true(front.has_point(Critters.cluster_pos(front, i, n)), "slot %d of %d inside" % [i, n])
+
+
+func test_fed_hens_gather_at_coop() -> void:
+	var region := _region()
+	region["places"] = [{"type": "coop", "pos": [100, 480], "size": [80, 50]}]
+	var front := Critters.coop_front_rect(Critters.coop_rect(region))
+	var fed := Critters.today(region, "spring", 3, true, true)
+	assert_true(front.grow(4.0).has_point(fed[0]["pos"]), "fed hen clusters at the coop")
+	var plain := Critters.today(region, "spring", 3, true, false)
+	assert_eq(plain[0]["pos"], Vector2(100, 400))
+
+
+func test_coop_pixel_art_exists() -> void:
+	assert_true(PixelPlace.supports("coop"))
+	var rows := PixelPlace.rows("coop")
+	assert_true(rows.size() > 0)
+	for r in rows:
+		assert_eq(r.length(), rows[0].length())

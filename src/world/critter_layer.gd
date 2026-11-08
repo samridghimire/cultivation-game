@@ -15,9 +15,19 @@ const RUN_SECONDS := 0.4
 const RETURN_SECONDS := 3.0
 
 
+var _args: Array = []
+
+
+## WU-490: rebuild with the same arguments (after the hens are fed).
+func refresh() -> void:
+	if not _args.is_empty():
+		setup(_args[0], _args[1], _args[2], _args[3], _args[4])
+
+
 ## Rebuilds from `Critters.today`; the layer hides itself when there is nothing to draw.
 func setup(region: Dictionary, season: String, day: int, enabled: bool, reduce_motion: bool) -> void:
-	critters = Critters.today(region, season, day, enabled)
+	_args = [region, season, day, enabled, reduce_motion]
+	critters = Critters.today(region, season, day, enabled, Critters.fed_today(GameState.world_flags, String(region.get("id", "")), day))
 	_still = reduce_motion
 	z_index = 3
 	visible = not critters.is_empty()
@@ -27,6 +37,7 @@ func setup(region: Dictionary, season: String, day: int, enabled: bool, reduce_m
 		_offsets.append(Vector2.ZERO)
 		_fleeing.append(false)
 	set_process(visible)
+	add_to_group("critter_layer")
 	queue_redraw()
 
 
@@ -90,6 +101,8 @@ func _draw() -> void:
 
 
 func _draw_hen(p: Vector2, seed_value: int, t: float, still: bool, fleeing: bool = false) -> void:
+	if fleeing and not still:  # WU-490: a hen hops away rather than gliding
+		p.y -= absf(sin(t * 18.0)) * 4.0
 	var peck := 0.0 if still else maxf(0.0, sin(t * 3.0 + float(seed_value % 10))) * 2.0
 	draw_rect(Rect2(p + Vector2(-4, 2), Vector2(9, 3)), Color(0, 0, 0, 0.2))
 	draw_rect(Rect2(p + Vector2(-4, -3), Vector2(8, 6)), Color("e8dcc4"))

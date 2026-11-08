@@ -8,7 +8,7 @@ extends RefCounted
 ## e earth, v foliage (GFX-022 nature places: meditation, gather, explore, inheritance, abode, secret_realm, camp).
 ## Rendering only: pure and deterministic, no node access.
 
-const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
+const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction", "coop"]
 const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 ## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
@@ -174,6 +174,8 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _bounty_board()
 		"auction":
 			c = _auction()
+		"coop":
+			c = _coop()
 		"travel":
 			c = _gate_h() if horizontal else _gate_v()
 		"meditation":
@@ -466,6 +468,20 @@ static func _bounty_board() -> Array:
 	for n: Array in [[5, 7, 6, 7], [14, 6, 6, 8], [23, 8, 6, 6]]:
 		rect(c, n[0], n[1], n[2], n[3], "p")
 		rect(c, n[0] + 1, n[1] + 2, n[2] - 2, 1, "d")
+	return c
+
+
+## WU-490: a small henhouse: straw roof, nest box on the left, a ramp up to the pop-hole on the right.
+static func _coop() -> Array:
+	var c := canvas(38, 24)
+	box(c, 7, 10, 24, 12, "w", "W")
+	rect(c, 7, 10, 2, 12, "t")
+	rect(c, 29, 10, 2, 12, "T")
+	box(c, 1, 14, 7, 8, "t", "T")  # nest box
+	rect(c, 3, 16, 3, 3, "d")
+	rect(c, 17, 14, 7, 8, "d")  # pop-hole
+	rect(c, 16, 21, 12, 2, "t")  # ramp
+	roof(c, 4, 3, 30, 8)
 	return c
 
 

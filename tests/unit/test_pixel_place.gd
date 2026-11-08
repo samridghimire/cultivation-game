@@ -27,7 +27,7 @@ func test_templates_are_well_formed() -> void:
 func test_supports() -> void:
 	for kind in PixelPlace.KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
-	assert_eq(PixelPlace.KINDS.size(), 9)
+	assert_eq(PixelPlace.KINDS.size(), 10)
 	for kind in PixelPlace.NATURE_KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
 	assert_true(PixelPlace.supports("fishing"))

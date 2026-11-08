@@ -176,8 +176,14 @@ static func in_season(kind: String, season: String) -> bool:
 
 ## Today's critters: [{kind, pos, home (Rect2: the roaming box), seed (int)}], none when `enabled` is false.
 ## Deterministic from the region id and day (no global randomness).
-static func today(region: Dictionary, season: String, day: int, enabled: bool) -> Array[Dictionary]:
+static func today(region: Dictionary, season: String, day: int, enabled: bool, fed: bool = false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
+	var coop := coop_rect(region)
+	var hens_total := 0
+	for e: Variant in region.get("map", {}).get("ambient_critters", []):
+		if String((e as Dictionary).get("kind", "")) == "hen":
+			hens_total += 1
+	var hen_n := 0
 	if not enabled:
 		return out
 	var list: Array = region.get("map", {}).get("ambient_critters", [])
@@ -189,6 +195,11 @@ static func today(region: Dictionary, season: String, day: int, enabled: bool) -
 		var pos := Vector2(float(e["pos"][0]), float(e["pos"][1]))
 		var seed_value := hash([String(region.get("id", "")), day, i])
 		var home := Rect2(pos - Vector2(18, 10), Vector2(36, 20))
+		if kind == "hen":
+			if fed and coop.size != Vector2.ZERO:  # WU-490: fed hens cluster pecking in front of the coop
+				pos = cluster_pos(coop_front_rect(coop), hen_n, hens_total)
+				home = Rect2(pos - Vector2(4, 3), Vector2(8, 6))
+			hen_n += 1
 		if kind == "duck":
 			home = pond_at(region, pos)
 		elif kind == "butterfly":
@@ -214,9 +225,9 @@ static func position_at(c: Dictionary, t: float, still: bool) -> Vector2:
 
 
 ## GFX-088: how close the player must be before a critter notices, by kind.
-const FLEE_RADIUS := {"hen": 48.0, "duck": 56.0, "butterfly": 32.0}
+const FLEE_RADIUS := {"hen": 28.0, "duck": 56.0, "butterfly": 32.0}
 ## ...and how far it moves at contact (a hen runs 40-60 px, a duck paddles, a butterfly rises 20 px).
-const FLEE_DIST := {"hen": 60.0, "duck": 36.0, "butterfly": 20.0}
+const FLEE_DIST := {"hen": 24.0, "duck": 36.0, "butterfly": 20.0}
 
 
 ## Offset a critter takes to get away from the player: zero beyond `radius`, pointing directly away,
@@ -245,3 +256,26 @@ static func startle_offset(c: Dictionary, p: Vector2, player_pos: Vector2) -> Ve
 	if kind == "butterfly":
 		return Vector2(0.0, -away.length())
 	return away
+
+
+## WU-490: the rect of the region's first coop place (Rect2 of pos +/- size/2), or an empty Rect2.
+static func coop_rect(region: Dictionary) -> Rect2:
+	for p: Variant in region.get("places", []):
+		if String((p as Dictionary).get("type", "")) == "coop":
+			var pos: Array = p["pos"]
+			var sz: Array = p["size"]
+			return Rect2(float(pos[0]) - float(sz[0]) / 2.0, float(pos[1]) - float(sz[1]) / 2.0, float(sz[0]), float(sz[1]))
+	return Rect2()
+
+
+## WU-490: the strip of ground just below a coop where fed hens peck (coop width, 28 px deep).
+static func coop_front_rect(coop: Rect2) -> Rect2:
+	return Rect2(coop.position.x + 6.0, coop.end.y + 4.0, maxf(coop.size.x - 12.0, 8.0), 24.0)
+
+
+## WU-490: slot `i` of `n` hens inside `front`: spread along its width on two staggered rows. Always inside.
+static func cluster_pos(front: Rect2, i: int, n: int) -> Vector2:
+	var count := maxi(n, 1)
+	var x := front.position.x + front.size.x * (float(i) + 0.5) / float(count)
+	var y := front.position.y + front.size.y * (0.3 if i % 2 == 0 else 0.7)
+	return Vector2(clampf(x, front.position.x + 4.0, front.end.x - 4.0), y)
