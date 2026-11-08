@@ -49,6 +49,9 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		var rid := String(inst.get("region", ""))
 		var until := Calendar.format_date(last)
 		var stall := ", festival stall open" if not Places.festival_stalls_open(data, [inst], rid, first).is_empty() else ""  # FEST-012
+		var wares := Places.open_stall_wares(data, [inst], rid, first, 4)  # GUIDE-221
+		if not wares.is_empty():
+			stall += ": " + ", ".join(wares)
 		out.append({"day": first, "kind": "festival_active", "region": rid, "last_day": last, "festival_id": String(inst["id"]), "name": WorldEvents.event_name(data, String(inst["id"])),
 			"text": "%s in %s (to %s%s)%s" % [WorldEvents.event_name(data, String(inst["id"])), Exploration.region_name(data, rid), until, stall, _contest_suffix(data, String(inst["id"]), flags, start)]})
 	# Festival months inside the window that are not under way.

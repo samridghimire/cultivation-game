@@ -326,6 +326,13 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		if ends != "":
 			line += "; " + ends
 		out.append(line + ".")
+		var wares := Places.festival_wares_line(data, active_events, region_id, day)  # GUIDE-221
+		if wares != "":
+			out.append(wares + ".")
+	else:
+		var eve := Places.festival_eve_line(data, active_events, region_id, day)  # GUIDE-221
+		if eve != "":
+			out.append(eve + ".")
 	# 1b. Named friends (GUIDE-218): a birthday today, and a lesson waiting.
 	var named_birthday := {}
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):

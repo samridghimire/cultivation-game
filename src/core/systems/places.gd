@@ -29,6 +29,60 @@ static func festival_stalls_open(data: GameData, events: Array, region_id: Strin
 	return out
 
 
+## GUIDE-221: up to `limit` item names a festival stall really carries today (its own stock plus the festival's goods
+## when the stall sells them), cheapest first.
+static func festival_wares(data: GameData, events: Array, place: Dictionary, region_id: String, limit: int = 2) -> PackedStringArray:
+	var tags: Array = place.get("stock_tags", [])
+	var ids: Array = Items.shop_stock(data, int(place.get("max_price", 0)), tags)
+	for item_id: Variant in WorldEvents.shop_items(data, events, region_id, tags):
+		if not ids.has(item_id) and int(data.items.get(String(item_id), {}).get("price", 0)) > 0:
+			ids.append(item_id)
+	ids.sort_custom(func(a: Variant, b: Variant) -> bool:
+		var pa := int(data.items[a].get("price", 0))
+		var pb := int(data.items[b].get("price", 0))
+		return pa < pb or (pa == pb and String(data.items[a].get("name", "")) < String(data.items[b].get("name", ""))))
+	var out := PackedStringArray()
+	for item_id: Variant in ids:
+		if out.size() >= limit:
+			break
+		out.append(String(data.items[item_id].get("name", item_id)))
+	return out
+
+
+## GUIDE-221: names of up to `limit` wares of the first open festival stall of `region_id` ([] when none).
+static func open_stall_wares(data: GameData, events: Array, region_id: String, today: int, limit: int) -> PackedStringArray:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("festival_only") and festival_open(place, events, region_id, today):
+			var wares := festival_wares(data, events, place, region_id, limit)
+			if not wares.is_empty():
+				return wares
+	return PackedStringArray()
+
+
+## GUIDE-221: "Stall sells A, B and more" for the first open festival stall of `region_id`, or "".
+static func festival_wares_line(data: GameData, events: Array, region_id: String, today: int) -> String:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if not place.has("festival_only") or not festival_open(place, events, region_id, today):
+			continue
+		var wares := festival_wares(data, events, place, region_id, 2)
+		if wares.is_empty():
+			continue
+		var stall := String(place.get("display_name", "The stall"))
+		return "%s sells %s" % [stall, wares[0] if wares.size() == 1 else "%s, %s and more" % [wares[0], wares[1]]]
+	return ""
+
+
+## GUIDE-221: "Tomorrow: <festival> (<stall> opens)" when a fixed-date festival with a stall starts in `region_id` on day + 1.
+static func festival_eve_line(data: GameData, events: Array, region_id: String, today: int) -> String:
+	for inst: Dictionary in WorldEvents.starting_on(data, events, today + 1):
+		if String(inst.get("region", "")) != region_id:
+			continue
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			if String(place.get("festival_only", "")) == String(inst["id"]):
+				return "Tomorrow: %s (%s opens)" % [WorldEvents.event_name(data, String(inst["id"])), String(place.get("display_name", "a stall"))]
+	return ""
+
+
 ## Load-time check of a `festival_only` value: a known festival event that runs in `region_id`.
 static func validate_festival_only(value: Variant, region_id: String, data: GameData, where: String) -> Array[String]:
 	var problems: Array[String] = []

@@ -66,6 +66,18 @@ static func roll(data: GameData, active: Array, total_days: int, rng: RandomNumb
 	return started
 
 
+## GUIDE-221: the fixed-date (`months`) events that the monthly roll starts on `total_days`, without touching `active`.
+static func starting_on(data: GameData, active: Array, total_days: int) -> Array[Dictionary]:
+	if Calendar.day_of(total_days) != 1:
+		return []
+	var out: Array[Dictionary] = []
+	var copy: Array = active.duplicate(true)
+	for inst: Dictionary in roll(data, copy, total_days, RandomNumberGenerator.new()):
+		if not (def_of(data, String(inst["id"])).get("months", []) as Array).is_empty():
+			out.append(inst)
+	return out
+
+
 ## Extra encounter tags the active events add in `region_id`.
 static func encounter_tags(data: GameData, active: Array, region_id: String) -> Array[String]:
 	var tags: Array[String] = []
