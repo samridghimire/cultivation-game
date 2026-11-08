@@ -12,7 +12,7 @@ const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "fam
 const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 ## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
-const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
+const EXPLORE_LOOKS := PlaceLooks.EXPLORE_LOOKS  # GUIDE-219: owned by core
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")

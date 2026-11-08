@@ -6458,3 +6458,13 @@ func test_today_knows_your_friends() -> void:
 	c.lessons_taught["elder_mo:0"] = 1
 	assert_false("\n".join(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, favor)).contains("something to show you"))
 	assert_true(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR, "qingshi_village", npcs, favor).size() <= Guidance.TODAY_MAX)
+
+
+func test_find_note_names_only_dishes_you_know() -> void:
+	var d := data()
+	assert_true(d.home_meals.any(func(m: Dictionary) -> bool: return m["id"] == "honey_egg_cake" and m.get("taught", false)))
+	var c := CharacterData.new()
+	assert_false(Guidance.find_note(d, "hen_egg", "qingshi_village", c).contains("Honey Egg Cake"))
+	assert_false(Guidance.find_note(d, "hen_egg", "qingshi_village").contains("Honey Egg Cake"), "null hides taught meals")
+	Cooking.learn(c, d, "honey_egg_cake")
+	assert_true(Guidance.find_note(d, "hen_egg", "qingshi_village", c).contains("Honey Egg Cake"))

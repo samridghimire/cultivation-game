@@ -332,7 +332,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		if data.npcs.has(b["npc"].id):
 			named_birthday[b["npc"].id] = true
 			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
-	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught):
+	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught, day):
 		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
@@ -4338,7 +4338,7 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("%s: %s" % [npc.name, Folk.celebration_label(flags, npc.id, data)])
 	for b: Dictionary in Folk.birthdays_soon(people, data, region_id, today, favor):
 		out.append("%s's birthday is today: a gift counts double." % b["npc"].name if int(b["in_days"]) == 0 else "%s's birthday in %s." % [b["npc"].name, Calendar.format_duration(int(b["in_days"]))])
-	for w: Dictionary in Folk.lessons_waiting(people, data, region_id, favor, c.lessons_taught):  # GUIDE-218
+	for w: Dictionary in Folk.lessons_waiting(people, data, region_id, favor, c.lessons_taught, today):  # GUIDE-218
 		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, maxi(today, 0), [])])
 	var friends := Folk.friends_line(people, data, region_id, favor)
 	if friends != "":
@@ -5227,12 +5227,15 @@ static func artifact_lives_hint(c: CharacterData, data: GameData) -> String:
 
 ## GUIDE-211: what a picked find is good for, one sentence tail: "Used in Fish Stew (cook at the Village Workshop); sells for about 2."
 ## Home meals first (with the nearest workshop, `region_id` first), then profession recipes; at most two uses.
+## GUIDE-219: taught dishes show only once `c` knows them (c == null hides them all).
 ## Items with no use give only the sell note; items that cannot be sold give "".
-static func find_note(data: GameData, item_id: String, region_id: String) -> String:
+static func find_note(data: GameData, item_id: String, region_id: String, c: CharacterData = null) -> String:
 	var uses: PackedStringArray = []
 	var workshop := _workshop_name(data, region_id)
 	for meal: Dictionary in data.home_meals:
 		if meal.get("ingredients", {}).has(item_id) and uses.size() < 2:
+			if bool(meal.get("taught", false)) and (c == null or not Cooking.is_known(c, data, String(meal["id"]))):
+				continue  # GUIDE-219: never promise a dish the player was not taught
 			uses.append("%s (cook at %s)" % [String(meal.get("name", meal["id"])), workshop] if workshop != "" else String(meal.get("name", meal["id"])))
 	for recipe_name in Items.recipes_using(data, item_id):
 		if uses.size() < 2 and not uses.has(recipe_name):

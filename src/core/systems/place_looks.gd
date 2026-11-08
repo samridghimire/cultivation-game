@@ -8,6 +8,8 @@ const KEYS := ["robe", "hair", "style", "child", "kind"]
 const HAIR := {"dark": Color("2a2018"), "grey": Color("b8b8b8")}
 const STYLES := ["bun", "long", "hood"]
 const KINDS := ["figure", "camp"]
+## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
+const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 
 
 ## Error strings for `look` (empty when valid); `who` names the place in messages.

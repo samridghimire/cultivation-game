@@ -640,8 +640,8 @@ func _validate_world() -> void:
 			if place.has("look"):
 				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]
 				if place.get("type", "") == "explore":
-					if not PixelPlace.EXPLORE_LOOKS.has(String(place["look"])):
-						load_errors.append("%s: unknown explore look '%s' (use %s)" % [who, place["look"], ", ".join(PixelPlace.EXPLORE_LOOKS)])
+					if not PlaceLooks.EXPLORE_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown explore look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.EXPLORE_LOOKS)])
 				else:
 					if place.get("type", "") != "deed_giver":
 						load_errors.append("%s: look is only for deed_giver and explore places" % who)

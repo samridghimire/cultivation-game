@@ -30,3 +30,20 @@ func test_validation_rejects_bad_lessons() -> void:
 		assert_true(Folk.validate_lessons(d).size() > 0, "rejected: " + str(bad))
 	d.npcs["hunter_ma"]["lessons"] = original
 	assert_eq(Folk.validate_lessons(d).size(), 0)
+
+
+func test_taught_today_and_waiting_skips_the_teaching_day() -> void:
+	var d := data()
+	var npcs := {}
+	Npcs.ensure_all(npcs, d, seeded_rng(3))
+	var favor := {"elder_mo": 100}
+	var taught := {}
+	assert_false(Folk.taught_today("elder_mo", taught, 10))
+	assert_eq(Folk.lessons_waiting(npcs, d, "qingshi_village", favor, taught, 10).size(), 1)
+	taught["elder_mo:0"] = 10
+	assert_true(Folk.taught_today("elder_mo", taught, 10))
+	assert_false(Folk.taught_today("elder_mo", taught, 11))
+	assert_eq(Folk.lessons_waiting(npcs, d, "qingshi_village", favor, taught, 10).size(), 0, "taught today: nothing promised")
+	var next := Folk.lessons_waiting(npcs, d, "qingshi_village", favor, taught, 11)
+	assert_eq(next.size(), 1, "the next lesson the following day")
+	assert_eq(next[0]["key"], "elder_mo:1")

@@ -1564,9 +1564,8 @@ func _teach_lessons(npc_id: String) -> void:
 	if Npcs.region_of(npc, data) != current_region:  # FOLK-021: taught only where the teacher stands
 		return
 	var today := GameClock.total_days
-	for key: String in player.lessons_taught:
-		if key.begins_with(npc_id + ":") and int(player.lessons_taught[key]) == today:
-			return
+	if Folk.taught_today(npc_id, player.lessons_taught, today):
+		return
 	var due := Folk.due_lessons(data, npc_id, Folk.tier_index(data, int(npc_favor.get(npc_id, 0))), player.lessons_taught)
 	if due.is_empty():
 		return
@@ -3468,7 +3467,7 @@ func pick_forage(slot: int) -> bool:
 		player.forage_picks += 1
 		var tier_line := Foraging.tier_line(Foraging.tier_for(player.forage_picks)) if Foraging.tier_for(player.forage_picks) > tier_before else ""
 		var find_text := "You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)]
-		var find_note := Guidance.find_note(data, item_id, current_region)
+		var find_note := Guidance.find_note(data, item_id, current_region, player)
 		if find_note != "":
 			find_text += " " + find_note + "."
 		EventBus.post(find_text, "world")

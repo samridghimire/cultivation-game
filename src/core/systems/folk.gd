@@ -436,11 +436,19 @@ static func due_lessons(data: GameData, npc_id: String, tier: int, taught: Dicti
 	return result
 
 
+## GUIDE-219: true when `npc_id` already taught a lesson on `day` (one lesson a day per teacher).
+static func taught_today(npc_id: String, taught: Dictionary, day: int) -> bool:
+	for key: String in taught:
+		if key.begins_with(npc_id + ":") and int(taught[key]) == day:
+			return true
+	return false
+
+
 ## GUIDE-218: named villagers of `region_id` with a lesson due at their friendship tier, as [{npc, key}] by name.
-static func lessons_waiting(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, taught: Dictionary) -> Array[Dictionary]:
+static func lessons_waiting(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, taught: Dictionary, day: int = -1) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for npc in Npcs.in_region(npcs, data, region_id):
-		if not data.npcs.has(npc.id):
+		if not data.npcs.has(npc.id) or (day >= 0 and taught_today(npc.id, taught, day)):
 			continue
 		var due := due_lessons(data, npc.id, tier_index(data, int(favor.get(npc.id, 0))), taught)
 		if not due.is_empty():
