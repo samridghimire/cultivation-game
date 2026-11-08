@@ -18,13 +18,13 @@
         ],
         "done_text": "The old well is whole: Qingshi's fields grow faster, and you may draw well water once a day.",
         "daily": {"item": "well_water", "flag": "well_drawn", "text": "You draw a bucket of cold, sweet water from the old well."}},
-      {"id": "jetty", "name": "the Village Pond Jetty", "region": "qingshi_village", "done_line": "The Village Pond Jetty stands whole again, and the carp crowd beneath its planks.", "fish_bonus": 0.05,
+      {"id": "jetty", "name": "the Village Pond Jetty", "region": "qingshi_village", "done_line": "Our jetty stands whole again, friend, and something long-shadowed has come to lurk under its planks.", "fish_bonus": 0.05,
         "stages": [
-          {"flag": "jetty_stage_1", "text": "Villagers pull the rotten planks off the Village Pond Jetty."},
-          {"flag": "jetty_stage_2", "text": "New posts are driven into the pond mud beside the jetty."},
-          {"flag": "jetty_stage_3", "text": "Fresh planks are laid and the Village Pond Jetty is sound again."}
+          {"flag": "jetty_stage_1", "text": "Old Fisher Wen's neighbours pull the rotten planks off the jetty, and every one of them has a story about the fish that got away."},
+          {"flag": "jetty_stage_2", "text": "New posts go into the pond mud. The children count each blow of the mallet aloud and lose count every time."},
+          {"flag": "jetty_stage_3", "text": "Fresh planks are laid, and the old folk walk out to the end of the jetty just to feel it hold."}
         ],
-        "done_text": "The pond jetty is whole: fish bite more readily at Qingshi's pond."}
+        "done_text": "The pond jetty is whole: fish bite more readily at Qingshi's pond, and a pearl-backed rarity has been seen beneath the planks."}
     ]
   },
   "seasons": {
