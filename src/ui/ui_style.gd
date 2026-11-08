@@ -163,6 +163,21 @@ static func bar(size: Vector2, fill: Color) -> ProgressBar:
 	return b
 
 
+## WU-485: x of the 1 px gold end cap at the right edge of a bar's fill; -1 when the bar is empty.
+static func end_cap_x(width: float, value: float, max_value: float) -> float:
+	if value <= 0.0 or max_value <= 0.0:
+		return -1.0
+	return clampf(roundf(width * minf(value / max_value, 1.0)) - 1.0, 0.0, maxf(width - 1.0, 0.0))
+
+
+## WU-485: gives a UIStyle.bar a 1 px gold cap at the end of its fill.
+static func add_end_cap(b: ProgressBar) -> void:
+	b.draw.connect(func() -> void:
+		var x := end_cap_x(b.size.x, b.value, b.max_value)
+		if x >= 0.0:
+			b.draw_rect(Rect2(x, 1, 1, maxf(b.size.y - 2.0, 1.0)), ACCENT))
+
+
 ## Swaps the fill colour of a UIStyle.bar.
 static func set_bar_fill(b: ProgressBar, fill: Color) -> void:
 	var f := StyleBoxFlat.new()

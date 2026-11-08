@@ -18,6 +18,7 @@ var _label: Label
 
 
 func _ready() -> void:
+	add_to_group("festival_stalls")
 	if caption == "":
 		return
 	_label = Label.new()
@@ -32,6 +33,13 @@ func _ready() -> void:
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label.z_index = 20  # GFX-085: above every NPC label
 	add_child(_label)
+
+
+## WU-485: the caption's rect in screen px (empty when there is no caption); the [E] chip keeps clear of it.
+func caption_screen_rect() -> Rect2:
+	if _label == null or not is_inside_tree():
+		return Rect2()
+	return get_global_transform_with_canvas() * Rect2(_label.position, _label.size)
 
 
 ## Drawing keys per look (draw_look and the sprite key): the data look "boats" draws the dragon boat, "kite" the willow kites.

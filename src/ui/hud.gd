@@ -469,6 +469,7 @@ func _build_status_panel() -> void:
 	_realm = UIStyle.label("", 14, UIStyle.ACCENT)
 	box.add_child(_realm)
 	_qi_bar = UIStyle.bar(Vector2(300, 16), QI_FILL)
+	UIStyle.add_end_cap(_qi_bar)
 	box.add_child(_qi_bar)
 	_qi_text = UIStyle.label("", 12)
 	_qi_text.add_theme_constant_override("outline_size", 3)
@@ -968,7 +969,12 @@ func _place_prompt() -> void:
 	if not screen.grow(40.0).has_point(figure):  # WU-475: target off screen
 		_prompt_to_bottom()
 		return
-	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip, figure)
+	var avoid := occupied_rects()
+	for stall in get_tree().get_nodes_in_group("festival_stalls"):  # WU-485: the festival caption is a blocker
+		var cr: Rect2 = (stall as FestivalStall).caption_screen_rect()
+		if cr.size != Vector2.ZERO:
+			avoid.append(cr)
+	var rect := prompt_rect(label_rect, screen, avoid, chip, figure)
 	if _prompt_floating == false:
 		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		_prompt_floating = true

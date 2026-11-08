@@ -113,6 +113,7 @@ func close() -> void:
 
 func _rebuild() -> void:
 	for child in _buttons.get_children():
+		_buttons.remove_child(child)  # WU-485: gone now, so the old rows no longer pad the panel's height
 		child.queue_free()
 	_title.text = _source.display_name
 	_portrait.set_portrait(_source.portrait_texture() if _source.has_method("portrait_texture") else null)
@@ -152,6 +153,7 @@ func _fit_scroll() -> void:
 		return
 	var room := get_viewport_rect().size.y - MENU_MARGIN
 	_scroll.custom_minimum_size.y = minf(_buttons.get_combined_minimum_size().y, maxf(room, 160.0))
+	reset_size()  # WU-485: size the panel to its content (a menu opened after a taller one shrinks back)
 
 
 func _on_viewport_resized() -> void:

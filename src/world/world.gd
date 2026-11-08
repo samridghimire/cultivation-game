@@ -970,6 +970,18 @@ func _limit_camera() -> void:
 	camera.limit_bottom = int(map_size.y) + CAMERA_MARGIN_BOTTOM  # WU-472: scroll clear of the HUD bars (the border draws past the edge)
 
 
+## WU-485: the four strips (top, bottom, left, right) that cover every camera-reachable area outside the map.
+static func margin_rects(size: Vector2) -> Array[Rect2]:
+	var side := 64.0
+	var out: Array[Rect2] = [
+		Rect2(-side, -CAMERA_MARGIN_TOP, size.x + 2.0 * side, CAMERA_MARGIN_TOP),
+		Rect2(-side, size.y, size.x + 2.0 * side, CAMERA_MARGIN_BOTTOM),
+		Rect2(-side, 0, side, size.y),
+		Rect2(size.x, 0, side, size.y),
+	]
+	return out
+
+
 ## The camera zoom that makes one sprite pixel a whole number of screen pixels (GFX-009).
 static func pixel_zoom(stretch: float, sprite_scale: int) -> float:
 	var total := stretch * sprite_scale
@@ -1034,7 +1046,8 @@ func _draw() -> void:
 	for d in _decor:
 		_draw_decor(d)
 	# GFX-097: below the map's bottom edge the camera shows this band; paint it in the border colour so it reads as the edge.
-	draw_rect(Rect2(0, map_size.y, map_size.x, CAMERA_MARGIN_BOTTOM), Color(map.get("border", "2a3a20")).darkened(0.35))
+	for margin: Rect2 in margin_rects(map_size):  # WU-485: no engine-grey ever shows past the map
+		draw_rect(margin, Color(map.get("border", "2a3a20")).darkened(0.35))
 	var border_tile := Sprites.first(["border_" + rid, "border"])
 	if border_tile != null:
 		for strip: Rect2 in [Rect2(0, 0, map_size.x, 6), Rect2(0, map_size.y - 6, map_size.x, 6), Rect2(0, 6, 6, map_size.y - 12), Rect2(map_size.x - 6, 6, 6, map_size.y - 12)]:
