@@ -247,6 +247,24 @@ static func spread_labels(nodes: Array) -> void:
 ## The interact prompt already names the current target, so its own label is not drawn
 ## (it sat under the player sprite and the prompt, WU-176). The HUD shows the prompt
 ## whenever a target exists, so the target's own label is always hidden.
+## GFX-101: the 8 rects (two 4x2 / 2x4 arms per corner) of the four pixel corner brackets around `box`.
+static func bracket_rects(box: Rect2, arm: float = 4.0, thick: float = 2.0) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var l := box.position.x
+	var t := box.position.y
+	var r := box.end.x
+	var b := box.end.y
+	out.append(Rect2(l, t, arm, thick))
+	out.append(Rect2(l, t, thick, arm))
+	out.append(Rect2(r - arm, t, arm, thick))
+	out.append(Rect2(r - thick, t, thick, arm))
+	out.append(Rect2(l, b - thick, arm, thick))
+	out.append(Rect2(l, b - arm, thick, arm))
+	out.append(Rect2(r - arm, b - thick, arm, thick))
+	out.append(Rect2(r - thick, b - arm, thick, arm))
+	return out
+
+
 static func label_visible(is_target: bool) -> bool:
 	return not is_target
 
@@ -532,7 +550,8 @@ func _draw() -> void:
 		if ring_tex != null:
 			Sprites.draw_nine_patch(self, ring_tex, ring, float(Sprites.scale() * 4), Color(1, 1, 1, 0.45 + 0.4 * glow))
 		else:
-			draw_rect(ring, Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
+			for br in bracket_rects(ring.grow(-2.0 * glow)):  # GFX-101: four gold corner brackets, not a selection box
+				draw_rect(br, UIStyle.ACCENT)
 	if anchor_id != "":
 		_draw_anchor_marker()
 

@@ -155,6 +155,19 @@ static func frame(look: Dictionary, dir: String, index: int) -> ImageTexture:
 	return _cache[key]
 
 
+## GFX-101: a one-colour copy of `tex`'s opaque pixels, drawn offset in 4 directions under the sprite as a light outline.
+static func silhouette(tex: Texture2D, color: Color) -> ImageTexture:
+	var key := "sil|%s|%d" % [color.to_html(), tex.get_rid().get_id()]
+	if not _cache.has(key):
+		var img := tex.get_image()
+		for y in img.get_height():
+			for x in img.get_width():
+				if img.get_pixel(x, y).a > 0.0:
+					img.set_pixel(x, y, color)
+		_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
+
+
 static func _build(template: PackedStringArray, colors: Dictionary, mirror: bool) -> ImageTexture:
 	var img := Image.create(SIZE.x, SIZE.y, false, Image.FORMAT_RGBA8)
 	for y in SIZE.y:

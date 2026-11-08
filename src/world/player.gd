@@ -154,6 +154,10 @@ func _update_target() -> void:
 		EventBus.interaction_target_changed.emit(best.prompt_text() if best else "")
 
 
+## GFX-101: the player figure's 1 px silhouette outline.
+const OUTLINE_COLOR := Color("f3e6c4")
+
+
 func _draw() -> void:
 	_draw_celebration()
 	var shake := 0.0
@@ -165,6 +169,7 @@ func _draw() -> void:
 	# Shadow stays on the ground; the body bobs while walking.
 	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.4))
 	draw_circle(Vector2.ZERO, RADIUS, Color(0, 0, 0, 0.3))
+	draw_circle(Vector2.ZERO, RADIUS + 2.0, Color(0, 0, 0, 0.18))  # GFX-101: darker, wider than villagers' shadows
 	draw_set_transform(Vector2.ZERO)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
 	var o := Vector2(shake, bob)
@@ -174,7 +179,11 @@ func _draw() -> void:
 	var tex := PixelFigure.frame(_look, _dir_name(), int(_time * 6.0) if velocity != Vector2.ZERO else 0)
 	var s := float(Sprites.scale())
 	var size := Vector2(tex.get_size()) * s
-	draw_texture_rect(tex, Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size), false)
+	var body := Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size)
+	var sil := PixelFigure.silhouette(tex, OUTLINE_COLOR)  # GFX-101: pale outline so you can find yourself in a crowd
+	for d: Vector2 in [Vector2(s, 0), Vector2(-s, 0), Vector2(0, s), Vector2(0, -s)]:
+		draw_texture_rect(sil, Rect2(body.position + d, size), false)
+	draw_texture_rect(tex, body, false)
 
 
 ## "down", "up", "left" or "right" from the facing vector.
