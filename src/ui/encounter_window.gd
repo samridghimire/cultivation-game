@@ -97,6 +97,7 @@ func open() -> void:
 		return
 	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
 	_scene.show_encounter(enc)
+	_scene.set_choice_count(choices.size())
 	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():

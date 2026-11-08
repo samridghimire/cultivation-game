@@ -101,6 +101,7 @@ var _last_source: Node
 var _encounter: EncounterWindow
 var _quarrel: QuarrelWindow
 var _cast_bar: CastBar
+var _arrival_title: String = ""  # WU-491: title of the region name card, so a modal can dismiss it
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
@@ -1806,7 +1807,10 @@ func _show_arrival(region_id: String) -> void:
 	if extra != "":
 		sub += "\n" + extra
 	var hold := 2.4 if first_visit else 2.0
-	_banner.announce(Exploration.region_name(data, region_id), sub, UIStyle.ACCENT, hold)
+	_arrival_title = Exploration.region_name(data, region_id)
+	if _blocking_except_encounter():
+		return # WU-491: a screen is open; the name card is not shown over it
+	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold)
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
@@ -2087,8 +2091,20 @@ func digest_blocked() -> bool:
 	return GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty() or _death_screen.visible
 
 
+## WU-491: true while any HUD modal is open (the name card never draws over one).
+func _is_blocking() -> bool:
+	return _blocking_except_encounter() or _encounter.visible
+
+
+func _blocking_except_encounter() -> bool:
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+
+
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _is_blocking()
+	if blocking and _arrival_title != "":
+		_banner.dismiss_titled(_arrival_title)  # WU-491: the name card never stays over an open screen
+		_arrival_title = ""
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	if blocking and _digest_card != null:

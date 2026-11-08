@@ -88,12 +88,12 @@ func _init() -> void:
 	add_child(_timer)
 
 
-## "Rated: Even (55%) before the fight." from the enemy as the fight began
+## "Rated before the fight: Even, 55 in 100." from the enemy as the fight began
 ## (WU-104), or "" for a friendly spar.
 static func rating_line(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
 	if bool(enemy.get("friendly", false)):
 		return ""
-	return "Rated: %s before the fight." % UIStyle.fight_label(c, data, enemy)
+	return "Rated before the fight: %s." % UIStyle.odds_text(c, data, enemy, bool(enemy.get("lethal", false)))
 
 
 ## "Xiao Ling fights at your side" for the report header ("" when nobody came).

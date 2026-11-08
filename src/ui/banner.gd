@@ -132,6 +132,16 @@ func set_held(value: bool) -> void:
 		finish_current()
 
 
+## WU-491: drops every notice titled `title`, showing or queued, without playing the next one early
+## while held. Used for the arrival name card when a screen opens over it.
+func dismiss_titled(title: String) -> void:
+	for i in range(_queue.size() - 1, -1, -1):
+		if str(_queue[i][0]) == title:
+			_queue.remove_at(i)
+	if visible and not _current.is_empty() and str(_current[0]) == title:
+		finish_current()
+
+
 func queued_count() -> int:
 	return _queue.size()
 

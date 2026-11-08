@@ -106,10 +106,10 @@ func test_finishing_line_is_bold_and_large() -> void:
 ## WU-104: the pre-fight rating shows at the top, never for a friendly spar.
 func test_report_shows_pre_fight_rating() -> void:
 	var r := _report(false)
-	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "Rated: Even before the fight.")
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "Rated before the fight: Even, 55 in 100.")
 	assert_true(r._rated.visible)
-	assert_eq(r._rated.text, "Rated: Even before the fight.")
-	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, true, "Rated: Even before the fight.")
+	assert_eq(r._rated.text, "Rated before the fight: Even, 55 in 100.")
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, true, "Rated before the fight: Even, 55 in 100.")
 	assert_false(r._rated.visible, "no rating for a friendly spar")
 	_done(r)
 
@@ -118,7 +118,7 @@ func test_rating_line_skips_friendly_spars() -> void:
 	var gd := GameData.new()
 	var c := CharacterData.new()
 	var enemy := {"id": "x", "name": "Foe", "hp": 10, "attack": 1, "defense": 0, "realm": "mortal"}
-	assert_true(CombatReport.rating_line(c, gd, enemy).begins_with("Rated: "))
+	assert_true(CombatReport.rating_line(c, gd, enemy).begins_with("Rated before the fight: "))
 	enemy["friendly"] = true
 	assert_eq(CombatReport.rating_line(c, gd, enemy), "")
 
@@ -152,3 +152,13 @@ func test_blow_floats_numbers_and_skip_clears() -> void:
 
 func test_five_blow_report_is_shorter() -> void:
 	assert_true(CombatReport.log_height(8) < 8 * 26.0 + 20.0)
+
+
+## WU-491: the report uses the HUD's wording and odds.
+func test_rating_line_matches_hud_odds() -> void:
+	var gd := GameData.new()
+	var c := CharacterData.new()
+	var enemy := {"id": "x", "name": "Foe", "hp": 10, "attack": 1, "defense": 0, "realm": "mortal", "lethal": true}
+	var expect := UIStyle.odds_text(c, gd, enemy, true)
+	assert_eq(CombatReport.rating_line(c, gd, enemy), "Rated before the fight: %s." % expect)
+	assert_true(expect.ends_with("to the death"))

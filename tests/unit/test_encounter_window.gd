@@ -149,3 +149,23 @@ func test_tag_footer_only_when_a_choice_is_tagged() -> void:
 	assert_eq(window.footer_text(), "", "untagged: no footer")
 	window.free()
 	_cleanup(gs)
+
+
+## WU-491: more than 3 choices shrink the scene strip, and the card (with a tagged footer) fits 1280x720.
+func test_five_choices_fit_720_high() -> void:
+	assert_eq(EncounterScene.strip_height_for(3), 120.0)
+	assert_eq(EncounterScene.strip_height_for(5), 72.0)
+	var five := ENCOUNTER.duplicate(true)
+	five["id"] = "test_window_five"
+	five["choices"] = [
+		{"label": "Study the runes", "requires": {"min_attributes": {"comprehension": 1}}},
+		{"label": "Bind his wounds"}, {"label": "Search his pack"}, {"label": "Ask his name"}, {"label": "Leave"},
+	]
+	var gs := _start(five)
+	var window := EncounterWindow.new()
+	window.open()
+	assert_eq(window.choice_buttons().size(), 5)
+	assert_true(window.get_combined_minimum_size().y <= 720.0 - 2.0 * 16.0, "5-choice card fits 1280x720: %s" % window.get_combined_minimum_size().y)
+	window.free()
+	gs.data.encounters.erase("test_window_five")
+	_cleanup(gs)

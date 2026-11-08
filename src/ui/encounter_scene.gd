@@ -5,6 +5,9 @@ extends DuelStage
 ## from the encounter's tags: a beast, a robed stranger, a glowing treasure, or the player alone.
 
 const STRIP_SIZE := Vector2(600, 120)
+## WU-491: a card with more than this many choices gets the short strip so the last button stays on screen.
+const SHORT_STRIP_HEIGHT := 72.0
+const SHORT_STRIP_CHOICES := 3
 const BEAST_TAGS := ["beast", "beast_tide", "hunt"]
 const ROBED_TAGS := ["cultivator", "npc", "spirit", "recruiter", "disciple", "elder", "stranger", "tournament"]
 const TREASURE_TAGS := ["treasure", "herb", "herbs", "chest"]
@@ -18,6 +21,18 @@ func _init() -> void:
 	custom_minimum_size = STRIP_SIZE
 	size = STRIP_SIZE
 	visible = true
+
+
+## Strip height for a card with `choices` buttons.
+static func strip_height_for(choices: int) -> float:
+	return SHORT_STRIP_HEIGHT if choices > SHORT_STRIP_CHOICES else STRIP_SIZE.y
+
+
+func set_choice_count(choices: int) -> void:
+	var h := strip_height_for(choices)
+	custom_minimum_size = Vector2(STRIP_SIZE.x, h)
+	size = custom_minimum_size
+	queue_redraw()
 
 
 ## "beast", "robed", "treasure" or "player" for an encounter's tags (first matching group wins).
