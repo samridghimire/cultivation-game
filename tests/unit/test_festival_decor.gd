@@ -7,7 +7,7 @@ func test_layout_counts_and_clearance() -> void:
 	var size := Vector2(2000, 1600)
 	for id in ["dragon_boat_festival", "lantern_festival", "mid_autumn_festival", "qingming_festival"]:
 		var poles := FestivalDecor.layout(Vector2(1000, 800), id, blockers, size)
-		assert_true(poles.size() >= 4 and poles.size() <= 6, "%s pole count %d" % [id, poles.size()])
+		assert_true(poles.size() >= 6 and poles.size() <= 8, "%s pole count %d" % [id, poles.size()])
 		for p in poles:
 			assert_true(not blockers[0].grow(FestivalDecor.CLEAR).has_point(p), "pole off the stall")
 			assert_true(p.distance_to(Vector2(1000, 800)) >= 140.0, "outside the crowd ring")
@@ -42,3 +42,27 @@ func test_qingshi_decor_in_world() -> void:
 	assert_true(found.poles.size() >= 4)
 	world.free()
 	gs.end_session()
+
+
+## GFX-097: every festival names a decor look and colours in data; the look lists agree.
+func test_every_festival_has_decor() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	assert_eq(WorldEvents.DECOR_LOOKS.size(), FestivalStall.LOOK_DRAW.size())
+	for look: String in WorldEvents.DECOR_LOOKS:
+		assert_true(FestivalStall.LOOK_DRAW.has(look), look)
+	for id: String in gs.data.world_events:
+		if gs.data.world_events[id].get("festival", false):
+			assert_true(gs.data.world_events[id].has("decor"), id)
+			assert_true(FestivalStall.colors_for(id).size() >= 1)
+
+
+func test_decor_validation_catches_bad_look() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var def: Dictionary = gs.data.world_events["lantern_festival"]
+	var saved: Variant = def["decor"]
+	def["decor"] = {"look": "fireworks", "colors": ["#fff"]}
+	assert_true(not WorldEvents.validate(gs.data).is_empty())
+	def["decor"] = {"look": "drum", "colors": ["nope"]}
+	assert_true(not WorldEvents.validate(gs.data).is_empty())
+	def["decor"] = saved
+	assert_true(WorldEvents.validate(gs.data).is_empty())

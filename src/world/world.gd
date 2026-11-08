@@ -544,6 +544,8 @@ func _build_forage() -> void:
 	for d in _decor:
 		if d["kind"] == "tree":
 			trees.append(d["pos"])
+	if _festival_decor != null:  # GFX-097: no forage inside the festival ring on festival days
+		blocked.append(Rect2(_festival_decor.position, Vector2.ZERO).grow(FestivalDecor.RADIUS + 20.0))
 	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
 	for node in get_children():
 		if node is Roamer and not node.is_queued_for_deletion():
@@ -1027,6 +1029,8 @@ func _draw() -> void:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
 	for d in _decor:
 		_draw_decor(d)
+	# GFX-097: below the map's bottom edge the camera shows this band; paint it in the border colour so it reads as the edge.
+	draw_rect(Rect2(0, map_size.y, map_size.x, CAMERA_MARGIN_BOTTOM), Color(map.get("border", "2a3a20")).darkened(0.35))
 	var border_tile := Sprites.first(["border_" + rid, "border"])
 	if border_tile != null:
 		for strip: Rect2 in [Rect2(0, 0, map_size.x, 6), Rect2(0, map_size.y - 6, map_size.x, 6), Rect2(0, 6, 6, map_size.y - 12), Rect2(map_size.x - 6, 6, 6, map_size.y - 12)]:

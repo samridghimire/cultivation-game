@@ -14,6 +14,8 @@ func test_stall_decor_by_festival() -> void:
 	assert_eq(FestivalStall.decor_for("qingming_festival"), "willow")
 	assert_eq(FestivalStall.decor_for("lantern_festival"), "lanterns")
 	assert_eq(FestivalStall.decor_for("mystery_festival"), "lanterns")
+	assert_eq(FestivalStall.decor_for("dragon_boat_festival"), "dragon_boat")
+	assert_eq(FestivalStall.decor_for("mid_autumn_festival"), "moon")
 
 
 ## GFX-083: each festival has its own look, and every festival_only stall's festival is a known one.
@@ -29,7 +31,7 @@ func test_festival_looks_distinct() -> void:
 	for region: Dictionary in gs.data.regions.values():
 		for place: Dictionary in region["places"]:
 			if place.has("festival_only"):
-				assert_true(FestivalStall.LOOKS.has(String(place["festival_only"])))
+				assert_true(gs.data.world_events.has(String(place["festival_only"])))
 
 
 func test_festival_only_merchant_has_decor() -> void:

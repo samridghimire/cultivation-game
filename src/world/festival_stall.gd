@@ -34,12 +34,29 @@ func _ready() -> void:
 	add_child(_label)
 
 
-## GFX-083: the look of a festival's decoration: "dragon_boat", "lanterns", "moon" or "willow"; unknown festivals get "lanterns".
-const LOOKS := {"dragon_boat_festival": "dragon_boat", "lantern_festival": "lanterns", "mid_autumn_festival": "moon", "qingming_festival": "willow"}
+## Drawing keys per look (draw_look and the sprite key): the data look "boats" draws the dragon boat, "kite" the willow kites.
+const LOOK_DRAW := {"boats": "dragon_boat", "drum": "drum", "kite": "willow", "lanterns": "lanterns", "moon": "moon"}
 
 
-static func decor_for(festival_id: String) -> String:
-	return String(LOOKS.get(festival_id, "lanterns"))
+## GFX-083/097: the look of a festival's decoration ("dragon_boat", "drum", "willow", "lanterns" or "moon"), from the
+## event's `decor.look` in data; unknown festivals (or none given) get "lanterns".
+static func decor_for(festival_id: String, data: GameData = null) -> String:
+	if data == null:
+		data = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var decor: Dictionary = data.world_events.get(festival_id, {}).get("decor", {})
+	return String(LOOK_DRAW.get(String(decor.get("look", "lanterns")), "lanterns"))
+
+
+## GFX-097: the festival's bunting colours from `decor.colors` (hex strings), or the default red/gold/green.
+static func colors_for(festival_id: String, data: GameData = null) -> Array[Color]:
+	if data == null:
+		data = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var out: Array[Color] = []
+	for c in data.world_events.get(festival_id, {}).get("decor", {}).get("colors", []):
+		out.append(Color(String(c)))
+	if out.is_empty():
+		out = [RED, GOLD, WILLOW]
+	return out
 
 
 ## GFX-083: when true this node draws only the festival decoration (beside a `festival_only` merchant), no awning.
@@ -73,6 +90,13 @@ static func draw_look(ci: CanvasItem, look: String, at: Vector2, phase: float) -
 			ci.draw_circle(at + Vector2(-34, -6), 8.0, RED)  # drum
 			ci.draw_circle(at + Vector2(-34, -6), 8.0, GOLD, false, 2.0)
 			ci.draw_line(at + Vector2(-40, -6), at + Vector2(-28, -6), GOLD, 1.0)
+		"drum":
+			ci.draw_rect(Rect2(at + Vector2(-14, -22), Vector2(28, 22)), RED)
+			ci.draw_rect(Rect2(at + Vector2(-14, -22), Vector2(28, 22)), OUTLINE, false, 1.5)
+			ci.draw_line(at + Vector2(-14, -16), at + Vector2(14, -16), GOLD, 2.0)
+			ci.draw_line(at + Vector2(-14, -6), at + Vector2(14, -6), GOLD, 2.0)
+			ci.draw_line(at + Vector2(-10, -30 + sway), at + Vector2(-2, -22), POLE, 2.0)  # sticks
+			ci.draw_line(at + Vector2(10, -30 - sway), at + Vector2(2, -22), POLE, 2.0)
 		"lanterns":
 			ci.draw_line(at + Vector2(-34, -26), at + Vector2(34, -26), POLE, 1.5)
 			for i in 5:

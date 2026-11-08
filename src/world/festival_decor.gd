@@ -4,11 +4,11 @@ extends Node2D
 ## crowd, strung with bunting or lanterns, one festival look per pole set. Code-drawn, no collision, gone the next day.
 
 const RADIUS := 150.0
-const SLOTS := 10
+const SLOTS := 12
 const CLEAR := 24.0
 const EDGE := 160.0
-const MIN_POLES := 4
-const MAX_POLES := 6
+const MIN_POLES := 6
+const MAX_POLES := 8
 const RED := Color("b83a2e")
 const GOLD := Color("e0b84a")
 const GREEN := Color("5f9f4a")
@@ -16,6 +16,7 @@ const POLE := Color("6b4a2e")
 const OUTLINE := Color("2a2018")
 
 var look := "lanterns"
+var colors: Array[Color] = [RED, GOLD, GREEN]
 var poles: Array[Vector2] = []
 ## Pole positions relative to this node (which sits on the square).
 var _t := 0.0
@@ -58,6 +59,7 @@ static func glows(decor_look: String) -> bool:
 
 func setup(festival_id: String, center: Vector2, blockers: Array[Rect2], map_size: Vector2) -> void:
 	look = FestivalStall.decor_for(festival_id)
+	colors = FestivalStall.colors_for(festival_id)
 	position = center
 	poles.clear()
 	for p in layout(center, festival_id, blockers, map_size):
@@ -75,33 +77,55 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+## GFX-097: pennants hang every 14 px along a string.
+const FLAG_STEP := 14.0
+
+
 func _draw() -> void:
 	var n := poles.size()
+	_draw_cloth()
 	for i in n:
-		var a := poles[i] + Vector2(0, -34)
-		draw_line(poles[i], a, POLE, 3.0)
+		var a := poles[i] + Vector2(0, -38)
+		draw_line(poles[i], a, OUTLINE, 6.0)
+		draw_line(poles[i], a, POLE, 4.0)
+		draw_circle(a, 4.0, GOLD)
 		if i + 1 < n or n > 2:
-			var b := poles[(i + 1) % n] + Vector2(0, -34)
+			var b := poles[(i + 1) % n] + Vector2(0, -38)
 			if a.distance_to(b) < RADIUS * 1.2:
 				_string(a, b, i)
 	if n > 0 and look != "lanterns" and look != "moon":
 		FestivalStall.draw_look(self, look, poles[0] + Vector2(0, 6), _phase)
 
 
+## GFX-097: a swept flagstone disc with a red and gold border under the square, so it reads from across the village.
+func _draw_cloth() -> void:
+	var r := RADIUS - 14.0
+	draw_circle(Vector2.ZERO, r, Color(0.72, 0.62, 0.48, 0.32))
+	draw_arc(Vector2.ZERO, r, 0.0, TAU, 48, Color(RED, 0.75), 6.0)
+	draw_arc(Vector2.ZERO, r - 5.0, 0.0, TAU, 48, Color(GOLD, 0.8), 2.0)
+
+
 func _string(a: Vector2, b: Vector2, index: int) -> void:
-	var mid := (a + b) / 2.0 + Vector2(0, 12)
+	var mid := (a + b) / 2.0 + Vector2(0, 14)
+	var steps := maxi(8, int(a.distance_to(b) / 7.0))
 	var prev := a
-	for s in range(1, 9):
-		var t := float(s) / 8.0
+	var since := FLAG_STEP / 2.0
+	var k := 0
+	for s in range(1, steps + 1):
+		var t := float(s) / float(steps)
 		var q: Vector2 = (1.0 - t) * (1.0 - t) * a + 2.0 * (1.0 - t) * t * mid + t * t * b
-		draw_line(prev, q, OUTLINE, 1.0)
-		if s % 2 == 0 and s < 8:
-			var c := q + Vector2(0, 7)
+		draw_line(prev, q, OUTLINE, 2.0)
+		since += prev.distance_to(q)
+		if since >= FLAG_STEP and s < steps:
+			since = 0.0
 			if glows(look):
-				draw_circle(c, 10.0, Color(1.0, 0.8, 0.4, 0.14 + 0.04 * _phase))
-				draw_circle(c, 5.0, RED.lightened(0.1))
-				draw_circle(c, 5.0, GOLD, false, 1.0)
+				draw_circle(q + Vector2(0, 9), 13.0, Color(1.0, 0.8, 0.4, 0.14 + 0.04 * _phase))
+				draw_circle(q + Vector2(0, 9), 7.0, RED.lightened(0.1))
+				draw_circle(q + Vector2(0, 9), 7.0, GOLD, false, 2.0)
 			else:
-				var col := [RED, GOLD, GREEN][(index + s / 2) % 3] as Color
-				draw_colored_polygon(PackedVector2Array([q + Vector2(-4, 0), q + Vector2(4, 0), q + Vector2(0, 9)]), col)
+				var col: Color = colors[(index + k) % colors.size()]
+				var tri := PackedVector2Array([q + Vector2(-5, 0), q + Vector2(5, 0), q + Vector2(0, 12)])
+				draw_colored_polygon(tri, col)
+				draw_polyline(PackedVector2Array([tri[0], tri[2], tri[1]]), OUTLINE, 1.0)
+			k += 1
 		prev = q

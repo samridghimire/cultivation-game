@@ -273,11 +273,29 @@ static func do_activity(data: GameData, active: Array, c: CharacterData, event_i
 	return {"ok": true, "reason": "", "text": text, "notes": notes, "days": int(activity.get("days", 0)), "bonus": got_bonus}
 
 
+## GFX-097: the festival decoration looks `decor.look` may name (FestivalStall.LOOK_DRAW has the same keys).
+const DECOR_LOOKS := ["boats", "drum", "kite", "lanterns", "moon"]
+
+
 ## Load errors for data/world_events.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	for def: Dictionary in data.world_events.values():
 		var id := String(def.get("id", ""))
+		if def.get("festival", false) and not def.has("decor"):
+			errors.append("Festival '%s' needs a decor" % id)
+		if def.has("decor"):
+			var decor: Variant = def["decor"]
+			if not decor is Dictionary or not DECOR_LOOKS.has(String((decor as Dictionary).get("look", ""))):
+				errors.append("World event '%s' decor.look must be one of %s" % [id, ", ".join(DECOR_LOOKS)])
+			else:
+				var cols: Variant = (decor as Dictionary).get("colors", [])
+				if not cols is Array or (cols as Array).is_empty():
+					errors.append("World event '%s' decor.colors must be a non-empty list" % id)
+				else:
+					for c in cols:
+						if not (c is String and String(c).is_valid_html_color()):
+							errors.append("World event '%s' decor color '%s' is not a hex colour" % [id, c])
 		var chance := float(def.get("monthly_chance", -1.0))
 		if chance < 0.0 or chance > 1.0:
 			errors.append("World event '%s' monthly_chance must be in 0..1" % id)
