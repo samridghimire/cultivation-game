@@ -360,3 +360,9 @@ static func validate_rotating(rot: Variant, place: Dictionary, items: Dictionary
 			if restricted.has(String(tag)):
 				problems.append("%s rotating_stock item '%s' carries a restricted tag" % [where, (e as Dictionary)["item"]])
 	return problems
+
+
+## GUIDE-222: the region's `short_name` (<= 14 chars) for the narrow Next steps panel; its display name when it has none.
+static func short_region_name(data: GameData, region_id: String) -> String:
+	var region: Dictionary = data.regions.get(region_id, {})
+	return String(region.get("short_name", region.get("name", region_id)))

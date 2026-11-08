@@ -588,6 +588,8 @@ func _validate_world() -> void:
 			load_errors.append("Region '%s' discovery '%s' must be a discovery_only encounter" % [region["id"], region["discovery"]])
 		if region.has("discovery_rumor") and not (region.has("discovery") and region["discovery_rumor"] is String and (region["discovery_rumor"] as String).strip_edges() != ""):
 			load_errors.append("Region '%s' discovery_rumor must be a non-empty string and needs a discovery" % region["id"])
+		if region.has("short_name") and not (region["short_name"] is String and (region["short_name"] as String).strip_edges() != "" and (region["short_name"] as String).length() <= 14):
+			load_errors.append("Region '%s' short_name must be a non-empty string of at most 14 characters" % region["id"])
 		if region.has("first_visit") and not (region["first_visit"] is String and (region["first_visit"] as String).strip_edges() != ""):
 			load_errors.append("Region '%s' first_visit must be a non-empty string" % region["id"])
 		if region.has("map_pos"):

@@ -6505,3 +6505,48 @@ func test_short_hint_rewrites_the_fighting_style_line() -> void:
 	assert_eq(Guidance.short_hint(line), "No fighting style: Iron Fist")
 	assert_eq(Guidance.short_hint("Short line."), "Short line.")
 	assert_true(Guidance.short_hint("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.").length() <= 42)
+
+
+# GUIDE-222
+func test_short_goal_fits_and_keeps_the_target() -> void:
+	var g := Guidance.short_goal("Goal: Talk to Elder Mo in Qingshi Village (10 days)", data())
+	assert_eq(g, "Goal: See Elder Mo in Qingshi · 10d")
+	assert_true(g.length() <= 46)
+	assert_eq(Guidance.short_goal("Goal: Reach the 2nd layer", data()), "Goal: Reach the 2nd layer")
+	var long := Guidance.short_goal("Goal: Sell your herbs to the Wandering Merchant at Fallen Star Market (9 days)", data())
+	assert_true(long.length() <= 46, long)
+	assert_false(long.ends_with("..."))
+
+
+func test_short_fight_lines() -> void:
+	assert_eq(Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+
+
+func test_short_hints_fit_in_every_region() -> void:
+	for region: String in data().regions:
+		var c := _fresh()
+		c.techniques = {}
+		_assert_short_set(c, region, "mortal in " + region)
+
+
+func test_short_hints_fit_with_an_injury() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 3
+	Injuries.inflict(c, data(), String(data().injuries.keys()[0]))
+	_assert_short_set(c, "qingshi_village", "injured")
+
+
+func test_region_short_name_falls_back_and_validates() -> void:
+	assert_eq(Places.short_region_name(data(), "withered_bone_marsh"), "Bone Marsh")
+	assert_eq(Places.short_region_name(data(), "azure_peak"), "Azure Peak")
+	var d := GameData.new()
+	d.regions = {"r": {"id": "r", "short_name": "A name far too long"}}
+	d.load_errors.clear()
+	d._validate()
+	var found := false
+	for e in d.load_errors:
+		if "short_name" in e:
+			found = true
+	assert_true(found, "long short_name rejected")

@@ -432,9 +432,12 @@ const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" f
 
 ## GUIDE-220: `line` squeezed to SHORT_HINT_CHARS keeping the verb and the target: known long forms are
 ## rewritten, others fall back to their first sentence, then a word-boundary cut (never "...").
-static func short_hint(line: String) -> String:
+static func short_hint(line: String, data: GameData = null) -> String:
 	if line.length() <= SHORT_HINT_CHARS:
 		return line
+	var fight := _short_fight(line, data)
+	if fight != "":
+		return fight
 	var re := RegEx.new()
 	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
 	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
@@ -467,6 +470,64 @@ static func short_hint(line: String) -> String:
 	return cut.rstrip(" .:;,-(")
 
 
+## GUIDE-222: "Easy fight: Wild Boar, Bone Marsh · 99%" from "Easy fight: Chore for Headman Zhou: Wild Boar in
+## Withered Bone Marsh (9 days, 99 in 100)". Drops the chore giver, then the region, until it fits; "" when `line` is no fight line.
+static func _short_fight(line: String, data: GameData) -> String:
+	var re := RegEx.new()
+	re.compile("^(Easy fight|Fair fight): (.+) \\((?:.+, )?(\\d+) in 100\\)$")
+	var m := re.search(line)
+	if m == null:
+		return ""
+	var rest := m.get_string(2)
+	var tail := " · %s%%" % m.get_string(3)
+	var head := m.get_string(1) + ": "
+	var chore := rest.find(": ")
+	var no_chore := rest.substr(chore + 2) if rest.begins_with("Chore for ") and chore > 0 else rest
+	var foe := no_chore
+	var where := ""
+	var at := no_chore.find(" in ")
+	if at > 0:
+		foe = no_chore.substr(0, at)
+		where = no_chore.substr(at + 4)
+		if data != null:
+			for id: String in data.regions:
+				if String(data.regions[id].get("name", "")) == where:
+					where = Places.short_region_name(data, id)
+	var tries: Array[String] = []
+	if where != "":
+		tries.append(head + foe + ", " + where + tail)
+	tries.append(head + foe + tail)
+	for t in tries:
+		if t.length() <= SHORT_HINT_CHARS:
+			return t
+	return tries[tries.size() - 1]
+
+
+## GUIDE-222: the HUD goal line in <= SHORT_GOAL_CHARS: "(N days)" -> "· Nd", full region names -> short names,
+## "Talk to X in R" -> "See X in R", then the word-boundary cut of short_hint.
+const SHORT_GOAL_CHARS := 46
+static func short_goal(goal_line: String, data: GameData) -> String:
+	var line := goal_line
+	if line.length() <= SHORT_GOAL_CHARS:
+		return line
+	var re := RegEx.new()
+	re.compile(" \\((\\d+) days?\\)$")
+	var m := re.search(line)
+	if m != null:
+		line = line.substr(0, m.get_start()) + " · %sd" % m.get_string(1)
+	for id: String in data.regions:
+		var full := String(data.regions[id].get("name", ""))
+		if full != "" and line.contains(full):
+			line = line.replace(full, Places.short_region_name(data, id))
+	line = line.replace("Goal: Talk to ", "Goal: See ")
+	if line.length() <= SHORT_GOAL_CHARS:
+		return line
+	var cut := line.substr(0, SHORT_GOAL_CHARS + 1)
+	var space := cut.rfind(" ")
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS)
+	return cut.rstrip(" .:;,-(")
+
+
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
@@ -476,7 +537,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		# GUIDE-220: the HUD's Next steps panel is narrow; ask for a few extra so duplicates after shortening can go.
 		var shorts: PackedStringArray = []
 		for line in hints(c, data, density, limit + 2, people, flags, region_id, today, favor, false):
-			var one := short_hint(line)
+			var one := short_hint(line, data)
 			if one != "" and not shorts.has(one):
 				shorts.append(one)
 		if shorts.size() > limit:

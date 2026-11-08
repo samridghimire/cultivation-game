@@ -727,7 +727,7 @@ func _refresh() -> void:
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density, GameState.current_region, GameClock.total_days) if hint_count > 0 else ""
-	_goal.text = goal
+	_goal.text = Guidance.short_goal(goal, data)
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
 	var hints: PackedStringArray = []
