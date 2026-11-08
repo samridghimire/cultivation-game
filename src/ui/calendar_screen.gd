@@ -339,7 +339,7 @@ static func next_summary(entries: Array) -> String:
 
 
 func _today_style() -> StyleBoxFlat:
-	var sb := UIStyle.panel_style()
+	var sb := UIStyle.flat_panel_style()
 	sb.border_color = GOLD
 	sb.set_border_width_all(3)
 	sb.bg_color = Color(0.2, 0.17, 0.08)

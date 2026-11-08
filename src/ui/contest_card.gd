@@ -27,9 +27,7 @@ var _style: StyleBoxFlat
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	_style = (style_source.get_theme_stylebox("panel") as StyleBoxFlat).duplicate() as StyleBoxFlat
-	style_source.free()
+	_style = UIStyle.flat_panel_style()
 	add_theme_stylebox_override("panel", _style)
 	visible = false
 	var box := VBoxContainer.new()

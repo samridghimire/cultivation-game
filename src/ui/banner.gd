@@ -44,7 +44,7 @@ func _init() -> void:
 	_ribbon = PanelContainer.new()
 	_ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ribbon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var style := UIStyle.panel_style()
+	var style := UIStyle.flat_panel_style()
 	style.bg_color = Color(style.bg_color, 0.85)
 	style.set_corner_radius_all(6)
 	style.border_color = UIStyle.ACCENT

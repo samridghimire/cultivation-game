@@ -592,6 +592,12 @@ func _build_guide_panel() -> void:
 	_key_bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_key_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_key_bar.visible = bool(Settings.get_value("key_help"))
+	var caps := KeyCaps.new()
+	caps.bar = _key_bar
+	caps.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caps.set_anchors_preset(Control.PRESET_FULL_RECT)
+	caps.show_behind_parent = true
+	_key_bar.add_child(caps)
 	add_child(_key_bar)
 	_refresh_key_hints()
 
@@ -2196,7 +2202,7 @@ static func ellipsize_first_line(text: String, font: Font, font_size: int, width
 
 ## The key strip's translucent dark backing (GFX-016).
 static func key_bar_style() -> StyleBoxFlat:
-	var style := UIStyle.panel_style().duplicate() as StyleBoxFlat
+	var style := UIStyle.flat_panel_style()
 	style.bg_color.a = 0.6
 	style.border_width_left = 0
 	style.border_width_right = 0
@@ -2238,3 +2244,19 @@ func _on_dialogue_ended(_id: String) -> void:
 
 func _on_session_started_season() -> void:
 	_season = Calendar.season_of(GameClock.total_days)
+
+
+## GFX-099: draws the key bar's "[X]" keys as small key caps (lighter box, 1 px shadow) behind its text.
+class KeyCaps extends Control:
+	var bar: Label
+
+	func _draw() -> void:
+		if bar == null or bar.text == "":
+			return
+		var font := bar.get_theme_font("font")
+		var fs := bar.get_theme_font_size("font_size")
+		var sb := bar.get_theme_stylebox("normal")
+		var mr := sb.get_margin(SIDE_RIGHT) if sb != null else 0.0
+		for r in UIStyle.key_cap_rects(font, fs, bar.text, size.x, mr, size.y):
+			draw_rect(Rect2(r.position + Vector2(0, 1), r.size), Color(0, 0, 0, 0.6))
+			draw_rect(r, Color(0.28, 0.29, 0.34, 0.9))
