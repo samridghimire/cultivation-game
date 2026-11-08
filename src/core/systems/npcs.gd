@@ -396,7 +396,40 @@ static func haunt_positions(people: Array[CharacterData], region: Dictionary, da
 	return out
 
 
+const STOP_TRAVEL_CLEAR := 40.0
+const STOP_PLACE_CLEAR := 24.0
+
+
+## WU-483: true when `pos` is 40 px from every travel point and 24 px from every place rect.
+static func stop_is_clear(pos: Vector2, region: Dictionary) -> bool:
+	for p: Dictionary in region.get("places", []):
+		var rect := _rect_of(p)
+		if rect.grow(STOP_PLACE_CLEAR).has_point(pos):
+			return false
+		if String(p.get("type", "")) == "travel" and rect.get_center().distance_to(pos) < STOP_TRAVEL_CLEAR:
+			return false
+	return true
+
+
+## WU-483: `pos` moved (deterministically, outward along 16 directions, 8 px steps) to the nearest stop_is_clear
+## point; unchanged when already clear.
+static func nudge_stop(pos: Vector2, region: Dictionary) -> Vector2:
+	if stop_is_clear(pos, region):
+		return pos
+	for step in range(1, 40):
+		for k in 16:
+			var cand := pos + Vector2.from_angle(TAU * float(k) / 16.0) * (8.0 * float(step))
+			if stop_is_clear(cand, region):
+				return cand
+	return pos
+
+
 static func _haunt_at(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2], visit_place: Dictionary = {}) -> Vector2:
+	var pos := _haunt_raw(npc, region, day, adult, weather, placed, visit_place)
+	return pos if pos == Vector2.ZERO else nudge_stop(pos, region)
+
+
+static func _haunt_raw(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2], visit_place: Dictionary = {}) -> Vector2:
 	var h := absi(hash(npc.id))
 	var place := haunt_place(npc, region, day, adult, weather, visit_place)
 	if place.is_empty():

@@ -399,7 +399,15 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if gn.get("great") == true:
 			own[i] = blockers.size()
 			blockers.append(Rect2(gn.position - GREAT_FIGURE / 2.0, GREAT_FIGURE))
-	var result := LabelLayout.resolve(rects, view, blockers, own)
+	var covers := {}
+	for i in ranked.size():  # WU-483: a villager's name never sits on the roof of a building behind them
+		if (ranked[i] as Interactable).get("npc_id") != null:
+			var roofs: Array[Rect2] = []
+			for other: Interactable in nodes:
+				if other != ranked[i] and other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
+					roofs.append(Rect2(other.position - other.size / 2.0, other.size))
+			covers[i] = roofs
+	var result := LabelLayout.resolve(rects, view, blockers, own, covers)
 	for i in ranked.size():
 		var node: Interactable = ranked[i]
 		var lift: float = result[i]["offset"]

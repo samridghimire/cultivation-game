@@ -108,3 +108,13 @@ func test_blocker_at_bottom_pushes_label_up() -> void:
 	var moved := Rect2(rects[0].position + Vector2(0, float(res[0]["offset"])), rects[0].size)
 	assert_false(moved.intersects(bar))
 	assert_true(float(res[0]["offset"]) < 0.0)
+
+
+func test_label_moves_below_a_building_it_would_sit_on() -> void:
+	var rects: Array[Rect2] = [Rect2(100, 100, 80, 16)]
+	var roof := Rect2(90, 60, 100, 50)
+	var out := LabelLayout.resolve(rects, Rect2(0, 0, 1280, 800), [], {}, {0: [roof]})
+	assert_gt(float(out[0]["offset"]), 0.0, "moved down, not up")
+	assert_false(bool(out[0]["faded"]))
+	var free := LabelLayout.resolve(rects, Rect2(0, 0, 1280, 800), [], {}, {0: [Rect2(600, 600, 50, 50)]})
+	assert_eq(float(free[0]["offset"]), 0.0)

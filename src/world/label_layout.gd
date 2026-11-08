@@ -10,7 +10,8 @@ const MAX_STEPS := 2
 ## (or a `blockers` rect) is nudged down then up by its height (max MAX_STEPS tries each way,
 ## and never off `screen`); if it still overlaps it is marked faded and left in place.
 ## `own_blocker` (GFX-071) maps a rect index to the blocker index that rect belongs to; that one is ignored for it.
-static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = [], own_blocker: Dictionary = {}) -> Array[Dictionary]:
+## WU-483: `covers` maps a rect index to extra rects (building sprites) only that label must clear; it then moves down first.
+static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = [], own_blocker: Dictionary = {}, covers: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var placed: Array[Rect2] = blockers.duplicate()
 	for ri in rects.size():
@@ -19,7 +20,9 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 		var chosen := rect
 		var offset := 0.0
 		var faded := false
-		if _hits(rect, placed, skip):
+		var extra: Array[Rect2] = []
+		extra.assign(covers.get(ri, []))
+		if _hits(rect, placed, skip) or _hits(rect, extra):
 			faded = true
 			var step := rect.size.y + 2.0
 			var tries: Array[float] = []
@@ -31,7 +34,7 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 				var moved := Rect2(rect.position + Vector2(0, dy), rect.size)
 				if screen.size != Vector2.ZERO and not screen.encloses(moved):
 					continue
-				if not _hits(moved, placed, skip):
+				if not _hits(moved, placed, skip) and not _hits(moved, extra):
 					chosen = moved
 					offset = dy
 					faded = false
