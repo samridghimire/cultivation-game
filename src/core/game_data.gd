@@ -596,6 +596,8 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
 		if region.get("map", {}).has("no_snow") and not region["map"]["no_snow"] is bool:
 			load_errors.append("Region '%s' map.no_snow must be true or false" % region["id"])
+		if region.get("map", {}).has("building_style") and not PixelPlace.STYLES.has(region["map"]["building_style"]):
+			load_errors.append("Region '%s' map.building_style must be one of %s" % [region["id"], PixelPlace.STYLES])
 		if region.get("map", {}).has("ground_style") and not GroundTiles.STYLES.has(region["map"]["ground_style"]):
 			load_errors.append("Region '%s' map.ground_style must be one of %s" % [region["id"], GroundTiles.STYLES])
 		if region.get("map", {}).has("mist"):

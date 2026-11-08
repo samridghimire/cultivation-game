@@ -647,6 +647,7 @@ func _make_place(place: Dictionary) -> Interactable:
 	var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
 	node.position = _vec(place.get("pos", [0, 0]))
 	node.art_kind = place["type"]
+	node.building_style = String(_region.get("map", {}).get("building_style", "thatch"))
 	for key in place:
 		if LAYOUT_KEYS.has(key):
 			continue
@@ -1139,8 +1140,10 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
 		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced())
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")))
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
+		if lm["kind"] == "house":
+			PlaceArt.contact_shadow(self, Vector2(r.get_center().x, r.end.y), px.x)
 		var origin := Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y)
 		draw_texture_rect(ptex, Rect2(origin, px), false)
 		_draw_season_overlay(str(lm["kind"]), origin, r, ptex.get_size())

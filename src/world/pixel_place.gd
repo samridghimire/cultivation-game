@@ -23,7 +23,28 @@ const COLORS := {
 	"p": Color("e8dcc0"), "g": Color("c9a24a"), "s": Color("8a8478"), "S": Color("6a6559"), "e": Color("6e5a3c"), "v": Color("4f7a3a"),
 }
 
+## GFX-100: regions.json `map.building_style`; thatch is the base look (COLORS), the others override these entries
+## (and the roof colour) on building kinds only. `roof` (optional) replaces the place colour.
+const STYLES := ["thatch", "tile", "stone", "stilt", "log"]
+const STYLE_COLORS := {
+	"thatch": {},
+	"tile": {"w": Color("ece8de"), "W": Color("c4beb0"), "t": Color("a8332b"), "T": Color("7a2420"), "roof": Color("5d7388")},
+	"stone": {"w": Color("9a968c"), "W": Color("746f65"), "t": Color("5a5f68"), "T": Color("40444c"), "roof": Color("4d5f7a")},
+	"stilt": {"w": Color("6b5a44"), "W": Color("4a3d2d"), "t": Color("4a3a28"), "T": Color("33281b"), "roof": Color("7a6444")},
+	"log": {"w": Color("5a4330"), "W": Color("3d2d20"), "t": Color("463525"), "T": Color("2e2218"), "roof": Color("4c6a3a")},
+}
+
 static var _cache: Dictionary = {}
+
+
+## GFX-100: kinds that take a building style (sect halls, nature and explore looks never do).
+static func is_building(kind: String) -> bool:
+	return ["workshop", "clinic", "orphanage", "family_home", "auction", "merchant"].has(kind) or kind.begins_with("shop")
+
+
+## GFX-100: the style that actually applies to `kind` ("thatch" for non-buildings and unknown styles).
+static func effective_style(kind: String, style: String) -> String:
+	return style if is_building(kind) and STYLE_COLORS.has(style) else "thatch"
 
 
 static func supports(kind: String) -> bool:
@@ -77,23 +98,32 @@ static func shop_look(place_name: String) -> String:
 	return "shop"
 
 
-static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "") -> ImageTexture:
+static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> ImageTexture:
 	var compact := false
 	if kind == "merchant" and size.x >= SHOP_MIN_WIDTH:
 		kind = shop_look(place_name)
 		compact = size.x < 120.0
 	var horizontal := size.x >= size.y
+	style = effective_style(kind, style)
 	var key := "%s|%s|%s|%s" % [kind + ("_c" if compact else ""), color.to_html(), horizontal if kind == "travel" else true, active]
+	if style != "thatch":
+		key += "|" + style
 	if not _cache.has(key):
-		_cache[key] = from_rows(rows(kind, horizontal, active, compact), color, active)
+		_cache[key] = from_rows(rows(kind, horizontal, active, compact, style), color, active, style)
 	return _cache[key]
 
 
 ## Builds a texture from template rows; `r` takes `color` (brighter when `active`), R / h are its shade / highlight.
-static func from_rows(r: Array[String], color: Color, active: bool = false) -> ImageTexture:
+static func from_rows(r: Array[String], color: Color, active: bool = false, style: String = "thatch") -> ImageTexture:
 	var img := Image.create(r[0].length(), r.size(), false, Image.FORMAT_RGBA8)
 	var palette := COLORS.duplicate()
-	var base := color.lightened(0.25) if active else color
+	var over: Dictionary = STYLE_COLORS.get(style, {})
+	for ch: String in over:
+		if ch != "roof":
+			palette[ch] = over[ch]
+	var base: Color = over.get("roof", color) if over.has("roof") else color
+	if active:
+		base = base.lightened(0.25)
 	palette["r"] = base
 	palette["R"] = base.darkened(0.3)
 	palette["h"] = base.lightened(0.2)
@@ -105,7 +135,7 @@ static func from_rows(r: Array[String], color: Color, active: bool = false) -> I
 
 
 ## Template rows for `kind` (empty for unsupported kinds); each row has the same length.
-static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false) -> Array[String]:
+static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false, style: String = "thatch") -> Array[String]:
 	var c: Array
 	match kind:
 		"merchant":
@@ -170,11 +200,32 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _trail()
 		_:
 			return []
+	apply_style_rows(c, effective_style(kind, style))
 	outline(c)
 	var out: Array[String] = []
 	for row: Array in c:
 		out.append("".join(row))
 	return out
+
+
+## GFX-100: small row edits per style, before the outline: stilt raises the base on posts (the bottom 3 rows keep a
+## 2 px post every 8 px, mud-dark between is cleared); log draws a horizontal seam on every 3rd wall row.
+static func apply_style_rows(c: Array, style: String) -> void:
+	var h := c.size()
+	if style == "stilt":
+		for y in range(h - 3, h):
+			for x in c[y].size():
+				if x % 8 >= 2:
+					c[y][x] = "."
+				elif c[y][x] != ".":
+					c[y][x] = "T"
+	elif style == "log":
+		for y in range(0, h - 3):
+			if y % 3 != 0:
+				continue
+			for x in c[y].size():
+				if c[y][x] == "w":
+					c[y][x] = "W"
 
 
 static func canvas(w: int, h: int) -> Array:

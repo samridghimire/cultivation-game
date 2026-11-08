@@ -21,6 +21,7 @@ extends Area2D
 var tags: Array = []
 ## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
 var art_kind := ""
+var building_style := "thatch"  ## GFX-100: regions.json map.building_style, set by the world builder
 ## The player's current interaction target pulses (set by Player).
 var highlighted := false:
 	set(value):
@@ -523,7 +524,7 @@ func _draw() -> void:
 		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))
 		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
 	elif not draw_generated_art():
-		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name)
+		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name, building_style)
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		var ring := Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow)

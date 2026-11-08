@@ -15,13 +15,15 @@ const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
 
 
-static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "") -> void:
+static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> void:
 	var h := size / 2.0
 	# GFX-021: PixelPlace kinds are drawn as pixel art, base on the place rect's lower edge (the vector
 	# functions below for those kinds are unused while PixelPlace supports them).
 	if PixelPlace.supports(kind):
-		var tex := PixelPlace.texture(kind, size, color, active, place_name)
+		var tex := PixelPlace.texture(kind, size, color, active, place_name, style)
 		var px := Vector2(tex.get_size()) * float(Sprites.scale())
+		if PixelPlace.is_building(kind):
+			contact_shadow(ci, Vector2(0, h.y), px.x)
 		ci.draw_texture_rect(tex, Rect2(Vector2(-px.x / 2.0, h.y - px.y), px), false)
 		return
 	match kind:
@@ -70,6 +72,12 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 		_:
 			ci.draw_rect(Rect2(-h, size), color)
 			ci.draw_rect(Rect2(-h, size), color.darkened(0.5), false, 2.0)
+
+
+## GFX-100: a soft 2-step ground shadow under a building base (`base` = bottom-centre), 1.1x the footprint wide.
+static func contact_shadow(ci: CanvasItem, base: Vector2, width: float) -> void:
+	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.55, 4.0), Color(0, 0, 0, 0.12))
+	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.46, 3.0), Color(0, 0, 0, 0.22))
 
 
 ## Ellipse filled (or outlined with width > 0) centered at `center`.

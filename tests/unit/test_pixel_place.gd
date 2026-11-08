@@ -219,3 +219,33 @@ func test_game_data_rejects_unknown_realm_look() -> void:
 		data.load_errors.clear()
 		data._validate_world()
 		assert_eq("\n".join(data.load_errors).contains("unknown secret_realm look"), look == "castle", look)
+
+
+## GFX-100
+func test_building_styles() -> void:
+	var size := Vector2(60, 50)
+	var base := PixelPlace.texture("workshop", size, Color("a0522d"))
+	assert_eq(PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "thatch"), base)
+	for style: String in PixelPlace.STYLES:
+		for kind in ["workshop", "clinic", "orphanage", "family_home", "auction", "merchant"]:
+			var t := PixelPlace.texture(kind, size, Color("a0522d"), false, "", style)
+			var t0 := PixelPlace.texture(kind, size, Color("a0522d"))
+			assert_eq(t.get_size(), t0.get_size(), "%s %s keeps its size" % [style, kind])
+	var tile := PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "tile")
+	assert_true(tile != base)
+	assert_true(tile.get_image().get_data() != base.get_image().get_data())
+	# Non-building kinds ignore the style.
+	assert_eq(PixelPlace.texture("sect_hall", size, Color("a0522d"), false, "", "stone"), PixelPlace.texture("sect_hall", size, Color("a0522d")))
+	var stilt := PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "stilt").get_image()
+	assert_eq(stilt.get_pixel(3, stilt.get_height() - 1).a, 0.0, "gap between posts")
+
+
+func test_game_data_rejects_unknown_building_style() -> void:
+	for style: String in PixelPlace.STYLES + ["pagoda"]:
+		var data := GameData.load_from_dir()
+		data.regions["qingshi_village"]["map"]["building_style"] = style
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("building_style"), style == "pagoda", style)
+	var fresh := GameData.load_from_dir()
+	assert_eq(fresh.load_errors.size(), 0, str(fresh.load_errors))

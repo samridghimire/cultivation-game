@@ -25,13 +25,14 @@ static func pixel_size(kind: String, size: Vector2) -> Vector2i:
 
 ## `tint` is the pond's water colour; other kinds ignore it.
 ## `dashes` false leaves streams without baked ripple dashes (GFX-051: WaterLife scrolls its own).
-static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), frozen: bool = false, dashes: bool = true) -> ImageTexture:
+static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), frozen: bool = false, dashes: bool = true, style: String = "thatch") -> ImageTexture:
+	style = PixelPlace.effective_style("family_home" if kind == "house" else kind, style)
 	var px := pixel_size(kind, size)
 	if frozen and kind == "pond":
 		return frozen_pond(px, tint)
-	var key := "%s|%s|%s|%s" % [kind, px, tint.to_html(), dashes]
+	var key := "%s|%s|%s|%s|%s" % [kind, px, tint.to_html(), dashes, style]
 	if not _cache.has(key):
-		_cache[key] = PixelPlace.from_rows(rows(kind, size, dashes), tint)
+		_cache[key] = PixelPlace.from_rows(rows(kind, size, dashes, style), tint, false, style)
 	return _cache[key]
 
 
@@ -68,7 +69,7 @@ static func frozen_pond(px: Vector2i, water: Color) -> ImageTexture:
 
 
 ## Template rows (all of one length) for `kind` in a rect of `size`.
-static func rows(kind: String, size: Vector2, dashes: bool = true) -> Array[String]:
+static func rows(kind: String, size: Vector2, dashes: bool = true, style: String = "thatch") -> Array[String]:
 	var c: Array
 	var n := pixel_size(kind, size) if not FIXED.has(kind) else Vector2i.ZERO
 	match kind:
@@ -99,6 +100,7 @@ static func rows(kind: String, size: Vector2, dashes: bool = true) -> Array[Stri
 		_:
 			return []
 	if kind != "pond" and kind != "stream":
+		PixelPlace.apply_style_rows(c, style)
 		PixelPlace.outline(c)
 	return _rows_of(c)
 
