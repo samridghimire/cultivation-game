@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-08 [QA-204] A clean balance baseline: every number the sims track is explained again.
+- 2026-11-08 [WILD-022] Hang great-beast trophies in your home: a little renown each month, and visitors notice.
+- 2026-11-08 [SEASON-011] A third village project: finished seasons repair the pond jetty for better fishing and a new fish.
+- 2026-11-08 [WU-490] The hen coop looks like a coop, and fed hens gather round it.
+- 2026-11-08 [WILD-021] Finishing a region's great-beast trail is remembered: a world line and a deed of its own.
+- 2026-11-08 [C-330] Friends who came to a festival with you each remember it in their own words.
+- 2026-11-08 [WU-489] A tidier first morning: the empty log box waits for its first line, village labels no longer touch.
+- 2026-11-08 [WU-488] Encounters open with a little scene of where you are and who you meet.
+- 2026-11-08 [FOLK-027] You have a birthday: friends greet you and your family cooks for you.
+- 2026-11-08 [C-328] Villagers have something to say at each festival.
+- 2026-11-08 [GUIDE-222] Shorter goal and hint lines on the HUD.
+- 2026-11-08 [C-327] The great-beast trails in the forest, the peak and the marsh gain a middle step.
+- 2026-11-08 [GFX-103] Region signs fit their names, and ponds look clear, murky or icy by region.
+- 2026-11-08 [GFX-102] Gather sites look like what they are: herb beds, rubble, craters, crystal, frost, terraces, bog.
+- 2026-11-08 [GFX-101] You can always find yourself: a light outline and gold corner brackets on your target.
 - 2026-11-08 [WU-487] Secret realms that are open look open in the world (shot flag for checking it).
 - 2026-11-08 [WU-486] Villagers show a little heart, smile or sweat drop when you give gifts, share scenes or learn from them.
 - 2026-11-08 [FOLK-026] A friend who came with you to a festival remembers it the next time you talk.
