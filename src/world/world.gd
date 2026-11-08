@@ -653,7 +653,9 @@ func _make_place(place: Dictionary) -> Interactable:
 			continue
 		node.set(key, _convert(place[key], node.get(key)))
 	if place["type"] == "explore":
-		node.art_kind = PixelPlace.explore_kind(String(place.get("look", "cave")))
+		node.art_kind = PixelPlace.explore_kind(String(place.get("look", "cave")), place.get("explore_tags", []))
+		if place.get("look", "") == "woods":
+			node.color = PixelPlace.woods_color(_region.get("map", {}), node.color)  # GFX-104
 	if place["type"] == "gather":
 		node.art_kind = PixelPlace.gather_kind(String(place.get("look", "patch")))
 	if place["type"] == "secret_realm":

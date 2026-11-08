@@ -51,11 +51,13 @@ static func effective_style(kind: String, style: String) -> String:
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != "" or _gather_look(kind) != "" or _realm_look(kind) != ""
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or kind == "explore_woods_herbs" or _explore_look(kind) != "" or _gather_look(kind) != "" or _realm_look(kind) != ""
 
 
 ## The art kind for an explore place with `look`: plain "explore" for cave or an unknown look.
-static func explore_kind(look: String) -> String:
+static func explore_kind(look: String, tags: Array = []) -> String:
+	if look == "woods" and tags.has("herbs"):
+		return "explore_woods_herbs"  # GFX-104
 	return "explore_" + look if look != "cave" and EXPLORE_LOOKS.has(look) else "explore"
 
 
@@ -218,6 +220,8 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _jetty()
 		"explore_woods":
 			c = _woods()
+		"explore_woods_herbs":
+			c = _woods(true)
 		"explore_ruins":
 			c = _ruins()
 		"explore_reeds":
@@ -693,22 +697,47 @@ static func _cave() -> Array:
 	return c
 
 
-## GFX-095: a dark clump of tree crowns with a narrow earth path into a gap.
-static func _woods() -> Array:
+## GFX-104: one tree crown: body `r`, lower-right shade `R`, upper-left highlight `h`.
+static func crown(c: Array, cx: float, cy: float, rx: float, ry: float) -> void:
+	ell(c, cx, cy, rx, ry, "r")
+	for y in c.size():
+		for x in c[y].size():
+			if c[y][x] != "r":
+				continue
+			var dx: float = (x + 0.5 - cx) / rx
+			var dy: float = (y + 0.5 - cy) / ry
+			if dx + dy > 0.6:
+				c[y][x] = "R"
+			elif dx + dy < -0.75:
+				c[y][x] = "h"
+
+
+## GFX-104: the crown colour for an explore woods site: the region's `map.decor.tree_color` (so the site sits in its
+## forest), else the place's own colour.
+static func woods_color(region_map: Dictionary, place_color: Color) -> Color:
+	var hex := String((region_map.get("decor", {}) as Dictionary).get("tree_color", ""))
+	return Color(hex) if hex != "" else place_color
+
+
+## GFX-095, GFX-104: separate overlapping tree crowns with their own trunks, a dark gap between the two middle
+## crowns and an earth path leading in; `herbs` adds bright herb sprigs along the path.
+static func _woods(herbs: bool = false) -> Array:
 	var c := canvas(54, 38)
-	rect(c, 0, 30, 54, 8, "v")
-	ell(c, 14, 18, 13, 12, "v")
-	ell(c, 40, 17, 13, 12, "v")
-	ell(c, 27, 12, 14, 11, "v")
-	for p: Array in [[8, 22], [20, 18], [34, 22], [44, 20], [24, 8]]:
-		ell(c, p[0], p[1], 5, 3, "S")
-	for p: Array in [[10, 12], [30, 6], [42, 10], [18, 14]]:
-		rect(c, p[0], p[1], 4, 2, "v")
-	rect(c, 22, 26, 10, 12, "e")
-	rect(c, 25, 20, 4, 6, "e")
-	rect(c, 25, 14, 4, 6, "d")
-	rect(c, 4, 34, 46, 3, "v")
-	rect(c, 22, 34, 10, 4, "e")
+	rect(c, 26, 10, 4, 16, "d")
+	rect(c, 24, 25, 8, 13, "e")
+	rect(c, 26, 18, 4, 8, "e")
+	for t: Array in [[11, 22], [43, 22], [19, 27], [36, 27]]:
+		rect(c, t[0] - 1, t[1], 3, 5, "t")
+		rect(c, t[0] + 1, t[1], 1, 5, "T")
+	crown(c, 11, 15, 10, 9)
+	crown(c, 43, 15, 10, 9)
+	crown(c, 27, 7, 7, 5)
+	crown(c, 19, 22, 7, 6)
+	crown(c, 36, 22, 7, 6)
+	if herbs:
+		for p: Array in [[22, 31], [32, 33], [21, 35], [33, 29]]:
+			rect(c, p[0], p[1], 1, 3, "v")
+			rect(c, p[0] - 1, p[1], 3, 1, "g")
 	return c
 
 

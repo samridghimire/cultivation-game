@@ -287,3 +287,24 @@ func test_game_data_rejects_unknown_gather_look() -> void:
 		data.load_errors.clear()
 		data._validate_world()
 		assert_eq("\n".join(data.load_errors).contains("unknown gather look"), look == "swamp", look)
+
+
+## GFX-104: woods are separate crowns on a 54x38 canvas; herb woods add sprigs; the crown colour follows the region.
+func test_woods_canvas_and_herb_variant() -> void:
+	var plain := PixelPlace.rows("explore_woods")
+	assert_eq(plain.size(), 38)
+	assert_eq(plain[0].length(), 54)
+	var herbs := PixelPlace.rows(PixelPlace.explore_kind("woods", ["herbs"]))
+	assert_eq(herbs.size(), 38)
+	assert_eq(herbs[0].length(), 54)
+	assert_true("".join(herbs) != "".join(plain))
+	assert_eq(PixelPlace.explore_kind("woods", ["ruins"]), "explore_woods")
+	assert_true(PixelPlace.supports("explore_woods_herbs"))
+	assert_false(plain[37].contains("o") and plain[37].count("o") > 20, "no full-width bar along the bottom")
+
+
+func test_woods_color_falls_back_to_place_color() -> void:
+	var place := Color("6f9f4a")
+	assert_eq(PixelPlace.woods_color({}, place), place)
+	assert_eq(PixelPlace.woods_color({"decor": {"trees": 3}}, place), place)
+	assert_eq(PixelPlace.woods_color({"decor": {"tree_color": "183427"}}, place), Color("183427"))
