@@ -7,6 +7,7 @@ extends PanelContainer
 
 signal closed
 
+var _scene: EncounterScene
 var _title: Label
 var _text: Label
 var _choices: VBoxContainer
@@ -20,6 +21,8 @@ func _init() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	add_child(box)
+	_scene = EncounterScene.new()
+	box.add_child(_scene)
 	_title = UIStyle.label("Encounter", 22, UIStyle.ACCENT)
 	box.add_child(_title)
 	_text = UIStyle.label("", 17)
@@ -93,6 +96,7 @@ func open() -> void:
 		close()
 		return
 	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
+	_scene.show_encounter(enc)
 	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
@@ -149,3 +153,7 @@ func _focus_first() -> void:
 
 func footer_text() -> String:
 	return _footer.text if _footer.visible else ""
+
+
+func scene_figure() -> String:
+	return _scene.figure()
