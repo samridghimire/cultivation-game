@@ -370,6 +370,20 @@ static func finish_trail(data: GameData, flags: Dictionary, region_id: String, e
 	return text.replace("{region}", String(data.regions[region_id].get("name", region_id)))
 
 
+## WILD-021: sets the trail flag, silently, for every region whose last great beast `c` has already felled (saves from
+## before WILD-021, where the first win of the last step never set it). Returns the regions flagged.
+static func backfill_trails(c: CharacterData, data: GameData, flags: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for region_id: String in data.regions:
+		var chain := great_chain(_great_def(data, region_id))
+		if chain.size() < 2 or flags.has(trail_flag(region_id)):
+			continue
+		if c.great_beasts.has(String(chain.back().get("enemy", ""))):
+			flags[trail_flag(region_id)] = true
+			out.append(region_id)
+	return out
+
+
 ## Item id -> count of everything this beast has dropped for the player so far.
 static func spoils_of(c: CharacterData, enemy_id: String) -> Dictionary:
 	return c.hunt_spoils.get(enemy_id, {}).duplicate()

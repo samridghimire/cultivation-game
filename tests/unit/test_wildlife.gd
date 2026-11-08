@@ -764,6 +764,21 @@ func test_trail_end_flag_once() -> void:
 	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", last, true), "", "only once")
 
 
+
+func test_trail_backfill_for_old_saves() -> void:
+	var data := GameData.load_from_dir()
+	var flags := {}
+	var chain := Wildlife.great_chain(data.regions["misty_forest"]["roamers"]["great"])
+	var c := _player(0)
+	c.great_beasts[String(chain[0]["enemy"])] = 1
+	assert_eq(Wildlife.backfill_trails(c, data, flags).size(), 0, "an early step is not the end")
+	c.great_beasts[String(chain.back()["enemy"])] = 1
+	var flagged := Wildlife.backfill_trails(c, data, flags)
+	assert_eq(flagged.size(), 1)
+	assert_eq(flagged[0], "misty_forest")
+	assert_true(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.backfill_trails(c, data, flags).size(), 0, "only once")
+
 func test_trail_data_valid() -> void:
 	var data := GameData.load_from_dir()
 	assert_eq(Wildlife.validate(data).size(), 0)

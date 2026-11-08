@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 49b988c
+Last reviewed commit: c85ddec
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1699,3 +1699,23 @@ Last reviewed commit: 49b988c
     (the dish comes on a chat with spouse/child instead); C-327 says the refreshed balance baseline absorbed unexplained
     drift from earlier work (first-hour wolf win day, sect contribution); WU-488's 120 px strip makes the encounter card
     taller, not checked on a many-choice encounter at 1280x800.
+- 2026-11-08 (reviewer, 4th run): reviewed 49b988c..c85ddec (WILD-021, WU-490, SEASON-011 (landed during the last
+  review), WILD-022, QA-204, COOK-003, WU-491, GUIDE-223, C-329, C-333, ENC-014, WU-492, GFX-104, WU-493, FOLK-028,
+  SEASON-012; [PLAN]/[REVIEW] skipped). Main green (3631 -> 3632 tests). No BACKLOG/CHANGELOG edits by workers; no
+  binary assets; no SAVE_VERSION change (`hung_trophies` defaults to [], `season_start_*` to {}/-1 and the first day
+  advance snapshots; `dish_memory` and the birthday-friend year are world flags).
+  - Fixed (WILD-021): the trail flag (and the four "End of the ... Trail" milestones) was only set on the *first* win
+    over a chain's last beast, so a save that had already felled it could never earn them. New
+    `Wildlife.backfill_trails` flags those regions silently on load (before the milestone award). Test added.
+  - Fixed: WILD-022 and FOLK-028 inserted their functions between another function's doc comment and its body
+    (claim_abode's and _rival_news's docs ended up on hang_trophy / birthday_at_home).
+  - SEASON-012 (season key still the old one at review time since SeasonTasks resets lazily; winter->spring only logs),
+    WILD-022 (home-gated hang/take-down, renown in the home region), COOK-003, FOLK-028 (has_home guarantees someone
+    at home before `[0]`), SEASON-011 (scale_catch leaves the "nothing" weight alone, so the bonus is real), ENC-014
+    (figure validated), WU-491, WU-492, WU-493, WU-490, GUIDE-223 OK.
+  - Notes, not filed: WILD-022's trophy remark fires on the first chat with anyone in a home region that month, not
+    only inside the home; SEASON-012's recap now takes the slot of the "Summer arrives" banner (in its Follow-ups);
+    GUIDE-223's gated-road trip note copies the whole character (to_dict/from_dict) on each HUD refresh while the
+    goal's road is realm-gated; GFX-104's `crown` re-shades every "r" pixel on the canvas against the newest crown, so
+    overlapping crowns' shading follows the last one drawn. Several UI tasks (WU-491/492, GFX-104, GUIDE-223) say
+    their screenshots were not rendered.

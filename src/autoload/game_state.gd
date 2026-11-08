@@ -225,8 +225,6 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	_pass_time(days, skip_title)
 
 
-## Claim a cave abode in the current region for spirit stones. Its anchor is
-## bound right away if the artifact has a free anchor slot.
 ## WILD-022: hang a great-beast trophy from the pack on the wall of your home in this region (no time passes).
 func hang_trophy(item_id: String) -> void:
 	EventBus.topic = "world"
@@ -253,6 +251,8 @@ func take_down_trophy(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## Claim a cave abode in the current region for spirit stones. Its anchor is
+## bound right away if the artifact has a free anchor slot.
 func claim_abode(abode_id: String) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
@@ -4333,6 +4333,7 @@ func load_save_dict(d: Dictionary) -> void:
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	# Milestones reached before this save (or before GOAL-001) are awarded silently, so
 	# loading never re-announces them; every earned one is re-synced to Steam (idempotent).
+	Wildlife.backfill_trails(player, data, world_flags)  # pre-WILD-021 saves
 	LifeStats.backfill(player, data, world_flags)
 	Milestones.award(player, data, world_flags, clan, GameClock.total_days)
 	for id in player.milestones:
@@ -4807,7 +4808,6 @@ func _on_days_advanced(days: int) -> void:
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
 
-## RIVAL-005: word of the rival's breakthroughs once you have met them.
 ## FOLK-028: on your birthday, family at your Family Home sets out the dish as you enter or wake there; without
 ## family, a Close friend (2+ needed) brings a small gift in the morning. Once a year each; no time passes.
 func birthday_at_home() -> void:
@@ -4832,6 +4832,7 @@ func birthday_at_home() -> void:
 	EventBus.topic = topic
 
 
+## RIVAL-005: word of the rival's breakthroughs once you have met them.
 func _rival_news() -> void:
 	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
 		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)
