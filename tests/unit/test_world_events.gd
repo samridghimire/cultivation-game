@@ -444,7 +444,7 @@ func test_festival_doubles_chat_favor_and_saves() -> void:
 func test_festival_shop_items() -> void:
 	var d := data()
 	var active: Array = [_lantern_instance(0)]
-	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), ["paper_lantern", "sweet_rice_ball"])
+	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), ["paper_lantern", "sweet_rice_ball", "river_lantern", "ginger_sugar_soup", "candied_haws"])
 	assert_eq(WorldEvents.shop_items(d, active, "misty_forest"), [])
 	WorldEvents.expire(active, 100)
 	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village"), [])
@@ -465,7 +465,7 @@ func test_game_state_festival_stock() -> void:
 	gs.world_events = []
 	assert_eq(gs.festival_stock(), [])
 	gs.world_events = [_lantern_instance(0)]
-	assert_eq(gs.festival_stock(), ["paper_lantern", "sweet_rice_ball"])
+	assert_eq(gs.festival_stock(), ["paper_lantern", "sweet_rice_ball", "river_lantern", "ginger_sugar_soup", "candied_haws"])
 	gs.world_events = []
 
 
@@ -506,7 +506,7 @@ func test_festival_activity_survives_save_and_validates() -> void:
 func test_festival_goods_only_at_matching_stalls() -> void:
 	var d := data()
 	var active: Array = [_lantern_instance(0)]
-	var goods: Array = ["paper_lantern", "sweet_rice_ball"]
+	var goods: Array = ["paper_lantern", "sweet_rice_ball", "river_lantern", "ginger_sugar_soup", "candied_haws"]
 	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["herb", "ore"]), goods, "herb stall")
 	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["equipment", "ore", "smithing"]), [], "smithy")
 	assert_eq(WorldEvents.shop_items(d, active, "qingshi_village", ["blood_art"]), [], "apothecary")
@@ -532,7 +532,7 @@ func test_game_state_festival_stock_by_stall() -> void:
 	gs.current_region = "qingshi_village"
 	gs.world_events = [_lantern_instance(0)]
 	assert_eq(gs.festival_stock(["weapon"]), [])
-	assert_eq(gs.festival_stock(["herb"]), ["paper_lantern", "sweet_rice_ball"])
+	assert_eq(gs.festival_stock(["herb"]), ["paper_lantern", "sweet_rice_ball", "river_lantern", "ginger_sugar_soup", "candied_haws"])
 	gs.end_session()
 
 
@@ -543,3 +543,20 @@ func test_every_festival_has_an_activity() -> void:
 		if bool(ev.get("festival", false)):
 			assert_true(ev.has("activity"), "%s has an activity" % ev["id"])
 	assert_true(WorldEvents.validate(d).is_empty(), ", ".join(WorldEvents.validate(d)))
+
+
+## C-314: every festival has 4-6 wares, each a known item with a price, sold by its own stall.
+func test_festival_wares_stocked() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	for id: String in gs.data.world_events:
+		var def: Dictionary = gs.data.world_events[id]
+		if not def.get("festival", false):
+			continue
+		var wares: Array = def.get("shop_items", [])
+		assert_true(wares.size() >= 4 and wares.size() <= 6, "%s has %d wares" % [id, wares.size()])
+		for item_id: String in wares:
+			assert_true(gs.data.items.has(item_id) and int(gs.data.items[item_id]["price"]) > 0, "%s ware %s" % [id, item_id])
+		for region: Dictionary in gs.data.regions.values():
+			for place: Dictionary in region["places"]:
+				if place.get("festival_only", "") == id:
+					assert_true(WorldEvents.sold_by(gs.data, id, place.get("stock_tags", [])), "%s stall sells its wares" % id)
