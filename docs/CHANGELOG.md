@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-08 [WU-483] Villagers on their daily rounds stop clear of signs, exits and buildings.
+- 2026-11-08 [GFX-099] Every HUD panel and menu has a gold pixel frame, and the key bar shows real key caps.
+- 2026-11-08 [WILD-020] Great-beast trails can run several steps, each beast stronger than the last.
+- 2026-11-08 [C-314] Festival stalls sell festival foods and keepsakes, some of them welcome gifts.
+- 2026-11-08 [WU-482] A cake floats over a friend on their birthday, and the Cook menu hints at dishes still to learn.
+- 2026-11-08 [GFX-098] Each secret-realm entrance looks like where it leads: rifts, clefts, seals, gates, tombs and pavilions.
+- 2026-11-08 [FOLK-025] Villagers have something to say about the festival when you talk to them.
+- 2026-11-08 [GUIDE-219] Hints no longer name dishes you haven't been taught or lessons promised a day early.
+- 2026-11-08 [C-326] Every named villager has a birthday and something you can give them in your first year.
+- 2026-11-08 [GFX-097] Festival bunting and a festival ground cloth you can see from across the village.
 - 2026-11-08 [GFX-096] Fields change with the seasons and your rented plots show what grows in them.
 - 2026-11-07 [C-325] Xiao Ling, Hunter Ma and Herbalist Lan teach you their dishes as you become friends.
 - 2026-11-07 [WU-481] Place names no longer hide under villagers and beasts.
