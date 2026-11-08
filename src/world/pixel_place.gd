@@ -13,14 +13,17 @@ const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as 
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 ## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
 const EXPLORE_LOOKS := PlaceLooks.EXPLORE_LOOKS  # GUIDE-219: owned by core
+## GFX-102: the pictures a gather place can have (regions.json `look`); "patch" is the original herb bed.
+const GATHER_LOOKS := PlaceLooks.GATHER_LOOKS
 ## GFX-098: the pictures a secret-realm entrance can have (regions.json `look`); "rift" is the original ring.
 const REALM_LOOKS := PlaceLooks.REALM_LOOKS
-const PALETTE := ".owWrRhdtTpgsSev"
+const PALETTE := ".owWrRhdtTpgsSevbBnmfk"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")
 const COLORS := {
 	"o": OUTLINE, "w": Color("d9cdb4"), "W": Color("b3a68c"), "d": DOOR, "t": Color("6e5636"), "T": Color("4f3d26"),
 	"p": Color("e8dcc0"), "g": Color("c9a24a"), "s": Color("8a8478"), "S": Color("6a6559"), "e": Color("6e5a3c"), "v": Color("4f7a3a"),
+	"b": Color("bfe3f2"), "B": Color("6fa6d0"), "n": Color("eef4f8"), "m": Color("2f3a2c"), "f": Color("e8742a"), "k": Color("2a2624"),
 }
 
 ## GFX-100: regions.json `map.building_style`; thatch is the base look (COLORS), the others override these entries
@@ -48,12 +51,23 @@ static func effective_style(kind: String, style: String) -> String:
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != "" or _realm_look(kind) != ""
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != "" or _gather_look(kind) != "" or _realm_look(kind) != ""
 
 
 ## The art kind for an explore place with `look`: plain "explore" for cave or an unknown look.
 static func explore_kind(look: String) -> String:
 	return "explore_" + look if look != "cave" and EXPLORE_LOOKS.has(look) else "explore"
+
+
+## GFX-102: the art kind for a gather place with `look`: plain "gather" for patch or an unknown look.
+static func gather_kind(look: String) -> String:
+	return "gather_" + look if look != "patch" and GATHER_LOOKS.has(look) else "gather"
+
+
+static func _gather_look(kind: String) -> String:
+	if kind.begins_with("gather_") and GATHER_LOOKS.has(kind.substr(7)):
+		return kind.substr(7)
+	return ""
 
 
 ## The art kind for a secret-realm entrance with `look`: "secret_realm" for rift or an unknown look.
@@ -166,6 +180,18 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _meditation()
 		"gather":
 			c = _gather()
+		"gather_rubble":
+			c = _gather_rubble()
+		"gather_crater":
+			c = _gather_crater()
+		"gather_crystal":
+			c = _gather_crystal()
+		"gather_frost":
+			c = _gather_frost()
+		"gather_terrace":
+			c = _gather_terrace()
+		"gather_bog":
+			c = _gather_bog()
 		"explore":
 			c = _cave()
 		"inheritance":
@@ -516,6 +542,105 @@ static func _gather() -> Array:
 		rect(c, p[0] - 2, p[1] + 1, 5, 2, "r")
 		rect(c, p[0] - 1, p[1], 3, 1, "h")
 		rect(c, p[0], p[1] - 2, 1, 2, "h")
+	return c
+
+
+## GFX-102: grey stone chips and two broken blocks with one rusty ore glint.
+static func _gather_rubble() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "S")
+	ell(c, 25, 19, 22, 10, "s")
+	for p: Array in [[6, 18], [14, 25], [22, 13], [31, 26], [40, 19], [44, 24], [28, 18], [10, 12]]:
+		rect(c, p[0], p[1], 3, 2, "S")
+		rect(c, p[0], p[1], 2, 1, "w")
+	for p: Array in [[13, 12], [30, 14]]:
+		box(c, p[0], p[1], 9, 7, "s", "S")
+		rect(c, p[0] + 1, p[1] + 1, 4, 1, "w")
+		rect(c, p[0] + 4, p[1] + 3, 1, 4, "S")
+	rect(c, 33, 17, 2, 2, "e")
+	rect(c, 33, 17, 1, 1, "g")
+	return c
+
+
+## GFX-102: a scorched ring round a cracked black rock with ember glints.
+static func _gather_crater() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "k")
+	ell(c, 25, 20, 20, 10, "T")
+	ell(c, 25, 20, 14, 7, "k")
+	ell(c, 25, 18, 9, 6, "S")
+	rect(c, 21, 15, 9, 6, "k")
+	rect(c, 25, 15, 1, 6, "T")
+	rect(c, 23, 18, 4, 1, "T")
+	for p: Array in [[10, 20], [38, 22], [27, 26], [17, 13]]:
+		rect(c, p[0], p[1], 2, 2, "f")
+		rect(c, p[0], p[1], 1, 1, "g")
+	return c
+
+
+## GFX-102: a rock outcrop with pale-blue crystal spikes.
+static func _gather_crystal() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 24, 23, 9, "S")
+	ell(c, 25, 22, 21, 8, "s")
+	for p: Array in [[11, 20, 4, 11], [19, 14, 5, 16], [28, 10, 5, 20], [37, 18, 4, 12]]:
+		var x: int = p[0]
+		var h: int = p[3]
+		var w: int = p[2]
+		for i in h:
+			var inset := 0 if i > h / 3 else 1
+			rect(c, x + inset, 28 - i, w - inset * 2, 1, "B")
+			rect(c, x + inset, 28 - i, maxi(1, (w - inset * 2) / 2), 1, "b")
+	return c
+
+
+## GFX-102: a white-blue rock shelf under snow with two tiny blue flowers.
+static func _gather_frost() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 22, 24, 11, "B")
+	ell(c, 25, 20, 22, 9, "b")
+	ell(c, 25, 18, 18, 6, "n")
+	rect(c, 4, 22, 42, 2, "B")
+	for p: Array in [[12, 14], [34, 16], [20, 26]]:
+		rect(c, p[0], p[1], 5, 2, "n")
+	for p: Array in [[17, 18], [31, 21]]:
+		rect(c, p[0], p[1] + 1, 1, 3, "v")
+		rect(c, p[0] - 1, p[1], 3, 2, "B")
+		rect(c, p[0], p[1], 1, 1, "n")
+	return c
+
+
+## GFX-102: stepped green bands with stone edges and orchid dots (tinted by the place colour).
+static func _gather_terrace() -> Array:
+	var c := canvas(50, 34)
+	for i in 3:
+		var y := 4 + i * 9
+		var inset := 6 - i * 2
+		rect(c, inset, y, 50 - inset * 2, 6, "v")
+		rect(c, inset, y, 50 - inset * 2, 1, "h")
+		rect(c, inset, y + 6, 50 - inset * 2, 3, "S")
+		rect(c, inset, y + 6, 50 - inset * 2, 1, "s")
+		for x in range(inset + 4, 50 - inset - 3, 8):
+			rect(c, x + i * 2, y + 2, 2, 2, "r")
+			rect(c, x + i * 2, y + 2, 1, 1, "n")
+	return c
+
+
+## GFX-102: a dark murky pool, reeds at the rim and two pale lilies.
+static func _gather_bog() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "T")
+	ell(c, 25, 21, 22, 10, "m")
+	ell(c, 25, 21, 15, 6, "t")
+	ell(c, 25, 21, 14, 5, "m")
+	for p: Array in [[5, 14], [9, 26], [41, 13], [45, 22], [37, 29], [18, 10]]:
+		rect(c, p[0], p[1], 1, 7, "v")
+		rect(c, p[0] + 1, p[1] + 2, 1, 5, "v")
+		rect(c, p[0], p[1] - 1, 2, 2, "T")
+	for p: Array in [[19, 20], [30, 23]]:
+		rect(c, p[0], p[1], 5, 3, "v")
+		rect(c, p[0] + 1, p[1], 2, 2, "n")
+		rect(c, p[0] + 2, p[1], 1, 1, "g")
 	return c
 
 

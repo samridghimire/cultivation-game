@@ -10,6 +10,8 @@ const STYLES := ["bun", "long", "hood"]
 const KINDS := ["figure", "camp"]
 ## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
+## Gather-place looks (GFX-102, regions.json `look` on gather places); "patch" is the original herb bed.
+const GATHER_LOOKS := ["patch", "rubble", "crater", "crystal", "frost", "terrace", "bog"]
 ## Secret-realm entrance looks (GFX-098); "rift" is the original ring.
 const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
 ## Region building styles (regions.json `map.building_style`, GFX-100); PixelPlace.STYLE_COLORS colours each.

@@ -249,3 +249,41 @@ func test_game_data_rejects_unknown_building_style() -> void:
 		assert_eq("\n".join(data.load_errors).contains("building_style"), style == "pagoda", style)
 	var fresh := GameData.load_from_dir()
 	assert_eq(fresh.load_errors.size(), 0, str(fresh.load_errors))
+
+
+func test_gather_looks_are_well_formed() -> void:
+	var base := PixelPlace.rows("gather")
+	var distinct := {}
+	for look: String in PixelPlace.GATHER_LOOKS:
+		var kind := PixelPlace.gather_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		var r := PixelPlace.rows(kind)
+		assert_eq(r.size(), base.size(), look + " same height as the herb bed")
+		for row in r:
+			assert_eq(row.length(), base[0].length(), look + " row width")
+			for ch in row:
+				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+		distinct["".join(r)] = true
+	assert_eq(distinct.size(), PixelPlace.GATHER_LOOKS.size(), "every gather look is its own picture")
+	assert_eq(PixelPlace.gather_kind("patch"), "gather")
+	assert_eq(PixelPlace.gather_kind("bogus"), "gather")
+
+
+func test_every_gather_place_has_a_valid_look() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "gather":
+				assert_true(PixelPlace.GATHER_LOOKS.has(String(place.get("look", "patch"))), place.get("display_name", ""))
+
+
+func test_game_data_rejects_unknown_gather_look() -> void:
+	for look: String in PixelPlace.GATHER_LOOKS + ["swamp"]:
+		var data := GameData.load_from_dir()
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "gather":
+				p["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("unknown gather look"), look == "swamp", look)
