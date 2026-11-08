@@ -185,7 +185,10 @@ static func _draw_marsh_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: 
 		ci.draw_line(Vector2(rx, court.position.y - 1.0), Vector2(rx - 1.0, court.position.y - 9.0), reed, 1.0)
 
 
-const STELE_W := 136.0  ## the hanging name board
+const STELE_W := 136.0  ## the hanging name board (its minimum width)
+const STELE_MAX_W := 160.0  ## GFX-103: the board grows to fit the name up to this width
+const STELE_PAD := 12.0
+const STELE_SIZES: Array[int] = [13, 12, 11]  ## font sizes tried, largest first, before the name goes on two lines
 const POST_H := 64.0  ## post height above its foot line (GFX-076)
 const POST_BASE := 8.0  ## plinth below the foot line
 const ROOF_W := 40.0
@@ -220,6 +223,23 @@ static func filter_decor(region: Dictionary, decor: Array[Dictionary]) -> Array[
 	return out
 
 
+## GFX-103: how the name fits the board: {w, size, lines}. Widen up to STELE_MAX_W, then the next smaller size,
+## then two lines (split at the space nearest the middle) at the smallest size.
+static func board_layout(name: String, font: Font) -> Dictionary:
+	for fs: int in STELE_SIZES:
+		var need := font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + STELE_PAD
+		if need <= STELE_MAX_W:
+			return {"w": maxf(STELE_W, need), "size": fs, "lines": [name]}
+	var fs: int = STELE_SIZES[-1]
+	var mid := name.length() / 2
+	var cut := -1
+	for i in name.length():
+		if name[i] == " " and (cut < 0 or absi(i - mid) < absi(cut - mid)):
+			cut = i
+	var lines: Array = [name] if cut < 0 else [name.substr(0, cut), name.substr(cut + 1)]
+	return {"w": STELE_MAX_W, "size": fs, "lines": lines}
+
+
 ## GFX-076: the gate in 3/4 view. Posts stand on the north and south road verges (feet 4 px off the path); the roof
 ## is lifted by the post height and spans from the north post's top to the south post's top; the name board hangs
 ## under the roof's south end.
@@ -230,10 +250,11 @@ static func gate_parts(g: Dictionary) -> Dictionary:
 	var south_foot := path.end.y + 4.0
 	var top := north_foot - POST_H
 	var roof_end := south_foot - POST_H
+	var board_w := float(board_layout(String(g.get("name", "")), ThemeDB.fallback_font)["w"])
 	return {
 		"roof": Rect2(gx - ROOF_W / 2.0, top, ROOF_W, roof_end - top),
 		"posts": [Rect2(gx - 13.0, top, 26.0, POST_H + POST_BASE), Rect2(gx - 13.0, roof_end, 26.0, POST_H + POST_BASE)],
-		"stele": Rect2(gx - STELE_W / 2.0, roof_end + 10.0, STELE_W, 22.0),
+		"stele": Rect2(gx - board_w / 2.0, roof_end + 10.0, board_w, 22.0),
 	}
 
 
@@ -293,7 +314,11 @@ static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
 	ci.draw_rect(board, wood.darkened(0.2))
 	ci.draw_line(Vector2(board.position.x + 10.0, board.position.y - 2.0), Vector2(board.position.x + 10.0, board.position.y - 8.0), dark, 2.0)
 	ci.draw_line(Vector2(board.end.x - 10.0, board.position.y - 2.0), Vector2(board.end.x - 10.0, board.position.y - 8.0), dark, 2.0)
-	ci.draw_string(font, board.position + Vector2(0.0, 16.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 13, Color("f2e3b8"))
+	var fit := board_layout(String(g["name"]), font)
+	var lines: Array = fit["lines"]
+	for i in lines.size():
+		var dy := 16.0 if lines.size() == 1 else 10.0 + 10.0 * i
+		ci.draw_string(font, board.position + Vector2(0.0, dy), String(lines[i]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, int(fit["size"]), Color("f2e3b8"))
 
 
 static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> void:

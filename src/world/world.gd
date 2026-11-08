@@ -1140,9 +1140,9 @@ func _draw_landmark(lm: Dictionary) -> void:
 		_draw_clouds(r)
 		return
 	if PixelLandmark.supports(str(lm["kind"])):
-		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
+		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")))
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")))
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		if lm["kind"] == "house":
 			PlaceArt.contact_shadow(self, Vector2(r.get_center().x, r.end.y), px.x)

@@ -398,3 +398,32 @@ func test_gate_keep_out() -> void:
 		assert_eq(SectCourt.nudge_off_gate(Vector2(5, 5), g), Vector2(5, 5))
 		for spot: Array in region.get("npc_spots", []):
 			assert_false(keep.has_point(Vector2(float(spot[0]), float(spot[1]))), "%s npc spot in the gate" % region["id"])
+
+
+## GFX-103: every region name fits its gate board (width, then smaller type, then two lines).
+func test_gate_board_fits_every_region_name() -> void:
+	var font := ThemeDB.fallback_font
+	for region: Dictionary in data().regions.values():
+		var name := String(region.get("name", ""))
+		var fit := SectCourt.board_layout(name, font)
+		assert_true(float(fit["w"]) <= SectCourt.STELE_MAX_W and float(fit["w"]) >= SectCourt.STELE_W, name + " width")
+		for line: String in fit["lines"]:
+			assert_true(font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, int(fit["size"])).x <= float(fit["w"]), "%s line '%s' fits" % [name, line])
+	var long := SectCourt.board_layout("The Extremely Long Name Of A Faraway Mountain Region", font)
+	assert_eq((long["lines"] as Array).size(), 2)
+	var marsh := SectCourt.board_layout("Withered Bone Marsh", font)
+	assert_eq((marsh["lines"] as Array).size(), 1)
+
+
+func test_map_water_kinds() -> void:
+	for kind: String in PlaceLooks.WATER_KINDS + ["lava"]:
+		var d := GameData.load_from_dir()
+		d.regions["qingshi_village"]["map"]["water"] = kind
+		d.load_errors.clear()
+		d._validate_world()
+		assert_eq("\n".join(d.load_errors).contains("unknown map.water"), kind == "lava", kind)
+	var tex: Array = []
+	for kind: String in PlaceLooks.WATER_KINDS:
+		tex.append("".join(PixelLandmark._rows_of(PixelLandmark._pond(60, 40, true, kind))))
+	assert_eq(tex.size(), 3)
+	assert_true(tex[0] != tex[1] and tex[1] != tex[2] and tex[0] != tex[2], "each water kind is its own picture")

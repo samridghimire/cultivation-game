@@ -638,6 +638,8 @@ func _validate_world() -> void:
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
 		load_errors.append_array(signpost_clearance_errors(region))
+		if region.get("map", {}).has("water") and not PlaceLooks.WATER_KINDS.has(String(region["map"]["water"])):
+			load_errors.append("Region '%s': unknown map.water '%s' (use %s)" % [region["id"], region["map"]["water"], ", ".join(PlaceLooks.WATER_KINDS)])
 		for place: Dictionary in region.get("places", []):
 			if place.has("look"):
 				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]

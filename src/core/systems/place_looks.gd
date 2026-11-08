@@ -12,6 +12,10 @@ const KINDS := ["figure", "camp"]
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 ## Gather-place looks (GFX-102, regions.json `look` on gather places); "patch" is the original herb bed.
 const GATHER_LOOKS := ["patch", "rubble", "crater", "crystal", "frost", "terrace", "bog"]
+## Pond water kinds (GFX-103, regions.json `map.water`); "clear" is the original blue pond.
+const WATER_KINDS := ["clear", "murky", "icy"]
+## The water colour of a pond landmark without its own `color`.
+const WATER_TINTS := {"clear": "3f7fa8", "murky": "3a4a2c", "icy": "bcd8ea"}
 ## Secret-realm entrance looks (GFX-098); "rift" is the original ring.
 const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
 ## Region building styles (regions.json `map.building_style`, GFX-100); PixelPlace.STYLE_COLORS colours each.
