@@ -1602,7 +1602,7 @@ func _named_remembers(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
 		return
-	if _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-026, FOLK-025
+	if _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
 		return
 	var news: Variant = world_flags.get("village_news")
 	if not (news is Dictionary):

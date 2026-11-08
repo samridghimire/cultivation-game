@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b872ed1
+Last reviewed commit: 49b988c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1684,3 +1684,18 @@ Last reviewed commit: b872ed1
   - Notes, not filed: `Critters.grain_item` doc says "cheapest" but picks the lowest id (only Millet is tagged grain
     today); the coop sits on the west dead end of Qingshi's main road (no exit there, so harmless); shots for
     WU-484/485, GFX-099/100 were not rendered (headless runs, already in their Follow-ups).
+- 2026-11-08 (reviewer, 3rd run): reviewed b872ed1..49b988c (FOLK-026, WU-486, WU-487, GFX-101, GFX-102, GFX-103, C-327,
+  GUIDE-222, C-328, FOLK-027, WU-488, WU-489, C-330; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change (FOLK-027's `birthday` defaults to -1 and hashes the name; FOLK-026's
+  `festival_memory` is a world flag); no binary assets (gather looks, water, brackets, encounter strip are code-drawn).
+  - Fixed (FOLK-027): the birthday greeting / family dish only ran from Chat; Talk with a named villager
+    (`start_dialogue` -> `_named_remembers`) skipped it, though FOLK-026 had wired both paths. `_named_remembers` now
+    tries `_player_birthday_words` first. GameState test added.
+  - Fixed: WU-486 inserted `npc_reaction` between FOLK-021's doc comment and `lesson_taught` in EventBus.
+  - FOLK-026 (validated, once per shared festival, both chat paths), WU-486 (pure `gift_reaction`), WU-487, GFX-101..103
+    (looks/water validated in core PlaceLooks), C-327 (odds in commit), GUIDE-222 (short_name validated <= 14),
+    C-328, C-330, WU-488, WU-489 (one footprint owner in Npcs) OK.
+  - Notes, not filed: FOLK-027 spec's HUD cake marker over the player and the Family Home gift are in its Follow-ups
+    (the dish comes on a chat with spouse/child instead); C-327 says the refreshed balance baseline absorbed unexplained
+    drift from earlier work (first-hour wolf win day, sect contribution); WU-488's 120 px strip makes the encounter card
+    taller, not checked on a many-choice encounter at 1280x800.

@@ -107,3 +107,20 @@ func test_chat_on_your_birthday_greets_once() -> void:
 	assert_true(gs.world_flags.has(Folk.PLAYER_BIRTHDAY_PREFIX + npc.id), "the villager wished you well")
 	assert_gt(int(gs.npc_favor[npc.id]), 22 + Folk.PLAYER_BIRTHDAY_FAVOR - 1)
 	gs.end_session()
+
+
+## Review: Talk with a named villager (start_dialogue) wishes you well too, not only Chat.
+func test_talk_with_a_named_friend_on_your_birthday_greets() -> void:
+	var gs: Node = _gs()
+	var c := CharacterFactory.create("Talker", gs.data, seeded_rng())
+	gs.start_session(c)
+	var clock: Node = Engine.get_main_loop().root.get_node("GameClock")
+	gs.current_region = "qingshi_village"
+	var day := _plain_day(gs.npcs["elder_mo"])
+	c.birthday = day % Calendar.DAYS_PER_YEAR
+	clock.total_days = day
+	gs.npc_favor["elder_mo"] = 22
+	gs.start_dialogue("elder_mo")
+	assert_true(gs.world_flags.has(Folk.PLAYER_BIRTHDAY_PREFIX + "elder_mo"), "Elder Mo wished you well")
+	assert_eq(int(gs.npc_favor["elder_mo"]), 22 + Folk.PLAYER_BIRTHDAY_FAVOR)
+	gs.end_session()
