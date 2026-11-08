@@ -897,7 +897,7 @@ static func lives_color(lives: int) -> Color:
 func occupied_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	for c: Control in [_status_panel, _guide_panel, _log_panel, _key_bar]:
-		if c != null and c.is_visible_in_tree():
+		if c != null and c.is_visible_in_tree() and not (c == _log_panel and _log_lines.is_empty()):
 			var r := c.get_global_rect()
 			if c == _key_bar:
 				r = r.grow_side(SIDE_TOP, KEY_STRIP_CLEARANCE)  # WU-441: labels keep off the key strip
@@ -2005,6 +2005,8 @@ func _process(delta: float) -> void:
 		return
 	var k := 1.0 if MotionFx.reduced() else minf(1.0, 8.0 * delta)
 	var log_target := _fade_targets.y
+	if _log_lines.is_empty():  # WU-489: no empty framed box on a new game; fades in with the first message
+		log_target = 0.0
 	var idle := log_idle_alpha(float(Time.get_ticks_msec() - _last_message_msec) / 1000.0)
 	if idle < 1.0 and not _log_panel.get_global_rect().has_point(_log_panel.get_global_mouse_position()):
 		log_target = minf(log_target, idle)

@@ -49,11 +49,7 @@ static func court_style(region: Dictionary) -> String:
 ## GFX-071: what a place really covers: the drawn landmark (about 1.3x its size), the 22 px label band above
 ## it and 12 px of clearance.
 static func place_footprint(place: Dictionary) -> Rect2:
-	var r := _rect(place)
-	var big := Rect2(r.get_center() - r.size * 0.65, r.size * 1.3)
-	big.position.y -= 22.0
-	big.size.y += 22.0
-	return big.grow(12.0)
+	return Npcs.building_footprint(place)  # WU-489: one set of numbers
 
 
 ## WU-484: a person's final position: off the gate and off every building (Npcs.settle_stand).

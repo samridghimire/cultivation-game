@@ -407,9 +407,15 @@ const BUILDING_TYPES: Array[String] = ["merchant", "shop", "workshop", "clinic",
 ## WU-484: the area nobody may stand in around a place: the drawn building (about 1.3x its rect, 22 px up,
 ## 12 px clearance) for building kinds, `rect.grow(24)` for the rest.
 static func place_keepout(place: Dictionary) -> Rect2:
-	var r := _rect_of(place)
 	if not String(place.get("type", "")) in BUILDING_TYPES:
-		return r.grow(STOP_PLACE_CLEAR)
+		return _rect_of(place).grow(STOP_PLACE_CLEAR)
+	return building_footprint(place)
+
+
+## WU-489: the drawn building of any place: about 1.3x its rect, 22 px up for the label band, 12 px clearance.
+## The one owner of these numbers (SectCourt.place_footprint calls it).
+static func building_footprint(place: Dictionary) -> Rect2:
+	var r := _rect_of(place)
 	var big := Rect2(r.get_center() - r.size * 0.65, r.size * 1.3)
 	big.position.y -= 22.0
 	big.size.y += 22.0

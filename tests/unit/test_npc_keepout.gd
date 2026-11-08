@@ -58,3 +58,10 @@ func test_nobody_stands_in_a_building_or_gate_in_any_region() -> void:
 				if _in_keepout(s[1], region, s[2]) or (not gate.is_empty() and keep_gate.has_point(s[1])):
 					bad.append("%s %s day %d at %s" % [rid, s[0], day, s[1]])
 	assert_eq(bad.size(), 0, "stands on buildings or gates: " + "; ".join(bad.slice(0, 6)))
+
+
+## WU-489: SectCourt.place_footprint and Npcs.place_keepout share one set of building numbers.
+func test_footprint_and_keepout_agree_for_every_building_kind() -> void:
+	for kind: String in Npcs.BUILDING_TYPES:
+		var place := {"type": kind, "pos": [640, 400], "size": [110, 90]}
+		assert_eq(SectCourt.place_footprint(place), Npcs.place_keepout(place), kind)
