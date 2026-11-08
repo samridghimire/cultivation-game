@@ -25,3 +25,33 @@ func test_every_encounter_card_has_a_figure_and_fits() -> void:
 		longest = maxi(longest, String(enc.get("text", "")).length())
 	assert_true(longest < 700, "longest encounter text %d chars should fit a 17px, 656px-wide label in a few lines" % longest)
 	assert_true(EncounterScene.STRIP_SIZE.y + 520.0 <= 720.0)
+
+
+func test_named_figure_wins_over_tag_guess() -> void:
+	assert_eq(EncounterScene.figure_of({"id": "x", "tags": ["beast"], "figure": "elder"}), "elder")
+	assert_eq(EncounterScene.figure_of({"id": "x", "tags": ["beast"], "figure": "none"}), "player")
+	assert_eq(EncounterScene.figure_of({"id": "x", "tags": ["beast"]}), "beast")
+	assert_eq(EncounterScene.figure_of({"id": "x", "tags": ["beast"], "figure": "bogus"}), "beast")
+
+
+func test_every_named_figure_is_valid_and_examples_exist() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	var named := 0
+	for id: String in data.encounters:
+		var f := String(data.encounters[id].get("figure", ""))
+		if f != "":
+			named += 1
+			assert_true(f in GameData.ENCOUNTER_FIGURES, "%s: bad figure %s" % [id, f])
+	assert_true(named >= 10, "at least 10 example figures set")
+
+
+func test_every_figure_renders() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	for f: String in GameData.ENCOUNTER_FIGURES:
+		var scene := EncounterScene.new()
+		tree.root.add_child(scene)
+		scene.show_encounter({"id": "t_" + f, "tags": [], "figure": f})
+		await tree.process_frame
+		assert_true(scene.figure() != "")
+		scene.free()

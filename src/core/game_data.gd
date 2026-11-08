@@ -48,6 +48,8 @@ var fishing_rules: Dictionary = {}  # FISH-006: regions.json "fishing"
 var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
 var herb_lore: Dictionary = {}  # GATHER-001: regions.json "herb_lore" (HerbLore); {} = none
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
+## ENC-014: encounters.json `figure` values (what the encounter strip draws).
+const ENCOUNTER_FIGURES: Array = ["none", "beast", "robed", "villager", "child", "elder", "spirit", "treasure", "corpse"]
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## True for an int or a whole-number float (JSON numbers load as floats).
@@ -286,6 +288,8 @@ func _load(dir: String) -> void:
 	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
 	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
+		if encounter.has("figure") and not (encounter["figure"] is String and String(encounter["figure"]) in ENCOUNTER_FIGURES):
+			load_errors.append("encounter %s: figure %s is not one of %s" % [encounter["id"], encounter["figure"], ENCOUNTER_FIGURES])
 
 	var bounty_file := _read(dir, "bounties.json")
 	for key: String in bounty_config:
