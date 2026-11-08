@@ -469,7 +469,56 @@ static func short_hint(line: String, data: GameData = null) -> String:
 	var cut := first.substr(0, SHORT_HINT_CHARS + 1)
 	var space := cut.rfind(" ")
 	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_HINT_CHARS)
-	return cut.rstrip(" .:;,-(")
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
+
+
+## GUIDE-223: words a shortened line must not end on.
+const STOP_WORDS: PackedStringArray = ["a", "an", "the", "and", "or", "by", "to", "of", "in", "at", "for", "with"]
+
+## GUIDE-223: `text` without trailing stop words ("Mugwort by the" -> "Mugwort"), and without trailing punctuation.
+static func drop_trailing_stop_words(text: String) -> String:
+	var t := text.rstrip(" .:;,-(")
+	while true:
+		var space := t.rfind(" ")
+		if space <= 0 or not STOP_WORDS.has(t.substr(space + 1).to_lower()):
+			break
+		t = t.substr(0, space).rstrip(" .:;,-(")
+	return t
+
+
+## GUIDE-223: `text` without a trailing place phrase as a whole ("Mugwort by the path" -> "Mugwort",
+## "Hen's Egg by the coop (2 left)" -> "Hen's Egg (2 left)"); unchanged when nothing would be left.
+static func short_today_phrase(text: String) -> String:
+	var re := RegEx.new()
+	re.compile("^(.+?) (?:by|in|at|near) (?:the )?[^()]+?( \\(.*\\))?$")
+	var m := re.search(text)
+	if m == null:
+		return text
+	return drop_trailing_stop_words(m.get_string(1)) + m.get_string(2)
+
+
+## GUIDE-223: the short form of a HUD fight line: "Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)" ->
+## "Easy fight: Wild Boar, Bone Marsh · 99%"; "Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)" ->
+## "Hunting: Blood-Eyed Wolf, Bone Marsh". Other lines are returned unchanged.
+static func short_fight_line(line: String, data: GameData) -> String:
+	var fight := _short_fight(line, data)
+	if fight != "":
+		return fight
+	var re := RegEx.new()
+	re.compile("^Hunting: (.+?)(?: in (.+?))? \\(\\d+ days? left\\)$")
+	var m := re.search(line)
+	if m == null:
+		return line
+	var foe := m.get_string(1)
+	var where := m.get_string(2)
+	if where == "":
+		return "Hunting: " + foe
+	if data != null:
+		for id: String in data.regions:
+			if String(data.regions[id].get("name", "")) == where:
+				where = Places.short_region_name(data, id)
+	var tried := "Hunting: %s, %s" % [foe, where]
+	return tried if tried.length() <= SHORT_HINT_CHARS else "Hunting: " + foe
 
 
 ## GUIDE-222: "Easy fight: Wild Boar, Bone Marsh · 99%" from "Easy fight: Chore for Headman Zhou: Wild Boar in
@@ -527,7 +576,7 @@ static func short_goal(goal_line: String, data: GameData) -> String:
 	var cut := line.substr(0, SHORT_GOAL_CHARS + 1)
 	var space := cut.rfind(" ")
 	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS)
-	return cut.rstrip(" .:;,-(")
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
@@ -4805,6 +4854,11 @@ static func goal_trip_note(c: CharacterData, data: GameData, goal: String, regio
 	if target == "":
 		return ""
 	var days := route_days(c, data, region_id, target)
+	if days < 0:
+		# GUIDE-223: roads gated by min_realm (the Ridge's) still have a length worth telling.
+		var strong := CharacterData.from_dict(c.to_dict())
+		strong.realm_index = data.realms.size() - 1
+		days = route_days(strong, data, region_id, target)
 	return " (%s)" % Calendar.format_duration(days) if days > 0 else ""
 
 

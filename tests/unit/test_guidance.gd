@@ -6550,3 +6550,31 @@ func test_region_short_name_falls_back_and_validates() -> void:
 		if "short_name" in e:
 			found = true
 	assert_true(found, "long short_name rejected")
+
+
+# GUIDE-223
+func test_short_fight_line_and_hunt_line() -> void:
+	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_fight_line("Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)", data()), "Hunting: Blood-Eyed Wolf, Bone Marsh")
+	assert_eq(Guidance.short_fight_line("Rest a while.", data()), "Rest a while.")
+
+
+func test_short_today_phrase_drops_whole_place_phrases() -> void:
+	assert_eq(Guidance.short_today_phrase("Mugwort by the path"), "Mugwort")
+	assert_eq(Guidance.short_today_phrase("Hen's Egg by the coop (2 left)"), "Hen's Egg (2 left)")
+	assert_eq(Guidance.short_today_phrase("the Cloud Crane roams"), "the Cloud Crane roams")
+
+
+func test_short_hint_never_ends_on_a_stop_word() -> void:
+	for line in ["Reach Qi Refining and Azure Cloud Sect or somewhere else", "Gather Mugwort by the path near the old well today", "Reach Qi Refining stage two and then the Azure Cloud Sect or"]:
+		var s := Guidance.short_hint(line, data())
+		var last := s.split(" ")[-1].to_lower()
+		assert_false(Guidance.STOP_WORDS.has(last), s)
+	assert_eq(Guidance.drop_trailing_stop_words("Mugwort by the"), "Mugwort")
+
+
+func test_goal_trip_note_counts_realm_gated_roads() -> void:
+	var c := _fresh()
+	var note := Guidance.goal_trip_note(c, data(), "Talk to Elder Mo in Qingshi Village", "myriad_peaks_ridge")
+	assert_true(note.contains("days"), note)
