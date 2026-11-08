@@ -12,6 +12,8 @@ const KINDS := ["figure", "camp"]
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 ## Secret-realm entrance looks (GFX-098); "rift" is the original ring.
 const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
+## Region building styles (regions.json `map.building_style`, GFX-100); PixelPlace.STYLE_COLORS colours each.
+const BUILDING_STYLES := ["thatch", "tile", "stone", "stilt", "log"]
 
 
 ## Error strings for `look` (empty when valid); `who` names the place in messages.

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 877015a
+Last reviewed commit: b872ed1
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1669,3 +1669,18 @@ Last reviewed commit: 877015a
   - Notes, not filed: C-326 added birthdays without a test that none falls in a festival month/market day of the
     villager's region (checked by hand: none do); the `drum` decor look is drawn and validated but no festival uses it;
     GFX-097/098 and WU-482 shots were not rendered (already routed to planner/QA shots).
+- 2026-11-08 (reviewer, 2nd run): reviewed 877015a..b872ed1 (WILD-020, GFX-099, WU-483, WU-484, GUIDE-220, GUIDE-221,
+  CRIT-002, WU-485, GFX-100; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (CRIT-002's `hens_fed_<region>` is a world flag); no binary assets (coop, panel frame, key caps,
+  building styles are code-drawn).
+  - Fixed: GFX-100 made GameData (core) read `PixelPlace.STYLES` from src/world again (same layering slip GUIDE-219
+    fixed for EXPLORE_LOOKS); the list now lives in `PlaceLooks.BUILDING_STYLES` and PixelPlace aliases it.
+  - Fixed: GUIDE-220 committed two orphan `.uid` files (`tests/zz_probe.gd.uid`, `tests/unit/test_zz_probe.gd.uid`)
+    for a probe script it never committed; removed.
+  - WILD-020 (chain walk keeps WILD-019 behaviour for 1-2 steps, recursive validation, tests), CRIT-002 (seeded roll,
+    fed flag is yesterday's day, integration test of the action), GUIDE-221 (`starting_on` rolls a copy, fixed-date
+    events use their own seeded stream so no shared-rng drift), WU-483/484 (keepout + door spots), GUIDE-220,
+    GFX-099 (FramedPanel; callers that tweak borders moved to flat_panel_style), WU-485 OK.
+  - Notes, not filed: `Critters.grain_item` doc says "cheapest" but picks the lowest id (only Millet is tagged grain
+    today); the coop sits on the west dead end of Qingshi's main road (no exit there, so harmless); shots for
+    WU-484/485, GFX-099/100 were not rendered (headless runs, already in their Follow-ups).

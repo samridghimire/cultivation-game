@@ -25,7 +25,7 @@ const COLORS := {
 
 ## GFX-100: regions.json `map.building_style`; thatch is the base look (COLORS), the others override these entries
 ## (and the roof colour) on building kinds only. `roof` (optional) replaces the place colour.
-const STYLES := ["thatch", "tile", "stone", "stilt", "log"]
+const STYLES := PlaceLooks.BUILDING_STYLES
 const STYLE_COLORS := {
 	"thatch": {},
 	"tile": {"w": Color("ece8de"), "W": Color("c4beb0"), "t": Color("a8332b"), "T": Color("7a2420"), "roof": Color("5d7388")},
