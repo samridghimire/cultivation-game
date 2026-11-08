@@ -505,3 +505,15 @@ func test_misty_forest_is_denser_than_qingshi_and_clear_of_places() -> void:
 		if d["kind"] == "tree":
 			qingshi += 1
 	assert_gt(trees, qingshi * 3)
+
+
+func test_field_look_follows_the_season() -> void:
+	assert_eq(Scenery.field_look("Spring", 5)["style"], "sprout")
+	assert_eq(Scenery.field_look("Summer", 5)["style"], "tall")
+	assert_eq(Scenery.field_look("Autumn", 5)["style"], "golden")
+	assert_true(Scenery.field_look("Autumn", 5)["sheaves"])
+	var w := Scenery.field_look("Winter", 5)
+	assert_eq(w["style"], "bare")
+	assert_true(w["snow"])
+	assert_false(Scenery.field_look("Winter", 5, true)["snow"])
+	assert_true(Scenery.field_look("Summer", 1)["vertical"] and not Scenery.field_look("Summer", 0)["vertical"])

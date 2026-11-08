@@ -456,6 +456,29 @@ static func crop_color(season: String) -> Color:
 	return Color(String(CROP_COLORS.get(season, "4f9a3a")))
 
 
+## GFX-096: how a field landmark looks in `season`. `seed_value` (the field's position hash) varies neighbours:
+## `vertical` rows run north-south, `alt` swaps the crop tone. Returns {style, color, vertical, sheaves, snow}.
+## style: sprout (spring), tall (summer), golden (autumn), bare (winter).
+static func field_look(season: String, seed_value: int, no_snow: bool = false) -> Dictionary:
+	var h := absi(seed_value)
+	var style := "tall"
+	var color := Color("3f8a30")
+	match season:
+		"Spring":
+			style = "sprout"
+			color = Color("8fd16a")
+		"Autumn":
+			style = "golden"
+			color = Color("d9aa3a")
+		"Winter":
+			style = "bare"
+			color = Color("00000000")
+	if h % 3 == 0 and style != "bare":
+		color = color.darkened(0.12)
+	return {"style": style, "color": color, "vertical": h % 4 == 1, "sheaves": style == "golden",
+		"snow": style == "bare" and not no_snow}
+
+
 ## GFX-043: the newest footprint list: `prints` plus `pos`, oldest dropped beyond `cap` (default 12).
 static func add_footprint(prints: Array, pos: Vector2, cap: int = 12) -> Array:
 	var out := prints.duplicate()

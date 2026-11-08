@@ -1252,14 +1252,49 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 					pts.append(r.get_center() + Vector2(cos(a) * r.size.x / 2.0, sin(a) * r.size.y / 2.0))
 				draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.9), 3.0)
 		"field":
-			var crop := Scenery.crop_color(_season)
-			var y := 2
-			while y < int(pix.y) - 2:
-				if crop.a > 0.0:
-					draw_rect(Rect2(origin + Vector2(3, y + 1) * sc, Vector2(pix.x - 6, 2) * sc), crop)
-				else:
-					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.92, 0.96, 1.0, 0.6))  # GFX-055: snow-covered furrows
-				y += 4
+			_draw_field_overlay(origin, r, pix)
+
+
+## GFX-096: the field's rows by season (sprouts, tall crop, golden rows with sheaves, bare furrows with snow),
+## varied per field position; no snow where map.no_snow.
+func _draw_field_overlay(origin: Vector2, r: Rect2, pix: Vector2) -> void:
+	var sc := float(Sprites.scale())
+	var no_snow := bool(_region.get("map", {}).get("no_snow", false))
+	var look := Scenery.field_look(_season, int(r.position.x) * 31 + int(r.position.y) * 17, no_snow)
+	var color: Color = look["color"]
+	var vertical: bool = look["vertical"]
+	var style: String = look["style"]
+	var cross := int(pix.x) if vertical else int(pix.y)
+	var along := int(pix.y) if vertical else int(pix.x)
+	var i := 2
+	while i < cross - 2:
+		var row := i + 1
+		if style == "bare":
+			if look["snow"]:
+				var a := Vector2(row if vertical else 2, 2 if vertical else row)
+				var b := Vector2(1, along - 4) if vertical else Vector2(along - 4, 1)
+				draw_rect(Rect2(origin + a * sc, b * sc), Color(0.92, 0.96, 1.0, 0.6))
+		elif style == "sprout":
+			var k := 3
+			while k < along - 3:  # small sprouts on dark tilled earth
+				var p := Vector2(row, k) if vertical else Vector2(k, row)
+				draw_rect(Rect2(origin + p * sc, Vector2(1, 1) * sc), color)
+				draw_rect(Rect2(origin + (p + Vector2(0, -1)) * sc, Vector2(1, 1) * sc), color.lightened(0.2))
+				k += 4
+		else:
+			var tall := 2 if style == "golden" else 3
+			var a2 := Vector2(row, 3) if vertical else Vector2(3, row - 1)
+			var b2 := Vector2(1, along - 6) if vertical else Vector2(along - 6, tall)
+			draw_rect(Rect2(origin + a2 * sc, b2 * sc), color)
+			draw_rect(Rect2(origin + a2 * sc, (Vector2(1, along - 6) if vertical else Vector2(along - 6, 1)) * sc), color.lightened(0.18))
+		i += 4
+	if look["sheaves"]:
+		for n in 3:
+			var sp := Vector2(8 + n * maxi(8, along / 4), 3 + n % 2 * 6)
+			if vertical:
+				sp = Vector2(sp.y, sp.x)
+			draw_rect(Rect2(origin + sp * sc, Vector2(2, 3) * sc), Color("e8c86a"))
+			draw_rect(Rect2(origin + (sp + Vector2(0, 2)) * sc, Vector2(2, 1) * sc), Color("8a5a2a"))
 
 
 ## GFX-046: the jetty runs out from the shore into its pond (Scenery.jetty_layout); darker posts stand in the water.

@@ -66,6 +66,13 @@ func draw_generated_art() -> bool:
 		draw_line(Vector2(rect.position.x + 4.0, y), Vector2(rect.end.x - 4.0, y), soil.darkened(0.3), 2.0)
 	if place.is_empty() or GameState.player == null:
 		return true
+	var tilled := maxi(1, int(place.get("plots", 1)))  # GFX-096: each plot is a tilled bed, empty until planted
+	for i in tilled:
+		var bx := rect.position.x + size.x * (i + 1.0) / (tilled + 1.0)
+		var bed := Rect2(bx - 12.0, rect.position.y + size.y * 0.35, 24.0, size.y * 0.5)
+		draw_rect(bed, soil.darkened(0.25))
+		for j in 3:
+			draw_line(Vector2(bed.position.x + 2.0, bed.position.y + 4.0 + j * (bed.size.y - 8.0) / 2.0), Vector2(bed.end.x - 2.0, bed.position.y + 4.0 + j * (bed.size.y - 8.0) / 2.0), soil.darkened(0.45), 2.0)
 	if rented:  # rope marker along the edges
 		var rope := Color("c9b27a")
 		for corner in [rect.position, Vector2(rect.end.x, rect.position.y), Vector2(rect.position.x, rect.end.y), rect.end]:
