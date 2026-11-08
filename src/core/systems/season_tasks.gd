@@ -122,6 +122,14 @@ static func project_stage(c: CharacterData, data: GameData, index: int) -> int:
 	return 0
 
 
+## WU-494: [stage, total] of the project with this id (zeros when it is unknown).
+static func project_progress(c: CharacterData, data: GameData, id: String) -> Array[int]:
+	var idx := project_index(data, id)
+	if idx < 0 or c == null:
+		return [0, 0]
+	return [project_stage(c, data, idx), (project_list(data)[idx].get("stages", []) as Array).size()]
+
+
 ## SEASON-010: the project stage the season set that brought `c` to `done_count` finished sets just completed, as
 ## {index, project, final} ({} when beyond every project). `final` is true for the last stage of its project.
 static func stage_reached(data: GameData, done_count: int) -> Dictionary:

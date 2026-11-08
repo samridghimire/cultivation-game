@@ -224,6 +224,19 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 	return out
 
 
+## WU-494: how much of the Village Pond Jetty is built at project `stage` (0..3): the fraction of planks laid from the shore,
+## whether the planks still have gaps, and whether the lantern post stands.
+static func jetty_stage_look(stage: int) -> Dictionary:
+	match clampi(stage, 0, 3):
+		0:
+			return {"frac": 0.0, "gaps": false, "lantern": false}
+		1:
+			return {"frac": 0.5, "gaps": false, "lantern": false}
+		2:
+			return {"frac": 1.0, "gaps": true, "lantern": false}
+	return {"frac": 1.0, "gaps": false, "lantern": true}
+
+
 ## GFX-046: where a `jetty` landmark really sits. Within JETTY_REACH px of a pond landmark it runs from the pond's
 ## nearest rim toward the landmark's pos (the fishing place), long side perpendicular to the shore, overlapping the
 ## water by JETTY_OVERLAP px; otherwise (a stream ford, no pond) it stays on its own rect. Returns {rect: Rect2 on

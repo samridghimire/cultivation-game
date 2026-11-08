@@ -6,6 +6,7 @@ extends SceneTree
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
+## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
@@ -79,7 +80,7 @@ func _start() -> void:
 			gs.player.seasons_completed.clear()
 			for i in clampi(int(arg.substr(9)), 0, 4):
 				gs.player.seasons_completed.append("shot_%d" % i)
-	for arg in OS.get_cmdline_user_args():  # GFX-087: --well=N sets the Founder's Old Well stage (0..3)
+	for arg in OS.get_cmdline_user_args():  # GFX-087: --jetty=N (WU-494), --well=N sets the Founder's Old Well stage (0..3)
 		if arg.begins_with("--well="):
 			gs.player.seasons_completed.clear()
 			var idx := SeasonTasks.project_index(gs.data, "well")
@@ -87,6 +88,15 @@ func _start() -> void:
 			for i in idx:
 				before += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
 			for i in before + clampi(int(arg.substr(7)), 0, 3):
+				gs.player.seasons_completed.append("shot_%d" % i)
+	for arg in OS.get_cmdline_user_args():  # WU-494: --jetty=N sets the Village Pond Jetty stage (0..3); it follows the well in the order
+		if arg.begins_with("--jetty="):
+			gs.player.seasons_completed.clear()
+			var jidx := SeasonTasks.project_index(gs.data, "jetty")
+			var jbefore := 0
+			for i in jidx:
+				jbefore += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
+			for i in jbefore + clampi(int(arg.substr(8)), 0, 3):
 				gs.player.seasons_completed.append("shot_%d" % i)
 	for arg in OS.get_cmdline_user_args():  # WU-482: --birthday=<npc_id> moves the clock to that villager's birthday (favor 40)
 		if arg.begins_with("--birthday="):

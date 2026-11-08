@@ -543,6 +543,8 @@ func _draw() -> void:
 		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
 	elif not draw_generated_art():
 		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name, building_style)
+	if art_kind == "family_home" or (art_kind == "abode" and has_method("is_owned") and call("is_owned")):
+		_draw_trophies()  # WU-494
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		var ring := Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow)
@@ -554,6 +556,15 @@ func _draw() -> void:
 				draw_rect(br, UIStyle.ACCENT)
 	if anchor_id != "":
 		_draw_anchor_marker()
+
+
+## WU-494: the hung trophies as plaques on the front wall of the player's home.
+func _draw_trophies() -> void:
+	if not GameState.has_session() or GameState.player.hung_trophies.is_empty():
+		return
+	if Trophies.home_region(GameState.player, GameState.npcs, GameState.data) != GameState.current_region:
+		return
+	TrophyPlaques.draw(self, size, TrophyPlaques.kinds_for(GameState.player.hung_trophies, GameState.data.items))
 
 
 ## Asks the label layer to redraw.

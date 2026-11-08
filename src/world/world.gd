@@ -138,6 +138,7 @@ func _build_season_tint() -> void:
 
 
 func _on_days_advanced(_days: int) -> void:
+	queue_redraw()  # WU-494: the jetty project may have moved on
 	_build_roamers()
 	_build_forage()
 	_build_eggs()
@@ -1331,25 +1332,73 @@ func _draw_jetty(lm: Dictionary) -> void:
 	var r: Rect2 = lay["rect"]
 	var size := _vec(lm["size"])
 	var winter := Scenery.is_snowy(_season)
-	if bool(lay["vertical"]):
-		_draw_jetty_vertical(r, int(lay["toward_water"]), winter)
-	else:
-		var ptex := PixelLandmark.texture("jetty", size)
-		var sc := float(Sprites.scale())
-		var px := Vector2(ptex.get_size()) * sc
-		draw_texture_rect(ptex, Rect2(r.get_center() - px / 2.0, px), false)
-		if winter:
-			draw_rect(Rect2(r.position, Vector2(px.x, sc)), Color("f4f8ff"))
-	if bool(lay["on_water"]):
-		var post := Color("2e2218")
-		var toward: int = int(lay["toward_water"])
+	var toward: int = -1 if int(lay.get("toward_water", 0)) == 0 else int(lay["toward_water"])
+	var look := Scenery.jetty_stage_look(_jetty_stage())  # WU-494: the village project builds it up in stages
+	var vertical := bool(lay["vertical"])
+	var frac: float = look["frac"]
+	var full := r
+	# The planked part keeps the shore end; the water end stays bare posts until built.
+	if frac < 1.0:
+		var keep := (r.size.y if vertical else r.size.x) * frac
+		var from_water_low := toward < 0
+		if vertical:
+			r = Rect2(r.position.x, r.end.y - keep if from_water_low else r.position.y, r.size.x, keep)
+		else:
+			r = Rect2(r.end.x - keep if from_water_low else r.position.x, r.position.y, keep, r.size.y)
+	if frac > 0.0:
+		if vertical:
+			_draw_jetty_vertical(r, toward, winter)
+		else:
+			var ptex := PixelLandmark.texture("jetty", size)
+			var sc := float(Sprites.scale())
+			var px := Vector2(ptex.get_size()) * sc
+			var src_w := ptex.get_width() * frac
+			var dst := Rect2(r.position.x, r.get_center().y - px.y / 2.0, px.x * frac, px.y)
+			if frac >= 1.0:
+				dst = Rect2(r.get_center() - px / 2.0, px)
+			var shore_right := toward < 0
+			draw_texture_rect_region(ptex, dst, Rect2(ptex.get_width() - src_w if shore_right else 0.0, 0, src_w, ptex.get_height()))
+			if winter:
+				draw_rect(Rect2(dst.position, Vector2(dst.size.x, sc)), Color("f4f8ff"))
+	if bool(look["gaps"]):
+		var gap := Color("4a3524")
+		if vertical:
+			var y := r.position.y + 6.0
+			while y < r.end.y:
+				draw_rect(Rect2(r.position.x + 2.0, y, r.size.x - 4.0, 3.0), gap)
+				y += 14.0
+		else:
+			var x := r.position.x + 6.0
+			while x < r.end.x:
+				draw_rect(Rect2(x, r.position.y + 3.0, 3.0, r.size.y - 6.0), gap)
+				x += 14.0
+	var post := Color("2e2218")
+	if frac < 1.0:  # unbuilt stretch: bare posts in pairs along the full length
+		var span := (full.size.y if vertical else full.size.x)
+		for k in 3:
+			var t := 4.0 + (span - 8.0) * float(k) / 2.0
+			for off: float in [-9.0, 9.0]:
+				var tip := Vector2(full.get_center().x + off, full.position.y + t if toward < 0 else full.end.y - t) if vertical else Vector2(full.position.x + t if toward < 0 else full.end.x - t, full.get_center().y + off)
+				draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
+	elif bool(lay["on_water"]):
 		for off: float in [-9.0, 9.0]:
-			var tip := r.get_center()
-			if bool(lay["vertical"]):
-				tip = Vector2(r.get_center().x + off, r.position.y + 2.0 if toward < 0 else r.end.y - 2.0)
-			else:
-				tip = Vector2(r.position.x + 2.0 if toward < 0 else r.end.x - 2.0, r.get_center().y + off)
+			var tip := Vector2(full.get_center().x + off, full.position.y + 2.0 if toward < 0 else full.end.y - 2.0) if vertical else Vector2(full.position.x + 2.0 if toward < 0 else full.end.x - 2.0, full.get_center().y + off)
 			draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
+	if bool(look["lantern"]):  # a lantern post at the shore end
+		var shore := Vector2(full.get_center().x, full.end.y if toward < 0 else full.position.y) if vertical else Vector2(full.end.x if toward < 0 else full.position.x, full.get_center().y)
+		draw_rect(Rect2(shore + Vector2(-1, -22), Vector2(3, 22)), Color("5a4028"))
+		draw_rect(Rect2(shore + Vector2(-4, -30), Vector2(9, 9)), Color("d9503a"))
+		draw_rect(Rect2(shore + Vector2(-2, -28), Vector2(5, 5)), Color("f4d27a"))
+
+
+## WU-494: the Village Pond Jetty's project stage (0..3) in its own region; 3 (whole) anywhere else or with no session.
+func _jetty_stage() -> int:
+	if not GameState.has_session():
+		return 3
+	var idx := SeasonTasks.project_index(GameState.data, "jetty")
+	if idx < 0 or String(SeasonTasks.project_list(GameState.data)[idx].get("region", "")) != GameState.current_region:
+		return 3
+	return SeasonTasks.project_stage(GameState.player, GameState.data, idx)
 
 
 ## GFX-049: a north-south jetty: boards run across the walkway (3 px with 1 px gaps), dark side rails, and the

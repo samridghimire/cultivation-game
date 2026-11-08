@@ -173,6 +173,7 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
 	var o := Vector2(shake, bob)
+	_draw_cake(o)
 	if _draw_sprite(o, sash):
 		return
 	# Generated pixel figure (GFX-011), feet on the hem line.
@@ -184,6 +185,22 @@ func _draw() -> void:
 	for d: Vector2 in [Vector2(s, 0), Vector2(-s, 0), Vector2(0, s), Vector2(0, -s)]:
 		draw_texture_rect(sil, Rect2(body.position + d, size), false)
 	draw_texture_rect(tex, body, false)
+
+
+## WU-494: true on the player's own birthday (FOLK-027); pure so tests can pass any day.
+static func shows_cake(c: CharacterData, data: GameData, day: int) -> bool:
+	return c != null and Folk.player_birthday_today(c, data, day)
+
+
+## WU-494: the friend cake marker (WU-482, same art) over the player's head on their birthday.
+func _draw_cake(o: Vector2) -> void:
+	if not GameState.has_session() or not shows_cake(GameState.player, GameState.data, GameClock.total_days):
+		return
+	var tex := HudIcons.calendar_kind("birthday")
+	if tex == null:
+		return
+	var w := tex.get_width() * 2.0
+	draw_texture_rect(tex, Rect2(o + Vector2(-w / 2.0, -58.0), Vector2(w, tex.get_height() * 2.0)), false)
 
 
 ## "down", "up", "left" or "right" from the facing vector.
