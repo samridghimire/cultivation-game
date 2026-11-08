@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d259ccc
+Last reviewed commit: 877015a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1658,3 +1658,14 @@ Last reviewed commit: d259ccc
     from src/world (a RefCounted const, works, but belongs in PlaceLooks); GUIDE-218's "has something to show you" also
     shows on a day the NPC already taught one lesson (one a day), so it can promise the next tier a day early; C-324's
     balance drift vs the baseline is unexplained (its Follow-up asks QA to refresh docs/balance_baseline.txt).
+- 2026-11-08 (reviewer): reviewed d259ccc..877015a (C-326, GFX-097, GUIDE-219, FOLK-025, GFX-098, WU-482, C-314;
+  [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (FOLK-025's
+  `festival_lines_<year>` is a world flag); no binary assets (drum, realm entrances, cake marker are code-drawn or
+  existing icons).
+  - Nothing to fix. GUIDE-219 closes the three notes from the last run (find_note hides untaught dishes, lessons_waiting
+    skips a teacher who taught today, EXPLORE_LOOKS now in core PlaceLooks). FOLK-025 (birthday wins, once per festival
+    per year, validated), GFX-097 (decor in data, validated, forage kept out of the ring), GFX-098 (look validated per
+    secret_realm), WU-482, C-314 (wares sold by each festival stall, test added), C-326 OK.
+  - Notes, not filed: C-326 added birthdays without a test that none falls in a festival month/market day of the
+    villager's region (checked by hand: none do); the `drum` decor look is drawn and validated but no festival uses it;
+    GFX-097/098 and WU-482 shots were not rendered (already routed to planner/QA shots).
