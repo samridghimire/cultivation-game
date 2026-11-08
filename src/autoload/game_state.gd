@@ -108,6 +108,7 @@ func _ready() -> void:
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
+	EventBus.region_changed.connect(func(_id: String) -> void: birthday_at_home())
 
 
 func has_session() -> bool:
@@ -4655,6 +4656,7 @@ func _on_days_advanced(days: int) -> void:
 	if player.age_years() > age_before / Calendar.DAYS_PER_YEAR:
 		_prune_dead_npcs()
 	_advance_pregnancies(days)
+	birthday_at_home()  # FOLK-028
 	for legacy: Dictionary in data.inheritances.values():
 		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
 			if Inheritances.player_knew(player, legacy):
@@ -4745,6 +4747,30 @@ func _on_days_advanced(days: int) -> void:
 
 
 ## RIVAL-005: word of the rival's breakthroughs once you have met them.
+## FOLK-028: on your birthday, family at your Family Home sets out the dish as you enter or wake there; without
+## family, a Close friend (2+ needed) brings a small gift in the morning. Once a year each; no time passes.
+func birthday_at_home() -> void:
+	if player == null or not Folk.player_birthday_today(player, data, GameClock.total_days):
+		return
+	var topic := EventBus.topic
+	EventBus.topic = "people"
+	if FamilyHome.has_home(player, npcs, data, current_region):
+		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
+		if dish != "":
+			var who: CharacterData = FamilyHome.at_home(player, npcs, data, current_region)[0]
+			var dish_name := String(data.items[dish]["name"])
+			player.add_item(dish, 1)
+			EventBus.post(Folk.birthday_home_line(data, who.name, dish_name, GameClock.total_days), "people")
+			EventBus.player_changed.emit()
+	else:
+		var gift := Folk.birthday_friend_gift(player, npcs, npc_favor, data, GameClock.total_days, world_flags, true)
+		if not gift.is_empty():
+			player.add_item(String(gift["item"]), 1)
+			EventBus.post("%s leaves %s for your birthday, with a note: \"Many happy returns.\"" % [npcs[gift["npc_id"]].name, String(data.items[gift["item"]]["name"])], "people")
+			EventBus.player_changed.emit()
+	EventBus.topic = topic
+
+
 func _rival_news() -> void:
 	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
 		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)

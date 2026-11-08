@@ -435,6 +435,9 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	var pgift: Variant = data.family.get("player_birthday_gift", "")
 	if not (pgift is String) or (String(pgift) != "" and not data.items.has(String(pgift))):
 		errors.append("family.json player_birthday_gift must be an items.json id")
+	var home_lines: Variant = data.family.get("birthday_home_lines", [])
+	if not (home_lines is Array) or not (home_lines as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "" and String(x).length() <= 160):
+		errors.append("family.json birthday_home_lines must be an array of 1..160 character strings")
 	var thanks: Variant = bands.get("birthday_thanks", [])
 	if not (thanks is Array) or not (thanks as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday_thanks must be an array of non-empty strings")
@@ -1089,6 +1092,47 @@ static func player_birthday_gift(c: CharacterData, data: GameData, day: int, fla
 	if consume:
 		flags[PLAYER_BIRTHDAY_PREFIX + "family"] = year
 	return item
+
+
+## FOLK-028: the line posted when family sets out the birthday dish at home (family.json birthday_home_lines,
+## {name}/{dish}), picked by day. "" when the file has none.
+static func birthday_home_line(data: GameData, name: String, dish_name: String, day: int) -> String:
+	var pool: Array = data.family.get("birthday_home_lines", [])
+	if pool.is_empty():
+		return ""
+	return String(pool[absi(day) % pool.size()]).replace("{name}", name).replace("{dish}", dish_name)
+
+
+## FOLK-028: a player without family who has 2+ Close friends (tier 2 and up) gets one small gift on their birthday,
+## once a year (world flag player_birthday_friend). Returns {npc_id, item} or {}. The friend is the closest (then by id)
+## whose first liked item id is cheap (price <= FRIEND_GIFT_MAX_PRICE). `consume` marks the year.
+const FRIEND_GIFT_MAX_PRICE := 20
+const CLOSE_FRIEND_TIER := 2
+
+static func birthday_friend_gift(c: CharacterData, people: Dictionary, favor: Dictionary, data: GameData, day: int, flags: Dictionary, consume: bool) -> Dictionary:
+	if not player_birthday_today(c, data, day) or not (c.spouses.is_empty() and c.children.is_empty()):
+		return {}
+	var year := Calendar.year_of(day)
+	if int(flags.get(PLAYER_BIRTHDAY_PREFIX + "friend", -1)) == year:
+		return {}
+	var close: Array[String] = []
+	for id: String in people:
+		var npc: CharacterData = people[id]
+		if npc != null and npc.alive and tier_index(data, int(favor.get(id, 0))) >= CLOSE_FRIEND_TIER:
+			close.append(id)
+	if close.size() < 2:
+		return {}
+	close.sort_custom(func(a: String, b: String) -> bool:
+		var fa := int(favor.get(a, 0))
+		var fb := int(favor.get(b, 0))
+		return fa > fb if fa != fb else a < b)
+	for id in close:
+		for entry: Variant in Family.taste_lists(data, id)["likes"]:
+			if data.items.has(String(entry)) and int(data.items[String(entry)].get("price", 999)) <= FRIEND_GIFT_MAX_PRICE:
+				if consume:
+					flags[PLAYER_BIRTHDAY_PREFIX + "friend"] = year
+				return {"npc_id": id, "item": String(entry)}
+	return {}
 
 
 ## FOLK-008: 2 for the first gift to `npc` on their birthday this year, else 1. `consume` marks it used.

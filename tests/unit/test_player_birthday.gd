@@ -124,3 +124,85 @@ func test_talk_with_a_named_friend_on_your_birthday_greets() -> void:
 	assert_true(gs.world_flags.has(Folk.PLAYER_BIRTHDAY_PREFIX + "elder_mo"), "Elder Mo wished you well")
 	assert_eq(int(gs.npc_favor["elder_mo"]), 22 + Folk.PLAYER_BIRTHDAY_FAVOR)
 	gs.end_session()
+
+
+## FOLK-028: a birthday at home.
+func _home_session(name: String) -> Dictionary:
+	var gs: Node = _gs()
+	var c := CharacterFactory.create(name, gs.data, seeded_rng())
+	gs.start_session(c)
+	var clock: Node = Engine.get_main_loop().root.get_node("GameClock")
+	return {"gs": gs, "c": c, "clock": clock}
+
+
+func test_home_lines_are_validated_and_filled() -> void:
+	assert_true(data().family.get("birthday_home_lines", []).size() >= 4)
+	var line := Folk.birthday_home_line(data(), "Mei", "Herb Porridge", 3)
+	assert_true(line.contains("Mei") or line.contains("Herb Porridge"))
+	assert_false(line.contains("{"))
+	var d := data()
+	var saved: Variant = d.family.get("birthday_home_lines", [])
+	d.family["birthday_home_lines"] = [""]
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["birthday_home_lines"] = saved
+	assert_true(Folk.validate_greetings(d).is_empty())
+
+
+func test_dish_at_home_once_a_year_and_not_on_another_day() -> void:
+	var s := _home_session("Homebody")
+	var gs: Node = s["gs"]
+	var c: CharacterData = s["c"]
+	var wife := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 25, "region": "qingshi_village", "realm": "mortal"})
+	c.spouses.append(wife.id)
+	gs.current_region = "qingshi_village"
+	var day := 50 + Calendar.DAYS_PER_YEAR
+	c.birthday = day % Calendar.DAYS_PER_YEAR
+	var dish := String(gs.data.family["player_birthday_gift"])
+	s["clock"].total_days = day + 1
+	gs.birthday_at_home()
+	assert_eq(c.item_count(dish), 0, "not on another day")
+	s["clock"].total_days = day
+	gs.birthday_at_home()
+	assert_eq(c.item_count(dish), 1)
+	gs.birthday_at_home()
+	assert_eq(c.item_count(dish), 1, "once a year")
+	assert_eq(Folk.player_birthday_gift(c, gs.data, day, gs.world_flags, true), "", "the chat path shares the flag")
+	gs.end_session()
+
+
+func test_no_dish_away_from_home() -> void:
+	var s := _home_session("Away")
+	var gs: Node = s["gs"]
+	var c: CharacterData = s["c"]
+	var wife := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 25, "region": "qingshi_village", "realm": "mortal"})
+	c.spouses.append(wife.id)
+	gs.current_region = "withered_bone_marsh"
+	var day := 50 + Calendar.DAYS_PER_YEAR
+	c.birthday = day % Calendar.DAYS_PER_YEAR
+	s["clock"].total_days = day
+	gs.birthday_at_home()
+	assert_eq(c.item_count(String(gs.data.family["player_birthday_gift"])), 0)
+	gs.end_session()
+
+
+func test_friend_gift_needs_two_close_friends_and_no_family() -> void:
+	var s := _home_session("Lonely")
+	var gs: Node = s["gs"]
+	var c: CharacterData = s["c"]
+	var day := 50 + Calendar.DAYS_PER_YEAR
+	c.birthday = day % Calendar.DAYS_PER_YEAR
+	s["clock"].total_days = day
+	gs.npc_favor["elder_mo"] = 70
+	assert_true(Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day, {}, false).is_empty(), "one friend is not enough")
+	gs.npc_favor["xiao_ling"] = 65
+	var flags := {}
+	var gift := Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day, flags, true)
+	assert_false(gift.is_empty())
+	assert_true(gs.data.items.has(gift["item"]))
+	assert_true(Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day, flags, true).is_empty(), "once a year")
+	assert_true(Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day + 1, {}, true).is_empty(), "only on the day")
+	gs.birthday_at_home()
+	assert_eq(c.item_count(String(gift["item"])), 1)
+	c.spouses.append("someone")
+	assert_true(Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day, {}, false).is_empty(), "family takes the dish path")
+	gs.end_session()
