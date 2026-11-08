@@ -400,13 +400,59 @@ const STOP_TRAVEL_CLEAR := 40.0
 const STOP_PLACE_CLEAR := 24.0
 
 
-## WU-483: true when `pos` is 40 px from every travel point and 24 px from every place rect.
+## WU-484: place types drawn as buildings (bigger than their rect, with a roof and a label band).
+const BUILDING_TYPES: Array[String] = ["merchant", "shop", "workshop", "clinic", "orphanage", "family_home", "sect_hall", "auction"]
+
+
+## WU-484: the area nobody may stand in around a place: the drawn building (about 1.3x its rect, 22 px up,
+## 12 px clearance) for building kinds, `rect.grow(24)` for the rest.
+static func place_keepout(place: Dictionary) -> Rect2:
+	var r := _rect_of(place)
+	if not String(place.get("type", "")) in BUILDING_TYPES:
+		return r.grow(STOP_PLACE_CLEAR)
+	var big := Rect2(r.get_center() - r.size * 0.65, r.size * 1.3)
+	big.position.y -= 22.0
+	big.size.y += 22.0
+	return big.grow(12.0)
+
+
+## WU-484: where a person who keeps the place stands: at its door, just south of the building.
+static func door_of(place: Dictionary) -> Vector2:
+	var k := place_keepout(place)
+	return Vector2(k.get_center().x, k.end.y + 10.0)
+
+
+## WU-484: true when `pos` is 40 px from every travel point and outside every place keepout.
 static func stop_is_clear(pos: Vector2, region: Dictionary) -> bool:
 	for p: Dictionary in region.get("places", []):
 		var rect := _rect_of(p)
-		if rect.grow(STOP_PLACE_CLEAR).has_point(pos):
+		if place_keepout(p).has_point(pos):
 			return false
 		if String(p.get("type", "")) == "travel" and rect.get_center().distance_to(pos) < STOP_TRAVEL_CLEAR:
+			return false
+	return true
+
+
+## WU-484: final position for a person at `pos`. A named person inside a wide building's keepout (a shop or
+## healer they keep) stands at its door; stalls narrower than 110 px keep their spot on purpose; anyone else
+## inside a keepout is nudged out.
+static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vector2:
+	if named:
+		for p: Dictionary in region.get("places", []):
+			var rect := _rect_of(p)
+			if place_keepout(p).has_point(pos) and String(p.get("type", "")) in BUILDING_TYPES:
+				if rect.size.x < 110.0:
+					return pos
+				var door := door_of(p)
+				return door if stop_is_clear_except(door, region, p) else nudge_stop(door, region)
+		return pos  # named people may stand at a meditation spot or a board on purpose
+	return nudge_stop(pos, region)
+
+
+## True when `pos` is outside every place keepout except `own`'s.
+static func stop_is_clear_except(pos: Vector2, region: Dictionary, own: Dictionary) -> bool:
+	for p: Dictionary in region.get("places", []):
+		if p != own and place_keepout(p).has_point(pos):
 			return false
 	return true
 

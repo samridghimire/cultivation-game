@@ -56,6 +56,14 @@ static func place_footprint(place: Dictionary) -> Rect2:
 	return big.grow(12.0)
 
 
+## WU-484: a person's final position: off the gate and off every building (Npcs.settle_stand).
+static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vector2:
+	var g := gate(region)
+	var out := nudge_off_gate(pos, g)
+	out = Npcs.settle_stand(out, region, named)
+	return nudge_off_gate(out, g)
+
+
 static func _clear(r: Rect2, hall: Dictionary, region: Dictionary) -> bool:
 	for p in region["map"].get("paths", []):
 		if r.intersects(Rect2(p[0], p[1], p[2], p[3])):

@@ -713,7 +713,7 @@ func _build_npcs() -> void:
 		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
-		node.position = GameState.npc_spot(c.id)["pos"]  # FOLK-017
+		node.position = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)  # FOLK-017, WU-484
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)
@@ -768,9 +768,8 @@ func _build_generated_npcs() -> void:
 	if _region.has("family_home"):
 		avoid.append(_vec(_region["family_home"].get("pos", [0, 0])))
 	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position, avoid)
-	var gate := SectCourt.gate(_region)
-	for i in spots.size():  # GFX-076: nobody stands in the gate
-		spots[i] = SectCourt.nudge_off_gate(spots[i], gate)
+	for i in spots.size():  # GFX-076, WU-484: nobody stands in the gate
+		spots[i] = SectCourt.settle_stand(spots[i], _region, false)
 	if not family.is_empty():
 		var split := FamilyHome.split_spots(spots, family.size(), _vec(_region["family_home"].get("pos", [0, 0])))
 		spots = split[1]
@@ -782,6 +781,8 @@ func _build_generated_npcs() -> void:
 			neighbours.append(c)
 	var visitor := GameState.visitor_today()
 	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days), visitor, GameState.visit_place_for(visitor), GameState.together_places())
+	for id: String in stands:  # WU-484: nobody on a roof or in the gate
+		stands[id] = SectCourt.settle_stand(stands[id], _region, false)
 	var centre: Variant = _crowd_centre()
 	if centre != null:
 		var crowd_avoid: Array[Vector2] = avoid.duplicate()
