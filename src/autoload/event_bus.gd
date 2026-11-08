@@ -106,6 +106,9 @@ signal friend_scene(npc_id: String, npc_name: String, text: String, gift_name: S
 ## GFX-092: an item was picked up or drawn by hand (egg, well water): the world floats "+1 <name>" above the player.
 signal pickup_noted(item_id: String, amount: int)
 ## FOLK-021: a friend taught a lesson; effect_line is the effect notes joined by ", " (may be empty).
+## WU-486: a villager reacts with an emote bubble; kind is "love", "happy" or "sweat".
+@warning_ignore("unused_signal")
+signal npc_reaction(npc_id: String, kind: String)
 @warning_ignore("unused_signal")
 signal lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String)
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).

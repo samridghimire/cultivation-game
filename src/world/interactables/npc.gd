@@ -48,6 +48,8 @@ var _wander := Vector2.ZERO
 var _wander_target := Vector2.ZERO
 var _wait := 0.0
 var _modal_open := false
+var _bubble: EmoteBubble = null
+var _lesson_bubble: EmoteBubble = null
 var _on_screen := true
 var _dir := "down"
 var _walk_frame := 0
@@ -77,6 +79,10 @@ func _ready() -> void:
 	EventBus.ui_modal_changed.connect(_on_modal_changed)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	GameClock.days_advanced.connect(_on_day_redraw)  # WU-482: the birthday marker
+	EventBus.npc_reaction.connect(_on_reaction)  # WU-486
+	EventBus.ui_modal_changed.connect(_on_modal_for_bubble)
+	GameClock.days_advanced.connect(_on_day_for_bubble)
+	refresh_lesson_bubble.call_deferred()
 	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
 		GameClock.days_advanced.connect(_on_days_advanced)
 	var notifier := VisibleOnScreenNotifier2D.new()
@@ -84,6 +90,62 @@ func _ready() -> void:
 	notifier.screen_entered.connect(func(): _on_screen = true)
 	notifier.screen_exited.connect(func(): _on_screen = false)
 	add_child(notifier)
+
+
+## WU-486: show an emote bubble of `kind` 22 px above the head when it is this villager's; `seconds` for tests.
+func _on_reaction(id: String, kind: String, seconds: float = 1.6) -> void:
+	if id != npc_id or npc_id == "":
+		return
+	if _bubble != null and is_instance_valid(_bubble):
+		_bubble.queue_free()
+	_bubble = EmoteBubble.make(kind, seconds)
+	_bubble.base_position = Vector2(size.x / 2.0, -22.0 + 16.0)
+	_bubble.tree_exited.connect(func() -> void:
+		queue_redraw()
+		if is_inside_tree():
+			refresh_lesson_bubble())
+	add_child(_bubble)
+	refresh_lesson_bubble()
+	queue_redraw()
+
+
+func _on_modal_for_bubble(_open: bool) -> void:
+	refresh_lesson_bubble.call_deferred()
+
+
+func _on_day_for_bubble(_days: int) -> void:
+	refresh_lesson_bubble.call_deferred()
+
+
+## WU-486: true while a timed emote bubble shows (the cake marker hides meanwhile).
+func has_bubble() -> bool:
+	return _bubble != null and is_instance_valid(_bubble) and not _bubble.is_queued_for_deletion()
+
+
+## WU-486: this named friend has a lesson waiting for the player here (due at their tier, not yet taught today).
+func lesson_waiting() -> bool:
+	if GameState.player == null or GameState.data == null or not GameState.data.npcs.has(npc_id):
+		return false
+	if Folk.taught_today(npc_id, GameState.player.lessons_taught, GameClock.total_days):
+		return false
+	var tier := Folk.tier_index(GameState.data, int(GameState.npc_favor.get(npc_id, 0)))
+	return not Folk.due_lessons(GameState.data, npc_id, tier, GameState.player.lessons_taught).is_empty()
+
+
+## WU-486: keep the persistent "!" bubble in step with lesson_waiting() (hidden while a modal is open).
+func refresh_lesson_bubble() -> void:
+	if not is_inside_tree():
+		return
+	var want := not _modal_open and lesson_waiting()
+	if want and (_lesson_bubble == null or not is_instance_valid(_lesson_bubble)):
+		_lesson_bubble = EmoteBubble.make("lesson", 0.0)
+		_lesson_bubble.base_position = Vector2(size.x / 2.0, -22.0 + 16.0)
+		add_child(_lesson_bubble)
+	elif not want and _lesson_bubble != null and is_instance_valid(_lesson_bubble):
+		_lesson_bubble.queue_free()
+		_lesson_bubble = null
+	if _lesson_bubble != null and is_instance_valid(_lesson_bubble):
+		_lesson_bubble.visible = not has_bubble()
 
 
 func _on_day_redraw(_days: int) -> void:
@@ -192,7 +254,7 @@ static func visit_line(npc_name: String) -> String:
 ## Draws the tea tray (two cups and a pot) at the visitor's side in pixel blocks (WU-411).
 func _draw() -> void:
 	super._draw()
-	if not _modal_open and is_birthday():  # WU-482: the cake glyph 18 px above the head
+	if not _modal_open and is_birthday() and not has_bubble():  # WU-482: the cake glyph 18 px above the head
 		var tex := HudIcons.calendar_kind("birthday")
 		if tex != null:
 			var s2 := 2.0

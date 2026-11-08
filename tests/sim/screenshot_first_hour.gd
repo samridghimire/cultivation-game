@@ -6,6 +6,7 @@ extends SceneTree
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
+## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
@@ -712,6 +713,9 @@ func _friend_shots(gs: Node) -> void:
 			if id != "" and gs.npcs.has(id) and not gs.data.npcs.has(id):
 				gs.npc_favor[id] = 65
 				hud.get("_choice_menu").open_for(node)
+				for arg in OS.get_cmdline_user_args():  # WU-486: --emote=love|happy|sweat shows a bubble over the friend
+					if arg.begins_with("--emote="):
+						root.get_node("EventBus").npc_reaction.emit(id, arg.substr(8))
 				return
 		print("friend shot: no generated villager found"), "close": hud.get("_choice_menu").close})
 

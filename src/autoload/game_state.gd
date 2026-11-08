@@ -1576,6 +1576,7 @@ func _teach_lessons(npc_id: String) -> void:
 	for note in notes:
 		EventBus.post(note, "progress")
 	EventBus.lesson_taught.emit(npc_id, String(npc.name), Folk.lesson_line(lesson, npc.name, player.name), ", ".join(notes))
+	EventBus.npc_reaction.emit(npc_id, "happy")  # WU-486
 	EventBus.player_changed.emit()
 
 
@@ -1784,6 +1785,7 @@ func _friend_scene(npc_id: String) -> void:
 		gift_name = String(data.items[String(scene["gift"])].name)
 		EventBus.post("%s gives you %s." % [npc.name, gift_name], "people")
 	EventBus.friend_scene.emit(npc_id, String(npc.name), text, gift_name, gift_id)
+	EventBus.npc_reaction.emit(npc_id, "happy")  # WU-486
 
 
 ## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).
@@ -2165,10 +2167,12 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
 	var taste := int(result["taste"])
 	var gain := int(result["favor"])
+	var birthday_gift := false
 	if taste >= 0:
 		gain *= Folk.gift_multiplier(world_flags, npc_id, GameClock.total_days, data, true)
 		var cake := Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
 		gain *= cake
+		birthday_gift = cake > 1
 		if cake > 1 and taste > 0 and data.npcs.has(npc_id):  # FOLK-022
 			var thanks: Array = data.family.get("folk_greetings", {}).get("birthday_thanks", [])
 			if not thanks.is_empty():
@@ -2187,6 +2191,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
 		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
 	_post_attitude_change(before)
+	EventBus.npc_reaction.emit(npc_id, Folk.gift_reaction(taste, birthday_gift))  # WU-486
 	if taste >= 0:
 		_clan_deed(npc_id, "gift")  # a disliked gift (taken even at the favor cap) earns no clan kindness
 	_pass_time(result["days"])

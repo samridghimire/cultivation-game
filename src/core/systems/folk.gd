@@ -534,6 +534,16 @@ static func new_tiers(data: GameData, seen: Dictionary, favor_by_id: Dictionary,
 	return result
 
 
+## WU-486: the emote a gift draws: "love" (liked, or any non-disliked gift on their birthday), "happy" (neutral),
+## "sweat" (disliked). `taste` is the gift's taste (-1 disliked, 0 neutral, 1 liked). Pure.
+static func gift_reaction(taste: int, birthday: bool) -> String:
+	if taste < 0:
+		return "sweat"
+	if taste > 0 or birthday:
+		return "love"
+	return "happy"
+
+
 ## FOLK-020: the lessons a named villager teaches (npcs.json `lessons`), [] when none. Pure.
 static func lessons_of(data: GameData, npc_id: String) -> Array:
 	var raw: Variant = data.npcs.get(npc_id, {}).get("lessons", [])
