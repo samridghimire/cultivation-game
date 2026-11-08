@@ -1601,7 +1601,7 @@ func _named_remembers(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
 		return
-	if _festival_words(npc_id):  # FOLK-025
+	if _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-026, FOLK-025
 		return
 	var news: Variant = world_flags.get("village_news")
 	if not (news is Dictionary):
@@ -1614,6 +1614,19 @@ func _named_remembers(npc_id: String) -> void:
 		return
 	world_flags[key] = int(news.get("day", -1))
 	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+
+
+## FOLK-026: a friend who went to a festival with you recalls it on their first chat within 10 days (+2 favor, once).
+func _festival_memory(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var line := Folk.festival_memory_line(npc, data, world_flags, GameClock.total_days, true)
+	if line == "":
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.FESTIVAL_MEMORY_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+	return true
 
 
 ## FOLK-025: a villager chatting while a festival runs in their region says their festival line, once per festival per year.
@@ -2037,7 +2050,7 @@ func chat(npc_id: String) -> void:
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
-	else:
+	elif not _festival_memory(npc_id):  # FOLK-026
 		_festival_words(npc_id)  # FOLK-025 (generated villagers; named ones go through start_dialogue)
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
@@ -3381,6 +3394,7 @@ func festival_contest(event_id: String) -> Dictionary:
 	if not cheerers.is_empty():
 		EventBus.post(FestivalContest.cheer_line(cheerers), "world")
 	if companion != null:
+		Folk.note_festival_company(world_flags, companion.id, event_id, GameClock.total_days)  # FOLK-026
 		npc_favor[companion.id] = clampi(int(npc_favor.get(companion.id, 0)) + FestivalContest.COMPANY_FAVOR, -100, 100)
 		var company := FestivalContest.company_line(data, companion.name, year)
 		if company != "":

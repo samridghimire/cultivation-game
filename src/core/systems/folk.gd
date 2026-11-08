@@ -185,6 +185,62 @@ static func validate_festival_lines(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## FOLK-026: remember that `npc_id` went to `event_id` with the player (a Close friend's invitation, FOLK-012).
+static func note_festival_company(flags: Dictionary, npc_id: String, event_id: String, day: int) -> void:
+	var memory: Dictionary = flags.get("festival_memory", {})
+	memory[npc_id] = {"event": event_id, "day": day, "told": false}
+	flags["festival_memory"] = memory
+
+
+## FOLK-026: favor a friend gives when they recall the festival you shared.
+const FESTIVAL_MEMORY_FAVOR := 2
+## FOLK-026: days after the festival in which the friend still remembers it.
+const FESTIVAL_MEMORY_DAYS := 10
+
+
+## FOLK-026: the remembered festival line `npc` says on their first chat within FESTIVAL_MEMORY_DAYS of a shared festival,
+## or "". Own `festival_memory_line` first, else family.json folk_greetings.festival_memory ({name}/{festival}/{player}).
+## With `consume` it is marked told (once per festival per year).
+static func festival_memory_line(npc: CharacterData, data: GameData, flags: Dictionary, day: int, consume: bool) -> String:
+	var memory: Dictionary = flags.get("festival_memory", {})
+	var entry: Variant = memory.get(npc.id)
+	if not (entry is Dictionary) or bool(entry.get("told", false)):
+		return ""
+	var since := day - int(entry.get("day", day))
+	if since < 0 or since > FESTIVAL_MEMORY_DAYS:
+		return ""
+	var fid := String(entry.get("event", ""))
+	var pool: Array = data.family.get("folk_greetings", {}).get("festival_memory", [])
+	var line := String(data.npcs.get(npc.id, {}).get("festival_memory_line", ""))
+	if line == "" and not pool.is_empty():
+		line = String(pool[absi(hash(npc.id + fid)) % pool.size()])
+	if line == "":
+		return ""
+	if consume:
+		entry["told"] = true
+		memory[npc.id] = entry
+		flags["festival_memory"] = memory
+	return line.replace("{name}", npc.name).replace("{festival}", String(WorldEvents.def_of(data, fid).get("name", fid)))
+
+
+## FOLK-026: load errors for npcs.json festival_memory_line and family.json folk_greetings.festival_memory.
+static func validate_festival_memory(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var pool: Variant = data.family.get("folk_greetings", {}).get("festival_memory", [])
+	if not (pool is Array):
+		errors.append("family.json folk_greetings.festival_memory must be an array of strings")
+	else:
+		for line: Variant in pool:
+			if not (line is String) or String(line) == "" or String(line).length() > 160:
+				errors.append("family.json folk_greetings.festival_memory lines must be strings of 1..160 characters")
+	for id: String in data.npcs:
+		if data.npcs[id].has("festival_memory_line"):
+			var l: Variant = data.npcs[id]["festival_memory_line"]
+			if not (l is String) or String(l) == "" or String(l).length() > 160:
+				errors.append("NPC '%s' festival_memory_line must be a string of 1..160 characters" % id)
+	return errors
+
+
 ## FOLK-018: remember `npc_id`'s newest gift from the player (taste 1 liked, 0 neutral, -1 disliked).
 static func record_gift(flags: Dictionary, npc_id: String, item_id: String, day: int, taste: int) -> void:
 	var memory: Dictionary = flags.get("gift_memory", {})
@@ -708,6 +764,7 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
 	errors.append_array(validate_festival_lines(data))
+	errors.append_array(validate_festival_memory(data))
 	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
