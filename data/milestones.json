@@ -56,9 +56,9 @@
 		{"id": "worthy_rival", "name": "A Worthy Rival", "description": "Win ten bouts against your rival.", "check": {"type": "life_stat", "stat": "rival_bouts_won", "min": 10}},
 		{"id": "surpass_the_rival", "name": "Surpassing the Rival", "description": "Reach a higher realm than your rival.", "check": {"type": "flag", "flag": "rival_surpassed"}},
 		{"id": "master_of_many_lands", "name": "Master of Many Lands", "description": "Master three regions.", "check": {"type": "life_stat", "stat": "regions_mastered", "min": 3}},
-		{"id": "great_trail_misty_forest", "name": "End of the Misty Forest Trail", "description": "Fell the last great beast of the Misty Forest trail.", "check": {"type": "flag", "flag": "great_trail_done_misty_forest"}},
-		{"id": "great_trail_azure_peak", "name": "End of the Azure Peak Trail", "description": "Fell the last great beast of the Azure Peak trail.", "check": {"type": "flag", "flag": "great_trail_done_azure_peak"}},
-		{"id": "great_trail_withered_bone_marsh", "name": "End of the Withered Bone Marsh Trail", "description": "Fell the last great beast of the Withered Bone Marsh trail.", "check": {"type": "flag", "flag": "great_trail_done_withered_bone_marsh"}},
-		{"id": "great_trail_myriad_peaks_ridge", "name": "End of the Myriad Peaks Ridge Trail", "description": "Fell the last great beast of the Myriad Peaks Ridge trail.", "check": {"type": "flag", "flag": "great_trail_done_myriad_peaks_ridge"}}
+		{"id": "great_trail_misty_forest", "name": "The Old Boar's Trail", "description": "Walk the hunters' trail to its end: fell the old tusker, his sow, and the scarred one.", "check": {"type": "flag", "flag": "great_trail_done_misty_forest"}},
+		{"id": "great_trail_azure_peak", "name": "Where the Cranes Fell Silent", "description": "Follow the crane trail above the cloud line to its last broken crown.", "check": {"type": "flag", "flag": "great_trail_done_azure_peak"}},
+		{"id": "great_trail_withered_bone_marsh", "name": "The Bog-King's Last Croak", "description": "Wade the marsh trail through father, son and cracked-pearl elder.", "check": {"type": "flag", "flag": "great_trail_done_withered_bone_marsh"}},
+		{"id": "great_trail_myriad_peaks_ridge", "name": "Hush on the High Ridge", "description": "Outlast the thunder-horned ram and the cracked-horn that came back.", "check": {"type": "flag", "flag": "great_trail_done_myriad_peaks_ridge"}}
 	]
 }

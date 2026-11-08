@@ -147,7 +147,11 @@
    ],
    "great_trail": [
     "{player}, they say the last of the {subject} trail is ended. The whole village breathes easier.",
-    "Good day, {player}. You walked the hunters' trail to its end and felled {subject}. We will tell it for years."
+    "Good day, {player}. You walked the hunters' trail to its end and felled {subject}. We will tell it for years.",
+    "{player}, {subject} was the last of them, they say. My grandfather's stories end with you.",
+    "Good day, {player}. The hunters set down their spears for a night, all thanks to {subject} falling.",
+    "{player}, the whole trail, and {subject} at the end of it! Children now play where we feared to go.",
+    "They say you finished the trail, {player}. {subject} will be a story long after we're all dust."
    ],
    "shrine_stage": [
     "{player}, have you seen {subject}? Fresher than it has been in years, thanks to you.",
