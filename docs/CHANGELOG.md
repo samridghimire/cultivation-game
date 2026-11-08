@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-08 [GFX-096] Fields change with the seasons and your rented plots show what grows in them.
 - 2026-11-07 [C-325] Xiao Ling, Hunter Ma and Herbalist Lan teach you their dishes as you become friends.
 - 2026-11-07 [WU-481] Place names no longer hide under villagers and beasts.
 - 2026-11-07 [WU-480] Friend cards in the village book fit their lines and say when someone has something to teach.
