@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
@@ -102,6 +103,11 @@ func _start() -> void:
 		var walk: int = Wildlife.next_great_day(gs.data, gs.current_region, clock.total_days, gs.player.realm_index)
 		if walk >= 0:
 			clock.total_days = walk - (1 if OS.get_cmdline_user_args().has("--tracks") else 0)  # WU-450: --tracks = the day before
+	if OS.get_cmdline_user_args().has("--realm-open") and region_list.size() <= 1:  # WU-487: a day a realm here is open
+		var clock_r: Node = root.get_node("GameClock")
+		var open_day: int = SecretRealms.next_open_day_in_region(gs.data, gs.current_region, clock_r.total_days)
+		if open_day >= 0:
+			clock_r.total_days = open_day
 	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
 		_drop_start_line()
@@ -147,7 +153,12 @@ func _start() -> void:
 		return
 	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
 		for id in region_list:
-			shots.append({"name": "region_" + id, "open": func() -> void: _rebuild_world(gs, id), "close": func() -> void: pass})
+			shots.append({"name": "region_" + id + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
+				if OS.get_cmdline_user_args().has("--realm-open"):  # WU-487
+					var od: int = SecretRealms.next_open_day_in_region(gs.data, id, gs.get_node("/root/GameClock").total_days)
+					if od >= 0:
+						gs.get_node("/root/GameClock").total_days = od
+				_rebuild_world(gs, id), "close": func() -> void: pass})
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return
@@ -264,7 +275,7 @@ func _start() -> void:
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	if region_list.size() == 1:
-		shots.append({"name": "region_" + region_list[0], "open": func() -> void: pass, "close": func() -> void: pass})
+		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void: pass, "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:

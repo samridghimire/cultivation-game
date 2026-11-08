@@ -44,6 +44,17 @@ static func open_in_region(data: GameData, region_id: String, total_days: int) -
 	return false
 
 
+## WU-487: the first day on or after `from_day` when a realm whose entrance is in `region_id` is open, or -1 if none (screenshots).
+static func next_open_day_in_region(data: GameData, region_id: String, from_day: int) -> int:
+	var best := -1
+	for realm_id in in_region(data, region_id):
+		var def := realm(data, realm_id)
+		var day := from_day + days_until_open(def, from_day)
+		if is_open(def, day) and (best < 0 or day < best):
+			best = day
+	return best
+
+
 static func days_until_open(def: Dictionary, total_days: int) -> int:
 	if is_open(def, total_days):
 		return 0

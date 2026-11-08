@@ -37,6 +37,16 @@ func test_opening_schedule() -> void:
 	assert_eq(SecretRealms.opening_index(def, 6 * Y + 1), 1)
 
 
+## WU-487: the screenshot helper finds a day a region's realm is open.
+func test_next_open_day_in_region() -> void:
+	var data := GameData.new()
+	data.secret_realms = {"test_realm": _def()}
+	assert_eq(SecretRealms.next_open_day_in_region(data, "misty_forest", 0), Y)
+	assert_eq(SecretRealms.next_open_day_in_region(data, "misty_forest", Y + 10), Y + 10)
+	assert_eq(SecretRealms.next_open_day_in_region(data, "misty_forest", Y + 60), 6 * Y)
+	assert_eq(SecretRealms.next_open_day_in_region(data, "nowhere", 0), -1)
+
+
 func test_entry_checks() -> void:
 	var data := data()
 	data.secret_realms["test_realm"] = _def()
