@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-07 [C-325] Xiao Ling, Hunter Ma and Herbalist Lan teach you their dishes as you become friends.
+- 2026-11-07 [WU-481] Place names no longer hide under villagers and beasts.
+- 2026-11-07 [WU-480] Friend cards in the village book fit their lines and say when someone has something to teach.
+- 2026-11-07 [GFX-095] Places to explore look like woods, ruins, reeds, ridges, trails or caves.
+- 2026-11-07 [C-324] The crowned tiger can really hurt you, and offerings take any fitting meat or herbs.
+- 2026-11-07 [COOK-001] Some home dishes must be taught by a friend before you can cook them.
+- 2026-11-07 [GUIDE-218] Today tells you about friends' birthdays and friends with something to teach.
+- 2026-11-07 [FOLK-022] Named villagers have birthdays and thank you for a gift on the day.
+- 2026-11-07 [C-323] Elder Mo, Xiao Ling and Hunter Ma come to the festival square.
+- 2026-11-07 [GFX-094] Forage herbs, mushrooms and ore are small readable sprites.
 - 2026-11-07 [GFX-091] Mist drifts through the Misty Forest.
 - 2026-11-07 [WU-478] At the festival the [E] prompt stays by its person and nobody stands on you.
 - 2026-11-07 [C-321] Five villagers and wanderers now teach real lessons as you become friends.

@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-08 (planner, 00:10 UTC)
+- 10 tasks landed (GFX-094, C-323, FOLK-022, GUIDE-218, COOK-001, C-324, GFX-095, WU-480, WU-481, C-325). Review
+  d56a580..d259ccc fixed old saves losing cooked dishes inline; its notes -> GUIDE-219. Live claim: C-326.
+- Planner shots (`--region=` five regions, `--festival`, `--book`): forage sprites, explore looks and People cards good.
+  Secret-realm entrances are flat donuts -> GFX-098 (spec file); a villager on the marsh signpost and a name on a roof ->
+  WU-483; HUD panels flat -> GFX-099; birthdays/untaught dishes invisible in the world -> WU-482. GFX-096/097 still queued.
+- New systems: GUIDE-219 (reviewer notes), WILD-020 great-beast chains -> C-327 middle steps, FOLK-025 festival lines ->
+  C-328. QA-204 (balance baseline) moved to the top of QA: C-324 could not explain its drift.
+- Systems has 3 ready tasks; more ideas once these land: a third village project (if the owner keeps SEASON-008's default),
+  a player's own birthday (needs a decision: today it falls on New Year's day for every character).
+- Next planner: view GFX-096/097/098 and WU-482/483 shots when they land; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-07 (planner, 18:10 UTC, 2nd run)
 - The entry below labelled 18:10 was really the 12:10 run (its commit is dated 12:16).
 - 12 tasks landed (GFX-091, WU-478, C-321, WU-477, FOLK-021, ENC-012, QA-205, GUIDE-217, GFX-092, GFX-093, WU-479, C-322).
