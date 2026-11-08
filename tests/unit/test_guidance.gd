@@ -6133,9 +6133,9 @@ func test_core_road_goal_beast_skipped_when_all_beaten_and_region_pointers() -> 
 		if not def.is_empty():
 			c.great_beasts[String(def["enemy"])] = 1
 			c.great_beast_realms[String(def["enemy"])] = 2
-			var ret: Variant = def.get("return")
-			if ret is Dictionary:
-				c.great_beast_realms[String(ret["enemy"])] = 2
+			for step: Dictionary in Wildlife.great_chain(def):
+				c.great_beasts[String(step["enemy"])] = 1
+				c.great_beast_realms[String(step["enemy"])] = 2
 	var goals := Guidance.road_goals(c, data(), flags, 100)
 	assert_eq(goals.size(), 14)
 	assert_true(String(goals[12]["text"]).begins_with("Get a Core Formation pill"), String(goals[12]["text"]))

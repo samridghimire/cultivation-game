@@ -238,6 +238,8 @@ func test_great_return_switches_after_first_win() -> void:
 	var day := 7 * 40 + wd
 	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day, {})["enemy"]), "old_tusker_boar")
 	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "tuskers_sow_boar", "C-327: a Qi Refining middle step follows")
+	assert_eq(Wildlife.record_great(c, d, "tuskers_sow_boar", "misty_forest", day + 7), "tuskers_sow_bristle")
 	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "", "C-317: the return is a Foundation fight")
 	c.realm_index = d.realm_index_of("foundation_establishment")
 	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "scarred_old_tusker")
@@ -561,6 +563,7 @@ func test_return_beast_own_min_realm() -> void:
 func test_great_max_realm_hands_slot_to_return_beast() -> void:
 	var d := _gdata()
 	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	_collapse_trail(d, "misty_forest")
 	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
 	great["max_realm"] = "qi_refining"
 	var wd := Wildlife.great_day("misty_forest", great)
@@ -621,7 +624,7 @@ func test_great_beasts_for_every_realm() -> void:
 		if not foundation_only.has(rid):
 			assert_true(Wildlife.next_great_day(d, rid, 100, qr.realm_index, qr) >= 0, "%s: a great beast walks for Qi Refining" % rid)
 			assert_eq(String(g.get("max_realm", "")), "qi_refining", "%s: the first beast is Qi Refining only" % rid)
-		var ret: Dictionary = g.get("return", {})
+		var ret: Dictionary = Wildlife.great_chain(g).back()
 		assert_eq(String(d.enemies[String(ret["enemy"])]["realm"]), "foundation_establishment", "%s: the return beast is a Foundation foe" % rid)
 
 
@@ -652,9 +655,16 @@ func test_every_roaming_region_has_foundation_beasts() -> void:
 		assert_true(seen.size() >= 1, "%s: a Foundation Early player meets Foundation beasts" % region_id)
 
 
+## C-327: cut a region's real trail down to first beast + last step, for tests that script their own middle.
+func _collapse_trail(d: GameData, rid: String) -> void:
+	var great: Dictionary = d.regions[rid]["roamers"]["great"]
+	great["return"] = Wildlife.great_chain(great).back()
+
+
 ## WILD-020: a great-beast trail of three steps: first -> middle -> last.
 func _chain_fixture(d: GameData) -> Dictionary:
 	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	_collapse_trail(d, "misty_forest")
 	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
 	great.erase("max_realm")
 	great["return"]["min_realm"] = "foundation_establishment"
@@ -708,3 +718,31 @@ func test_great_chain_validation_is_recursive() -> void:
 	third["rumor"] = "x".repeat(141)
 	assert_false(Wildlife.validate(d).is_empty(), "long rumor")
 	d.regions["misty_forest"]["roamers"] = old
+
+
+## C-327: the Qi Refining great-beast trails have a middle step between the first beast and the Foundation return.
+func test_qi_refining_trails_have_a_middle_step() -> void:
+	var d := _gdata()
+	for rid: String in ["misty_forest", "azure_peak", "withered_bone_marsh"]:
+		var chain := Wildlife.great_chain(d.regions[rid]["roamers"]["great"])
+		assert_eq(chain.size(), 3, "%s: first, middle, return" % rid)
+		var mid: Dictionary = chain[1]
+		var e: Dictionary = d.enemies[String(mid["enemy"])]
+		assert_eq(String(e["realm"]), "qi_refining", rid)
+		assert_false(bool(e.get("lethal", false)), rid)
+		assert_eq(String(mid.get("min_realm", "")), "qi_refining", rid)
+		assert_eq(String(mid.get("max_realm", "")), "qi_refining", rid)
+		assert_true(String(mid.get("rumor", "")) != "", "%s middle rumor" % rid)
+		assert_true((d.items[String(mid["trophy"])]["tags"] as Array).has("trophy"), rid)
+		assert_true(int(d.items[String(mid["trophy"])]["price"]) > 0, rid)
+		var last: Dictionary = chain[2]
+		assert_true(mid["trophy"] != last["trophy"] and mid["trophy"] != chain[0]["trophy"], "%s trophies differ" % rid)
+		# A Qi Refining player walks first -> middle, then waits for Foundation; Foundation skips an unbeaten middle.
+		var q := _player(d.realm_index_of("qi_refining"))
+		q.great_beasts[String(chain[0]["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(q, d, rid), String(mid["enemy"]), rid)
+		q.great_beasts[String(mid["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(q, d, rid), "", "%s: the return waits for Foundation" % rid)
+		var f := _player(d.realm_index_of("foundation_establishment"))
+		f.great_beasts[String(chain[0]["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(f, d, rid), String(last["enemy"]), "%s: Foundation skips the middle" % rid)

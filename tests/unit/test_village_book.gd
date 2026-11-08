@@ -185,7 +185,7 @@ func test_hunts_page_shows_hunted_and_hides_unhunted() -> void:
 func test_trophy_rows_list_great_beasts_in_region_order() -> void:
 	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
 	var rows := VillageBook.trophy_rows(c, data())
-	assert_eq(rows.size(), 8, "four great beasts and their four return slots")
+	assert_eq(rows.size(), 11, "four great beasts, three middle steps and four return slots")
 	assert_eq(String(rows[0]["enemy"]), "old_tusker_boar", "regions.json order")
 	assert_false(bool(rows[0]["won"]))
 	assert_true(String(rows[0]["text"]).begins_with("???"), "unwon is a mystery")
@@ -218,20 +218,25 @@ func test_great_rumors_exist_and_show_on_unwon_rows() -> void:
 func test_return_slot_sits_beside_the_first_and_opens_after_it() -> void:
 	var c := CharacterFactory.create("T", data(), seeded_rng(), "male")
 	var rows := VillageBook.trophy_rows(c, data())
-	assert_eq(String(rows[1]["enemy"]), "scarred_old_tusker", "second slot beside the first")
+	assert_eq(String(rows[1]["enemy"]), "tuskers_sow_boar", "second slot beside the first")
+	assert_eq(String(rows[2]["enemy"]), "scarred_old_tusker", "the trail's last step follows")
 	assert_false(bool(rows[1]["won"]))
 	assert_true(String(rows[1]["text"]).begins_with("???"))
 	assert_false(String(rows[1]["detail"]).contains("Hunters say"), "no spoiler before the first win")
 	Wildlife.record_great(c, data(), "old_tusker_boar", "misty_forest", 9)
 	rows = VillageBook.trophy_rows(c, data())
-	assert_eq(rows.size(), 8, "slot count is stable")
+	assert_eq(rows.size(), 11, "slot count is stable")
 	assert_false(bool(rows[1]["won"]))
 	assert_true(String(rows[1]["text"]).contains("Wed") or String(rows[1]["text"]).contains("(Misty Forest,"), String(rows[1]["text"]))
 	assert_true(String(rows[1]["detail"]).contains(Wildlife.rumor_of(data(), "misty_forest", c)), "the return's rumour")
-	Wildlife.record_great(c, data(), "scarred_old_tusker", "misty_forest", 20)
+	Wildlife.record_great(c, data(), "tuskers_sow_boar", "misty_forest", 20)
 	rows = VillageBook.trophy_rows(c, data())
 	assert_true(bool(rows[1]["won"]))
-	assert_true(String(rows[1]["text"]).contains("Scarred Old Tusker"), String(rows[1]["text"]))
+	assert_true(String(rows[1]["text"]).contains("Sow"), String(rows[1]["text"]))
+	Wildlife.record_great(c, data(), "scarred_old_tusker", "misty_forest", 30)
+	rows = VillageBook.trophy_rows(c, data())
+	assert_true(bool(rows[2]["won"]))
+	assert_true(String(rows[2]["text"]).contains("Scarred Old Tusker"), String(rows[2]["text"]))
 
 
 func test_festival_card_lines_from_a_fixed_history_row() -> void:
