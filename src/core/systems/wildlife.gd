@@ -78,29 +78,51 @@ static func _great_def(data: GameData, region_id: String) -> Dictionary:
 	return data.regions.get(region_id, {}).get("roamers", {}).get("great", {})
 
 
-## WILD-019: which beast the great slot holds for `c`: {enemy, ret} or {} when nothing walks for them. The first beast
-## walks while unbeaten and not outgrown (`max_realm`); then the `return` beast within its own min_realm..max_realm
-## (min defaults to the first's). With no character the first beast gates on `realm_index` only (old callers, sims).
+## WILD-020: a region's great beasts as a chain of steps: the slot itself, then each nested `return` (any depth).
+static func great_chain(def: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var step: Variant = def
+	while step is Dictionary and not (step as Dictionary).is_empty():
+		out.append(step)
+		step = (step as Dictionary).get("return")
+	return out
+
+
+## WILD-019/020: which beast the great slot holds for `c`: {enemy, ret, step} or {} when nothing walks for them. The
+## walking beast is the first step not yet beaten; an unbeaten step the player has outgrown (`max_realm`) is skipped, an
+## unbeaten step above their realm (`min_realm`, defaulting to the previous step's) stops the walk. When every step is
+## beaten or skipped the last step keeps walking while the player is in its range. With no character the first beast
+## gates on `realm_index` only (old callers, sims).
 static func _great_pick(c: CharacterData, data: GameData, def: Dictionary, realm_index: int) -> Dictionary:
 	if def.is_empty():
 		return {}
+	var chain := great_chain(def)
 	var first := String(def.get("enemy", ""))
-	var below_first: bool = def.has("min_realm") and realm_index < data.realm_index_of(String(def["min_realm"]))
+	var mins: Array[int] = []
+	var inherited := -1
+	for step: Dictionary in chain:
+		if step.has("min_realm"):
+			inherited = data.realm_index_of(String(step["min_realm"]))
+		mins.append(inherited)
 	if c == null:
-		return {} if below_first else {"enemy": first, "ret": false}
-	var outgrown: bool = def.has("max_realm") and realm_index > data.realm_index_of(String(def["max_realm"]))
-	if not c.great_beasts.has(first) and not outgrown:
-		return {} if below_first else {"enemy": first, "ret": false}
-	var ret: Variant = def.get("return")
-	if ret is Dictionary:
-		if ret.has("min_realm") and realm_index < data.realm_index_of(String(ret["min_realm"])):
+		return {} if realm_index < mins[0] else {"enemy": first, "ret": false, "step": 0}
+	for i in chain.size():
+		var step: Dictionary = chain[i]
+		var enemy := String(step.get("enemy", first))
+		if c.great_beasts.has(enemy):
+			continue
+		if step.has("max_realm") and realm_index > data.realm_index_of(String(step["max_realm"])):
+			continue
+		if realm_index < mins[i]:
 			return {}
-		if not ret.has("min_realm") and below_first:
-			return {}
-		if ret.has("max_realm") and realm_index > data.realm_index_of(String(ret["max_realm"])):
-			return {}
-		return {"enemy": String(ret.get("enemy", first)), "ret": true}
-	return {} if outgrown or below_first else {"enemy": first, "ret": false}
+		return {"enemy": enemy, "ret": i > 0, "step": i}
+	var last := chain.size() - 1
+	var ls: Dictionary = chain[last]
+	if realm_index < mins[last]:
+		return {}
+	if ls.has("max_realm") and realm_index > data.realm_index_of(String(ls["max_realm"])):
+		return {}
+	return {"enemy": String(ls.get("enemy", first)), "ret": last > 0, "step": last}
 
 
 ## WILD-019: the enemy walking the region's great slot for `c`, "" when nothing does. Every great-beast caller uses it.
@@ -136,12 +158,24 @@ static func active_great_enemy(c: CharacterData, data: GameData, region_id: Stri
 	return e if e != "" else String(_great_def(data, region_id).get("enemy", ""))
 
 
-## C-297: the hunters' rumour about a region's great beast, "" when it has none.
+## C-297/WILD-020: the hunters' rumour about a region's great beast (the step now walking, else the first unbeaten
+## one), "" when it has none. Later steps without a rumour fall back to the slot's own.
 static func rumor_of(data: GameData, region_id: String, c: CharacterData = null) -> String:
 	var def := _great_def(data, region_id)
-	var ret: Variant = def.get("return")
-	if ret is Dictionary and c != null and ret.has("rumor") and (c.great_beasts.has(String(def.get("enemy", ""))) or _great_pick(c, data, def, c.realm_index).get("ret", false)):
-		return String(ret["rumor"])
+	if c != null:
+		var chain := great_chain(def)
+		var idx := -1
+		var pick := _great_pick(c, data, def, c.realm_index)
+		if not pick.is_empty():
+			idx = int(pick["step"])
+		else:
+			idx = chain.size() - 1
+			for i in chain.size():
+				if not c.great_beasts.has(String(chain[i].get("enemy", ""))):
+					idx = i
+					break
+		if idx > 0 and chain[idx].has("rumor"):
+			return String(chain[idx]["rumor"])
 	return String(def.get("rumor", ""))
 
 
@@ -292,9 +326,9 @@ static func great_trophy(data: GameData, enemy_id: String) -> String:
 		var g: Dictionary = region.get("roamers", {}).get("great", {})
 		if not g.is_empty() and String(g.get("enemy", "")) == enemy_id and g.has("trophy"):
 			return String(g["trophy"])
-		var ret: Variant = g.get("return")
-		if ret is Dictionary and String(ret.get("enemy", "")) == enemy_id and ret.has("trophy"):
-			return String(ret["trophy"])
+		for step in great_chain(g):
+			if String(step.get("enemy", "")) == enemy_id and step.has("trophy"):
+				return String(step["trophy"])
 	return ""
 
 
@@ -309,9 +343,9 @@ static func record_great(c: CharacterData, data: GameData, enemy_id: String, reg
 	var def := _great_def(data, region_id)
 	if String(def.get("enemy", "")) == enemy_id and def.has("trophy"):
 		return String(def["trophy"])
-	var ret: Variant = def.get("return")
-	if ret is Dictionary and String(ret.get("enemy", "")) == enemy_id and ret.has("trophy"):
-		return String(ret["trophy"])
+	for step in great_chain(def):
+		if String(step.get("enemy", "")) == enemy_id and step.has("trophy"):
+			return String(step["trophy"])
 	return great_trophy(data, enemy_id)
 
 
@@ -433,22 +467,7 @@ static func validate(data: GameData) -> PackedStringArray:
 								errors.append("%s great bait '%s' is not an item" % [where, bid])
 				if great.has("bait_weaken") and not (_num(great["bait_weaken"]) and float(great["bait_weaken"]) >= 0.02 and float(great["bait_weaken"]) <= 0.5):
 					errors.append("%s great bait_weaken must be 0.02..0.5" % where)
-				var rt: Variant = great.get("return")
-				if rt != null:
-					if not rt is Dictionary or not data.enemies.has(String(rt.get("enemy", ""))):
-						errors.append("%s great return needs a known enemy" % where)
-					else:
-						var re: Dictionary = data.enemies[rt["enemy"]]
-						if bool(re.get("lethal", false)) or not (re.get("tags", []) as Array).has("beast"):
-							errors.append("%s great return enemy '%s' must be a non-lethal beast" % [where, rt["enemy"]])
-						var rti: Variant = data.items.get(String(rt.get("trophy", "")))
-						if rti == null or not (rti.get("tags", []) as Array).has("trophy"):
-							errors.append("%s great return trophy must be an item tagged trophy" % where)
-						if rt.has("min_realm") and data.realm_index_of(String(rt["min_realm"])) < 0:
-							errors.append("%s great return has unknown min_realm" % where)
-						errors.append_array(_max_realm_errors(data, rt, "%s great return" % where))
-						if rt.has("rumor") and not (rt["rumor"] is String and not String(rt["rumor"]).is_empty() and String(rt["rumor"]).length() <= 140):
-							errors.append("%s great return rumor must be a string of at most 140 characters" % where)
+				_return_errors(data, great, "%s great" % where, errors)
 				for gs: Variant in great.get("seasons", []):
 					if not Exploration.SEASON_NAMES.has(String(gs)):
 						errors.append("%s great has unknown season '%s'" % [where, gs])
@@ -494,6 +513,28 @@ static func validate(data: GameData) -> PackedStringArray:
 		if in_season_count > 4:
 			errors.append("%s has %d in_season beasts (max 4)" % [where, in_season_count])
 	return errors
+
+
+## WILD-020: validates a step's nested `return` chain (any depth) with the same rules at every level.
+static func _return_errors(data: GameData, parent: Dictionary, label: String, errors: PackedStringArray) -> void:
+	var rt: Variant = parent.get("return")
+	if rt == null:
+		return
+	if not rt is Dictionary or not data.enemies.has(String(rt.get("enemy", ""))):
+		errors.append("%s return needs a known enemy" % label)
+		return
+	var re: Dictionary = data.enemies[rt["enemy"]]
+	if bool(re.get("lethal", false)) or not (re.get("tags", []) as Array).has("beast"):
+		errors.append("%s return enemy '%s' must be a non-lethal beast" % [label, rt["enemy"]])
+	var rti: Variant = data.items.get(String(rt.get("trophy", "")))
+	if rti == null or not (rti.get("tags", []) as Array).has("trophy"):
+		errors.append("%s return trophy must be an item tagged trophy" % label)
+	if rt.has("min_realm") and data.realm_index_of(String(rt["min_realm"])) < 0:
+		errors.append("%s return has unknown min_realm" % label)
+	errors.append_array(_max_realm_errors(data, rt, "%s return" % label))
+	if rt.has("rumor") and not (rt["rumor"] is String and not String(rt["rumor"]).is_empty() and String(rt["rumor"]).length() <= 140):
+		errors.append("%s return rumor must be a string of at most 140 characters" % label)
+	_return_errors(data, rt, "%s return" % label, errors)
 
 
 ## WILD-019: errors for an optional `max_realm` on a great beast or its return: a known realm, not below its min_realm.

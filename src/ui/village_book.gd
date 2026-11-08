@@ -534,14 +534,17 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 		var g: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if g.is_empty():
 			continue
-		var blocks: Array[Dictionary] = [g]
-		var ret: Variant = g.get("return")
-		# WU-451: a region with a `return` beast always shows a second slot beside the first.
-		if ret is Dictionary:
-			blocks.append(ret)
+		# WU-451/WILD-020: every step of the chain gets its own slot beside the first.
+		var blocks := Wildlife.great_chain(g)
 		for block: Dictionary in blocks:
 			_trophy_row(rows, c, data, rid, g, block)
 	return rows
+
+
+static func _previous_step_beaten(c: CharacterData, g: Dictionary, block: Dictionary) -> bool:
+	var chain := Wildlife.great_chain(g)
+	var i := chain.find(block)
+	return i <= 0 or c.great_beasts.has(String(chain[i - 1].get("enemy", "")))
 
 
 static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameData, rid: String, g: Dictionary, block: Dictionary) -> void:
@@ -555,8 +558,8 @@ static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameDat
 		row["day"] = int(c.great_beasts[enemy]) + 1
 		row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
 		row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
-	elif block != g and not c.great_beasts.has(String(g["enemy"])):
-		# WU-451: the return beast stays a mystery until the first has fallen (its rumour would spoil it).
+	elif block != g and not _previous_step_beaten(c, g, block):
+		# WU-451: the return beast stays a mystery until the one before it has fallen (its rumour would spoil it).
 		row["text"] = "???\n(%s)" % region
 		row["detail"] = "Some say a great beast never walks alone."
 	else:
