@@ -1413,10 +1413,13 @@ func cook_meal(meal_id: String) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
+	var first_time := int(player.cooked_meals.get(meal_id, 0)) == 0
 	var result := Cooking.cook(player, data, meal_id)
 	if not result["ok"]:
 		EventBus.post(String(result["reason"]), "warning")
 		return
+	if first_time:
+		Folk.record_dish_cooked(world_flags, player, data, meal_id, GameClock.total_days)  # COOK-003
 	EventBus.post("You cook %s: +%d %s." % [Cooking.meal(data, meal_id)["name"], result["count"], Items.item_plural(data, String(result["item"]), int(result["count"]))], "progress")
 	EventBus.player_changed.emit()
 	_pass_time(int(result["days"]))
@@ -1628,7 +1631,7 @@ func _named_remembers(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
 		return
-	if _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
+	if _dish_noticed(npc_id) or _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
 		return
 	var news: Variant = world_flags.get("village_news")
 	if not (news is Dictionary):
@@ -1653,6 +1656,19 @@ func _festival_memory(npc_id: String) -> bool:
 		return false
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.FESTIVAL_MEMORY_FAVOR, -100, 100)
 	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+	return true
+
+
+## COOK-003: the friend who taught a dish remarks on it the first time they see you after you cooked it (+3 favor, once per dish).
+func _dish_noticed(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or player == null:
+		return false
+	var found := Folk.dish_noticed(npc, data, world_flags, GameClock.total_days, true)
+	if found.is_empty():
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.DISH_NOTICED_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, String(found["line"])], "info")
 	return true
 
 
@@ -2102,6 +2118,8 @@ func chat(npc_id: String) -> void:
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
+	elif _dish_noticed(npc_id):  # COOK-003
+		pass
 	elif _player_birthday_words(npc_id):  # FOLK-027
 		pass
 	elif not _festival_memory(npc_id):  # FOLK-026

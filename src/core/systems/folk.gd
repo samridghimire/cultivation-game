@@ -241,6 +241,69 @@ static func validate_festival_memory(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## COOK-003: favor a friend's remark about their dish gives (once per dish).
+const DISH_NOTICED_FAVOR := 3
+## COOK-003: days after the first cook in which the teacher's next chat mentions it.
+const DISH_NOTICED_DAYS := 14
+
+
+## COOK-003: the named friend whose lesson teaches `meal_id` (effects.learn_dish) and that `c` has been taught
+## ("npc_id:index" in lessons_taught), or "".
+static func dish_teacher(c: CharacterData, data: GameData, meal_id: String) -> String:
+	for npc_id: String in data.npcs:
+		var lessons: Array = data.npcs[npc_id].get("lessons", [])
+		for i in lessons.size():
+			if String(lessons[i].get("effects", {}).get("learn_dish", "")) == meal_id and c.lessons_taught.has("%s:%d" % [npc_id, i]):
+				return npc_id
+	return ""
+
+
+## COOK-003: the first time `c` cooks a dish a friend taught, remember it (world flag "dish_memory", one entry per
+## dish) so that friend's next chat can say a line. True when something was recorded.
+static func record_dish_cooked(flags: Dictionary, c: CharacterData, data: GameData, meal_id: String, day: int) -> bool:
+	var memory: Dictionary = flags.get("dish_memory", {})
+	if memory.has(meal_id):
+		return false
+	var npc_id := dish_teacher(c, data, meal_id)
+	if npc_id == "" or String(data.npcs[npc_id].get("taught_dish_line", "")) == "":
+		return false
+	memory[meal_id] = {"npc": npc_id, "day": day, "told": false}
+	flags["dish_memory"] = memory
+	return true
+
+
+## COOK-003: the line `npc` says about a dish they taught that you cooked, within DISH_NOTICED_DAYS (once per dish),
+## or "". With `consume` the entry is marked told. Returns {line, dish} fields as a dictionary, empty when nothing.
+static func dish_noticed(npc: CharacterData, data: GameData, flags: Dictionary, day: int, consume: bool) -> Dictionary:
+	var memory: Variant = flags.get("dish_memory", {})
+	if not (memory is Dictionary) or not data.npcs.has(npc.id):
+		return {}
+	var template := String(data.npcs[npc.id].get("taught_dish_line", ""))
+	if template == "":
+		return {}
+	for meal_id: String in (memory as Dictionary):
+		var m: Dictionary = memory[meal_id]
+		var age := day - int(m.get("day", -9999))
+		if String(m.get("npc", "")) != npc.id or bool(m.get("told", false)) or age < 0 or age > DISH_NOTICED_DAYS:
+			continue
+		if consume:
+			m["told"] = true
+		var dish_name := String(Cooking.meal(data, meal_id).get("name", meal_id)).to_lower()
+		return {"line": template.replace("{dish}", dish_name), "dish": meal_id}
+	return {}
+
+
+## COOK-003: load errors in npcs.json taught_dish_line.
+static func validate_taught_dish_line(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for id: String in data.npcs:
+		if data.npcs[id].has("taught_dish_line"):
+			var l: Variant = data.npcs[id]["taught_dish_line"]
+			if not (l is String) or String(l) == "" or String(l).length() > 160 or not String(l).contains("{dish}"):
+				errors.append("NPC '%s' taught_dish_line must be a string of 1..160 characters containing {dish}" % id)
+	return errors
+
+
 ## FOLK-018: remember `npc_id`'s newest gift from the player (taste 1 liked, 0 neutral, -1 disliked).
 static func record_gift(flags: Dictionary, npc_id: String, item_id: String, day: int, taste: int) -> void:
 	var memory: Dictionary = flags.get("gift_memory", {})
@@ -781,6 +844,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
 	errors.append_array(validate_festival_lines(data))
 	errors.append_array(validate_festival_memory(data))
+	errors.append_array(validate_taught_dish_line(data))
 	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
