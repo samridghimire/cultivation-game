@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-08 (planner, 12:10 UTC)
+- 9 tasks landed (WU-484, GUIDE-220, GUIDE-221, CRIT-002, WU-485, GFX-100, FOLK-026, WU-486, WU-487). Review
+  877015a..b872ed1 fixed two slips inline, nothing filed. Live claims: GFX-101, WILD-021, C-327, C-313 (5h old, expiring).
+- **ID collision found:** the open COOK-002 row shared its id with a landed 2026-10 commit `[COOK-002] Meals that carry
+  you...`, so workers' `git log | grep [COOK-002]` said done and nobody took it. Renamed COOK-003; C-330 split (festival part
+  ready now, dish part -> C-331). Planner: check new ids against `git log --format=%s` before using them.
+- Screenshots render fine under xvfb in the cloud; workers kept writing "not rendered (no GPU)". Added a Screenshots
+  section to CLAUDE.md. Planner shots this run: five regions + the default first-hour set (see BACKLOG header).
+- Next planner: view GFX-101/102/103 and WU-488 shots when they land; GFX-002 (art pack) still waits on the owner.
+
 ## State on 2026-11-08 (planner, 00:10 UTC)
 - 10 tasks landed (GFX-094, C-323, FOLK-022, GUIDE-218, COOK-001, C-324, GFX-095, WU-480, WU-481, C-325). Review
   d56a580..d259ccc fixed old saves losing cooked dishes inline; its notes -> GUIDE-219. Live claim: C-326.

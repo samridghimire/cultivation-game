@@ -16,6 +16,16 @@ tools/godot.sh --headless --path . -s res://tests/run_tests.gd   # unit tests on
 
 `tools/test.sh` must print `ALL CHECKS PASSED`. Never commit with failing checks.
 
+### Screenshots (they work in the cloud container)
+```bash
+tools/godot.sh --headless --path . --import    # once in a fresh container
+xvfb-run -a -s "-screen 0 1280x800x24" tools/godot.sh --path . --rendering-driver opengl3 --resolution 1280x800 \
+    -s res://tests/sim/screenshot_first_hour.gd -- --region=qingshi_village,withered_bone_marsh
+```
+PNGs land in `~/.local/share/godot/app_userdata/Cultivation Game/screenshots/first_hour/`; open them with the Read tool.
+Flags are listed at the top of `tests/sim/screenshot_first_hour.gd`. "No GPU" is not a reason to skip a visual check.
+Revert any `project.godot` change the import makes before committing.
+
 ## Architecture
 
 ```

@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-08 [WU-487] Secret realms that are open look open in the world (shot flag for checking it).
+- 2026-11-08 [WU-486] Villagers show a little heart, smile or sweat drop when you give gifts, share scenes or learn from them.
+- 2026-11-08 [FOLK-026] A friend who came with you to a festival remembers it the next time you talk.
+- 2026-11-08 [GFX-100] Every region builds its own way: thatch, tile, stone, stilts or logs.
+- 2026-11-08 [WU-485] Clean screen edges, a readable [E] prompt at festivals and menus that fit their content.
+- 2026-11-08 [CRIT-002] Feed the village hens with grain and they lay surely the next day.
+- 2026-11-08 [GUIDE-221] The day's notes say what a festival stall sells, and the eve of a festival is announced.
+- 2026-11-08 [GUIDE-220] Next steps on the HUD are short enough to read at a glance.
+- 2026-11-08 [WU-484] Nobody stands on a roof or in the gate; shopkeepers wait at their door.
 - 2026-11-08 [WU-483] Villagers on their daily rounds stop clear of signs, exits and buildings.
 - 2026-11-08 [GFX-099] Every HUD panel and menu has a gold pixel frame, and the key bar shows real key caps.
 - 2026-11-08 [WILD-020] Great-beast trails can run several steps, each beast stronger than the last.
