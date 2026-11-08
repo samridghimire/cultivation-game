@@ -565,7 +565,7 @@ func _validate_world() -> void:
 			load_errors.append("travel_speed mult must be a number in (0, 1]")
 		if String(speed.get("how", "")).strip_edges() == "":
 			load_errors.append("travel_speed entries need a non-empty 'how'")
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "field_plot", "secret_realm", "auction", "inheritance", "bounty_board", "shrine", "well"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "field_plot", "secret_realm", "auction", "inheritance", "bounty_board", "shrine", "well", "coop"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):

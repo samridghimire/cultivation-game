@@ -20,9 +20,54 @@ static func egg_flag(region_id: String) -> String:
 	return "eggs_" + region_id
 
 
+## CRIT-002: world flag key holding the day the hens were last fed in a region.
+static func fed_flag(region_id: String) -> String:
+	return "hens_fed_" + region_id
+
+
+## CRIT-002: the first hen's `lays.feed` block {item_tag, eggs_min, eggs_max} among `entries`, or {}.
+static func feed_of(entries: Array) -> Dictionary:
+	for e: Variant in entries:
+		if e is Dictionary and String(e.get("kind", "")) == "hen" and e.has("lays") and (e["lays"] as Dictionary).has("feed"):
+			return (e["lays"] as Dictionary)["feed"]
+	return {}
+
+
+## CRIT-002: true when the hens were fed the day before `day`.
+static func fed_for(flags: Dictionary, region_id: String, day: int) -> bool:
+	return int(flags.get(fed_flag(region_id), -99)) == day - 1
+
+
+## CRIT-002: true when the hens were fed today (the Today line says so).
+static func fed_today(flags: Dictionary, region_id: String, day: int) -> bool:
+	return int(flags.get(fed_flag(region_id), -99)) == day
+
+
+## CRIT-002: why the hens cannot be fed ("" = they can): no feed data, already fed today, or no grain.
+static func feed_refusal(data: GameData, c: CharacterData, entries: Array, flags: Dictionary, region_id: String, day: int) -> String:
+	var feed := feed_of(entries)
+	if feed.is_empty():
+		return "There are no hens to feed here."
+	if fed_today(flags, region_id, day):
+		return "The hens are already fed today."
+	if grain_item(data, c, String(feed.get("item_tag", ""))) == "":
+		return "You have no grain to scatter."
+	return ""
+
+
+## CRIT-002: the cheapest owned item carrying `tag`, or "".
+static func grain_item(data: GameData, c: CharacterData, tag: String) -> String:
+	var best := ""
+	for item_id: Variant in c.inventory:
+		if c.item_count(String(item_id)) > 0 and Items.has_tag(data, String(item_id), [tag]):
+			if best == "" or String(item_id) < best:
+				best = String(item_id)
+	return best
+
+
 ## CRIT-001: today's eggs for a region's `entries` (its map.ambient_critters): [{index, pos, item}], at most one per
 ## hen that has `lays`, near the hen's pos. Pure, seeded by region id and day; hens only lay in season.
-static func eggs_today(region_id: String, entries: Array, day: int, season: String = "spring") -> Array[Dictionary]:
+static func eggs_today(region_id: String, entries: Array, day: int, season: String = "spring", fed: bool = false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for i in entries.size():
 		var e: Dictionary = entries[i]
@@ -31,10 +76,14 @@ static func eggs_today(region_id: String, entries: Array, day: int, season: Stri
 		var lays: Dictionary = e["lays"]
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash("egg:%s:%d:%d" % [region_id, day, i])
-		if rng.randf() >= float(lays.get("chance", 0.0)):
+		var feed: Dictionary = lays.get("feed", {}) if fed else {}  # CRIT-002: fed hens lay surely, maybe two
+		if rng.randf() >= (1.0 if not feed.is_empty() else float(lays.get("chance", 0.0))):
 			continue
 		var pos := Vector2(float(e["pos"][0]), float(e["pos"][1])) + Vector2(rng.randf_range(-26.0, 26.0), rng.randf_range(10.0, 26.0))
-		out.append({"index": i, "pos": pos, "item": String(lays["item"])})
+		var count := 1
+		if not feed.is_empty():
+			count = rng.randi_range(int(feed.get("eggs_min", 1)), maxi(int(feed.get("eggs_min", 1)), int(feed.get("eggs_max", 1))))
+		out.append({"index": i, "pos": pos, "item": String(lays["item"]), "count": count})
 	return out
 
 
@@ -45,7 +94,7 @@ static func eggs_left(region_id: String, entries: Array, day: int, flags: Dictio
 	if rec is Dictionary and int(rec.get("day", -1)) == day:
 		for t: Variant in rec.get("taken", []):
 			taken.append(int(t))  # JSON saves hand back floats
-	return eggs_today(region_id, entries, day, season).filter(func(e: Dictionary) -> bool: return not taken.has(int(e["index"])))
+	return eggs_today(region_id, entries, day, season, fed_for(flags, region_id, day)).filter(func(e: Dictionary) -> bool: return not taken.has(int(e["index"])))
 
 
 ## Marks entry `index` picked today (the record is overwritten on a new day).
@@ -94,6 +143,10 @@ static func validate(region: Dictionary, items: Dictionary = {}) -> PackedString
 				var ch: Variant = lays.get("chance")
 				if not (ch is float or ch is int) or float(ch) < 0.0 or float(ch) > 1.0:
 					errors.append("Region '%s' map.ambient_critters[%d] lays.chance must be 0..1" % [rid, i])
+				if lays is Dictionary and lays.has("feed"):
+					var fd: Variant = lays["feed"]
+					if not fd is Dictionary or String(fd.get("item_tag", "")) == "" or int(fd.get("eggs_min", 0)) < 1 or int(fd.get("eggs_max", 0)) < int(fd.get("eggs_min", 0)) or int(fd.get("eggs_max", 0)) > 4:
+						errors.append("Region '%s' map.ambient_critters[%d] lays.feed needs item_tag and 1 <= eggs_min <= eggs_max <= 4" % [rid, i])
 				if not items.is_empty() and not items.has(String(lays.get("item", ""))):
 					errors.append("Region '%s' map.ambient_critters[%d] lays.item '%s' is not an item" % [rid, i, lays.get("item", "")])
 		var p := Vector2(float(pos[0]), float(pos[1]))

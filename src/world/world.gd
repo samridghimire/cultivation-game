@@ -24,6 +24,7 @@ const PLACE_SCRIPTS := {
 	"inheritance": preload("res://src/world/interactables/inheritance_grounds.gd"),
 	"shrine": preload("res://src/world/interactables/shrine.gd"),
 	"well": preload("res://src/world/interactables/well.gd"),
+	"coop": preload("res://src/world/interactables/coop.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]

@@ -3447,6 +3447,29 @@ func eggs_here() -> Array[Dictionary]:
 	return Critters.eggs_left(current_region, entries, GameClock.total_days, world_flags, Calendar.season_of(GameClock.total_days).to_lower())
 
 
+## CRIT-002: why the hens here cannot be fed today ("" = they can).
+func feed_hens_refusal() -> String:
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	return Critters.feed_refusal(data, player, entries, world_flags, current_region, GameClock.total_days)
+
+
+## CRIT-002: scatter one grain item for the hens, once a day. Tomorrow's egg roll is sure and may give more. No time.
+func feed_hens() -> bool:
+	if not _can_act():
+		return false
+	var why := feed_hens_refusal()
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	var grain := Critters.grain_item(data, player, String(Critters.feed_of(entries).get("item_tag", "")))
+	player.add_item(grain, -1)
+	world_flags[Critters.fed_flag(current_region)] = GameClock.total_days
+	EventBus.post("You scatter a handful of %s; the hens crowd round, clucking." % String(data.items.get(grain, {}).get("name", "grain")).to_lower(), "world")
+	EventBus.player_changed.emit()
+	return true
+
+
 ## CRIT-001: pick up the egg of ambient critter `index`. Takes no time; it is gone until the next day.
 func pick_egg(index: int) -> bool:
 	if not _can_act():
@@ -3455,10 +3478,11 @@ func pick_egg(index: int) -> bool:
 		if int(e["index"]) != index:
 			continue
 		var item_id := String(e["item"])
-		player.add_item(item_id, 1)
+		var count := int(e.get("count", 1))
+		player.add_item(item_id, count)
 		Critters.mark_egg(world_flags, current_region, index, GameClock.total_days)
-		EventBus.post("You pick up a %s from the grass." % String(data.items.get(item_id, {}).get("name", item_id)).to_lower(), "world")
-		EventBus.pickup_noted.emit(item_id, 1)
+		EventBus.post("You pick up %s from the grass." % ("a " + String(data.items.get(item_id, {}).get("name", item_id)).to_lower() if count == 1 else "%d %s" % [count, String(data.items.get(item_id, {}).get("plural", item_id)).to_lower()]), "world")
+		EventBus.pickup_noted.emit(item_id, count)
 		EventBus.forage_changed.emit()
 		EventBus.player_changed.emit()
 		return true

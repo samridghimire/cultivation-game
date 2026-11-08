@@ -409,6 +409,8 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var egg := _egg_line(data, region_id, day, flags)
 	if egg != "":
 		out.append(egg)
+	if Critters.fed_today(flags, region_id, day):  # CRIT-002
+		out.append("The hens are fed")
 	if out.size() > TODAY_MAX:
 		out.resize(TODAY_MAX)
 	return out

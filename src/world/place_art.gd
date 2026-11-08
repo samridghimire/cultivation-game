@@ -9,7 +9,7 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "field_plot", "explore", "deed_giver", "npc",
-	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine", "well"]
+	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine", "well", "coop"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
@@ -59,6 +59,8 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_stele(ci, h, color)
 		"shrine":
 			_stele(ci, h, color)  # the live stage art is Shrine.draw_generated_art (GFX-081)
+		"coop":
+			_coop(ci, h, color)
 		"well":
 			_bucket(ci, h, color)  # the well itself is the solid landmark beside it
 		"abode":
@@ -301,6 +303,17 @@ static func _notice_board(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	for i in 3:
 		var x := -h.x * 0.75 + i * h.x * 0.55
 		ci.draw_rect(Rect2(Vector2(x, -h.y * 0.8 + (i % 2) * h.y * 0.25), Vector2(h.x * 0.4, h.y * 0.6)), Color("e8dcc0"))
+
+
+## CRIT-002: a low henhouse with a ramp and a pitched roof.
+static func _coop(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.8), Vector2(h.x * 0.9, h.y * 0.2), Color(0, 0, 0, 0.25))
+	var body := Rect2(-h.x * 0.6, -h.y * 0.2, h.x * 1.2, h.y * 0.9)
+	ci.draw_rect(body, WOOD.lerp(c, 0.25))
+	ci.draw_rect(body, OUTLINE, false, 1.5)
+	var roof := PackedVector2Array([Vector2(-h.x * 0.75, -h.y * 0.2), Vector2(0, -h.y * 0.85), Vector2(h.x * 0.75, -h.y * 0.2)])
+	ci.draw_colored_polygon(roof, c.darkened(0.2))
+	ci.draw_rect(Rect2(-h.x * 0.15, h.y * 0.1, h.x * 0.3, h.y * 0.6), OUTLINE)
 
 
 ## RV-018: a wooden bucket and a coil of rope on the well's apron.
