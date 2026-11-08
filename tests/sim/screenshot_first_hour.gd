@@ -5,6 +5,7 @@ extends SceneTree
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_first_hour.gd
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
+## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
@@ -85,6 +86,14 @@ func _start() -> void:
 				before += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
 			for i in before + clampi(int(arg.substr(7)), 0, 3):
 				gs.player.seasons_completed.append("shot_%d" % i)
+	for arg in OS.get_cmdline_user_args():  # WU-482: --birthday=<npc_id> moves the clock to that villager's birthday (favor 40)
+		if arg.begins_with("--birthday="):
+			var bid := arg.substr(11)
+			if gs.npcs.has(bid):
+				var clock_b: Node = root.get_node("GameClock")
+				var bday: int = Folk.birthday_day(gs.npcs[bid], gs.data)
+				clock_b.total_days = (clock_b.total_days / Calendar.DAYS_PER_YEAR) * Calendar.DAYS_PER_YEAR + bday
+				gs.npc_favor[bid] = 40
 	if OS.get_cmdline_user_args().has("--incense"):  # GFX-084: the incense burns today
 		gs.world_flags["shrine_incense"] = {"until": gs.get_node("/root/GameClock").total_days + 1}
 	if OS.get_cmdline_user_args().has("--great") or OS.get_cmdline_user_args().has("--tracks"):  # WU-430: jump to the region's next great-beast day

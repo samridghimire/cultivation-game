@@ -881,6 +881,11 @@ static func days_to_birthday(npc: CharacterData, data: GameData, day: int) -> in
 	return posmod(b - day, Calendar.DAYS_PER_YEAR)
 
 
+## WU-482: true when it is `npc`'s birthday on `day` and you know them (favor >= min_favor), so the world marks it. Pure.
+static func is_birthday_today(npc: CharacterData, data: GameData, day: int, favor: Dictionary, min_favor: int = 10) -> bool:
+	return npc != null and int(favor.get(npc.id, 0)) >= min_favor and birthday_today(npc, data, day)
+
+
 ## FOLK-008: living generated villagers of `region_id` you know (favor >= min_favor) whose birthday falls within
 ## `span` days of `day`, as [{npc, in_days}] soonest first (ties by id). Pure.
 static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, day: int, favor: Dictionary, span: int = 7, min_favor: int = 10) -> Array[Dictionary]:

@@ -967,6 +967,26 @@ func test_birthdays_soon_needs_favor_and_window() -> void:
 	assert_true("\n".join(lines).contains("birthday is today"))
 
 
+func test_is_birthday_today_needs_favor_and_the_day() -> void:
+	var npcs := {}
+	_village(npcs, 3)
+	var npc: CharacterData = npcs[npcs.keys()[0]]
+	var b := Folk.birthday_day(npc, data())
+	var day := b + Calendar.DAYS_PER_YEAR
+	assert_true(Folk.is_birthday_today(npc, data(), day, {npc.id: 10}))
+	assert_false(Folk.is_birthday_today(npc, data(), day, {npc.id: 9}), "strangers are not marked")
+	assert_false(Folk.is_birthday_today(npc, data(), day + 1, {npc.id: 50}))
+	assert_false(Folk.is_birthday_today(null, data(), day, {}))
+	var named: CharacterData = null
+	for id: String in data().npcs:
+		if data().npcs[id].has("birthday"):
+			named = CharacterData.new()
+			named.id = id
+			break
+	if named != null:
+		assert_true(Folk.is_birthday_today(named, data(), Folk.birthday_day(named, data()), {named.id: 20}))
+
+
 func test_people_entries_filter_order_and_tastes() -> void:
 	var npcs := {}
 	_village(npcs, 3)

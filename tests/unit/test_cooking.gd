@@ -84,12 +84,31 @@ func test_meal_buff_validation() -> void:
 func test_cook_options_list_every_meal_with_its_effect() -> void:
 	var c := new_character()
 	var options := Workshop.cook_options(c, data())
-	assert_eq(options.size(), Cooking.known_meals(c, data()).size())
-	for option in options:
-		assert_true(option["disabled"], "no ingredients yet")
-		assert_true(String(option["description"]).contains("for 3 days"), option["description"])
+	var known := Cooking.known_meals(c, data()).size()
+	var hidden := Cooking.unknown_taught_count(c, data())
+	assert_eq(options.size(), known + (1 if hidden > 0 else 0))
+	for i in known:
+		assert_true(options[i]["disabled"], "no ingredients yet")
+		assert_true(String(options[i]["description"]).contains("for 3 days"), options[i]["description"])
 	c.add_item("silver_carp", 2)
 	assert_false(Workshop.cook_options(c, data())[0]["disabled"])
+
+
+func test_cook_options_hint_at_taught_dishes_without_names() -> void:
+	var c := new_character()
+	var hidden := Cooking.unknown_taught_count(c, data())
+	assert_true(hidden > 0, "data has taught dishes")
+	var options := Workshop.cook_options(c, data())
+	var last: Dictionary = options[options.size() - 1]
+	assert_true(String(last["label"]).begins_with("Cook: ??? (%d more dish" % hidden), last["label"])
+	assert_true(last["disabled"])
+	assert_eq(last["description"], "Become friends with the villagers; some of them cook.")
+	for m: Dictionary in data().home_meals:
+		if bool(m.get("taught", false)):
+			Cooking.learn(c, data(), String(m["id"]))
+	assert_eq(Cooking.unknown_taught_count(c, data()), 0)
+	for o in Workshop.cook_options(c, data()):
+		assert_false(String(o["label"]).contains("???"))
 
 
 func test_folk_ask_for_fish_exists() -> void:
@@ -121,7 +140,7 @@ func test_taught_meal_hidden_until_learned() -> void:
 	assert_false(Cooking.is_known(c, data(), "honey_egg_cake"))
 	assert_true(Cooking.is_known(c, data(), "fish_stew"))
 	assert_eq(Cooking.known_meals(c, data()).size(), data().home_meals.size() - 4)
-	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 4)
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 3, "known dishes plus the ??? hint")
 	for item_id: Variant in Cooking.meal(data(), "honey_egg_cake")["ingredients"]:
 		c.add_item(String(item_id), 9)
 	assert_eq(Cooking.check(c, data(), "honey_egg_cake"), "You have not learned to cook that.")
@@ -129,7 +148,7 @@ func test_taught_meal_hidden_until_learned() -> void:
 	assert_false(Cooking.learn(c, data(), "honey_egg_cake"), "twice")
 	assert_false(Cooking.learn(c, data(), "fish_stew"), "not taught")
 	assert_false(Cooking.learn(c, data(), "nonsense"))
-	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 3)
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 2)
 	assert_true(Cooking.cook(c, data(), "honey_egg_cake")["ok"])
 
 

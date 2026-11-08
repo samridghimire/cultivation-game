@@ -151,7 +151,7 @@ func _update_target() -> void:
 		_target = best
 		if best:
 			best.highlighted = true
-		EventBus.interaction_target_changed.emit(best.display_name if best else "")
+		EventBus.interaction_target_changed.emit(best.prompt_text() if best else "")
 
 
 func _draw() -> void:

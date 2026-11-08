@@ -144,6 +144,11 @@ func label_text() -> String:
 	return display_name
 
 
+## The text after the key on the [E] chip (NPCs add a birthday note, WU-482).
+func prompt_text() -> String:
+	return display_name
+
+
 ## The color of the name label (NPCs override it, WU-138).
 func label_color() -> Color:
 	return Color.WHITE

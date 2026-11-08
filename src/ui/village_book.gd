@@ -416,7 +416,8 @@ func _card(e: Dictionary) -> Button:
 	var tier := UIStyle.label(String(e["tier_name"]), 14)
 	tier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(tier)
-	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, DIM)
+	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= 7  # WU-482: gold within a week
+	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))

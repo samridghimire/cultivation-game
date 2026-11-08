@@ -37,6 +37,15 @@ static func known_meals(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	return out
 
 
+## WU-482: how many taught dishes `c` has not learned yet.
+static func unknown_taught_count(c: CharacterData, data: GameData) -> int:
+	var n := 0
+	for m: Dictionary in data.home_meals:
+		if bool(m.get("taught", false)) and not is_known(c, data, String(m["id"])):
+			n += 1
+	return n
+
+
 ## "" if `c` can cook the meal now, else why not.
 static func check(c: CharacterData, data: GameData, meal_id: String) -> String:
 	var m := meal(data, meal_id)

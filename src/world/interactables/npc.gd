@@ -62,6 +62,7 @@ func sprite_keys() -> PackedStringArray:
 
 func _on_modal_changed(is_open: bool) -> void:
 	_modal_open = is_open
+	queue_redraw()
 
 
 func _ready() -> void:
@@ -74,6 +75,8 @@ func _ready() -> void:
 	_phase = float(absi(h) % 628) / 100.0
 	_wait = _rng.randf_range(1.0, 4.0)
 	EventBus.ui_modal_changed.connect(_on_modal_changed)
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	GameClock.days_advanced.connect(_on_day_redraw)  # WU-482: the birthday marker
 	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
 		GameClock.days_advanced.connect(_on_days_advanced)
 	var notifier := VisibleOnScreenNotifier2D.new()
@@ -81,6 +84,10 @@ func _ready() -> void:
 	notifier.screen_entered.connect(func(): _on_screen = true)
 	notifier.screen_exited.connect(func(): _on_screen = false)
 	add_child(notifier)
+
+
+func _on_day_redraw(_days: int) -> void:
+	queue_redraw()
 
 
 ## FOLK-017: a new day, a new spot (Folk.spot_for): walk there, or jump with reduce_motion.
@@ -185,6 +192,12 @@ static func visit_line(npc_name: String) -> String:
 ## Draws the tea tray (two cups and a pot) at the visitor's side in pixel blocks (WU-411).
 func _draw() -> void:
 	super._draw()
+	if not _modal_open and is_birthday():  # WU-482: the cake glyph 18 px above the head
+		var tex := HudIcons.calendar_kind("birthday")
+		if tex != null:
+			var s2 := 2.0
+			var w := tex.get_width() * s2
+			draw_texture_rect(tex, Rect2(Vector2(size.x / 2.0 - w / 2.0, -18.0 - tex.get_height() * s2), Vector2(w, tex.get_height() * s2)), false)
 	if not _visiting:
 		return
 	var s := float(Sprites.scale())
@@ -195,6 +208,20 @@ func _draw() -> void:
 	draw_rect(Rect2(o + Vector2(10, -3) * s, Vector2(3, 3) * s), Color("f4f0e6"))
 	draw_rect(Rect2(o + Vector2(5, -4) * s, Vector2(4, 4) * s), Color("4f7a5a"))
 	draw_rect(Rect2(o + Vector2(6, -5) * s, Vector2(2, 1) * s), Color("4f7a5a"))
+
+
+## WU-482: a known friend whose birthday is today.
+func is_birthday() -> bool:
+	if GameState.player == null or GameState.data == null or not GameState.npcs.has(npc_id):
+		return false
+	return Folk.is_birthday_today(GameState.npcs[npc_id], GameState.data, GameClock.total_days, GameState.npc_favor)
+
+
+func prompt_text() -> String:
+	return display_name + (BIRTHDAY_NOTE if is_birthday() else "")
+
+
+const BIRTHDAY_NOTE := " - birthday today"
 
 
 ## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".

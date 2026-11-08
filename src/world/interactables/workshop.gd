@@ -37,6 +37,9 @@ static func cook_options(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	for m: Dictionary in Cooking.known_meals(c, data):
 		var meal_reason := Cooking.check(c, data, String(m["id"]))
 		options.append({"label": "Cook: %s" % m["name"], "description": "No profession needed. %s" % Cooking.describe(data, String(m["id"])), "reason": meal_reason, "action": GameState.cook_meal.bind(String(m["id"])), "disabled": meal_reason != "", "keep_open": true})
+	var hidden := Cooking.unknown_taught_count(c, data)
+	if hidden > 0:  # WU-482: no names, finding the teacher is the fun
+		options.append({"label": "Cook: ??? (%d more dish%s a friend could teach you)" % [hidden, "" if hidden == 1 else "es"], "description": "Become friends with the villagers; some of them cook.", "reason": "You do not know that dish.", "disabled": true})
 	return options
 
 
