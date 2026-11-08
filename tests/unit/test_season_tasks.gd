@@ -278,7 +278,7 @@ func test_well_stages_follow_the_shrine() -> void:
 	assert_eq(SeasonTasks.project_line(c, gs.data, {}, 365), "The Founder's Old Well: 1 of 3 stages repaired.")
 	_finish_seasons(gs, [455, 545])
 	assert_eq(SeasonTasks.project_stage(c, gs.data, 1), 3)
-	assert_true(SeasonTasks.current_project(c, gs.data).is_empty())
+	assert_eq(String(SeasonTasks.current_project(c, gs.data)["project"]["id"]), "jetty", "SEASON-011: the jetty is next")
 
 
 func test_well_crop_bonus_and_draw() -> void:
@@ -294,7 +294,7 @@ func test_well_crop_bonus_and_draw() -> void:
 	assert_true(gs.draw_well_water())
 	assert_eq(c.item_count("well_water"), 1)
 	assert_false(gs.draw_well_water(), "once a day")
-	assert_eq(SeasonTasks.project_line(c, gs.data, gs.world_flags, 600), "", "GUIDE-216: no draw line after drawing")
+	assert_eq(SeasonTasks.project_line(c, gs.data, gs.world_flags, 600), "The Village Pond Jetty: 0 of 3 stages repaired.", "GUIDE-216: no draw line after drawing")
 	GameClock.total_days = 601
 	assert_true(gs.draw_well_water())
 	assert_eq(c.item_count("well_water"), 2)
@@ -431,3 +431,45 @@ func test_project_index_finds_projects_by_id() -> void:
 	var data: GameData = _gs().data
 	assert_true(SeasonTasks.project_index(data, "well") >= 0, "well project exists")
 	assert_eq(SeasonTasks.project_index(data, "no_such_project"), -1)
+
+
+## SEASON-011: the pond jetty is the third project; each stage adds 5% catch weight at Qingshi's fishing places.
+func test_jetty_stages_and_fish_bonus() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	_finish_seasons(gs, [365, 455, 545])
+	var ji := SeasonTasks.project_index(gs.data, "jetty")
+	assert_eq(ji, 2, "after the well")
+	assert_eq(SeasonTasks.project_stage(c, gs.data, ji), 0)
+	assert_eq(SeasonTasks.fish_bonus(c, gs.data, "qingshi_village"), 0.0)
+	assert_eq(SeasonTasks.fish_project_line(c, gs.data, "qingshi_village"), "Jetty: 0/3 repaired.")
+	_finish_seasons(gs, [635])
+	assert_true(bool(gs.world_flags.get("jetty_stage_1", false)))
+	assert_almost_eq(SeasonTasks.fish_bonus(c, gs.data, "qingshi_village"), 0.05)
+	assert_eq(SeasonTasks.fish_project_line(c, gs.data, "qingshi_village"), "Jetty: 1/3 repaired.")
+	_finish_seasons(gs, [725, 815])
+	assert_almost_eq(SeasonTasks.fish_bonus(c, gs.data, "qingshi_village"), 0.15)
+	assert_eq(SeasonTasks.fish_bonus(c, gs.data, "misty_forest"), 0.0)
+	assert_eq(SeasonTasks.fish_project_line(c, gs.data, "qingshi_village"), "", "whole")
+	assert_eq(CharacterData.from_dict(c.to_dict()).seasons_completed.size(), c.seasons_completed.size(), "stages come from seasons_completed")
+
+
+func test_jetty_scales_catch_weights_and_flag_gate() -> void:
+	var gs := _gs()
+	var table: Array = [{"item": "", "weight": 1}, {"item": "silver_carp", "weight": 2}, {"item": "rain_loach", "weight": 1, "requires_flag": "jetty_stage_3"}]
+	assert_eq(Fishing.filter_flags(table, {}).size(), 2, "gated entry skipped without the flag")
+	assert_eq(Fishing.filter_flags(table, {"jetty_stage_3": true}).size(), 3)
+	var scaled := Weather.scale_catch(table, 1.15)
+	assert_almost_eq(float(scaled[1]["weight"]), 2.3)
+	assert_eq(float(scaled[0]["weight"]), 1.0, "nothing entry unchanged")
+	var bad: Array = [{"item": "silver_carp", "weight": 1, "requires_flag": ""}]
+	assert_false(Fishing.validate_table(gs.data, bad, "t").is_empty())
+
+
+func test_jetty_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][1]["fish_bonus"] = 0.5
+	assert_false(SeasonTasks.validate(gd).is_empty(), "fish_bonus")
+	gd.season_tasks = saved

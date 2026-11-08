@@ -1334,8 +1334,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if Fishing.too_wild(weather_kind):
 		EventBus.post(Fishing.STORM_REFUSAL, "warning")
 		return
-	var mult := Weather.fishing_multiplier(data, weather_kind)
-	var base := Exploration.gather_table_for(player, data, Fishing.filter_weather(table, weather_kind), season)
+	var mult := Weather.fishing_multiplier(data, weather_kind) * (1.0 + SeasonTasks.fish_bonus(player, data, current_region))
+	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_weather(table, weather_kind), world_flags), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
 	if Fishing.got_away(quality, rng):

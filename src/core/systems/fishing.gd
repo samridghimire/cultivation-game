@@ -214,6 +214,8 @@ static func validate_table(data: GameData, table: Array, who: String) -> PackedS
 	var errors: PackedStringArray = []
 	var count := 0
 	for entry: Dictionary in table:
+		if entry.has("requires_flag") and String(entry["requires_flag"]) == "":
+			errors.append("%s: requires_flag must be a non-empty world flag" % who)
 		if not is_trophy(entry):
 			continue
 		count += 1
@@ -236,6 +238,16 @@ static func filter_weather(table: Array, kind: String) -> Array:
 	var out: Array = []
 	for entry: Dictionary in table:
 		if entry.has("weather") and not (entry["weather"] as Array).has(kind):
+			continue
+		out.append(entry)
+	return out
+
+
+## SEASON-011: `table` without entries whose `requires_flag` world flag is not set.
+static func filter_flags(table: Array, flags: Dictionary) -> Array:
+	var out: Array = []
+	for entry: Dictionary in table:
+		if entry.has("requires_flag") and not bool(flags.get(String(entry["requires_flag"]), false)):
 			continue
 		out.append(entry)
 	return out

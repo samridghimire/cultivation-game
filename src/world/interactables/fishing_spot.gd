@@ -9,6 +9,9 @@ extends Interactable
 func get_options() -> Array[Dictionary]:
 	var kind := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
 	var note := Weather.effect_note(GameState.data, Weather.of(GameState.data, GameState.current_region, GameClock.total_days), "fish")
+	var jetty := SeasonTasks.fish_project_line(GameState.player, GameState.data, GameState.current_region)
+	if jetty != "":
+		note = jetty if note == "" else "%s %s" % [note, jetty]
 	var label := "Fish (%s)" % Calendar.format_duration(gather_days)
 	var line := Fishing.weather_line(GameState.data, kind)
 	if line != "":

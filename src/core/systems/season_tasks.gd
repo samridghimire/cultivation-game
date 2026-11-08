@@ -157,6 +157,31 @@ static func crop_bonus(c: CharacterData, data: GameData, region_id: String) -> f
 	return total
 
 
+## SEASON-011: extra catch weight (fraction) at fishing places in `region_id` from repaired projects.
+static func fish_bonus(c: CharacterData, data: GameData, region_id: String) -> float:
+	var total := 0.0
+	var list := project_list(data)
+	for i in list.size():
+		var proj: Dictionary = list[i]
+		if String(proj.get("region", "")) == region_id and proj.has("fish_bonus"):
+			total += float(proj["fish_bonus"]) * project_stage(c, data, i)
+	return total
+
+
+## SEASON-011: "The jetty: 1/3 repaired" for the project with a fish_bonus in `region_id` ("" when none or whole).
+static func fish_project_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	var list := project_list(data)
+	for i in list.size():
+		var proj: Dictionary = list[i]
+		if String(proj.get("region", "")) == region_id and proj.has("fish_bonus"):
+			var total := (proj["stages"] as Array).size()
+			var st := project_stage(c, data, i)
+			if st >= total:
+				return ""
+			return "%s: %d/%d repaired." % [_cap(String(proj["name"]).trim_prefix("the Village Pond ").trim_prefix("the ")), st, total]
+	return ""
+
+
 ## The well-like project with a `daily` block ({} when absent) and whether it is whole.
 static func daily_project(data: GameData) -> Dictionary:
 	for p: Dictionary in project_list(data):
@@ -190,13 +215,14 @@ static func draw_daily(c: CharacterData, data: GameData, flags: Dictionary, day:
 
 ## The Today line for the current project ("" when all are whole or only the shrine is open).
 static func project_line(c: CharacterData, data: GameData, flags: Dictionary, day: int) -> String:
+	var dp := daily_project(data)
+	# A whole well with water still to draw today comes first; later projects follow (SEASON-011).
+	if not dp.is_empty() and project_stage(c, data, project_list(data).find(dp)) >= (dp["stages"] as Array).size() and can_draw(c, data, flags, day) == "":
+		return "%s is whole: draw %s today." % [_cap(String(dp["name"])), _incense_item_name(data, String(dp["daily"]["item"])).to_lower()]
 	var cur := current_project(c, data)
 	if not cur.is_empty() and int(cur["index"]) > 0:
 		var proj: Dictionary = cur["project"]
 		return "%s: %d of %d stages repaired." % [_cap(String(proj["name"])), int(cur["stage"]), (proj["stages"] as Array).size()]
-	var dp := daily_project(data)
-	if cur.is_empty() and not dp.is_empty() and can_draw(c, data, flags, day) == "":
-		return "%s is whole: draw %s today." % [_cap(String(dp["name"])), _incense_item_name(data, String(dp["daily"]["item"])).to_lower()]
 	return ""
 
 
@@ -513,6 +539,8 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 			errs.append("season_tasks.json project '%s' done_line must be non-empty" % pid)
 		if p.has("crop_bonus") and (float(p["crop_bonus"]) <= 0.0 or float(p["crop_bonus"]) > 0.1):
 			errs.append("season_tasks.json project '%s' crop_bonus must be in (0, 0.1]" % pid)
+		if p.has("fish_bonus") and (float(p["fish_bonus"]) <= 0.0 or float(p["fish_bonus"]) > 0.1):
+			errs.append("season_tasks.json project '%s' fish_bonus must be in (0, 0.1]" % pid)
 		if p.has("daily"):
 			var dd: Dictionary = p["daily"]
 			if not data.items.has(String(dd.get("item", ""))) or String(dd.get("flag", "")) == "" or String(dd.get("text", "")) == "":
