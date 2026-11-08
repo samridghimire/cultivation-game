@@ -138,7 +138,7 @@ func _rebuild_left() -> void:
 	var data := GameState.data
 	_portrait.texture = PixelFigure.frame(PlayerLook.of(p, data), "down", 0)
 	_name_label.text = p.name
-	_age_label.text = "Age %d of %d" % [p.age_years(), Cultivation.lifespan_years(p, data)]
+	_age_label.text = "Age %d of %d · Born %s" % [p.age_years(), Cultivation.lifespan_years(p, data), Folk.player_birthday_text(p).replace("Month ", "M").replace(", Day ", " D")]
 	_realm_label.text = Cultivation.realm_label(p, data)
 	var need := Cultivation.qi_required(p, data)
 	_qi_bar.max_value = maxf(need, 1.0)

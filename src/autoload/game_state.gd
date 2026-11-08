@@ -1630,6 +1630,27 @@ func _festival_memory(npc_id: String) -> bool:
 	return true
 
 
+## FOLK-027: on your birthday a villager you know wishes you well (+2 favor once a year), and family gives a dish.
+func _player_birthday_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var told := false
+	var line := Folk.player_birthday_line(npc, player, data, GameClock.total_days, int(npc_favor.get(npc_id, 0)), world_flags, true)
+	if line != "":
+		npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.PLAYER_BIRTHDAY_FAVOR, -100, 100)
+		EventBus.post("%s: \"%s\"" % [npc.name, line], "info")
+		told = true
+	if player.spouses.has(npc_id) or player.children.has(npc_id):
+		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
+		if dish != "":
+			player.add_item(dish, 1)
+			EventBus.post("%s brings you %s for your birthday." % [npc.name, String(data.items[dish]["name"])], "people")
+			EventBus.player_changed.emit()
+			told = true
+	return told
+
+
 ## FOLK-025: a villager chatting while a festival runs in their region says their festival line, once per festival per year.
 func _festival_words(npc_id: String) -> bool:
 	var npc: CharacterData = npcs.get(npc_id)
@@ -2052,6 +2073,8 @@ func chat(npc_id: String) -> void:
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
+	elif _player_birthday_words(npc_id):  # FOLK-027
+		pass
 	elif not _festival_memory(npc_id):  # FOLK-026
 		_festival_words(npc_id)  # FOLK-025 (generated villagers; named ones go through start_dialogue)
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)

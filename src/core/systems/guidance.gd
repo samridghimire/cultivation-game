@@ -333,6 +333,8 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		var eve := Places.festival_eve_line(data, active_events, region_id, day)  # GUIDE-221
 		if eve != "":
 			out.append(eve + ".")
+	if Folk.player_birthday_today(c, data, day):  # FOLK-027
+		out.append("Today is your birthday.")
 	# 1b. Named friends (GUIDE-218): a birthday today, and a lesson waiting.
 	var named_birthday := {}
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):

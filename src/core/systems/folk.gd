@@ -366,6 +366,12 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	var cake: Variant = bands.get("birthday", [])
 	if not (cake is Array) or not (cake as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday must be an array of non-empty strings")
+	var mine: Variant = bands.get("player_birthday", [])
+	if not (mine is Array) or not (mine as Array).all(func(v: Variant) -> bool: return v is String and String(v) != "" and String(v).length() <= 160):
+		errors.append("family.json folk_greetings.player_birthday must be an array of 1..160 character strings")
+	var pgift: Variant = data.family.get("player_birthday_gift", "")
+	if not (pgift is String) or (String(pgift) != "" and not data.items.has(String(pgift))):
+		errors.append("family.json player_birthday_gift must be an items.json id")
 	var thanks: Variant = bands.get("birthday_thanks", [])
 	if not (thanks is Array) or not (thanks as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday_thanks must be an array of non-empty strings")
@@ -971,6 +977,54 @@ static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, 
 
 
 const BIRTHDAY_GIFT_PREFIX := "birthday_gift_"
+const PLAYER_BIRTHDAY_PREFIX := "player_birthday_"
+const PLAYER_BIRTHDAY_FAVOR := 2
+
+
+## FOLK-027: the player's birthday as a day of the year; a missing one (old saves) hashes the name, never rng.
+static func player_birthday_day(c: CharacterData) -> int:
+	if c.birthday >= 0:
+		return c.birthday % Calendar.DAYS_PER_YEAR
+	return absi(hash("birthday:" + c.name)) % Calendar.DAYS_PER_YEAR
+
+
+static func player_birthday_today(c: CharacterData, _data: GameData, day: int) -> bool:
+	return day >= 0 and day % Calendar.DAYS_PER_YEAR == player_birthday_day(c)
+
+
+## FOLK-027: "Month M, Day D" for the character sheet.
+static func player_birthday_text(c: CharacterData) -> String:
+	var b := player_birthday_day(c)
+	return "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)]
+
+
+## FOLK-027: on the player's birthday the first chat with each villager you know (favor reaches the first tier) says a
+## line from family.json folk_greetings.player_birthday, once per villager per year. The villager's own birthday wins.
+## `consume` marks it told. Returns "" when nothing is said.
+static func player_birthday_line(npc: CharacterData, c: CharacterData, data: GameData, day: int, favor: int, flags: Dictionary, consume: bool) -> String:
+	if npc == null or not player_birthday_today(c, data, day) or birthday_today(npc, data, day) or tier_index(data, favor) < 0:
+		return ""
+	var pool: Array = data.family.get("folk_greetings", {}).get("player_birthday", [])
+	var year := Calendar.year_of(day)
+	if pool.is_empty() or int(flags.get(PLAYER_BIRTHDAY_PREFIX + npc.id, -1)) == year:
+		return ""
+	if consume:
+		flags[PLAYER_BIRTHDAY_PREFIX + npc.id] = year
+	return String(pool[absi(hash(npc.id + str(day))) % pool.size()]).replace("{player}", c.name)
+
+
+## FOLK-027: the dish family gives on the player's birthday (family.json player_birthday_gift), once per year, to a
+## player who has a spouse or child. Returns the item id or "". `consume` marks the year.
+static func player_birthday_gift(c: CharacterData, data: GameData, day: int, flags: Dictionary, consume: bool) -> String:
+	var item := String(data.family.get("player_birthday_gift", ""))
+	if item == "" or not player_birthday_today(c, data, day) or (c.spouses.is_empty() and c.children.is_empty()):
+		return ""
+	var year := Calendar.year_of(day)
+	if int(flags.get(PLAYER_BIRTHDAY_PREFIX + "family", -1)) == year:
+		return ""
+	if consume:
+		flags[PLAYER_BIRTHDAY_PREFIX + "family"] = year
+	return item
 
 
 ## FOLK-008: 2 for the first gift to `npc` on their birthday this year, else 1. `consume` marks it used.

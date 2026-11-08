@@ -9,6 +9,8 @@ var name := ""
 var gender := ""
 var surname := ""
 var given_name := ""
+## FOLK-027: day of the year (0-based) the player is said to be born; -1 = unrolled (old saves hash the name).
+var birthday: int = -1
 ## Family links: character ids (the player is "player", NPCs use their GameState.npcs id).
 var parents: Array[String] = []
 var children: Array[String] = []
@@ -237,6 +239,7 @@ func to_dict() -> Dictionary:
 		"gender": gender,
 		"surname": surname,
 		"given_name": given_name,
+		"birthday": birthday,
 		"parents": parents.duplicate(),
 		"children": children.duplicate(),
 		"spouses": spouses.duplicate(),
@@ -358,6 +361,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.gender = String(d.get("gender", ""))
 	c.surname = String(d.get("surname", ""))
 	c.given_name = String(d.get("given_name", ""))
+	c.birthday = int(d.get("birthday", -1))
 	c.parents = _strings(d.get("parents", []))
 	c.children = _strings(d.get("children", []))
 	c.spouses = _strings(d.get("spouses", []))
