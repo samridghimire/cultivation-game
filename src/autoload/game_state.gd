@@ -225,6 +225,32 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
 ## bound right away if the artifact has a free anchor slot.
+## WILD-022: hang a great-beast trophy from the pack on the wall of your home in this region (no time passes).
+func hang_trophy(item_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var result := Trophies.hang(player, npcs, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You hang the %s on the wall of your home." % data.items[item_id]["name"], "progress")
+	EventBus.player_changed.emit()
+
+
+## WILD-022: take a hung trophy back into the pack.
+func take_down_trophy(item_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var result := Trophies.take_down(player, npcs, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You take the %s down from the wall." % data.items[item_id]["name"])
+	EventBus.player_changed.emit()
+
+
 func claim_abode(abode_id: String) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
@@ -2070,6 +2096,9 @@ func chat(npc_id: String) -> void:
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
 	_teach_lessons(npc_id)
+	var wall_line := Trophies.comment(player, npcs, data, world_flags, current_region, GameClock.total_days)  # WILD-022
+	if wall_line != "":
+		EventBus.post("%s: %s" % [npcs[npc_id].name, wall_line], "info")
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
@@ -4644,6 +4673,13 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
+	var wall_renown := Trophies.monthly_renown(player, npcs, data, months)  # WILD-022
+	if wall_renown > 0:
+		var wall_region := Trophies.home_region(player, npcs, data)
+		var before_region := current_region
+		current_region = wall_region
+		_announce_renown(Renown.add(player, data, wall_region, wall_renown))
+		current_region = before_region
 	for i in months:
 		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days, current_region)
 		if not letter.is_empty():

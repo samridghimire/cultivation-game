@@ -107,6 +107,8 @@ var devoured := 0
 var rival := ""
 ## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
 var abode := ""
+## Great-beast trophies hung on the home's wall, at most Trophies.MAX_HUNG (WILD-022).
+var hung_trophies: Array[String] = []
 ## Items kept in the abode's storage chest: item id -> count.
 var abode_storage: Dictionary = {}
 ## Item id of the array set up at the abode (items.json `array`), "" if none (G-006).
@@ -313,6 +315,7 @@ func to_dict() -> Dictionary:
 		"rival": rival,
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
+		"hung_trophies": hung_trophies.duplicate(),
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
 		"letters": letters.duplicate(),
@@ -483,6 +486,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.rival = String(d.get("rival", ""))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	for t: Variant in d.get("hung_trophies", []):
+		c.hung_trophies.append(String(t))
 	c.grudges = _int_values(d.get("grudges", {}))
 	c.gratitude = _int_values(d.get("gratitude", {}))
 	for letter in d.get("letters", []):
