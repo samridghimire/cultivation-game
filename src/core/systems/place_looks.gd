@@ -10,6 +10,8 @@ const STYLES := ["bun", "long", "hood"]
 const KINDS := ["figure", "camp"]
 ## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
+## Secret-realm entrance looks (GFX-098); "rift" is the original ring.
+const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
 
 
 ## Error strings for `look` (empty when valid); `who` names the place in messages.

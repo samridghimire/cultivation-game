@@ -177,3 +177,45 @@ func test_game_data_rejects_unknown_explore_look() -> void:
 		data._validate_world()
 		var bad := look == "swamp"
 		assert_eq("\n".join(data.load_errors).contains("unknown explore look"), bad, look)
+
+
+func test_realm_looks_are_well_formed() -> void:
+	var distinct := {}
+	for look: String in PixelPlace.REALM_LOOKS:
+		var kind := PixelPlace.realm_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		for active: bool in [false, true]:
+			var r := PixelPlace.rows(kind, true, active)
+			assert_true(r.size() > 8, look + " has rows")
+			for row in r:
+				assert_eq(row.length(), r[0].length(), look + " row width")
+				for ch in row:
+					assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+			distinct["".join(r)] = true
+		assert_true("".join(PixelPlace.rows(kind, true, true)) != "".join(PixelPlace.rows(kind, true, false)), look + " open differs from closed")
+	assert_eq(distinct.size(), PixelPlace.REALM_LOOKS.size() * 2, "every look and state is its own picture")
+	assert_eq(PixelPlace.realm_kind("rift"), "secret_realm")
+	assert_eq(PixelPlace.realm_kind("gate"), "secret_realm_gate")
+	assert_eq(PixelPlace.realm_kind("castle"), "secret_realm")
+
+
+func test_every_secret_realm_place_has_a_look() -> void:
+	var data := GameData.load_from_dir()
+	var n := 0
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "secret_realm":
+				n += 1
+				assert_true(PixelPlace.REALM_LOOKS.has(String(place.get("look", ""))), "%s needs a look" % place.get("display_name", ""))
+	assert_eq(n, 6)
+
+
+func test_game_data_rejects_unknown_realm_look() -> void:
+	for look: String in PixelPlace.REALM_LOOKS + ["castle"]:
+		var data := GameData.load_from_dir()
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "secret_realm":
+				p["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("unknown secret_realm look"), look == "castle", look)

@@ -642,9 +642,12 @@ func _validate_world() -> void:
 				if place.get("type", "") == "explore":
 					if not PlaceLooks.EXPLORE_LOOKS.has(String(place["look"])):
 						load_errors.append("%s: unknown explore look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.EXPLORE_LOOKS)])
+				elif place.get("type", "") == "secret_realm":
+					if not PlaceLooks.REALM_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown secret_realm look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.REALM_LOOKS)])
 				else:
 					if place.get("type", "") != "deed_giver":
-						load_errors.append("%s: look is only for deed_giver and explore places" % who)
+						load_errors.append("%s: look is only for deed_giver, explore and secret_realm places" % who)
 					load_errors.append_array(PlaceLooks.errors(place["look"], who))
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])

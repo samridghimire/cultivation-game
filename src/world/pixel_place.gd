@@ -13,6 +13,8 @@ const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as 
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
 ## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
 const EXPLORE_LOOKS := PlaceLooks.EXPLORE_LOOKS  # GUIDE-219: owned by core
+## GFX-098: the pictures a secret-realm entrance can have (regions.json `look`); "rift" is the original ring.
+const REALM_LOOKS := PlaceLooks.REALM_LOOKS
 const PALETTE := ".owWrRhdtTpgsSev"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")
@@ -25,12 +27,23 @@ static var _cache: Dictionary = {}
 
 
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != ""
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or _explore_look(kind) != "" or _realm_look(kind) != ""
 
 
 ## The art kind for an explore place with `look`: plain "explore" for cave or an unknown look.
 static func explore_kind(look: String) -> String:
 	return "explore_" + look if look != "cave" and EXPLORE_LOOKS.has(look) else "explore"
+
+
+## The art kind for a secret-realm entrance with `look`: "secret_realm" for rift or an unknown look.
+static func realm_kind(look: String) -> String:
+	return "secret_realm_" + look if look != "rift" and REALM_LOOKS.has(look) else "secret_realm"
+
+
+static func _realm_look(kind: String) -> String:
+	if kind.begins_with("secret_realm_") and REALM_LOOKS.has(kind.substr(13)):
+		return kind.substr(13)
+	return ""
 
 
 static func _explore_look(kind: String) -> String:
@@ -131,6 +144,16 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _dwelling()
 		"secret_realm":
 			c = _rift(active)
+		"secret_realm_cleft":
+			c = _realm_cleft(active)
+		"secret_realm_seal":
+			c = _realm_seal(active)
+		"secret_realm_gate":
+			c = _realm_gate(active)
+		"secret_realm_tomb":
+			c = _realm_tomb(active)
+		"secret_realm_pavilion":
+			c = _realm_pavilion(active)
 		"camp":
 			c = _camp()
 		"fishing":
@@ -616,6 +639,132 @@ static func _rift(active: bool) -> Array:
 		ell(c, 24, 19, 4, 3, "p")
 	else:
 		ell(c, 24, 19, 3, 2, "S")
+	return c
+
+
+## A grassy hillock split by a dark jagged crack; open, the crack glows and sparks drift out.
+static func _realm_cleft(active: bool) -> Array:
+	var c := canvas(48, 38)
+	ell(c, 24, 26, 23, 12, "s")
+	ell(c, 24, 20, 19, 15, "s")
+	ell(c, 29, 23, 13, 11, "S")
+	ell(c, 24, 18, 18, 13, "s")
+	rect(c, 8, 6, 28, 3, "v")
+	rect(c, 14, 4, 16, 2, "v")
+	rect(c, 4, 30, 40, 2, "v")
+	rect(c, 22, 6, 3, 5, "d")
+	rect(c, 20, 11, 4, 6, "d")
+	rect(c, 23, 16, 4, 6, "d")
+	rect(c, 21, 21, 4, 7, "d")
+	rect(c, 19, 27, 5, 6, "d")
+	if active:
+		rect(c, 23, 8, 1, 3, "h")
+		rect(c, 21, 12, 2, 4, "p")
+		rect(c, 24, 17, 2, 4, "h")
+		rect(c, 22, 22, 2, 5, "p")
+		rect(c, 20, 28, 3, 4, "h")
+		for q: Array in [[14, 3], [32, 5], [38, 13], [10, 12]]:
+			rect(c, q[0], q[1], 2, 2, "r")
+	else:
+		rect(c, 22, 18, 1, 3, "S")
+	return c
+
+
+## A round stone lid set in a ring of rubble, carved with a cross of runes.
+static func _realm_seal(active: bool) -> Array:
+	var c := canvas(48, 36)
+	ell(c, 24, 18, 23, 17, "S")
+	for q: Array in [[2, 14], [6, 6], [14, 1], [32, 1], [41, 7], [43, 20], [38, 29], [10, 29], [3, 23]]:
+		rect(c, q[0], q[1], 4, 3, "s")
+	ell(c, 24, 18, 19, 14, "s")
+	ell(c, 25, 19, 17, 12, "S")
+	ell(c, 24, 18, 17, 12, "s")
+	rect(c, 23, 8, 2, 20, "r" if not active else "h")
+	rect(c, 12, 17, 24, 2, "r" if not active else "h")
+	rect(c, 20, 9, 8, 1, "r")
+	rect(c, 20, 27, 8, 1, "r")
+	rect(c, 13, 14, 1, 8, "r")
+	rect(c, 34, 14, 1, 8, "r")
+	if active:
+		ell(c, 24, 18, 3, 2, "p")
+		rect(c, 8, 18, 3, 1, "p")
+		rect(c, 37, 18, 3, 1, "p")
+	else:
+		rect(c, 7, 18, 3, 1, "S")
+	return c
+
+
+## Two stone pillars and a lintel half sunk in dark water, a dark doorway between them.
+static func _realm_gate(active: bool) -> Array:
+	var c := canvas(48, 38)
+	ell(c, 24, 31, 23, 6, "d")
+	box(c, 7, 8, 8, 24, "s", "S")
+	box(c, 33, 8, 8, 24, "s", "S")
+	box(c, 4, 3, 40, 6, "s", "S")
+	rect(c, 14, 9, 20, 22, "d")
+	rect(c, 4, 3, 40, 1, "W")
+	rect(c, 9, 12, 4, 1, "S")
+	rect(c, 35, 16, 4, 1, "S")
+	if active:
+		rect(c, 17, 12, 14, 18, "p")
+		rect(c, 20, 14, 8, 14, "h")
+		rect(c, 18, 31, 12, 1, "p")
+		rect(c, 10, 33, 6, 1, "h")
+		rect(c, 32, 34, 6, 1, "h")
+	else:
+		rect(c, 22, 14, 4, 1, "S")
+		rect(c, 10, 33, 6, 1, "S")
+		rect(c, 32, 34, 6, 1, "S")
+	return c
+
+
+## A low earth mound with a stone door and two small guardian stones.
+static func _realm_tomb(active: bool) -> Array:
+	var c := canvas(48, 36)
+	ell(c, 24, 28, 23, 10, "e")
+	ell(c, 24, 22, 20, 15, "e")
+	ell(c, 29, 24, 13, 11, "t")
+	ell(c, 24, 21, 19, 14, "e")
+	rect(c, 8, 8, 12, 2, "v")
+	rect(c, 28, 7, 8, 2, "v")
+	box(c, 17, 16, 14, 18, "s", "S")
+	rect(c, 19, 18, 10, 14, "d")
+	rect(c, 15, 14, 18, 3, "S")
+	box(c, 5, 24, 6, 9, "s", "S")
+	box(c, 37, 24, 6, 9, "s", "S")
+	rect(c, 6, 22, 4, 2, "s")
+	rect(c, 38, 22, 4, 2, "s")
+	if active:
+		rect(c, 19, 18, 10, 14, "h")
+		rect(c, 21, 20, 6, 10, "p")
+		rect(c, 17, 16, 4, 18, "s")
+	else:
+		rect(c, 23, 18, 2, 14, "S")
+	return c
+
+
+## A small tiered roof on four thin posts over a stone plinth; open, a bright orb hangs under it.
+static func _realm_pavilion(active: bool) -> Array:
+	var c := canvas(48, 40)
+	box(c, 4, 32, 40, 6, "s", "S")
+	rect(c, 8, 30, 32, 2, "s")
+	for x in [10, 17, 29, 36]:
+		rect(c, x, 15, 2, 15, "t")
+	rect(c, 10, 15, 28, 1, "T")
+	for i in 7:
+		rect(c, 11 - i, 8 + i, 26 + i * 2, 1, "r")
+		rect(c, 11 - i, 8 + i, 26 + i * 2, 1, "r")
+	rect(c, 4, 14, 40, 1, "R")
+	rect(c, 12, 1, 24, 3, "r")
+	rect(c, 14, 4, 20, 4, "r")
+	rect(c, 12, 3, 24, 1, "h")
+	rect(c, 23, 0, 2, 2, "g")
+	rect(c, 14, 7, 20, 1, "R")
+	if active:
+		ell(c, 24, 23, 6, 6, "h")
+		ell(c, 24, 23, 3, 3, "p")
+	else:
+		ell(c, 24, 25, 2, 2, "S")
 	return c
 
 
