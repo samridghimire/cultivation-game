@@ -16,6 +16,8 @@ var _name: Label
 var _info: Label
 var _ingredients: Label
 var _where: Label
+var _all_toggle: Button
+var _all_sources: Label
 var _output: Label
 var _odds: Label
 var _status: Label
@@ -46,10 +48,18 @@ func _init() -> void:
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_list)
 
+	var right := VBoxContainer.new()
+	right.custom_minimum_size = Vector2(440, 0)
+	right.add_theme_constant_override("separation", 8)
+	columns.add_child(right)
+	var details_scroll := ScrollContainer.new()
+	details_scroll.custom_minimum_size = Vector2(440, 330)
+	details_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	right.add_child(details_scroll)
 	var details := VBoxContainer.new()
-	details.custom_minimum_size = Vector2(440, 0)
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details.add_theme_constant_override("separation", 8)
-	columns.add_child(details)
+	details_scroll.add_child(details)
 	_name = UIStyle.label("", 20, UIStyle.ACCENT)
 	details.add_child(_name)
 	_info = UIStyle.label("", 14, Color(0.7, 0.7, 0.7))
@@ -58,6 +68,12 @@ func _init() -> void:
 	details.add_child(_ingredients)
 	_where = _wrapped(UIStyle.label("", 14, Color(0.7, 0.7, 0.7)))
 	details.add_child(_where)
+	_all_toggle = UIStyle.button("All sources", _toggle_all_sources)
+	_all_toggle.name = "AllSources"
+	details.add_child(_all_toggle)
+	_all_sources = _wrapped(UIStyle.label("", 13, Color(0.7, 0.7, 0.7)))
+	_all_sources.visible = false
+	details.add_child(_all_sources)
 	_output = _wrapped(UIStyle.label("", 16, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_output)
 	_odds = _wrapped(UIStyle.label("", 16))
@@ -65,7 +81,7 @@ func _init() -> void:
 	_status = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
 	details.add_child(_status)
 	_actions = HBoxContainer.new()
-	details.add_child(_actions)
+	right.add_child(_actions)
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -125,7 +141,57 @@ static func _names_gather_place(source: String, place: String) -> bool:
 	return place == name or place.begins_with(name + " in ") or place.begins_with(name + " (in ")
 
 
-## For each ingredient the player lacks, where to get it ("" when none is missing).
+const GENERIC_SOURCE_NOTE := "dropped by creatures, found exploring"
+
+
+## The shop/gather/fishing lines of `Items.sources` for `item_id`, nearest first: this region,
+## then by road days from `region_id`, then name; the generic kinds (drops, rewards) are dropped.
+## Each entry is the place phrase without its verb ("Village Herb Seller (here)"); returns at most `limit`
+## (-1 = all). WU-492.
+static func nearest_sources(c: CharacterData, data: GameData, item_id: String, region_id: String = "", limit: int = 2, skip_place: String = "") -> Array[String]:
+	var days_to := {}
+	for route: Dictionary in Exploration.routes(c, data, region_id):
+		if route["ok"]:
+			days_to[String(route["to"])] = int(route["days"])
+	var ranked: Array = []
+	for source in Items.sources(data, item_id):
+		var phrase := ""
+		for verb in ["Sold at ", "Gathered at ", "Caught at "]:
+			if source.begins_with(verb):
+				phrase = source.trim_prefix(verb)
+		if phrase == "" or (skip_place != "" and _names_gather_place(source, skip_place)):
+			continue
+		var rank := 9999
+		var tag := ""
+		for rid: String in data.regions:
+			var rname := String(data.regions[rid].get("name", rid))
+			if phrase.contains("(" + rname + ")") or phrase.ends_with(", " + rname) or phrase.contains(", " + rname + " "):
+				if rid == region_id:
+					rank = 0
+					tag = " (here)"
+				elif days_to.has(rid):
+					rank = 1 + int(days_to[rid])
+				phrase = phrase.replace(" (" + rname + ")", "").replace(", " + rname, "")
+				if tag == "" and rank > 0 and rank < 9999:
+					tag = " (%s)" % rname
+				elif tag == "":
+					tag = " (%s)" % rname
+				break
+		ranked.append({"rank": rank, "text": phrase + tag})
+	ranked.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		if x["rank"] != y["rank"]:
+			return x["rank"] < y["rank"]
+		return String(x["text"]) < String(y["text"]))
+	var out: Array[String] = []
+	for r: Dictionary in ranked:
+		out.append(String(r["text"]))
+	if limit >= 0 and out.size() > limit:
+		out = out.slice(0, limit)
+	return out
+
+
+## One short line per ingredient the player lacks: the nearest two places and "+N more"
+## (the generic note when only drops/rewards remain). "" when none is missing.
 ## Gather sources the ingredient line already names are left out (WU-201).
 ## `today` must match the one given to ingredient_lines so both name the same place.
 static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: String, region_id: String = "", today: int = -1) -> String:
@@ -135,13 +201,31 @@ static func missing_sources_text(c: CharacterData, data: GameData, recipe_id: St
 		if c.item_count(item_id) >= int(ingredients[item_id]):
 			continue
 		var place := Guidance.herb_place(c, data, item_id, region_id, today)
-		var sources: Array[String] = []
-		for source in Items.sources(data, item_id):
-			if place == "" or not _names_gather_place(source, place):
-				sources.append(source)
-		if not sources.is_empty():
-			lines.append("%s: %s" % [data.items[item_id].get("name", item_id), "; ".join(sources)])
+		var all := nearest_sources(c, data, item_id, region_id, -1, place)
+		var name: String = data.items[item_id].get("name", item_id)
+		if all.is_empty():
+			lines.append("%s: %s" % [name, GENERIC_SOURCE_NOTE])
+			continue
+		var line := "%s: %s" % [name, ", ".join(all.slice(0, 2))]
+		if all.size() > 2:
+			line += " +%d more" % (all.size() - 2)
+		lines.append(line)
 	return "\n".join(lines)
+
+
+## Every source of every missing ingredient, one per line (the "All sources" toggle and tooltip).
+static func all_sources_text(c: CharacterData, data: GameData, recipe_id: String) -> String:
+	var lines: PackedStringArray = []
+	var ingredients: Dictionary = data.recipes[recipe_id]["ingredients"]
+	for item_id in ingredients:
+		if c.item_count(item_id) < int(ingredients[item_id]):
+			lines.append("%s: %s" % [data.items[item_id].get("name", item_id), "; ".join(Items.sources(data, item_id))])
+	return "\n".join(lines)
+
+
+func _toggle_all_sources() -> void:
+	_all_sources.visible = not _all_sources.visible
+	_all_toggle.text = "Hide sources" if _all_sources.visible else "All sources"
 
 
 ## "2x Qi Gathering Pill" for a recipe output block ({item, count}).
@@ -221,7 +305,7 @@ func _show_details() -> void:
 		_actions.remove_child(child)
 		child.queue_free()
 	var recipe: Dictionary = data.recipes.get(_selected, {})
-	for c in [_name, _info, _ingredients, _where, _output, _odds, _status]:
+	for c in [_name, _info, _ingredients, _where, _all_toggle, _all_sources, _output, _odds, _status]:
 		c.visible = not recipe.is_empty()
 	if recipe.is_empty():
 		return
@@ -233,6 +317,11 @@ func _show_details() -> void:
 	_ingredients.text = "Ingredients:\n  " + "\n  ".join(ingredient_lines(p, data, _selected, GameState.current_region, GameClock.total_days)) + "\n" + Alchemy.margin_line(data, _selected)
 	_where.text = missing_sources_text(p, data, _selected, GameState.current_region, GameClock.total_days)
 	_where.visible = _where.text != ""
+	_all_sources.text = all_sources_text(p, data, _selected)
+	_all_toggle.visible = _where.visible
+	_all_sources.visible = _all_sources.visible and _where.visible
+	_ingredients.tooltip_text = _all_sources.text
+	_ingredients.mouse_filter = Control.MOUSE_FILTER_STOP if _all_sources.text != "" else Control.MOUSE_FILTER_IGNORE
 	var out := "Yields: %s" % output_text(data, recipe["output"])
 	if recipe.has("great_output"):
 		out += "\nGreat success: %s" % output_text(data, recipe["great_output"])
