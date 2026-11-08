@@ -149,6 +149,7 @@ func start_session(character: CharacterData) -> void:
 		world_flags["notice_" + String(notice["id"])] = true  # roads already open are not news
 	GameClock.reset()
 	_store_year_snapshot()
+	_store_season_snapshot()
 	_announced_tier = Alignment.tier_name(player.alignment, data)
 	EventBus.clear_history()
 	EventBus.session_started.emit()
@@ -4593,9 +4594,69 @@ func _on_year_changed(year: int) -> void:
 	_store_year_snapshot()
 
 
+## SEASON-012: remembers life_stats at the start of a season.
+func _store_season_snapshot() -> void:
+	player.season_start_stats = player.life_stats.duplicate()
+	player.season_start_day = GameClock.total_days
+
+
+## The first fixed-date festival of the season after `day`'s: "Coming: the Dragon Boat Festival in month 5." or "".
+func _coming_festival_line(day: int) -> String:
+	var next_day := day + Calendar.days_left_in_season(day) + 1
+	var next_season := Calendar.season_of(next_day)
+	var best := 99
+	var best_name := ""
+	for ev: Dictionary in data.world_events.values():
+		if not bool(ev.get("festival", false)):
+			continue
+		for m in ev.get("months", []):
+			var month := int(m)
+			var probe := (month - 1) * Calendar.DAYS_PER_MONTH
+			if Calendar.season_of(probe) == next_season and month < best:
+				best = month
+				best_name = String(ev.get("name", ""))
+	if best_name == "":
+		return ""
+	return "Coming: the %s in month %d." % [best_name, best]
+
+
+## SEASON-012: looks back when a season ends. Only the last season ended is reviewed after a long skip.
+func _review_season_if_changed() -> void:
+	var now := GameClock.total_days
+	if player.season_start_day < 0:
+		_store_season_snapshot()
+		return
+	var ended_day := player.season_start_day
+	if Calendar.season_of(ended_day) == Calendar.season_of(now) and Calendar.year_of(ended_day) == Calendar.year_of(now):
+		return
+	# the season that ended last: the one before today's
+	var last_ended := now - Calendar.day_of(now) - (Calendar.month_of(now) - 1) % 3 * Calendar.DAYS_PER_MONTH - 1
+	var extras := {"coming": _coming_festival_line(last_ended)}
+	var tasks := SeasonTasks.tasks_for(data, last_ended)
+	if not tasks.is_empty() and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(last_ended):
+		var progress: Dictionary = player.season_tasks.get("progress", {})
+		var done := 0
+		for t: Dictionary in tasks:
+			if int(progress.get(String(t["id"]), 0)) >= int(t["count"]):
+				done += 1
+		extras["tasks_done"] = done
+		extras["tasks_total"] = tasks.size()
+	elif not tasks.is_empty():
+		extras["tasks_done"] = 0
+		extras["tasks_total"] = tasks.size()
+	var lines := LifeStats.season_summary(player.season_start_stats, player.life_stats, extras)
+	for line in lines:
+		EventBus.post(line, "progress")
+	var new_year := Calendar.year_of(now) != Calendar.year_of(last_ended)
+	if not new_year:
+		EventBus.season_reviewed.emit(Calendar.season_of(last_ended), Calendar.year_of(last_ended), lines)
+	_store_season_snapshot()
+
+
 func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
+	_review_season_if_changed()
 	var action_topic := EventBus.topic
 	EventBus.topic = "cultivation"
 	var age_before := player.age_days

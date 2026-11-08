@@ -77,6 +77,8 @@ signal dialogue_ended(npc_id: String)
 signal time_skipped(days: int, summary: Dictionary)
 ## A new year began and the year just ended was summed up (YEAR-001).
 signal year_reviewed(year: int, lines: PackedStringArray, start_year: int)
+## A season ended and was summed up (SEASON-012): its name, year and up to 4 lines.
+signal season_reviewed(season: String, year: int, lines: PackedStringArray)
 ## A milestone was just earned (GOAL-001).
 signal milestone_reached(id: String, name: String)
 ## A festival began in the current region (WU-072); the HUD shows a banner.

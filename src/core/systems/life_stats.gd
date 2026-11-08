@@ -278,5 +278,57 @@ static func _adventures_line(before: Dictionary, after: Dictionary) -> String:
 	return "You %s." % text
 
 
+## SEASON-012: the season in review, at most 4 lines. extras: tasks_done, tasks_total (ints, 0 = none),
+## project_line (String), coming (String). Pure.
+static func season_summary(before: Dictionary, after: Dictionary, extras: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var total := int(extras.get("tasks_total", 0))
+	if total > 0:
+		out.append("Village tasks: %d of %d done." % [int(extras.get("tasks_done", 0)), total])
+	var project := String(extras.get("project_line", ""))
+	if project != "":
+		out.append(project)
+	var cands := PackedStringArray()
+	var won := _delta(before, after, "fights_won")
+	var lost := _delta(before, after, "fights_lost")
+	if won > 0 and lost > 0:
+		cands.append("You won %d fight%s and lost %d." % [won, "" if won == 1 else "s", lost])
+	elif won > 0:
+		cands.append("You won %d fight%s." % [won, "" if won == 1 else "s"])
+	elif lost > 0:
+		cands.append("You lost %d fight%s." % [lost, "" if lost == 1 else "s"])
+	var great := _delta(before, after, "great_beasts")
+	if great > 0:
+		cands.append("You brought down a great beast." if great == 1 else "You brought down %d great beasts." % great)
+	var harvests := _delta(before, after, "harvests")
+	if harvests > 0:
+		cands.append("You harvested %d crop%s." % [harvests, "" if harvests == 1 else "s"])
+	var foraged := _delta(before, after, "foraged")
+	if foraged > 0:
+		cands.append("You foraged %d time%s." % [foraged, "" if foraged == 1 else "s"])
+	var crafted := _delta(before, after, "items_crafted")
+	if crafted > 0:
+		cands.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
+	var fest := _delta(before, after, "festival_activities")
+	if fest > 0:
+		cands.append("You joined a festival event." if fest == 1 else "You joined %d festival events." % fest)
+	var missions := _delta(before, after, "missions_done")
+	if missions > 0:
+		cands.append("You finished %d sect mission%s." % [missions, "" if missions == 1 else "s"])
+	var bt := _delta(before, after, "breakthroughs")
+	if bt > 0:
+		cands.append("You broke through." if bt == 1 else "You broke through %s." % ("twice" if bt == 2 else "%d times" % bt))
+	for line in cands:
+		if out.size() >= 3:
+			break
+		out.append(line)
+	if out.is_empty():
+		out.append("A quiet season.")
+	var coming := String(extras.get("coming", ""))
+	if coming != "":
+		out.append(coming)
+	return out
+
+
 static func _delta(before: Dictionary, after: Dictionary, key: String) -> int:
 	return int(after.get(key, 0)) - int(before.get(key, 0))

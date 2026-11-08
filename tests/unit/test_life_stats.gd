@@ -214,3 +214,26 @@ func test_year_summary_orders_rank_below_craft_earnings() -> void:
 	var lines := LifeStats.year_summary({}, after, "A", "A")
 	assert_eq(lines.size(), 4)
 	assert_eq(lines[3], "Your craft earned 30 spirit stones.", "orders are the first line the cap drops")
+
+
+func test_season_summary_priority_and_cap() -> void:
+	var after := {"fights_won": 4, "fights_lost": 1, "great_beasts": 1, "harvests": 3, "foraged": 2, "breakthroughs": 2}
+	var lines := LifeStats.season_summary({}, after, {"tasks_done": 3, "tasks_total": 3, "project_line": "The old shrine: stage 2 of 4.", "coming": "Coming: the Dragon Boat Festival in month 5."})
+	assert_eq(lines.size(), 4)
+	assert_eq(lines[0], "Village tasks: 3 of 3 done.")
+	assert_eq(lines[1], "The old shrine: stage 2 of 4.")
+	assert_eq(lines[2], "You won 4 fights and lost 1.")
+	assert_eq(lines[3], "Coming: the Dragon Boat Festival in month 5.")
+	var no_extras := LifeStats.season_summary({}, after, {})
+	assert_eq(no_extras.size(), 3)
+	assert_eq(no_extras[1], "You brought down a great beast.")
+	assert_eq(no_extras[2], "You harvested 3 crops.")
+
+
+func test_season_summary_quiet_and_partial_tasks() -> void:
+	assert_eq(LifeStats.season_summary({}, {}, {}), PackedStringArray(["A quiet season."]))
+	var q := LifeStats.season_summary({}, {}, {"coming": "Coming: x."})
+	assert_eq(q, PackedStringArray(["A quiet season.", "Coming: x."]))
+	var t := LifeStats.season_summary({}, {"festival_activities": 2}, {"tasks_done": 2, "tasks_total": 3})
+	assert_eq(t[0], "Village tasks: 2 of 3 done.")
+	assert_eq(t[1], "You joined 2 festival events.")

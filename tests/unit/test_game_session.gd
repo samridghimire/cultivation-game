@@ -3577,3 +3577,53 @@ func test_great_trail_finish() -> void:
 	var restored := _game_state()
 	restored.load_save_dict(gs.to_save_dict())
 	assert_true(restored.world_flags.has(Wildlife.trail_flag("misty_forest")))
+
+
+func test_season_review_emits_once_per_boundary() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var seen: Array = []
+	var cb := func(season: String, _year: int, lines: PackedStringArray) -> void: seen.append([season, lines])
+	bus.season_reviewed.connect(cb)
+	LifeStats.add(c, "fights_won", 2)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # spring -> summer
+	assert_eq(seen.size(), 1)
+	assert_eq(seen[0][0], "Spring")
+	assert_true("You won 2 fights." in (seen[0][1] as PackedStringArray))
+	assert_true((seen[0][1] as PackedStringArray)[(seen[0][1] as PackedStringArray).size() - 1].begins_with("Coming:"))
+	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # summer -> autumn -> winter in one call
+	assert_eq(seen.size(), 2)
+	assert_eq(seen[1][0], "Autumn")
+	# winter -> spring: log only, no banner signal (the year review shows)
+	LifeStats.add(c, "fights_won", 1)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 2)
+	var logged := false
+	for m in bus.history:
+		if String(m["text"]) == "You won 1 fight.":
+			logged = true
+	assert_true(logged, "the winter line is logged")
+
+
+func test_season_review_skips_old_save() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var d := c.to_dict()
+	d.erase("season_start_stats")
+	d.erase("season_start_day")
+	var old := CharacterData.from_dict(d)
+	assert_eq(old.season_start_day, -1)
+	_game_state().player = old
+	var seen: Array = []
+	var cb := func(_s: String, _y: int, _l: PackedStringArray) -> void: seen.append(1)
+	bus.season_reviewed.connect(cb)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 0)
+	assert_true(old.season_start_day >= 0)
+	var rt := CharacterData.from_dict(old.to_dict())
+	assert_eq(rt.season_start_day, old.season_start_day)
+	assert_eq(rt.season_start_stats, old.season_start_stats)

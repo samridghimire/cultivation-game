@@ -129,6 +129,7 @@ var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
+var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
 static var _showing_skip: Dictionary = {}
@@ -324,6 +325,7 @@ func _ready() -> void:
 	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
+	EventBus.season_reviewed.connect(_on_season_reviewed)
 	EventBus.milestone_reached.connect(_on_milestone)
 	EventBus.season_tasks_done.connect(_on_season_tasks_done)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
@@ -1709,7 +1711,23 @@ func _on_year_reviewed(year: int, lines: PackedStringArray, start_year: int = 0)
 	_flush_year_review.call_deferred()
 
 
+## SEASON-012: the season recap banner; a pending year review wins when both are queued.
+func _on_season_reviewed(season: String, year: int, lines: PackedStringArray) -> void:
+	if not Settings.get_value("yearly_recap") or lines.is_empty():
+		return
+	_pending_season = [season, year, lines]
+	_flush_year_review.call_deferred()
+
+
 func _flush_year_review() -> void:
+	if _pending_year.is_empty() and not _pending_season.is_empty():
+		if not (_time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty()) and GameState.player != null and GameState.player.alive:
+			var sl: PackedStringArray = _pending_season[2]
+			_banner.announce("%s of Year %d is over" % [_pending_season[0], _pending_season[1]], "\n".join(sl), UIStyle.ACCENT, 4.0)
+			_pending_season = []
+		return
+	if not _pending_season.is_empty():
+		_pending_season = []
 	if _pending_year.is_empty() or _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
 		return
 	if GameState.player == null or not GameState.player.alive:
