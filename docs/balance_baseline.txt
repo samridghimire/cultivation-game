@@ -1259,79 +1259,79 @@ Economy sim: 50 lives per profession, income 1 month in 4, 3.0 violent deaths pe
   Body-Void Union Pill costs 8000000 spirit stones
   Great Vehicle Pill costs 20000000 spirit stones
   Heavenly Tribulation Pill costs 50000000 spirit stones
-Alchemist (rank 5.8 at the end): avg final realm 2.04 (~Foundation Establishment); earned 34765, left 2360 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 46 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 27 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+Alchemist (rank 5.9 at the end): avg final realm 2.00 (~Foundation Establishment); earned 32795, left 1860 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 25 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1047, attempts without a pill 3170; lives bought 179 (dearest 12800); ended for good 6 (avg age 232), old age 44
-    income (all lives): work 8990 mo / 866718 stones, craft 0 mo / 0 stones, gather 8972 mo / 625523 stones, sect 8955 mo / 427421 stones (stipends 212756)
-    spent: gear 0, clinic 11080; savings alone covered the Core Forming Pill at the Foundation peak for 24/50; pills bought with contribution 498; avg sect rank 2.0, contribution 33079
-Blacksmith (rank 5.8 at the end): avg final realm 2.04 (~Foundation Establishment); earned 34728, left 2032 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 42 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 21 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1069, attempts without a pill 3271; lives bought 168 (dearest 3200); ended for good 5 (avg age 160), old age 45
+    income (all lives): work 8510 mo / 818982 stones, craft 0 mo / 0 stones, gather 8492 mo / 584375 stones, sect 8474 mo / 421615 stones (stipends 211572)
+    spent: gear 0, clinic 7360; savings alone covered the Core Forming Pill at the Foundation peak for 24/50; pills bought with contribution 504; avg sect rank 2.0, contribution 31385
+Blacksmith (rank 5.9 at the end): avg final realm 2.00 (~Foundation Establishment); earned 33091, left 1706 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 43 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 25 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1062, attempts without a pill 3718; lives bought 186 (dearest 12800); ended for good 5 (avg age 254), old age 45
-    income (all lives): work 8939 mo / 868878 stones, craft 0 mo / 0 stones, gather 8923 mo / 620883 stones, sect 8905 mo / 431247 stones (stipends 212012)
-    spent: gear 0, clinic 9410; savings alone covered the Core Forming Pill at the Foundation peak for 20/50; pills bought with contribution 497; avg sect rank 2.0, contribution 32981
-Talisman Master (rank 6.0 at the end): avg final realm 2.06 (~Foundation Establishment); earned 34116, left 2745 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 46 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 27 could afford the pill on the first attempt
-    Nascent Soul: 3/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1021, attempts without a pill 3469; lives bought 190 (dearest 12800); ended for good 2 (avg age 296), old age 48
-    income (all lives): work 9449 mo / 795030 stones, craft 0 mo / 0 stones, gather 9435 mo / 653480 stones, sect 9405 mo / 441388 stones (stipends 211948)
-    spent: gear 0, clinic 7450; savings alone covered the Core Forming Pill at the Foundation peak for 24/50; pills bought with contribution 512; avg sect rank 2.1, contribution 34826
-Array Master (rank 5.2 at the end): avg final realm 2.02 (~Foundation Establishment); earned 34582, left 2073 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 27 could afford the pill on the first attempt
+    pills 1084, attempts without a pill 3473; lives bought 174 (dearest 3200); ended for good 2 (avg age 188), old age 48
+    income (all lives): work 8673 mo / 833202 stones, craft 0 mo / 0 stones, gather 8653 mo / 584973 stones, sect 8637 mo / 423855 stones (stipends 215816)
+    spent: gear 0, clinic 12050; savings alone covered the Core Forming Pill at the Foundation peak for 25/50; pills bought with contribution 513; avg sect rank 2.0, contribution 31881
+Talisman Master (rank 5.9 at the end): avg final realm 2.02 (~Foundation Establishment); earned 32387, left 1778 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 47 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 32 could afford the pill on the first attempt
     Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1064, attempts without a pill 2853; lives bought 193 (dearest 12800); ended for good 7 (avg age 210), old age 43
-    income (all lives): work 8779 mo / 886305 stones, craft 0 mo / 0 stones, gather 8763 mo / 601578 stones, sect 8749 mo / 419399 stones (stipends 211396)
-    spent: gear 0, clinic 13130; savings alone covered the Core Forming Pill at the Foundation peak for 27/50; pills bought with contribution 508; avg sect rank 2.0, contribution 32256
-Doctor (rank 6.4 at the end): avg final realm 2.04 (~Foundation Establishment); earned 33283, left 1838 stones
+    pills 1048, attempts without a pill 2826; lives bought 181 (dearest 25600); ended for good 1 (avg age 176), old age 49
+    income (all lives): work 9089 mo / 729300 stones, craft 0 mo / 0 stones, gather 9069 mo / 644435 stones, sect 9054 mo / 428797 stones (stipends 217104)
+    spent: gear 0, clinic 12030; savings alone covered the Core Forming Pill at the Foundation peak for 28/50; pills bought with contribution 531; avg sect rank 2.0, contribution 33327
+Array Master (rank 5.3 at the end): avg final realm 2.00 (~Foundation Establishment); earned 33794, left 1652 stones
     Foundation Establishment: 50/50 lives reached the bottleneck, 45 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 30 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 25 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1028, attempts without a pill 3250; lives bought 196 (dearest 12800); ended for good 3 (avg age 315), old age 47
-    income (all lives): work 9051 mo / 788010 stones, craft 0 mo / 0 stones, gather 9031 mo / 628898 stones, sect 9016 mo / 429348 stones (stipends 211836)
-    spent: gear 0, clinic 11570; savings alone covered the Core Forming Pill at the Foundation peak for 28/50; pills bought with contribution 505; avg sect rank 2.0, contribution 33308
-Beast Tamer (rank 5.6 at the end): avg final realm 2.04 (~Foundation Establishment); earned 30382, left 2116 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 21 could afford the pill on the first attempt
-    Nascent Soul: 2/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1070, attempts without a pill 3459; lives bought 194 (dearest 3200); ended for good 3 (avg age 149), old age 47
+    income (all lives): work 8529 mo / 871689 stones, craft 0 mo / 0 stones, gather 8510 mo / 586148 stones, sect 8490 mo / 414328 stones (stipends 211688)
+    spent: gear 0, clinic 10050; savings alone covered the Core Forming Pill at the Foundation peak for 23/50; pills bought with contribution 501; avg sect rank 2.0, contribution 31310
+Doctor (rank 6.3 at the end): avg final realm 2.06 (~Foundation Establishment); earned 34029, left 2816 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 45 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 24 could afford the pill on the first attempt
+    Nascent Soul: 3/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 986, attempts without a pill 3210; lives bought 198 (dearest 12800); ended for good 10 (avg age 197), old age 40
-    income (all lives): work 8711 mo / 681255 stones, craft 0 mo / 0 stones, gather 8692 mo / 604867 stones, sect 8675 mo / 418651 stones (stipends 209076)
-    spent: gear 0, clinic 9360; savings alone covered the Core Forming Pill at the Foundation peak for 19/50; pills bought with contribution 500; avg sect rank 2.0, contribution 31976
-Net stones per sect mission over all lives (top 12): procure_azure_crystal 787455, gather_spirit_herbs 536060, carry_goods_to_market 107410, auction_consignment 24000, alchemist_rare_order 19680, fill_herb_order 12690
+    pills 1021, attempts without a pill 3656; lives bought 196 (dearest 12800); ended for good 4 (avg age 366), old age 46
+    income (all lives): work 9293 mo / 803670 stones, craft 0 mo / 0 stones, gather 9278 mo / 644240 stones, sect 9264 mo / 438632 stones (stipends 210664)
+    spent: gear 0, clinic 7330; savings alone covered the Core Forming Pill at the Foundation peak for 23/50; pills bought with contribution 501; avg sect rank 2.1, contribution 34302
+Beast Tamer (rank 6.0 at the end): avg final realm 2.06 (~Foundation Establishment); earned 34201, left 2536 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 44 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 20 could afford the pill on the first attempt
+    Nascent Soul: 3/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1008, attempts without a pill 3584; lives bought 170 (dearest 12800); ended for good 3 (avg age 272), old age 47
+    income (all lives): work 9480 mo / 788400 stones, craft 0 mo / 0 stones, gather 9460 mo / 662665 stones, sect 9444 mo / 442257 stones (stipends 210224)
+    spent: gear 0, clinic 9920; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 498; avg sect rank 2.1, contribution 34955
+Net stones per sect mission over all lives (top 12): procure_azure_crystal 782535, gather_spirit_herbs 532440, carry_goods_to_market 106726, auction_consignment 23040, alchemist_rare_order 20960, fill_herb_order 13140
 
 ## economy, bounty hunter (seeds 1-10, 12 months)
 
@@ -1388,23 +1388,23 @@ Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a
 
 Profession income: Qi Refining, attribute 10, 3 days a week for 24 months, seeds 1-5
                              Q1    Q2    Q3    Q4    Q5    Q6    Q7  | rank  work craft  comm | per day
-Alchemist (bought)          -2.9  -0.6   0.8   0.3   0.4   0.7  -0.6 |  0.8    0%    0%  100% | -0.05
-Alchemist (gathered)         3.6   4.8   1.9   3.4   5.2   4.3   6.4 |  2.8    0%   83%   16% |  1.47
+Alchemist (bought)          -3.0  -0.5   0.0  -0.4   0.0   0.0   0.0 |  0.8   -    -     - | -0.17
+Alchemist (gathered)         3.6   4.5   3.9   6.3   4.4   4.4   4.8 |  3.0    0%   86%   13% |  1.61
 Alchemist (odd jobs)         1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
-Blacksmith (bought)         -3.5   0.0   0.0   0.0   0.0   0.0   0.0 |  0.2    0%    0%  100% | -0.15
-Blacksmith (gathered)        5.5   2.6   7.0   6.7   5.8   4.0   5.8 |  2.8    0%   76%   23% |  1.81
+Blacksmith (bought)         -3.4   0.0   0.0   0.0   0.0   0.0   0.0 |  0.2   -    -     - | -0.14
+Blacksmith (gathered)        4.0   3.4   5.8   7.6   7.1   6.9   4.5 |  3.0    0%   86%   13% |  1.93
 Blacksmith (odd jobs)        1.4   1.4   1.4   4.2   2.8   2.8   5.5 |  2.0  100%    0%    0% |  0.94
-Talisman Master (bought)    -2.4   1.3   0.5   1.8   0.2   2.0   1.5 |  1.8    0%  100%    0% |  0.19
-Talisman Master (gathered)   4.8   5.7   4.4   6.8   5.3   7.8   8.8 |  3.8    0%   91%    8% |  2.02
+Talisman Master (bought)    -3.4  -0.2  -0.0   1.0   2.7   3.0   1.2 |  2.0    0%  100%    0% |  0.27
+Talisman Master (gathered)   4.6   2.6   7.0   8.6   8.3   4.2   6.2 |  3.8    0%   92%    7% |  2.10
 Talisman Master (odd jobs)   1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
 Array Master (bought)       -4.6   0.0   0.0   0.0   0.0   0.0   0.0 |  0.0   -    -     - | -0.14
-Array Master (gathered)     -1.0   1.8   5.5   4.4   6.6   5.1   1.4 |  2.8    0%   13%   86% |  1.04
+Array Master (gathered)      0.1  -0.3   4.0   4.8   1.6   6.7   2.6 |  3.4    0%   34%   65% |  1.19
 Array Master (odd jobs)      1.6   1.6   1.6   4.8   3.2   3.2   6.5 |  1.0  100%    0%    0% |  1.10
 Doctor                       1.2   1.2   1.2   4.6   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.88
-Beast Tamer (bought)        -3.6  -0.2   0.0   0.0   0.0   0.0   0.0 |  0.6   -    -     - | -0.17
-Beast Tamer (gathered)       3.3   4.5   3.6   5.5   3.3   8.6   4.7 |  3.6    0%   78%   21% |  1.65
+Beast Tamer (bought)        -3.5  -0.3   0.0   0.0   0.0   0.0   0.0 |  0.4   -    -     - | -0.16
+Beast Tamer (gathered)       3.4   4.2   2.1   2.8   4.8   5.5   4.2 |  3.0    0%   86%   13% |  1.29
 Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
-(gatherer)                   6.7   6.8   7.3   7.5   5.8   6.4   6.5 |  0.0   -    -     - |  2.24
+(gatherer)                   6.4   6.8   7.2   7.6   5.8   6.4   6.5 |  0.0   -    -     - |  2.23
 (sect missions)             -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
 (stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)
 
