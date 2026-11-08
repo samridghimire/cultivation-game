@@ -6468,3 +6468,40 @@ func test_find_note_names_only_dishes_you_know() -> void:
 	assert_false(Guidance.find_note(d, "hen_egg", "qingshi_village").contains("Honey Egg Cake"), "null hides taught meals")
 	Cooking.learn(c, d, "honey_egg_cake")
 	assert_true(Guidance.find_note(d, "hen_egg", "qingshi_village", c).contains("Honey Egg Cake"))
+
+
+# GUIDE-220: short hints for the HUD's narrow Next steps panel.
+func _assert_short_set(c: CharacterData, region: String, label: String) -> void:
+	var gs := _root().get_node("GameState")
+	var long_hints := Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor)
+	var short_hints := Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor, true)
+	assert_false(short_hints.is_empty(), label)
+	for h in short_hints:
+		assert_true(h.length() <= 42, "%s: '%s' (%d)" % [label, h, h.length()])
+		assert_false(h.ends_with("..."), h)
+	for h in long_hints:
+		assert_eq(h, Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor, false)[long_hints.find(h)], "long unchanged")
+
+
+func test_short_hints_fit_for_a_fresh_mortal() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	_assert_short_set(c, "qingshi_village", "mortal")
+
+
+func test_short_hints_fit_for_a_rogue_and_a_disciple() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 2
+	_assert_short_set(c, "misty_forest", "rogue QR3")
+	c.realm_index = 1
+	c.stage = 4
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	_assert_short_set(c, "azure_peak", "azure QR5")
+
+
+func test_short_hint_rewrites_the_fighting_style_line() -> void:
+	var line := "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches Iron Fist for 15 spirit stones."
+	assert_eq(Guidance.short_hint(line), "No fighting style: Iron Fist")
+	assert_eq(Guidance.short_hint("Short line."), "Short line.")
+	assert_true(Guidance.short_hint("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.").length() <= 42)

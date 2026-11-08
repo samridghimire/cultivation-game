@@ -732,7 +732,7 @@ func _refresh() -> void:
 	var hints: PackedStringArray = []
 	if hint_count > 0:
 		# GUIDE-031: ask for a few extra so hints that repeat the goal can be dropped without leaving the panel short.
-		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count + 2, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
+		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count + 2, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor, true)
 		hints = Guidance.drop_goal_echoes(goal, hints).slice(0, hint_count)
 	var hunt := hunt_line(p, data, GameClock.total_days)
 	_hunt.text = hunt

@@ -419,11 +419,60 @@ static func _market_today_line(data: GameData, region_id: String, day: int) -> S
 	return ""
 
 
+const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" fits 46 characters.
+
+## GUIDE-220: `line` squeezed to SHORT_HINT_CHARS keeping the verb and the target: known long forms are
+## rewritten, others fall back to their first sentence, then a word-boundary cut (never "...").
+static func short_hint(line: String) -> String:
+	if line.length() <= SHORT_HINT_CHARS:
+		return line
+	var re := RegEx.new()
+	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
+	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
+	var m := re.search(line)
+	if m != null:
+		var style := m.get_string(1)
+		var where := m.get_string(2)
+		if where != "":
+			var words := where.split(" ")
+			where = "the " + (words[words.size() - 1] as String).to_lower() if where.begins_with("Wandering ") else where
+			var tried := "No fighting style: %s at %s" % [style, where]
+			if tried.length() <= SHORT_HINT_CHARS:
+				return tried
+		var plain := "No fighting style: " + style
+		if plain.length() <= SHORT_HINT_CHARS:
+			return plain
+	# "Chore: ..." style hints keep the head up to the first colon-led target.
+	var first := line
+	for sep in [". ", "; "]:
+		var at := first.find(sep)
+		if at > 0:
+			first = first.substr(0, at)
+	first = first.rstrip(".:;, ")
+	if first.length() <= SHORT_HINT_CHARS:
+		return first
+	# Drop a trailing parenthetical or "for/to ..." tail, then cut at a word boundary.
+	var cut := first.substr(0, SHORT_HINT_CHARS + 1)
+	var space := cut.rfind(" ")
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_HINT_CHARS)
+	return cut.rstrip(" .:;,-(")
+
+
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}, short: bool = false) -> PackedStringArray:
+	if short:
+		# GUIDE-220: the HUD's Next steps panel is narrow; ask for a few extra so duplicates after shortening can go.
+		var shorts: PackedStringArray = []
+		for line in hints(c, data, density, limit + 2, people, flags, region_id, today, favor, false):
+			var one := short_hint(line)
+			if one != "" and not shorts.has(one):
+				shorts.append(one)
+		if shorts.size() > limit:
+			shorts.resize(limit)
+		return shorts
 	var out: PackedStringArray = []
 	flags = with_season(flags, today)
 	# GUIDE-209: the arrival line leads for the day it was posted; GUIDE-210: only in the region it was posted for.
