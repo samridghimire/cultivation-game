@@ -570,6 +570,10 @@ static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameDat
 		if rumor != "":
 			row["rumor"] = rumor
 			row["detail"] = "%s\nHunters say: %s" % [row["detail"], rumor]
+	if won and Wildlife.is_trail_end(data, rid, enemy):
+		# WILD-021: the last beast of a chain closes the trail.
+		row["trail_done"] = true
+		row["detail"] = "Trail finished. %s" % row["detail"]
 	rows.append(row)
 
 

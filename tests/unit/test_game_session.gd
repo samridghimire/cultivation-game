@@ -3554,3 +3554,26 @@ func test_lesson_teaches_a_dish() -> void:
 	gs.npc_favor["hunter_ma"] = 62
 	gs.start_dialogue("hunter_ma")
 	assert_true(c.known_dishes.has("boar_roast"))
+
+
+## WILD-021: beating the last beast of the trail finishes it once: flag, line, milestone, news; survives a save.
+func test_great_trail_finish() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = 5
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	var chain := Wildlife.great_chain(def)
+	for step: Dictionary in chain:
+		step.erase("max_realm")
+	for i in chain.size():
+		GameClock.total_days = 7 * (60 + i * 2) + Wildlife.great_day("misty_forest", def)
+		assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT), "step %d" % i)
+		var done: bool = gs.world_flags.has(Wildlife.trail_flag("misty_forest"))
+		assert_eq(done, i == chain.size() - 1, "trail done only after the last step (%d)" % i)
+	assert_eq(String(gs.world_flags["village_news"]["kind"]), "great_trail")
+	gs.check_milestones()
+	assert_true(gs.player.milestones.has("great_trail_misty_forest"))
+	var restored := _game_state()
+	restored.load_save_dict(gs.to_save_dict())
+	assert_true(restored.world_flags.has(Wildlife.trail_flag("misty_forest")))

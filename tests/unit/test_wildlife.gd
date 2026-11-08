@@ -746,3 +746,32 @@ func test_qi_refining_trails_have_a_middle_step() -> void:
 		var f := _player(d.realm_index_of("foundation_establishment"))
 		f.great_beasts[String(chain[0]["enemy"])] = 1
 		assert_eq(Wildlife.great_enemy_for(f, d, rid), String(last["enemy"]), "%s: Foundation skips the middle" % rid)
+
+
+## WILD-021: the end of a great-beast trail.
+func test_trail_end_flag_once() -> void:
+	var data := GameData.load_from_dir()
+	var flags := {}
+	var chain := Wildlife.great_chain(data.regions["misty_forest"]["roamers"]["great"])
+	var first := String(chain[0]["enemy"])
+	var last := String(chain.back()["enemy"])
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", first, true), "", "an early step does not finish the trail")
+	assert_false(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", last, false), "", "a re-win does not")
+	var line := Wildlife.finish_trail(data, flags, "misty_forest", last, true)
+	assert_true(line.contains("Misty Forest"), line)
+	assert_true(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", last, true), "", "only once")
+
+
+func test_trail_data_valid() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(Wildlife.validate(data).size(), 0)
+	var ids: Array = []
+	for m: Dictionary in data.milestones:
+		ids.append(m["id"])
+	for rid: String in data.regions:
+		if Wildlife.great_chain(data.regions[rid].get("roamers", {}).get("great", {})).size() >= 2:
+			assert_true(ids.has("great_trail_" + rid), "milestone for " + rid)
+	data.regions["misty_forest"]["roamers"]["great"]["trail_done_text"] = ""
+	assert_true(Wildlife.validate(data).size() > 0)

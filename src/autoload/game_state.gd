@@ -3628,7 +3628,13 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 				LifeStats.add(player, "great_beasts")
 				Folk.record_news(world_flags, "great_beast", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				_gain_renown("great_beast")  # WILD-010: the hunter is known (the beast walks and falls once a day)
+				var first_win := not player.great_beasts.has(String(r["enemy"]))
 				var trophy := Wildlife.record_great(player, data, String(r["enemy"]), region, GameClock.total_days)
+				var trail_line := Wildlife.finish_trail(data, world_flags, region, String(r["enemy"]), first_win)
+				if trail_line != "":
+					# WILD-021: the end of the trail; the village hears of it (replaces the plain great-beast news).
+					EventBus.post(trail_line, "world")
+					Folk.record_news(world_flags, "great_trail", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				if trophy != "":
 					player.add_item(trophy, 1)
 					EventBus.post("You take the %s as a token of the hunt." % String(data.items[trophy]["name"]).to_lower(), "progress")

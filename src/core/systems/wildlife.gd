@@ -349,6 +349,27 @@ static func record_great(c: CharacterData, data: GameData, enemy_id: String, reg
 	return great_trophy(data, enemy_id)
 
 
+## WILD-021: world flag set once a region's great-beast trail has been walked to its last step.
+static func trail_flag(region_id: String) -> String:
+	return "great_trail_done_" + region_id
+
+
+## WILD-021: true when `enemy_id` is the last step of `region_id`'s great chain (and the chain is more than one step).
+static func is_trail_end(data: GameData, region_id: String, enemy_id: String) -> bool:
+	var chain := great_chain(_great_def(data, region_id))
+	return chain.size() >= 2 and String(chain.back().get("enemy", "")) == enemy_id
+
+
+## WILD-021: call on a great-beast win (`first_win`: the kind was not in great_beasts before). The first win of the
+## trail's last step sets the flag once and returns the line to post ("" otherwise).
+static func finish_trail(data: GameData, flags: Dictionary, region_id: String, enemy_id: String, first_win: bool) -> String:
+	if not first_win or not is_trail_end(data, region_id, enemy_id) or flags.has(trail_flag(region_id)):
+		return ""
+	flags[trail_flag(region_id)] = true
+	var text := String(_great_def(data, region_id).get("trail_done_text", "The hunters of {region} will tell this hunt for years."))
+	return text.replace("{region}", String(data.regions[region_id].get("name", region_id)))
+
+
 ## Item id -> count of everything this beast has dropped for the player so far.
 static func spoils_of(c: CharacterData, enemy_id: String) -> Dictionary:
 	return c.hunt_spoils.get(enemy_id, {}).duplicate()
@@ -450,6 +471,8 @@ static func validate(data: GameData) -> PackedStringArray:
 					errors.append("%s great weekday must be 0..6" % where)
 				if great.has("rumor") and not (great["rumor"] is String and not String(great["rumor"]).strip_edges().is_empty()):
 					errors.append("%s great rumor must be a non-empty string" % where)
+				if great.has("trail_done_text") and not (great["trail_done_text"] is String and not String(great["trail_done_text"]).strip_edges().is_empty() and String(great["trail_done_text"]).length() <= 160):
+					errors.append("%s great trail_done_text must be a non-empty string of at most 160 characters" % where)
 				if great.has("min_realm") and data.realm_index_of(String(great["min_realm"])) < 0:
 					errors.append("%s great has unknown min_realm" % where)
 				errors.append_array(_max_realm_errors(data, great, "%s great" % where))
