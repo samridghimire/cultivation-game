@@ -1601,6 +1601,8 @@ func _named_remembers(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
 		return
+	if _festival_words(npc_id):  # FOLK-025
+		return
 	var news: Variant = world_flags.get("village_news")
 	if not (news is Dictionary):
 		return
@@ -1612,6 +1614,20 @@ func _named_remembers(npc_id: String) -> void:
 		return
 	world_flags[key] = int(news.get("day", -1))
 	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+
+
+## FOLK-025: a villager chatting while a festival runs in their region says their festival line, once per festival per year.
+func _festival_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var region := String(data.npcs.get(npc_id, {}).get("region", current_region))
+	var said := Folk.festival_line(npc, data, world_events, region, GameClock.total_days, world_flags)
+	if said.is_empty():
+		return false
+	Folk.mark_festival_told(world_flags, npc_id, String(said["event"]), GameClock.total_days)
+	EventBus.post("%s: \"%s\"" % [npc.name, String(said["line"]).replace("{player}", player.name)], "info")
+	return true
 
 
 ## Start a story event: a dialogue file (data/dialogue/) not bound to an NPC.
@@ -2021,6 +2037,8 @@ func chat(npc_id: String) -> void:
 	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
+	else:
+		_festival_words(npc_id)  # FOLK-025 (generated villagers; named ones go through start_dialogue)
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true

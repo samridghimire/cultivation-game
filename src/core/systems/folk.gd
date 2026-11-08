@@ -126,6 +126,65 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	return String(lines[absi(hash(npc.id + str(day))) % lines.size()])
 
 
+## FOLK-025: the festival line `npc` says while a festival runs in `region_id`: {"event": id, "line": text} or {}.
+## A named villager's own `festival_lines[event]` first, else the shared family.json folk_greetings.festival pool
+## (picked by day + npc id hash, {name}/{festival} filled). Birthdays win, and a line is told once per festival per year.
+static func festival_line(npc: CharacterData, data: GameData, events: Array, region_id: String, day: int, flags: Dictionary) -> Dictionary:
+	if birthday_today(npc, data, day):
+		return {}
+	var year := Calendar.year_of(day)
+	var told: Dictionary = flags.get("festival_lines_%d" % year, {})
+	for e in WorldEvents.active_in(events, region_id):
+		var fid := String(e.get("id", ""))
+		if not WorldEvents.is_festival(data, fid) or (told.get(npc.id, []) as Array).has(fid):
+			continue
+		var own: Dictionary = data.npcs.get(npc.id, {}).get("festival_lines", {})
+		var pool: Array = data.family.get("folk_greetings", {}).get("festival", [])
+		var line := ""
+		if own.has(fid):
+			line = String(own[fid])
+		elif not pool.is_empty():
+			line = String(pool[absi(hash(npc.id + str(day))) % pool.size()])
+		if line != "":
+			line = line.replace("{name}", npc.name).replace("{festival}", String(WorldEvents.def_of(data, fid).get("name", fid)))
+			return {"event": fid, "line": line}
+	return {}
+
+
+## FOLK-025: remember that `npc_id` told the `event_id` line this year.
+static func mark_festival_told(flags: Dictionary, npc_id: String, event_id: String, day: int) -> void:
+	var key := "festival_lines_%d" % Calendar.year_of(day)
+	var told: Dictionary = flags.get(key, {})
+	var list: Array = told.get(npc_id, [])
+	if not list.has(event_id):
+		list.append(event_id)
+	told[npc_id] = list
+	flags[key] = told
+
+
+## FOLK-025: load errors for npcs.json festival_lines and family.json folk_greetings.festival.
+static func validate_festival_lines(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var pool: Variant = data.family.get("folk_greetings", {}).get("festival", [])
+	if not (pool is Array):
+		errors.append("family.json folk_greetings.festival must be an array of strings")
+	else:
+		for line: Variant in pool:
+			if not (line is String) or String(line) == "" or String(line).length() > 160:
+				errors.append("family.json folk_greetings.festival lines must be strings of 1..160 characters")
+	for id: String in data.npcs:
+		var lines: Variant = data.npcs[id].get("festival_lines", {})
+		if not (lines is Dictionary):
+			errors.append("NPC '%s' festival_lines must be an object" % id)
+			continue
+		for fid: String in lines:
+			if not WorldEvents.is_festival(data, fid):
+				errors.append("NPC '%s' festival_lines: '%s' is not a festival world event" % [id, fid])
+			if not (lines[fid] is String) or String(lines[fid]) == "" or String(lines[fid]).length() > 160:
+				errors.append("NPC '%s' festival_lines.%s must be a string of 1..160 characters" % [id, fid])
+	return errors
+
+
 ## FOLK-018: remember `npc_id`'s newest gift from the player (taste 1 liked, 0 neutral, -1 disliked).
 static func record_gift(flags: Dictionary, npc_id: String, item_id: String, day: int, taste: int) -> void:
 	var memory: Dictionary = flags.get("gift_memory", {})
@@ -648,6 +707,7 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 ## Load errors: favor effects are ints within +-FAVOR_LIMIT and need their placeholder in the encounter's texts.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
+	errors.append_array(validate_festival_lines(data))
 	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
