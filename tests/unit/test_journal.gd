@@ -76,7 +76,7 @@ func test_missions_ready_and_on_cooldown() -> void:
 	assert_true(ready != "")
 	assert_true(_find(_entries(c), "Ready:")["tone"] == "normal")
 	c.mission_cooldowns[ready] = c.age_days + 9
-	var line := _find(_entries(c), "again in 9 days")
+	var line := _find(_entries(c), ": again in 9 days")
 	assert_eq(line["tone"], "dim")
 	assert_eq(line["section"], "Sect")
 

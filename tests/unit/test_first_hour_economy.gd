@@ -55,8 +55,8 @@ func test_qi_refining_mission_fights_are_weak_or_even_for_newcomers() -> void:
 		if String(m.get("enemy", "")) == "":
 			continue
 		var is_early := int(m.get("min_rank", 0)) == 0 or String(m.get("min_realm", "mortal")) == "qi_refining"
-		if not is_early:
-			continue
+		if not is_early or String(m.get("min_realm", "mortal")) == "foundation_establishment":
+			continue  # C-313: a Foundation disciple is no bare newcomer
 		var c := new_character(31)
 		c.realm_index = maxi(0, data().realm_index_of(String(m.get("min_realm", "mortal"))))
 		c.stage = int(m.get("min_stage", 0))
