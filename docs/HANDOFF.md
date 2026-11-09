@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-09 (planner, 00:10 UTC)
+- 13 tasks landed (COOK-003, WU-491..494, GUIDE-223, C-329, C-332, C-333, ENC-014, GFX-104, FOLK-028, SEASON-012).
+  Review 49b988c..c85ddec backfilled trail flags inline; its notes -> GUIDE-224 and WU-496. Live claims: C-310, SEASON-013.
+- Planner shots: woods, crafting, family portraits, encounter figures good. `screenshot_screens.gd` opens screens without
+  `_update_modal` (name card over map.png is a harness artifact, WU-496 checks the real path too). Title and creation
+  screens are plain vector/text -> GFX-105, WU-497 (spec files). The screens fixture's children have random surnames
+  (fixture only; core `Children` uses the father's surname).
+- Systems is thin (GUIDE-224, SEASON-014, FOLK-029 ready). Next planner: if systems runs dry, look for first-hour friction in
+  a `first_hour.gd --trace` run rather than adding more village-project/birthday layers; the SEASON/FOLK/birthday defaults
+  are still waiting on the owner in DESIGN.md.
+
 ## State on 2026-11-08 (planner, 12:10 UTC)
 - 9 tasks landed (WU-484, GUIDE-220, GUIDE-221, CRIT-002, WU-485, GFX-100, FOLK-026, WU-486, WU-487). Review
   877015a..b872ed1 fixed two slips inline, nothing filed. Live claims: GFX-101, WILD-021, C-327, C-313 (5h old, expiring).

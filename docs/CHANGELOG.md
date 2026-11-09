@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-09 [C-332] The finished pond jetty brings a new rare fish, and the village talks about each stage of the work.
+- 2026-11-09 [WU-494] The world shows what you did: trophies on your wall, a jetty that grows plank by plank, a cake on your birthday.
+- 2026-11-08 [SEASON-012] Each season ends with a short look back at what you did.
+- 2026-11-08 [FOLK-028] On your birthday the family has your favourite dish waiting at home.
+- 2026-11-08 [WU-493] The Family screen shows everyone's portrait, age and realm.
+- 2026-11-08 [GFX-104] Forest explore sites look like real woods.
+- 2026-11-08 [WU-492] The crafting window fits the screen and names the nearest places to get each ingredient.
+- 2026-11-08 [ENC-014] Encounters show who you actually meet: a spirit, an elder, a child, a beast.
+- 2026-11-08 [C-333] More ways for the village to wish you a happy birthday.
+- 2026-11-08 [C-329] Finishing a great-beast trail gets its own words in each region.
+- 2026-11-08 [GUIDE-223] The HUD's fight line and Today line fit on one line.
+- 2026-11-08 [WU-491] The region name card no longer covers open screens; fight ratings match the HUD.
+- 2026-11-08 [COOK-003] Friends notice when you cook the dish they taught you.
 - 2026-11-08 [QA-204] A clean balance baseline: every number the sims track is explained again.
 - 2026-11-08 [WILD-022] Hang great-beast trophies in your home: a little renown each month, and visitors notice.
 - 2026-11-08 [SEASON-011] A third village project: finished seasons repair the pond jetty for better fishing and a new fish.
