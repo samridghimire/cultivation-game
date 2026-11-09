@@ -898,6 +898,26 @@ func test_explore_many_quiet_days_post_one_summary() -> void:
 	gs.end_session()
 
 
+## WU-501: the explored place's look is kept while a choice encounter is pending, then cleared.
+func test_explore_look_kept_for_pending_choice() -> void:
+	_start()
+	var gs := _game_state()
+	gs.data.encounters["t_look"] = {"id": "t_look", "tags": ["t_look"], "weight": 1, "text": "A fork.", "effects": {}, "days": 1,
+		"choices": [{"text": "Go on", "effects": {}}]}
+	gs.last_explore_look = "cave"
+	gs._meet_encounter(gs.data.encounters["t_look"])
+	assert_eq(gs.pending_encounter, "t_look")
+	assert_eq(gs.last_explore_look, "cave")
+	gs.choose_encounter(0)
+	assert_eq(gs.last_explore_look, "")
+	gs.world_flags["found_hermit_garden"] = true
+	gs.explore(["t_no_such_tag"], "woods")
+	if gs.pending_encounter == "":
+		assert_eq(gs.last_explore_look, "", "cleared when nothing is pending")
+	gs.data.encounters.erase("t_look")
+	gs.end_session()
+
+
 ## FH-025: an encounter on day one stops the exploring there.
 func test_explore_many_stops_when_something_happens() -> void:
 	_start()

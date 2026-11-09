@@ -15,6 +15,14 @@ const TINTS := {
 	"Winter": Color(0.7, 0.85, 1.0, 0.18),
 }
 
+## WU-501: the season's own sky and ground (spring blossom, summer green, autumn amber, winter snow).
+const SEASON_LOOKS := {
+	"Spring": {"ground": "8fb86a", "sky": ["bfe0f0", "f5dce6"]},
+	"Summer": {"ground": "3f7a38", "sky": ["5aa8e0", "b8dcf0"]},
+	"Autumn": {"ground": "a8782f", "sky": ["d9a870", "f0d8a8"]},
+	"Winter": {"ground": "dfe8ee", "sky": ["9fb4c8", "dce6ee"]},
+}
+
 var _strip: EncounterScene
 var _tint: ColorRect
 var _title: Label
@@ -75,6 +83,7 @@ func open(season: String, year: int, back: PackedStringArray, coming: PackedStri
 	_back_lines = back
 	_coming_lines = coming
 	_title.text = title_for(season, year)
+	_strip.season_look = SEASON_LOOKS.get(season, {})
 	_strip.show_encounter({"figure": "none"})
 	_strip.set_snow(season == "Winter")
 	_tint.color = TINTS.get(season, Color(0, 0, 0, 0))

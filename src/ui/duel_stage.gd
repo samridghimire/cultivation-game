@@ -43,6 +43,10 @@ const SKY_BY_SEASON := {
 }
 
 var _foe_beast: bool = false
+## WU-501: a backdrop kind that replaces the region's own near layer (pines, reeds, cave, ruins, crags, hills); "" = the region's.
+var look_kind: String = ""
+## WU-501: {ground: hex, sky: [top hex, horizon hex]} that replaces the region's ground and the clock's sky (the season card); {} = none.
+var season_look: Dictionary = {}
 var _foe_id: String = ""
 var _foe_texture: Texture2D
 var _offset: Array[float] = [0.0, 0.0]  # [player, foe] x offsets
@@ -398,13 +402,15 @@ static func hill_arc(cx: float, base_y: float, r: float, max_h: float, steps: in
 func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var top_h := size.y - GROUND_BAND
 	var sky := sky_colors(Calendar.season_of(GameClock.total_days))
+	if season_look.has("sky"):
+		sky = [Color(String(season_look["sky"][0])), Color(String(season_look["sky"][1]))]
 	var bands := 12
 	for i in bands:
 		var c: Color = (sky[0] as Color).lerp(sky[1], float(i) / float(bands - 1))
 		draw_rect(Rect2(0.0, top_h * i / bands, size.x, ceilf(top_h / bands) + 1.0), c)
 	var haze: Color = sky[1]
 	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45).lerp(haze, HAZE)
-	var kind := silhouette_for(rid)
+	var kind := look_kind if look_kind != "" else silhouette_for(rid)
 	var horizon := top_h
 	if is_raining():
 		draw_rect(Rect2(0.0, 0.0, size.x, top_h), Color(0.12, 0.14, 0.2, 0.55))
@@ -416,6 +422,8 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55).lerp(haze, 0.4)  # distant ridge, 40% lighter (GFX-107)
 	col = col.darkened(0.2)  # the near layer sits darker than the ridge
 	var layers := backdrop_layers(rid, size.x)
+	if look_kind != "":
+		layers["near"] = silhouette_shapes(rid + look_kind, kind, size.x)
 	var crags := rid in PEAK_REGIONS
 	for s in layers["far"]:
 		var fr := 60.0 + float(s["h"]) * 0.6
@@ -460,6 +468,17 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				if s.get("lantern", false):
 					draw_rect(Rect2(x + w + 8.0, horizon - 34.0, 2.0, 34.0), col)
 					draw_rect(Rect2(x + w + 5.0, horizon - 28.0, 8.0, 10.0), Color("e0a040").lerp(haze, 0.3))
+			"cave":  # WU-501: a rounded hill with a dark mouth
+				draw_colored_polygon(hill_arc(x, horizon, w, h), col)
+				draw_colored_polygon(hill_arc(x, horizon, w * 0.3, h * 0.45), Color(0.05, 0.04, 0.06))
+			"ruins":  # broken wall stubs with a gap in the top
+				draw_rect(Rect2(x, horizon - h * 0.6, w, h * 0.6), col.darkened(0.1))
+				draw_rect(Rect2(x, horizon - h * 0.6 - PIXEL, w * 0.35, PIXEL), col)
+				draw_rect(Rect2(x + w * 0.65, horizon - h * 0.6 - 2.0 * PIXEL, w * 0.35, 2.0 * PIXEL), col)
+				draw_rect(Rect2(x + w * 0.4, horizon - h * 0.25, w * 0.2, h * 0.25), col.darkened(0.5))
+			"crags":  # jagged rock
+				draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.5, horizon), Vector2(x - w * 0.2, horizon - h * 0.8),
+					Vector2(x, horizon - h * 0.5), Vector2(x + w * 0.2, horizon - h), Vector2(x + w * 0.5, horizon)]), col)
 			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
 				if s.get("tuft", false):  # cattail head
@@ -567,7 +586,10 @@ func _draw_ground() -> void:
 	if GameState.data == null or not GameState.data.regions.has(rid):
 		draw_rect(band, Color("33402a"))
 		return
-	var map: Dictionary = GameState.data.regions[rid].get("map", {})
+	var map: Dictionary = GameState.data.regions[rid].get("map", {}).duplicate(true)
+	if season_look.has("ground"):
+		map["ground"] = season_look["ground"]
+		map.get("decor", {}).erase("grass_color")
 	_draw_backdrop(map, rid)
 	var base := Color(map.get("ground", "4d6b3c"))
 	var decor: Dictionary = map.get("decor", {})

@@ -71,8 +71,18 @@ static func tokens_for(enc: Dictionary) -> Array:
 	return out
 
 
-## Points the strip at an encounter.
-func show_encounter(enc: Dictionary) -> void:
+## WU-501: the backdrop kind for an explore place's PlaceLooks look ("" = keep the region's own backdrop,
+## e.g. in a settlement or for an unknown look). Pure.
+const LOOK_BACKDROPS := {"cave": "cave", "woods": "pines", "ruins": "ruins", "reeds": "reeds", "ridge": "crags", "trail": "hills"}
+
+
+static func backdrop_for_look(look: String) -> String:
+	return String(LOOK_BACKDROPS.get(look, ""))
+
+
+## Points the strip at an encounter. `look` is the explore place's look, "" when it did not come from one.
+func show_encounter(enc: Dictionary, look: String = "") -> void:
+	look_kind = backdrop_for_look(look)
 	_figure = figure_of(enc)
 	_foe_id = String(enc.get("id", ""))
 	_foe_beast = _figure == "beast"

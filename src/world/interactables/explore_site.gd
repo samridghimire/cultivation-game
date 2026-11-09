@@ -14,8 +14,8 @@ func get_options() -> Array[Dictionary]:
 	if known != "":
 		outlook += "\n" + known
 	outlook += quarry_note(GameState.player, GameState.data, GameState.current_region, GameClock.total_days)
-	var options: Array[Dictionary] = [{"label": "Explore", "description": outlook, "action": GameState.explore.bind(explore_tags), "keep_open": true}]
-	options.append({"label": "Explore for a week (stops when something happens)", "description": outlook, "action": GameState.explore_many.bind(7, explore_tags), "keep_open": true})
+	var options: Array[Dictionary] = [{"label": "Explore", "description": outlook, "action": GameState.explore.bind(explore_tags, look), "keep_open": true}]
+	options.append({"label": "Explore for a week (stops when something happens)", "description": outlook, "action": GameState.explore_many.bind(7, explore_tags, look), "keep_open": true})
 	options.append_array(bait_options())
 	options.append_array(event_options())
 	return options

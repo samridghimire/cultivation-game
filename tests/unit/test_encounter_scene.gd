@@ -55,3 +55,21 @@ func test_every_figure_renders() -> void:
 		await tree.process_frame
 		assert_true(scene.figure() != "")
 		scene.free()
+
+
+func test_backdrop_for_look() -> void:
+	assert_eq(EncounterScene.backdrop_for_look("woods"), "pines")
+	assert_eq(EncounterScene.backdrop_for_look("cave"), "cave")
+	assert_eq(EncounterScene.backdrop_for_look("ruins"), "ruins")
+	assert_eq(EncounterScene.backdrop_for_look("reeds"), "reeds")
+	assert_eq(EncounterScene.backdrop_for_look("ridge"), "crags")
+	assert_eq(EncounterScene.backdrop_for_look(""), "")
+	assert_eq(EncounterScene.backdrop_for_look("bogus"), "")
+	for look: String in PlaceLooks.EXPLORE_LOOKS:
+		assert_true(EncounterScene.backdrop_for_look(look) != "", look)
+
+
+func test_season_look_per_season() -> void:
+	for s in ["Spring", "Summer", "Autumn", "Winter"]:
+		assert_true(SeasonCard.SEASON_LOOKS.has(s))
+	assert_true(SeasonCard.SEASON_LOOKS["Spring"]["ground"] != SeasonCard.SEASON_LOOKS["Autumn"]["ground"])

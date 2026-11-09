@@ -66,6 +66,8 @@ var pending_encounter := ""
 var pending_cast: Dictionary = {}
 ## True when the last explore day used a region discovery (TRAV-005).
 var last_explore_discovery := false
+## WU-501: the look of the explore place being explored ("" off a place), so an encounter card draws that place.
+var last_explore_look := ""
 var last_explore_deep_path := false
 ## True while a bounty's foe is fought, so the hunt does not lapse mid-fight (BOUNTY-001).
 var _bounty_fight := false
@@ -750,16 +752,19 @@ func _road_ambush() -> bool:
 
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).
-func explore(tags: Array = []) -> void:
+func explore(tags: Array = [], look: String = "") -> void:
+	last_explore_look = look
 	_explore_once(tags, false)
+	_clear_explore_look()
 
 
 ## Explore for up to `max_days` days (1..30), one day at a time, stopping as
 ## soon as anything happens that needs the player (an encounter, a choice, a
 ## sensed threat, a fight, death). Returns the days spent. Quiet days are
 ## summed up in one line at the end (FH-025).
-func explore_many(max_days: int, tags: Array = []) -> int:
+func explore_many(max_days: int, tags: Array = [], look: String = "") -> int:
 	EventBus.topic = "world"
+	last_explore_look = look
 	var limit := clampi(max_days, 1, 30)
 	var days := 0
 	var quiet_days := 0
@@ -771,7 +776,14 @@ func explore_many(max_days: int, tags: Array = []) -> int:
 		quiet_days += 1
 	if quiet_days > 0 and _can_act():
 		EventBus.post(("You explore for %s and find nothing of note. %s" % [Calendar.format_duration(quiet_days), Exploration.quiet_line(data, current_region, GameClock.total_days)]).strip_edges())
+	_clear_explore_look()
 	return days
+
+
+## The look only matters while an encounter card of this exploration is pending.
+func _clear_explore_look() -> void:
+	if pending_encounter == "":
+		last_explore_look = ""
 
 
 ## What exploring here (or a place with `tags`) might bring, as one line.
@@ -1171,6 +1183,7 @@ func choose_encounter(index: int) -> void:
 		return
 	pending_encounter = ""
 	pending_threat = ""
+	last_explore_look = ""
 	var picked: Dictionary = encounter["choices"][index]
 	if result["failed"]:
 		picked = picked["on_fail"]
@@ -1286,6 +1299,7 @@ func dismiss_encounter() -> void:
 		return
 	pending_encounter = ""
 	pending_threat = ""
+	last_explore_look = ""
 	EventBus.post("You leave the matter be and walk away.")
 	EventBus.encounter_choice_resolved.emit()
 	EventBus.player_changed.emit()
