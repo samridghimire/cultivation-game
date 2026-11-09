@@ -413,11 +413,23 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
 			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55)  # distant mountain line
-	for s in silhouette_shapes(rid + "_far", "hills", size.x):
+	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55).lerp(haze, 0.4)  # distant ridge, 40% lighter (GFX-107)
+	col = col.darkened(0.2)  # the near layer sits darker than the ridge
+	var layers := backdrop_layers(rid, size.x)
+	var crags := rid in PEAK_REGIONS
+	for s in layers["far"]:
 		var fr := 60.0 + float(s["h"]) * 0.6
-		draw_colored_polygon(hill_arc(s["x"], horizon, fr, minf(float(s["h"]) + 14.0, top_h * 0.45)), far)
-	for s in silhouette_shapes(rid, kind, size.x):
+		var fh := minf(float(s["h"]) + 14.0, top_h * 0.45)
+		if crags:  # jagged crag line instead of rounded hills
+			var cx: float = s["x"]
+			draw_colored_polygon(PackedVector2Array([Vector2(cx - fr, horizon), Vector2(cx - fr * 0.3, horizon - fh * 0.7),
+				Vector2(cx - fr * 0.1, horizon - fh * 0.55), Vector2(cx + fr * 0.05, horizon - fh), Vector2(cx + fr * 0.4, horizon - fh * 0.5),
+				Vector2(cx + fr, horizon)]), far)
+		else:
+			draw_colored_polygon(hill_arc(s["x"], horizon, fr, fh), far)
+	var piece_i := -1
+	for s in layers["near"]:
+		piece_i += 1
 		var x: float = s["x"]
 		var w: float = s["w"]
 		var h: float = s["h"]
@@ -428,6 +440,8 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				for row in int(h / PIXEL):
 					var rw := (float(row) + 1.0) * PIXEL * 0.5 * (w / 34.0)
 					draw_rect(Rect2(x - rw / 2.0, horizon - h + row * PIXEL, rw, PIXEL), col)
+				draw_rect(Rect2(x - 2.0, horizon - 8.0, 4.0, 8.0), col.darkened(0.3))  # trunk
+				draw_rect(Rect2(x - 1.0, horizon - h * 0.5, 1.0, h * 0.5), col.darkened(0.15))  # trunk line
 			"roofs":
 				var wall := 12.0 + h * 0.2
 				draw_rect(Rect2(x, horizon - wall, w, wall), col.darkened(0.15))
@@ -438,11 +452,18 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col)
 				draw_rect(Rect2(x - 9.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
 				draw_rect(Rect2(x + w + 4.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
+				if piece_i == 2:  # one taller two-tier roof
+					draw_rect(Rect2(x + w * 0.2, horizon - wall - rows * PIXEL - 10.0, w * 0.6, 10.0), col.darkened(0.1))
+					draw_rect(Rect2(x + w * 0.1, horizon - wall - rows * PIXEL - 14.0, w * 0.8, PIXEL), col)
+					draw_rect(Rect2(x + w * 0.1 - 4.0, horizon - wall - rows * PIXEL - 17.0, 5.0, 3.0), col)
+					draw_rect(Rect2(x + w * 0.9 - 1.0, horizon - wall - rows * PIXEL - 17.0, 5.0, 3.0), col)
 				if s.get("lantern", false):
 					draw_rect(Rect2(x + w + 8.0, horizon - 34.0, 2.0, 34.0), col)
 					draw_rect(Rect2(x + w + 5.0, horizon - 28.0, 8.0, 10.0), Color("e0a040").lerp(haze, 0.3))
 			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
+				if s.get("tuft", false):  # cattail head
+					draw_rect(Rect2(x - 1.0, horizon - h - 6.0, 4.0, 8.0), col.darkened(0.25))
 				if s.get("tuft", false):
 					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
 			_:
@@ -450,6 +471,11 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 
 
 const HAZE := 0.45
+const PEAK_REGIONS := ["azure_peak", "myriad_peaks_ridge"]
+## Foreground prop kinds on the ground strip by backdrop kind (GFX-107).
+const PROP_KINDS := {"roofs": ["fence", "lantern"], "pines": ["stump", "ferns"], "reeds": ["deadtree", "pool"], "hills": ["rocks", "stump"]}
+## Fractions of the stage width where a prop centre may sit: clear of the fighters' feet (15-30% and 70-85%, plus margin).
+const PROP_ZONES := [[0.04, 0.12], [0.33, 0.67], [0.88, 0.96]]
 const PIXEL := 4.0
 
 
@@ -499,6 +525,25 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 	return out
 
 
+## The layered backdrop for a region (GFX-107): {far: ridge pieces, near: silhouette pieces, props: [{kind, x, y}]}.
+## Deterministic per region id; no prop centre lies inside a fighter's foot zone.
+static func backdrop_layers(rid: String, width: float) -> Dictionary:
+	var kind := silhouette_for(rid)
+	var kinds: Array = PROP_KINDS.get(kind, PROP_KINDS["hills"])
+	if rid in PEAK_REGIONS:
+		kinds = ["rocks", "rocks"]
+	elif rid == "fallen_star_market":
+		kinds = ["awning", "fence"]
+	var props: Array = []
+	var count := 2 + int(unit_hash(rid, 700) * 2.99)
+	for i in count:
+		var zone: Array = PROP_ZONES[i % PROP_ZONES.size()]
+		var t := unit_hash(rid, 710 + i)
+		props.append({"kind": kinds[i % kinds.size()], "x": width * lerpf(float(zone[0]), float(zone[1]), t),
+			"y": 8.0 + unit_hash(rid, 720 + i) * 18.0})
+	return {"far": silhouette_shapes(rid + "_far", "hills", width), "near": silhouette_shapes(rid, kind, width), "props": props}
+
+
 static func size_hills_step(r: float) -> float:
 	return 120.0 + r * 160.0
 
@@ -536,6 +581,45 @@ func _draw_ground() -> void:
 		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
 		draw_rect(Rect2(tx, ty, 2.0, 4.0), base.lightened(0.25))
 		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), base.lightened(0.25))
+	for p in backdrop_layers(rid, size.x)["props"]:
+		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
+
+
+func _draw_prop(kind: String, at: Vector2, ground: Color) -> void:
+	var dark := ground.darkened(0.6)
+	var wood := Color("6b4a2e")
+	match kind:
+		"fence":
+			for i in 3:
+				draw_rect(Rect2(at.x - 12.0 + i * 10.0, at.y - 10.0, 4.0, 14.0), wood)
+			draw_rect(Rect2(at.x - 12.0, at.y - 6.0, 24.0, 3.0), wood.lightened(0.15))
+		"lantern":
+			draw_rect(Rect2(at.x - 1.0, at.y - 26.0, 3.0, 28.0), wood)
+			draw_rect(Rect2(at.x - 5.0, at.y - 26.0, 11.0, 10.0), Color("c8503c"))
+			draw_rect(Rect2(at.x - 3.0, at.y - 24.0, 7.0, 6.0), Color("f0c060"))
+		"stump":
+			draw_rect(Rect2(at.x - 8.0, at.y - 8.0, 16.0, 12.0), wood.darkened(0.2))
+			draw_rect(Rect2(at.x - 8.0, at.y - 10.0, 16.0, 4.0), wood.lightened(0.2))
+		"ferns":
+			for i in 4:
+				draw_rect(Rect2(at.x - 8.0 + i * 4.0, at.y - 4.0 - (i % 2) * 5.0, 3.0, 8.0 + (i % 2) * 5.0), ground.lightened(0.2))
+		"deadtree":
+			draw_rect(Rect2(at.x - 2.0, at.y - 24.0, 4.0, 28.0), dark)
+			draw_rect(Rect2(at.x - 10.0, at.y - 20.0, 9.0, 3.0), dark)
+			draw_rect(Rect2(at.x + 1.0, at.y - 14.0, 9.0, 3.0), dark)
+		"pool":
+			draw_set_transform(at, 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, 16.0, Color("3a5a5c"))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"rocks":
+			draw_rect(Rect2(at.x - 10.0, at.y - 6.0, 14.0, 10.0), Color("7a7a78"))
+			draw_rect(Rect2(at.x + 2.0, at.y - 10.0, 10.0, 14.0), Color("8e8c88"))
+			draw_rect(Rect2(at.x - 10.0, at.y - 6.0, 14.0, 2.0), Color("a8a6a0"))
+		"awning":
+			draw_rect(Rect2(at.x - 12.0, at.y - 4.0, 3.0, 8.0), wood)
+			draw_rect(Rect2(at.x + 9.0, at.y - 4.0, 3.0, 8.0), wood)
+			for i in 6:
+				draw_rect(Rect2(at.x - 14.0 + i * 5.0, at.y - 12.0, 5.0, 8.0), Color("b83c3c") if i % 2 == 0 else Color("e8d9b0"))
 
 
 ## The whole-stage offset of a heavy hit's 3 px, 0.15 s shake.
