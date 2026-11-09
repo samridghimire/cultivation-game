@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-09 [C-337] The season recap speaks in the village's own voice.
+- 2026-11-09 [WU-499] Qingshi's labels no longer crowd each other, and no empty band shows above the map.
+- 2026-11-09 [C-336] Every named friend has their own birthday wish for you.
+- 2026-11-09 [GUIDE-226] The journal tells you what a day of work, gathering, fishing or crafting is worth here.
+- 2026-11-09 [GFX-108] The world map looks like a painted map.
+- 2026-11-09 [GFX-107] Fights show the place they happen in: ridges, pines, reeds and rooftops.
+- 2026-11-09 [GFX-106] Item icons you can tell apart: food, drink, lanterns, charms, trophies.
+- 2026-11-09 [GFX-105] A pixel-art title screen.
+- 2026-11-09 [C-338] Fishing pays like a pastime, not the best job in the world.
+- 2026-11-09 [GUIDE-225] Hints are cheaper to compute.
+- 2026-11-09 [CAL-008] Reminders for far-off festivals tell you how long the road is, or stay quiet if you can't make it.
+- 2026-11-09 [FISH-007] A better angler lands more fish.
+- 2026-11-09 [WU-495] Each season opens with one card: a look back and what's coming.
+- 2026-11-09 [RV-019] Screenshot tools work again, and the pond jetty stands in the water.
 - 2026-11-09 [WU-498] Qingshi's pond corner is tidy: the Wandering Merchant moved to open ground, no more overlapping labels.
 - 2026-11-09 [QA-203] Screenshot tooling: the HUD panel crop works at 1280x720 and multi-region runs start each region clean.
 - 2026-11-09 [C-331] Every villager who teaches you a dish remembers it in their own words.
