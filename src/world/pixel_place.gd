@@ -699,10 +699,12 @@ static func _cave() -> Array:
 
 ## GFX-104: one tree crown: body `r`, lower-right shade `R`, upper-left highlight `h`.
 static func crown(c: Array, cx: float, cy: float, rx: float, ry: float) -> void:
-	ell(c, cx, cy, rx, ry, "r")
-	for y in c.size():
-		for x in c[y].size():
-			if c[y][x] != "r":
+	# WU-496: draw on a scratch canvas so only this crown's own pixels are shaded against its centre.
+	var own := canvas(c[0].size(), c.size())
+	ell(own, cx, cy, rx, ry, "r")
+	for y in own.size():
+		for x in own[y].size():
+			if own[y][x] != "r":
 				continue
 			var dx: float = (x + 0.5 - cx) / rx
 			var dy: float = (y + 0.5 - cy) / ry
@@ -710,6 +712,8 @@ static func crown(c: Array, cx: float, cy: float, rx: float, ry: float) -> void:
 				c[y][x] = "R"
 			elif dx + dy < -0.75:
 				c[y][x] = "h"
+			else:
+				c[y][x] = "r"
 
 
 ## GFX-104: the crown colour for an explore woods site: the region's `map.decor.tree_color` (so the site sits in its

@@ -308,3 +308,35 @@ func test_woods_color_falls_back_to_place_color() -> void:
 	assert_eq(PixelPlace.woods_color({}, place), place)
 	assert_eq(PixelPlace.woods_color({"decor": {"trees": 3}}, place), place)
 	assert_eq(PixelPlace.woods_color({"decor": {"tree_color": "183427"}}, place), Color("183427"))
+
+
+## WU-496: a crown shades only its own pixels; drawing crown 2 leaves crown 1's shading and pixel count alone.
+func test_crown_shades_only_its_own_pixels() -> void:
+	var c := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(c, 10, 10, 8, 7)
+	var before := c.duplicate(true)
+	var count_before := 0
+	for row: Array in c:
+		for ch: Variant in row:
+			count_before += 1 if ch != "." else 0
+	PixelPlace.crown(c, 30, 10, 8, 7)  # far apart: no overlap
+	for y in 20:
+		for x in 20:
+			assert_eq(c[y][x], before[y][x], "crown 1 unchanged at %d,%d" % [x, y])
+	var lone := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(lone, 30, 10, 8, 7)
+	var count_after := 0
+	for row: Array in c:
+		for ch: Variant in row:
+			count_after += 1 if ch != "." else 0
+	var lone_count := 0
+	for row: Array in lone:
+		for ch: Variant in row:
+			lone_count += 1 if ch != "." else 0
+	assert_eq(count_after, count_before + lone_count, "pixel count is the sum of both crowns")
+	# overlapping: crown 1's far upper-left stays highlighted after crown 2 overlaps its lower right
+	var o := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(o, 12, 10, 8, 7)
+	var tl: String = o[5][8]
+	PixelPlace.crown(o, 20, 10, 8, 7)
+	assert_eq(o[5][8], tl, "crown 1's shading survives an overlapping crown 2")

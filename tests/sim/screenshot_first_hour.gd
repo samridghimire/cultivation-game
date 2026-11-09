@@ -6,6 +6,7 @@ extends SceneTree
 ## WU-218: append `-- --crafter` for a new Alchemist's first hour (workshop, hint, gather site, crafting,
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
+## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
@@ -106,6 +107,13 @@ func _start() -> void:
 				var bday: int = Folk.birthday_day(gs.npcs[bid], gs.data)
 				clock_b.total_days = (clock_b.total_days / Calendar.DAYS_PER_YEAR) * Calendar.DAYS_PER_YEAR + bday
 				gs.npc_favor[bid] = 40
+	if OS.get_cmdline_user_args().has("--trophies"):  # WU-496: three trophies hung at the Family Home
+		gs.player.hung_trophies.clear()
+		for id: String in ["old_tuskers_broken_tusk", "cloud_cranes_crown_plume", "tuskers_sow_bristle"]:
+			gs.player.hung_trophies.append(id)
+		var home_abodes: Array[String] = Abodes.in_region(gs.data, gs.current_region)
+		if not home_abodes.is_empty():  # the abode is the home the plaques hang on (use --region=misty_forest)
+			gs.player.abode = home_abodes[0]
 	if OS.get_cmdline_user_args().has("--incense"):  # GFX-084: the incense burns today
 		gs.world_flags["shrine_incense"] = {"until": gs.get_node("/root/GameClock").total_days + 1}
 	if OS.get_cmdline_user_args().has("--great") or OS.get_cmdline_user_args().has("--tracks"):  # WU-430: jump to the region's next great-beast day

@@ -4309,6 +4309,7 @@ func _process(_d: float) -> bool:
 	var shot: Dictionary = shots[index]
 	if not opened:
 		(shot["open"] as Callable).call()
+		hud.call("_update_modal")  # WU-496: as the game does, so the backdrop and name-card dismissal happen
 		opened = true
 		frames = 0
 		return false
