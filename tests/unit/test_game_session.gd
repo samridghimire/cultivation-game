@@ -3590,7 +3590,10 @@ func test_season_review_emits_once_per_boundary() -> void:
 	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # spring -> summer
 	assert_eq(seen.size(), 1)
 	assert_eq(seen[0][0], "Spring")
-	assert_true("You won 2 fights." in (seen[0][1] as PackedStringArray))
+	var won2: Array = []  # SEASON-014: the wording is any recap template
+	for t: String in GameState.data.season_tasks["recap"]["fights_won"]:
+		won2.append(t.replace("{n}", "2").replace("{s}", "s"))
+	assert_true(won2.any(func(t: String) -> bool: return t in (seen[0][1] as PackedStringArray)))
 	assert_true((seen[0][1] as PackedStringArray)[(seen[0][1] as PackedStringArray).size() - 1].begins_with("Coming:"))
 	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # summer -> autumn -> winter in one call
 	assert_eq(seen.size(), 2)
@@ -3602,7 +3605,7 @@ func test_season_review_emits_once_per_boundary() -> void:
 	assert_eq(seen.size(), 2)
 	var logged := false
 	for m in bus.history:
-		if String(m["text"]) == "You won 1 fight.":
+		if String(m["text"]) in (GameState.data.season_tasks["recap"]["fights_won"] as Array).map(func(t: String) -> String: return t.replace("{n}", "1").replace("{s}", "")):
 			logged = true
 	assert_true(logged, "the winter line is logged")
 

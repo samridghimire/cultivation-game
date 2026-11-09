@@ -520,6 +520,37 @@ static func validate(data: GameData) -> Array[String]:
 			errs.append("season_tasks.json %s payout item '%s' is unknown" % [s, r["item"]])
 	if data.season_tasks.has("restoration"):
 		errs.append_array(_validate_restoration(data))
+	errs.append_array(_validate_recap(data))
+	return errs
+
+
+## SEASON-014: every LifeStats.RECAP_DEFAULTS key has 1..3 non-empty templates <= 100 chars, known placeholders only.
+const RECAP_PLACEHOLDERS := {
+	"tasks": ["done", "n"], "fights_won": ["n", "s"], "fights_lost": ["n", "s"], "fights_mixed": ["won", "lost", "s"],
+	"great_beast_one": [], "great_beast_many": ["n"], "harvests": ["n", "s"], "foraged": ["n", "s"], "crafted": ["n", "s"],
+	"festival_one": [], "festival_many": ["n"], "missions": ["n", "s"], "breakthrough_one": [], "breakthrough_many": ["n"], "quiet": [],
+}
+
+
+static func _validate_recap(data: GameData) -> Array[String]:
+	var errs: Array[String] = []
+	var recap: Dictionary = data.season_tasks.get("recap", {})
+	for key: String in RECAP_PLACEHOLDERS:
+		var list: Variant = recap.get(key, null)
+		if not (list is Array) or (list as Array).is_empty() or (list as Array).size() > 3:
+			errs.append("season_tasks.json recap '%s' needs 1..3 templates" % key)
+			continue
+		for t: Variant in list:
+			var text := String(t)
+			if text == "" or text.length() > 100:
+				errs.append("season_tasks.json recap '%s' template must be 1..100 chars" % key)
+			var rx := RegEx.create_from_string("\\{([^}]*)\\}")
+			for m in rx.search_all(text):
+				if not (RECAP_PLACEHOLDERS[key] as Array).has(m.get_string(1)):
+					errs.append("season_tasks.json recap '%s' has unknown placeholder {%s}" % [key, m.get_string(1)])
+	for key: String in recap:
+		if not RECAP_PLACEHOLDERS.has(key):
+			errs.append("season_tasks.json recap has unknown key '%s'" % key)
 	return errs
 
 

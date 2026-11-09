@@ -278,13 +278,47 @@ static func _adventures_line(before: Dictionary, after: Dictionary) -> String:
 	return "You %s." % text
 
 
+## SEASON-014: the first template of each data/season_tasks.json `recap` key; used when no data is passed.
+const RECAP_DEFAULTS := {
+	"tasks": "Village tasks: {done} of {n} done.",
+	"fights_won": "You won {n} fight{s}.",
+	"fights_lost": "You lost {n} fight{s}.",
+	"fights_mixed": "You won {won} fight{s} and lost {lost}.",
+	"great_beast_one": "You brought down a great beast.",
+	"great_beast_many": "You brought down {n} great beasts.",
+	"harvests": "You harvested {n} crop{s}.",
+	"foraged": "You foraged {n} time{s}.",
+	"crafted": "You crafted {n} item{s}.",
+	"festival_one": "You joined a festival event.",
+	"festival_many": "You joined {n} festival events.",
+	"missions": "You finished {n} sect mission{s}.",
+	"breakthrough_one": "You broke through.",
+	"breakthrough_many": "You broke through {n} times.",
+	"quiet": "A quiet season.",
+}
+
+
+## One recap line: a template of `key` (data's pick via rng, else the first), placeholders filled from `vars`.
+static func _recap_line(data: GameData, rng: RandomNumberGenerator, key: String, vars: Dictionary) -> String:
+	var templates: Array = []
+	if data != null:
+		templates = (data.season_tasks.get("recap", {}) as Dictionary).get(key, [])
+	var tpl := String(RECAP_DEFAULTS[key])
+	if not templates.is_empty():
+		tpl = String(templates[rng.randi_range(0, templates.size() - 1)]) if rng != null else String(templates[0])
+	for k: String in vars:
+		tpl = tpl.replace("{%s}" % k, str(vars[k]))
+	return tpl
+
+
 ## SEASON-012: the season in review, at most 4 lines. extras: tasks_done, tasks_total (ints, 0 = none),
-## project_line (String), coming (String). Pure.
-static func season_summary(before: Dictionary, after: Dictionary, extras: Dictionary) -> PackedStringArray:
+## project_line (String), coming (String). SEASON-014: with `data` (and `rng`) the wording comes from
+## season_tasks.json `recap`; without them the first template of each key is used. Pure.
+static func season_summary(before: Dictionary, after: Dictionary, extras: Dictionary, data: GameData = null, rng: RandomNumberGenerator = null) -> PackedStringArray:
 	var out := PackedStringArray()
 	var total := int(extras.get("tasks_total", 0))
 	if total > 0:
-		out.append("Village tasks: %d of %d done." % [int(extras.get("tasks_done", 0)), total])
+		out.append(_recap_line(data, rng, "tasks", {"done": int(extras.get("tasks_done", 0)), "n": total}))
 	var project := String(extras.get("project_line", ""))
 	if project != "":
 		out.append(project)
@@ -292,38 +326,38 @@ static func season_summary(before: Dictionary, after: Dictionary, extras: Dictio
 	var won := _delta(before, after, "fights_won")
 	var lost := _delta(before, after, "fights_lost")
 	if won > 0 and lost > 0:
-		cands.append("You won %d fight%s and lost %d." % [won, "" if won == 1 else "s", lost])
+		cands.append(_recap_line(data, rng, "fights_mixed", {"won": won, "lost": lost, "s": "" if won == 1 else "s"}))
 	elif won > 0:
-		cands.append("You won %d fight%s." % [won, "" if won == 1 else "s"])
+		cands.append(_recap_line(data, rng, "fights_won", {"n": won, "s": "" if won == 1 else "s"}))
 	elif lost > 0:
-		cands.append("You lost %d fight%s." % [lost, "" if lost == 1 else "s"])
+		cands.append(_recap_line(data, rng, "fights_lost", {"n": lost, "s": "" if lost == 1 else "s"}))
 	var great := _delta(before, after, "great_beasts")
 	if great > 0:
-		cands.append("You brought down a great beast." if great == 1 else "You brought down %d great beasts." % great)
+		cands.append(_recap_line(data, rng, "great_beast_one" if great == 1 else "great_beast_many", {"n": great}))
 	var harvests := _delta(before, after, "harvests")
 	if harvests > 0:
-		cands.append("You harvested %d crop%s." % [harvests, "" if harvests == 1 else "s"])
+		cands.append(_recap_line(data, rng, "harvests", {"n": harvests, "s": "" if harvests == 1 else "s"}))
 	var foraged := _delta(before, after, "foraged")
 	if foraged > 0:
-		cands.append("You foraged %d time%s." % [foraged, "" if foraged == 1 else "s"])
+		cands.append(_recap_line(data, rng, "foraged", {"n": foraged, "s": "" if foraged == 1 else "s"}))
 	var crafted := _delta(before, after, "items_crafted")
 	if crafted > 0:
-		cands.append("You crafted %d item%s." % [crafted, "" if crafted == 1 else "s"])
+		cands.append(_recap_line(data, rng, "crafted", {"n": crafted, "s": "" if crafted == 1 else "s"}))
 	var fest := _delta(before, after, "festival_activities")
 	if fest > 0:
-		cands.append("You joined a festival event." if fest == 1 else "You joined %d festival events." % fest)
+		cands.append(_recap_line(data, rng, "festival_one" if fest == 1 else "festival_many", {"n": fest}))
 	var missions := _delta(before, after, "missions_done")
 	if missions > 0:
-		cands.append("You finished %d sect mission%s." % [missions, "" if missions == 1 else "s"])
+		cands.append(_recap_line(data, rng, "missions", {"n": missions, "s": "" if missions == 1 else "s"}))
 	var bt := _delta(before, after, "breakthroughs")
 	if bt > 0:
-		cands.append("You broke through." if bt == 1 else "You broke through %s." % ("twice" if bt == 2 else "%d times" % bt))
+		cands.append(_recap_line(data, rng, "breakthrough_one" if bt == 1 else "breakthrough_many", {"n": bt}))
 	for line in cands:
 		if out.size() >= 3:
 			break
 		out.append(line)
 	if out.is_empty():
-		out.append("A quiet season.")
+		out.append(_recap_line(data, rng, "quiet", {}))
 	var coming := String(extras.get("coming", ""))
 	if coming != "":
 		out.append(coming)

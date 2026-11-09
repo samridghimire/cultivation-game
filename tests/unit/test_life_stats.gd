@@ -237,3 +237,50 @@ func test_season_summary_quiet_and_partial_tasks() -> void:
 	var t := LifeStats.season_summary({}, {"festival_activities": 2}, {"tasks_done": 2, "tasks_total": 3})
 	assert_eq(t[0], "Village tasks: 2 of 3 done.")
 	assert_eq(t[1], "You joined 2 festival events.")
+
+
+## SEASON-014: every recap key renders from data, plurals hold, the quiet line is alone, a seed is deterministic.
+func test_recap_every_key_renders_from_data() -> void:
+	var d: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var rng := seeded_rng()
+	var after := {"fights_won": 2, "fights_lost": 1, "great_beasts": 2, "harvests": 1, "foraged": 1, "items_crafted": 3, "festival_activities": 1, "missions_done": 2, "breakthroughs": 3}
+	for key: String in SeasonTasks.RECAP_PLACEHOLDERS:
+		assert_true((d.season_tasks["recap"] as Dictionary).has(key), key)
+	var lines := LifeStats.season_summary({}, after, {"tasks_done": 1, "tasks_total": 3}, d, rng)
+	assert_eq(lines.size(), 3)
+	for l in lines:
+		assert_false("{" in l, "no raw placeholder in '%s'" % l)
+	for pair in [["festival_activities", 1], ["breakthroughs", 1], ["great_beasts", 1]]:
+		var one := LifeStats.season_summary({}, {pair[0]: pair[1]}, {}, d, seeded_rng())
+		assert_eq(one.size(), 1)
+		assert_false("{" in one[0])
+
+
+func test_recap_quiet_only_when_nothing_else() -> void:
+	var d: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var quiet := LifeStats.season_summary({}, {}, {}, d, seeded_rng())
+	assert_true(quiet[0] in d.season_tasks["recap"]["quiet"])
+	var busy := LifeStats.season_summary({}, {"harvests": 1}, {}, d, seeded_rng())
+	assert_false(busy[0] in d.season_tasks["recap"]["quiet"])
+	assert_eq(LifeStats.season_summary({}, {"harvests": 1}, {}, d, null)[0], "You harvested 1 crop.", "no rng: first template")
+
+
+func test_recap_deterministic_with_seed() -> void:
+	var d: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var after := {"fights_won": 2, "harvests": 3, "foraged": 2}
+	var a := LifeStats.season_summary({}, after, {}, d, seeded_rng())
+	var b := LifeStats.season_summary({}, after, {}, d, seeded_rng())
+	assert_eq(a, b)
+
+
+func test_recap_validation_rejects_bad_templates() -> void:
+	var d: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var saved: Dictionary = d.season_tasks
+	d.season_tasks = saved.duplicate(true)
+	d.season_tasks["recap"]["harvests"] = ["You got {bogus}."]
+	d.season_tasks["recap"]["quiet"] = []
+	var errs := SeasonTasks.validate(d)
+	d.season_tasks = saved
+	var text := "\n".join(errs)
+	assert_true("unknown placeholder {bogus}" in text)
+	assert_true("'quiet' needs 1..3" in text)

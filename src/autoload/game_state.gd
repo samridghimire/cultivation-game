@@ -4647,7 +4647,9 @@ func _review_season_if_changed() -> void:
 		extras["tasks_done"] = 0
 		extras["tasks_total"] = tasks.size()
 	extras["project_line"] = SeasonTasks.project_recap_line(data, player.season_start_sets, player.seasons_completed.size())
-	var lines := LifeStats.season_summary(player.season_start_stats, player.life_stats, extras)
+	var recap_rng := RandomNumberGenerator.new()  # own stream: wording must not shift GameState.rng
+	recap_rng.seed = hash([now, rng.seed])
+	var lines := LifeStats.season_summary(player.season_start_stats, player.life_stats, extras, data, recap_rng)
 	for line in lines:
 		EventBus.post(line, "progress")
 	var new_year := Calendar.year_of(now) != Calendar.year_of(last_ended)
