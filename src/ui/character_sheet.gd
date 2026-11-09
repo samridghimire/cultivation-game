@@ -459,10 +459,18 @@ static func craft_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	if c.fishing_xp <= 0 and c.gather_xp <= 0 and c.catch_log.is_empty():
 		return rows
 	rows.append({"name": "Fishing", "rank": Fishing.rank_name(c.fishing_xp), "xp": c.fishing_xp,
-		"progress": Fishing.progress(c.fishing_xp), "note": Fishing.log_summary(c, data)})
+		"progress": Fishing.progress(c.fishing_xp), "note": _join_notes([Fishing.rank_perk(c.fishing_xp), Fishing.log_summary(c, data)])})
 	rows.append({"name": "Herb lore", "rank": HerbLore.rank_name(data.herb_lore, c.gather_xp), "xp": c.gather_xp,
 		"progress": HerbLore.progress(data.herb_lore, c.gather_xp), "note": ""})
 	return rows
+
+
+static func _join_notes(parts: Array) -> String:
+	var out: PackedStringArray = []
+	for p: String in parts:
+		if p != "":
+			out.append(p)
+	return " ".join(out)
 
 
 func _craft_row(row: Dictionary) -> Control:

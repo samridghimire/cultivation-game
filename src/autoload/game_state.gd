@@ -1374,6 +1374,10 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 			var more := Exploration.gather(player, usable, rng)
 			for id: String in more:
 				found[id] = int(found.get(id, 0)) + int(more[id])
+		for i in Fishing.bonus_draws(player.fishing_xp, rng):
+			var bonus := Exploration.gather(player, usable, rng)
+			for id: String in bonus:
+				found[id] = int(found.get(id, 0)) + int(bonus[id])
 		var trophy := Fishing.trophy_in(base, found)
 		if trophy != "" and not Fishing.trophy_allowed(quality, player.fishing_xp):
 			# Only the trophy draw comes to nothing; the trip's other fish are still caught.
@@ -1406,7 +1410,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		EventBus.post("Pond legend: you landed the %s!" % trophy_caught, "progress")
 	# After the first-catch bonus, so a rank reached through it is announced too.
 	if Fishing.rank_name(player.fishing_xp) != old_rank:
-		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
+		var perk := Fishing.rank_perk(player.fishing_xp)
+		EventBus.post("Your fishing has improved: %s.%s" % [Fishing.rank_name(player.fishing_xp), " " + perk if perk != "" else ""], "progress")
 	_pass_time(days)
 
 

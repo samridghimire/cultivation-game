@@ -1639,23 +1639,23 @@ Curious practiser: 10 seeds, 12 months
 
 Stones per fishing day (trip = 2 days, 100 trips per cell, ordinary casts, storm days lost)
   qingshi_village        Novice   jetty 0: 1.35/day avg (Spr 1.87, Sum 1.25, Aut 1.00, Win 1.27), rare in 55% of trips
-  qingshi_village        Angler   jetty 0: 1.35/day avg (Spr 1.86, Sum 1.25, Aut 0.99, Win 1.30), rare in 56% of trips
-  qingshi_village        Old Hand jetty 0: 1.37/day avg (Spr 1.83, Sum 1.32, Aut 0.98, Win 1.33), rare in 60% of trips
+  qingshi_village        Angler   jetty 0: 1.65/day avg (Spr 2.31, Sum 1.50, Aut 1.21, Win 1.59), rare in 64% of trips
+  qingshi_village        Old Hand jetty 0: 1.97/day avg (Spr 2.52, Sum 1.83, Aut 1.54, Win 1.98), rare in 72% of trips
   qingshi_village        Novice   jetty 3: 1.80/day avg (Spr 2.46, Sum 1.70, Aut 1.36, Win 1.69), rare in 63% of trips
-  qingshi_village        Angler   jetty 3: 1.83/day avg (Spr 2.52, Sum 1.76, Aut 1.38, Win 1.65), rare in 64% of trips
-  qingshi_village        Old Hand jetty 3: 1.89/day avg (Spr 2.58, Sum 1.88, Aut 1.33, Win 1.75), rare in 67% of trips
+  qingshi_village        Angler   jetty 3: 2.32/day avg (Spr 3.29, Sum 2.18, Aut 1.76, Win 2.04), rare in 70% of trips
+  qingshi_village        Old Hand jetty 3: 2.83/day avg (Spr 3.71, Sum 2.50, Aut 2.28, Win 2.85), rare in 78% of trips
   gathering in qingshi_village: 0.75 stones/day at the best gather place (Mortal)
   misty_forest           Novice   jetty 0: 2.15/day avg (Spr 2.27, Sum 2.34, Aut 2.56, Win 1.45), rare in 74% of trips
-  misty_forest           Angler   jetty 0: 2.20/day avg (Spr 2.33, Sum 2.40, Aut 2.60, Win 1.46), rare in 74% of trips
-  misty_forest           Old Hand jetty 0: 2.30/day avg (Spr 2.52, Sum 2.48, Aut 2.66, Win 1.52), rare in 77% of trips
+  misty_forest           Angler   jetty 0: 2.72/day avg (Spr 2.85, Sum 2.96, Aut 3.12, Win 1.97), rare in 79% of trips
+  misty_forest           Old Hand jetty 0: 3.33/day avg (Spr 3.48, Sum 3.58, Aut 3.69, Win 2.55), rare in 86% of trips
   gathering in misty_forest: 0.56 stones/day at the best gather place (Mortal)
   azure_peak             Novice   jetty 0: 6.54/day avg (Spr 7.14, Sum 6.83, Aut 6.07, Win 6.12), rare in 48% of trips
-  azure_peak             Angler   jetty 0: 6.46/day avg (Spr 7.07, Sum 6.70, Aut 6.17, Win 5.92), rare in 49% of trips
-  azure_peak             Old Hand jetty 0: 6.42/day avg (Spr 6.87, Sum 6.91, Aut 6.10, Win 5.83), rare in 53% of trips
+  azure_peak             Angler   jetty 0: 7.85/day avg (Spr 8.30, Sum 8.07, Aut 7.38, Win 7.66), rare in 54% of trips
+  azure_peak             Old Hand jetty 0: 9.49/day avg (Spr 9.77, Sum 9.64, Aut 9.21, Win 9.34), rare in 64% of trips
   gathering in azure_peak: 0.64 stones/day at the best gather place (Mortal)
   withered_bone_marsh    Novice   jetty 0: 4.03/day avg (Spr 4.25, Sum 4.75, Aut 4.00, Win 3.12), rare in 63% of trips
-  withered_bone_marsh    Angler   jetty 0: 4.07/day avg (Spr 4.21, Sum 4.81, Aut 4.09, Win 3.15), rare in 65% of trips
-  withered_bone_marsh    Old Hand jetty 0: 4.05/day avg (Spr 4.26, Sum 4.91, Aut 3.91, Win 3.12), rare in 69% of trips
+  withered_bone_marsh    Angler   jetty 0: 4.95/day avg (Spr 5.32, Sum 5.80, Aut 4.74, Win 3.93), rare in 69% of trips
+  withered_bone_marsh    Old Hand jetty 0: 5.89/day avg (Spr 5.95, Sum 6.89, Aut 5.90, Win 4.80), rare in 79% of trips
   gathering in withered_bone_marsh: 0.72 stones/day at the best gather place (Mortal)
   myriad_peaks_ridge     Novice   jetty 0: 0.00/day avg (Spr 0.00, Sum 0.00, Aut 0.00, Win 0.00), rare in 0% of trips
   myriad_peaks_ridge     Angler   jetty 0: 0.00/day avg (Spr 0.00, Sum 0.00, Aut 0.00, Win 0.00), rare in 0% of trips

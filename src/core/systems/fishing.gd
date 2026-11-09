@@ -8,10 +8,10 @@ const RARE_WEIGHT := 2.0  # a non-empty catch_table entry at or below this weigh
 const XP_CAP := 100
 const GOT_AWAY_CHANCE := 0.3
 const RANKS: Array[Dictionary] = [
-	{"min": 0, "name": "Novice"},
-	{"min": 10, "name": "Angler"},
-	{"min": 40, "name": "Old Hand"},
-	{"min": 100, "name": "Master"},
+	{"min": 0, "name": "Novice", "bonus_chance": 0.0, "perk": ""},
+	{"min": 10, "name": "Angler", "bonus_chance": 0.25, "perk": "An Angler lands an extra fish one trip in four."},
+	{"min": 40, "name": "Old Hand", "bonus_chance": 0.5, "perk": "An Old Hand lands an extra fish every other trip."},
+	{"min": 100, "name": "Master", "bonus_chance": 1.0, "perk": "A Master always lands an extra fish."},
 ]
 
 
@@ -26,6 +26,28 @@ static func rank_name(xp: int) -> String:
 		if xp >= int(r["min"]):
 			name = String(r["name"])
 	return name
+
+
+## FISH-007: extra catch draws (0 or 1) a trip earns at this rank; draws from `rng` only when the chance is fractional.
+static func bonus_draws(xp: int, rng: RandomNumberGenerator) -> int:
+	var chance := 0.0
+	for r in RANKS:
+		if xp >= int(r["min"]):
+			chance = float(r["bonus_chance"])
+	if chance <= 0.0:
+		return 0
+	if chance >= 1.0:
+		return 1
+	return 1 if rng.randf() < chance else 0
+
+
+## One line describing the rank's fishing perk; "" for Novice.
+static func rank_perk(xp: int) -> String:
+	var perk := ""
+	for r in RANKS:
+		if xp >= int(r["min"]):
+			perk = String(r["perk"])
+	return perk
 
 
 ## 0..1 progress from the current rank's threshold to the next; 1.0 at the top rank.
