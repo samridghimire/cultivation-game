@@ -239,6 +239,42 @@ static func jetty_stage_look(stage: int) -> Dictionary:
 	return {"frac": 1.0, "gaps": false, "lantern": true}
 
 
+## WU-500: the jetty's post rects (6x6) at project `stage`. An unbuilt stretch (stage 0..1) shows bare posts in pairs along the
+## full length, but only those standing in the water or within 6 px of the pond's rim; a finished jetty keeps two posts at the water end.
+static func jetty_posts(region: Dictionary, lm: Dictionary, stage: int) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var lay := jetty_layout(region, lm)
+	if not bool(lay["on_water"]):
+		return out
+	var full: Rect2 = lay["rect"]
+	var vertical := bool(lay["vertical"])
+	var toward: int = int(lay.get("toward_water", -1))
+	var ponds: Array[Rect2] = []
+	for other: Dictionary in region.get("map", {}).get("landmarks", []):
+		if other.get("kind", "") == "pond":
+			var half := Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0
+			ponds.append(Rect2(Vector2(float(other["pos"][0]), float(other["pos"][1])) - half, half * 2.0))
+	var span := full.size.y if vertical else full.size.x
+	var along: Array[float] = [2.0]
+	if jetty_stage_look(stage)["frac"] < 1.0:
+		along = [4.0, 4.0 + (span - 8.0) / 2.0, 4.0 + (span - 8.0)]
+	for t in along:
+		for off: float in [-9.0, 9.0]:
+			var tip: Vector2
+			if vertical:
+				tip = Vector2(full.get_center().x + off, full.position.y + t if toward < 0 else full.end.y - t)
+			else:
+				tip = Vector2(full.position.x + t if toward < 0 else full.end.x - t, full.get_center().y + off)
+			var post := Rect2(tip - Vector2(3, 3), Vector2(6, 6))
+			var keep := false
+			for pond in ponds:
+				if pond.grow(6.0).intersects(post):
+					keep = true
+			if keep:
+				out.append(post)
+	return out
+
+
 ## GFX-046: where a `jetty` landmark really sits. Within JETTY_REACH px of a pond landmark it runs from the pond's
 ## nearest rim toward the landmark's pos (the fishing place), long side perpendicular to the shore, overlapping the
 ## water by JETTY_OVERLAP px; otherwise (a stream ford, no pond) it stays on its own rect. Returns {rect: Rect2 on

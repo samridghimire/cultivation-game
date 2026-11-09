@@ -535,3 +535,25 @@ func test_field_look_follows_the_season() -> void:
 	assert_true(w["snow"])
 	assert_false(Scenery.field_look("Winter", 5, true)["snow"])
 	assert_true(Scenery.field_look("Summer", 1)["vertical"] and not Scenery.field_look("Summer", 0)["vertical"])
+
+
+## WU-500: at every project stage every jetty post stands in the water or within 6 px of the pond's rim.
+func test_jetty_posts_stand_in_the_water() -> void:
+	var region: Dictionary = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data.regions["qingshi_village"]
+	var ponds: Array[Rect2] = []
+	for lm: Dictionary in region["map"]["landmarks"]:
+		if lm["kind"] == "pond":
+			var sz := Vector2(lm["size"][0], lm["size"][1])
+			ponds.append(Rect2(Vector2(lm["pos"][0], lm["pos"][1]) - sz / 2.0, sz))
+	for lm: Dictionary in region["map"]["landmarks"]:
+		if lm["kind"] != "jetty":
+			continue
+		for stage in 4:
+			var posts := Scenery.jetty_posts(region, lm, stage)
+			assert_true(posts.size() >= 2, "stage %d keeps a pair of posts" % stage)
+			for post in posts:
+				var ok := false
+				for pond in ponds:
+					if pond.grow(6.0).intersects(post):
+						ok = true
+				assert_true(ok, "stage %d post %s stands on dry grass" % [stage, post])

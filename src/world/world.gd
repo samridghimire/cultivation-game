@@ -1434,17 +1434,8 @@ func _draw_jetty(lm: Dictionary) -> void:
 				draw_rect(Rect2(x, r.position.y + 3.0, 3.0, r.size.y - 6.0), gap)
 				x += 14.0
 	var post := Color("2e2218")
-	if frac < 1.0:  # unbuilt stretch: bare posts in pairs along the full length
-		var span := (full.size.y if vertical else full.size.x)
-		for k in 3:
-			var t := 4.0 + (span - 8.0) * float(k) / 2.0
-			for off: float in [-9.0, 9.0]:
-				var tip := Vector2(full.get_center().x + off, full.position.y + t if toward < 0 else full.end.y - t) if vertical else Vector2(full.position.x + t if toward < 0 else full.end.x - t, full.get_center().y + off)
-				draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
-	elif bool(lay["on_water"]):
-		for off: float in [-9.0, 9.0]:
-			var tip := Vector2(full.get_center().x + off, full.position.y + 2.0 if toward < 0 else full.end.y - 2.0) if vertical else Vector2(full.position.x + 2.0 if toward < 0 else full.end.x - 2.0, full.get_center().y + off)
-			draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
+	for post_rect: Rect2 in Scenery.jetty_posts(_region, lm, _jetty_stage()):  # WU-500: only posts in or at the water
+		draw_rect(post_rect, post)
 	if bool(look["lantern"]):  # a lantern post at the shore end
 		var shore := Vector2(full.get_center().x, full.end.y if toward < 0 else full.position.y) if vertical else Vector2(full.end.x if toward < 0 else full.position.x, full.get_center().y)
 		draw_rect(Rect2(shore + Vector2(-1, -22), Vector2(3, 22)), Color("5a4028"))

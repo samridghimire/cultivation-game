@@ -455,3 +455,31 @@ func test_place_labels_clear_of_other_footprints() -> void:
 				var ocen := Vector2(float(other["pos"][0]), float(other["pos"][1]))
 				var body := Rect2(ocen - Vector2(float(osz[0]), float(osz[1])) * 0.65, Vector2(float(osz[0]), float(osz[1])) * 1.3)  # the drawn building (1.3x its rect)
 				assert_false(lr.intersects(body), "%s: label of %s lies on %s" % [region["id"], place.get("display_name", "?"), other.get("display_name", "?")])
+
+
+## WU-500: strict check: no Qingshi place label (world font size) lies on another place's drawn body (1.3x its rect).
+func _qingshi_label_hits() -> PackedStringArray:
+	var hits := PackedStringArray()
+	var region: Dictionary = data().regions["qingshi_village"]
+	var places: Array = region.get("places", [])
+	for place: Dictionary in places:
+		var node := Interactable.new()
+		var pos: Array = place["pos"]
+		var sz: Array = place.get("size", [30, 30])
+		node.position = Vector2(float(pos[0]), float(pos[1]))
+		node.size = Vector2(float(sz[0]), float(sz[1]))
+		var lr := node.label_rect(String(place.get("display_name", place["type"])))
+		node.free()
+		for other: Dictionary in places:
+			if other == place:
+				continue
+			var osz: Array = other.get("size", [64, 64])
+			var ocen := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+			if lr.intersects(Rect2(ocen - Vector2(float(osz[0]), float(osz[1])) * 0.65, Vector2(float(osz[0]), float(osz[1])) * 1.3)):
+				hits.append("%s on %s [%s]" % [place.get("display_name", "?"), other.get("display_name", "?"), lr])
+	return hits
+
+
+func test_qingshi_labels_clear_of_footprints() -> void:
+	var hits := _qingshi_label_hits()
+	assert_eq(hits.size(), 0, "label overlaps: " + "; ".join(hits))
