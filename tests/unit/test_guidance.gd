@@ -6590,3 +6590,28 @@ func test_goal_trip_note_counts_realm_gated_roads() -> void:
 	var c := _fresh()
 	var note := Guidance.goal_trip_note(c, data(), "Talk to Elder Mo in Qingshi Village", "myriad_peaks_ridge")
 	assert_true(note.contains("days"), note)
+
+
+## GUIDE-225: probes swap-and-restore on the character itself and give what a copy would.
+func test_probes_leave_the_character_untouched_and_match_a_copy() -> void:
+	var c := _payoff_fighter()
+	assert_true(c != null)
+	Injuries.inflict(c, data(), "broken_bones")
+	c.buffs = {"test_buff": {"name": "Test", "days": 3, "mults": {}}}
+	var before := JSON.stringify(c.to_dict())
+	var copy := CharacterData.from_dict(c.to_dict())
+	var d := data()
+	var foe: Dictionary = d.enemies["azure_sword_examiner"]
+	assert_eq(Guidance.odds_unhurt(c, d, foe), Guidance.odds_unhurt(copy, d, foe))
+	var ref := CharacterData.from_dict(c.to_dict())
+	ref.injuries.clear()
+	assert_eq(Guidance.odds_unhurt(c, d, foe), Combat.win_chance(ref, d, foe), "same as the old unhurt copy")
+	var payoff := Guidance.practice_payoff(c, d, "iron_fist", "misty_forest", 10)
+	assert_eq(payoff, Guidance.practice_payoff(copy, d, "iron_fist", "misty_forest", 10))
+	assert_eq(Guidance._rated_region_fights(c, d, "misty_forest", 10, {}), Guidance._rated_region_fights(copy, d, "misty_forest", 10, {}))
+	assert_eq(Guidance.empty_fair_fights_note(c, d, "misty_forest", 10), Guidance.empty_fair_fights_note(copy, d, "misty_forest", 10))
+	assert_eq(Guidance.meal_before_fight(c, d, "misty_forest", 10), Guidance.meal_before_fight(copy, d, "misty_forest", 10))
+	assert_eq(Guidance.trial_practice_payoff(c, d), Guidance.trial_practice_payoff(copy, d))
+	assert_eq(Guidance._mortal_sect_hint(c, d, PackedStringArray()), Guidance._mortal_sect_hint(copy, d, PackedStringArray()))
+	assert_eq(JSON.stringify(c.to_dict()), before, "no probe leaves a trace")
+	assert_eq(JSON.stringify(copy.to_dict()), before)

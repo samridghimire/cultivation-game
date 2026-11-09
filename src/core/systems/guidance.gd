@@ -831,9 +831,7 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: 
 	if missing != "":
 		return lead + missing + "."
 	if region_id != "" and not c.injuries.is_empty():
-		var healed := CharacterData.from_dict(c.to_dict())
-		healed.injuries = {}
-		var could := fair_fights(healed, data, flags, today, region_id)
+		var could: Array = _with_probe(c, "injuries", {}, func() -> Variant: return fair_fights(c, data, flags, today, region_id))
 		if not could.is_empty():
 			return lead + "heal your injuries first (healed, you could win: %s)." % String(could[0]["text"])
 	var best := _best_unmastered_combat(c, data)
@@ -1087,6 +1085,15 @@ static func nearest_selling(c: CharacterData, data: GameData, region_id: String,
 		if result != "":
 			return {"region_id": r, "region_name": Exploration.region_name(data, r), "days": int(best_days[r]), "result": result}
 	return {}
+
+
+## GUIDE-225: runs `f` with `c.<field>` temporarily set to `value`, restores it and returns f's result (no character copy).
+static func _with_probe(c: CharacterData, field: String, value: Variant, f: Callable) -> Variant:
+	var saved: Variant = c.get(field)
+	c.set(field, value)
+	var result: Variant = f.call()
+	c.set(field, saved)
+	return result
 
 
 ## GUIDE-083: shortest total base route days from `from_id` to `to_id` (no hop limit, routes failing
@@ -2573,9 +2580,7 @@ static func trial_odds(c: CharacterData, data: GameData) -> float:
 static func odds_unhurt(c: CharacterData, data: GameData, enemy: Dictionary) -> float:
 	if c.injuries.is_empty():
 		return -1.0
-	var copy := CharacterData.from_dict(c.to_dict())
-	copy.injuries.clear()
-	return Combat.win_chance(copy, data, enemy)
+	return float(_with_probe(c, "injuries", {}, func() -> Variant: return Combat.win_chance(c, data, enemy)))
 
 
 ## GUIDE-121: "you face the X (Even, 80 in 100)", or "" when no trial is open.
@@ -2683,11 +2688,19 @@ static func trial_practice_payoff(c: CharacterData, data: GameData) -> Dictionar
 	if style == "":
 		return {}
 	var opponent := Sects.trial_opponent(data, Sects.trial_enemy(c, data))
-	var copy := CharacterData.from_dict(c.to_dict())
-	copy.injuries.clear()
-	var base := Combat.win_chance(copy, data, opponent)
-	copy.techniques[style] = {"level": Techniques.level(c, style) + 1, "xp": 0.0}
-	var next := Combat.win_chance(copy, data, opponent)
+	var level_now := Techniques.level(c, style)
+	var saved_injuries: Dictionary = c.injuries
+	var had_entry := c.techniques.has(style)
+	var saved_entry: Variant = c.techniques.get(style)
+	c.injuries = {}
+	var base := Combat.win_chance(c, data, opponent)
+	c.techniques[style] = {"level": level_now + 1, "xp": 0.0}
+	var next := Combat.win_chance(c, data, opponent)
+	if had_entry:
+		c.techniques[style] = saved_entry
+	else:
+		c.techniques.erase(style)
+	c.injuries = saved_injuries
 	if next - base < 0.1:
 		return {}
 	return {"style": style, "style_name": data.techniques[style].name, "level": Techniques.level(c, style) + 1, "days": Techniques.days_to_next(c, data, style), "next": next}
@@ -2722,9 +2735,9 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 	for sect: SectDef in data.sects.values():
 		if Sects.check_join(c, data, sect.id)["ok"]:
 			continue
-		var probe := CharacterData.from_dict(c.to_dict())
-		probe.realm_index = maxi(c.realm_index, data.realm_index_of(sect.min_realm))
-		if Sects.check_join(probe, data, sect.id)["ok"]:
+		var probed: Dictionary = _with_probe(c, "realm_index", maxi(c.realm_index, data.realm_index_of(sect.min_realm)),
+				func() -> Variant: return Sects.check_join(c, data, sect.id))
+		if probed["ok"]:
 			later.append(sect.name)
 	if later.is_empty():
 		return "" if open.is_empty() else "As a rogue cultivator you could join %s at a sect hall." % " or ".join(open)
@@ -3395,14 +3408,19 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 	var rated: Array[Dictionary] = []
 	if region_id == "" or today < 0 or not data.regions.has(region_id):
 		return rated
-	var unhurt := CharacterData.from_dict(c.to_dict())
-	unhurt.injuries.clear()
 	var tags: Array = data.regions[region_id].get("encounter_tags", [])
 	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
 		if rated.size() >= OUTGROWN_RATED_MAX:
 			break
 		var foe: Dictionary = data.enemies[enemy_id]
-		rated.append({"name": String(foe.get("name", enemy_id)), "chance": Combat.win_chance(unhurt, data, foe), "floor": fight_floor(c, foe)})
+		rated.append({"name": String(foe.get("name", enemy_id)), "chance": 0.0, "floor": fight_floor(c, foe)})
+		rated[rated.size() - 1]["foe"] = foe
+	_with_probe(c, "injuries", {}, func() -> Variant:
+		for r: Dictionary in rated:
+			r["chance"] = Combat.win_chance(c, data, r["foe"])
+		return null)
+	for r: Dictionary in rated:
+		r.erase("foe")
 	return rated
 
 
@@ -3457,20 +3475,28 @@ static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, r
 	if region_id == "" or today < 0 or not Techniques.knows(c, tech_id) or Techniques.is_mastered(c, data, tech_id):
 		return {}
 	# GUIDE-095: rated unhurt, so an injury the clinic fixes is not credited to practice.
-	var unhurt := CharacterData.from_dict(c.to_dict())
-	unhurt.injuries.clear()
-	var upgraded := CharacterData.from_dict(unhurt.to_dict())
-	upgraded.techniques[tech_id] = {"level": Techniques.level(c, tech_id) + 1, "xp": 0.0}
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var best: Dictionary = {}
 	var rated := 0
-	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
+	var level_now := Techniques.level(c, tech_id)
+	var saved_injuries: Dictionary = c.injuries
+	var had_entry := c.techniques.has(tech_id)
+	var saved_entry: Variant = c.techniques.get(tech_id)
+	var fights: Array = Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today)
+	for enemy_id in fights:
 		if rated >= FAIR_FIGHT_EXPLORE_MAX:
 			break
 		rated += 1
 		var foe: Dictionary = data.enemies[enemy_id]
-		var now := Combat.win_chance(unhurt, data, foe)
-		var next := Combat.win_chance(upgraded, data, foe)
+		c.injuries = {}
+		var now := Combat.win_chance(c, data, foe)
+		c.techniques[tech_id] = {"level": level_now + 1, "xp": 0.0}
+		var next := Combat.win_chance(c, data, foe)
+		if had_entry:
+			c.techniques[tech_id] = saved_entry
+		else:
+			c.techniques.erase(tech_id)
+		c.injuries = saved_injuries
 		if now < FAIR_FIGHT_MIN_CHANCE and next >= 0.5 and next - now >= 0.1 and next > float(best.get("next", 0.0)):
 			best = {"enemy": String(foe.get("name", enemy_id)), "now": now, "next": next, "level": Techniques.level(c, tech_id) + 1}
 	return best
@@ -4647,9 +4673,10 @@ static func meal_before_fight(c: CharacterData, data: GameData, region_id: Strin
 		var held := c.item_count(item_id) > 0
 		if not held and not (can_cook_here and Cooking.check(c, data, String(m["id"])) == ""):
 			continue
-		var copy := CharacterData.from_dict(c.to_dict())
-		Buffs.add_from_effect(copy, buff)
-		var after := Combat.win_chance(copy, data, foe)
+		var saved_buffs: Dictionary = c.buffs.duplicate(true)
+		Buffs.add_from_effect(c, buff)
+		var after := Combat.win_chance(c, data, foe)
+		c.buffs = saved_buffs
 		if after - base < MEAL_MIN_GAIN - 0.0001:
 			continue
 		var entry := {"item": item_id, "meal": m, "after": after, "price": int(item.get("price", 0))}
