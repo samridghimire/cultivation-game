@@ -8,7 +8,11 @@
     "{name} walks the lantern-lit lanes beside you, pointing out every stall worth a look.",
     "{name} saves you a spot on the best bench and shares a bag of roasted chestnuts.",
     "{name} laughs the whole way through the crowd and says it has been years since a festival felt this easy.",
-    "{name} keeps pace at your elbow, whispering the gossip of every face you pass."
+    "{name} keeps pace at your elbow, whispering the gossip of every face you pass.",
+    "{name} haggles over a bag of candied haws, then splits it with you and pretends it was a bargain.",
+    "{name} holds your sleeve through the thickest of the crowd so neither of you is swept away.",
+    "{name} points out the fireworks and not once looks at the sky, only at you.",
+    "{name} hums the old festival tune beside you, off-key and perfectly happy."
   ],
   "folk_tiers": [
     {"min": 20, "name": "Acquaintance"},
