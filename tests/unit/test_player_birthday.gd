@@ -241,3 +241,39 @@ func test_own_birthday_line_validation() -> void:
 	d.npcs["hunter_ma"]["player_birthday_line"] = saved
 	d.load_errors.clear()
 	assert_true(found, "161 chars rejected")
+
+
+## FOLK-030: a villager's birthday gift rides their own line, once a year.
+func test_villager_gift_helper_and_validation() -> void:
+	var d := data()
+	assert_eq(Folk.player_birthday_gift_of("hunter_ma", d), {"item": "venison", "count": 2})
+	assert_true(Folk.player_birthday_gift_of("elder_mo", d).is_empty())
+	assert_true(Folk.validate_player_birthday_gifts(d).is_empty())
+	var saved: Variant = d.npcs["hunter_ma"]["player_birthday_gift"]
+	for bad: Dictionary in [{"item": "nope", "count": 1}, {"item": "venison", "count": 0}, {"item": "venison", "count": 4}]:
+		d.npcs["hunter_ma"]["player_birthday_gift"] = bad
+		assert_false(Folk.validate_player_birthday_gifts(d).is_empty(), str(bad))
+	d.npcs["hunter_ma"]["player_birthday_gift"] = saved
+
+
+func test_villager_gift_in_game() -> void:
+	var gs := _gs()
+	gs.start_session(CharacterFactory.create("Li Wei", gs.data, seeded_rng(3)))
+	var npc: CharacterData = gs.npcs["hunter_ma"]
+	var day := _plain_day(npc)
+	gs.player.birthday = day % Calendar.DAYS_PER_YEAR
+	Engine.get_main_loop().root.get_node("GameClock").total_days = day
+	gs.npc_favor["hunter_ma"] = 25
+	var before: int = gs.player.item_count("venison")
+	assert_true(gs._player_birthday_words("hunter_ma"))
+	assert_eq(gs.player.item_count("venison"), before + 2)
+	gs._player_birthday_words("hunter_ma")
+	assert_eq(gs.player.item_count("venison"), before + 2, "not twice the same year")
+	Engine.get_main_loop().root.get_node("GameClock").total_days = day + Calendar.DAYS_PER_YEAR
+	gs._player_birthday_words("hunter_ma")
+	assert_eq(gs.player.item_count("venison"), before + 4, "again next year")
+	gs.npc_favor["elder_mo"] = -50
+	var mo: int = gs.player.item_count("venison")
+	gs._player_birthday_words("elder_mo")
+	assert_eq(gs.player.item_count("venison"), mo, "stranger gives nothing")
+	gs.end_session()

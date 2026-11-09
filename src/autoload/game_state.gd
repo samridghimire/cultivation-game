@@ -1690,6 +1690,11 @@ func _player_birthday_words(npc_id: String) -> bool:
 		npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.PLAYER_BIRTHDAY_FAVOR, -100, 100)
 		EventBus.post("%s: \"%s\"" % [npc.name, line], "info")
 		told = true
+		var gift := Folk.player_birthday_gift_of(npc_id, data)  # FOLK-030
+		if not gift.is_empty() and Folk.player_birthday_own_line(npc_id, data):
+			player.add_item(String(gift["item"]), int(gift["count"]))
+			EventBus.post("%s gives you %d %s." % [npc.name, int(gift["count"]), String(data.items[gift["item"]]["name"])], "info")
+			EventBus.player_changed.emit()
 	if player.spouses.has(npc_id) or player.children.has(npc_id):
 		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
 		if dish != "":

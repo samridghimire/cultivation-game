@@ -241,6 +241,33 @@ static func validate_festival_memory(data: GameData) -> PackedStringArray:
 	return errors
 
 
+## FOLK-030: load errors for npcs.json player_birthday_gift {item, count 1..3}.
+static func validate_player_birthday_gifts(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for id: String in data.npcs:
+		if not data.npcs[id].has("player_birthday_gift"):
+			continue
+		var g: Variant = data.npcs[id]["player_birthday_gift"]
+		if not (g is Dictionary) or not data.items.has(String(g.get("item", ""))):
+			errors.append("NPC '%s' player_birthday_gift.item must be an items.json id" % id)
+		elif not (g.get("count") is int or g.get("count") is float) or int(g["count"]) < 1 or int(g["count"]) > 3:
+			errors.append("NPC '%s' player_birthday_gift.count must be 1..3" % id)
+	return errors
+
+
+## FOLK-030: true when the villager has their own player_birthday_line (the gift rides that line, not the shared pool).
+static func player_birthday_own_line(npc_id: String, data: GameData) -> bool:
+	return String(data.npcs.get(npc_id, {}).get("player_birthday_line", "")) != ""
+
+
+## FOLK-030: the gift a named villager gives on the player's birthday with their own line: {item, count} or {}.
+static func player_birthday_gift_of(npc_id: String, data: GameData) -> Dictionary:
+	var g: Variant = data.npcs.get(npc_id, {}).get("player_birthday_gift", {})
+	if not (g is Dictionary) or not data.items.has(String(g.get("item", ""))):
+		return {}
+	return {"item": String(g["item"]), "count": clampi(int(g.get("count", 1)), 1, 3)}
+
+
 ## COOK-003: favor a friend's remark about their dish gives (once per dish).
 const DISH_NOTICED_FAVOR := 3
 ## COOK-003: days after the first cook in which the teacher's next chat mentions it.
@@ -847,6 +874,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
 	errors.append_array(validate_festival_lines(data))
 	errors.append_array(validate_festival_memory(data))
+	errors.append_array(validate_player_birthday_gifts(data))
 	errors.append_array(validate_taught_dish_line(data))
 	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
