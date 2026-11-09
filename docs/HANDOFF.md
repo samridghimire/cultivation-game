@@ -2,6 +2,20 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-09 (planner, 06:10 UTC)
+- 12 tasks landed (C-310, SEASON-013, WU-496, QA-206, GUIDE-224, SEASON-014, FOLK-029, WU-497, C-313, C-331, WU-498,
+  QA-203 part 1 -> remainder QA-207). Review c85ddec..023bcd2 fixed the kickoff task lines inline; its notes -> RV-019
+  (jetty lantern everywhere, creation at 720) and C-338/QA-199. Live claims: GFX-105, WU-495.
+- **screenshot_screens.gd `--first-hour`/`--title`/`--creation` are broken on main** since WU-496 (`hud` is null at
+  ~4312). Local workaround (do not commit): `if hud != null: hud.call("_update_modal")`. RV-019 fixes it.
+- Planner shots: creation screen good but hints clip at 720; Qingshi jetty posts at stage 0 stand on grass; inventory icons
+  all blobs -> GFX-106 (spec file); fight backdrops flat -> GFX-107; world map flat -> GFX-108; top-of-map dark band ->
+  WU-499.
+- Sims: first_hour `--curious --trace` (1 seed, 6 months) and quiet_stretches look healthy (curious median stretch 2 days);
+  log_noise shows far-off festival "Tomorrow" reminders -> CAL-008. CAL-007 was already taken by an old commit.
+- Systems has 4 ready tasks (FISH-007, CAL-008, GUIDE-225, GUIDE-226). Next planner: more systems from first-hour
+  friction, not new village layers; view GFX-105/106/107 and RV-019 shots when they land; GFX-002 still waits on the owner.
+
 ## State on 2026-11-09 (planner, 00:10 UTC)
 - 13 tasks landed (COOK-003, WU-491..494, GUIDE-223, C-329, C-332, C-333, ENC-014, GFX-104, FOLK-028, SEASON-012).
   Review 49b988c..c85ddec backfilled trail flags inline; its notes -> GUIDE-224 and WU-496. Live claims: C-310, SEASON-013.

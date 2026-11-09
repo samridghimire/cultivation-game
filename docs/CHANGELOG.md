@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-09 [WU-498] Qingshi's pond corner is tidy: the Wandering Merchant moved to open ground, no more overlapping labels.
+- 2026-11-09 [QA-203] Screenshot tooling: the HUD panel crop works at 1280x720 and multi-region runs start each region clean.
+- 2026-11-09 [C-331] Every villager who teaches you a dish remembers it in their own words.
+- 2026-11-09 [C-313] Foundation disciples get missions of their own at every sect hall.
+- 2026-11-09 [WU-497] A new character creation screen: a pixel portrait, colourful root bars and readable attributes.
+- 2026-11-09 [FOLK-029] Villagers can wish you a happy birthday in their own words.
+- 2026-11-09 [SEASON-014] The season recap's wording lives in data, so it can speak in the village's voice.
+- 2026-11-09 [GUIDE-224] Cheaper HUD hints, and the season recap mentions the village project.
+- 2026-11-09 [WU-496] Screenshots now open screens exactly the way the game does.
+- 2026-11-09 [SEASON-013] Each new season opens with its village tasks, festivals and what is in season nearby.
+- 2026-11-09 [QA-206] A fishing balance report: what a day at each pond is worth, by rank and season.
+- 2026-11-09 [C-310] Festival contests and your rival have more to say when you win or lose.
 - 2026-11-09 [C-332] The finished pond jetty brings a new rare fish, and the village talks about each stage of the work.
 - 2026-11-09 [WU-494] The world shows what you did: trophies on your wall, a jetty that grows plank by plank, a cake on your birthday.
 - 2026-11-08 [SEASON-012] Each season ends with a short look back at what you did.
