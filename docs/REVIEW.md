@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 023bcd2
+Last reviewed commit: 6b0ab87
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1734,3 +1734,17 @@ Last reviewed commit: 023bcd2
     landmark now draws the lantern post; C-313 changes mission contribution but balance.sh --check was not run (in its
     Follow-ups, QA-199); QA-206 measured fishing at 3.9x-10x a gathering day outside Qingshi (its Follow-ups suggest
     price cuts, a planner call); WU-497's layout was not screenshotted at 1280x720.
+- 2026-11-09 (reviewer, 2nd run): reviewed 023bcd2..6b0ab87 (QA-203 part 1, WU-498, RV-019, WU-495, FISH-007, CAL-008,
+  GUIDE-225, C-338, GFX-105, GFX-106, GFX-107; [PLAN]/[REVIEW] skipped). Main green (3681 -> 3682 tests). No
+  BACKLOG/CHANGELOG edits by workers (QA-203 added a HANDOFF note); no binary assets (title scene, icons, fight props are
+  code-drawn); no SAVE_VERSION change.
+  - Fixed (WU-495): the season card was not held behind the realm card or the tribulation, so a season that turned
+    during a long breakthrough opened the card on top of the realm card (both modal). Both now block it and re-run the
+    flush on close. Test added.
+  - GUIDE-225 OK: the swap-and-restore probes are safe because Combat.win_chance's cache key (fight_fingerprint) covers
+    injuries, buffs and technique levels, and Combat.resolve does not mutate the character. FISH-007 (bonus draws only
+    on a caught trip, before the trophy check), CAL-008 (route-days gate on far festival/event/realm reminders), C-338
+    and FISH-007 refreshed balance_baseline, GFX-106 (`icon` validated against ITEM_ICON_KINDS), RV-019, GFX-105
+    (menu focus unchanged), GFX-107, WU-498, QA-203 OK.
+  - Notes, not filed: CAL-008 needs arrival by `today + 1 + days`, a day stricter than leaving today; FISH-007's
+    integration test silently skips on stormy/rainy seeds; GFX-107's fight-region screenshot flag was not added.

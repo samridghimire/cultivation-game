@@ -254,12 +254,14 @@ func _ready() -> void:
 	_tribulation.closed.connect(_update_modal)
 	_tribulation.closed.connect(_open_pending_respawn)
 	_tribulation.closed.connect(_open_pending_realm_card)
+	_tribulation.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # review: the season card waits for the waves
 	add_child(UIStyle.centered(_tribulation))
 	_breakthrough = BreakthroughScreen.new()
 	_breakthrough.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_breakthrough))
 	_realm_card = RealmCard.new()
 	_realm_card.closed.connect(_update_modal)
+	_realm_card.closed.connect(_flush_year_review)  # review: a season that turned during a breakthrough waits for the realm card
 	add_child(UIStyle.centered(_realm_card))
 	_contest_card = ContestCard.new()
 	_contest_card.closed.connect(_update_modal)
@@ -1779,7 +1781,8 @@ func _season_card_blocked() -> bool:
 		_dialogue.closed.connect(_flush_year_review, CONNECT_ONE_SHOT)
 	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
 		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
-	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _encounter.visible or _combat_report.visible
+	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _encounter.visible or _combat_report.visible \
+			or _realm_card.visible or _tribulation.visible
 
 
 ## The year review stays a banner (WU-031); the season recap now rides on the season card.

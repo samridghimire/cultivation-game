@@ -66,3 +66,31 @@ func test_hud_queues_card_behind_friend_card() -> void:
 	root.remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## Review: a season that turns during a breakthrough waits for the realm card instead of stacking on it.
+func test_hud_queues_card_behind_realm_card() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var realm: RealmCard = hud.get("_realm_card")
+	var card: SeasonCard = hud.get("_season_card")
+	var dialogue: Control = hud.get("_dialogue")
+	if dialogue.visible:  # the opening talk; not what this test is about
+		dialogue.close()
+		await _frames()
+	realm.open("Qi Refining", "A new realm.", "", [])
+	EventBus.season_began.emit("Summer", 1, PackedStringArray(["Summer begins."]))
+	await _frames()
+	assert_true(realm.visible)
+	assert_false(card.visible, "the season card waits for the realm card")
+	realm.close()
+	await _frames()
+	assert_true(card.visible, "shown once the realm card closes")
+	card.close()
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
