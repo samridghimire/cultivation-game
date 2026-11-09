@@ -1071,12 +1071,15 @@ static func player_birthday_text(c: CharacterData) -> String:
 static func player_birthday_line(npc: CharacterData, c: CharacterData, data: GameData, day: int, favor: int, flags: Dictionary, consume: bool) -> String:
 	if npc == null or not player_birthday_today(c, data, day) or birthday_today(npc, data, day) or tier_index(data, favor) < 0:
 		return ""
+	var own := String(data.npcs.get(npc.id, {}).get("player_birthday_line", ""))  # FOLK-029
 	var pool: Array = data.family.get("folk_greetings", {}).get("player_birthday", [])
 	var year := Calendar.year_of(day)
-	if pool.is_empty() or int(flags.get(PLAYER_BIRTHDAY_PREFIX + npc.id, -1)) == year:
+	if (own == "" and pool.is_empty()) or int(flags.get(PLAYER_BIRTHDAY_PREFIX + npc.id, -1)) == year:
 		return ""
 	if consume:
 		flags[PLAYER_BIRTHDAY_PREFIX + npc.id] = year
+	if own != "":
+		return own.replace("{player}", c.name)
 	return String(pool[absi(hash(npc.id + str(day))) % pool.size()]).replace("{player}", c.name)
 
 

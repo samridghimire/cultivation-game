@@ -783,6 +783,8 @@ func _validate_world() -> void:
 				load_errors.append("NPC '%s' birthday must be {month 1..12, day 1..30}" % npc["id"])
 		if npc.has("birthday_line") and (not npc["birthday_line"] is String or String(npc["birthday_line"]) == "" or String(npc["birthday_line"]).length() > 160):
 			load_errors.append("NPC '%s' birthday_line must be a string of 1..160 characters" % npc["id"])
+		if npc.has("player_birthday_line") and (not npc["player_birthday_line"] is String or String(npc["player_birthday_line"]) == "" or String(npc["player_birthday_line"]).length() > 160):
+			load_errors.append("NPC '%s' player_birthday_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("hunter") and not npc["hunter"] is bool:
 			load_errors.append("NPC '%s' hunter must be a bool" % npc["id"])
 		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):

@@ -206,3 +206,38 @@ func test_friend_gift_needs_two_close_friends_and_no_family() -> void:
 	c.spouses.append("someone")
 	assert_true(Folk.birthday_friend_gift(c, gs.npcs, gs.npc_favor, gs.data, day, {}, false).is_empty(), "family takes the dish path")
 	gs.end_session()
+
+
+## FOLK-029: a villager's own player_birthday_line wins; others use the shared pool; validation caps it.
+func test_own_birthday_line_and_fallback() -> void:
+	var npc := _npc("hunter_ma")
+	npc.name = "Hunter Ma"
+	var day := _plain_day(npc)
+	var p := _player(day % Calendar.DAYS_PER_YEAR)
+	p.name = "Lin"
+	var own := String(data().npcs["hunter_ma"]["player_birthday_line"])
+	assert_eq(Folk.player_birthday_line(npc, p, data(), day, 25, {}, true), own.replace("{player}", "Lin"))
+	var plain := _npc("villager_a")
+	var pool: Array = data().family["folk_greetings"]["player_birthday"]
+	var got := Folk.player_birthday_line(plain, p, data(), _plain_day(plain), 25, {}, true)
+	assert_true(got == "" or pool.any(func(t: String) -> bool: return t.replace("{player}", "Lin") == got))
+	var p2 := _player(_plain_day(plain) % Calendar.DAYS_PER_YEAR)
+	p2.name = "Lin"
+	var got2 := Folk.player_birthday_line(plain, p2, data(), _plain_day(plain), 25, {}, true)
+	assert_true(pool.any(func(t: String) -> bool: return t.replace("{player}", "Lin") == got2), "fallback to the shared pool")
+
+
+func test_own_birthday_line_validation() -> void:
+	var d := data()
+	for id in ["elder_mo", "xiao_ling", "hunter_ma"]:
+		assert_true(String(d.npcs[id].get("player_birthday_line", "")) != "", id)
+	var saved: Variant = d.npcs["hunter_ma"].get("player_birthday_line")
+	d.npcs["hunter_ma"]["player_birthday_line"] = "x".repeat(161)
+	d.load_errors.clear()
+	d._validate()
+	var found := false
+	for e in d.load_errors:
+		found = found or "player_birthday_line" in e
+	d.npcs["hunter_ma"]["player_birthday_line"] = saved
+	d.load_errors.clear()
+	assert_true(found, "161 chars rejected")
