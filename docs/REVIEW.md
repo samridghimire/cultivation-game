@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 6b0ab87
+Last reviewed commit: 99c86db
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1748,3 +1748,17 @@ Last reviewed commit: 6b0ab87
     (menu focus unchanged), GFX-107, WU-498, QA-203 OK.
   - Notes, not filed: CAL-008 needs arrival by `today + 1 + days`, a day stricter than leaving today; FISH-007's
     integration test silently skips on stormy/rainy seeds; GFX-107's fight-region screenshot flag was not added.
+- 2026-11-09 (reviewer, 3rd run): reviewed 6b0ab87..99c86db (GFX-108, GUIDE-226, C-336, WU-499, C-337; [PLAN]/[REVIEW]
+  skipped). Main green (3689 tests -> 3690). No BACKLOG/CHANGELOG edits by workers; no binary assets (the parchment map
+  is code-drawn); no SAVE_VERSION change.
+  - Fixed (GUIDE-226): Earnings' fishing estimate counted flag-gated catches (the jetty's Pearl-Backed Bream, 12 stones,
+    `requires_flag: jetty_stage_3`) that GameState.fish drops with Fishing.filter_flags, and left out the jetty
+    project's SeasonTasks.fish_bonus that GameState.fish applies. That was the "unknown" 30% overestimate in its
+    Follow-ups: Qingshi Novice spring is now 1.86 vs the baseline's 1.87, so the test bound is back to the spec's 15%.
+    Test added (the bream counts only with its flag).
+  - GFX-108 (terrain_kind tested, focus colours only), WU-499 (camera top clamped, label pairs tested), C-336 (lines
+    <= 160 chars, `{player}` only), C-337 (3 templates per key, all <= 100 chars) OK.
+  - Notes, not filed: GUIDE-226's craft test never asserts a craft row appears, and no test checks a chore row (spec
+    asked for one); its gathering figure is 3x simulate_fishing's (the sim counts one roll, in its Follow-ups); some
+    C-336 birthday lines promise a gift ("this warm pill", "half price today") that no mechanic gives. WU-499 and
+    GFX-108 say their screenshots were not re-rendered.

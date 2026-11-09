@@ -33,7 +33,7 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 			if v > float(best_gather.get("per_day", 0.0)):
 				best_gather = {"kind": "gather", "place": name, "per_day": v, "note": "gathering"}
 		elif kind == "fishing":
-			var base := Fishing.filter_trophy(Fishing.skill_table(Exploration.gather_table_for(c, data, place.get("catch_table", []), season), 0.5, c.fishing_xp), 0.5, c.fishing_xp)
+			var base := Fishing.filter_trophy(Fishing.skill_table(Exploration.gather_table_for(c, data, Fishing.filter_flags(place.get("catch_table", []), flags), season), 0.5, c.fishing_xp), 0.5, c.fishing_xp)
 			var v := _fishing_trip_value(c, data, base, region_id, today, season) * (1.0 + Fishing.bonus_chance(c.fishing_xp)) / float(maxi(1, int(place.get("gather_days", 1))))
 			if v > float(best_fish.get("per_day", 0.0)):
 				best_fish = {"kind": "fishing", "place": name, "per_day": v, "note": "fishing"}
@@ -80,7 +80,7 @@ static func _fishing_trip_value(c: CharacterData, data: GameData, base: Array, r
 		total += w
 		if Fishing.too_wild(kind):
 			continue
-		var table := Weather.scale_catch(Fishing.filter_weather(base, kind), Weather.fishing_multiplier(data, kind))
+		var table := Weather.scale_catch(Fishing.filter_weather(base, kind), Weather.fishing_multiplier(data, kind) * (1.0 + SeasonTasks.fish_bonus(c, data, region_id)))
 		value += w * float(1 + Fishing.extra_draws(data, kind)) * _table_value(c, data, table, season, c.attribute("fortune"))
 	return value / maxf(total, 0.001)
 

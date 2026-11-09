@@ -29,13 +29,13 @@ func test_rows_sorted_and_deterministic() -> void:
 		assert_true(float(a[i - 1]["per_day"]) >= float(a[i]["per_day"]))
 
 
-## Day 0 is spring: compared with the baseline's Qingshi Novice spring figure (1.87); the estimate runs about 30% above the sim (cause unknown), so the bound is 40%.
+## Day 0 is spring: compared with the baseline's Qingshi Novice spring figure (1.87). (The first version ran 30% high: it counted the flag-gated Pearl-Backed Bream.)
 func test_novice_figures_near_balance_baseline() -> void:
 	var c := new_character()
 	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
 	for r in rows:
 		if r["kind"] == "fishing":
-			assert_true(absf(float(r["per_day"]) - 1.87) <= 1.87 * 0.4, "fishing %f" % float(r["per_day"]))
+			assert_true(absf(float(r["per_day"]) - 1.87) <= 1.87 * 0.15, "fishing %f" % float(r["per_day"]))
 		if r["kind"] == "gather":
 			assert_true(absf(float(r["per_day"]) - 0.75 * Exploration.GATHER_ROLLS) <= 0.75 * Exploration.GATHER_ROLLS * 0.15, "gather %f (baseline counts one roll a trip; the game rolls GATHER_ROLLS)" % float(r["per_day"]))
 
@@ -58,3 +58,18 @@ func test_journal_lists_earning_section() -> void:
 			found = true
 			assert_true(String(e["text"]).contains("a day"))
 	assert_true(found)
+
+
+## Reviewer: a catch gated on a world flag (the jetty's Pearl-Backed Bream) only counts once the flag is set, like GameState.fish.
+func test_flag_gated_catch_needs_its_flag() -> void:
+	var c := new_character()
+	var without := 0.0
+	var with_flag := 0.0
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		if r["kind"] == "fishing":
+			without = float(r["per_day"])
+	for r in Earnings.earning_options(c, data(), {"jetty_stage_3": true}, "qingshi_village", 0):
+		if r["kind"] == "fishing":
+			with_flag = float(r["per_day"])
+	assert_true(without > 0.0)
+	assert_true(with_flag > without, "bream counted only with jetty_stage_3 (%f vs %f)" % [with_flag, without])
