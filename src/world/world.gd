@@ -48,6 +48,7 @@ var _decor: Array[Dictionary] = []
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
 var _season := ""
+var _relief: Array[Dictionary] = []  # GFX-109
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
 var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
@@ -451,6 +452,13 @@ func _build_decor() -> void:
 	rng.seed = hash(GameState.current_region)
 	_decor = Scenery.place(_region, rng)
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
+	_relief = Scenery.relief_layout(_region)
+	if not _relief.is_empty():  # GFX-109: nothing grows on a rock ledge or boulder
+		_decor = _decor.filter(func(d: Dictionary) -> bool:
+			for it: Dictionary in _relief:
+				if (it["rect"] as Rect2).grow(6.0).has_point(d["pos"]):
+					return false
+			return true)
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
 
@@ -1043,6 +1051,7 @@ func _draw() -> void:
 			var psc := float(Sprites.scale())
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
+	_draw_relief(map)
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
@@ -1060,6 +1069,58 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-109: rock ledges (lit top, dark face, cracks), boulder clusters and snow drifts, in crisp scaled pixels.
+func _draw_relief(map: Dictionary) -> void:
+	if _relief.is_empty():
+		return
+	var px := float(Sprites.scale())
+	var ground := Color(map.get("ground", "4d6b3c"))
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	var gseason := GroundTiles.ground_season(_season, map)
+	var winter := gseason == "Winter"
+	var summer := gseason == "Summer"
+	var snow_col := Color("e8eef4")
+	var shade_col := Color("9fb0c2")
+	for it: Dictionary in _relief:
+		var r: Rect2 = it["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(it["seed"])
+		match it["kind"]:
+			"ledge":
+				var top := ground.lightened(0.25)
+				var face := ground.darkened(0.35)
+				var x := r.position.x
+				while x < r.end.x:
+					var step := minf(px * rng.randi_range(6, 10), r.end.x - x)
+					var lift := px * rng.randi_range(0, 2)
+					var seg := Rect2(x, r.position.y + lift, step, r.size.y - lift)
+					draw_rect(seg, face)
+					draw_rect(Rect2(seg.position, Vector2(step, px * 3.0)), top)
+					x += step
+				for c in rng.randi_range(2, 3):
+					var cx := r.position.x + rng.randf_range(0.1, 0.9) * r.size.x
+					draw_line(Vector2(cx, r.position.y + px * 4.0), Vector2(cx + px * 2.0, r.end.y - px * 2.0), face.darkened(0.3), px)
+				draw_rect(r, face.darkened(0.5), false, px)
+				if winter:
+					draw_rect(Rect2(r.position.x, r.position.y - px, r.size.x, px * 2.0), snow_col)
+					draw_rect(Rect2(r.position.x, r.end.y, r.size.x * 0.7, px * 3.0), snow_col)
+			"boulders":
+				for n in rng.randi_range(3, 5):
+					var rad := rng.randf_range(8.0, 16.0)
+					var c := r.position + Vector2(rng.randf_range(rad, maxf(r.size.x - rad, rad)), rng.randf_range(rad, maxf(r.size.y - rad, rad)))
+					draw_circle(c + Vector2(px, px * 2.0), rad, rock.darkened(0.5))
+					draw_circle(c, rad, rock)
+					draw_circle(c + Vector2(rad * 0.3, rad * 0.35), rad * 0.6, rock.darkened(0.25))
+					draw_circle(c + Vector2(-rad * 0.3, -rad * 0.3), rad * 0.4, rock.lightened(0.3))
+			"drift":
+				var dr := r
+				if summer:
+					dr = Rect2(r.position + Vector2(r.size.x * 0.25, 0.0), Vector2(r.size.x * 0.5, r.size.y * 0.5))
+				draw_rect(Rect2(dr.position + Vector2(px, 0), dr.size - Vector2(px * 2.0, 0)), snow_col)
+				draw_rect(Rect2(dr.position.x, dr.position.y + px, dr.size.x, dr.size.y - px * 2.0), snow_col)
+				draw_rect(Rect2(dr.position.x + px, dr.end.y - px, dr.size.x - px * 2.0, px), shade_col)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).

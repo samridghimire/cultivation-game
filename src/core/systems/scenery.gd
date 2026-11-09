@@ -366,6 +366,100 @@ static func paved_zones(map: Dictionary, scale: float = 1.0) -> Array:
 	return zones
 
 
+## GFX-109: map.relief keys and limits.
+const RELIEF_KEYS: PackedStringArray = ["ledges", "snow", "boulders"]
+const RELIEF_MAX := 12
+const RELIEF_BORDER := 24.0
+const RELIEF_PATH_GAP := 12.0
+const RELIEF_PLACE_GAP := 16.0
+const RELIEF_POINT_RADIUS := 60.0
+const RELIEF_SPOT_RADIUS := 24.0
+const RELIEF_TRIES := 30
+
+
+## GFX-109: rock ledges, boulder clusters and snow drifts of a `map.relief` region, [{kind: "ledge"|"boulders"|"drift", rect: Rect2, seed: int}].
+## Seeded from the region id only; clear of paths, places, landmarks, the spawn and travel points, npc spots and the map border; never overlapping. Empty without map.relief.
+static func relief_layout(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	var relief: Variant = map.get("relief", null)
+	if not relief is Dictionary:
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var bounds := Rect2(Vector2.ZERO, Vector2(float(size_arr[0]), float(size_arr[1]))).grow(-RELIEF_BORDER)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|relief")
+	var forbid: Array[Rect2] = []
+	for r in map.get("paths", []):
+		forbid.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(RELIEF_PATH_GAP))
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		var pos: Array = p.get("pos", [0, 0])
+		var sz: Array = p.get("size", [64, 64])
+		var psize := Vector2(float(sz[0]), float(sz[1]))
+		forbid.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(RELIEF_PLACE_GAP))
+	forbid.append_array(landmark_rects(region))
+	var points: Array[Vector3] = []  # x, y, radius
+	if region.has("spawn"):
+		points.append(Vector3(float(region["spawn"][0]), float(region["spawn"][1]), RELIEF_POINT_RADIUS))
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) == "travel":
+			points.append(Vector3(float(p["pos"][0]), float(p["pos"][1]), RELIEF_POINT_RADIUS))
+	for s in region.get("npc_spots", []):
+		points.append(Vector3(float(s[0]), float(s[1]), RELIEF_SPOT_RADIUS))
+	var taken: Array[Rect2] = []
+	var snow := clampf(float(relief.get("snow", 0.0)), 0.0, 1.0)
+	var items: Array[Dictionary] = []
+	for i in clampi(int(relief.get("ledges", 0)), 0, RELIEF_MAX):
+		var r := Rect2(0, 0, rng.randf_range(60.0, 180.0), rng.randf_range(18.0, 36.0))
+		var it := _relief_try(r, "ledge", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			items.append(it)
+	for i in clampi(int(relief.get("boulders", 0)), 0, RELIEF_MAX):
+		var r := Rect2(0, 0, rng.randf_range(40.0, 70.0), rng.randf_range(40.0, 70.0))
+		var it := _relief_try(r, "boulders", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			items.append(it)
+	out.append_array(items)
+	for it in items:
+		if rng.randf() >= snow:
+			continue
+		var base: Rect2 = it["rect"]
+		var w := rng.randf_range(30.0, 90.0)
+		var r := Rect2(base.position.x + rng.randf_range(0.0, maxf(base.size.x - w, 0.0)), base.end.y, w, rng.randf_range(10.0, 16.0))
+		if not _relief_fits(r, bounds, forbid, points, taken):
+			continue
+		taken.append(r.grow(4.0))
+		out.append({"kind": "drift", "rect": r, "seed": rng.randi()})
+	return out
+
+
+static func _relief_try(r: Rect2, kind: String, rng: RandomNumberGenerator, bounds: Rect2, forbid: Array[Rect2], points: Array[Vector3], taken: Array[Rect2]) -> Dictionary:
+	for attempt in RELIEF_TRIES:
+		var cand := Rect2(Vector2(rng.randf_range(bounds.position.x, bounds.end.x - r.size.x), rng.randf_range(bounds.position.y, bounds.end.y - r.size.y)).round(), r.size.round())
+		if _relief_fits(cand, bounds, forbid, points, taken):
+			# leave room below for a drift
+			taken.append(cand.grow(4.0))
+			taken.append(Rect2(cand.position.x, cand.end.y, cand.size.x, 20.0))
+			return {"kind": kind, "rect": cand, "seed": rng.randi()}
+	return {}
+
+
+static func _relief_fits(r: Rect2, bounds: Rect2, forbid: Array[Rect2], points: Array[Vector3], taken: Array[Rect2]) -> bool:
+	if not bounds.encloses(r):
+		return false
+	for f in forbid:
+		if f.intersects(r):
+			return false
+	for p in points:
+		var near := Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y))
+		if near.distance_to(Vector2(p.x, p.y)) < p.z:
+			return false
+	for t in taken:
+		if t.intersects(r):
+			return false
+	return true
+
+
 ## Load errors for map.decor in data/regions.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -376,6 +470,19 @@ static func validate(data: GameData) -> PackedStringArray:
 		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
 		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
 			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
+		var relief: Variant = region.get("map", {}).get("relief", null)
+		if relief != null:
+			if not relief is Dictionary:
+				errors.append("Region '%s' map.relief must be an object" % region["id"])
+			else:
+				for key in relief:
+					if not RELIEF_KEYS.has(String(key)):
+						errors.append("Region '%s' map.relief has unknown key '%s'" % [region["id"], key])
+					elif key == "snow":
+						if not ((relief[key] is float or relief[key] is int) and float(relief[key]) >= 0.0 and float(relief[key]) <= 1.0):
+							errors.append("Region '%s' map.relief.snow must be 0-1" % region["id"])
+					elif not (relief[key] is float or relief[key] is int) or int(relief[key]) < 0 or int(relief[key]) > RELIEF_MAX:
+						errors.append("Region '%s' map.relief.%s must be 0-%d" % [region["id"], key, RELIEF_MAX])
 		var decor: Variant = region.get("map", {}).get("decor", {})
 		if not decor is Dictionary:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])
