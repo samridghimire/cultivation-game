@@ -441,6 +441,12 @@ static func short_hint(line: String, data: GameData = null) -> String:
 	if fight != "":
 		return fight
 	var re := RegEx.new()
+	# GUIDE-229: "Short on stones: fish at Village Pond Jetty, about 2 a day." -> "Fish at Village Pond Jetty: ~2 a day"
+	re.compile("^Short on stones: (\\w+) at (.+?), about (\\d+) a day")
+	var purse := re.search(line)
+	if purse != null:
+		var tight := "%s at %s: ~%s a day" % [purse.get_string(1).capitalize(), purse.get_string(2), purse.get_string(3)]
+		return tight if tight.length() <= SHORT_HINT_CHARS else "%s: ~%s stones a day" % [purse.get_string(1).capitalize(), purse.get_string(3)]
 	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
 	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
 	var m := re.search(line)
@@ -669,6 +675,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var odd_jobs := _odd_jobs_hint(c, data, region_id)
 		if odd_jobs != "":
 			out.append(odd_jobs)
+	if today >= 0 and not _has_work_hint(out):
+		var purse := empty_purse_hint(c, data, region_id, today, flags)
+		if purse != "":
+			out.append(purse)
 	if due != "" and not due_urgent:
 		out.append(due)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
@@ -1611,6 +1621,34 @@ static func _meditation_spot(c: CharacterData, data: GameData, region_id: String
 	out["needed"] = maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
 	out["rate"] = Cultivation.qi_per_day(c, data, float(best["density"]))
 	return out
+
+
+## GUIDE-229: true when an earlier hint already sends the player to earn stones.
+static func _has_work_hint(out: PackedStringArray) -> bool:
+	for line in out:
+		if line.begins_with("Short of stones?") or line.begins_with("Short on stones:"):
+			return true
+	return false
+
+
+const EMPTY_PURSE_FLOOR := 15
+
+## GUIDE-229: stones held below the price of the next wanted manual (or below EMPTY_PURSE_FLOOR): name the best
+## way to earn here ("Short on stones: fish at Village Pond Jetty, about 2 a day."). "" when a free chore pays best.
+static func empty_purse_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	var wanted := EMPTY_PURSE_FLOOR
+	var manual := _body_manual_merchant(c, data, region_id)
+	if not manual.is_empty():
+		wanted = maxi(wanted, merchant_price(c, data, region_id, String(manual["item_id"]), _season_in(flags)))
+	if c.item_count("spirit_stone") >= wanted:
+		return ""
+	var rows := Earnings.earning_options(c, data, flags, region_id, today)
+	if rows.is_empty() or String(rows[0]["kind"]) == "chore":
+		return ""
+	var best: Dictionary = rows[0]
+	var verb: String = {"gather": "gather", "fishing": "fish", "craft": "craft"}.get(String(best["kind"]), "work")
+	var n := maxi(1, roundi(float(best["per_day"])))
+	return "Short on stones: %s at %s, about %d a day." % [verb, best["place"], n]
 
 
 ## GUIDE-047: a broke crafter (nothing craftable, too few stones for any recipe in rank) hears

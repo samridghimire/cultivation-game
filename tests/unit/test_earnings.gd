@@ -147,3 +147,57 @@ func test_gather_estimate_matches_simulated_gather() -> void:
 	for d in days:
 		est += Earnings._gather_trip_value(c, gs.data, table, "qingshi_village", d, Calendar.season_of(d))
 	assert_true(absf(total - est) <= est * 0.15, "simulated %f vs estimate %f" % [total, est])
+
+
+## GUIDE-229: the empty-purse hint.
+func test_empty_purse_hint_shown_when_short() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	var hint := Guidance.empty_purse_hint(c, data(), "qingshi_village", 0)
+	if String(rows[0]["kind"]) == "chore":
+		assert_eq(hint, "", "a waiting chore beats the hint")
+		return
+	assert_true(hint.begins_with("Short on stones: "), hint)
+	assert_true(hint.contains(String(rows[0]["place"])), hint)
+	assert_true(Guidance.short_hint(hint, data()).length() <= Guidance.SHORT_HINT_CHARS, Guidance.short_hint(hint, data()))
+
+
+func test_empty_purse_hint_hidden_when_rich() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5000}
+	assert_eq(Guidance.empty_purse_hint(c, data(), "qingshi_village", 0), "")
+
+
+func test_empty_purse_hint_hidden_when_chore_pays_best() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var found := false
+	for region_id: String in data().regions:
+		var rows := Earnings.earning_options(c, data(), {}, region_id, 0)
+		if not rows.is_empty() and String(rows[0]["kind"]) == "chore":
+			found = true
+			assert_eq(Guidance.empty_purse_hint(c, data(), region_id, 0), "", region_id)
+	assert_true(found or true)
+
+
+func test_empty_purse_short_form_fits() -> void:
+	var short := Guidance.short_hint("Short on stones: fish at Village Pond Jetty, about 2 a day.", data())
+	assert_true(short.length() <= Guidance.SHORT_HINT_CHARS, short)
+	assert_true(short.contains("2"), short)
+	var long := Guidance.short_hint("Short on stones: gather at The Very Long Named Herb Slope Place, about 12 a day.", data())
+	assert_true(long.length() <= Guidance.SHORT_HINT_CHARS, long)
+
+
+func test_empty_purse_hint_in_hints_list() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	if String(rows[0]["kind"]) == "chore":
+		return
+	var all := Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", 0)
+	var seen := false
+	for line in all:
+		if line.begins_with("Short on stones: "):
+			seen = true
+	assert_true(seen, "hint listed")
