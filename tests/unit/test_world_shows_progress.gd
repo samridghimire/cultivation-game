@@ -40,7 +40,9 @@ func test_jetty_stage_look() -> void:
 	assert_true(Scenery.jetty_stage_look(3)["lantern"])
 	assert_false(Scenery.jetty_stage_look(2)["lantern"])
 	assert_true(Scenery.jetty_stage_look(9)["lantern"])
-	assert_eq(Scenery.jetty_stage_look(-4)["frac"], 0.0)
+	assert_eq(Scenery.jetty_stage_look(-1)["frac"], 1.0)  # RV-019: plain whole jetty elsewhere
+	assert_false(Scenery.jetty_stage_look(-1)["gaps"])
+	assert_false(Scenery.jetty_stage_look(-1)["lantern"])
 
 
 func test_jetty_label() -> void:

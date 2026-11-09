@@ -224,9 +224,11 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 	return out
 
 
-## WU-494: how much of the Village Pond Jetty is built at project `stage` (0..3): the fraction of planks laid from the shore,
+## WU-494: how much of the Village Pond Jetty is built at project `stage` (0..3; -1 = a jetty that is not the project's): the fraction of planks laid from the shore,
 ## whether the planks still have gaps, and whether the lantern post stands.
 static func jetty_stage_look(stage: int) -> Dictionary:
+	if stage < 0:  # RV-019: not the village project's jetty: a plain, whole walkway with no lantern post
+		return {"frac": 1.0, "gaps": false, "lantern": false}
 	match clampi(stage, 0, 3):
 		0:
 			return {"frac": 0.0, "gaps": false, "lantern": false}

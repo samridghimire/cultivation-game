@@ -188,7 +188,9 @@ func _roll(animate: bool = true) -> void:
 		row.add_child(num)
 		row.add_child(_bar_for(UIStyle.ACCENT, value, maxi(int(attr.get("roll_max", 20)), 20), Vector2(110, 10)))
 		var hint := UIStyle.label(String(attr["description"]).get_slice(".", 1).strip_edges().trim_suffix("."), 13, Color(0.55, 0.55, 0.55))
-		hint.clip_text = true
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # RV-019: wrap (two lines) instead of clipping
+		hint.max_lines_visible = 2
+		hint.custom_minimum_size = Vector2(120, 0)
 		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(hint)
 		_attr_box.add_child(row)

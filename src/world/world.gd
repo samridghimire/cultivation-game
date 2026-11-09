@@ -1391,13 +1391,13 @@ func _draw_jetty(lm: Dictionary) -> void:
 		draw_rect(Rect2(shore + Vector2(-2, -28), Vector2(5, 5)), Color("f4d27a"))
 
 
-## WU-494: the Village Pond Jetty's project stage (0..3) in its own region; 3 (whole) anywhere else or with no session.
+## WU-494: the Village Pond Jetty's project stage (0..3) in its own region; -1 (plain whole jetty) anywhere else or with no session.
 func _jetty_stage() -> int:
 	if not GameState.has_session():
-		return 3
+		return -1
 	var idx := SeasonTasks.project_index(GameState.data, "jetty")
 	if idx < 0 or String(SeasonTasks.project_list(GameState.data)[idx].get("region", "")) != GameState.current_region:
-		return 3
+		return -1
 	return SeasonTasks.project_stage(GameState.player, GameState.data, idx)
 
 

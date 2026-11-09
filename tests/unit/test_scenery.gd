@@ -294,6 +294,24 @@ func test_jetty_meets_the_pond() -> void:
 	assert_eq(lay2["rect"], Rect2(56, 86, 88, 28))
 
 
+## RV-019: every jetty within 200 px of a pond lays out on the water (no bare posts on grass).
+func test_near_pond_jetties_are_on_water() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var checked := 0
+	for region: Dictionary in gs.data.regions.values():
+		var lms: Array = region.get("map", {}).get("landmarks", [])
+		for lm: Dictionary in lms:
+			if lm["kind"] != "jetty":
+				continue
+			var pos := Vector2(lm["pos"][0], lm["pos"][1])
+			for other: Dictionary in lms:
+				if other["kind"] == "pond" and pos.distance_to(Vector2(other["pos"][0], other["pos"][1])) <= 200.0:
+					checked += 1
+					assert_true(bool(Scenery.jetty_layout(region, lm)["on_water"]), "%s: jetty near a pond is on_water" % region["id"])
+					break
+	assert_true(checked >= 3, "several jetties checked")
+
+
 ## GFX-046: a landmark tree_kind must be a known kind and only goes on a pine.
 func test_landmark_tree_kind_validation() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
