@@ -490,6 +490,17 @@ func test_kickoff_lines_each_season() -> void:
 	assert_true(summer[0].contains("land a Lotus Bass"))
 
 
+## REVIEW: sell_wanted has no target, and catch counts above 1 are named.
+func test_task_short_counts_and_markets() -> void:
+	var gd := data()
+	assert_eq(SeasonTasks.task_short(gd, {"kind": "sell_wanted", "target": "", "count": 3}), "sell 3 wanted goods at a market")
+	assert_eq(SeasonTasks.task_short(gd, {"kind": "catch", "target": "silver_carp", "count": 2}), "land 2 %s" % Items.item_plural(gd, "silver_carp", 2))
+	assert_eq(SeasonTasks.task_short(gd, {"kind": "catch", "target": "lotus_bass", "count": 1}), "land a Lotus Bass")
+	for s in 4:
+		for line in SeasonTasks.kickoff_lines(gd, s * 3 * Calendar.DAYS_PER_MONTH, "qingshi_village"):
+			assert_false(line.contains("a  ") or line.contains("a ,") or line.contains("a and"), line)
+
+
 func lines_have_prefix(lines: PackedStringArray, prefix: String) -> bool:
 	for l in lines:
 		if l.begins_with(prefix):

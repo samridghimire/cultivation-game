@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: c85ddec
+Last reviewed commit: 023bcd2
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1719,3 +1719,18 @@ Last reviewed commit: c85ddec
     goal's road is realm-gated; GFX-104's `crown` re-shades every "r" pixel on the canvas against the newest crown, so
     overlapping crowns' shading follows the last one drawn. Several UI tasks (WU-491/492, GFX-104, GUIDE-223) say
     their screenshots were not rendered.
+- 2026-11-09 (reviewer, 1st run): reviewed c85ddec..023bcd2 (WU-494, C-332, C-310, SEASON-013, WU-496, QA-206, GUIDE-224,
+  SEASON-014, FOLK-029, WU-497, C-313, C-331; [PLAN]/[REVIEW] skipped). Main green (3657 -> 3659 tests). No
+  BACKLOG/CHANGELOG edits by workers; no binary assets (plaques, jetty stages, cake marker are code-drawn); no
+  SAVE_VERSION change (GUIDE-224's `season_start_sets` defaults to -1 = no project line that season).
+  - Fixed (SEASON-013): the kickoff banner's `task_short` read the empty `sell_wanted` target as an item, so autumn and
+    winter showed "sell a  and ..."; catch tasks ignored their count ("land a Silver Carp" for 2) and gather tasks used
+    the singular name. Now "sell N wanted goods at a market", "land 2 Silver Carps", plural gather names. Test added.
+  - WU-494 (jetty stage look pure in Scenery, label via SeasonTasks.project_progress), C-332 (`requires_flag` on the
+    bream is honoured by Fishing.filter_flags; jetty_stage_3 is the last stage flag), GUIDE-224 (route_days without a
+    character copy), SEASON-014 (recap templates validated, own rng stream), FOLK-029 (validated), C-313 (max_realm
+    caps validated by Sects), WU-497 (focus path name -> sex -> buttons), WU-496, QA-206, C-310, C-331 OK.
+  - Notes, not filed: WU-494's `_jetty_stage` returns 3 outside the project's region, so every other jetty/ford
+    landmark now draws the lantern post; C-313 changes mission contribution but balance.sh --check was not run (in its
+    Follow-ups, QA-199); QA-206 measured fishing at 3.9x-10x a gathering day outside Qingshi (its Follow-ups suggest
+    price cuts, a planner call); WU-497's layout was not screenshotted at 1280x720.

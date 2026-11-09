@@ -638,11 +638,14 @@ static func task_short(data: GameData, t: Dictionary) -> String:
 	var target := String(t["target"])
 	var n := int(t.get("count", 1))
 	match String(t["kind"]):
-		"catch", "sell_wanted":
-			var name := String(data.items.get(target, {}).get("name", target))
-			return ("land a %s" if String(t["kind"]) == "catch" else "sell a %s") % name
+		"catch":
+			if n > 1:
+				return "land %d %s" % [n, Items.item_plural(data, target, n)]
+			return "land a %s" % String(data.items.get(target, {}).get("name", target))
+		"sell_wanted":  # target is "" (any stall's wanted goods)
+			return "sell %d wanted good%s at a market" % [n, "" if n == 1 else "s"]
 		"gather":
-			return "gather %d %s" % [n, String(data.items.get(target, {}).get("name", target))]
+			return "gather %d %s" % [n, Items.item_plural(data, target, n)]
 		"hunt":
 			return "drive off a %s" % String(data.enemies.get(target, {}).get("name", target)).to_lower()
 		"contest":
