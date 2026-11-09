@@ -78,3 +78,12 @@ func test_clip_to_rects_leaves_both_nodes() -> void:
 			var seg := WorldMapScreen.clip_to_rects((rects[region["id"]] as Rect2).get_center(), (rects[to] as Rect2).get_center(), ra, rb)
 			for p in seg:
 				assert_false(ra.has_point(p) or rb.has_point(p), "%s->%s point inside a node" % [region["id"], to])
+
+
+func test_terrain_kind_from_encounter_tags() -> void:
+	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["village"]}), "village")
+	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["mountain", "wild"]}), "peaks")
+	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["marsh", "wild"]}), "marsh")
+	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["city"]}), "market")
+	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["forest", "wild"]}), "forest")
+	assert_eq(WorldMapScreen.terrain_kind({}), "hills")
