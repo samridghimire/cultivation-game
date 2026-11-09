@@ -187,7 +187,7 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 			var now := SecretRealms.is_open(def, day)
 			var before := SecretRealms.is_open(def, day - 1)
 			if now and not before:
-				out.append({"day": day, "kind": "secret_realm", "region": rid, "text": "%s opens" % rname})
+				out.append({"day": day, "kind": "secret_realm", "region": rid, "last_day": day + int(def.get("open_days", 1)) - 1, "text": "%s opens" % rname})
 			elif before and not now:
 				out.append({"day": day, "kind": "secret_realm", "region": rid, "text": "%s closes" % rname})
 	for inst: Dictionary in active_events:
@@ -199,7 +199,7 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 		var from_day := int(inst.get("start_day", 0))
 		var to_day := int(inst.get("end_day", 0))
 		if from_day >= start and from_day < end:
-			out.append({"day": from_day, "kind": "event", "region": rid, "text": "%s begins in %s" % [ename, Exploration.region_name(data, rid)]})
+			out.append({"day": from_day, "kind": "event", "region": rid, "last_day": to_day - 1, "text": "%s begins in %s" % [ename, Exploration.region_name(data, rid)]})
 		if to_day >= start and to_day < end:
 			out.append({"day": to_day, "kind": "event", "region": rid, "text": "%s ends in %s" % [ename, Exploration.region_name(data, rid)]})
 
@@ -228,8 +228,25 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		if bool(e.get("ongoing", false)):
 			continue  # WILD-020: "in season now" is for the calendar, not a "Tomorrow" reminder
 		var line := reminder_line(data, npcs, flags, e)
-		if line != "":
-			out.append(line)
+		if line == "":
+			continue
+		# CAL-008: a far-away festival, event or realm opening is only worth a reminder if you could still make it.
+		var far_region := String(e.get("region", ""))
+		var kind := String(e["kind"])
+		if far_region != "" and far_region != region_id and _is_far(data, region_id, far_region) \
+				and (kind == "festival_active" or kind == "secret_realm" or (kind == "event" and String(e["text"]).contains(" begins "))):
+			if c == null:
+				continue
+			var days := Guidance.route_days(c, data, region_id, far_region)
+			if days < 0:
+				continue
+			if e.has("last_day") and today + 1 + days > int(e["last_day"]):
+				continue
+			if line.ends_with("."):
+				line = line.substr(0, line.length() - 1) + " (%d days' travel)." % days
+			else:
+				line += " (%d days' travel)" % days
+		out.append(line)
 	# MARKET-012: a regular learns the stall's wanted item a day early.
 	if c != null and out.size() < MAX_REMINDERS:
 		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
@@ -274,6 +291,16 @@ static func mark_lines(c: CharacterData, today: int) -> PackedStringArray:
 	if c.marked_days.has(today + 1):
 		out.append("Tomorrow: %s." % String(c.marked_days[today + 1]))
 	return out
+
+
+## CAL-008: true when `rid` is not `here`, nor one short direct route (3 days or less) from it.
+static func _is_far(data: GameData, here: String, rid: String) -> bool:
+	if rid == here:
+		return false
+	for r: Dictionary in data.regions.get(here, {}).get("routes", []):
+		if String(r.get("to", "")) == rid:
+			return int(r.get("days", 1)) > 3
+	return true
 
 
 ## True when `rid` is `here` or one direct route from it.

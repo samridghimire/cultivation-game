@@ -344,3 +344,46 @@ func test_foundation_sees_the_return_beast() -> void:
 	var f := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", 0, 40, c), "great_beast")
 	assert_true(f.size() > 0)
 	assert_eq(f[0]["enemy"], "scarred_old_tusker")
+
+
+## CAL-008: far reminders carry the travel time, or vanish when you could not arrive in time.
+func _far_fest(region: String, today: int, length: int) -> Array:
+	return [{"id": "lantern_festival", "region": region, "start_day": today + 1, "end_day": today + 1 + length}]
+
+
+func _travelling_char() -> CharacterData:
+	var c := new_character()
+	c.realm_index = data().realms.size() - 1
+	return c
+
+
+func test_far_festival_too_short_gives_no_reminder() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	assert_true(days > 3)
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, 3), "qingshi_village", 100, c)
+	assert_eq(r.size(), 0, str(r))
+
+
+func test_far_festival_long_enough_gets_travel_note() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days + 5), "qingshi_village", 100, c)
+	assert_eq(r.size(), 1, str(r))
+	assert_true(r[0].contains("(%d days' travel)" % days), r[0])
+
+
+func test_near_and_local_festival_reminders_unchanged() -> void:
+	var c := _travelling_char()
+	for region in ["qingshi_village", "misty_forest"]:
+		var inst := _far_fest(region, 100, 3)
+		var with_c := VillageCalendar.reminders(data(), {}, {}, inst, "qingshi_village", 100, c)
+		var without := VillageCalendar.reminders(data(), {}, {}, inst, "qingshi_village", 100, null)
+		assert_eq(with_c, without)
+		for line in with_c:
+			assert_false(line.contains("travel)"), line)
+
+
+func test_far_festival_without_character_is_dropped() -> void:
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, 30), "qingshi_village", 100, null)
+	assert_eq(r.size(), 0, str(r))
