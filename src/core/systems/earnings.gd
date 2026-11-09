@@ -88,6 +88,8 @@ static func _gather_trip_value(c: CharacterData, data: GameData, table: Array, r
 	for kind: String in weights:
 		wsum += float(weights[kind])
 	var value := 0.0
+	var top_units := 0.0  # SEASON-015: the item expected to have the most units gets the project's bonus unit
+	var top_price := 0.0
 	for entry: Dictionary in usable:
 		var id := String(entry.get("item", ""))
 		if id == "":
@@ -110,7 +112,10 @@ static func _gather_trip_value(c: CharacterData, data: GameData, table: Array, r
 						stack += thrive
 					units += pmf * stack
 			value += float(weights[kind]) / wsum * units * price
-	return value
+			if units > top_units:
+				top_units = units
+				top_price = price
+	return value + SeasonTasks.gather_bonus(c, data, region_id) * top_price
 
 
 ## Expected value of one fishing trip, averaged over the region's weather odds today's season

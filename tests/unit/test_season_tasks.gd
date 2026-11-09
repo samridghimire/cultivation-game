@@ -506,3 +506,55 @@ func lines_have_prefix(lines: PackedStringArray, prefix: String) -> bool:
 		if l.begins_with(prefix):
 			return true
 	return false
+
+
+func test_terraces_follow_jetty_and_gather_bonus() -> void:
+	var gs := _gs()
+	var c := _start()
+	_restore(gs, c)
+	_finish_seasons(gs, [365, 455, 545, 635, 725, 815])
+	assert_eq(SeasonTasks.project_index(gs.data, "terraces"), 3, "after the jetty")
+	assert_eq(String(SeasonTasks.current_project(c, gs.data)["project"]["id"]), "terraces")
+	assert_eq(SeasonTasks.gather_bonus(c, gs.data, "qingshi_village"), 0.0)
+	assert_eq(SeasonTasks.gather_project_line(c, gs.data, "qingshi_village"), "Terraces: 0/3 repaired.")
+	_finish_seasons(gs, [905])
+	assert_almost_eq(SeasonTasks.gather_bonus(c, gs.data, "qingshi_village"), 0.1)
+	assert_eq(SeasonTasks.gather_project_line(c, gs.data, "qingshi_village"), "Terraces: 1/3 repaired.")
+	_finish_seasons(gs, [995, 1085])
+	assert_almost_eq(SeasonTasks.gather_bonus(c, gs.data, "qingshi_village"), 0.3)
+	assert_eq(SeasonTasks.gather_bonus(c, gs.data, "misty_forest"), 0.0)
+	assert_eq(SeasonTasks.gather_project_line(c, gs.data, "qingshi_village"), "", "whole")
+
+
+func test_top_unit_item_ties_by_id() -> void:
+	assert_eq(SeasonTasks.top_unit_item({}), "")
+	assert_eq(SeasonTasks.top_unit_item({"b": 2, "a": 2, "c": 1}), "a")
+	assert_eq(SeasonTasks.top_unit_item({"b": 3, "a": 2}), "b")
+
+
+func test_terraces_validation() -> void:
+	var gd: GameData = _gs().data
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	gd.season_tasks["restoration"]["projects"][2]["gather_bonus"] = 0.5
+	assert_false(SeasonTasks.validate(gd).is_empty(), "gather_bonus too big")
+	gd.season_tasks = saved
+
+
+func test_terraces_gather_yields_more_over_200_days() -> void:
+	var table: Array = [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	var totals: Array[int] = [0, 0]
+	for mode in 2:
+		var gs := _gs()
+		var c := _start()
+		gs.player = c
+		gs.current_region = "qingshi_village"
+		gs.rng.seed = 77
+		if mode == 1:
+			_restore(gs, c)
+			_finish_seasons(gs, [365, 455, 545, 635, 725, 815, 905, 995, 1085])
+			assert_almost_eq(SeasonTasks.gather_bonus(c, gs.data, "qingshi_village"), 0.3)
+		var before := c.item_count("spirit_herb")
+		for d in 200:
+			gs.gather(table, 1)
+		totals[mode] = c.item_count("spirit_herb") - before
+	assert_true(totals[1] > totals[0], "stage 3 yields more (%d vs %d)" % [totals[1], totals[0]])

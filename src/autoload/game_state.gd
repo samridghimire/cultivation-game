@@ -1324,6 +1324,10 @@ func gather(table: Array, days: int) -> void:
 	var tipped := Folk.tip_bonus(data, world_flags, GameClock.total_days, current_region, Exploration.gather_table_for(player, data, table, season))
 	for item_id in tipped:
 		found[item_id] = int(found.get(item_id, 0)) + int(tipped[item_id])
+	var terrace := SeasonTasks.gather_bonus(player, data, current_region)  # SEASON-015
+	if terrace > 0.0 and not found.is_empty() and rng.randf() < terrace:
+		var top := SeasonTasks.top_unit_item(found)
+		found[top] = int(found[top]) + 1
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])

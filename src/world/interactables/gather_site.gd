@@ -13,6 +13,9 @@ func get_options() -> Array[Dictionary]:
 	if not uses.is_empty():
 		note += "%sUsed in: %s." % [". " if note != "" else "", ", ".join(uses)]
 	note += gather_weather_note(note)
+	var terraces := SeasonTasks.gather_project_line(GameState.player, GameState.data, GameState.current_region)
+	if terraces != "":
+		note += (" " if note != "" else "") + terraces
 	return [{"label": "Gather (%s)" % Calendar.format_duration(gather_days), "description": note, "action": GameState.gather.bind(gather_table, gather_days), "keep_open": true}]
 
 

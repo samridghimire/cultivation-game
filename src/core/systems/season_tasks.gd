@@ -211,6 +211,41 @@ static func fish_project_line(c: CharacterData, data: GameData, region_id: Strin
 	return ""
 
 
+## SEASON-015: chance (sum over projects of `gather_bonus` * stage) of one extra unit on a gather in `region_id`.
+static func gather_bonus(c: CharacterData, data: GameData, region_id: String) -> float:
+	var total := 0.0
+	var list := project_list(data)
+	for i in list.size():
+		var proj: Dictionary = list[i]
+		if String(proj.get("region", "")) == region_id and proj.has("gather_bonus"):
+			total += float(proj["gather_bonus"]) * project_stage(c, data, i)
+	return total
+
+
+## SEASON-015: the id of the item with the most units in `found` (ties by id), "" when empty.
+static func top_unit_item(found: Dictionary) -> String:
+	var best := ""
+	for id: Variant in found:
+		var k := String(id)
+		if best == "" or int(found[k]) > int(found[best]) or (int(found[k]) == int(found[best]) and k < best):
+			best = k
+	return best
+
+
+## SEASON-015: "Terraces: 1/3 repaired." for the project with a gather_bonus in `region_id` ("" when none or whole).
+static func gather_project_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	var list := project_list(data)
+	for i in list.size():
+		var proj: Dictionary = list[i]
+		if String(proj.get("region", "")) == region_id and proj.has("gather_bonus"):
+			var total := (proj["stages"] as Array).size()
+			var st := project_stage(c, data, i)
+			if st >= total:
+				return ""
+			return "%s: %d/%d repaired." % [_cap(String(proj["name"]).trim_prefix("the Herb Slope ").trim_prefix("the ")), st, total]
+	return ""
+
+
 ## The well-like project with a `daily` block ({} when absent) and whether it is whole.
 static func daily_project(data: GameData) -> Dictionary:
 	for p: Dictionary in project_list(data):
@@ -601,6 +636,8 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 			errs.append("season_tasks.json project '%s' crop_bonus must be in (0, 0.1]" % pid)
 		if p.has("fish_bonus") and (float(p["fish_bonus"]) <= 0.0 or float(p["fish_bonus"]) > 0.1):
 			errs.append("season_tasks.json project '%s' fish_bonus must be in (0, 0.1]" % pid)
+		if p.has("gather_bonus") and (float(p["gather_bonus"]) <= 0.0 or float(p["gather_bonus"]) > 0.2):
+			errs.append("season_tasks.json project '%s' gather_bonus must be in (0, 0.2]" % pid)
 		if p.has("daily"):
 			var dd: Dictionary = p["daily"]
 			if not data.items.has(String(dd.get("item", ""))) or String(dd.get("flag", "")) == "" or String(dd.get("text", "")) == "":
