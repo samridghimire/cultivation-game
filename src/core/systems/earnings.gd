@@ -29,7 +29,7 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 				if per_day > float(best_chore.get("per_day", 0.0)):
 					best_chore = {"kind": "chore", "place": name, "per_day": per_day, "note": String(deed.get("name", ""))}
 		elif kind == "gather":
-			var v := _table_value(c, data, place.get("gather_table", []), season, c.attribute("fortune")) / float(maxi(1, int(place.get("gather_days", 1))))
+			var v := _gather_trip_value(c, data, place.get("gather_table", []), region_id, today, season) / float(maxi(1, int(place.get("gather_days", 1))))
 			if v > float(best_gather.get("per_day", 0.0)):
 				best_gather = {"kind": "gather", "place": name, "per_day": v, "note": "gathering"}
 		elif kind == "fishing":
@@ -65,6 +65,52 @@ static func _table_value(c: CharacterData, data: GameData, table: Array, season:
 		return 0.0
 	var rolls := Exploration.GATHER_ROLLS + maxi(0, (fortune - 10) / 5)
 	return float(rolls) * value / total
+
+
+## Expected sell value of one gather trip, as GameState.gather yields it. One trip makes
+## GATHER_ROLLS + (fortune-10)/5 rolls whatever its length in days (so per-day value divides by gather_days).
+## Per item stack, over the number of rolls k that hit it (binomial): the herb-lore skill table raises rare
+## weights, HerbLore.bonus_units adds bonus_chance units per stack, then today's weather (expected over the
+## region's odds) cuts herb stacks by herb_yield_penalty or adds one with herb_bonus_chance.
+static func _gather_trip_value(c: CharacterData, data: GameData, table: Array, region_id: String, today: int, season: String) -> float:
+	var usable := HerbLore.skill_table(data.herb_lore, Exploration.gather_table_for(c, data, table, season), c.gather_xp)
+	var total := 0.0
+	for entry: Dictionary in usable:
+		total += float(entry.get("weight", 1))
+	if total <= 0.0:
+		return 0.0
+	var rolls := Exploration.GATHER_ROLLS + maxi(0, (c.attribute("fortune") - 10) / 5)
+	var lore_bonus := HerbLore.bonus_chance(data.herb_lore, c.gather_xp) if c.gather_xp > 0 and not data.herb_lore.is_empty() else 0.0
+	var weights: Dictionary = Weather._weights(data.regions.get(region_id, {}), today)
+	if weights.is_empty():
+		weights = {"clear": 1.0}
+	var wsum := 0.0
+	for kind: String in weights:
+		wsum += float(weights[kind])
+	var value := 0.0
+	for entry: Dictionary in usable:
+		var id := String(entry.get("item", ""))
+		if id == "":
+			continue
+		var p := float(entry.get("weight", 1)) / total
+		var avg := (float(entry.get("min", 1)) + float(entry.get("max", 1))) / 2.0
+		var herb: bool = (data.items.get(id, {}).get("tags", []) as Array).has("herb")
+		var price := float(Items.sell_price(data, id, season))
+		for kind: String in weights:
+			var eff: Dictionary = data.weather_effects.get(kind, {})
+			var cut := float(int(eff.get("herb_yield_penalty", 0))) if herb else 0.0
+			var thrive := float(eff.get("herb_bonus_chance", 0.0)) if herb else 0.0
+			var units := 0.0
+			var pmf := pow(1.0 - p, rolls)
+			for k in range(0, rolls + 1):
+				if k > 0:
+					pmf *= float(rolls - k + 1) / float(k) * p / (1.0 - p) if p < 1.0 else 0.0
+					var stack := maxf(0.0, float(k) * avg + lore_bonus - cut)
+					if stack > 0.0:
+						stack += thrive
+					units += pmf * stack
+			value += float(weights[kind]) / wsum * units * price
+	return value
 
 
 ## Expected value of one fishing trip, averaged over the region's weather odds today's season

@@ -73,3 +73,77 @@ func test_flag_gated_catch_needs_its_flag() -> void:
 			with_flag = float(r["per_day"])
 	assert_true(without > 0.0)
 	assert_true(with_flag > without, "bream counted only with jetty_stage_3 (%f vs %f)" % [with_flag, without])
+
+
+## GUIDE-227: a chore row where a chore is reachable; its stones/day is pay / days.
+func test_chore_row_matches_deed_pay_per_day() -> void:
+	var c := new_character()
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	for r in rows:
+		if r["kind"] != "chore":
+			continue
+		var best := 0.0
+		for place: Dictionary in data().regions["qingshi_village"]["places"]:
+			if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+				continue
+			for deed in Deeds.available(data(), String(place["deed_context"]), {}):
+				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
+				if stones > 0 and Deeds.check(c, data(), deed, {}, 0) == "":
+					best = maxf(best, float(stones) / float(maxi(1, int(deed.get("days", 1)))))
+		assert_true(absf(float(r["per_day"]) - best) < 0.001, "chore %f vs %f" % [float(r["per_day"]), best])
+		return
+	assert_true(false, "Qingshi has a chore row")
+
+
+## A crafter gets a craft row worth (sell price - ingredient cost) / days.
+func test_craft_row_value_is_margin_per_day() -> void:
+	var c := new_character()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	var best := -INF
+	for recipe: Dictionary in data().recipes.values():
+		if String(recipe.get("profession", "")) == "alchemist" and bool(recipe.get("starter", false)) and int(recipe.get("min_rank", 0)) <= 0:
+			var m := Alchemy.recipe_margin(data(), String(recipe["id"]))
+			best = maxf(best, float(int(m["value"]) - int(m["cost"])) / float(maxi(1, int(recipe.get("days", 1)))))
+	var craft := {}
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		if r["kind"] == "craft":
+			craft = r
+	if best <= 0.0:
+		assert_true(craft.is_empty(), "no profitable recipe, no row")
+	else:
+		assert_false(craft.is_empty(), "craft row")
+		assert_true(absf(float(craft["per_day"]) - best) < 0.001, "%f vs %f" % [float(craft.get("per_day", 0.0)), best])
+
+
+## The gathering estimate tracks what GameState.gather really pays (200 seeded days in Qingshi, sold at sell price).
+func test_gather_estimate_matches_simulated_gather() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	var c := CharacterFactory.create("Gatherer", gs.data, seeded_rng(77))
+	c.spiritual_roots = {"fire": 80}
+	gs.start_session(c)
+	var place := {}
+	for p: Dictionary in gs.data.regions["qingshi_village"]["places"]:
+		if String(p.get("type", "")) == "gather":
+			place = p
+			break
+	assert_false(place.is_empty())
+	var table: Array = place["gather_table"]
+	var days := 200
+	var total := 0.0
+	for d in days:
+		var day: int = clock.total_days
+		var before := {}
+		for entry: Dictionary in table:
+			before[String(entry.get("item", ""))] = c.item_count(String(entry.get("item", "")))
+		gs.gather(table, 1)
+		var season := Calendar.season_of(day)
+		for id: String in before:
+			if id != "":
+				total += float(c.item_count(id) - int(before[id])) * float(Items.sell_price(gs.data, id, season))
+	# Compare with the average of the per-day estimate over the same days (1 gather day per trip).
+	var est := 0.0
+	for d in days:
+		est += Earnings._gather_trip_value(c, gs.data, table, "qingshi_village", d, Calendar.season_of(d))
+	assert_true(absf(total - est) <= est * 0.15, "simulated %f vs estimate %f" % [total, est])

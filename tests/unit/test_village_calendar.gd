@@ -365,6 +365,17 @@ func test_far_festival_too_short_gives_no_reminder() -> void:
 	assert_eq(r.size(), 0, str(r))
 
 
+## GUIDE-227: leave today, arrive on day today + route_days: a festival whose last day is exactly then is kept.
+func test_far_festival_ending_on_arrival_day_is_kept_one_day_earlier_is_dropped() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	assert_true(days >= 1)
+	var kept := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days), "qingshi_village", 100, c)
+	assert_eq(kept.size(), 1, str(kept))
+	var dropped := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days - 1), "qingshi_village", 100, c)
+	assert_eq(dropped.size(), 0, str(dropped))
+
+
 func test_far_festival_long_enough_gets_travel_note() -> void:
 	var c := _travelling_char()
 	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")

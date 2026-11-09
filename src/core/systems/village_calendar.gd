@@ -240,7 +240,7 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 			var days := Guidance.route_days(c, data, region_id, far_region)
 			if days < 0:
 				continue
-			if e.has("last_day") and today + 1 + days > int(e["last_day"]):
+			if e.has("last_day") and today + days > int(e["last_day"]):  # leave today, arrive on day today + days
 				continue
 			if line.ends_with("."):
 				line = line.substr(0, line.length() - 1) + " (%d days' travel)." % days
