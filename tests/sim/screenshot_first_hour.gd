@@ -22,6 +22,7 @@ extends SceneTree
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
+## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
 ## FOLK-016: append `-- --friend-scene` for friend_scene.png (a friend scene card with a gift line).
@@ -178,6 +179,8 @@ func _start() -> void:
 					if od >= 0:
 						gs.get_node("/root/GameClock").total_days = od
 				_rebuild_world(gs, id)
+				if OS.get_cmdline_user_args().has("--edge"):  # GFX-110: stand at the bottom path end
+					_teleport_player(Vector2(float(world.map_size.x) - 40.0 if gs.data.regions[id]["map"]["paths"].size() < 2 else 800.0, world.map_size.y - 20.0))
 				root.get_node("EventBus").clear_history(), "close": func() -> void: pass})  # QA-203: no previous region's log lines
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})

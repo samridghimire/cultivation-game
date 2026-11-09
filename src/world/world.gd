@@ -49,6 +49,7 @@ var _decor: Array[Dictionary] = []
 var _season_tint: CanvasModulate
 var _season := ""
 var _relief: Array[Dictionary] = []  # GFX-109
+var _edge: Array[Dictionary] = []  # GFX-110
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
 var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
@@ -453,6 +454,7 @@ func _build_decor() -> void:
 	_decor = Scenery.place(_region, rng)
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
 	_relief = Scenery.relief_layout(_region)
+	_edge = Scenery.edge_props(_region, map_size)
 	if not _relief.is_empty():  # GFX-109: nothing grows on a rock ledge or boulder
 		_decor = _decor.filter(func(d: Dictionary) -> bool:
 			for it: Dictionary in _relief:
@@ -1060,15 +1062,99 @@ func _draw() -> void:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
 	for d in _decor:
 		_draw_decor(d)
-	# GFX-097: below the map's bottom edge the camera shows this band; paint it in the border colour so it reads as the edge.
-	for margin: Rect2 in margin_rects(map_size):  # WU-485: no engine-grey ever shows past the map
-		draw_rect(margin, Color(map.get("border", "2a3a20")).darkened(0.35))
+	_draw_margins(map, rid)
 	var border_tile := Sprites.first(["border_" + rid, "border"])
-	if border_tile != null:
+	if not _edge.is_empty():
+		_draw_edge()  # GFX-110: hedge, treeline, wall, cliff or reeds instead of the border line
+	elif border_tile != null:
 		for strip: Rect2 in [Rect2(0, 0, map_size.x, 6), Rect2(0, map_size.y - 6, map_size.x, 6), Rect2(0, 6, 6, map_size.y - 12), Rect2(map_size.x - 6, 6, 6, map_size.y - 12)]:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-110: the strips past the map edge show the region's own ground, darkening toward the outer edge (WU-485: no engine grey).
+func _draw_margins(map: Dictionary, rid: String) -> void:
+	var sc := float(Sprites.scale())
+	var ground_color := Color(map.get("ground", "4d6b3c"))
+	var gseason := GroundTiles.ground_season(_season, map)
+	var style := str(map.get("ground_style", "grass"))
+	var strips := margin_rects(map_size)
+	for i in strips.size():
+		var m: Rect2 = strips[i]
+		var tex := GroundTiles.ground_texture(ground_color, rid + "|margin%d" % i, Vector2i(ceili(m.size.x / sc), ceili(m.size.y / sc)), false, gseason, style, [], float(map.get("scree_density", 1.0)))
+		draw_texture_rect(tex, Rect2(m.position, Vector2(tex.get_size()) * sc), false)
+		var bands := 8
+		for b in bands:
+			var a := 0.08 + 0.09 * float(b)  # rising toward the outer edge
+			var f0 := float(b) / bands
+			var f1 := float(b + 1) / bands
+			var r: Rect2
+			match i:
+				0: r = Rect2(m.position.x, m.end.y - m.size.y * f1, m.size.x, m.size.y * (f1 - f0) + 1.0)  # top: outer edge is the top
+				1: r = Rect2(m.position.x, m.position.y + m.size.y * f0, m.size.x, m.size.y * (f1 - f0) + 1.0)
+				2: r = Rect2(m.end.x - m.size.x * f1, m.position.y, m.size.x * (f1 - f0) + 1.0, m.size.y)
+				_: r = Rect2(m.position.x + m.size.x * f0, m.position.y, m.size.x * (f1 - f0) + 1.0, m.size.y)
+			draw_rect(r, Color(0, 0, 0, a))
+
+
+## GFX-110: draws the code-drawn edge props (Scenery.edge_props).
+func _draw_edge() -> void:
+	var px := float(Sprites.scale())
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for it: Dictionary in _edge:
+		var r: Rect2 = it["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(it["seed"])
+		var c := r.get_center()
+		match it["kind"]:
+			"hedge":
+				var g := Color("3f7a35").darkened(rng.randf_range(0.0, 0.25))
+				draw_circle(c + Vector2(px, px * 2.0), minf(r.size.x, r.size.y) * 0.6, g.darkened(0.5))
+				draw_circle(c, minf(r.size.x, r.size.y) * 0.6, g)
+				draw_circle(c + Vector2(-px * 2.0, -px * 2.0), minf(r.size.x, r.size.y) * 0.3, g.lightened(0.25))
+				if rng.randf() < 0.3:
+					draw_rect(Rect2(c + Vector2(px, 0), Vector2(px, px)), Color("e8a0b8"))
+				if winter:
+					draw_rect(Rect2(c + Vector2(-px * 3.0, -px * 4.0), Vector2(px * 6.0, px * 2.0)), Color("e8eef4"))
+			"treeline":
+				var rad := minf(r.size.x, r.size.y) * 0.5 + px * 2.0
+				var leaf := Color("2c5a3a").darkened(rng.randf_range(0.0, 0.3))
+				draw_rect(Rect2(c.x - px, c.y + rad * 0.4, px * 2.0, rad * 0.6), Color("4a3524"))
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -rad), c + Vector2(rad * 0.8, rad * 0.5), c + Vector2(-rad * 0.8, rad * 0.5)]), leaf)
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -rad * 0.9), c + Vector2(rad * 0.3, rad * 0.1), c + Vector2(-rad * 0.5, rad * 0.1)]), leaf.lightened(0.2))
+				if winter:
+					draw_rect(Rect2(c.x - px, c.y - rad, px * 2.0, px * 2.0), Color("e8eef4"))
+			"wall":
+				var stone := Color("8a8478").darkened(rng.randf_range(0.0, 0.15))
+				draw_rect(r, stone.darkened(0.4))
+				var inner := r.grow(-px)
+				draw_rect(inner, stone)
+				if it["side"] < 2:
+					draw_rect(Rect2(inner.position, Vector2(inner.size.x, px * 2.0)), stone.lightened(0.25))
+					draw_line(Vector2(inner.position.x + inner.size.x * 0.5, inner.position.y + px * 2.0), Vector2(inner.position.x + inner.size.x * 0.5, inner.end.y), stone.darkened(0.35), px)
+				else:
+					draw_rect(Rect2(inner.position, Vector2(px * 2.0, inner.size.y)), stone.lightened(0.25))
+					draw_line(Vector2(inner.position.x + px * 2.0, inner.position.y + inner.size.y * 0.5), Vector2(inner.end.x, inner.position.y + inner.size.y * 0.5), stone.darkened(0.35), px)
+			"cliff":
+				var rock := Color("7c8590").darkened(rng.randf_range(0.0, 0.2))
+				draw_rect(r, rock.darkened(0.45))
+				var face := Rect2(r.position + Vector2(px, px), r.size - Vector2(px * 2.0, px * 2.0))
+				draw_rect(face, rock.darkened(0.15))
+				var lip := Rect2(face.position, Vector2(face.size.x, px * 3.0)) if it["side"] != 0 else Rect2(face.position.x, face.end.y - px * 3.0, face.size.x, px * 3.0)
+				if it["side"] >= 2:
+					lip = Rect2(face.position, Vector2(px * 3.0, face.size.y)) if it["side"] == 3 else Rect2(face.end.x - px * 3.0, face.position.y, px * 3.0, face.size.y)
+				draw_rect(lip, rock.lightened(0.3))
+				if winter:
+					draw_rect(Rect2(face.position.x, face.position.y - px, face.size.x, px * 2.0), Color("e8eef4"))
+			"reeds":
+				var stalk := Color("7a8a4a").darkened(rng.randf_range(0.0, 0.3))
+				for n in 3:
+					var x := r.position.x + rng.randf_range(0.0, r.size.x)
+					var y := r.position.y + rng.randf_range(0.0, r.size.y)
+					draw_line(Vector2(x, y + px * 6.0), Vector2(x + rng.randf_range(-px, px), y - px * 4.0), stalk, px)
+					if n == 0:
+						draw_rect(Rect2(x - px * 0.5, y - px * 7.0, px, px * 3.0), Color("5a3a22"))
 
 
 ## GFX-109: rock ledges (lit top, dark face, cracks), boulder clusters and snow drifts, in crisp scaled pixels.

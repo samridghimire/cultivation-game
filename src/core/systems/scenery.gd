@@ -402,6 +402,53 @@ static func paved_zones(map: Dictionary, scale: float = 1.0) -> Array:
 	return zones
 
 
+## GFX-110: map.edge kinds and the props along the outer map edge.
+const EDGE_KINDS: PackedStringArray = ["hedge", "treeline", "wall", "cliff", "reeds"]
+const EDGE_INSIDE := 16.0  # how far a prop reaches into the map (never more than 24)
+const EDGE_DEPTH := {"hedge": 14.0, "treeline": 30.0, "wall": 10.0, "cliff": 22.0, "reeds": 18.0}
+const EDGE_PATH_GAP := 10.0
+
+
+## GFX-110: props along the four outer map edges for a region with `map.edge`, [{kind, rect: Rect2, seed: int, side: int}].
+## Each rect reaches at most EDGE_INSIDE px into the map and the rest out into the margin; none touches a path
+## (grown by EDGE_PATH_GAP, so a wall has a gap at each road). Seeded by region id; empty without map.edge.
+static func edge_props(region: Dictionary, size: Vector2) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	var kind := String(map.get("edge", ""))
+	if not EDGE_KINDS.has(kind):
+		return out
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|edge")
+	var gaps: Array[Rect2] = []
+	for r in map.get("paths", []):
+		gaps.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(EDGE_PATH_GAP))
+	var depth: float = EDGE_DEPTH[kind]
+	var total := EDGE_INSIDE + depth
+	for side in 4:
+		var length := size.x if side < 2 else size.y
+		var t := 0.0
+		while t < length:
+			var step := rng.randf_range(18.0, 34.0) if kind != "wall" else 40.0
+			step = minf(step, length - t)
+			var r: Rect2
+			match side:
+				0: r = Rect2(t, -depth, step, total)
+				1: r = Rect2(t, size.y - EDGE_INSIDE, step, total)
+				2: r = Rect2(-depth, t, total, step)
+				_: r = Rect2(size.x - EDGE_INSIDE, t, total, step)
+			t += step
+			var blocked := false
+			for g in gaps:
+				if g.intersects(r):
+					blocked = true
+					break
+			var seed_value := rng.randi()
+			if not blocked and step >= 8.0:
+				out.append({"kind": kind, "rect": r, "seed": seed_value, "side": side})
+	return out
+
+
 ## GFX-109: map.relief keys and limits.
 const RELIEF_KEYS: PackedStringArray = ["ledges", "snow", "boulders"]
 const RELIEF_MAX := 12
@@ -519,6 +566,9 @@ static func validate(data: GameData) -> PackedStringArray:
 							errors.append("Region '%s' map.relief.snow must be 0-1" % region["id"])
 					elif not (relief[key] is float or relief[key] is int) or int(relief[key]) < 0 or int(relief[key]) > RELIEF_MAX:
 						errors.append("Region '%s' map.relief.%s must be 0-%d" % [region["id"], key, RELIEF_MAX])
+		var edge: Variant = region.get("map", {}).get("edge", null)
+		if edge != null and not (edge is String and EDGE_KINDS.has(edge)):
+			errors.append("Region '%s' map.edge must be one of %s" % [region["id"], ", ".join(EDGE_KINDS)])
 		var decor: Variant = region.get("map", {}).get("decor", {})
 		if not decor is Dictionary:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])
