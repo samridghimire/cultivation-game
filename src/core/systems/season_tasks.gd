@@ -143,6 +143,27 @@ static func stage_reached(data: GameData, done_count: int) -> Dictionary:
 	return {}
 
 
+## GUIDE-224: the recap line for a project stage finished while the finished-set count went from `before` to `after`
+## ("" when `before` is unknown (< 0), nothing was finished or no stage matches). The stage's first text line cut to 80
+## characters, else "<project>: stage N of M done.".
+static func project_recap_line(data: GameData, before: int, after: int) -> String:
+	if before < 0 or after <= before:
+		return ""
+	var reached := stage_reached(data, after)
+	if reached.is_empty():
+		return ""
+	var proj: Dictionary = reached["project"]
+	var stages: Array = proj.get("stages", [])
+	var offset := 0
+	for i in int(reached["index"]):
+		offset += (project_list(data)[i].get("stages", []) as Array).size()
+	var k := after - offset - 1
+	var text := String(stages[k].get("text", "")).split("\n")[0].strip_edges()
+	if text == "":
+		return "%s: stage %d of %d done." % [_cap(String(proj.get("name", ""))), k + 1, stages.size()]
+	return text if text.length() <= 80 else text.substr(0, 79).strip_edges() + "…"
+
+
 ## The project being worked on now (first unfinished) as {index, project, stage}; {} when all are whole.
 static func current_project(c: CharacterData, data: GameData) -> Dictionary:
 	var list := project_list(data)

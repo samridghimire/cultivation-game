@@ -3658,3 +3658,31 @@ func test_season_kickoff_follows_recap() -> void:
 		if String(o).begins_with("kick:Spring:"):
 			kicked = true
 	assert_true(kicked)
+
+
+func test_season_recap_names_a_finished_project_stage() -> void:  # GUIDE-224
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var seen: Array = []
+	var cb := func(_s: String, _y: int, lines: PackedStringArray) -> void: seen.append(lines)
+	bus.season_reviewed.connect(cb)
+	clock.advance(Calendar.DAYS_PER_MONTH)
+	c.season_start_sets = c.seasons_completed.size()
+	c.seasons_completed.append("test_season_a")
+	clock.advance(2 * Calendar.DAYS_PER_MONTH)  # the season ends
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 1)
+	var expected: String = SeasonTasks.project_recap_line(_game_state().data, c.seasons_completed.size() - 1, c.seasons_completed.size())
+	assert_true(expected != "")
+	assert_true(expected in (seen[0] as PackedStringArray), "project line in recap")
+
+
+func test_season_recap_without_a_finished_stage_or_snapshot() -> void:  # GUIDE-224
+	var d: GameData = _game_state().data
+	assert_eq(SeasonTasks.project_recap_line(d, 3, 3), "")
+	assert_eq(SeasonTasks.project_recap_line(d, -1, 5), "", "old save: no snapshot")
+	var line := SeasonTasks.project_recap_line(d, 0, 1)
+	assert_true(line != "" and line.length() <= 80)
+	var old := CharacterData.from_dict({})
+	assert_eq(old.season_start_sets, -1)

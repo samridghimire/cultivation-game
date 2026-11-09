@@ -4599,6 +4599,7 @@ func _on_year_changed(year: int) -> void:
 func _store_season_snapshot() -> void:
 	player.season_start_stats = player.life_stats.duplicate()
 	player.season_start_day = GameClock.total_days
+	player.season_start_sets = player.seasons_completed.size()
 
 
 ## The first fixed-date festival of the season after `day`'s: "Coming: the Dragon Boat Festival in month 5." or "".
@@ -4645,6 +4646,7 @@ func _review_season_if_changed() -> void:
 	elif not tasks.is_empty():
 		extras["tasks_done"] = 0
 		extras["tasks_total"] = tasks.size()
+	extras["project_line"] = SeasonTasks.project_recap_line(data, player.season_start_sets, player.seasons_completed.size())
 	var lines := LifeStats.season_summary(player.season_start_stats, player.life_stats, extras)
 	for line in lines:
 		EventBus.post(line, "progress")

@@ -144,6 +144,7 @@ var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-0
 var year_start_year: int = 0  # the year the snapshot was taken in (YEAR-002); 0 = unknown (old saves)
 var last_meditated_day: int = -1  # GameClock day the last cultivation ended (GUIDE-057); -1 = never/unknown
 var year_start_realm: String = ""  # realm label then; "" = no snapshot yet
+var season_start_sets: int = -1  # seasons_completed.size() at the last season start; -1 = unknown (GUIDE-224)
 var season_start_stats: Dictionary = {}  # life_stats at the last season start (SEASON-012)
 var season_start_day: int = -1  # GameClock day of that snapshot; -1 = none yet (old saves)
 var milestones: Array[String] = []  # earned Milestones ids
@@ -305,6 +306,7 @@ func to_dict() -> Dictionary:
 		"last_meditated_day": last_meditated_day,
 		"year_start_realm": year_start_realm,
 		"season_start_stats": season_start_stats.duplicate(),
+		"season_start_sets": season_start_sets,
 		"season_start_day": season_start_day,
 		"commissions": commissions.duplicate(true),
 		"milestones": milestones.duplicate(),
@@ -467,6 +469,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.last_meditated_day = int(d.get("last_meditated_day", -1))
 	c.year_start_realm = String(d.get("year_start_realm", ""))
 	c.season_start_stats = _int_values(d.get("season_start_stats", {}))
+	c.season_start_sets = int(d.get("season_start_sets", -1))
 	c.season_start_day = int(d.get("season_start_day", -1))
 	for order in d.get("commissions", []):
 		if order is Dictionary:

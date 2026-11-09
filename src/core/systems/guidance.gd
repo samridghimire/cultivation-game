@@ -1091,10 +1091,11 @@ static func nearest_selling(c: CharacterData, data: GameData, region_id: String,
 
 ## GUIDE-083: shortest total base route days from `from_id` to `to_id` (no hop limit, routes failing
 ## Exploration.check_travel skipped). 0 when equal, -1 when unreachable or unknown.
-static func route_days(c: CharacterData, data: GameData, from_id: String, to_id: String) -> int:
+## GUIDE-224: `ignore_realm_gates` also walks roads closed by a route's min_realm (the length only, no copy of `c`).
+static func route_days(c: CharacterData, data: GameData, from_id: String, to_id: String, ignore_realm_gates: bool = false) -> int:
 	if not data.regions.has(from_id) or not data.regions.has(to_id):
 		return -1
-	var days: Dictionary = _route_day_map(c, data, from_id, -1)["days"]
+	var days: Dictionary = _route_day_map(c, data, from_id, -1, ignore_realm_gates)["days"]
 	return int(days[to_id]) if days.has(to_id) else -1
 
 
@@ -1124,7 +1125,7 @@ static func hinted_region(data: GameData, hint: String, current_id: String) -> S
 
 ## Dijkstra over region routes: {"days": region_id -> total days, "order": regions in settle order, "prev": region_id -> region it was reached from}.
 ## `max_hops` < 0 means unlimited.
-static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int) -> Dictionary:
+static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int, ignore_realm_gates: bool = false) -> Dictionary:
 	var best_days := {region_id: 0}
 	var prev := {}
 	var hops := {region_id: 0}
@@ -1141,7 +1142,9 @@ static func _route_day_map(c: CharacterData, data: GameData, region_id: String, 
 			continue
 		for route: Dictionary in data.regions.get(cur, {}).get("routes", []):
 			var to: String = route["to"]
-			if not data.regions.has(to) or not Exploration.check_travel(c, data, cur, to)["ok"] or order.has(to):
+			if not data.regions.has(to) or order.has(to):
+				continue
+			if not ignore_realm_gates and not Exploration.check_travel(c, data, cur, to)["ok"]:
 				continue
 			var d := int(best_days[cur]) + int(route.get("days", 1))
 			if not best_days.has(to) or d < int(best_days[to]):
@@ -4856,9 +4859,7 @@ static func goal_trip_note(c: CharacterData, data: GameData, goal: String, regio
 	var days := route_days(c, data, region_id, target)
 	if days < 0:
 		# GUIDE-223: roads gated by min_realm (the Ridge's) still have a length worth telling.
-		var strong := CharacterData.from_dict(c.to_dict())
-		strong.realm_index = data.realms.size() - 1
-		days = route_days(strong, data, region_id, target)
+		days = route_days(c, data, region_id, target, true)
 	return " (%s)" % Calendar.format_duration(days) if days > 0 else ""
 
 

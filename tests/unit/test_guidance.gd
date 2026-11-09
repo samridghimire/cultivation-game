@@ -457,6 +457,18 @@ func test_better_qi_keeps_standalone_line_without_a_gather_line() -> void:
 	assert_eq(Guidance._merge_better_qi(lines, c, d, 1.0, "qingshi_village"), lines)
 
 
+func test_route_days_ignoring_realm_gates_matches_strong_copy() -> void:  # GUIDE-224
+	var c := _fresh()
+	c.realm_index = 1
+	var strong := CharacterData.from_dict(c.to_dict())
+	strong.realm_index = data().realms.size() - 1
+	var want := Guidance.route_days(strong, data(), "qingshi_village", "myriad_peaks_ridge")
+	assert_true(want > 0)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "myriad_peaks_ridge", true), want)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "myriad_peaks_ridge"), -1, "default still gated")
+	assert_eq(c.realm_index, 1, "character untouched")
+
+
 func test_route_days_follows_routes_and_gating() -> void:
 	var c := _fresh()
 	c.realm_index = 1
