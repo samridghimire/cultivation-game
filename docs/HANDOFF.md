@@ -1121,3 +1121,6 @@ Looked at all 8 PNGs from `screenshot_first_hour.gd` against WU-157's list. Noth
 
 ## Village look (QA-186)
 Viewed at 1280x800 under xvfb: `--field` (field plot, fence, labels), `--season=Autumn` hud_arrival (orange/red trees, leaf-strewn ground, seasonal chip in the HUD card) and the `--season=Spring` shop shot (WU-415: seasonal price tag, quantity row with `-10 < x1 > +10 Max`, category tabs). Nothing clipped or overlapping, no layout changes. Not viewed: the WU-413 invited-friend chip and the field menu with tool icons (no screenshot flag shows them; a `--companion` flag is still needed). Village sim `-- 10 12 --village` (10 seeds): fishing 527 stones over 480 days = ~1.10 stones/day (C-279 measured ~1.43; the later trophy/weather changes shifted it), field 151 stones vs rent 159 (net -8), 38 harvests, 37 quarrels.
+
+## Shot pass (QA-203), partial
+Fixed in `screenshot_first_hour.gd`: `--hud-panel` crop now scales by window/viewport ratio (viewed at 1280x720: whole panel, no clipping); multi-region `--region=a,b` clears the log per region (viewed qingshi_village,misty_forest at 1280x720: only that region's lines). Misty Forest arrival shot: no clipping or overlap. Not yet viewed: --season-board, --regular, calendar months, --festival, --contest, --season=Winter, --critters, --lesson flag, GFX-096 crop shots.

@@ -176,7 +176,8 @@ func _start() -> void:
 					var od: int = SecretRealms.next_open_day_in_region(gs.data, id, gs.get_node("/root/GameClock").total_days)
 					if od >= 0:
 						gs.get_node("/root/GameClock").total_days = od
-				_rebuild_world(gs, id), "close": func() -> void: pass})
+				_rebuild_world(gs, id)
+				root.get_node("EventBus").clear_history(), "close": func() -> void: pass})  # QA-203: no previous region's log lines
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return
@@ -821,6 +822,9 @@ func _process(_d: float) -> bool:
 		if shot.get("crop", false):  # WU-471: the guide panel at 2x
 			var panel: Control = hud.get("_guide_panel")
 			var r := panel.get_global_rect().grow(6.0)
+			var vp_size: Vector2 = root.get_viewport().get_visible_rect().size  # QA-203: image is in window pixels
+			var k: float = float(img.get_width()) / maxf(vp_size.x, 1.0)
+			r = Rect2(r.position * k, r.size * k)
 			img = img.get_region(Rect2i(r).intersection(Rect2i(Vector2i.ZERO, img.get_size())))
 			img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
 		img.save_png(file)
