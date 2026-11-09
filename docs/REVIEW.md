@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 99c86db
+Last reviewed commit: 2430218
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1762,3 +1762,16 @@ Last reviewed commit: 99c86db
     asked for one); its gathering figure is 3x simulate_fishing's (the sim counts one roll, in its Follow-ups); some
     C-336 birthday lines promise a gift ("this warm pill", "half price today") that no mechanic gives. WU-499 and
     GFX-108 say their screenshots were not re-rendered.
+- 2026-11-09 (reviewer, 4th run): reviewed 99c86db..2430218 (GFX-109, WU-500, C-334, C-335, GUIDE-227, FOLK-030, GFX-110,
+  QA-042, WU-501; [PLAN]/[REVIEW] skipped). Main green (3709 tests -> 3710). No BACKLOG/CHANGELOG edits by workers; no
+  binary assets (relief, edges, jetty posts, strips are code-drawn); no SAVE_VERSION change (`last_explore_look` is transient).
+  - Fixed (WU-501): `last_explore_look` was not reset by start_session/end_session/load_save_dict, so a cave look left
+    pending at quit could dress the next loaded game's saved pending encounter. Now reset there; test added.
+  - Fixed (FOLK-030): the gift line used the singular item name for count 2-3 (fine for Venison, wrong for any other
+    future gift) -> Items.item_plural.
+  - GUIDE-227 (binomial gather estimate with herb-lore table, bonus units and weather; CAL-008's off-by-one from my last
+    note fixed), GFX-109/GFX-110 (seeded layouts in Scenery, validated, tested), WU-500 (posts only in/at the pond, label
+    test), C-334 (figures all valid ENCOUNTER_FIGURES; spot-checked subjects), C-335, QA-042 OK.
+  - Notes, not filed: QA-042 found Core Formation fights almost all trivial (98% rated >95%), a planner/content call;
+    the new year-sim guard adds ~7 s to the suite. GFX-109/110, WU-500 and WU-501 did not render 1280x720 or their
+    encounter/season-card shots.

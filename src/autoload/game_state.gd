@@ -133,6 +133,7 @@ func start_session(character: CharacterData) -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
@@ -174,6 +175,7 @@ func end_session() -> void:
 	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
@@ -1725,7 +1727,7 @@ func _player_birthday_words(npc_id: String) -> bool:
 		var gift := Folk.player_birthday_gift_of(npc_id, data)  # FOLK-030
 		if not gift.is_empty() and Folk.player_birthday_own_line(npc_id, data):
 			player.add_item(String(gift["item"]), int(gift["count"]))
-			EventBus.post("%s gives you %d %s." % [npc.name, int(gift["count"]), String(data.items[gift["item"]]["name"])], "info")
+			EventBus.post("%s gives you %d %s." % [npc.name, int(gift["count"]), Items.item_plural(data, String(gift["item"]), int(gift["count"]))], "info")
 			EventBus.player_changed.emit()
 	if player.spouses.has(npc_id) or player.children.has(npc_id):
 		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
@@ -4362,6 +4364,7 @@ func load_save_dict(d: Dictionary) -> void:
 	dialogue_event = ""
 	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	if not data.regions.has(current_region):

@@ -918,6 +918,18 @@ func test_explore_look_kept_for_pending_choice() -> void:
 	gs.end_session()
 
 
+## REVIEW: a stale look never carries into a loaded game or a new session.
+func test_explore_look_reset_on_load_and_new_session() -> void:
+	_start()
+	var gs := _game_state()
+	gs.last_explore_look = "cave"
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(gs.to_save_dict())))
+	assert_eq(gs.last_explore_look, "", "load clears it")
+	gs.last_explore_look = "cave"
+	gs.end_session()
+	assert_eq(gs.last_explore_look, "", "end_session clears it")
+
+
 ## FH-025: an encounter on day one stops the exploring there.
 func test_explore_many_stops_when_something_happens() -> void:
 	_start()
