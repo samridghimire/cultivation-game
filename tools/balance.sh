@@ -53,6 +53,7 @@ fresh() {
 	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 	run "first Foundation Establishment year, fighting sensed threats (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2 --threats=fight
+	run "first Core Formation year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 3
 	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
 }
 CHECK=0
