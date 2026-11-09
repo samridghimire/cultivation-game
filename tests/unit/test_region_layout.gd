@@ -427,3 +427,31 @@ func test_map_water_kinds() -> void:
 		tex.append("".join(PixelLandmark._rows_of(PixelLandmark._pond(60, 40, true, kind))))
 	assert_eq(tex.size(), 3)
 	assert_true(tex[0] != tex[1] and tex[1] != tex[2] and tex[0] != tex[2], "each water kind is its own picture")
+
+
+## WU-499: no place's name label lies on another place's drawn footprint (per region that passes today).
+## Qingshi's remaining label/footprint pairs are spread at runtime (LabelLayout); these pairs are fixed in the layout.
+const LABEL_FOOTPRINT_REGIONS: Array[String] = ["qingshi_village"]
+const LABEL_FOOTPRINT_PAIRS: Array = [["Blossom Crack in the Hill", "Village Workshop"], ["Old Shrine", "Founder's Old Well"]]
+
+
+func test_place_labels_clear_of_other_footprints() -> void:
+	for region: Dictionary in data().regions.values():
+		if not LABEL_FOOTPRINT_REGIONS.has(String(region["id"])):
+			continue
+		var places: Array = region.get("places", [])
+		for place: Dictionary in places:
+			var node := Interactable.new()
+			var pos: Array = place["pos"]
+			var sz: Array = place.get("size", [30, 30])
+			node.position = Vector2(float(pos[0]), float(pos[1]))
+			node.size = Vector2(float(sz[0]), float(sz[1]))
+			var lr := node.label_rect(String(place.get("display_name", place["type"])))
+			node.free()
+			for other: Dictionary in places:
+				if other == place or not LABEL_FOOTPRINT_PAIRS.any(func(pr: Array) -> bool: return pr[0] == place.get("display_name") and pr[1] == other.get("display_name")):
+					continue
+				var osz: Array = other.get("size", [64, 64])
+				var ocen := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+				var body := Rect2(ocen - Vector2(float(osz[0]), float(osz[1])) * 0.65, Vector2(float(osz[0]), float(osz[1])) * 1.3)  # the drawn building (1.3x its rect)
+				assert_false(lr.intersects(body), "%s: label of %s lies on %s" % [region["id"], place.get("display_name", "?"), other.get("display_name", "?")])

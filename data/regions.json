@@ -34,7 +34,7 @@
       "map": {"size": [1600, 1000], "ground": "4d6b3c", "border": "2a3a20", "paths": [[0, 470, 1600, 60], [770, 0, 60, 1000]], "path_color": "8a7350", "ambient": {"spring": "petals", "autumn": "leaves"}, "decor": {"trees": 22, "rocks": 8, "grass": 40, "flowers": 16}, "landmarks": [{"kind": "jetty", "pos": [680, 314], "size": [88, 28]}, {"kind": "house", "pos": [180, 340], "size": [100, 80]}, {"kind": "house", "pos": [1400, 380], "size": [100, 80]}, {"kind": "house", "pos": [1330, 900], "size": [100, 70]}, {"kind": "house", "pos": [400, 790], "size": [100, 80]}, {"kind": "field", "pos": [170, 760], "size": [200, 120]}, {"kind": "field", "pos": [1350, 620], "size": [160, 100]}, {"kind": "pond", "pos": [680, 230], "size": [150, 100]}, {"kind": "fence", "pos": [960, 320], "size": [160, 40]}, {"kind": "well", "pos": [1030, 600], "size": [40, 40]}], "ambient_critters": [{"kind": "hen", "pos": [150, 412], "lays": {"item": "hen_egg", "chance": 0.5, "feed": {"item_tag": "grain", "eggs_min": 1, "eggs_max": 2}}}, {"kind": "hen", "pos": [205, 418], "lays": {"item": "hen_egg", "chance": 0.5, "feed": {"item_tag": "grain", "eggs_min": 1, "eggs_max": 2}}}, {"kind": "hen", "pos": [180, 436], "lays": {"item": "hen_egg", "chance": 0.5, "feed": {"item_tag": "grain", "eggs_min": 1, "eggs_max": 2}}}, {"kind": "duck", "pos": [640, 225]}, {"kind": "duck", "pos": [720, 240]}, {"kind": "butterfly", "pos": [480, 590]}, {"kind": "butterfly", "pos": [1150, 880]}]},
       "spawn": [800, 500], "festival_square": [660, 800],
       "family_home": {"pos": [380, 580], "size": [90, 64]},
-      "npc_spots": [[640, 540], [950, 250], [1150, 560], [200, 560], [650, 880], [1000, 880], [460, 90], [1500, 910], [1500, 270], [100, 190], [300, 910], [1220, 90], [1460, 630], [420, 390]],
+      "npc_spots": [[640, 540], [950, 250], [1150, 560], [200, 560], [650, 880], [1000, 910], [460, 90], [1500, 910], [1500, 270], [100, 190], [300, 910], [1220, 90], [1460, 630], [420, 390]],
       "routes": [
         {"to": "misty_forest", "days": 3},
         {"to": "fallen_star_market", "days": 10}
@@ -62,9 +62,9 @@
         {"type": "deed_giver", "display_name": "Farmer Tian", "pos": [1000, 400], "size": [30, 30], "color": "e6bf99", "look": {"robe": "b08a5a"}, "deed_context": "villager", "hidden_by_flag": "villager_dead"},
         {"type": "explore", "look": "trail", "display_name": "Village Outskirts", "pos": [550, 670], "size": [120, 70], "color": "6b7d4a"},
         {"type": "bounty_board", "display_name": "Hunters' Bounty Board", "pos": [700, 450], "size": [70, 60], "color": "9c7a4a"},
-        {"type": "inheritance", "display_name": "Founder's Old Well", "pos": [1250, 350], "size": [90, 60], "color": "7d8a7a"},
-        {"type": "secret_realm", "look": "cleft", "display_name": "Blossom Crack in the Hill", "pos": [1000, 760], "size": [90, 80], "color": "e8a0c0"},
-        {"type": "shrine", "display_name": "Old Shrine", "pos": [1180, 430], "size": [70, 70], "color": "8a8478"},
+        {"type": "inheritance", "display_name": "Founder's Old Well", "pos": [1280, 350], "size": [90, 60], "color": "7d8a7a"},
+        {"type": "secret_realm", "look": "cleft", "display_name": "Blossom Crack in the Hill", "pos": [1040, 800], "size": [90, 80], "color": "e8a0c0"},
+        {"type": "shrine", "display_name": "Old Shrine", "pos": [1165, 430], "size": [70, 70], "color": "8a8478"},
         {"type": "travel", "display_name": "Village Gate", "pos": [1540, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },

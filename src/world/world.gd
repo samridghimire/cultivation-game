@@ -971,7 +971,7 @@ func _limit_camera() -> void:
 	if camera == null:
 		return
 	camera.limit_left = 0
-	camera.limit_top = -CAMERA_MARGIN_TOP
+	camera.limit_top = 0  # WU-499: no empty band above the region (the margin strip stays painted as a fallback)
 	camera.limit_right = int(map_size.x)
 	camera.limit_bottom = int(map_size.y) + CAMERA_MARGIN_BOTTOM  # WU-472: scroll clear of the HUD bars (the border draws past the edge)
 
