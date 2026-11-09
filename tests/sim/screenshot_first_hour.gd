@@ -7,6 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
+## WU-495: append `-- --season-end` for the season card (season_card.png).
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
@@ -217,6 +218,14 @@ func _start() -> void:
 		special = true
 	if OS.get_cmdline_user_args().has("--hud-panel"):  # WU-471: the Next-steps panel, cropped at 2x
 		shots.append({"name": "hud_panel", "open": func() -> void: hud.get("_banner").visible = false, "close": func() -> void: pass, "crop": true})
+		special = true
+	if OS.get_cmdline_user_args().has("--season-end"):  # WU-495: the season card across a season boundary
+		var scard: Control = hud.get("_season_card")
+		shots.append({"name": "season_card", "open": func() -> void:
+			hud.get("_banner").visible = false
+			Engine.get_main_loop().root.get_node("EventBus").season_reviewed.emit("Autumn", 1, PackedStringArray(["You won 3 fights.", "Your cultivation advanced a stage.", "You gathered 12 herbs."]))
+			Engine.get_main_loop().root.get_node("EventBus").season_began.emit("Winter", 1, PackedStringArray(["Winter tasks are up at the village board.", "The Lantern Festival is coming."]))
+			hud.call("_flush_year_review"), "close": scard.close})
 		special = true
 	if OS.get_cmdline_user_args().has("--season-board"):  # WU-466: the village board's season task card
 		var sboard: Control = hud.get("_season_board")

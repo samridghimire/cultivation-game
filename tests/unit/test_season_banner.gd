@@ -29,10 +29,17 @@ func test_crossing_a_boundary_queues_one_banner() -> void:
 	assert_false(banner.visible)
 	clock.advance(Calendar.DAYS_PER_YEAR / 4)
 	await _frame()
-	assert_true(banner.visible)
-	# SEASON-012: the season recap takes the slot (the low "arrives" banner never waits behind it)
-	assert_eq(banner.title_text(), "Spring of Year 1 is over")
-	assert_eq(banner.queued_count(), 1, "SEASON-013: the kickoff waits behind the recap")
+	var dlg: Control = hud.get("_dialogue")  # the day's rival event may be talking: the card waits behind it
+	if dlg.visible:
+		assert_false((hud.get("_season_card") as SeasonCard).visible, "the card waits behind a conversation")
+		dlg.visible = false
+		hud.call("_flush_year_review")
+	# WU-495: the recap and kickoff ride on one season card (the low "arrives" banner stays a banner)
+	var card: SeasonCard = hud.get("_season_card")
+	assert_true(card.visible)
+	assert_eq(card.title_text(), "Summer of Year 1")
+	assert_true(card.back_lines().size() > 0, "SEASON-012: the recap")
+	card.close()
 	hud.free()
 	_root().get_node("GameState").end_session()
 	clock.reset()

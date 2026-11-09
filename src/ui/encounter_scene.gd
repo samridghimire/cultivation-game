@@ -21,6 +21,7 @@ const CORPSE_LOOK := {"robe": Color("5a4a40"), "sash": Color("3a2f2f")}
 
 var _figure: String = "player"
 var _snowing: bool = false
+var _force_snow: bool = false  # WU-495: the season card's winter strip
 
 
 func _init() -> void:
@@ -75,7 +76,14 @@ func show_encounter(enc: Dictionary) -> void:
 	_figure = figure_of(enc)
 	_foe_id = String(enc.get("id", ""))
 	_foe_beast = _figure == "beast"
-	_snowing = GameState.data != null and WorldScript.weather_today(GameState.data, GameState.current_region, GameClock.total_days) == "snow"
+	_snowing = _force_snow or GameState.data != null and WorldScript.weather_today(GameState.data, GameState.current_region, GameClock.total_days) == "snow"
+	queue_redraw()
+
+
+## WU-495: snow on the strip whatever the day's weather.
+func set_snow(on: bool) -> void:
+	_force_snow = on
+	_snowing = on or _snowing
 	queue_redraw()
 
 

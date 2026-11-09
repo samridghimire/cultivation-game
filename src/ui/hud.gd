@@ -138,6 +138,7 @@ var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
 var _friend_card: FriendSceneCard  # WU-467
+var _season_card: SeasonCard  # WU-495
 var _pending_friend_scenes: Array = []
 var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
@@ -211,12 +212,14 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_child_training))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
+	_combat_report.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # WU-495
 	add_child(UIStyle.centered(_combat_report))
 	_dialogue = DialogueWindow.new()
 	_dialogue.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_dialogue))
 	_encounter = EncounterWindow.new()
 	_encounter.closed.connect(_update_modal)
+	_encounter.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # WU-495
 	_encounter.closed.connect(_show_waiting_arrival)
 	add_child(UIStyle.centered(_encounter))
 	_quarrel = QuarrelWindow.new()
@@ -266,6 +269,12 @@ func _ready() -> void:
 	_friend_card.closed.connect(_update_modal)
 	_friend_card.closed.connect(_flush_friend_scenes)
 	add_child(UIStyle.centered(_friend_card))
+	_season_card = SeasonCard.new()
+	_season_card.closed.connect(_update_modal)
+	_season_card.closed.connect(_flush_year_review)
+	add_child(UIStyle.centered(_season_card))
+	_friend_card.closed.connect(_flush_year_review)
+	_contest_card.closed.connect(_flush_year_review)
 	_season_board = SeasonBoard.new()
 	_season_board.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_season_board))
@@ -358,7 +367,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1289,7 +1298,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1731,30 +1740,55 @@ func _on_season_began(season: String, year: int, lines: PackedStringArray) -> vo
 
 func _flush_year_review() -> void:
 	_flush_recap_banner()
-	if _pending_kickoff.is_empty() or not _pending_year.is_empty() or not _pending_season.is_empty():
+	if _pending_kickoff.is_empty() and _pending_season.is_empty():
+		return
+	if not _pending_year.is_empty():
 		return
 	if _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
 		return
 	if GameState.player == null or not GameState.player.alive:
-		return
-	var kl: PackedStringArray = _pending_kickoff[2]
-	_banner.announce("%s begins" % _pending_kickoff[0], "\n".join(kl), UIStyle.ACCENT, 4.0)
-	_pending_kickoff = []
-
-
-func _flush_recap_banner() -> void:
-	if _pending_year.is_empty() and not _pending_season.is_empty():
-		if not (_time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty()) and GameState.player != null and GameState.player.alive:
-			var sl: PackedStringArray = _pending_season[2]
-			_banner.announce("%s of Year %d is over" % [_pending_season[0], _pending_season[1]], "\n".join(sl), UIStyle.ACCENT, 4.0)
-			_pending_season = []
-		return
-	if not _pending_season.is_empty():
+		_pending_kickoff = []
 		_pending_season = []
+		return
+	if _season_card_blocked():
+		return  # WU-495: queued behind dialogue, friend, road and contest cards; their close re-runs this
+	var season := ""
+	var year := 1
+	var back := PackedStringArray()
+	var coming := PackedStringArray()
+	if not _pending_season.is_empty():
+		season = _pending_season[0]
+		year = int(_pending_season[1])
+		back = _pending_season[2]
+	if not _pending_kickoff.is_empty():
+		season = _pending_kickoff[0]
+		year = int(_pending_kickoff[1])
+		coming = _pending_kickoff[2]
+	_pending_kickoff = []
+	_pending_season = []
+	_choice_menu.close()
+	_close_screens()
+	_season_card.open(season, year, back, coming)
+	Audio.play("chime_info")
+	_update_modal()
+
+
+## WU-495: true while another card or dialogue is up; the season card waits for it.
+func _season_card_blocked() -> bool:
+	if _dialogue.visible and not _dialogue.closed.is_connected(_flush_year_review):
+		_dialogue.closed.connect(_flush_year_review, CONNECT_ONE_SHOT)
+	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
+		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
+	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _encounter.visible or _combat_report.visible
+
+
+## The year review stays a banner (WU-031); the season recap now rides on the season card.
+func _flush_recap_banner() -> void:
 	if _pending_year.is_empty() or _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
 		return
 	if GameState.player == null or not GameState.player.alive:
 		return
+	_pending_season = []
 	var lines: PackedStringArray = _pending_year[1]
 	_banner.announce("%s of your journey" % LifeStats.review_title(int(_pending_year[2]), int(_pending_year[0])), "\n".join(lines), UIStyle.ACCENT, 4.0)
 	_pending_year = []
@@ -1928,7 +1962,7 @@ func _queue_friend_card(entry: Array) -> void:
 
 
 func _flush_friend_scenes() -> void:
-	if _pending_friend_scenes.is_empty() or _friend_card.visible or _contest_card.visible:
+	if _pending_friend_scenes.is_empty() or _friend_card.visible or _season_card.visible or _contest_card.visible:
 		return
 	if _dialogue.visible:  # review: queued just before start_dialogue opened it; show once it closes
 		if not _dialogue.closed.is_connected(_flush_friend_scenes):
@@ -2138,7 +2172,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
 
 
 func _update_modal() -> void:
@@ -2162,7 +2196,7 @@ func _update_modal() -> void:
 
 ## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
