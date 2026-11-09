@@ -17,20 +17,26 @@ func _ready() -> void:
 	add_child(TitleBackdrop.new())
 
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	var title := UIStyle.label(ProjectSettings.get_setting("application/config/name"), 48, UIStyle.ACCENT)
+	box.add_theme_constant_override("separation", 10)
+	box.custom_minimum_size = Vector2(360, 0)
+	# GFX-105: the title sits on a framed plaque; the tagline under it in the dim gold accent.
+	var plaque := PanelContainer.new()
+	plaque.add_theme_stylebox_override("panel", UIStyle.panel_style())
+	var plaque_box := VBoxContainer.new()
+	plaque_box.add_theme_constant_override("separation", 4)
+	var title := UIStyle.label(ProjectSettings.get_setting("application/config/name"), 32, UIStyle.ACCENT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 64)
-	title.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
-	title.add_theme_constant_override("outline_size", 10)
-	box.add_child(title)
-	var subtitle := UIStyle.label("Mortal today. Immortal, perhaps, tomorrow.", 18, Color(0.85, 0.87, 0.92))
-	subtitle.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
-	subtitle.add_theme_constant_override("outline_size", 6)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	plaque_box.add_child(title)
+	var subtitle := UIStyle.label("Mortal today. Immortal, perhaps, tomorrow.", 16, UIStyle.ACCENT.darkened(0.25))
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(subtitle)
-	box.add_child(Control.new())
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	plaque_box.add_child(subtitle)
+	plaque.add_child(plaque_box)
+	box.add_child(plaque)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 6)
+	box.add_child(gap)
 
 	var new_game := UIStyle.button("New Game", func(): get_tree().change_scene_to_file(CHARACTER_CREATION))
 	box.add_child(new_game)
@@ -49,7 +55,9 @@ func _ready() -> void:
 	var credits_button := UIStyle.button("Credits", _open_credits)
 	box.add_child(credits_button)
 	box.add_child(UIStyle.button("Quit", func(): get_tree().quit()))
-	add_child(UIStyle.centered(box))
+	# Lower-left column over the dark foreground; the moon, pavilion and figure stay clear.
+	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE, 48)
+	add_child(box)
 	_menu = box
 	_settings = SettingsScreen.new()
 	_settings.closed.connect(func():
