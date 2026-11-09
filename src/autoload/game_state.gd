@@ -4652,6 +4652,15 @@ func _review_season_if_changed() -> void:
 	if not new_year:
 		EventBus.season_reviewed.emit(Calendar.season_of(last_ended), Calendar.year_of(last_ended), lines)
 	_store_season_snapshot()
+	_announce_season_start(now)
+
+
+## SEASON-013: after the recap, the new season's kickoff lines.
+func _announce_season_start(now: int) -> void:
+	var lines := SeasonTasks.kickoff_lines(data, now, current_region)
+	if lines.is_empty():
+		return
+	EventBus.season_began.emit(Calendar.season_of(now), Calendar.year_of(now), lines)
 
 
 func _on_days_advanced(days: int) -> void:

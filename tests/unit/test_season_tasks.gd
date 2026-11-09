@@ -473,3 +473,25 @@ func test_jetty_validation() -> void:
 	gd.season_tasks["restoration"]["projects"][1]["fish_bonus"] = 0.5
 	assert_false(SeasonTasks.validate(gd).is_empty(), "fish_bonus")
 	gd.season_tasks = saved
+
+
+func test_kickoff_lines_each_season() -> void:
+	var gd := data()
+	for s in 4:
+		var day := s * 3 * Calendar.DAYS_PER_MONTH
+		var lines := SeasonTasks.kickoff_lines(gd, day, "qingshi_village")
+		assert_true(lines.size() >= 1 and lines.size() <= 3, "season %d has 1-3 lines" % s)
+		assert_true(lines[0].begins_with("Village tasks: "))
+		assert_true(lines[0].length() <= 120, lines[0])
+		assert_true(lines[0].ends_with("."))
+	var summer := SeasonTasks.kickoff_lines(gd, 3 * Calendar.DAYS_PER_MONTH, "qingshi_village")
+	assert_true("Festivals: Dragon Boat Festival (month 5)." in summer)
+	assert_true(lines_have_prefix(SeasonTasks.kickoff_lines(gd, 0, "qingshi_village"), "Festivals: ") == (SeasonTasks.festival_line(gd, 0) != ""))
+	assert_true(summer[0].contains("land a Lotus Bass"))
+
+
+func lines_have_prefix(lines: PackedStringArray, prefix: String) -> bool:
+	for l in lines:
+		if l.begins_with(prefix):
+			return true
+	return false

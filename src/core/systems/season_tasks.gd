@@ -579,3 +579,58 @@ static func project_index(data: GameData, id: String) -> int:
 		if String(list[i].get("id", "")) == id:
 			return i
 	return -1
+
+
+## SEASON-013: the short form of one task for the kickoff line ("land a Lotus Bass", "gather 3 Spirit Herbs").
+static func task_short(data: GameData, t: Dictionary) -> String:
+	var target := String(t["target"])
+	var n := int(t.get("count", 1))
+	match String(t["kind"]):
+		"catch", "sell_wanted":
+			var name := String(data.items.get(target, {}).get("name", target))
+			return ("land a %s" if String(t["kind"]) == "catch" else "sell a %s") % name
+		"gather":
+			return "gather %d %s" % [n, String(data.items.get(target, {}).get("name", target))]
+		"hunt":
+			return "drive off a %s" % String(data.enemies.get(target, {}).get("name", target)).to_lower()
+		"contest":
+			return "enter the %s" % String(data.world_events.get(target, {}).get("name", target))
+	return String(t.get("text", "")).trim_suffix(".").to_lower()
+
+
+## SEASON-013: "Festivals: Dragon Boat Festival (month 5)." for the festivals whose fixed month falls in `day`'s season.
+static func festival_line(data: GameData, day: int) -> String:
+	var season := Calendar.season_of(day)
+	var parts: Array[String] = []
+	for ev: Dictionary in data.world_events.values():
+		if not bool(ev.get("festival", false)):
+			continue
+		for m in ev.get("months", []):
+			if Calendar.season_of((int(m) - 1) * Calendar.DAYS_PER_MONTH) == season:
+				parts.append("%s (month %d)" % [String(ev.get("name", "")), int(m)])
+	return "" if parts.is_empty() else "Festivals: %s." % ", ".join(parts)
+
+
+## SEASON-013: up to 3 lines for the first day of `day`'s season: village tasks (<= 120 chars), festivals, and the
+## region's in-season beasts. Pure.
+static func kickoff_lines(data: GameData, day: int, region_id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var tasks := tasks_for(data, day)
+	if not tasks.is_empty():
+		var parts: Array[String] = []
+		for t: Dictionary in tasks:
+			parts.append(task_short(data, t))
+		var line := "Village tasks: %s." % ", ".join(parts)
+		if parts.size() > 1:
+			var last: String = parts.pop_back()
+			line = "Village tasks: %s and %s." % [", ".join(parts), last]
+		if line.length() > 120:
+			line = line.substr(0, 117).strip_edges() + "..."
+		out.append(line)
+	var fest := festival_line(data, day)
+	if fest != "":
+		out.append(fest)
+	var beasts := Wildlife.season_clause(data, region_id, day)
+	if beasts != "":
+		out.append(beasts)
+	return out

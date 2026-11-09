@@ -129,6 +129,7 @@ var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
+var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
 var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
@@ -326,6 +327,7 @@ func _ready() -> void:
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
 	EventBus.season_reviewed.connect(_on_season_reviewed)
+	EventBus.season_began.connect(_on_season_began)
 	EventBus.milestone_reached.connect(_on_milestone)
 	EventBus.season_tasks_done.connect(_on_season_tasks_done)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
@@ -1719,7 +1721,28 @@ func _on_season_reviewed(season: String, year: int, lines: PackedStringArray) ->
 	_flush_year_review.call_deferred()
 
 
+## SEASON-013: the kickoff banner queues behind the recap (or the year review).
+func _on_season_began(season: String, year: int, lines: PackedStringArray) -> void:
+	if not Settings.get_value("yearly_recap") or lines.is_empty():
+		return
+	_pending_kickoff = [season, year, lines]
+	_flush_year_review.call_deferred()
+
+
 func _flush_year_review() -> void:
+	_flush_recap_banner()
+	if _pending_kickoff.is_empty() or not _pending_year.is_empty() or not _pending_season.is_empty():
+		return
+	if _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
+		return
+	if GameState.player == null or not GameState.player.alive:
+		return
+	var kl: PackedStringArray = _pending_kickoff[2]
+	_banner.announce("%s begins" % _pending_kickoff[0], "\n".join(kl), UIStyle.ACCENT, 4.0)
+	_pending_kickoff = []
+
+
+func _flush_recap_banner() -> void:
 	if _pending_year.is_empty() and not _pending_season.is_empty():
 		if not (_time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty()) and GameState.player != null and GameState.player.alive:
 			var sl: PackedStringArray = _pending_season[2]

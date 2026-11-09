@@ -3627,3 +3627,34 @@ func test_season_review_skips_old_save() -> void:
 	var rt := CharacterData.from_dict(old.to_dict())
 	assert_eq(rt.season_start_day, old.season_start_day)
 	assert_eq(rt.season_start_stats, old.season_start_stats)
+
+
+func test_season_kickoff_follows_recap() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var order: Array = []
+	var a := func(_s: String, _y: int, _l: PackedStringArray) -> void: order.append("recap")
+	var b := func(s: String, _y: int, l: PackedStringArray) -> void: order.append("kick:" + s + ":" + str(l.size()))
+	var yr := func(_y: int, _l: PackedStringArray, _sy: int) -> void: order.append("year")
+	bus.season_reviewed.connect(a)
+	bus.season_began.connect(b)
+	bus.year_reviewed.connect(yr)
+	LifeStats.add(c, "fights_won", 1)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # spring -> summer
+	assert_eq(order.size(), 2)
+	assert_eq(order[0], "recap")
+	assert_true(String(order[1]).begins_with("kick:Summer:"))
+	order.clear()
+	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # -> winter
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # winter -> spring: year review, then kickoff
+	bus.season_reviewed.disconnect(a)
+	bus.season_began.disconnect(b)
+	bus.year_reviewed.disconnect(yr)
+	# both are emitted in the same day change; the HUD shows the year review first (pending kickoff waits)
+	assert_true(order.has("year"))
+	var kicked := false
+	for o in order:
+		if String(o).begins_with("kick:Spring:"):
+			kicked = true
+	assert_true(kicked)
