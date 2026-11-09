@@ -293,6 +293,18 @@ static func _fish_phrase(data: GameData, region_id: String, weather: String) -> 
 	return ""
 
 
+## WU-504: the friends' lines of today_lines: a birthday today, and a lesson waiting. Pure.
+static func people_today_lines(c: CharacterData, data: GameData, active_events: Array, day: int, region_id: String,
+		npcs: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
+		if data.npcs.has(b["npc"].id):
+			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
+	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught, day):
+		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
+	return out
+
+
 ## TODAY-001: up to TODAY_MAX short lines on what today holds here, in a fixed order, each only when true: a festival
 ## and its contest, a great beast (tracks, baited), market day now or within 3 days, a stall's wanted item, in-season
 ## beasts and forage/fishing, today's and tomorrow's calendar reminders, the season's ending. Pure.
@@ -336,13 +348,11 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	if Folk.player_birthday_today(c, data, day):  # FOLK-027
 		out.append("Today is your birthday.")
 	# 1b. Named friends (GUIDE-218): a birthday today, and a lesson waiting.
+	out.append_array(people_today_lines(c, data, active_events, day, region_id, npcs, favor))
 	var named_birthday := {}
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
 		if data.npcs.has(b["npc"].id):
 			named_birthday[b["npc"].id] = true
-			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
-	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught, day):
-		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
 	if not great.is_empty():

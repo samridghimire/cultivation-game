@@ -101,7 +101,7 @@ func open() -> void:
 	_text.clear()
 	_text.append_text(format_entries(list))
 	_build_cards(list)
-	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line())
+	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines())
 	set_page("today")
 	visible = true
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
@@ -160,7 +160,7 @@ static func parse_goal(text: String) -> Dictionary:
 
 
 ## WU-458: the date, weather and one icon row per Today line (a quiet-day line when there are none).
-func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: String = "") -> void:
+func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: String = "", earning: PackedStringArray = PackedStringArray(), people: PackedStringArray = PackedStringArray()) -> void:
 	for c in _today.get_children():
 		_today.remove_child(c)
 		c.queue_free()
@@ -188,7 +188,26 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 		quiet.name = "TodayQuiet"
 		inner.add_child(quiet)
 	for line in lines:
+		if people.has(line):  # shown in the People card below
+			continue
 		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
+	_today.add_child(card)
+	_today_card("EarningCard", "Earning here", earning, "coin")
+	_today_card("PeopleCard", "People today", people, "calendar")
+
+
+## WU-504: a titled card of icon rows under the main Today card; hidden (not built) when there are no lines.
+func _today_card(card_name: String, title: String, lines: PackedStringArray, icon_kind: String) -> void:
+	if lines.is_empty():
+		return
+	var card := UIStyle.panel()
+	card.name = card_name
+	var inner := VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 6)
+	card.add_child(inner)
+	inner.add_child(UIStyle.label(title, 15, UIStyle.ACCENT))
+	for line in lines:
+		inner.add_child(_today_row(line, HudIcons.today_glyph(icon_kind), "today_row"))
 	_today.add_child(card)
 
 

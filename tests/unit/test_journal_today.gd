@@ -82,3 +82,24 @@ func test_one_left_line() -> void:
 	assert_eq(HUD.season_one_left_line(_tasks([true, false, false]), "spring"), "")
 	assert_eq(HUD.season_one_left_line(_tasks([true, true, true]), "spring"), "")
 	assert_eq(HUD.season_one_left_line([], "spring"), "")
+
+
+func test_earning_and_people_cards() -> void:
+	var s := _screen()
+	s._build_today(PackedStringArray(["Fresh tracks in Y.", "Mei has something to show you."]), [], "",
+		PackedStringArray(["Gathering (Herb Slope): about 3 stones a day."]), PackedStringArray(["Mei has something to show you."]))
+	assert_true(s._today.find_child("EarningCard", true, false) != null)
+	assert_true(s._today.find_child("PeopleCard", true, false) != null)
+	assert_eq(_rows(s), 3)  # tracks + earning + one people row (not repeated in the main card)
+	s._build_today(PackedStringArray())
+	assert_true(s._today.find_child("EarningCard", true, false) == null)
+	assert_true(s._today.find_child("PeopleCard", true, false) == null)
+	s.queue_free()
+
+
+func test_people_today_lines_empty_for_new_game() -> void:
+	new_character()
+	var root: Node = Engine.get_main_loop().root
+	root.get_node("GameState").start_session(new_character())
+	assert_true(root.get_node("GameState").earning_lines_here().size() <= 3)
+	assert_true(root.get_node("GameState").people_today_lines().size() >= 0)

@@ -708,6 +708,20 @@ func today_lines() -> PackedStringArray:
 	return Guidance.today_lines(player, data, world_flags, world_events, GameClock.total_days, current_region, npcs, npc_favor)
 
 
+## WU-504: the friends' lines of today_lines (birthday today, lesson waiting) for the journal's People card.
+func people_today_lines() -> PackedStringArray:
+	if player == null:
+		return PackedStringArray()
+	return Guidance.people_today_lines(player, data, world_events, GameClock.total_days, current_region, npcs, npc_favor)
+
+
+## WU-504: the top 3 earning rows here, as text lines.
+func earning_lines_here() -> PackedStringArray:
+	if player == null:
+		return PackedStringArray()
+	return Earnings.lines(Earnings.earning_options(player, data, world_flags, current_region, GameClock.total_days).slice(0, 3))
+
+
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
 func _post_arrival_line() -> void:
 	var day := GameClock.total_days
