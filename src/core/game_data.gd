@@ -50,6 +50,8 @@ var herb_lore: Dictionary = {}  # GATHER-001: regions.json "herb_lore" (HerbLore
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
 ## ENC-014: encounters.json `figure` values (what the encounter strip draws).
 const ENCOUNTER_FIGURES: Array = ["none", "beast", "robed", "villager", "child", "elder", "spirit", "treasure", "corpse"]
+## GFX-106: valid items.json `icon` values (ItemIcon must have a glyph and body colour for each; a unit test checks).
+const ITEM_ICON_KINDS: PackedStringArray = ["pill", "herb", "ore", "beast_material", "spirit_stone", "weapon", "armor", "accessory", "talisman", "manual", "scroll", "fish", "pouch", "food", "drink", "lantern", "incense", "charm", "kite", "thread", "trophy", "meat", "grain"]
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## True for an int or a whole-number float (JSON numbers load as floats).
@@ -500,6 +502,8 @@ func _validate() -> void:
 	for item: Dictionary in items.values():
 		if (item.get("tags", []) as Array).has("untagged"):
 			load_errors.append("Item '%s': 'untagged' is a reserved stock tag" % item["id"])
+		if item.has("icon") and not (item["icon"] is String and ITEM_ICON_KINDS.has(item["icon"])):
+			load_errors.append("Item '%s': icon must be one of %s" % [item["id"], ", ".join(ITEM_ICON_KINDS)])
 		if item.has("forage_tint") and not (item["forage_tint"] is String and Color.html_is_valid(item["forage_tint"])):
 			load_errors.append("Item '%s': forage_tint must be a hex colour like '#8fb6c8'" % item["id"])
 		if item.get("effects", {}).has("buff"):

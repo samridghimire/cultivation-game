@@ -26,6 +26,16 @@ const GLYPHS := {
 	"champions_drumstick": ["............", ".........oo.", "........oaao", ".......oabao", "......oaaao.", ".....oaao...", "....oaao....", "...oaao.....", "..obao......", ".oabo.......", ".ooo........", "............"],
 	"paper_moon_crown": ["............", "o...o..o...o", "oo.oao.oao.o", "oaooabooabao", "oabaaaaaaabo", "oaaaabbaaaao", "oaaabbbbaaao", "oaaaabbbaaao", ".oooooooooo.", "............", "............", "............"],
 	"riddle_masters_lantern": ["............", ".....oo.....", "....oaao....", "..oooooooo..", ".oabaaaaabo.", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oooooooo..", "....oaao....", "....o..o....", "............"],
+	"food": ["............", "............", ".....oo.....", "....oabo....", "...oaaaao...", "..oabaaaao..", ".oabaaaaaao.", ".oaaaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............"],
+	"drink": ["............", "....oooo....", "....obbo....", ".....oo.....", "....oaao....", "..ooaaaaoo..", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............"],
+	"lantern": ["............", ".....oo.....", ".....oo.....", "...oooooo...", "..oabaaaao..", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", ".....oo.....", ".....oo....."],
+	"incense": ["...b..b..b..", "...o..o..o..", "...o..o..o..", "...o..o..o..", "...o..o..o..", ".oooooooooo.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............", "............"],
+	"charm": [".....oo.....", "....oaao....", "...oabaao...", "..oabaaaao..", "...oaaaao...", "....oaao....", ".....oo.....", ".....oao....", "....oaaao...", "....oaaao...", "....oaoao...", "............"],
+	"kite": [".....oo.....", "....oabo....", "...oabaao...", "..oabaaaao..", ".oabbbbbbbao", "..oaaaaaao..", "...oaaaao...", "....oaao....", ".....oo.....", ".....o......", "......o.....", ".....o.o...."],
+	"thread": ["............", "..oooooooo..", "..oabbbbao..", "...oooooo...", "...oabaao...", "...obaaao...", "...oabaao...", "...oaaabo...", "...oooooo...", "..oabbbbao..", "..oooooooo..", "............"],
+	"trophy": ["............", "........oo..", ".......oabo.", "......oabo..", ".....oabo...", "....oabao...", "...oabaao...", "..oabaaao...", "..oabaaoo...", "..oaaaao....", "..oooooo....", "............"],
+	"meat": ["............", "...oooooo...", "..oabbaaao..", ".oabaaaaaao.", ".oaaaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...ooaaoo...", "....oaao....", ".....obo....", "....obbbo...", "....ooooo..."],
+	"grain": ["............", "...b.b.b....", "...oooooo...", "....oaao....", "...oooooo...", "..oabaaaao..", ".oabaaaaaao.", ".oaaaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............"],
 	"pouch": ["............", "....o..o....", "....oooo....", "...oabbao...", "..oaaaaaao..", ".oabaaaaaao.", ".oabaaaaaao.", ".oaaaaaaaao.", "..oaaaaaao..", "...oooooo...", "............", "............"],
 }
 
@@ -33,8 +43,21 @@ const BODY := {
 	"pill": Color("e8b04a"), "herb": Color("5aa65a"), "ore": Color("8a8f9c"), "beast_material": Color("c9b18a"),
 	"spirit_stone": Color("7cc8e8"), "weapon": Color("b8c0cc"), "armor": Color("9a7a52"), "accessory": Color("d9a441"),
 	"fish": Color("c88a5a"), "talisman": Color("e8d27a"), "manual": Color("8a5a3a"), "scroll": Color("e8dcc0"), "pouch": Color("a8784a"),
+	"food": Color("e8d2a0"),
+	"drink": Color("b0763c"),
+	"lantern": Color("d9453a"),
+	"incense": Color("c89a6a"),
+	"charm": Color("c8403c"),
+	"kite": Color("e8b04a"),
+	"thread": Color("b07ad8"),
+	"trophy": Color("e8e0cc"),
+	"meat": Color("b8564a"),
+	"grain": Color("c8a86a"),
 	"ribbon_of_the_ridge_kite": Color("c8403c"), "champions_drumstick": Color("b8863f"), "paper_moon_crown": Color("e8dcc0"), "riddle_masters_lantern": Color("d9453a"),
 }
+
+## GFX-106: kinds tinted by the item's own colour (or a hash of its id).
+const TINTED_KINDS: Array[String] = ["food", "drink", "lantern", "charm", "thread"]
 
 static var _cache: Dictionary = {}
 
@@ -47,6 +70,8 @@ static func kind_of(item: Dictionary) -> String:
 		return str(item["id"])  # WU-463: a keepsake with a glyph of its own
 	if str(item.get("id", "")) == "spirit_stone":
 		return "spirit_stone"
+	if str(item.get("icon", "")) != "":
+		return str(item["icon"])  # GFX-106: the item's own choice (data)
 	if item.has("equip"):
 		var slot := str((item["equip"] as Dictionary).get("slot", ""))
 		return slot if slot in ["weapon", "accessory"] else "armor"
@@ -64,6 +89,11 @@ static func kind_of(item: Dictionary) -> String:
 		return "ore"
 	if tags.has("beast_material"):
 		return "beast_material"
+	for tag: String in ["trophy", "meat", "grain"]:
+		if tags.has(tag):
+			return tag
+	if tags.has("keepsake"):
+		return "charm"
 	if bool(item.get("usable", false)):
 		return "pill"
 	return "pouch"
@@ -86,7 +116,9 @@ static func texture(item_id: String, item: Dictionary) -> Texture2D:
 	if _cache.has(item_id):
 		return _cache[item_id]
 	var body: Color = BODY[kind]
-	if kind == "pill" or kind == "herb":
+	if kind in TINTED_KINDS:
+		body = body.lerp(tint_for(item_id, item), 0.7)
+	elif kind == "pill" or kind == "herb":
 		body = body.lerp(TINTS[absi(item_id.hash()) % TINTS.size()], 0.7)
 	elif kind == "fish":
 		body = tint_for(item_id, item)
