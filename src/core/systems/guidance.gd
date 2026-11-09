@@ -4482,6 +4482,9 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	if village.size() > 1:
 		for line in village:
 			_add(out, "Around the village", line, "normal")
+	# GUIDE-226: what a day is worth here.
+	for line in Earnings.lines(Earnings.earning_options(c, data, flags, region_id, today)):
+		_add(out, "Earning here", line, "normal")
 	return out
 
 

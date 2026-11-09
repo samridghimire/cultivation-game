@@ -28,12 +28,18 @@ static func rank_name(xp: int) -> String:
 	return name
 
 
-## FISH-007: extra catch draws (0 or 1) a trip earns at this rank; draws from `rng` only when the chance is fractional.
-static func bonus_draws(xp: int, rng: RandomNumberGenerator) -> int:
+## Chance (0..1) of the rank's extra catch draw at `xp`.
+static func bonus_chance(xp: int) -> float:
 	var chance := 0.0
 	for r in RANKS:
 		if xp >= int(r["min"]):
 			chance = float(r["bonus_chance"])
+	return chance
+
+
+## FISH-007: extra catch draws (0 or 1) a trip earns at this rank; draws from `rng` only when the chance is fractional.
+static func bonus_draws(xp: int, rng: RandomNumberGenerator) -> int:
+	var chance := bonus_chance(xp)
 	if chance <= 0.0:
 		return 0
 	if chance >= 1.0:
