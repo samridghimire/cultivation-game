@@ -687,6 +687,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var duty := duty_hint(c, data, flags, region_id, today)
 		if duty != "":
 			out.append(duty)
+	var home_hint := sect_home_hint(c, data, region_id)
+	if home_hint != "":
+		out.append(home_hint)
 	var due := ""
 	var due_urgent := false
 	if today >= 0:
@@ -3113,6 +3116,33 @@ static func _merge_sell_advice(out: PackedStringArray, sell_line: String) -> Pac
 			out.remove_at(out.find(sell_line))
 			break
 	return out
+
+
+## GUIDE-236: a sect member who has never visited their sect's home region is told where it is, how far, and
+## what really waits there ("" for rogues, sects without a home, or once visited).
+static func sect_home_hint(c: CharacterData, data: GameData, region_id: String = "") -> String:
+	if c.is_rogue():
+		return ""
+	var sect_id := String(c.sect["id"])
+	var home := Sects.home_region(data, sect_id)
+	if home == "" or not data.regions.has(home) or c.visited_regions.has(home) or region_id == home:
+		return ""
+	var hall := Sects.hall_name(data, home, c)
+	if hall == "":
+		return ""
+	var what: PackedStringArray = []
+	for m: Dictionary in data.sect_missions.values():
+		if (m.get("sects", []) as Array).has(sect_id):
+			what.append("your sect's own missions")
+			break
+	if not Sects.lecture_def(c, data).is_empty():
+		what.append("the monthly lecture")
+	var tail := ""
+	if not what.is_empty():
+		tail = ": " + " and ".join(what)
+	var days := route_days(c, data, region_id, home) if region_id != "" else 0
+	var road := " (%s by road)" % Calendar.format_duration(days) if days > 0 else ""
+	return "Your sect's home is %s in %s%s%s." % [hall, Exploration.region_name(data, home), road, tail]
 
 
 ## GUIDE-167: the duty reminder plus the quickest ready mission that covers what is owed, else what missing it costs.

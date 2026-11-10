@@ -6624,3 +6624,20 @@ func test_short_hint_rewrites_the_meal_line() -> void:
 	var cook := Guidance.short_hint("Cook Eel Congee at Village Workshop before you fight the Mist Fox (Even 41 -> 55).")
 	assert_eq(cook, "Cook Eel Congee: 41 -> 55")
 	assert_true(Guidance.short_hint("Eat a Mountain Hotpot Supreme Feast before you fight the Iron-Backed Great Boar: Hard 20 -> 34.").length() <= Guidance.SHORT_HINT_CHARS)
+
+
+## GUIDE-236: a new disciple is told where the sect lives until they have been there.
+func test_sect_home_hint_until_visited() -> void:
+	var c := _fresh()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+	c.visited_regions.clear()
+	var hint := Guidance.sect_home_hint(c, data(), "qingshi_village")
+	assert_true(hint.contains("Azure Cloud Hall in "), hint)
+	var days := Guidance.route_days(c, data(), "qingshi_village", "azure_peak")
+	if days > 0:
+		assert_true(hint.contains(Calendar.format_duration(days) + " by road"), hint)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, {}, {}, "qingshi_village"), "Your sect's home is"))
+	c.visited_regions.append("azure_peak")
+	assert_eq(Guidance.sect_home_hint(c, data(), "qingshi_village"), "")
+	var rogue := _fresh()
+	assert_eq(Guidance.sect_home_hint(rogue, data(), "qingshi_village"), "")
