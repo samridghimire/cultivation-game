@@ -73,3 +73,22 @@ func test_season_look_per_season() -> void:
 	for s in ["Spring", "Summer", "Autumn", "Winter"]:
 		assert_true(SeasonCard.SEASON_LOOKS.has(s))
 	assert_true(SeasonCard.SEASON_LOOKS["Spring"]["ground"] != SeasonCard.SEASON_LOOKS["Autumn"]["ground"])
+
+
+## WU-506: encounter scene > explore look > region wild_look > village; unknown values are skipped.
+func test_scene_look_order() -> void:
+	assert_eq(PlaceLooks.scene_look("woods", "cave", "ridge"), "woods")
+	assert_eq(PlaceLooks.scene_look("", "cave", "ridge"), "cave")
+	assert_eq(PlaceLooks.scene_look("", "", "ridge"), "ridge")
+	assert_eq(PlaceLooks.scene_look("", "", ""), "village")
+	assert_eq(PlaceLooks.scene_look("bogus", "", "reeds"), "reeds")
+	assert_eq(PlaceLooks.scene_look("village", "cave", "ridge"), "village")
+	assert_eq(EncounterScene.backdrop_for_look("village"), "roofs")
+
+
+func test_scene_data_is_valid() -> void:
+	var data := data()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	assert_eq(String(data.encounters["misty_forest_hidden_valley"].get("scene", "")), "woods")
+	assert_eq(String(data.regions["withered_bone_marsh"]["map"].get("wild_look", "")), "reeds")
+	assert_false(data.regions["qingshi_village"]["map"].has("wild_look"))

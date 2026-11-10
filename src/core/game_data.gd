@@ -290,6 +290,8 @@ func _load(dir: String) -> void:
 	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
 	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
+		if encounter.has("scene") and not (encounter["scene"] is String and (PlaceLooks.EXPLORE_LOOKS.has(String(encounter["scene"])) or encounter["scene"] == PlaceLooks.VILLAGE_SCENE)):
+			load_errors.append("encounter %s: scene %s is not one of %s or village" % [encounter["id"], encounter["scene"], PlaceLooks.EXPLORE_LOOKS])
 		if encounter.has("figure") and not (encounter["figure"] is String and String(encounter["figure"]) in ENCOUNTER_FIGURES):
 			load_errors.append("encounter %s: figure %s is not one of %s" % [encounter["id"], encounter["figure"], ENCOUNTER_FIGURES])
 
@@ -649,6 +651,8 @@ func _validate_world() -> void:
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
 		load_errors.append_array(signpost_clearance_errors(region))
+		if region.get("map", {}).has("wild_look") and not PlaceLooks.EXPLORE_LOOKS.has(String(region["map"]["wild_look"])):
+			load_errors.append("Region '%s': unknown map.wild_look '%s' (use %s)" % [region["id"], region["map"]["wild_look"], ", ".join(PlaceLooks.EXPLORE_LOOKS)])
 		if region.get("map", {}).has("water") and not PlaceLooks.WATER_KINDS.has(String(region["map"]["water"])):
 			load_errors.append("Region '%s': unknown map.water '%s' (use %s)" % [region["id"], region["map"]["water"], ", ".join(PlaceLooks.WATER_KINDS)])
 		for place: Dictionary in region.get("places", []):

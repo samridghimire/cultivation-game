@@ -96,7 +96,9 @@ func open() -> void:
 		close()
 		return
 	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
-	_scene.show_encounter(enc, GameState.last_explore_look)
+	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
+	var wild: String = String((region.get("map", {}) as Dictionary).get("wild_look", ""))
+	_scene.show_encounter(enc, PlaceLooks.scene_look(String(enc.get("scene", "")), GameState.last_explore_look, wild))
 	_scene.set_choice_count(choices.size())
 	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
