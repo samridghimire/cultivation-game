@@ -39,3 +39,21 @@ func test_bad_edge_is_rejected() -> void:
 	var data := GameData.load_from_dir()
 	data.regions["qingshi_village"]["map"]["edge"] = "moat"
 	assert_true(Scenery.validate(data).size() > 0)
+
+
+func test_jagged_outline() -> void:
+	var rect := Rect2(10, 20, 100, 30)
+	var a := Scenery.jagged_outline(rect, 7, 12, 6.0)
+	assert_eq(a, Scenery.jagged_outline(rect, 7, 12, 6.0), "deterministic")
+	assert_eq(a.size(), 12)
+	assert_eq(a[0], Vector2(10, 50), "starts bottom-left")
+	assert_eq(a[a.size() - 1], Vector2(110, 50), "ends bottom-right")
+	for p in a:
+		assert_true(rect.grow(6.0).has_point(p), "inside grown rect")
+
+
+func test_cliff_props_have_height_jitter() -> void:
+	var props := Scenery.edge_props({"id": "azure_peak", "map": {"edge": "cliff", "paths": []}}, Vector2(1600, 1000))
+	assert_false(props.is_empty())
+	for it: Dictionary in props:
+		assert_true(float(it["h"]) >= 0.65 and float(it["h"]) <= 1.0)

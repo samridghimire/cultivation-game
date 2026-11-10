@@ -1138,16 +1138,7 @@ func _draw_edge() -> void:
 					draw_rect(Rect2(inner.position, Vector2(px * 2.0, inner.size.y)), stone.lightened(0.25))
 					draw_line(Vector2(inner.position.x + px * 2.0, inner.position.y + inner.size.y * 0.5), Vector2(inner.end.x, inner.position.y + inner.size.y * 0.5), stone.darkened(0.35), px)
 			"cliff":
-				var rock := Color("7c8590").darkened(rng.randf_range(0.0, 0.2))
-				draw_rect(r, rock.darkened(0.45))
-				var face := Rect2(r.position + Vector2(px, px), r.size - Vector2(px * 2.0, px * 2.0))
-				draw_rect(face, rock.darkened(0.15))
-				var lip := Rect2(face.position, Vector2(face.size.x, px * 3.0)) if it["side"] != 0 else Rect2(face.position.x, face.end.y - px * 3.0, face.size.x, px * 3.0)
-				if it["side"] >= 2:
-					lip = Rect2(face.position, Vector2(px * 3.0, face.size.y)) if it["side"] == 3 else Rect2(face.end.x - px * 3.0, face.position.y, px * 3.0, face.size.y)
-				draw_rect(lip, rock.lightened(0.3))
-				if winter:
-					draw_rect(Rect2(face.position.x, face.position.y - px, face.size.x, px * 2.0), Color("e8eef4"))
+				_draw_rock_mass(r, int(it["seed"]), int(it["side"]), float(it.get("h", 1.0)), _rock_color(), winter)
 			"reeds":
 				var stalk := Color("7a8a4a").darkened(rng.randf_range(0.0, 0.3))
 				for n in 3:
@@ -1156,6 +1147,47 @@ func _draw_edge() -> void:
 					draw_line(Vector2(x, y + px * 6.0), Vector2(x + rng.randf_range(-px, px), y - px * 4.0), stalk, px)
 					if n == 0:
 						draw_rect(Rect2(x - px * 0.5, y - px * 7.0, px, px * 3.0), Color("5a3a22"))
+
+
+## GFX-111: the region's rock colour (decor.rock_color).
+func _rock_color() -> Color:
+	return Color(String(_region.get("map", {}).get("decor", {}).get("rock_color", "8a939c")))
+
+
+## GFX-111: a rock mass with a jagged silhouette facing into the map: shaded face, cracks, a lit lip along the
+## top silhouette only, pebbles in front. `side` 0 top, 1 bottom, 2 left, 3 right edge (landmark cliffs use 1).
+func _draw_rock_mass(r: Rect2, seed_value: int, side: int, h: float, rock: Color, snowy: bool) -> void:
+	var px := float(Sprites.scale())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var horizontal := side < 2
+	var length := r.size.x if horizontal else r.size.y
+	var depth := (r.size.y if horizontal else r.size.x) * h
+	length += px * 3.0  # neighbours overlap a few px, so no seams show
+	var u0 := (r.position.x if horizontal else r.position.y) - px * 1.5
+	var local := Scenery.jagged_outline(Rect2(0, 0, length, depth), seed_value, maxi(5, int(length / 6.0)), minf(depth * 0.35, 10.0))
+	var pts := PackedVector2Array()
+	for p in local:
+		match side:
+			0: pts.append(Vector2(u0 + p.x, r.end.y - p.y))
+			1: pts.append(Vector2(u0 + p.x, r.position.y + (r.size.y - depth) + p.y))
+			2: pts.append(Vector2(r.end.x - p.y, u0 + p.x))
+			_: pts.append(Vector2(r.position.x + (r.size.x - depth) + p.y, u0 + p.x))
+	var shade := rock.darkened(0.3 + rng.randf_range(0.0, 0.1))
+	draw_colored_polygon(pts, shade)
+	var c := (pts[0] + pts[pts.size() - 1]) * 0.5
+	for k in rng.randi_range(1, 2):
+		var t := rng.randf_range(0.2, 0.8)
+		var tip: Vector2 = pts[1 + int(t * (pts.size() - 3))]
+		draw_line(tip, tip.lerp(c, rng.randf_range(0.5, 0.9)) + Vector2(px * 2.0, 0), shade.darkened(0.4), px)
+	var rim := pts.slice(1, pts.size() - 1)
+	draw_polyline(rim, rock.lightened(0.25), px * 2.0)
+	if snowy:
+		draw_polyline(rim, Color("e8eef4"), px * 3.0)
+	for k in rng.randi_range(0, 2):
+		var q: Vector2 = rim[rng.randi_range(0, rim.size() - 1)]
+		var off := Vector2(0, -px * 3.0) if side == 1 else (Vector2(0, px * 3.0) if side == 0 else (Vector2(px * 3.0, 0) if side == 2 else Vector2(-px * 3.0, 0)))
+		draw_rect(Rect2(q + off, Vector2(px * 2.0, px * 2.0)), rock.darkened(0.15))
 
 
 ## GFX-109: rock ledges (lit top, dark face, cracks), boulder clusters and snow drifts, in crisp scaled pixels.
@@ -1176,16 +1208,11 @@ func _draw_relief(map: Dictionary) -> void:
 		rng.seed = int(it["seed"])
 		match it["kind"]:
 			"ledge":
-				var top := ground.lightened(0.25)
-				var face := ground.darkened(0.35)
-				var x := r.position.x
-				while x < r.end.x:
-					var step := minf(px * rng.randi_range(6, 10), r.end.x - x)
-					var lift := px * rng.randi_range(0, 2)
-					var seg := Rect2(x, r.position.y + lift, step, r.size.y - lift)
-					draw_rect(seg, face)
-					draw_rect(Rect2(seg.position, Vector2(step, px * 3.0)), top)
-					x += step
+				var face := rock.darkened(0.35)
+				draw_rect(Rect2(r.position.x + px, r.end.y, r.size.x - px * 2.0, px * 2.0), Color(0, 0, 0, 0.25))
+				var outline := Scenery.jagged_outline(r, int(it["seed"]), maxi(5, int(r.size.x / 10.0)), minf(px * 3.0, r.size.y * 0.3))
+				draw_colored_polygon(outline, face)
+				draw_polyline(outline.slice(1, outline.size() - 1), rock.lightened(0.15), px * 2.0)
 				for c in rng.randi_range(2, 3):
 					var cx := r.position.x + rng.randf_range(0.1, 0.9) * r.size.x
 					draw_line(Vector2(cx, r.position.y + px * 4.0), Vector2(cx + px * 2.0, r.end.y - px * 2.0), face.darkened(0.3), px)
@@ -1289,6 +1316,10 @@ func _draw_landmark(lm: Dictionary) -> void:
 		return
 	if lm["kind"] == "clouds":
 		_draw_clouds(r)
+		return
+	if lm["kind"] == "cliff":
+		# GFX-111: landmark cliffs use the same rock template as the edge props, not the brown timber palette.
+		_draw_rock_mass(r, hash(str(lm["pos"])), 1, 1.0, _rock_color(), Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false)))
 		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))

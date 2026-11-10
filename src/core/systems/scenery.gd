@@ -458,7 +458,25 @@ static func edge_props(region: Dictionary, size: Vector2) -> Array[Dictionary]:
 					break
 			var seed_value := rng.randi()
 			if not blocked and step >= 8.0:
-				out.append({"kind": kind, "rect": r, "seed": seed_value, "side": side})
+				var prop := {"kind": kind, "rect": r, "seed": seed_value, "side": side}
+				if kind == "cliff":
+					prop["h"] = 0.65 + 0.35 * float(seed_value % 100) / 100.0  # GFX-111: per-prop height (fraction of the rect's depth)
+				out.append(prop)
+	return out
+
+
+## GFX-111: a rock silhouette for `rect`: [bottom-left, jagged top points..., bottom-right], deterministic from `seed`.
+## The top points run left to right across the rect, each lifted 0..`jitter` px below the top edge; every point lies inside rect.grow(jitter).
+static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var n := maxi(points, 4) - 2
+	out.append(Vector2(rect.position.x, rect.end.y))
+	for i in n:
+		var x := rect.position.x + rect.size.x * float(i) / float(n - 1)
+		out.append(Vector2(x, rect.position.y + rng.randf() * jitter))
+	out.append(Vector2(rect.end.x, rect.end.y))
 	return out
 
 
