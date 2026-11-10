@@ -42,13 +42,13 @@
           {"flag": "jetty_stage_3", "text": "Fresh planks are laid, and the old folk walk out to the end of the jetty just to feel it hold."}
         ],
         "done_text": "The pond jetty is whole: fish bite more readily at Qingshi's pond, and a pearl-backed rarity has been seen beneath the planks."}
-      ,      {"id": "terraces", "name": "the Herb Slope Terraces", "region": "qingshi_village", "done_line": "The Herb Slope climbs in green steps again, friend, and every basket comes down heavier.", "gather_bonus": 0.1,
+      ,      {"id": "terraces", "name": "the Herb Slope Terraces", "region": "qingshi_village", "done_line": "The slope climbs in green steps again, friend, and Lan says every basket comes down heavier.", "gather_bonus": 0.1,
         "stages": [
-          {"flag": "terraces_stage_1", "text": "Villagers clear the brambles from the old Herb Slope terraces."},
-          {"flag": "terraces_stage_2", "text": "Fallen retaining walls of the Herb Slope are stacked stone by stone."},
-          {"flag": "terraces_stage_3", "text": "Fresh soil is carried up and the Herb Slope terraces are planted."}
+          {"flag": "terraces_stage_1", "text": "Herbalist Lan and the slope's old women hack the brambles off the terraces, grumbling that their mothers kept them tidier."},
+          {"flag": "terraces_stage_2", "text": "Stone by stone the fallen walls go back up. The old women swear each one sits where their grandmothers laid it."},
+          {"flag": "terraces_stage_3", "text": "Baskets of dark soil are carried up, and Herbalist Lan plants the first row herself, humming off-key."}
         ],
-        "done_text": "The Herb Slope terraces are whole: a day's gathering in Qingshi may turn up a little more."}
+        "done_text": "The Herb Slope terraces are whole: the old women say the slope gives freely again, and a day's gathering may turn up a little more."}
     ]
   },
   "seasons": {
