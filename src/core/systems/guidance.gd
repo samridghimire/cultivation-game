@@ -464,6 +464,14 @@ static func short_hint(line: String, data: GameData = null) -> String:
 	if purse != null:
 		var tight := "%s at %s: ~%s a day" % [purse.get_string(1).capitalize(), purse.get_string(2), purse.get_string(3)]
 		return tight if tight.length() <= SHORT_HINT_CHARS else "%s: ~%s stones a day" % [purse.get_string(1).capitalize(), purse.get_string(3)]
+	# GUIDE-228: "Eat an Eel Congee before you fight the Mist Fox: Even 55 -> 63." -> "Eat Eel Congee: 55 -> 63"
+	re.compile("^(Eat|Cook) (?:an? )?(.+?)(?: at .+?)? before you fight the .+?[:(] ?\\w+ (\\d+) -> (\\d+)")
+	var meal := re.search(line)
+	if meal != null:
+		var meal_short := "%s %s: %s -> %s" % [meal.get_string(1), meal.get_string(2), meal.get_string(3), meal.get_string(4)]
+		if meal_short.length() <= SHORT_HINT_CHARS:
+			return meal_short
+		return "%s: %s -> %s" % [meal.get_string(1), meal.get_string(3), meal.get_string(4)]
 	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
 	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
 	var m := re.search(line)

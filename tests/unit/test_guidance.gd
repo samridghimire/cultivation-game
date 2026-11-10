@@ -6615,3 +6615,11 @@ func test_probes_leave_the_character_untouched_and_match_a_copy() -> void:
 	assert_eq(Guidance._mortal_sect_hint(c, d, PackedStringArray()), Guidance._mortal_sect_hint(copy, d, PackedStringArray()))
 	assert_eq(JSON.stringify(c.to_dict()), before, "no probe leaves a trace")
 	assert_eq(JSON.stringify(copy.to_dict()), before)
+
+
+func test_short_hint_rewrites_the_meal_line() -> void:
+	var held := Guidance.short_hint("Eat an Eel Congee before you fight the Mist Fox: Even 55 -> 63.")
+	assert_eq(held, "Eat Eel Congee: 55 -> 63")
+	var cook := Guidance.short_hint("Cook Eel Congee at Village Workshop before you fight the Mist Fox (Even 41 -> 55).")
+	assert_eq(cook, "Cook Eel Congee: 41 -> 55")
+	assert_true(Guidance.short_hint("Eat a Mountain Hotpot Supreme Feast before you fight the Iron-Backed Great Boar: Hard 20 -> 34.").length() <= Guidance.SHORT_HINT_CHARS)
