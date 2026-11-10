@@ -44,7 +44,7 @@ func test_headman_chores_pay_once() -> void:
 	var places: Array = gs.data.regions["qingshi_village"]["places"].filter(func(p: Dictionary) -> bool: return p.get("deed_context", "") == "headman")
 	assert_eq(places.size(), 1, "Headman Zhou stands in Qingshi Village")
 	var chores := Deeds.available(gs.data, "headman", gs.world_flags)
-	assert_eq(chores.size(), 4, "three chores and the extortion")
+	assert_eq(chores.size(), 6, "three one-time chores, two errands and the extortion")
 	var stones := c.item_count("spirit_stone")
 	gs.perform_deed("chore_gather_herbs")
 	assert_gt(c.item_count("spirit_stone"), stones)
@@ -52,7 +52,7 @@ func test_headman_chores_pay_once() -> void:
 	gs.perform_deed("chore_widow_roof")
 	gs.perform_deed("chore_drive_off_boar")
 	assert_true(gs.world_flags.get("chore_boar_done", false), "a newcomer beats the boar")
-	assert_eq(Deeds.available(gs.data, "headman", gs.world_flags).map(func(dd: Dictionary) -> String: return dd["id"]), ["extort_headman"], "each chore once")
+	assert_eq(Deeds.available(gs.data, "headman", gs.world_flags).map(func(dd: Dictionary) -> String: return dd["id"]), ["extort_headman", "chore_odd_jobs", "chore_haul_water"], "one-time chores once; errands stay")
 	assert_gt(c.alignment, 0)
 	gs.end_session()
 

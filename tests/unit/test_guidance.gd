@@ -309,13 +309,14 @@ func test_newcomer_pill_hint_precedes_cultivation_hint() -> void:
 	assert_true(pill_at < qi_at)
 
 
-func test_headman_chores_hint_only_in_village_until_done() -> void:
+func test_headman_chores_hint_only_in_village() -> void:
 	var c := _fresh()
 	var flags := {Guidance.ELDER_MO_FLAG: true}
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "qingshi_village"), "Headman Zhou"))
 	assert_false(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "misty_forest"), "Headman Zhou"))
+	# C-347: the repeatable errands keep the hint alive after the one-time chores are done.
 	flags.merge({"chore_herbs_done": true, "chore_boar_done": true, "chore_roof_done": true})
-	assert_false(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "qingshi_village"), "Headman Zhou"))
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 10, {}, flags, "qingshi_village"), "Headman Zhou"))
 
 
 func test_no_newcomer_hints_past_qi_refining() -> void:

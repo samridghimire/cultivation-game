@@ -88,11 +88,10 @@ func test_chore_row_matches_deed_pay_per_day() -> void:
 				continue
 			for deed in Deeds.available(data(), String(place["deed_context"]), {}):
 				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
-				if stones > 0 and Deeds.is_repeatable(deed) and Deeds.check(c, data(), deed, {}, 0) == "":
+				if stones > 0 and Deeds.is_repeatable(deed) and int(deed.get("effects", {}).get("alignment", 0)) >= 0 and String(deed.get("enemy", "")) == "" and Deeds.check(c, data(), deed, {}, 0) == "":
 					best = maxf(best, float(stones) / float(maxi(1, int(deed.get("days", 1)))))
 		assert_true(absf(float(r["per_day"]) - best) < 0.001, "chore %f vs %f" % [float(r["per_day"]), best])
 		return
-	# GUIDE-230: Qingshi's headman chores are one-time, so a newcomer sees no chore row.
 
 
 ## A crafter gets a craft row worth (sell price - ingredient cost) / days.
@@ -307,3 +306,21 @@ func test_one_time_rows_list_good_headman_jobs() -> void:
 func test_lines_capitalize_gathering() -> void:
 	var rows: Array[Dictionary] = [{"kind": "gather", "place": "Herb Slope", "note": "gathering", "per_day": 3.0}]
 	assert_true(Earnings.lines(rows)[0].begins_with("Gathering ("))
+
+## C-347: Qingshi has repeatable paid errands; doing one hides the row until its cooldown ends.
+func test_qingshi_errands_are_a_repeatable_wage() -> void:
+	for id in ["chore_odd_jobs", "chore_haul_water"]:
+		assert_true(Deeds.is_repeatable(data().deeds[id]), id)
+	var c := new_character()
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	assert_true(_kinds(rows).has("chore"), "fresh character sees an errands row")
+	for r in rows:
+		if r["kind"] == "chore":
+			assert_true(absf(float(r["per_day"]) - 4.5) < 0.001, "about 4.5 a day")
+	c.deed_days["chore_odd_jobs"] = 0
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 1):
+		if r["kind"] == "chore":
+			assert_true(String(r["note"]).contains("Temple of Mercy"), "next deed is the water haul")
+	c.deed_days["chore_haul_water"] = 0
+	assert_false(_kinds(Earnings.earning_options(c, data(), {}, "qingshi_village", 1)).has("chore"), "both cooling down")
+	assert_true(_kinds(Earnings.earning_options(c, data(), {}, "qingshi_village", 7)).has("chore"), "odd jobs back after 7 days")

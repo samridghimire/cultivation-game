@@ -25,6 +25,8 @@
     {"id": "chore_gather_herbs", "name": "Gather spirit herbs on the hillside for the clinic", "context": "headman", "days": 3, "blocked_by_flag": "chore_herbs_done", "effects": {"witnessed": true, "alignment": 5, "items": {"spirit_stone": 8, "qi_gathering_pill": 1}, "set_flag": "chore_herbs_done"}},
     {"id": "chore_drive_off_boar", "name": "Drive off the wild boar raiding the fields", "context": "headman", "days": 1, "blocked_by_flag": "chore_boar_done", "enemy": "wild_boar", "effects": {"witnessed": true, "alignment": 10, "items": {"spirit_stone": 12}, "set_flag": "chore_boar_done"}},
     {"id": "extort_headman", "name": "Demand the headman pay you to 'protect' the village", "context": "headman", "days": 0, "blocked_by_flag": "headman_extorted", "requires": {"min_realm": "qi_refining"}, "effects": {"witnessed": true, "alignment": -40, "items": {"spirit_stone": 25}, "set_flag": "headman_extorted"}},
-    {"id": "chore_widow_roof", "name": "Mend Widow Chen's leaking roof", "context": "headman", "days": 2, "blocked_by_flag": "chore_roof_done", "effects": {"witnessed": true, "alignment": 15, "items": {"qi_gathering_pill": 2}, "set_flag": "chore_roof_done"}}
+    {"id": "chore_widow_roof", "name": "Mend Widow Chen's leaking roof", "context": "headman", "days": 2, "blocked_by_flag": "chore_roof_done", "effects": {"witnessed": true, "alignment": 15, "items": {"qi_gathering_pill": 2}, "set_flag": "chore_roof_done"}},
+    {"id": "chore_odd_jobs", "name": "Run errands around the village for Headman Zhou", "context": "headman", "days": 2, "cooldown_days": 7, "effects": {"witnessed": true, "alignment": 2, "items": {"spirit_stone": 9}}},
+    {"id": "chore_haul_water", "name": "Carry water and firewood for the Temple of Mercy", "context": "headman", "days": 1, "cooldown_days": 10, "effects": {"witnessed": true, "alignment": 5, "items": {"spirit_stone": 4}}}
   ]
 }

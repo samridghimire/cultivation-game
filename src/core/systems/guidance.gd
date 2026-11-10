@@ -3680,7 +3680,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	if region_id == CHORE_REGION:
 		for deed: Dictionary in data.deeds.values():
 			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
-				out.append("Headman Zhou has chores that pay stones and pills.")
+				out.append("Headman Zhou has paid work: errands and chores.")
 				break
 	if c.techniques.is_empty() and not technique_done:
 		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing else TECHNIQUE_HINT)
