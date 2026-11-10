@@ -295,8 +295,11 @@ static func _fish_phrase(data: GameData, region_id: String, weather: String) -> 
 
 ## WU-504: the friends' lines of today_lines: a birthday today, and a lesson waiting. Pure.
 static func people_today_lines(c: CharacterData, data: GameData, active_events: Array, day: int, region_id: String,
-		npcs: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
+		npcs: Dictionary = {}, favor: Dictionary = {}, flags: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
+	var guests := festival_guest_line(data, active_events, day, region_id, npcs, favor, flags)
+	if guests != "":
+		out.append(guests)
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
 		if data.npcs.has(b["npc"].id):
 			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
@@ -306,6 +309,39 @@ static func people_today_lines(c: CharacterData, data: GameData, active_events: 
 
 
 const FESTIVAL_LINE_MAX := 160
+const GUEST_LINE_DEFAULT := "At the {festival}: {names} will cheer for you; last year's champion {champion} is back."
+const GUEST_NAMES_MAX := 3
+
+
+## FOLK-031: who is at today's festival here: friends who will cheer (at most 3 names, "and N more") and last year's
+## champion. "" off festival days, in other regions, or with neither. Optional world_events.json `guest_line`
+## ({festival}, {names}, {champion}) is used when both are present. Pure.
+static func festival_guest_line(data: GameData, active_events: Array, day: int, region_id: String,
+		npcs: Dictionary, favor: Dictionary, flags: Dictionary) -> String:
+	for instance: Dictionary in WorldEvents.active_in(active_events, region_id):
+		var eid := String(instance.get("id", ""))
+		if not WorldEvents.is_festival(data, eid) or int(instance.get("end_day", -1)) < day:
+			continue
+		var festival := WorldEvents.event_name(data, eid)
+		var friends := FestivalContest.friends_of(npcs, data, favor, region_id, 1)
+		var names: Array[String] = []
+		for f in friends.slice(0, GUEST_NAMES_MAX):
+			names.append(f.name)
+		var name_text := ""
+		if not names.is_empty():
+			name_text = names[0] if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1]
+			if friends.size() > GUEST_NAMES_MAX:
+				name_text = ", ".join(names) + " and %d more" % (friends.size() - GUEST_NAMES_MAX)
+		var champion := FestivalContest.champion_rival(flags, eid, Calendar.year_of(day))
+		if name_text == "" and champion == "":
+			return ""
+		var template := String(WorldEvents.def_of(data, eid).get("guest_line", GUEST_LINE_DEFAULT))
+		if name_text != "" and champion != "":
+			return template.format({"festival": festival, "names": name_text, "champion": champion})
+		if name_text != "":
+			return "At the %s: %s will cheer for you." % [festival, name_text]
+		return "At the %s: last year's champion %s is back." % [festival, champion]
+	return ""
 
 
 ## TODAY-001: up to TODAY_MAX short lines on what today holds here, in a fixed order, each only when true: a festival

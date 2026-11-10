@@ -343,6 +343,10 @@ static func validate(data: GameData) -> PackedStringArray:
 				if not (tag is String) or String(tag).is_empty():
 					errors.append("World event '%s' stall_tags must be a non-empty list of strings" % id)
 					break
+		if def.has("guest_line"):
+			var gl: Variant = def["guest_line"]
+			if not (gl is String) or String(gl).is_empty() or not String(gl).contains("{names}"):
+				errors.append("World event '%s' guest_line must be a non-empty string with {names}" % id)
 		for item_id in def.get("shop_items", []):
 			if not data.items.has(item_id) or int(data.items[item_id].get("price", 0)) <= 0:
 				errors.append("World event '%s' shop_items needs a known item with a price: '%s'" % [id, item_id])

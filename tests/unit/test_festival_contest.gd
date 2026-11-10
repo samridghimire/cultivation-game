@@ -534,3 +534,40 @@ func test_contest_win_becomes_village_news() -> void:
 	assert_eq(int(result["place"]), 1)
 	assert_eq(String(gs.world_flags["village_news"]["kind"]), "contest_win")
 	assert_true(gs.greeting_for(npc.id).contains(String(gs.world_flags["village_news"]["subject"])))
+
+
+func _guest_events(day: int, region: String = "qingshi_village") -> Array:
+	return [{"id": "lantern_festival", "region": region, "start_day": day, "end_day": day + 5}]
+
+
+func test_festival_guest_line() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var day := 400
+	var year := Calendar.year_of(day)
+	var favor := {(folk[0] as CharacterData).id: 45, (folk[1] as CharacterData).id: 50}
+	var flags := {FestivalContest.winner_key("lantern_festival"): {"year": year - 1, "name": "Wen Qingxu", "you": false, "streak": 1}}
+	var line := Guidance.festival_guest_line(gs.data, _guest_events(day), day, "qingshi_village", gs.npcs, favor, flags)
+	assert_true(line.begins_with("At the Lantern Festival:"), line)
+	assert_true(line.contains((folk[0] as CharacterData).name) and line.contains((folk[1] as CharacterData).name))
+	assert_true(line.contains("Wen Qingxu"))
+	assert_eq(Guidance.festival_guest_line(gs.data, [], day, "qingshi_village", gs.npcs, favor, flags), "", "no festival")
+	assert_eq(Guidance.festival_guest_line(gs.data, _guest_events(day, "misty_forest"), day, "qingshi_village", gs.npcs, favor, flags), "", "other region")
+	assert_true(Guidance.people_today_lines(gs.player, gs.data, _guest_events(day), day, "qingshi_village", gs.npcs, favor, flags).size() >= 1)
+	gs.end_session()
+
+
+func test_festival_guest_line_caps_names() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	assert_true(folk.size() >= 4)
+	var favor := {}
+	for i in 4:
+		favor[(folk[i] as CharacterData).id] = 45 + i
+	var line := Guidance.festival_guest_line(gs.data, _guest_events(400), 400, "qingshi_village", gs.npcs, favor, {})
+	assert_true(line.contains("and 1 more"), line)
+	assert_false(line.contains((folk[0] as CharacterData).name), "the 4th friend is not named")
+	assert_eq(Guidance.festival_guest_line(gs.data, _guest_events(400), 400, "qingshi_village", gs.npcs, {}, {}), "", "nobody there")
+	gs.end_session()

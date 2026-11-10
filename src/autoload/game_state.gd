@@ -714,7 +714,7 @@ func today_lines() -> PackedStringArray:
 func people_today_lines() -> PackedStringArray:
 	if player == null:
 		return PackedStringArray()
-	return Guidance.people_today_lines(player, data, world_events, GameClock.total_days, current_region, npcs, npc_favor)
+	return Guidance.people_today_lines(player, data, world_events, GameClock.total_days, current_region, npcs, npc_favor, world_flags)
 
 
 ## WU-504: the top 3 earning rows here, as text lines.
