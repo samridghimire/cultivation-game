@@ -7,6 +7,9 @@ extends SceneTree
 
 const SEASONS: Array[String] = ["Spring", "Summer", "Autumn", "Winter"]
 const RANKS: Array = [["Novice", 0], ["Angler", 10], ["Old Hand", 40]]
+## Regions whose whole catch table needs a realm: the sim character (and the gathering row) is at this realm index.
+## myriad_peaks_ridge: every entry needs Core Formation (3), so its rows are for a Core Formation character.
+const REALM_FOR_REGION := {"myriad_peaks_ridge": 3}
 
 
 func _initialize() -> void:
@@ -29,7 +32,7 @@ func _run() -> void:
 			for stage: int in flags:
 				for rank: Array in RANKS:
 					_cell(gs, data, rid, place, String(rank[0]), int(rank[1]), stage, trips)
-			print("  gathering in %s: %.2f stones/day at the best gather place (Mortal)" % [rid, _gather_day(data, rid)])
+			print("  gathering in %s: %.2f stones/day at the best gather place (%s)" % [rid, _gather_day(data, rid), "Core Formation" if REALM_FOR_REGION.has(rid) else "Mortal"])
 	quit(0)
 
 
@@ -48,6 +51,7 @@ func _cell(gs: Node, data: GameData, rid: String, place: Dictionary, rank: Strin
 			rng.seed = 1000 * season_i + i + 1
 			var c := CharacterFactory.create("Angler", data, rng)
 			c.fishing_xp = xp
+			c.realm_index = int(REALM_FOR_REGION.get(rid, 0))
 			gs.start_session(c)
 			gs.pending_event = ""
 			gs.current_region = rid
@@ -76,10 +80,11 @@ func _cell(gs: Node, data: GameData, rid: String, place: Dictionary, rank: Strin
 	print("  %-22s %-8s jetty %d: %.2f/day avg (%s), rare in %.0f%% of trips" % [rid, rank, stage, all_stones / all_days, ", ".join(per_season), 100.0 * rare_trips / all_trips])
 
 
-## Expected stones per day at the region's best gather place (sold at shop price).
+## Expected stones per day at the region's best gather place (sold at shop price); one trip makes Exploration.GATHER_ROLLS rolls, as GameState.gather does.
 func _gather_day(data: GameData, region: String) -> float:
 	var best := 0.0
 	var c := CharacterData.new()
+	c.realm_index = int(REALM_FOR_REGION.get(region, 0))
 	for place: Dictionary in data.regions[region].get("places", []):
 		if place.get("type", "") != "gather":
 			continue
@@ -89,5 +94,5 @@ func _gather_day(data: GameData, region: String) -> float:
 			total += float(entry.get("weight", 0.0))
 			if String(entry.get("item", "")) != "":
 				value += float(entry["weight"]) * (int(entry.get("min", 1)) + int(entry.get("max", 1))) / 2.0 * Items.sell_price(data, String(entry["item"]))
-		best = maxf(best, value / maxf(total, 0.001) / maxi(1, int(place.get("gather_days", 1))))
+		best = maxf(best, value / maxf(total, 0.001) * Exploration.GATHER_ROLLS / maxi(1, int(place.get("gather_days", 1))))
 	return best
