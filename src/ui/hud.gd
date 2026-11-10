@@ -1888,10 +1888,10 @@ func _show_waiting_arrival() -> void:
 		_show_arrival(region_id)
 
 
-## Arrival banner subtitle (WU-192): "First visit · Qi x1.5 · Danger: Calm · Known here: Respected".
+## Arrival banner subtitle (WU-192, WU-514): "First visit · Qi x1.5 · Calm · Known here: Respected".
 ## `c` may be null (no title).
 static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool) -> String:
-	var sub := "Qi x%s · Danger: %s" % [Exploration.format_density(qi), danger]
+	var sub := "Qi x%s · %s" % [Exploration.format_density(qi), danger]
 	if first_visit:
 		sub = "First visit · " + sub
 	var title := Renown.title(c, data, region_id) if c != null else ""
@@ -1907,14 +1907,12 @@ func _show_arrival(region_id: String) -> void:
 	var qi := Exploration.effective_density(data, region_id, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.player)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
-	var extra := arrival_extra(GameState.world_flags, region_id)
-	if extra != "":
-		sub += "\n" + extra
+	# WU-514: today's line is in the message log and Next steps, not repeated on the banner.
 	var hold := Banner.SLIM_HOLD_SECONDS  # WU-510: a slim banner that leaves the village visible
 	_arrival_title = Exploration.region_name(data, region_id)
 	if _blocking_except_encounter():
 		return # WU-491: a screen is open; the name card is not shown over it
-	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold, false, null, true)
+	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold, false, null, true, UIStyle.arrival_danger_color(WorldMapScreen.danger_name(data, region_id)))
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:

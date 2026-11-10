@@ -202,8 +202,8 @@ func test_arrival_subtitle() -> void:
 	var d := data()
 	var c := new_character()
 	var region: String = d.start_region
-	assert_eq(HUD.arrival_subtitle(c, d, region, 1.5, "Calm", false), "Qi x1.5 · Danger: Calm")
-	assert_eq(HUD.arrival_subtitle(null, d, region, 1.0, "Calm", true), "First visit · Qi x1 · Danger: Calm")
+	assert_eq(HUD.arrival_subtitle(c, d, region, 1.5, "Calm", false), "Qi x1.5 · Calm")
+	assert_eq(HUD.arrival_subtitle(null, d, region, 1.0, "Calm", true), "First visit · Qi x1 · Calm")
 	var tiers: Array = d.renown["tiers"]
 	var t: Dictionary = tiers[1]
 	c.renown[region] = int(t["min"])
@@ -211,6 +211,21 @@ func test_arrival_subtitle() -> void:
 	assert_true(sub.ends_with("Known here: " + str(t["title"])), sub)
 	sub = HUD.arrival_subtitle(c, d, region, 1.5, "Calm", true)
 	assert_true(sub.begins_with("First visit · ") and sub.ends_with("Known here: " + str(t["title"])), sub)
+
+
+## WU-514: the banner subtitle never says "Today in" or "Danger:"; each danger word has a colour.
+func test_arrival_subtitle_is_short_and_coloured() -> void:
+	var d := data()
+	var c := new_character()
+	for region: String in d.regions:
+		var word := WorldMapScreen.danger_name(d, region)
+		var sub: String = HUD.arrival_subtitle(c, d, region, 1.0, word, true)
+		assert_false(sub.contains("Today in") or sub.contains("Danger:"), sub)
+		assert_true(UIStyle.ARRIVAL_DANGER_COLORS.has(word), word)
+	for word: String in WorldMapScreen.DANGER_NAMES:
+		assert_true(UIStyle.ARRIVAL_DANGER_COLORS.has(word), word)
+	assert_true(UIStyle.arrival_danger_color("Safe").g > UIStyle.arrival_danger_color("Safe").r, "safe is green")
+	assert_true(UIStyle.arrival_danger_color("Deadly").r > UIStyle.arrival_danger_color("Deadly").g, "deadly is red")
 
 
 ## WU-082: the hunt line, the quarry note and the bounty banner.

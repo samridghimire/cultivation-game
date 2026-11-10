@@ -128,16 +128,16 @@ func subtitle_text() -> String:
 
 
 ## `low` banners (the turn of the seasons) never wait in the queue: if something is showing they are dropped.
-func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false, portrait: Texture2D = null, slim: bool = false) -> void:
+func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false, portrait: Texture2D = null, slim: bool = false, sub_color: Color = Color(0, 0, 0, 0)) -> void:
 	if low and (visible or held):
 		return
 	if held or (visible and _tween != null):
-		_queue.append([title, subtitle, color, hold, portrait, slim])
+		_queue.append([title, subtitle, color, hold, portrait, slim, sub_color])
 		while _queue.size() > MAX_QUEUE:
 			_drop_oldest()
 		_shorten_current()
 		return
-	_play(title, subtitle, color, hold, portrait, slim)
+	_play(title, subtitle, color, hold, portrait, slim, sub_color)
 
 
 ## Hold or release the banner. Releasing plays the next queued banner if none is showing.
@@ -181,7 +181,7 @@ func finish_current() -> void:
 		hide()
 		return
 	var next: Array = _queue.pop_front()
-	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()), next[4] if next.size() > 4 else null, bool(next[5]) if next.size() > 5 else false)
+	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()), next[4] if next.size() > 4 else null, bool(next[5]) if next.size() > 5 else false, next[6] if next.size() > 6 else Color(0, 0, 0, 0))
 
 
 ## WU-409: a banner on screen with another waiting behind it fades after QUEUED_HOLD_SECONDS in total.
@@ -205,8 +205,8 @@ func _drop_oldest() -> void:
 	_queue.remove_at(0)
 
 
-func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null, slim: bool = false) -> void:
-	_current = [title, subtitle, color, hold, portrait, slim]
+func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null, slim: bool = false, sub_color: Color = Color(0, 0, 0, 0)) -> void:
+	_current = [title, subtitle, color, hold, portrait, slim, sub_color]
 	slim_showing = slim
 	_holder.anchor_top = 0.02 if slim else 0.03
 	_holder.anchor_bottom = 0.09 if slim else 0.2
@@ -222,6 +222,10 @@ func _play(title: String, subtitle: String, color: Color, hold: float, portrait:
 	_title.text = title
 	_title.add_theme_color_override("font_color", color)
 	_subtitle.text = subtitle
+	if sub_color.a > 0.0:  # WU-514: a coloured subtitle (the arrival banner's danger word)
+		_subtitle.add_theme_color_override("font_color", sub_color)
+	else:
+		_subtitle.remove_theme_color_override("font_color")
 	_subtitle.visible = subtitle != ""
 	var widest := 0.0
 	var font := _subtitle.get_theme_font("font")

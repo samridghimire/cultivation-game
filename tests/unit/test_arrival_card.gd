@@ -22,7 +22,7 @@ func test_arrival_banner_on_region_change_only() -> void:
 	assert_true(banner.visible)
 	assert_eq(banner.title_text(), Exploration.region_name(gs.data, dest))
 	assert_true(banner.subtitle_text().begins_with("Qi x"))
-	assert_true(banner.subtitle_text().contains("Danger: "))
+	assert_false(banner.subtitle_text().contains("Danger: "), "WU-514: just the danger word")
 	banner.visible = false
 	gs.pending_respawn = {"cause": "test", "anchor_id": "x", "lives_left": 1, "qi_lost": 0}
 	bus.region_changed.emit(dest)
@@ -123,7 +123,7 @@ func test_first_visit_card_marked_once() -> void:
 	gs.end_session()
 
 
-## WU-438: the arrival line sits under the qi/danger line; a load never shows the name card.
+## WU-438/WU-514: the arrival line stays off the banner; a load never shows the name card.
 func test_arrival_card_carries_the_arrival_line() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var gs := root.get_node("GameState")
@@ -139,7 +139,7 @@ func test_arrival_card_carries_the_arrival_line() -> void:
 	gs.world_flags["arrival_region"] = dest
 	gs.world_flags["arrival_line"] = "A festival fills the lanes."
 	bus.region_changed.emit(dest)
-	assert_true(banner.subtitle_text().contains(" · A festival fills the lanes."))
+	assert_false(banner.subtitle_text().contains("festival fills the lanes"), "WU-514: the banner does not repeat today's line")
 	banner.visible = false
 	gs.world_flags["arrival_line"] = ""
 	bus.region_changed.emit(dest)

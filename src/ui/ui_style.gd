@@ -25,6 +25,18 @@ const DANGER_COLORS := {
 }
 
 
+## WU-514: colours for the arrival banner's danger word (WorldMapScreen.DANGER_NAMES, plus "Calm"/"Risky").
+const ARRIVAL_DANGER_COLORS := {
+	"Safe": Color("8fd18a"), "Calm": Color("b8bcc8"), "Low": Color("b8bcc8"),
+	"Moderate": Color("e8b04a"), "Risky": Color("e8b04a"), "High": Color("e8a04a"), "Deadly": Color("e85a4a"),
+}
+
+
+## The colour for an arrival danger word (white for anything else).
+static func arrival_danger_color(word: String) -> Color:
+	return ARRIVAL_DANGER_COLORS.get(word, Color.WHITE)
+
+
 ## The shared panel look, for Controls that are themselves the panel (screens
 ## extending PanelContainer): add_theme_stylebox_override("panel", UIStyle.panel_style()).
 ## "Dangerous, to the death" / "Even": Combat.danger_label of `enemy`, plus
