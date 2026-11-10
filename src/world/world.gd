@@ -757,6 +757,7 @@ func _build_npcs() -> void:
 		move_child(node, player.get_index())
 	_build_generated_npcs()
 	var all: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	Interactable.clear_person_labels(all)  # WU-511
 	Interactable.spread_labels(all)
 	Interactable.clamp_labels(all, Rect2(Vector2.ZERO, map_size))
 

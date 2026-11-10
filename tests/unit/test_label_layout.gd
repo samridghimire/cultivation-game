@@ -118,3 +118,26 @@ func test_label_moves_below_a_building_it_would_sit_on() -> void:
 	assert_false(bool(out[0]["faded"]))
 	var free := LabelLayout.resolve(rects, Rect2(0, 0, 1280, 800), [], {}, {0: [Rect2(600, 600, 50, 50)]})
 	assert_eq(float(free[0]["offset"]), 0.0)
+
+
+## WU-511: a person's label that meets a place label drops below their feet, else slides sideways.
+func test_person_offset_clear_label_stays() -> void:
+	var places: Array[Rect2] = [Rect2(500, 500, 100, 20)]
+	assert_eq(LabelLayout.person_offset(Rect2(0, 0, 80, 20), 100.0, places), Vector2.ZERO)
+
+
+func test_person_offset_drops_below_feet() -> void:
+	var places: Array[Rect2] = [Rect2(90, 60, 100, 20)]
+	var label := Rect2(100, 70, 80, 20)
+	var d := LabelLayout.person_offset(label, 120.0, places)
+	assert_eq(d, Vector2(0, 54))  # label top 70 -> feet 120 + 4 gap
+	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
+
+
+func test_person_offset_slides_when_below_is_taken() -> void:
+	var places: Array[Rect2] = [Rect2(90, 60, 100, 20), Rect2(90, 124, 40, 20)]
+	var label := Rect2(100, 70, 80, 20)
+	var d := LabelLayout.person_offset(label, 120.0, places)
+	assert_true(absf(d.x) > 0.0 and absf(d.x) <= 40.0)
+	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
+	assert_false(Rect2(label.position + d, label.size).intersects(places[1]))

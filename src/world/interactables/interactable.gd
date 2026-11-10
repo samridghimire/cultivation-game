@@ -251,6 +251,22 @@ static func spread_labels(nodes: Array) -> void:
 		(nodes[i] as Interactable).label_offset += shifts[i]
 
 
+## WU-511: a person's name label (NPC or roamer) never sits on a place's label: it drops below their feet or slides.
+static func clear_person_labels(nodes: Array) -> void:
+	var places: Array[Rect2] = []
+	for node: Interactable in nodes:
+		if not node.is_person() and node.label_text() != "":
+			places.append(node.label_rect(node.label_text()))
+	for node: Interactable in nodes:
+		if node.is_person() and node.label_text() != "":
+			node.label_offset += LabelLayout.person_offset(node.label_rect(node.label_text()), node.position.y + node.size.y / 2.0, places)
+
+
+## WU-511: whether this is a person or creature (NPC, roamer) rather than a place.
+func is_person() -> bool:
+	return get("npc_id") != null or self is Roamer
+
+
 ## The interact prompt already names the current target, so its own label is not drawn
 ## (it sat under the player sprite and the prompt, WU-176). The HUD shows the prompt
 ## whenever a target exists, so the target's own label is always hidden.
@@ -427,8 +443,11 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 			blockers.append(Rect2(gn.position - GREAT_FIGURE / 2.0, GREAT_FIGURE))
 	var covers := {}
 	for i in ranked.size():  # WU-483: a villager's name never sits on the roof of a building behind them
-		if (ranked[i] as Interactable).get("npc_id") != null:
+		if (ranked[i] as Interactable).is_person():  # WU-511: nor on a place's name (roamers move, so this runs live)
 			var roofs: Array[Rect2] = []
+			for other: Interactable in ranked:
+				if not other.is_person() and other.label_drawn():
+					roofs.append(other.drawn_label_rect(view))
 			for other: Interactable in nodes:
 				if other != ranked[i] and other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
 					roofs.append(Rect2(other.position - other.size / 2.0, other.size))

@@ -46,3 +46,10 @@ func test_hud_key_bar_fades_under_player() -> void:
 	assert_true(kb.modulate.a > 0.9, "and returns when the player moves on")
 	player.queue_free()
 	hud.queue_free()
+
+
+## WU-511: a panel stays opaque while only a label or beast (not the player's body) is behind it.
+func test_panel_alpha_ignores_non_player_rects() -> void:
+	var panel := Rect2(0, 0, 200, 100)
+	var no_body: Array[Rect2] = []
+	assert_eq(HudScript.panel_alpha(panel, no_body), 1.0)

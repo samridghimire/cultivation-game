@@ -530,3 +530,23 @@ func test_all_regions_labels_clear_of_footprints_and_npcs() -> void:
 	for region: Dictionary in data().regions.values():
 		var hits := _label_hits(region)
 		assert_eq(hits.size(), 0, "%s: %s" % [region["id"], "; ".join(hits)])
+
+
+## WU-511: for every region, a person at a day spot (label at its normal place) ends clear of every place label.
+func test_person_labels_clear_of_place_labels_after_layout() -> void:
+	for region: Dictionary in data().regions.values():
+		var places: Array[Rect2] = []
+		for place: Dictionary in region["places"]:
+			var n := String(place.get("display_name", place["type"]))
+			var pos := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+			var sz: Array = place.get("size", [30, 30])
+			var w := 7.0 * n.length() + 16.0
+			places.append(Rect2(pos.x - w / 2.0, pos.y - float(sz[1]) / 2.0 - 30.0, w, 20.0))
+		for s: Array in region.get("npc_spots", []):
+			var pos := Vector2(float(s[0]), float(s[1]))
+			var w := 7.0 * 18.0 + 16.0  # a typical "Name (Title)" label
+			var label := Rect2(pos.x - w / 2.0, pos.y - 15.0 - 8.0 - 18.0, w, 22.0)
+			var d := LabelLayout.person_offset(label, pos.y + 15.0, places)
+			var moved := Rect2(label.position + d, label.size)
+			for p in places:
+				assert_false(moved.intersects(p), "%s: person label at %s still on a place label" % [region["id"], pos])

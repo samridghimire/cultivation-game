@@ -2067,7 +2067,7 @@ func _on_settings_closed() -> void:
 	_update_modal()
 
 
-## WU-165: 0.35 when any covered screen rect (player, nearby place labels) touches the panel, else 1.0.
+## WU-165: 0.35 when any covered screen rect (WU-511: the player's body only) touches the panel, else 1.0.
 static func panel_alpha(panel_rect: Rect2, covered: Array[Rect2]) -> float:
 	for r in covered:
 		if panel_rect.intersects(r):
@@ -2129,13 +2129,7 @@ func _compute_fade_targets() -> Vector3:
 		if not behind.is_empty():
 			_key_bar_fade = 0.3
 	covered.append(Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
-	var parent := player.get_parent()
-	if parent != null:
-		for n in parent.get_children():
-			var it := n as Interactable
-			if it != null and it.global_position.distance_to(player.global_position) < 250.0:
-				var lr := it.label_rect()
-				covered.append(Rect2(xf * (it.get_parent() as Node2D).to_global(lr.position) if it.get_parent() is Node2D else xf * lr.position, lr.size * xf.get_scale()))
+	# WU-511: only the player's own body fades a panel; a nearby name label or beast behind it does not.
 	return Vector3(
 		minf(panel_alpha(_status_panel.get_global_rect(), covered), card_fade_target(_status_panel.get_global_rect(), pp)),
 		minf(panel_alpha(_log_panel.get_global_rect(), covered), card_fade_target(_log_panel.get_global_rect(), pp)),
