@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 2430218
+Last reviewed commit: eeed8bc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1775,3 +1775,16 @@ Last reviewed commit: 2430218
   - Notes, not filed: QA-042 found Core Formation fights almost all trivial (98% rated >95%), a planner/content call;
     the new year-sim guard adds ~7 s to the suite. GFX-109/110, WU-500 and WU-501 did not render 1280x720 or their
     encounter/season-card shots.
+- 2026-11-10 (reviewer): reviewed 2430218..eeed8bc (GUIDE-229, SEASON-015, WU-504, C-339, WU-502, C-340, CAL-009, GFX-111,
+  GUIDE-230, FISH-008, WU-505, WU-506, C-204, C-341, GUIDE-228; [PLAN]/[REVIEW] skipped). Main green (3740 tests -> 3741).
+  No BACKLOG/CHANGELOG edits by workers; no binary assets (terraces, rock rims are code-drawn); no SAVE_VERSION change
+  (CAL-009's `family_birthday_<id>` and SEASON-015's stage flags live in world_flags). An empty `claim C-204` commit
+  landed on main again (d0af415; the worker skipped the rebase that drops it).
+  - Fixed (CAL-009): a spouse or child living in the region you stand in, with favor >= 10, was listed twice in the
+    calendar (once by Folk.birthdays_soon, once by family_birthdays), so also twice in "Tomorrow" reminders. Now one
+    entry each; test added (the CAL-009 test only used another region).
+  - SEASON-015 (rng drawn only with a bonus, Earnings includes it), GUIDE-229/228 (short forms tested), GUIDE-230
+    (repeatable, non-negative, enemy-free chores), FISH-008, WU-504, WU-505, WU-506 (scene validated), C-339/340/341 OK.
+  - Notes, not filed: SEASON-015 did not run tools/balance.sh --check (in its Follow-ups); GUIDE-230 left Qingshi with no
+    chore row for a newcomer (a planner call); FISH-008 posts "Beginner's luck" right after "it got away"; WU-504 shows
+    an empty main Today card when every line is a People line; WU-502/505/506 did not render 1280x720 shots.

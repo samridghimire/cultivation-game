@@ -304,6 +304,15 @@ func test_calendar_lists_player_and_family_birthdays() -> void:
 	assert_eq(int(own["day"]) % Calendar.DAYS_PER_YEAR, 100)
 
 
+## REVIEW: a child you know (favor >= 10) in the region you stand in is listed once, not by both sources.
+func test_family_birthday_in_own_region_listed_once() -> void:
+	var f := _family()
+	var npcs: Dictionary = f["npcs"]
+	var kid: CharacterData = npcs[f["ids"][0]]
+	var e := VillageCalendar.upcoming(data(), npcs, {kid.id: 50}, [], "qingshi_village", 0, Calendar.DAYS_PER_YEAR, f["player"], {})
+	assert_eq(e.filter(func(x: Dictionary) -> bool: return x.get("npc_id", "") == kid.id).size(), 1)
+
+
 func test_dead_family_never_listed() -> void:
 	var f := _family()
 	var npcs: Dictionary = f["npcs"]

@@ -60,8 +60,11 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		var npc: CharacterData = b["npc"]
 		out.append({"day": start + int(b["in_days"]), "kind": "birthday", "text": "%s's birthday" % npc.name, "region": region_id, "npc_id": npc.id})
 	# CAL-009: your own birthday and the living family's, wherever you are.
+	# A spouse or child you know in this region is already listed above; keep one entry each.
 	if c != null:
-		out.append_array(family_birthdays(c, npcs, data, start, span))
+		for fe: Dictionary in family_birthdays(c, npcs, data, start, span):
+			if not out.any(func(x: Dictionary) -> bool: return x["kind"] == "birthday" and x.get("npc_id", "") == fe.get("npc_id", "-")):
+				out.append(fe)
 	# Festivals under way.
 	for inst: Dictionary in active_events:
 		if not WorldEvents.is_festival(data, String(inst.get("id", ""))):
