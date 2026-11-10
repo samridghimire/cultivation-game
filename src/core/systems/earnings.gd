@@ -48,8 +48,28 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 	var craft := _best_craft(c, data)
 	if not craft.is_empty():
 		rows.append(craft)
+	var mission := _best_mission(c, data, flags, region_id)
+	if not mission.is_empty():
+		rows.append(mission)
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["per_day"]) > float(b["per_day"]))
 	return rows.slice(0, MAX_ROWS)
+
+
+## GUIDE-234: the sect mission paying the most stones a day that `c` can take from a hall in `region_id` now
+## (rank, realm, cooldown and items met; fights rated Dangerous or worse skipped). {} for a rogue or when none pays stones.
+static func _best_mission(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> Dictionary:
+	if c.is_rogue() or Sects.hall_name(data, region_id, c) == "":
+		return {}
+	var best := {}
+	for id: String in Sects.available_missions(c, data, flags):
+		if Sects.check_mission(c, data, id, flags, region_id) != "" or ["Dangerous", "Deadly"].has(Sects.mission_danger(c, data, id)):
+			continue
+		var mission: Dictionary = data.sect_missions[id]
+		var stones := int(mission.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
+		var per_day := float(stones) / float(maxi(1, int(mission.get("days", 1))))
+		if per_day > float(best.get("per_day", 0.0)):
+			best = {"kind": "mission", "place": Sects.hall_name(data, region_id, c), "per_day": per_day, "note": String(mission.get("name", id)), "contribution": int(mission.get("contribution", 0))}
+	return best
 
 
 ## GUIDE-233: up to 2 one-time paid jobs {kind: "job", place, note, stones, items, days} for the givers here:
@@ -240,6 +260,9 @@ static func lines(rows: Array[Dictionary], data: GameData = null) -> PackedStrin
 			out.append("Once: %s (%s): %s, %d %s." % [r["note"], r["place"], " + ".join(parts), int(r["days"]), "day" if int(r["days"]) == 1 else "days"])
 			continue
 		var n := maxi(1, roundi(float(r["per_day"])))
+		if String(r["kind"]) == "mission":
+			out.append("Sect mission %s (%s): about %d %s a day, +%d contribution." % [r["note"], r["place"], n, "stone" if n == 1 else "stones", int(r["contribution"])])
+			continue
 		if String(r["kind"]) == "far":
 			var verb: String = {"gather": "Gathering", "fishing": "Fishing", "chore": "Errands"}.get(String(r["note"]), "Work")
 			out.append("%s at %s (%d days away): about %d a day." % [verb, r["place"], int(r["days"]), n])

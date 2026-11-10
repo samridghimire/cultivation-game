@@ -324,3 +324,40 @@ func test_qingshi_errands_are_a_repeatable_wage() -> void:
 	c.deed_days["chore_haul_water"] = 0
 	assert_false(_kinds(Earnings.earning_options(c, data(), {}, "qingshi_village", 1)).has("chore"), "both cooling down")
 	assert_true(_kinds(Earnings.earning_options(c, data(), {}, "qingshi_village", 7)).has("chore"), "odd jobs back after 7 days")
+
+
+## GUIDE-234: a disciple at their hall sees the best sect mission as an earning row.
+func test_disciple_gets_mission_row_at_hall() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(Sects.join(c, data(), "azure_cloud_sect")["ok"])
+	c.add_item("spirit_herb", 3)
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	var mission := {}
+	for r in rows:
+		if r["kind"] == "mission":
+			mission = r
+	assert_false(mission.is_empty(), "mission row")
+	assert_eq(mission["note"], String(data().sect_missions["herb_hall_tithe"]["name"]))
+	assert_eq(int(roundf(float(mission["per_day"]))), 22)
+	var text := " ".join(Earnings.lines(rows, data()))
+	assert_true(text.contains("Sect mission"), text)
+	assert_true(text.contains("contribution"), text)
+
+
+func test_rogue_gets_no_mission_row() -> void:
+	var c := new_character()
+	c.add_item("spirit_herb", 3)
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		assert_true(r["kind"] != "mission", "no mission row")
+
+
+func test_mission_on_cooldown_is_not_a_row() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(Sects.join(c, data(), "azure_cloud_sect")["ok"])
+	c.add_item("spirit_herb", 3)
+	for id: String in Sects.available_missions(c, data(), {}):
+		c.mission_cooldowns[id] = c.age_days + 30
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		assert_true(r["kind"] != "mission", "no mission row")
