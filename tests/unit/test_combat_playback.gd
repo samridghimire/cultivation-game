@@ -106,10 +106,10 @@ func test_finishing_line_is_bold_and_large() -> void:
 ## WU-104: the pre-fight rating shows at the top, never for a friendly spar.
 func test_report_shows_pre_fight_rating() -> void:
 	var r := _report(false)
-	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "Rated: Even before the fight.")
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, false, "Rated before the fight: Even, 55 in 100.")
 	assert_true(r._rated.visible)
-	assert_eq(r._rated.text, "Rated: Even before the fight.")
-	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, true, "Rated: Even before the fight.")
+	assert_eq(r._rated.text, "Rated before the fight: Even, 55 in 100.")
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10, true, "Rated before the fight: Even, 55 in 100.")
 	assert_false(r._rated.visible, "no rating for a friendly spar")
 	_done(r)
 
@@ -118,6 +118,47 @@ func test_rating_line_skips_friendly_spars() -> void:
 	var gd := GameData.new()
 	var c := CharacterData.new()
 	var enemy := {"id": "x", "name": "Foe", "hp": 10, "attack": 1, "defense": 0, "realm": "mortal"}
-	assert_true(CombatReport.rating_line(c, gd, enemy).begins_with("Rated: "))
+	assert_true(CombatReport.rating_line(c, gd, enemy).begins_with("Rated before the fight: "))
 	enemy["friendly"] = true
 	assert_eq(CombatReport.rating_line(c, gd, enemy), "")
+
+
+func test_blow_info_from_trace() -> void:
+	var hit := DuelStage.blow_info([20, 10], [20, 5], "You strike for 5. (Foe: 5 hp)")
+	assert_eq(hit, {"side": 1, "amount": 5, "kind": "hit"})
+	var crit := DuelStage.blow_info([20, 10], [14, 10], "Foe hits you critically for 6.")
+	assert_eq(crit, {"side": -1, "amount": 6, "kind": "crit"})
+	assert_eq(DuelStage.blow_info([20, 10], [20, 9], "You strike for 1: a glancing blow")["kind"], "glance")
+	assert_eq(DuelStage.blow_info([20, 10], [20, 6], "You strike for 4: a solid blow")["kind"], "solid")
+	assert_eq(DuelStage.blow_info([20, 10], [20, 10], "Foe evades your strike.")["side"], 0)
+
+
+func test_technique_of_line() -> void:
+	assert_eq(DuelStage.technique_of("You strike with Cloud Palm critically: a solid blow for 9. (Boar: 3 hp)"), "Cloud Palm")
+	assert_eq(DuelStage.technique_of("Wolf attacks with Pounce for 4. (You: 5 hp)"), "Pounce")
+	assert_eq(DuelStage.technique_of("You strike for 5."), "")
+
+
+func test_blow_floats_numbers_and_skip_clears() -> void:
+	var r := _report(true)
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10)
+	r.tick()
+	r.tick()
+	assert_gt(r._stage.floater_count(), 0)
+	r.skip()
+	assert_eq(r._stage.floater_count(), 0)
+	_done(r)
+
+
+func test_five_blow_report_is_shorter() -> void:
+	assert_true(CombatReport.log_height(8) < 8 * 26.0 + 20.0)
+
+
+## WU-491: the report uses the HUD's wording and odds.
+func test_rating_line_matches_hud_odds() -> void:
+	var gd := GameData.new()
+	var c := CharacterData.new()
+	var enemy := {"id": "x", "name": "Foe", "hp": 10, "attack": 1, "defense": 0, "realm": "mortal", "lethal": true}
+	var expect := UIStyle.odds_text(c, gd, enemy, true)
+	assert_eq(CombatReport.rating_line(c, gd, enemy), "Rated before the fight: %s." % expect)
+	assert_true(expect.ends_with("to the death"))

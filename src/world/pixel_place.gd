@@ -8,22 +8,85 @@ extends RefCounted
 ## e earth, v foliage (GFX-022 nature places: meditation, gather, explore, inheritance, abode, secret_realm, camp).
 ## Rendering only: pure and deterministic, no node access.
 
-const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction"]
+const KINDS := ["merchant", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "bounty_board", "travel", "auction", "coop"]
 const SHOP_MIN_WIDTH := 110.0  ## GFX-058: merchants at least this wide draw as the two-storey "shop" instead of a stall
 const NATURE_KINDS := ["meditation", "gather", "explore", "inheritance", "abode", "secret_realm", "camp", "fishing"]
-const PALETTE := ".owWrRhdtTpgsSev"
+## GFX-095: the pictures an explore place can have (regions.json `look`); "cave" is the original dome.
+const EXPLORE_LOOKS := PlaceLooks.EXPLORE_LOOKS  # GUIDE-219: owned by core
+## GFX-102: the pictures a gather place can have (regions.json `look`); "patch" is the original herb bed.
+const GATHER_LOOKS := PlaceLooks.GATHER_LOOKS
+## GFX-098: the pictures a secret-realm entrance can have (regions.json `look`); "rift" is the original ring.
+const REALM_LOOKS := PlaceLooks.REALM_LOOKS
+const PALETTE := ".owWrRhdtTpgsSevbBnmfk"
 const OUTLINE := Color("2b2118")
 const DOOR := Color("3a2f26")
 const COLORS := {
 	"o": OUTLINE, "w": Color("d9cdb4"), "W": Color("b3a68c"), "d": DOOR, "t": Color("6e5636"), "T": Color("4f3d26"),
 	"p": Color("e8dcc0"), "g": Color("c9a24a"), "s": Color("8a8478"), "S": Color("6a6559"), "e": Color("6e5a3c"), "v": Color("4f7a3a"),
+	"b": Color("bfe3f2"), "B": Color("6fa6d0"), "n": Color("eef4f8"), "m": Color("2f3a2c"), "f": Color("e8742a"), "k": Color("2a2624"),
+}
+
+## GFX-100: regions.json `map.building_style`; thatch is the base look (COLORS), the others override these entries
+## (and the roof colour) on building kinds only. `roof` (optional) replaces the place colour.
+const STYLES := PlaceLooks.BUILDING_STYLES
+const STYLE_COLORS := {
+	"thatch": {},
+	"tile": {"w": Color("ece8de"), "W": Color("c4beb0"), "t": Color("a8332b"), "T": Color("7a2420"), "roof": Color("5d7388")},
+	"stone": {"w": Color("9a968c"), "W": Color("746f65"), "t": Color("5a5f68"), "T": Color("40444c"), "roof": Color("4d5f7a")},
+	"stilt": {"w": Color("6b5a44"), "W": Color("4a3d2d"), "t": Color("4a3a28"), "T": Color("33281b"), "roof": Color("7a6444")},
+	"log": {"w": Color("5a4330"), "W": Color("3d2d20"), "t": Color("463525"), "T": Color("2e2218"), "roof": Color("4c6a3a")},
 }
 
 static var _cache: Dictionary = {}
 
 
+## GFX-100: kinds that take a building style (sect halls, nature and explore looks never do).
+static func is_building(kind: String) -> bool:
+	return ["workshop", "clinic", "orphanage", "family_home", "auction", "merchant"].has(kind) or kind.begins_with("shop")
+
+
+## GFX-100: the style that actually applies to `kind` ("thatch" for non-buildings and unknown styles).
+static func effective_style(kind: String, style: String) -> String:
+	return style if is_building(kind) and STYLE_COLORS.has(style) else "thatch"
+
+
 static func supports(kind: String) -> bool:
-	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop")
+	return KINDS.has(kind) or NATURE_KINDS.has(kind) or kind.begins_with("shop") or kind == "explore_woods_herbs" or _explore_look(kind) != "" or _gather_look(kind) != "" or _realm_look(kind) != ""
+
+
+## The art kind for an explore place with `look`: plain "explore" for cave or an unknown look.
+static func explore_kind(look: String, tags: Array = []) -> String:
+	if look == "woods" and tags.has("herbs"):
+		return "explore_woods_herbs"  # GFX-104
+	return "explore_" + look if look != "cave" and EXPLORE_LOOKS.has(look) else "explore"
+
+
+## GFX-102: the art kind for a gather place with `look`: plain "gather" for patch or an unknown look.
+static func gather_kind(look: String) -> String:
+	return "gather_" + look if look != "patch" and GATHER_LOOKS.has(look) else "gather"
+
+
+static func _gather_look(kind: String) -> String:
+	if kind.begins_with("gather_") and GATHER_LOOKS.has(kind.substr(7)):
+		return kind.substr(7)
+	return ""
+
+
+## The art kind for a secret-realm entrance with `look`: "secret_realm" for rift or an unknown look.
+static func realm_kind(look: String) -> String:
+	return "secret_realm_" + look if look != "rift" and REALM_LOOKS.has(look) else "secret_realm"
+
+
+static func _realm_look(kind: String) -> String:
+	if kind.begins_with("secret_realm_") and REALM_LOOKS.has(kind.substr(13)):
+		return kind.substr(13)
+	return ""
+
+
+static func _explore_look(kind: String) -> String:
+	if kind.begins_with("explore_") and EXPLORE_LOOKS.has(kind.substr(8)):
+		return kind.substr(8)
+	return ""
 
 
 ## Pixel size of the template for `kind` (travel flips with the gate's orientation).
@@ -51,23 +114,32 @@ static func shop_look(place_name: String) -> String:
 	return "shop"
 
 
-static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "") -> ImageTexture:
+static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> ImageTexture:
 	var compact := false
 	if kind == "merchant" and size.x >= SHOP_MIN_WIDTH:
 		kind = shop_look(place_name)
 		compact = size.x < 120.0
 	var horizontal := size.x >= size.y
+	style = effective_style(kind, style)
 	var key := "%s|%s|%s|%s" % [kind + ("_c" if compact else ""), color.to_html(), horizontal if kind == "travel" else true, active]
+	if style != "thatch":
+		key += "|" + style
 	if not _cache.has(key):
-		_cache[key] = from_rows(rows(kind, horizontal, active, compact), color, active)
+		_cache[key] = from_rows(rows(kind, horizontal, active, compact, style), color, active, style)
 	return _cache[key]
 
 
 ## Builds a texture from template rows; `r` takes `color` (brighter when `active`), R / h are its shade / highlight.
-static func from_rows(r: Array[String], color: Color, active: bool = false) -> ImageTexture:
+static func from_rows(r: Array[String], color: Color, active: bool = false, style: String = "thatch") -> ImageTexture:
 	var img := Image.create(r[0].length(), r.size(), false, Image.FORMAT_RGBA8)
 	var palette := COLORS.duplicate()
-	var base := color.lightened(0.25) if active else color
+	var over: Dictionary = STYLE_COLORS.get(style, {})
+	for ch: String in over:
+		if ch != "roof":
+			palette[ch] = over[ch]
+	var base: Color = over.get("roof", color) if over.has("roof") else color
+	if active:
+		base = base.lightened(0.25)
 	palette["r"] = base
 	palette["R"] = base.darkened(0.3)
 	palette["h"] = base.lightened(0.2)
@@ -79,7 +151,7 @@ static func from_rows(r: Array[String], color: Color, active: bool = false) -> I
 
 
 ## Template rows for `kind` (empty for unsupported kinds); each row has the same length.
-static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false) -> Array[String]:
+static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false, style: String = "thatch") -> Array[String]:
 	var c: Array
 	match kind:
 		"merchant":
@@ -104,12 +176,26 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _bounty_board()
 		"auction":
 			c = _auction()
+		"coop":
+			c = _coop()
 		"travel":
 			c = _gate_h() if horizontal else _gate_v()
 		"meditation":
 			c = _meditation()
 		"gather":
 			c = _gather()
+		"gather_rubble":
+			c = _gather_rubble()
+		"gather_crater":
+			c = _gather_crater()
+		"gather_crystal":
+			c = _gather_crystal()
+		"gather_frost":
+			c = _gather_frost()
+		"gather_terrace":
+			c = _gather_terrace()
+		"gather_bog":
+			c = _gather_bog()
 		"explore":
 			c = _cave()
 		"inheritance":
@@ -118,17 +204,60 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 			c = _dwelling()
 		"secret_realm":
 			c = _rift(active)
+		"secret_realm_cleft":
+			c = _realm_cleft(active)
+		"secret_realm_seal":
+			c = _realm_seal(active)
+		"secret_realm_gate":
+			c = _realm_gate(active)
+		"secret_realm_tomb":
+			c = _realm_tomb(active)
+		"secret_realm_pavilion":
+			c = _realm_pavilion(active)
 		"camp":
 			c = _camp()
 		"fishing":
 			c = _jetty()
+		"explore_woods":
+			c = _woods()
+		"explore_woods_herbs":
+			c = _woods(true)
+		"explore_ruins":
+			c = _ruins()
+		"explore_reeds":
+			c = _reeds()
+		"explore_ridge":
+			c = _ridge()
+		"explore_trail":
+			c = _trail()
 		_:
 			return []
+	apply_style_rows(c, effective_style(kind, style))
 	outline(c)
 	var out: Array[String] = []
 	for row: Array in c:
 		out.append("".join(row))
 	return out
+
+
+## GFX-100: small row edits per style, before the outline: stilt raises the base on posts (the bottom 3 rows keep a
+## 2 px post every 8 px, mud-dark between is cleared); log draws a horizontal seam on every 3rd wall row.
+static func apply_style_rows(c: Array, style: String) -> void:
+	var h := c.size()
+	if style == "stilt":
+		for y in range(h - 3, h):
+			for x in c[y].size():
+				if x % 8 >= 2:
+					c[y][x] = "."
+				elif c[y][x] != ".":
+					c[y][x] = "T"
+	elif style == "log":
+		for y in range(0, h - 3):
+			if y % 3 != 0:
+				continue
+			for x in c[y].size():
+				if c[y][x] == "w":
+					c[y][x] = "W"
 
 
 static func canvas(w: int, h: int) -> Array:
@@ -346,6 +475,20 @@ static func _bounty_board() -> Array:
 	return c
 
 
+## WU-490: a small henhouse: straw roof, nest box on the left, a ramp up to the pop-hole on the right.
+static func _coop() -> Array:
+	var c := canvas(38, 24)
+	box(c, 7, 10, 24, 12, "w", "W")
+	rect(c, 7, 10, 2, 12, "t")
+	rect(c, 29, 10, 2, 12, "T")
+	box(c, 1, 14, 7, 8, "t", "T")  # nest box
+	rect(c, 3, 16, 3, 3, "d")
+	rect(c, 17, 14, 7, 8, "d")  # pop-hole
+	rect(c, 16, 21, 12, 2, "t")  # ramp
+	roof(c, 4, 3, 30, 8)
+	return c
+
+
 static func _auction() -> Array:
 	var c := canvas(68, 48)
 	box(c, 6, 44, 56, 4, "s", "S")
@@ -422,6 +565,105 @@ static func _gather() -> Array:
 	return c
 
 
+## GFX-102: grey stone chips and two broken blocks with one rusty ore glint.
+static func _gather_rubble() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "S")
+	ell(c, 25, 19, 22, 10, "s")
+	for p: Array in [[6, 18], [14, 25], [22, 13], [31, 26], [40, 19], [44, 24], [28, 18], [10, 12]]:
+		rect(c, p[0], p[1], 3, 2, "S")
+		rect(c, p[0], p[1], 2, 1, "w")
+	for p: Array in [[13, 12], [30, 14]]:
+		box(c, p[0], p[1], 9, 7, "s", "S")
+		rect(c, p[0] + 1, p[1] + 1, 4, 1, "w")
+		rect(c, p[0] + 4, p[1] + 3, 1, 4, "S")
+	rect(c, 33, 17, 2, 2, "e")
+	rect(c, 33, 17, 1, 1, "g")
+	return c
+
+
+## GFX-102: a scorched ring round a cracked black rock with ember glints.
+static func _gather_crater() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "k")
+	ell(c, 25, 20, 20, 10, "T")
+	ell(c, 25, 20, 14, 7, "k")
+	ell(c, 25, 18, 9, 6, "S")
+	rect(c, 21, 15, 9, 6, "k")
+	rect(c, 25, 15, 1, 6, "T")
+	rect(c, 23, 18, 4, 1, "T")
+	for p: Array in [[10, 20], [38, 22], [27, 26], [17, 13]]:
+		rect(c, p[0], p[1], 2, 2, "f")
+		rect(c, p[0], p[1], 1, 1, "g")
+	return c
+
+
+## GFX-102: a rock outcrop with pale-blue crystal spikes.
+static func _gather_crystal() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 24, 23, 9, "S")
+	ell(c, 25, 22, 21, 8, "s")
+	for p: Array in [[11, 20, 4, 11], [19, 14, 5, 16], [28, 10, 5, 20], [37, 18, 4, 12]]:
+		var x: int = p[0]
+		var h: int = p[3]
+		var w: int = p[2]
+		for i in h:
+			var inset := 0 if i > h / 3 else 1
+			rect(c, x + inset, 28 - i, w - inset * 2, 1, "B")
+			rect(c, x + inset, 28 - i, maxi(1, (w - inset * 2) / 2), 1, "b")
+	return c
+
+
+## GFX-102: a white-blue rock shelf under snow with two tiny blue flowers.
+static func _gather_frost() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 22, 24, 11, "B")
+	ell(c, 25, 20, 22, 9, "b")
+	ell(c, 25, 18, 18, 6, "n")
+	rect(c, 4, 22, 42, 2, "B")
+	for p: Array in [[12, 14], [34, 16], [20, 26]]:
+		rect(c, p[0], p[1], 5, 2, "n")
+	for p: Array in [[17, 18], [31, 21]]:
+		rect(c, p[0], p[1] + 1, 1, 3, "v")
+		rect(c, p[0] - 1, p[1], 3, 2, "B")
+		rect(c, p[0], p[1], 1, 1, "n")
+	return c
+
+
+## GFX-102: stepped green bands with stone edges and orchid dots (tinted by the place colour).
+static func _gather_terrace() -> Array:
+	var c := canvas(50, 34)
+	for i in 3:
+		var y := 4 + i * 9
+		var inset := 6 - i * 2
+		rect(c, inset, y, 50 - inset * 2, 6, "v")
+		rect(c, inset, y, 50 - inset * 2, 1, "h")
+		rect(c, inset, y + 6, 50 - inset * 2, 3, "S")
+		rect(c, inset, y + 6, 50 - inset * 2, 1, "s")
+		for x in range(inset + 4, 50 - inset - 3, 8):
+			rect(c, x + i * 2, y + 2, 2, 2, "r")
+			rect(c, x + i * 2, y + 2, 1, 1, "n")
+	return c
+
+
+## GFX-102: a dark murky pool, reeds at the rim and two pale lilies.
+static func _gather_bog() -> Array:
+	var c := canvas(50, 34)
+	ell(c, 25, 21, 24, 12, "T")
+	ell(c, 25, 21, 22, 10, "m")
+	ell(c, 25, 21, 15, 6, "t")
+	ell(c, 25, 21, 14, 5, "m")
+	for p: Array in [[5, 14], [9, 26], [41, 13], [45, 22], [37, 29], [18, 10]]:
+		rect(c, p[0], p[1], 1, 7, "v")
+		rect(c, p[0] + 1, p[1] + 2, 1, 5, "v")
+		rect(c, p[0], p[1] - 1, 2, 2, "T")
+	for p: Array in [[19, 20], [30, 23]]:
+		rect(c, p[0], p[1], 5, 3, "v")
+		rect(c, p[0] + 1, p[1], 2, 2, "n")
+		rect(c, p[0] + 2, p[1], 1, 1, "g")
+	return c
+
+
 ## A fishing spot (WU-405): a rod, line and float and a few reeds; the planks and posts are the `jetty` landmark
 ## drawn underneath (GFX-045), so its snow cap applies. `rect`s below use the old 44x22 layout.
 static func _jetty() -> Array:
@@ -452,6 +694,126 @@ static func _cave() -> Array:
 	rect(c, 23, 34, 8, 3, "S")
 	for p: Array in [[10, 10], [38, 8], [15, 5], [42, 15]]:
 		rect(c, p[0], p[1], 5, 2, "v")
+	return c
+
+
+## GFX-104: one tree crown: body `r`, lower-right shade `R`, upper-left highlight `h`.
+static func crown(c: Array, cx: float, cy: float, rx: float, ry: float) -> void:
+	# WU-496: draw on a scratch canvas so only this crown's own pixels are shaded against its centre.
+	var own := canvas(c[0].size(), c.size())
+	ell(own, cx, cy, rx, ry, "r")
+	for y in own.size():
+		for x in own[y].size():
+			if own[y][x] != "r":
+				continue
+			var dx: float = (x + 0.5 - cx) / rx
+			var dy: float = (y + 0.5 - cy) / ry
+			if dx + dy > 0.6:
+				c[y][x] = "R"
+			elif dx + dy < -0.75:
+				c[y][x] = "h"
+			else:
+				c[y][x] = "r"
+
+
+## GFX-104: the crown colour for an explore woods site: the region's `map.decor.tree_color` (so the site sits in its
+## forest), else the place's own colour.
+static func woods_color(region_map: Dictionary, place_color: Color) -> Color:
+	var hex := String((region_map.get("decor", {}) as Dictionary).get("tree_color", ""))
+	return Color(hex) if hex != "" else place_color
+
+
+## GFX-095, GFX-104: separate overlapping tree crowns with their own trunks, a dark gap between the two middle
+## crowns and an earth path leading in; `herbs` adds bright herb sprigs along the path.
+static func _woods(herbs: bool = false) -> Array:
+	var c := canvas(54, 38)
+	rect(c, 26, 10, 4, 16, "d")
+	rect(c, 24, 25, 8, 13, "e")
+	rect(c, 26, 18, 4, 8, "e")
+	for t: Array in [[11, 22], [43, 22], [19, 27], [36, 27]]:
+		rect(c, t[0] - 1, t[1], 3, 5, "t")
+		rect(c, t[0] + 1, t[1], 1, 5, "T")
+	crown(c, 11, 15, 10, 9)
+	crown(c, 43, 15, 10, 9)
+	crown(c, 27, 7, 7, 5)
+	crown(c, 19, 22, 7, 6)
+	crown(c, 36, 22, 7, 6)
+	if herbs:
+		for p: Array in [[22, 31], [32, 33], [21, 35], [33, 29]]:
+			rect(c, p[0], p[1], 1, 3, "v")
+			rect(c, p[0] - 1, p[1], 3, 1, "g")
+	return c
+
+
+## GFX-095: broken wall stubs, a fallen pillar and a torn banner.
+static func _ruins() -> Array:
+	var c := canvas(54, 38)
+	box(c, 3, 18, 12, 16, "s", "S")
+	box(c, 18, 24, 14, 10, "s", "S")
+	box(c, 36, 14, 11, 20, "s", "S")
+	for p: Array in [[5, 21], [9, 26], [20, 27], [38, 18], [41, 24]]:
+		rect(c, p[0], p[1], 3, 1, "S")
+	rect(c, 4, 16, 4, 2, "s")
+	rect(c, 38, 12, 3, 2, "s")
+	box(c, 12, 33, 24, 4, "s", "S")
+	rect(c, 14, 34, 2, 1, "w")
+	rect(c, 27, 4, 2, 24, "t")
+	rect(c, 29, 5, 9, 7, "r")
+	rect(c, 29, 11, 5, 3, "r")
+	rect(c, 29, 5, 9, 1, "h")
+	rect(c, 0, 36, 54, 2, "e")
+	return c
+
+
+## GFX-095: a dark water patch ringed with reed stalks.
+static func _reeds() -> Array:
+	var c := canvas(54, 38)
+	ell(c, 27, 28, 22, 8, "e")
+	ell(c, 27, 28, 18, 6, "d")
+	for x: int in [4, 8, 12, 15, 38, 42, 46, 50, 22, 32]:
+		var top := 8 + (x * 7) % 11
+		rect(c, x, top, 1, 36 - top, "v")
+		rect(c, x - 1, top - 3, 3, 4, "t")
+	rect(c, 0, 36, 54, 2, "v")
+	return c
+
+
+## GFX-095: jagged grey crags with a thin trail between them.
+static func _ridge() -> Array:
+	var c := canvas(54, 38)
+	for spec: Array in [[2, 14, 16], [18, 4, 18], [36, 10, 16]]:
+		var x0: int = spec[0]
+		var top: int = spec[1]
+		var w: int = spec[2]
+		for y in range(top, 36):
+			var inset := clampi(w / 2 + 2 - (y - top) * 2 / 3, 0, w / 2)
+			rect(c, x0 + inset, y, w - 2 * inset, 1, "s")
+		rect(c, x0 + w / 2, top + 2, w / 2 - 1, 34 - top, "S")
+		rect(c, x0 + w / 2 - 1, top, 2, 3, "s")
+	rect(c, 0, 33, 54, 5, ".")
+	rect(c, 12, 30, 30, 8, "s")
+	rect(c, 24, 28, 6, 2, "e")
+	rect(c, 22, 30, 10, 3, "e")
+	rect(c, 20, 33, 14, 5, "e")
+	rect(c, 10, 34, 6, 3, "S")
+	return c
+
+
+## GFX-095: a trail marker post with a sign board beside a worn path patch and two shrubs.
+static func _trail() -> Array:
+	var c := canvas(54, 38)
+	ell(c, 30, 31, 22, 5, "e")
+	rect(c, 8, 33, 38, 2, "e")
+	rect(c, 14, 6, 3, 28, "t")
+	rect(c, 16, 6, 1, 28, "T")
+	box(c, 6, 8, 18, 8, "t", "T")
+	rect(c, 8, 10, 14, 1, "p")
+	rect(c, 8, 12, 9, 1, "p")
+	rect(c, 20, 18, 14, 6, "t")
+	rect(c, 22, 20, 10, 1, "p")
+	ell(c, 40, 26, 6, 5, "v")
+	ell(c, 47, 29, 5, 4, "v")
+	rect(c, 0, 36, 54, 2, "v")
 	return c
 
 
@@ -502,6 +864,132 @@ static func _rift(active: bool) -> Array:
 		ell(c, 24, 19, 4, 3, "p")
 	else:
 		ell(c, 24, 19, 3, 2, "S")
+	return c
+
+
+## A grassy hillock split by a dark jagged crack; open, the crack glows and sparks drift out.
+static func _realm_cleft(active: bool) -> Array:
+	var c := canvas(48, 38)
+	ell(c, 24, 26, 23, 12, "s")
+	ell(c, 24, 20, 19, 15, "s")
+	ell(c, 29, 23, 13, 11, "S")
+	ell(c, 24, 18, 18, 13, "s")
+	rect(c, 8, 6, 28, 3, "v")
+	rect(c, 14, 4, 16, 2, "v")
+	rect(c, 4, 30, 40, 2, "v")
+	rect(c, 22, 6, 3, 5, "d")
+	rect(c, 20, 11, 4, 6, "d")
+	rect(c, 23, 16, 4, 6, "d")
+	rect(c, 21, 21, 4, 7, "d")
+	rect(c, 19, 27, 5, 6, "d")
+	if active:
+		rect(c, 23, 8, 1, 3, "h")
+		rect(c, 21, 12, 2, 4, "p")
+		rect(c, 24, 17, 2, 4, "h")
+		rect(c, 22, 22, 2, 5, "p")
+		rect(c, 20, 28, 3, 4, "h")
+		for q: Array in [[14, 3], [32, 5], [38, 13], [10, 12]]:
+			rect(c, q[0], q[1], 2, 2, "r")
+	else:
+		rect(c, 22, 18, 1, 3, "S")
+	return c
+
+
+## A round stone lid set in a ring of rubble, carved with a cross of runes.
+static func _realm_seal(active: bool) -> Array:
+	var c := canvas(48, 36)
+	ell(c, 24, 18, 23, 17, "S")
+	for q: Array in [[2, 14], [6, 6], [14, 1], [32, 1], [41, 7], [43, 20], [38, 29], [10, 29], [3, 23]]:
+		rect(c, q[0], q[1], 4, 3, "s")
+	ell(c, 24, 18, 19, 14, "s")
+	ell(c, 25, 19, 17, 12, "S")
+	ell(c, 24, 18, 17, 12, "s")
+	rect(c, 23, 8, 2, 20, "r" if not active else "h")
+	rect(c, 12, 17, 24, 2, "r" if not active else "h")
+	rect(c, 20, 9, 8, 1, "r")
+	rect(c, 20, 27, 8, 1, "r")
+	rect(c, 13, 14, 1, 8, "r")
+	rect(c, 34, 14, 1, 8, "r")
+	if active:
+		ell(c, 24, 18, 3, 2, "p")
+		rect(c, 8, 18, 3, 1, "p")
+		rect(c, 37, 18, 3, 1, "p")
+	else:
+		rect(c, 7, 18, 3, 1, "S")
+	return c
+
+
+## Two stone pillars and a lintel half sunk in dark water, a dark doorway between them.
+static func _realm_gate(active: bool) -> Array:
+	var c := canvas(48, 38)
+	ell(c, 24, 31, 23, 6, "d")
+	box(c, 7, 8, 8, 24, "s", "S")
+	box(c, 33, 8, 8, 24, "s", "S")
+	box(c, 4, 3, 40, 6, "s", "S")
+	rect(c, 14, 9, 20, 22, "d")
+	rect(c, 4, 3, 40, 1, "W")
+	rect(c, 9, 12, 4, 1, "S")
+	rect(c, 35, 16, 4, 1, "S")
+	if active:
+		rect(c, 17, 12, 14, 18, "p")
+		rect(c, 20, 14, 8, 14, "h")
+		rect(c, 18, 31, 12, 1, "p")
+		rect(c, 10, 33, 6, 1, "h")
+		rect(c, 32, 34, 6, 1, "h")
+	else:
+		rect(c, 22, 14, 4, 1, "S")
+		rect(c, 10, 33, 6, 1, "S")
+		rect(c, 32, 34, 6, 1, "S")
+	return c
+
+
+## A low earth mound with a stone door and two small guardian stones.
+static func _realm_tomb(active: bool) -> Array:
+	var c := canvas(48, 36)
+	ell(c, 24, 28, 23, 10, "e")
+	ell(c, 24, 22, 20, 15, "e")
+	ell(c, 29, 24, 13, 11, "t")
+	ell(c, 24, 21, 19, 14, "e")
+	rect(c, 8, 8, 12, 2, "v")
+	rect(c, 28, 7, 8, 2, "v")
+	box(c, 17, 16, 14, 18, "s", "S")
+	rect(c, 19, 18, 10, 14, "d")
+	rect(c, 15, 14, 18, 3, "S")
+	box(c, 5, 24, 6, 9, "s", "S")
+	box(c, 37, 24, 6, 9, "s", "S")
+	rect(c, 6, 22, 4, 2, "s")
+	rect(c, 38, 22, 4, 2, "s")
+	if active:
+		rect(c, 19, 18, 10, 14, "h")
+		rect(c, 21, 20, 6, 10, "p")
+		rect(c, 17, 16, 4, 18, "s")
+	else:
+		rect(c, 23, 18, 2, 14, "S")
+	return c
+
+
+## A small tiered roof on four thin posts over a stone plinth; open, a bright orb hangs under it.
+static func _realm_pavilion(active: bool) -> Array:
+	var c := canvas(48, 40)
+	box(c, 4, 32, 40, 6, "s", "S")
+	rect(c, 8, 30, 32, 2, "s")
+	for x in [10, 17, 29, 36]:
+		rect(c, x, 15, 2, 15, "t")
+	rect(c, 10, 15, 28, 1, "T")
+	for i in 7:
+		rect(c, 11 - i, 8 + i, 26 + i * 2, 1, "r")
+		rect(c, 11 - i, 8 + i, 26 + i * 2, 1, "r")
+	rect(c, 4, 14, 40, 1, "R")
+	rect(c, 12, 1, 24, 3, "r")
+	rect(c, 14, 4, 20, 4, "r")
+	rect(c, 12, 3, 24, 1, "h")
+	rect(c, 23, 0, 2, 2, "g")
+	rect(c, 14, 7, 20, 1, "R")
+	if active:
+		ell(c, 24, 23, 6, 6, "h")
+		ell(c, 24, 23, 3, 3, "p")
+	else:
+		ell(c, 24, 25, 2, 2, "S")
 	return c
 
 

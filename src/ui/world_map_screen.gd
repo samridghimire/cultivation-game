@@ -17,8 +17,12 @@ const NODE_HEIGHT := 40.0
 const MARGIN := Vector4(84, 26, 30, 56)
 const GLYPH_SIZE := 24.0
 const DANGER_NAMES: PackedStringArray = ["Safe", "Low", "Moderate", "High", "Deadly"]
-const ROUTE_COLOR := Color(0.85, 0.76, 0.5, 0.8)
-const LOCKED_COLOR := Color(0.9, 0.38, 0.32, 0.8)
+const ROUTE_COLOR := Color(0.3, 0.2, 0.12, 0.85)
+const LOCKED_COLOR := Color(0.7, 0.14, 0.1, 0.9)
+## GFX-108: paper and ink of the painted map.
+const PAPER_COLOR := Color(0.87, 0.8, 0.64)
+const INK_COLOR := Color(0.2, 0.13, 0.08)
+const SEAL_COLOR := Color(0.74, 0.12, 0.1)
 ## Mark kind -> dot color (see region_marks).
 const MARK_COLORS := {
 	"sect": Color("6fa8e8"),
@@ -109,8 +113,8 @@ func _init() -> void:
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
-	EventBus.region_changed.connect(func(_id): if visible: _rebuild())
-	EventBus.player_changed.connect(func(): if visible: _show_details())
+	EventBus.region_changed.connect(_on_region_changed_rebuild)
+	EventBus.player_changed.connect(_on_player_changed_details)
 
 
 func _wrapped(l: Label) -> Label:
@@ -210,8 +214,8 @@ static func node_footprint(rect: Rect2) -> Rect2:
 ## (but still readable) border and text for places not yet visited.
 static func node_colors(unexplored: bool) -> Dictionary:
 	if unexplored:
-		return {"bg": Color(0.1, 0.1, 0.13, 0.95), "border": Color(0.38, 0.38, 0.44), "text": Color(0.66, 0.66, 0.7)}
-	return {"bg": Color(0.08, 0.09, 0.13, 0.95), "border": Color(0.6, 0.55, 0.38), "text": Color(0.95, 0.95, 0.92)}
+		return {"bg": Color(0.82, 0.77, 0.66, 0.97), "border": Color(0.52, 0.46, 0.36), "text": Color(0.36, 0.31, 0.25)}
+	return {"bg": Color(0.93, 0.88, 0.74, 0.97), "border": Color(0.3, 0.2, 0.12), "text": Color(0.14, 0.09, 0.05)}
 
 
 ## GFX-061: WCAG-style contrast ratio between two colours.
@@ -479,9 +483,10 @@ static func foes_bbcode(foes: Array) -> String:
 
 
 ## "Qi density x2.75 (the valley guardian's seed)": the region's qi with the reasons its flags enrich it.
-static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array) -> String:
-	var qi := Exploration.qi_density(data, region_id, flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, events, region_id)
-	var text := "Qi density x%s" % String.num(qi, 2)
+## With `c` the weather for their root counts too, so the map quotes the HUD's and the travel note's number (QI-003).
+static func qi_line(data: GameData, region_id: String, flags: Dictionary, events: Array, c: CharacterData = null) -> String:
+	var qi := Exploration.effective_density(data, region_id, flags, GameClock.total_days, events, c)
+	var text := "Qi density x%s" % Exploration.format_density(qi)
 	var reasons := Exploration.qi_flag_reasons(data, region_id, flags, GameClock.total_days)
 	if not reasons.is_empty():
 		text += " (%s)" % ", ".join(reasons)
@@ -538,8 +543,8 @@ func _rebuild() -> void:
 		b.toggle_mode = true
 		b.button_pressed = region_id == _selected
 		if region_id == GameState.current_region:
-			b.add_theme_color_override("font_color", UIStyle.ACCENT)
-			b.add_theme_color_override("font_focus_color", UIStyle.ACCENT)
+			b.add_theme_color_override("font_color", SEAL_COLOR)
+			b.add_theme_color_override("font_focus_color", SEAL_COLOR)
 		_style_node(b, unexplored, region_id == GameState.current_region)
 		b.focus_entered.connect(_select.bind(region_id))
 		b.pressed.connect(_select.bind(region_id))
@@ -562,37 +567,78 @@ static func land_color(region: Dictionary) -> Color:
 	return Color(0.4, 0.6, 0.32)
 
 
-## GFX-059: the painted land, from region data only (soft blobs, mountains on scree, trees on woods).
+## GFX-108: the terrain vignette kind of a region from its encounter_tags.
+static func terrain_kind(region: Dictionary) -> String:
+	var tags: Array = region.get("encounter_tags", [])
+	for pair: Array in [["city", "market"], ["village", "village"], ["marsh", "marsh"], ["mountain", "peaks"], ["forest", "forest"]]:
+		if tags.has(pair[0]):
+			return pair[1]
+	return "hills"
+
+
+## GFX-108: the painted parchment: paper, brush-stroke grid, border, and a terrain vignette per region.
 func _draw_land(data: GameData) -> void:
-	_canvas.draw_rect(Rect2(Vector2.ZERO, CANVAS_SIZE), Color(0.2, 0.19, 0.14))
+	_canvas.draw_rect(Rect2(Vector2.ZERO, CANVAS_SIZE), PAPER_COLOR)
+	var grid := Color(0.6, 0.5, 0.34, 0.16)
+	for gx in range(40, int(CANVAS_SIZE.x), 80):
+		_canvas.draw_line(Vector2(gx, 6), Vector2(gx, CANVAS_SIZE.y - 6), grid, 1.0)
+	for gy in range(40, int(CANVAS_SIZE.y), 80):
+		_canvas.draw_line(Vector2(6, gy), Vector2(CANVAS_SIZE.x - 6, gy), grid, 1.0)
+	_canvas.draw_rect(Rect2(Vector2.ONE, CANVAS_SIZE - Vector2(2, 2)), Color(0.36, 0.25, 0.14), false, 2.0)
 	var ids := _positions.keys()
 	ids.sort()
 	for region_id: String in ids:
 		var region: Dictionary = data.regions[region_id]
-		var c: Vector2 = _positions[region_id]
-		var col := land_color(region)
-		for k in 5:
-			var r := 96.0 - k * 14.0
-			_canvas.draw_circle(c, r, Color(col.r, col.g, col.b, 0.13))
+		var r: Rect2 = _rects[region_id]
+		var faded := is_unexplored(GameState.player, region_id, GameState.current_region)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(region_id)
-		var decor: Dictionary = region.get("map", {}).get("decor", {})
-		if String(region.get("map", {}).get("ground_style", "")) == "scree":
-			for k in 5:
-				var p := c + Vector2(rng.randf_range(-90, 90), rng.randf_range(-60, 60))
-				var h := rng.randf_range(16, 26)
-				_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h, h * 0.6), p + Vector2(0, -h), p + Vector2(h, h * 0.6)]), Color(0.42, 0.45, 0.5, 0.7))
-				_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h * 0.3, -h * 0.4), p + Vector2(0, -h), p + Vector2(h * 0.3, -h * 0.4)]), Color(0.92, 0.94, 0.98, 0.8))
-		if int(decor.get("trees", 0)) >= 30:
-			for k in 9:
-				var p := c + Vector2(rng.randf_range(-100, 100), rng.randf_range(-60, 70))
-				_canvas.draw_rect(Rect2(p + Vector2(-1.5, 4), Vector2(3, 6)), Color(0.3, 0.2, 0.12, 0.8))
-				_canvas.draw_circle(p, 6.0, Color(0.12, 0.34, 0.16, 0.8))
+		var kind := terrain_kind(region)
+		for k in 7:
+			var side := -1.0 if k % 2 == 0 else 1.0
+			var p := r.get_center() + Vector2(side * (r.size.x / 2.0 + rng.randf_range(10, 48)), rng.randf_range(-22, 22))
+			if k >= 5:
+				p = r.get_center() + Vector2(rng.randf_range(-r.size.x / 2.0, r.size.x / 2.0), -r.size.y / 2.0 - rng.randf_range(10, 20))
+			_draw_vignette(kind, p, rng.randf_range(0.8, 1.2), faded)
+
+
+## GFX-108: one small terrain mark at p (ink-and-wash colours, paler when unexplored).
+func _draw_vignette(kind: String, p: Vector2, sc: float, faded: bool) -> void:
+	var al := 0.45 if faded else 0.95
+	var ink := Color(INK_COLOR.r, INK_COLOR.g, INK_COLOR.b, al)
+	match kind:
+		"village":
+			var w := 12.0 * sc
+			_canvas.draw_rect(Rect2(p + Vector2(-w / 2.0, 0), Vector2(w, 7.0 * sc)), Color(0.72, 0.6, 0.42, al))
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-w / 2.0 - 3, 1), p + Vector2(0, -7.0 * sc), p + Vector2(w / 2.0 + 3, 1)]), Color(0.5, 0.24, 0.16, al))
+		"forest":
+			_canvas.draw_rect(Rect2(p + Vector2(-1, 4), Vector2(2, 5)), ink)
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-6.0 * sc, 5), p + Vector2(0, -9.0 * sc), p + Vector2(6.0 * sc, 5)]), Color(0.16, 0.36, 0.2, al))
+		"marsh":
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-9, 2), p + Vector2(-3, -2), p + Vector2(5, -2), p + Vector2(10, 2), p + Vector2(3, 5), p + Vector2(-5, 5)]), Color(0.38, 0.5, 0.5, al * 0.8))
+			_canvas.draw_line(p + Vector2(-2, 2), p + Vector2(-2, -9.0 * sc), ink, 1.5)
+			_canvas.draw_rect(Rect2(p + Vector2(-3.5, -12.0 * sc), Vector2(3, 5)), Color(0.4, 0.24, 0.1, al))
+		"peaks":
+			var h := 12.0 * sc
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h, h * 0.6), p + Vector2(0, -h), p + Vector2(h, h * 0.6)]), Color(0.5, 0.5, 0.54, al))
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-h * 0.3, -h * 0.4), p + Vector2(0, -h), p + Vector2(h * 0.3, -h * 0.4)]), Color(0.97, 0.96, 0.92, al))
+		"market":
+			_canvas.draw_rect(Rect2(p + Vector2(-6, 0), Vector2(12, 6)), Color(0.55, 0.4, 0.22, al))
+			_canvas.draw_colored_polygon(PackedVector2Array([p + Vector2(-8, 1), p + Vector2(-6, -5), p + Vector2(6, -5), p + Vector2(8, 1)]), Color(0.78, 0.22, 0.16, al))
+		_:
+			_canvas.draw_arc(p, 8.0 * sc, PI, TAU, 10, Color(0.4, 0.5, 0.28, al), 2.0)
+
+
+## GFX-108: a dotted ink road from a to b (dots every 9 px).
+func _draw_dotted(a: Vector2, b: Vector2, col: Color) -> void:
+	var n := maxi(1, int(a.distance_to(b) / 9.0))
+	for i in n + 1:
+		_canvas.draw_circle(a.lerp(b, float(i) / n), 2.2, col)
 
 
 func _style_node(b: Button, unexplored: bool, current: bool) -> void:
 	var col := node_colors(unexplored)
-	var text: Color = UIStyle.ACCENT if current else col["text"]
+	var text: Color = SEAL_COLOR if current else col["text"]
 	for state: String in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = col["bg"]
@@ -630,14 +676,15 @@ func _draw_map() -> void:
 			var b: Vector2 = _positions[to]
 			var seg := clip_to_rects(a, b, node_footprint(_rects[region_id]), node_footprint(_rects[to]))
 			if seg.size() == 2:
-				_canvas.draw_line(seg[0], seg[1], LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR, 4.0)
+				_draw_dotted(seg[0], seg[1], LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR)
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
 			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)
 			var pos := route_label_pos(a, b, size, node_rects)
 			node_rects.append(Rect2(pos, size))  # later labels keep clear of this one
-			_canvas.draw_rect(Rect2(pos, size), Color(0.08, 0.08, 0.1, 0.85))
-			_canvas.draw_string(font, pos + Vector2(5, size.y - 5), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.9, 0.9, 0.85))
+			_canvas.draw_rect(Rect2(pos, size), Color(0.96, 0.92, 0.8))
+			_canvas.draw_rect(Rect2(pos, size), INK_COLOR, false, 1.0)
+			_canvas.draw_string(font, pos + Vector2(5, size.y - 5), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, INK_COLOR)
 	for region_id in _positions:
 		var rect: Rect2 = _rects[region_id]
 		var x := rect.position.x
@@ -654,7 +701,7 @@ func _draw_map() -> void:
 			if gold or roamer_count(GameState.player, data, region_id, GameClock.total_days, GameState.world_flags) > 0:
 				_canvas.draw_texture_rect(HudIcons.map_mark("paw_gold" if gold else "paw"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false)
 				x += GLYPH_SIZE + 2.0
-			elif Wildlife.tracks_today(data, region_id, GameClock.total_days, GameState.player.realm_index):
+			elif Wildlife.tracks_today(data, region_id, GameClock.total_days, GameState.player.realm_index, GameState.player):
 				_canvas.draw_texture_rect(HudIcons.map_mark("paw"), Rect2(x, y, GLYPH_SIZE, GLYPH_SIZE), false, Color(1, 1, 1, 0.5))
 				x += GLYPH_SIZE + 2.0
 			if not forage_entries(GameState.player, data, region_id, GameState.current_region, GameClock.total_days, GameState.world_flags).is_empty():
@@ -670,13 +717,16 @@ func _draw_map() -> void:
 	if _hint_region != "" and _rects.has(_hint_region):
 		var hr: Rect2 = _rects[_hint_region]
 		var hm := hint_marker_rect(hr)
-		_canvas.draw_rect(hm, Color(0.1, 0.09, 0.08, 1.0))  # GFX-067: opaque backing so no road line shows through
-		_canvas.draw_string(font, Vector2(hm.position.x + 5.0, hm.end.y - 4.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, UIStyle.ACCENT)
+		_canvas.draw_rect(hm, Color(0.96, 0.92, 0.8))  # GFX-067: opaque backing so no road line shows through
+		_canvas.draw_string(font, Vector2(hm.position.x + 5.0, hm.end.y - 4.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, SEAL_COLOR)
 	if _goal_region != "" and _rects.has(_goal_region):
 		var gr: Rect2 = _rects[_goal_region]
-		_canvas.draw_string(font, Vector2(gr.position.x, gr.position.y - 4.0), "* goal", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, UIStyle.ACCENT)
+		_canvas.draw_string(font, Vector2(gr.position.x, gr.position.y - 4.0), "* goal", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, SEAL_COLOR)
 	if _rects.has(GameState.current_region):
-		_canvas.draw_rect((_rects[GameState.current_region] as Rect2).grow(5.0), UIStyle.ACCENT, false, 3.0)
+		var cr: Rect2 = _rects[GameState.current_region]
+		_canvas.draw_rect(cr.grow(4.0), SEAL_COLOR, false, 2.0)
+		_canvas.draw_rect(Rect2(cr.position + Vector2(-9, -9), Vector2(15, 15)), SEAL_COLOR)  # seal stamp
+		_canvas.draw_rect(Rect2(cr.position + Vector2(-5, -5), Vector2(7, 7)), Color(0.96, 0.9, 0.8), false, 1.0)
 
 
 ## GFX-067: the box of the "!" hint marker: wholly above and outside the node rect, at its right end.
@@ -707,7 +757,7 @@ func _show_details() -> void:
 	if region.is_empty():
 		return
 	_name.text = String(region.get("name", _selected))
-	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events), danger_name(data, _selected)]
+	_info.text = "%s   |   Danger: %s" % [qi_line(data, _selected, GameState.world_flags, GameState.world_events, GameState.player), danger_name(data, _selected)]
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
 		_hint_note.text = "Your road goal points here."
@@ -761,3 +811,13 @@ func _focus_selected() -> void:
 		b.grab_focus()
 	else:
 		_close_button.grab_focus()
+
+
+func _on_region_changed_rebuild(_id: String) -> void:
+	if visible:
+		_rebuild()
+
+
+func _on_player_changed_details() -> void:
+	if visible:
+		_show_details()

@@ -44,7 +44,7 @@ func _init() -> void:
 	_ribbon = PanelContainer.new()
 	_ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ribbon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var style := UIStyle.panel_style()
+	var style := UIStyle.flat_panel_style()
 	style.bg_color = Color(style.bg_color, 0.85)
 	style.set_corner_radius_all(6)
 	style.border_color = UIStyle.ACCENT
@@ -129,6 +129,16 @@ func set_held(value: bool) -> void:
 		hide()
 		return
 	if not held and not visible and not _queue.is_empty():
+		finish_current()
+
+
+## WU-491: drops every notice titled `title`, showing or queued, without playing the next one early
+## while held. Used for the arrival name card when a screen opens over it.
+func dismiss_titled(title: String) -> void:
+	for i in range(_queue.size() - 1, -1, -1):
+		if str(_queue[i][0]) == title:
+			_queue.remove_at(i)
+	if visible and not _current.is_empty() and str(_current[0]) == title:
 		finish_current()
 
 

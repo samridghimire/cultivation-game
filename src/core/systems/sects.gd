@@ -593,9 +593,18 @@ static func available_missions(c: CharacterData, data: GameData, flags: Dictiona
 		var needed_flag := String(mission.get("requires_flag", ""))
 		if needed_flag != "" and not flags.get(needed_flag, false):
 			continue
+		if mission_beneath(c, data, mission):
+			continue
 		if sects.is_empty() or sects.has(c.sect["id"]):
 			out.append(String(mission["id"]))
 	return out
+
+
+## MISSION-003: True when `mission` has a `max_realm` and `c` has risen above it.
+static func mission_beneath(c: CharacterData, data: GameData, mission: Dictionary) -> bool:
+	if not mission.has("max_realm"):
+		return false
+	return c.realm_index > data.realm_index_of(String(mission["max_realm"]))
 
 
 ## Items (id -> count, summed) that `c`'s sect deliver-style missions are waiting on: missions with
@@ -631,6 +640,8 @@ static func mission_rank_realm_reason(c: CharacterData, data: GameData, mission:
 	var min_rank := int(mission.get("min_rank", 0))
 	if int(c.sect["rank"]) < min_rank:
 		return "Only %s or above may take this mission." % Text.a(sect.rank_name(min_rank))
+	if mission_beneath(c, data, mission):
+		return "Beneath you now: %s." % String(mission.get("name", "this mission"))
 	var min_realm := data.realm_index_of(String(mission.get("min_realm", "mortal")))
 	var min_stage := int(mission.get("min_stage", 0))
 	if c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
@@ -692,9 +703,11 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	var offered: Array = data.sect_missions[mission_id].get("sects", [])
 	if not offered.is_empty() and not offered.has(c.sect["id"]):
 		return "Your sect does not offer that mission."
+	var mission: Dictionary = data.sect_missions[mission_id]
+	if mission_beneath(c, data, mission):
+		return mission_rank_realm_reason(c, data, mission)
 	if not available_missions(c, data, flags).has(mission_id):
 		return "Your sect has no need of this now."
-	var mission: Dictionary = data.sect_missions[mission_id]
 	var rank_realm := mission_rank_realm_reason(c, data, mission)
 	if rank_realm != "":
 		return rank_realm
@@ -786,6 +799,12 @@ static func validate_missions(data: GameData) -> PackedStringArray:
 			errors.append("Mission '%s' has unknown min_realm '%s'" % [id, mission.get("min_realm", "")])
 		elif int(mission.get("min_stage", 0)) < 0 or int(mission.get("min_stage", 0)) >= data.realms[realm_index].stage_count():
 			errors.append("Mission '%s' has min_stage %d outside its min_realm's stages" % [id, int(mission.get("min_stage", 0))])
+		if mission.has("max_realm"):
+			var max_index := data.realm_index_of(String(mission["max_realm"]))
+			if max_index < 0:
+				errors.append("Mission '%s' has unknown max_realm '%s'" % [id, mission["max_realm"]])
+			elif max_index < realm_index:
+				errors.append("Mission '%s' has max_realm below its min_realm" % id)
 		if int(mission.get("min_rank", 0)) < 0:
 			errors.append("Mission '%s' needs min_rank >= 0" % id)
 		if int(mission.get("days", 0)) < 1:

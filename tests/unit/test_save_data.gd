@@ -81,6 +81,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.deed_days = {"help_villager": 12}
 	c.life_stats = {"fights_won": 3}
 	c.year_start_stats = {"fights_won": 1}
+	c.season_start_stats = {"fights_won": 1}
 	c.trial_progress = {"fist_saint_grave": 2}
 	c.training = {"assignment": "profession", "profession": "alchemist"}
 	c.npc_action_days = {"pointers:elder": 12}
@@ -92,10 +93,12 @@ func test_every_character_field_survives_a_save() -> void:
 	c.gratitude = {"npc_test_friend": 25}
 	c.folk_gift_day = {"npc_test_friend": 77}
 	c.folk_tier_seen = {"npc_test_friend": 1}
+	c.lessons_taught = {"hunter_ma:0": 12}
 	c.folk_tiers_seeded = true
 	c.catch_log = {"silver_carp": 3}
 	c.herb_log = {"dew_grass": 2}
 	c.hunt_log = {"wild_boar": 2}
+	c.season_tasks = {"season_key": "1-spring", "progress": {"spring_bream": 1}, "done": false}
 	c.hunt_spoils = {"wild_boar": {"boar_tusk": 3}}
 	c.great_beasts = {"old_tusker_boar": 12}
 	c.marked_days = {40: "Market: Qingshi Village"}
@@ -107,7 +110,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.folk_companion_day = {"npc_test_friend": 90}
 	c.dao = {"sword_dao": {"level": 2, "progress": 30.5}}
 	c.garden = [{"item": "flame_lotus", "days_left": 40}]
-	c.field_plots = {"qingshi_village:Farmer Tian's Spare Field": {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 12}]}}
+	c.field_plots = {"qingshi_village:Farmer Tian's Spare Field": {"paid_until": 90, "crops": [{"item": "spirit_herb", "days_left": 12, "bonus_acc": 0.25}]}}
 	c.commissions = [{"profession": "alchemist", "recipe": "qi_gathering_pill", "item": "qi_gathering_pill", "count": 2, "reward": 9, "xp": 10.0, "due_day": 77}]
 	c.companion_xp = {"x_companions": 30}
 	c.encounter_counts = {"forest_lost": 3}

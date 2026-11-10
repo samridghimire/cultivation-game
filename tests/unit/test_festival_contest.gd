@@ -272,3 +272,302 @@ func test_game_state_practice_then_contest() -> void:
 	var result: Dictionary = gs.festival_contest("lantern_festival")
 	assert_eq(int(result["practice"]), 4)
 	gs.end_session()
+
+
+## FEST-009: the rival at the festival.
+func test_rival_flag_in_scores_and_standings() -> void:
+	var p := new_character()
+	var rivals: Array[CharacterData] = [_npc("Mei Lan", 8), _npc("Old Wu", 8)]
+	var r := FestivalContest.run(data(), p, "lantern_festival", rivals, seeded_rng(3), "", 0, "Old Wu")
+	var flagged := 0
+	for s: Dictionary in r["scores"]:
+		if bool(s.get("rival", false)):
+			flagged += 1
+			assert_eq(s["name"], "Old Wu")
+	assert_eq(flagged, 1)
+	assert_true("\n".join(FestivalContest.standings_lines(r)).contains("Old Wu (your rival)"))
+
+
+func test_rival_enters_rules_and_tally() -> void:
+	var p := new_character()
+	var rv := _npc("Zhou", 8)
+	rv.realm_index = p.realm_index + 1
+	var met := {Rivals.FIRST_MEETING_FLAG: true}
+	assert_true(Rivals.enters_festival(p, rv, met))
+	assert_false(Rivals.enters_festival(p, rv, {}), "unmet")
+	rv.realm_index = p.realm_index + 2
+	assert_false(Rivals.enters_festival(p, rv, met), "two realms apart")
+	rv.realm_index = p.realm_index
+	rv.alive = false
+	assert_false(Rivals.enters_festival(p, rv, met), "dead")
+	assert_false(Rivals.enters_festival(p, null, met))
+	var flags := {}
+	Rivals.note_festival(flags, true)
+	Rivals.note_festival(flags, true)
+	Rivals.note_festival(flags, false)
+	assert_eq(Rivals.bout_record_text(flags), "bouts 0 won, 0 lost, festivals 2-1")
+	assert_eq(Rivals.bout_record_text({Rivals.BOUTS_WON_FLAG: 1}), "bouts 1 won, 0 lost")
+
+
+func test_rival_festival_lines_and_validation() -> void:
+	var rv := _npc("Zhou", 8)
+	for won in [true, false]:
+		for y in 4:
+			var line := Rivals.festival_line(data(), rv, won, y)
+			assert_true(line.contains("Zhou"), line)
+	assert_eq(Rivals.validate(data()).size(), 0, ", ".join(Rivals.validate(data())))
+	var d := GameData.load_from_dir()
+	d.karma["rival"]["festival"] = {"win": [], "lose": ["x"]}
+	assert_eq(Rivals.validate(d).size(), 1)
+
+
+func test_game_state_rival_enters_festival() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	var rival := Rivals.spawn(gs.player, gs.npcs, gs.data, gs.rng, "azure_peak")
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
+	rival.realm_index = gs.player.realm_index
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	var found := false
+	for s: Dictionary in result["scores"]:
+		if bool(s.get("rival", false)):
+			found = true
+			assert_eq(s["name"], rival.name)
+	assert_true(found, "the rival enters from another region")
+	assert_eq(result["scores"].size(), int(FestivalContest.contest_of(gs.data, "lantern_festival")["rivals"]) + 1)
+	var t := Rivals.festival_tally(gs.world_flags)
+	assert_eq(int(t["won"]) + int(t["lost"]), 1)
+	assert_true(String(result.get("rival_remark", "")) != "", "WU-463: the rival's remark is in the result")
+	assert_true(result.has("cheerers"))
+	gs.end_session()
+
+
+## FEST-010: festival memories.
+func test_history_empty_and_ordered() -> void:
+	var h := FestivalContest.history(data(), {}, new_character(), 1)
+	assert_eq(h.size(), 4)
+	for i in h.size() - 1:
+		assert_true(int(h[i]["month"]) <= int(h[i + 1]["month"]))
+	for e in h:
+		assert_eq(int(e["last_place"]), 0)
+		assert_false(bool(e["keepsake_owned"]))
+		assert_true(String(e["keepsake"]) != "", e["event_id"])
+	assert_true("\n".join(FestivalContest.history_lines(data(), {}, new_character(), 1)).contains("not yet entered"))
+
+
+func test_record_stores_history_and_streak() -> void:
+	var flags := {}
+	var win := {"place": 1, "scores": [{"name": "You", "score": 9, "you": true}]}
+	var lose := {"place": 2, "scores": [{"name": "Mei", "score": 9, "you": false}, {"name": "You", "score": 5, "you": true}]}
+	FestivalContest.record(flags, "lantern_festival", 1, lose)
+	var h := FestivalContest.history(data(), flags, new_character(), 2)
+	var lantern: Dictionary = h.filter(func(e: Dictionary) -> bool: return e["event_id"] == "lantern_festival")[0]
+	assert_eq(int(lantern["last_place"]), 2)
+	assert_eq(lantern["champion"], "Mei")
+	assert_false(bool(lantern["keepsake_owned"]))
+	for y in [2, 3, 4]:
+		FestivalContest.record(flags, "lantern_festival", y, win)
+	h = FestivalContest.history(data(), flags, new_character(), 5)
+	lantern = h.filter(func(e: Dictionary) -> bool: return e["event_id"] == "lantern_festival")[0]
+	assert_eq(int(lantern["streak"]), 3)
+	assert_eq(lantern["champion"], "You")
+	assert_true(bool(lantern["keepsake_owned"]), "a 1st place flags the keepsake")
+	for y in range(5, 20):
+		FestivalContest.record(flags, "lantern_festival", y, win)
+	assert_eq((flags[FestivalContest.history_key("lantern_festival")] as Dictionary).size(), FestivalContest.HISTORY_YEARS)
+
+
+func test_text_lists_pick_by_year_and_validate() -> void:
+	assert_eq(FestivalContest.pick_text(["a", "b", "c"], 4), "b")
+	assert_eq(FestivalContest.pick_text("solo", 7), "solo")
+	var d := GameData.load_from_dir()
+	var c: Dictionary = (d.world_events["lantern_festival"]["contest"] as Dictionary).duplicate(true)
+	c["win_text"] = ["one", "two"]
+	c["lose_text"] = ["lost to {winner}", "beaten by {winner}"]
+	d.world_events["lantern_festival"]["contest"] = c
+	assert_eq(FestivalContest.validate(d).size(), 0, ", ".join(FestivalContest.validate(d)))
+	c["win_text"] = []
+	assert_true(FestivalContest.validate(d).size() >= 1)
+	c["win_text"] = [3]
+	assert_true(FestivalContest.validate(d).size() >= 1)
+
+
+## FOLK-012: friends at the festival.
+func _friend_setup() -> Array:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var folk := Folk.candidates(gs.npcs, gs.data, gs.player, "qingshi_village")
+	return [gs, folk]
+
+
+func test_cheerers_cap_and_tier() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	assert_true(folk.size() >= 4)
+	var favor := {}
+	assert_eq(FestivalContest.cheerers(gs.npcs, gs.data, favor, "qingshi_village").size(), 0)
+	for i in 4:
+		favor[(folk[i] as CharacterData).id] = 45 + i
+	var who := FestivalContest.cheerers(gs.npcs, gs.data, favor, "qingshi_village")
+	assert_eq(who.size(), 3, "capped at 3")
+	assert_eq(who[0].id, (folk[3] as CharacterData).id, "best friend first")
+	assert_true(FestivalContest.cheer_line(who).contains("cheer you on (+3)"))
+	var entrants: Array[CharacterData] = [folk[3] as CharacterData]
+	var others := FestivalContest.cheerers(gs.npcs, gs.data, favor, "qingshi_village", entrants)
+	assert_eq(others.size(), 3, "the next friend steps in")
+	assert_false(others.has(folk[3]), "a friend who enters the contest does not cheer")
+	gs.end_session()
+
+
+func test_run_adds_cheer_to_roll() -> void:
+	var d := data()
+	var p := new_character()
+	var a := FestivalContest.run(d, p, "lantern_festival", [] as Array[CharacterData], seeded_rng(9))
+	var b := FestivalContest.run(d, p, "lantern_festival", [] as Array[CharacterData], seeded_rng(9), "", 0, "", 0, 3)
+	assert_eq(int(b["scores"].filter(func(s: Dictionary) -> bool: return s["you"])[0]["score"]) - int(a["scores"].filter(func(s: Dictionary) -> bool: return s["you"])[0]["score"]), 3)
+	assert_eq(int(b["cheer"]), 3)
+
+
+func test_invitation_picks_closest_friend_the_day_before() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var favor := {(folk[0] as CharacterData).id: 65, (folk[1] as CharacterData).id: 90, (folk[2] as CharacterData).id: 50}
+	assert_true(FestivalContest.invitation(gs.data, gs.npcs, favor, LANTERN_START - 1).is_empty(), "only on the festival's first day")
+	var inv := FestivalContest.invitation(gs.data, gs.npcs, favor, LANTERN_START)
+	assert_eq(inv["npc"].id, (folk[1] as CharacterData).id)
+	assert_true(FestivalContest.invitation_line(gs.data, inv).contains("asked you to the"))
+	var rem := VillageCalendar.reminders(gs.data, gs.npcs, favor, [], "qingshi_village", LANTERN_START - 1, gs.player)
+	assert_true(rem[0].contains("asked you to the"))
+	assert_true(FestivalContest.invitation(gs.data, gs.npcs, {(folk[2] as CharacterData).id: 50}, LANTERN_START).is_empty())
+	gs.end_session()
+
+
+func test_attending_with_inviter_gives_favor_and_line() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var friend: CharacterData = folk[folk.size() - 1]  # the last villager: not one of the entrants
+	assert_true(folk.size() > int(FestivalContest.contest_of(gs.data, "lantern_festival")["rivals"]))
+	gs.npc_favor[friend.id] = 70
+	_root().get_node("GameClock").total_days = LANTERN_START
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": LANTERN_START, "end_day": LANTERN_START + 8}]
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == friend.name), "the friend watches")
+	assert_eq(int(result["cheer"]), 1)
+	assert_eq(int(gs.npc_favor[friend.id]), 74 + (int((result["prize"] as Dictionary).get("favor_all", 0))))
+	gs.end_session()
+
+
+func test_festival_company_validation() -> void:
+	var d := GameData.load_from_dir()
+	assert_eq(Folk.validate(d).size(), 0, ", ".join(Folk.validate(d)))
+	assert_true((d.family["festival_company"] as Array).size() >= 4)
+	d.family["festival_company"] = ["no placeholder"]
+	assert_eq(Folk.validate(d).size(), 1)
+
+
+## FEST-011 (1): the invitation reminder is only posted near the festival's region.
+func test_invitation_reminder_only_nearby() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var favor := {(folk[1] as CharacterData).id: 90}
+	var far := ""
+	for rid: String in gs.data.regions:
+		if not Exploration.is_nearby(gs.data, rid, "qingshi_village"):
+			far = rid
+			break
+	assert_true(far != "", "some region is more than a route away")
+	var here := VillageCalendar.reminders(gs.data, gs.npcs, favor, [], "qingshi_village", LANTERN_START - 1, gs.player)
+	assert_true(here.size() > 0 and here[0].contains("asked you to the"))
+	var away := VillageCalendar.reminders(gs.data, gs.npcs, favor, [], far, LANTERN_START - 1, gs.player)
+	assert_false(Array(away).any(func(l: String) -> bool: return l.contains("asked you to the")))
+	gs.end_session()
+
+
+## FEST-011 (2): the invited friend never enters the contest; the next villager steps in.
+func test_invited_friend_is_not_an_entrant() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var friend: CharacterData = folk[0]  # the first candidate would otherwise enter
+	gs.npc_favor[friend.id] = 95
+	_root().get_node("GameClock").total_days = LANTERN_START
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": LANTERN_START, "end_day": LANTERN_START + 8}]
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == friend.name))
+	assert_false((result["scores"] as Array).any(func(sc: Dictionary) -> bool: return String(sc["name"]) == "a stranger"), "the next villager stepped in")
+	gs.end_session()
+
+
+## FEST-011 (3): the rival is marked by character id, not by name.
+func test_rival_marked_by_id() -> void:
+	var p := new_character()
+	var a := _npc("Old Wu", 8)
+	var b := _npc("Old Wu", 8)
+	a.id = "npc_a"
+	b.id = "npc_b"
+	var rivals: Array[CharacterData] = [a, b]
+	var r := FestivalContest.run(data(), p, "lantern_festival", rivals, seeded_rng(3), "", 0, "Old Wu", 0, 0, "npc_b")
+	var flagged := 0
+	for s: Dictionary in r["scores"]:
+		if bool(s.get("rival", false)):
+			flagged += 1
+	assert_eq(flagged, 1, "only the rival by id, not the namesake")
+
+
+func test_contest_win_becomes_village_news() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	gs.player.attributes["comprehension"] = 40
+	gs.current_region = "qingshi_village"
+	var day: int = _root().get_node("GameClock").total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day, "end_day": day + 8}]
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var result: Dictionary = gs.festival_contest("lantern_festival")
+	assert_eq(int(result["place"]), 1)
+	assert_eq(String(gs.world_flags["village_news"]["kind"]), "contest_win")
+	assert_true(gs.greeting_for(npc.id).contains(String(gs.world_flags["village_news"]["subject"])))
+
+
+func _guest_events(day: int, region: String = "qingshi_village") -> Array:
+	return [{"id": "lantern_festival", "region": region, "start_day": day, "end_day": day + 5}]
+
+
+func test_festival_guest_line() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	var day := 400
+	var year := Calendar.year_of(day)
+	var favor := {(folk[0] as CharacterData).id: 45, (folk[1] as CharacterData).id: 50}
+	var flags := {FestivalContest.winner_key("lantern_festival"): {"year": year - 1, "name": "Wen Qingxu", "you": false, "streak": 1}}
+	var line := Guidance.festival_guest_line(gs.data, _guest_events(day), day, "qingshi_village", gs.npcs, favor, flags)
+	assert_true(line.begins_with("At the Lantern Festival:"), line)
+	assert_true(line.contains((folk[0] as CharacterData).name) and line.contains((folk[1] as CharacterData).name))
+	assert_true(line.contains("Wen Qingxu"))
+	assert_eq(Guidance.festival_guest_line(gs.data, [], day, "qingshi_village", gs.npcs, favor, flags), "", "no festival")
+	assert_eq(Guidance.festival_guest_line(gs.data, _guest_events(day, "misty_forest"), day, "qingshi_village", gs.npcs, favor, flags), "", "other region")
+	assert_true(Guidance.people_today_lines(gs.player, gs.data, _guest_events(day), day, "qingshi_village", gs.npcs, favor, flags).size() >= 1)
+	gs.end_session()
+
+
+func test_festival_guest_line_caps_names() -> void:
+	var setup := _friend_setup()
+	var gs: Node = setup[0]
+	var folk: Array = setup[1]
+	assert_true(folk.size() >= 4)
+	var favor := {}
+	for i in 4:
+		favor[(folk[i] as CharacterData).id] = 45 + i
+	var line := Guidance.festival_guest_line(gs.data, _guest_events(400), 400, "qingshi_village", gs.npcs, favor, {})
+	assert_true(line.contains("and 1 more"), line)
+	assert_false(line.contains((folk[0] as CharacterData).name), "the 4th friend is not named")
+	assert_eq(Guidance.festival_guest_line(gs.data, _guest_events(400), 400, "qingshi_village", gs.npcs, {}, {}), "", "nobody there")
+	gs.end_session()

@@ -255,17 +255,25 @@ static func advance(c: CharacterData, data: GameData, world_days: int, today: in
 			if int(crop["days_left"]) <= 0:
 				continue
 			var left := int(crop["days_left"])
+			var bonus := SeasonTasks.crop_bonus(c, data, region_id)  # SEASON-008: village projects speed fields
+			var acc := float(crop.get("bonus_acc", 0.0))
 			for day in range(today - world_days + 1, today + 1):
 				if day >= int(entry.get("paid_until", 0)):
 					continue
 				if (place.get("frozen_seasons", []) as Array).has(Calendar.season_of(day).to_lower()):
 					continue
 				left -= 1
+				acc += bonus
+				if acc >= 0.999:
+					left -= 1
+					acc -= 1.0
 				if weather_of.call(region_id, day) == "rain" or int(entry.get("watered_day", -1)) == day - 1:
 					left -= int(place.get("rain_bonus_days", 0))
 				if left <= 0:
 					break
 			crop["days_left"] = maxi(0, left)
+			if bonus > 0.0:
+				crop["bonus_acc"] = acc
 			if left <= 0:
 				ready.append("%s:%s" % [region_id, crop["item"]])
 	return ready

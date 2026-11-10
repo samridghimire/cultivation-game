@@ -20,14 +20,14 @@ var _place: Label
 var _rows: VBoxContainer
 var _prize: Label
 var _text: Label
+var _cheer: Label
+var _remark: Label
 var _button: Button
 var _style: StyleBoxFlat
 
 
 func _init() -> void:
-	var style_source := UIStyle.panel()
-	_style = (style_source.get_theme_stylebox("panel") as StyleBoxFlat).duplicate() as StyleBoxFlat
-	style_source.free()
+	_style = UIStyle.flat_panel_style()
 	add_theme_stylebox_override("panel", _style)
 	visible = false
 	var box := VBoxContainer.new()
@@ -43,14 +43,35 @@ func _init() -> void:
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 2)
 	box.add_child(_rows)
+	_cheer = UIStyle.label("", 16, Color(0.8, 0.9, 0.7))
+	_cheer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_cheer)
 	_prize = UIStyle.label("", 16, UIStyle.CATEGORY_COLORS["progress"])
 	_prize.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_prize)
 	_text = UIStyle.label("", 16)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_text)
+	_remark = UIStyle.label("", 16, Color(0.85, 0.7, 0.55))
+	_remark.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_remark)
 	_button = UIStyle.button("Continue", close)
 	box.add_child(_button)
+
+
+## "Lan and Wei cheered you on (+2)." from the result's `cheerers` names, "" when nobody cheered.
+static func cheer_text(result: Dictionary) -> String:
+	var names: Array = result.get("cheerers", [])
+	if names.is_empty():
+		return ""
+	var joined := String(names[0]) if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + String(names[names.size() - 1])
+	return "%s cheered you on (+%d)." % [joined, names.size()]
+
+
+## The rival's remark in quotes, "" without one.
+static func remark_text(result: Dictionary) -> String:
+	var line := String(result.get("rival_remark", ""))
+	return "\"%s\"" % line if line != "" else ""
 
 
 static func tint_for(event_id: String) -> Color:
@@ -89,8 +110,14 @@ func open(result: Dictionary, data: GameData) -> void:
 	var lines := FestivalContest.standings_lines(result)
 	for i in lines.size():
 		var you: bool = i < scores.size() and bool(scores[i].get("you", false))
-		var l := UIStyle.label(("> " if you else "  ") + lines[i], 18, tint if you else Color(0.85, 0.85, 0.85))
+		var rival: bool = i < scores.size() and bool(scores[i].get("rival", false))
+		var col := tint if you else (Color(0.95, 0.6, 0.35) if rival else Color(0.85, 0.85, 0.85))
+		var l := UIStyle.label(("> " if you else "  ") + lines[i], 18, col)
 		_rows.add_child(l)
+	_cheer.text = cheer_text(result)
+	_cheer.visible = _cheer.text != ""
+	_remark.text = remark_text(result)
+	_remark.visible = _remark.text != ""
 	var prize_text := prize_line(result, data)
 	_prize.text = prize_text
 	_prize.visible = prize_text != ""

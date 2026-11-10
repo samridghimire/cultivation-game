@@ -32,7 +32,7 @@ func _ready() -> void:
 	add_to_group("player")
 	EventBus.player_changed.connect(refresh_look)
 	EventBus.session_started.connect(refresh_look)
-	EventBus.breakthrough_attempted.connect(func(success: bool, _realm: String) -> void: celebrate(success))
+	EventBus.breakthrough_attempted.connect(_on_breakthrough_attempted)
 	refresh_look.call_deferred()
 
 
@@ -64,6 +64,10 @@ func _update_camera_shake(delta: float) -> void:
 
 ## Breakthrough effect (WU-063): a gold ring and rays on success, a dull
 ## contracting ring and a sideways shake on failure. Drawn only; never moves `position`.
+func _on_breakthrough_attempted(success: bool, _realm: String) -> void:
+	celebrate(success)
+
+
 func celebrate(success: bool) -> void:
 	_celebrate_ok = success
 	if success and not MotionFx.reduced():
@@ -147,7 +151,11 @@ func _update_target() -> void:
 		_target = best
 		if best:
 			best.highlighted = true
-		EventBus.interaction_target_changed.emit(best.display_name if best else "")
+		EventBus.interaction_target_changed.emit(best.prompt_text() if best else "")
+
+
+## GFX-101: the player figure's 1 px silhouette outline.
+const OUTLINE_COLOR := Color("f3e6c4")
 
 
 func _draw() -> void:
@@ -161,16 +169,38 @@ func _draw() -> void:
 	# Shadow stays on the ground; the body bobs while walking.
 	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.4))
 	draw_circle(Vector2.ZERO, RADIUS, Color(0, 0, 0, 0.3))
+	draw_circle(Vector2.ZERO, RADIUS + 2.0, Color(0, 0, 0, 0.18))  # GFX-101: darker, wider than villagers' shadows
 	draw_set_transform(Vector2.ZERO)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
 	var o := Vector2(shake, bob)
+	_draw_cake(o)
 	if _draw_sprite(o, sash):
 		return
 	# Generated pixel figure (GFX-011), feet on the hem line.
 	var tex := PixelFigure.frame(_look, _dir_name(), int(_time * 6.0) if velocity != Vector2.ZERO else 0)
 	var s := float(Sprites.scale())
 	var size := Vector2(tex.get_size()) * s
-	draw_texture_rect(tex, Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size), false)
+	var body := Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size)
+	var sil := PixelFigure.silhouette(tex, OUTLINE_COLOR)  # GFX-101: pale outline so you can find yourself in a crowd
+	for d: Vector2 in [Vector2(s, 0), Vector2(-s, 0), Vector2(0, s), Vector2(0, -s)]:
+		draw_texture_rect(sil, Rect2(body.position + d, size), false)
+	draw_texture_rect(tex, body, false)
+
+
+## WU-494: true on the player's own birthday (FOLK-027); pure so tests can pass any day.
+static func shows_cake(c: CharacterData, data: GameData, day: int) -> bool:
+	return c != null and Folk.player_birthday_today(c, data, day)
+
+
+## WU-494: the friend cake marker (WU-482, same art) over the player's head on their birthday.
+func _draw_cake(o: Vector2) -> void:
+	if not GameState.has_session() or not shows_cake(GameState.player, GameState.data, GameClock.total_days):
+		return
+	var tex := HudIcons.calendar_kind("birthday")
+	if tex == null:
+		return
+	var w := tex.get_width() * 2.0
+	draw_texture_rect(tex, Rect2(o + Vector2(-w / 2.0, -58.0), Vector2(w, tex.get_height() * 2.0)), false)
 
 
 ## "down", "up", "left" or "right" from the facing vector.

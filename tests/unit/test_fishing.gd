@@ -247,3 +247,63 @@ func test_every_fishing_place_has_a_rain_only_fish() -> void:  # C-283
 			assert_true(found, "%s: no rain-only fish" % rid)
 			assert_true(rain_ok, "%s: rains never fall, so the rain fish is unreachable" % rid)
 	assert_eq(places, 5)
+
+
+## FISH-007: rank bonus draws and perk lines.
+func test_bonus_draws_by_rank() -> void:
+	for seed_i in 20:
+		assert_eq(Fishing.bonus_draws(0, seeded_rng(seed_i)), 0)
+		assert_eq(Fishing.bonus_draws(100, seeded_rng(seed_i)), 1)
+	var rng := seeded_rng(5)
+	var angler := 0
+	var hand := 0
+	for i in 400:
+		angler += Fishing.bonus_draws(10, rng)
+		hand += Fishing.bonus_draws(40, rng)
+	assert_true(absf(angler / 400.0 - 0.25) < 0.06, "Angler about 25%%, got %d/400" % angler)
+	assert_true(absf(hand / 400.0 - 0.5) < 0.06, "Old Hand about 50%%, got %d/400" % hand)
+
+
+func test_rank_perk_text() -> void:
+	assert_eq(Fishing.rank_perk(0), "")
+	assert_eq(Fishing.rank_perk(10), "An Angler lands an extra fish one trip in four.")
+	assert_eq(Fishing.rank_perk(40), "An Old Hand lands an extra fish every other trip.")
+	assert_eq(Fishing.rank_perk(100), "A Master always lands an extra fish.")
+
+
+func test_master_lands_extra_fish_and_rank_up_names_perk() -> void:
+	var gs: Node = Engine.get_main_loop().root.get_node("GameState")
+	var table := [{"item": "silver_carp", "weight": 1, "min": 1, "max": 1}]
+	var c := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
+	gs.start_session(c)
+	gs.data.regions[gs.current_region]["weather"] = {"any": {"clear": 1}}
+	gs.data.weather_persist = 0.0
+	c.fishing_xp = 100
+	var before := c.item_count("silver_carp")
+	gs.fish(table, 1, "", 0.5)
+	assert_eq(c.item_count("silver_carp") - before, 2 * Exploration.GATHER_ROLLS, "a Master makes one bonus draw on top of the normal one")
+	gs.end_session()
+	var c2 := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
+	gs.start_session(c2)
+	gs.data.regions[gs.current_region]["weather"] = {"any": {"clear": 1}}
+	gs.data.weather_persist = 0.0
+	c2.fishing_xp = 9
+	var seen := [""]
+	var cb := func(text: String, _cat: String) -> void:
+		if text.begins_with("Your fishing has improved"):
+			seen[0] = text
+	EventBus.message_posted.connect(cb)
+	gs.fish(table, 1, "", 0.5)
+	EventBus.message_posted.disconnect(cb)
+	gs.end_session()
+	gs.data = GameData.load_from_dir()
+	assert_true(String(seen[0]).contains("An Angler lands an extra fish"), "rank-up shows perk: %s" % seen[0])
+
+
+func test_beginner_catch_picks_the_common_plain_fish() -> void:
+	var data := GameData.new()
+	data.items = {"a_fish": {"tags": ["fish"]}, "b_fish": {"tags": ["fish"]}, "rare_fish": {"tags": ["fish"]}, "troph": {"tags": ["fish"]}, "herb": {"tags": ["herb"]}}
+	var table := [{"item": "", "weight": 9}, {"item": "herb", "weight": 8}, {"item": "troph", "weight": 7, "trophy": true},
+		{"item": "rare_fish", "weight": 1}, {"item": "b_fish", "weight": 4}, {"item": "a_fish", "weight": 4}]
+	assert_eq(Fishing.beginner_catch(table, data), "a_fish", "highest weight, ties by id")
+	assert_eq(Fishing.beginner_catch([{"item": "rare_fish", "weight": 1}, {"item": "troph", "weight": 5, "trophy": true}], data), "")

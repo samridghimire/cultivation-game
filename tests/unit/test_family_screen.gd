@@ -100,3 +100,84 @@ func test_sheet_button_hidden_without_family() -> void:
 	assert_false(sheet._family_button.visible)
 	sheet.free()
 	gs.end_session()
+
+
+func test_relation_words() -> void:
+	var people := {}
+	var me := new_character()
+	var wife := _person(people, "wife", 3)
+	wife.gender = "female"
+	var concubine := _person(people, "conc", 4)
+	var companion := _person(people, "dao", 5)
+	var son := _person(people, "son", 6)
+	son.gender = "male"
+	son.birth_rank = "wife"
+	var daughter := _person(people, "dau", 7)
+	daughter.gender = "female"
+	daughter.birth_rank = "wife"
+	var adopted := _person(people, "adop", 8)
+	adopted.gender = "male"
+	adopted.birth_rank = ""
+	var mother := _person(people, "mum", 9)
+	mother.gender = "female"
+	var grandson := _person(people, "gs", 10)
+	grandson.gender = "male"
+	me.spouses = [wife.id, concubine.id, companion.id] as Array[String]
+	me.spouse_ranks = {"wife": "wife", "conc": "concubine", "dao": "dao_companion"}
+	me.children = [son.id, daughter.id, adopted.id] as Array[String]
+	me.parents = [mother.id] as Array[String]
+	assert_eq(FamilyScreen.relation_word(me, wife), "Wife")
+	assert_eq(FamilyScreen.relation_word(me, concubine), "Concubine")
+	assert_eq(FamilyScreen.relation_word(me, companion), "Dao companion")
+	assert_eq(FamilyScreen.relation_word(me, son), "Son")
+	assert_eq(FamilyScreen.relation_word(me, daughter), "Daughter")
+	assert_eq(FamilyScreen.relation_word(me, adopted), "Adopted son")
+	assert_eq(FamilyScreen.relation_word(me, mother), "Mother")
+	assert_eq(FamilyScreen.relation_word(me, grandson), "Grandson")
+
+
+func test_realm_short_and_row_tag() -> void:
+	var c := new_character()
+	var d := data()
+	c.realm_index = d.realm_index_of("mortal")
+	assert_eq(FamilyScreen.realm_short(c, d), "Mortal")
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = 2
+	assert_eq(FamilyScreen.realm_short(c, d), "QR 3")
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	assert_eq(FamilyScreen.realm_short(c, d), "Foundation")
+	c.age_days = 28 * Calendar.DAYS_PER_YEAR
+	assert_eq(FamilyScreen.row_tag(c, d), "Foundation  28")
+	c.alive = false
+	assert_eq(FamilyScreen.row_tag(c, d), "(died, age 28)")
+
+
+func test_empty_family_and_big_family_layout() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var c := CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male")
+	gs.start_session(c)
+	var screen := FamilyScreen.new()
+	_root().add_child(screen)
+	screen.open()
+	assert_true(screen.find_child("Empty", true, false) != null)
+	assert_eq((screen.find_child("Empty", true, false) as Label).text, FamilyScreen.EMPTY_TEXT)
+	for i in 2:
+		var w := Npcs.spawn(gs.npcs, gs.data, seeded_rng(40 + i), {"gender": "female", "region": gs.current_region})
+		Family.marry(c, w, "wife" if i == 0 else "concubine")
+	for i in 6:
+		var kid := Npcs.spawn(gs.npcs, gs.data, seeded_rng(60 + i), {"age_years": 3 + i, "region": gs.current_region})
+		c.children.append(kid.id)
+	screen.close()
+	screen.open()
+	assert_true(screen.find_child("Empty", true, false) == null)
+	var row := screen.find_child(String(c.children[0]), true, false) as Button
+	assert_true(row != null and row.icon != null and row.find_child("Tag", false, false) != null)
+	var scroll := _list_scroll(screen)
+	assert_true(scroll != null and scroll.custom_minimum_size.y <= 360.0, "the 8-person list scrolls instead of growing the window")
+	screen.queue_free()
+
+
+func _list_scroll(node: Node) -> ScrollContainer:
+	for n in node.find_children("*", "ScrollContainer", true, false):
+		return n
+	return null

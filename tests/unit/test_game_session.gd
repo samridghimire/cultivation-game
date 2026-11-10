@@ -898,6 +898,38 @@ func test_explore_many_quiet_days_post_one_summary() -> void:
 	gs.end_session()
 
 
+## WU-501: the explored place's look is kept while a choice encounter is pending, then cleared.
+func test_explore_look_kept_for_pending_choice() -> void:
+	_start()
+	var gs := _game_state()
+	gs.data.encounters["t_look"] = {"id": "t_look", "tags": ["t_look"], "weight": 1, "text": "A fork.", "effects": {}, "days": 1,
+		"choices": [{"text": "Go on", "effects": {}}]}
+	gs.last_explore_look = "cave"
+	gs._meet_encounter(gs.data.encounters["t_look"])
+	assert_eq(gs.pending_encounter, "t_look")
+	assert_eq(gs.last_explore_look, "cave")
+	gs.choose_encounter(0)
+	assert_eq(gs.last_explore_look, "")
+	gs.world_flags["found_hermit_garden"] = true
+	gs.explore(["t_no_such_tag"], "woods")
+	if gs.pending_encounter == "":
+		assert_eq(gs.last_explore_look, "", "cleared when nothing is pending")
+	gs.data.encounters.erase("t_look")
+	gs.end_session()
+
+
+## REVIEW: a stale look never carries into a loaded game or a new session.
+func test_explore_look_reset_on_load_and_new_session() -> void:
+	_start()
+	var gs := _game_state()
+	gs.last_explore_look = "cave"
+	gs.load_save_dict(JSON.parse_string(JSON.stringify(gs.to_save_dict())))
+	assert_eq(gs.last_explore_look, "", "load clears it")
+	gs.last_explore_look = "cave"
+	gs.end_session()
+	assert_eq(gs.last_explore_look, "", "end_session clears it")
+
+
 ## FH-025: an encounter on day one stops the exploring there.
 func test_explore_many_stops_when_something_happens() -> void:
 	_start()
@@ -2779,6 +2811,22 @@ func test_birthday_gift_counts_double_once() -> void:
 	assert_true(other != null)
 
 
+func test_named_friend_birthday_gift_doubles() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(5))
+	GameClock.total_days = Folk.birthday_day(gs.npcs["elder_mo"], gs.data) + Calendar.DAYS_PER_YEAR
+	c.add_item("qi_gathering_pill", 2)
+	var worth := Family.gift_value(gs.data, "qi_gathering_pill") * int(gs.data.family["acquaintance"]["gift_like_mult"])
+	gs.npc_favor["elder_mo"] = 0
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	var first := int(gs.npc_favor["elder_mo"])
+	assert_true(first >= worth, "doubled on the birthday")
+	GameClock.total_days = Folk.birthday_day(gs.npcs["elder_mo"], gs.data) + Calendar.DAYS_PER_YEAR
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	assert_true(int(gs.npc_favor["elder_mo"]) - first < first, "second gift is not doubled")
+
+
 func test_liked_gift_to_generated_villager_sets_taste_flag() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -2844,6 +2892,7 @@ func test_great_beast_returns_scarred() -> void:
 	gs.current_region = "misty_forest"
 	gs.player.realm_index = 3
 	var g: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	g.erase("max_realm")  # C-317: the Qi Refining cap is tested elsewhere; here a strong player fights the first beast
 	GameClock.total_days = 7 * 60 + Wildlife.great_day("misty_forest", g)
 	var found := false
 	for r in gs.roamers_here():
@@ -2852,7 +2901,7 @@ func test_great_beast_returns_scarred() -> void:
 	assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT))
 	assert_true(gs.player.great_beasts.has("old_tusker_boar"))
 	assert_true(gs.player.item_count("old_tuskers_broken_tusk") >= 1)
-	GameClock.total_days = Wildlife.next_great_day(gs.data, "misty_forest", GameClock.total_days + 1, 3)
+	GameClock.total_days = Wildlife.next_great_day(gs.data, "misty_forest", GameClock.total_days + 1, 3, gs.player)
 	var enemies: Array = []
 	for r in gs.roamers_here():
 		enemies.append(String(r["enemy"]))
@@ -2940,6 +2989,7 @@ func test_great_beast_pays_double_and_counts() -> void:
 	gs.current_region = "misty_forest"
 	gs.player.realm_index = 5
 	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	def.erase("max_realm")  # C-317: a strong player still meets the first beast here
 	var wd := Wildlife.great_day("misty_forest", def)
 	GameClock.total_days = 7 * 50 + wd
 	var great: Dictionary = {}
@@ -2967,7 +3017,9 @@ func test_great_beast_calendar_and_reminder() -> void:
 	var gs := _game_state()
 	_start()
 	gs.current_region = "misty_forest"
+	gs.player.realm_index = 2  # C-317: the return beast walks from Foundation
 	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	def.erase("max_realm")  # the first beast still walks for this test
 	var wd := Wildlife.great_day("misty_forest", def)
 	var day := 7 * 50 + wd
 	gs.player.visited_regions.erase("misty_forest")
@@ -3325,8 +3377,8 @@ func test_village_hunt() -> void:
 		assert_eq(int(gs.npc_favor.get(npc_id, 0)), mini(100, favor_before + 1))
 	GameClock.total_days = 189 + 90  # winter day 10
 	assert_eq(gs.village_hunt_quarry(), "den_wolf", "next season again")
-	GameClock.total_days = 189 + 180  # spring: nothing in season in the forest
-	assert_eq(gs.village_hunt_quarry(), "")
+	GameClock.total_days = 189 + 180  # spring
+	assert_eq(gs.village_hunt_quarry(), "fog_antler_stag")
 	gs.current_region = "misty_forest"
 	GameClock.total_days = 189
 	assert_eq(gs.village_hunt_quarry(), "", "only where the hunt is posted")
@@ -3368,3 +3420,326 @@ func test_today_lines_wrapper() -> void:
 	gs.current_region = "misty_forest"
 	assert_eq(gs.today_lines(), Guidance.today_lines(gs.player, gs.data, gs.world_flags, gs.world_events, 268, "misty_forest", gs.npcs, gs.npc_favor))
 	assert_true(gs.today_lines().size() <= Guidance.TODAY_MAX)
+
+
+func test_arrival_never_posts_a_season_line_twice() -> void:  # WU-464
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.data.road = {}
+	EventBus.clear_history()
+	var route: Dictionary = gs.data.regions[gs.data.start_region]["routes"][0]
+	gs.travel(String(route["to"]))
+	var seen := {}
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(" run in "):
+			assert_false(seen.has(m["text"]), "season sentence posted once")
+			seen[m["text"]] = true
+	var sc := Wildlife.season_clause(gs.data, gs.current_region, GameClock.total_days)
+	if sc != "":
+		var n := 0
+		for m: Dictionary in EventBus.history:
+			if String(m["text"]).contains(sc):
+				n += 1
+		assert_eq(n, 1, "in-season sentence appears in one message")
+
+
+func _today_lines_count() -> int:  # TODAY-002
+	var n := 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).begins_with("Today in"):
+			n += 1
+	return n
+
+
+func test_new_session_posts_arrival_line_once() -> void:  # TODAY-002
+	_start()
+	var gs := _game_state()
+	gs.call("_post_arrival_line")  # a second caller on the same day and region posts nothing more
+	gs.call("_post_arrival_line")
+	assert_true(_today_lines_count() <= 1, "the arrival line is posted at most once")
+
+
+func test_season_line_posted_once_per_season_and_region() -> void:  # TODAY-002
+	_start()
+	var gs := _game_state()
+	var region := "misty_forest"
+	var season_day := -1
+	for d in range(0, Calendar.DAYS_PER_YEAR):
+		if Wildlife.season_clause(gs.data, region, d) != "":
+			season_day = d
+			break
+	assert_true(season_day >= 0, "misty forest has an in-season beast")
+	GameClock.total_days = season_day
+	gs.current_region = region
+	gs.world_flags.erase("season_line_seen")
+	EventBus.clear_history()
+	var clause := Wildlife.season_clause(gs.data, region, season_day)
+	gs.call("_post_arrival_line")
+	gs.current_region = "qingshi_village"
+	gs.call("_post_arrival_line")
+	gs.current_region = region
+	gs.call("_post_arrival_line")
+	var count := 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(clause):
+			count += 1
+	assert_eq(count, 1, "the in-season line is posted once for the season")
+	GameClock.total_days = season_day + Calendar.DAYS_PER_YEAR
+	gs.current_region = "qingshi_village"
+	gs.call("_post_arrival_line")
+	gs.current_region = region
+	gs.call("_post_arrival_line")
+	count = 0
+	for m: Dictionary in EventBus.history:
+		if String(m["text"]).contains(clause):
+			count += 1
+	assert_eq(count, 2, "and again the next year's season")
+
+
+## FOLK-018: a gift is remembered: next chat within 30 days posts one line, once.
+func test_gift_memory_line_posts_once_then_expires() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(8), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, npc.id, item_id) > 0 and Family.gift_value(gs.data, item_id) > 0:
+			liked = item_id
+			break
+	c.add_item(liked, 1)
+	gs.npc_favor[npc.id] = 0
+	gs.give_gift(npc.id, liked)
+	var entry_text := Folk.last_gift_text(gs.world_flags, npc.id, gs.data)
+	assert_true(entry_text.begins_with("Last gift: ") and entry_text.ends_with("(liked)"), entry_text)
+	gs.world_flags["gift_memory"][npc.id]["day"] = GameClock.total_days - 1  # "the next day"
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.chat(npc.id)
+	var first := "\n".join(_zero_round_posts)
+	assert_true(first.contains(npc.name + ": \""), first)
+	_zero_round_posts.clear()
+	gs.chat(npc.id)
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_false("\n".join(_zero_round_posts).contains(npc.name + ": \""), "once only")
+
+
+## FOLK-019: named villagers with a dialogue file remember gifts and news too, one line per talk.
+func test_named_npc_remembers_gift_then_news() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	c.add_item("venison", 1)
+	gs.npc_favor["hunter_ma"] = 0
+	gs.give_gift("hunter_ma", "venison")
+	gs.world_flags["gift_memory"]["hunter_ma"]["day"] = GameClock.total_days - 1
+	Folk.record_news(gs.world_flags, "contest_win", "the festival", "qingshi_village", GameClock.total_days)
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.start_dialogue("hunter_ma")
+	var first := "\n".join(_zero_round_posts)
+	assert_true(first.contains("Hunter Ma: \""), "gift memory line: " + first)
+	assert_eq(first.count("Hunter Ma: \""), 1, "only one line per talk")
+	_zero_round_posts.clear()
+	gs.start_dialogue("hunter_ma")  # news now, once
+	assert_eq("\n".join(_zero_round_posts).count("Hunter Ma: \""), 1, "news line next talk")
+	_zero_round_posts.clear()
+	gs.start_dialogue("hunter_ma")
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_false("\n".join(_zero_round_posts).contains("Hunter Ma: \""), "nothing the third time")
+
+
+## FOLK-020: Hunter Ma teaches once when you are close; saved; old saves teach on the next talk.
+func test_close_friend_teaches_lesson_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["hunter_ma"] = 59
+	gs.start_dialogue("hunter_ma")
+	assert_false(c.lessons_taught.has("hunter_ma:0"), "not yet close")
+	gs.npc_favor["hunter_ma"] = 62
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.start_dialogue("hunter_ma")
+	EventBus.message_posted.disconnect(_collect_post)
+	assert_true(c.lessons_taught.has("hunter_ma:0"), "taught")
+	assert_true("\n".join(_zero_round_posts).contains("read a track"), "line posted")
+	var reloaded := CharacterData.from_dict(c.to_dict())
+	assert_true(reloaded.lessons_taught.has("hunter_ma:0"), "saved")
+	c.lessons_taught.clear()  # a save from before the feature
+	gs.start_dialogue("hunter_ma")
+	assert_true(c.lessons_taught.has("hunter_ma:0"), "taught on next talk")
+	var day: int = c.lessons_taught["hunter_ma:0"]
+	gs.start_dialogue("hunter_ma")
+	assert_eq(int(c.lessons_taught["hunter_ma:0"]), day, "not taught twice")
+	assert_eq(gs.lessons_for("hunter_ma").size(), 2)
+	assert_true(gs.lessons_for("hunter_ma")[0]["taught"])
+
+
+## COOK-001: a lesson with learn_dish adds the dish.
+func test_lesson_teaches_a_dish() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = "qingshi_village"
+	var lessons: Array = gs.data.npcs["hunter_ma"]["lessons"]
+	lessons[0]["effects"] = {"learn_dish": "boar_roast"}
+	gs.npc_favor["hunter_ma"] = 62
+	gs.start_dialogue("hunter_ma")
+	assert_true(c.known_dishes.has("boar_roast"))
+
+
+## WILD-021: beating the last beast of the trail finishes it once: flag, line, milestone, news; survives a save.
+func test_great_trail_finish() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "misty_forest"
+	gs.player.realm_index = 5
+	var def: Dictionary = gs.data.regions["misty_forest"]["roamers"]["great"]
+	var chain := Wildlife.great_chain(def)
+	for step: Dictionary in chain:
+		step.erase("max_realm")
+	for i in chain.size():
+		GameClock.total_days = 7 * (60 + i * 2) + Wildlife.great_day("misty_forest", def)
+		assert_true(gs.engage_roamer(Wildlife.GREAT_SLOT), "step %d" % i)
+		var done: bool = gs.world_flags.has(Wildlife.trail_flag("misty_forest"))
+		assert_eq(done, i == chain.size() - 1, "trail done only after the last step (%d)" % i)
+	assert_eq(String(gs.world_flags["village_news"]["kind"]), "great_trail")
+	gs.check_milestones()
+	assert_true(gs.player.milestones.has("great_trail_misty_forest"))
+	var restored := _game_state()
+	restored.load_save_dict(gs.to_save_dict())
+	assert_true(restored.world_flags.has(Wildlife.trail_flag("misty_forest")))
+
+
+func test_season_review_emits_once_per_boundary() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var seen: Array = []
+	var cb := func(season: String, _year: int, lines: PackedStringArray) -> void: seen.append([season, lines])
+	bus.season_reviewed.connect(cb)
+	LifeStats.add(c, "fights_won", 2)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # spring -> summer
+	assert_eq(seen.size(), 1)
+	assert_eq(seen[0][0], "Spring")
+	var won2: Array = []  # SEASON-014: the wording is any recap template
+	for t: String in GameState.data.season_tasks["recap"]["fights_won"]:
+		won2.append(t.replace("{n}", "2").replace("{s}", "s"))
+	assert_true(won2.any(func(t: String) -> bool: return t in (seen[0][1] as PackedStringArray)))
+	assert_true((seen[0][1] as PackedStringArray)[(seen[0][1] as PackedStringArray).size() - 1].begins_with("Coming:"))
+	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # summer -> autumn -> winter in one call
+	assert_eq(seen.size(), 2)
+	assert_eq(seen[1][0], "Autumn")
+	# winter -> spring: log only, no banner signal (the year review shows)
+	LifeStats.add(c, "fights_won", 1)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 2)
+	var logged := false
+	for m in bus.history:
+		if String(m["text"]) in (GameState.data.season_tasks["recap"]["fights_won"] as Array).map(func(t: String) -> String: return t.replace("{n}", "1").replace("{s}", "")):
+			logged = true
+	assert_true(logged, "the winter line is logged")
+
+
+func test_season_review_skips_old_save() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var d := c.to_dict()
+	d.erase("season_start_stats")
+	d.erase("season_start_day")
+	var old := CharacterData.from_dict(d)
+	assert_eq(old.season_start_day, -1)
+	_game_state().player = old
+	var seen: Array = []
+	var cb := func(_s: String, _y: int, _l: PackedStringArray) -> void: seen.append(1)
+	bus.season_reviewed.connect(cb)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 0)
+	assert_true(old.season_start_day >= 0)
+	var rt := CharacterData.from_dict(old.to_dict())
+	assert_eq(rt.season_start_day, old.season_start_day)
+	assert_eq(rt.season_start_stats, old.season_start_stats)
+
+
+func test_season_kickoff_follows_recap() -> void:
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var order: Array = []
+	var a := func(_s: String, _y: int, _l: PackedStringArray) -> void: order.append("recap")
+	var b := func(s: String, _y: int, l: PackedStringArray) -> void: order.append("kick:" + s + ":" + str(l.size()))
+	var yr := func(_y: int, _l: PackedStringArray, _sy: int) -> void: order.append("year")
+	bus.season_reviewed.connect(a)
+	bus.season_began.connect(b)
+	bus.year_reviewed.connect(yr)
+	LifeStats.add(c, "fights_won", 1)
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # spring -> summer
+	assert_eq(order.size(), 2)
+	assert_eq(order[0], "recap")
+	assert_true(String(order[1]).begins_with("kick:Summer:"))
+	order.clear()
+	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # -> winter
+	clock.advance(3 * Calendar.DAYS_PER_MONTH)  # winter -> spring: year review, then kickoff
+	bus.season_reviewed.disconnect(a)
+	bus.season_began.disconnect(b)
+	bus.year_reviewed.disconnect(yr)
+	# both are emitted in the same day change; the HUD shows the year review first (pending kickoff waits)
+	assert_true(order.has("year"))
+	var kicked := false
+	for o in order:
+		if String(o).begins_with("kick:Spring:"):
+			kicked = true
+	assert_true(kicked)
+
+
+func test_season_recap_names_a_finished_project_stage() -> void:  # GUIDE-224
+	var c := _start()
+	var clock := _root().get_node("GameClock")
+	var bus := _root().get_node("EventBus")
+	var seen: Array = []
+	var cb := func(_s: String, _y: int, lines: PackedStringArray) -> void: seen.append(lines)
+	bus.season_reviewed.connect(cb)
+	clock.advance(Calendar.DAYS_PER_MONTH)
+	c.season_start_sets = c.seasons_completed.size()
+	c.seasons_completed.append("test_season_a")
+	clock.advance(2 * Calendar.DAYS_PER_MONTH)  # the season ends
+	bus.season_reviewed.disconnect(cb)
+	assert_eq(seen.size(), 1)
+	var expected: String = SeasonTasks.project_recap_line(_game_state().data, c.seasons_completed.size() - 1, c.seasons_completed.size())
+	assert_true(expected != "")
+	assert_true(expected in (seen[0] as PackedStringArray), "project line in recap")
+
+
+func test_season_recap_without_a_finished_stage_or_snapshot() -> void:  # GUIDE-224
+	var d: GameData = _game_state().data
+	assert_eq(SeasonTasks.project_recap_line(d, 3, 3), "")
+	assert_eq(SeasonTasks.project_recap_line(d, -1, 5), "", "old save: no snapshot")
+	var line := SeasonTasks.project_recap_line(d, 0, 1)
+	assert_true(line != "" and line.length() <= 80)
+	var old := CharacterData.from_dict({})
+	assert_eq(old.season_start_sets, -1)
+
+
+## FISH-008: a first fishing trip that comes home empty lands the common fish.
+func test_fishing_beginners_luck_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "clear")
+	var table := [{"item": "", "weight": 1000}, {"item": "silver_carp", "weight": 3, "min": 1, "max": 1}]
+	c.catch_log = {}
+	var got := 0
+	for i in 30:
+		gs.fish(table, 1, "", 0.0)
+		got = c.item_count("silver_carp")
+		if got > 0:
+			break
+	assert_eq(got, 1, "the first trips always end with exactly one fish by luck or draw")
+	assert_true(c.catch_log.has("silver_carp"))
+	var before := c.item_count("silver_carp")
+	var empty := [{"item": "", "weight": 1}]
+	gs.fish(empty, 1, "", 0.5)
+	assert_eq(c.item_count("silver_carp"), before, "no beginner fish once one has been caught")
+	_restore_weather(gs)

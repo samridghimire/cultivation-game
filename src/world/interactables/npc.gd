@@ -41,11 +41,15 @@ var _child_mode := ""
 var home := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 var _phase := 0.0
+## Where today's spot is (FOLK-017); `home` walks toward it.
+var _walk_to := Vector2.ZERO
 var _time := 0.0
 var _wander := Vector2.ZERO
 var _wander_target := Vector2.ZERO
 var _wait := 0.0
 var _modal_open := false
+var _bubble: EmoteBubble = null
+var _lesson_bubble: EmoteBubble = null
 var _on_screen := true
 var _dir := "down"
 var _walk_frame := 0
@@ -58,15 +62,29 @@ func sprite_keys() -> PackedStringArray:
 	return PackedStringArray(["npc_" + npc_id, "npc", "place_" + art_kind])
 
 
+func _on_modal_changed(is_open: bool) -> void:
+	_modal_open = is_open
+	queue_redraw()
+
+
 func _ready() -> void:
 	super._ready()
 	home = position
+	_walk_to = home
 	_visiting = GameState.player != null and npc_id != "" and GameState.visitor_today() == npc_id
 	var h := hash(npc_id)
 	_rng.seed = h
 	_phase = float(absi(h) % 628) / 100.0
 	_wait = _rng.randf_range(1.0, 4.0)
-	EventBus.ui_modal_changed.connect(func(is_open: bool): _modal_open = is_open)
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	GameClock.days_advanced.connect(_on_day_redraw)  # WU-482: the birthday marker
+	EventBus.npc_reaction.connect(_on_reaction)  # WU-486
+	EventBus.ui_modal_changed.connect(_on_modal_for_bubble)
+	GameClock.days_advanced.connect(_on_day_for_bubble)
+	refresh_lesson_bubble.call_deferred()
+	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
+		GameClock.days_advanced.connect(_on_days_advanced)
 	var notifier := VisibleOnScreenNotifier2D.new()
 	notifier.rect = Rect2(-size / 2.0 - Vector2(MAX_DRIFT, MAX_DRIFT), size + Vector2(MAX_DRIFT, MAX_DRIFT) * 2.0)
 	notifier.screen_entered.connect(func(): _on_screen = true)
@@ -74,9 +92,79 @@ func _ready() -> void:
 	add_child(notifier)
 
 
+## WU-486: show an emote bubble of `kind` 22 px above the head when it is this villager's; `seconds` for tests.
+func _on_reaction(id: String, kind: String, seconds: float = 1.6) -> void:
+	if id != npc_id or npc_id == "":
+		return
+	if _bubble != null and is_instance_valid(_bubble):
+		_bubble.queue_free()
+	_bubble = EmoteBubble.make(kind, seconds)
+	_bubble.base_position = Vector2(size.x / 2.0, -22.0 + 16.0)
+	_bubble.tree_exited.connect(func() -> void:
+		queue_redraw()
+		if is_inside_tree():
+			refresh_lesson_bubble())
+	add_child(_bubble)
+	refresh_lesson_bubble()
+	queue_redraw()
+
+
+func _on_modal_for_bubble(_open: bool) -> void:
+	refresh_lesson_bubble.call_deferred()
+
+
+func _on_day_for_bubble(_days: int) -> void:
+	refresh_lesson_bubble.call_deferred()
+
+
+## WU-486: true while a timed emote bubble shows (the cake marker hides meanwhile).
+func has_bubble() -> bool:
+	return _bubble != null and is_instance_valid(_bubble) and not _bubble.is_queued_for_deletion()
+
+
+## WU-486: this named friend has a lesson waiting for the player here (due at their tier, not yet taught today).
+func lesson_waiting() -> bool:
+	if GameState.player == null or GameState.data == null or not GameState.data.npcs.has(npc_id):
+		return false
+	if Folk.taught_today(npc_id, GameState.player.lessons_taught, GameClock.total_days):
+		return false
+	var tier := Folk.tier_index(GameState.data, int(GameState.npc_favor.get(npc_id, 0)))
+	return not Folk.due_lessons(GameState.data, npc_id, tier, GameState.player.lessons_taught).is_empty()
+
+
+## WU-486: keep the persistent "!" bubble in step with lesson_waiting() (hidden while a modal is open).
+func refresh_lesson_bubble() -> void:
+	if not is_inside_tree():
+		return
+	var want := not _modal_open and lesson_waiting()
+	if want and (_lesson_bubble == null or not is_instance_valid(_lesson_bubble)):
+		_lesson_bubble = EmoteBubble.make("lesson", 0.0)
+		_lesson_bubble.base_position = Vector2(size.x / 2.0, -22.0 + 16.0)
+		add_child(_lesson_bubble)
+	elif not want and _lesson_bubble != null and is_instance_valid(_lesson_bubble):
+		_lesson_bubble.queue_free()
+		_lesson_bubble = null
+	if _lesson_bubble != null and is_instance_valid(_lesson_bubble):
+		_lesson_bubble.visible = not has_bubble()
+
+
+func _on_day_redraw(_days: int) -> void:
+	queue_redraw()
+
+
+## FOLK-017: a new day, a new spot (Folk.spot_for): walk there, or jump with reduce_motion.
+func _on_days_advanced(_days: int) -> void:
+	_walk_to = GameState.npc_spot(npc_id)["pos"]
+	if Settings.get_value("reduce_motion") or not _on_screen:
+		home = _walk_to
+		_walk_to = home
+
+
 func _physics_process(delta: float) -> void:
 	if _modal_open or not _on_screen:
 		return
+	if _walk_to != home:
+		home = home.move_toward(_walk_to, WALK_SPEED * 6.0 * delta)
 	_update_near()
 	breathe(delta)
 
@@ -166,6 +254,12 @@ static func visit_line(npc_name: String) -> String:
 ## Draws the tea tray (two cups and a pot) at the visitor's side in pixel blocks (WU-411).
 func _draw() -> void:
 	super._draw()
+	if not _modal_open and is_birthday() and not has_bubble():  # WU-482: the cake glyph 18 px above the head
+		var tex := HudIcons.calendar_kind("birthday")
+		if tex != null:
+			var s2 := 2.0
+			var w := tex.get_width() * s2
+			draw_texture_rect(tex, Rect2(Vector2(size.x / 2.0 - w / 2.0, -18.0 - tex.get_height() * s2), Vector2(w, tex.get_height() * s2)), false)
 	if not _visiting:
 		return
 	var s := float(Sprites.scale())
@@ -178,12 +272,28 @@ func _draw() -> void:
 	draw_rect(Rect2(o + Vector2(6, -5) * s, Vector2(2, 1) * s), Color("4f7a5a"))
 
 
+## WU-482: a known friend whose birthday is today.
+func is_birthday() -> bool:
+	if GameState.player == null or GameState.data == null or not GameState.npcs.has(npc_id):
+		return false
+	return Folk.is_birthday_today(GameState.npcs[npc_id], GameState.data, GameClock.total_days, GameState.npc_favor)
+
+
+func prompt_text() -> String:
+	return display_name + (BIRTHDAY_NOTE if is_birthday() else "")
+
+
+const BIRTHDAY_NOTE := " - birthday today"
+
+
 ## Just the name until the player is close, then "Name (Qi Refining, 1st Layer)".
 func label_text() -> String:
 	var text := display_name
 	if not _near:
 		var i := display_name.find(" (")
 		text = display_name.substr(0, i) if i > 0 else display_name
+	elif display_name.ends_with(" (Mortal)"):
+		text = display_name.trim_suffix(" (Mortal)")  # GFX-085: a mortal has no realm to show
 	if _is_my_rival():
 		text += " (rival)"
 	return text

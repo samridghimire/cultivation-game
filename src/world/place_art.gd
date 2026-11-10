@@ -9,19 +9,21 @@ extends RefCounted
 
 ## Kinds with their own look; anything else is a plain box.
 const KINDS := ["meditation", "merchant", "workshop", "sect_hall", "travel", "gather", "fishing", "field_plot", "explore", "deed_giver", "npc",
-	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home"]
+	"camp", "clinic", "orphanage", "secret_realm", "auction", "inheritance", "bounty_board", "abode", "family_home", "shrine", "well", "coop"]
 const OUTLINE := Color("2a2018")
 const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
 
 
-static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "") -> void:
+static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> void:
 	var h := size / 2.0
 	# GFX-021: PixelPlace kinds are drawn as pixel art, base on the place rect's lower edge (the vector
 	# functions below for those kinds are unused while PixelPlace supports them).
 	if PixelPlace.supports(kind):
-		var tex := PixelPlace.texture(kind, size, color, active, place_name)
+		var tex := PixelPlace.texture(kind, size, color, active, place_name, style)
 		var px := Vector2(tex.get_size()) * float(Sprites.scale())
+		if PixelPlace.is_building(kind):
+			contact_shadow(ci, Vector2(0, h.y), px.x)
 		ci.draw_texture_rect(tex, Rect2(Vector2(-px.x / 2.0, h.y - px.y), px), false)
 		return
 	match kind:
@@ -57,6 +59,12 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 			_notice_board(ci, h, color)
 		"inheritance":
 			_stele(ci, h, color)
+		"shrine":
+			_stele(ci, h, color)  # the live stage art is Shrine.draw_generated_art (GFX-081)
+		"coop":
+			_coop(ci, h, color)
+		"well":
+			_bucket(ci, h, color)  # the well itself is the solid landmark beside it
 		"abode":
 			_cave_dwelling(ci, h, color)
 		"family_home":
@@ -64,6 +72,12 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 		_:
 			ci.draw_rect(Rect2(-h, size), color)
 			ci.draw_rect(Rect2(-h, size), color.darkened(0.5), false, 2.0)
+
+
+## GFX-100: a soft 2-step ground shadow under a building base (`base` = bottom-centre), 1.1x the footprint wide.
+static func contact_shadow(ci: CanvasItem, base: Vector2, width: float) -> void:
+	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.55, 4.0), Color(0, 0, 0, 0.12))
+	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.46, 3.0), Color(0, 0, 0, 0.22))
 
 
 ## Ellipse filled (or outlined with width > 0) centered at `center`.
@@ -297,6 +311,27 @@ static func _notice_board(ci: CanvasItem, h: Vector2, c: Color) -> void:
 	for i in 3:
 		var x := -h.x * 0.75 + i * h.x * 0.55
 		ci.draw_rect(Rect2(Vector2(x, -h.y * 0.8 + (i % 2) * h.y * 0.25), Vector2(h.x * 0.4, h.y * 0.6)), Color("e8dcc0"))
+
+
+## CRIT-002: a low henhouse with a ramp and a pitched roof.
+static func _coop(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.8), Vector2(h.x * 0.9, h.y * 0.2), Color(0, 0, 0, 0.25))
+	var body := Rect2(-h.x * 0.6, -h.y * 0.2, h.x * 1.2, h.y * 0.9)
+	ci.draw_rect(body, WOOD.lerp(c, 0.25))
+	ci.draw_rect(body, OUTLINE, false, 1.5)
+	var roof := PackedVector2Array([Vector2(-h.x * 0.75, -h.y * 0.2), Vector2(0, -h.y * 0.85), Vector2(h.x * 0.75, -h.y * 0.2)])
+	ci.draw_colored_polygon(roof, c.darkened(0.2))
+	ci.draw_rect(Rect2(-h.x * 0.15, h.y * 0.1, h.x * 0.3, h.y * 0.6), OUTLINE)
+
+
+## RV-018: a wooden bucket and a coil of rope on the well's apron.
+static func _bucket(ci: CanvasItem, h: Vector2, c: Color) -> void:
+	ellipse(ci, Vector2(0, h.y * 0.6), Vector2(h.x * 0.8, h.y * 0.4), Color(0, 0, 0, 0.25))
+	var tub := Rect2(-h.x * 0.25, -h.y * 0.6, h.x * 0.5, h.y * 1.2)
+	ci.draw_rect(tub, WOOD)
+	ci.draw_rect(tub, OUTLINE, false, 1.5)
+	ci.draw_line(Vector2(-h.x * 0.25, 0), Vector2(h.x * 0.25, 0), c.lightened(0.3), 2.0)
+	ellipse(ci, Vector2(h.x * 0.55, h.y * 0.2), Vector2(h.x * 0.2, h.y * 0.3), Color("b59b6a"), 2.0)
 
 
 ## A weathered stone stele carved with runes in the place color.

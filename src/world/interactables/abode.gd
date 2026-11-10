@@ -56,6 +56,7 @@ func get_options() -> Array[Dictionary]:
 	if GameState.clan == null:
 		var found_label := "Found the %s here (%d spirit stones)" % [Clans.clan_name(p, data), int(Clans.rules(data).get("found_cost", 0))]
 		options.append(_entry(found_label, Clans.check_found(p, GameState.clan, data), GameState.found_clan))
+	options.append_array(TrophyMenu.options())
 	options.append({"label": "Open the storage chest (%d / %d kinds)" % [p.abode_storage.size(), Abodes.storage_slots(p, data)], "action": _set_chest_mode.bind(true), "keep_open": true})
 	return options
 

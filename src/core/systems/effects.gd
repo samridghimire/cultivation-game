@@ -32,9 +32,11 @@ extends RefCounted
 ##                              needs a region_id passed to apply(), else it does nothing
 ##   contribution: int          sect contribution (1..500) for a sect member (Sects.add_contribution);
 ##                              a rogue gets nothing
+##   learn_dish: String         learn a taught home meal (recipes.json home_meals `taught`, see cooking.gd)
 ##   shorten_injury: int        ease every injury by this many days (1..60, Injuries.shorten); needs an injury
 ##   villager_favor / elder_favor: int  favor change with the person an encounter named ({villager} / {elder},
 ##                              see folk.gd, -20..20); applied by GameState, ignored by apply()
+##   injury: String             (ENC-012) inflict this injury (data/injuries.json id, see injuries.gd)
 ##   bloodline: String          grant a bloodline (data/bloodlines.json) to someone who has
 ##                              none; it awakens at once if they are past its awaken_realm
 
@@ -75,6 +77,8 @@ static func check(c: CharacterData, data: GameData, effects: Dictionary) -> Stri
 		var reason := Alchemy.can_learn(c, data, effects["learn_recipe"])
 		if reason != "":
 			return reason
+	if effects.has("learn_dish") and Cooking.is_known(c, data, String(effects["learn_dish"])):
+		return "You already know how to cook %s." % String(Cooking.meal(data, String(effects["learn_dish"])).get("name", effects["learn_dish"]))
 	return ""
 
 
@@ -143,6 +147,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("Learned %s" % data.techniques[effects["learn_technique"]].name)
 	if effects.has("learn_recipe") and Alchemy.learn(c, data, effects["learn_recipe"]):
 		notes.append("Learned the %s recipe" % data.recipes[effects["learn_recipe"]].get("name", effects["learn_recipe"]))
+	if effects.has("learn_dish") and Cooking.learn(c, data, String(effects["learn_dish"])):
+		notes.append("Learned to cook %s" % String(Cooking.meal(data, String(effects["learn_dish"])).get("name", effects["learn_dish"])))
 	if effects.has("practice_days"):
 		var levels_before: Dictionary = {}
 		for tech_id: String in c.techniques:
@@ -168,8 +174,12 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 			notes.append("%s healed" % Injuries.injury_name(data, injury_id))
 	if effects.has("shorten_injury"):
 		var days := int(effects["shorten_injury"])
+		var was_injured := Injuries.has_any(c)
 		Injuries.shorten(c, days)
-		notes.append("injuries ease by %d %s" % [days, "day" if days == 1 else "days"])
+		if was_injured:
+			notes.append("injuries ease by %d %s" % [days, "day" if days == 1 else "days"])
+	if effects.has("injury") and Injuries.inflict(c, data, String(effects["injury"])):
+		notes.append(Injuries.injury_name(data, String(effects["injury"])))
 	if effects.has("dao_insight") and Dao.gain_levels(c, data, effects["dao_insight"]) > 0:
 		notes.append("Insight into the %s (level %d)" % [Dao.def_of(data, effects["dao_insight"])["name"], Dao.level(c, effects["dao_insight"])])
 	if effects.has("buff"):
@@ -235,7 +245,7 @@ const KEYS: Array[String] = [
 	"qi", "alignment", "items", "breakthrough_bonus", "breakthrough_realm", "set_flag", "clear_flag", "flag_days",
 	"learn_technique", "heal_injury", "burn_lifespan", "extend_lifespan", "learn_recipe", "dao_insight",
 	"buff", "reputation", "witnessed", "attributes", "bloodline", "practice_days",
-	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor", "shorten_injury",
+	"profession_xp", "renown", "contribution", "villager_favor", "elder_favor", "shorten_injury", "injury", "learn_dish",
 ]
 
 
@@ -253,12 +263,18 @@ static func validate(data: GameData, effects: Dictionary, where: String) -> Pack
 		errors.append("%s: unknown technique '%s'" % [where, effects["learn_technique"]])
 	if effects.has("learn_recipe") and not data.recipes.has(String(effects["learn_recipe"])):
 		errors.append("%s: unknown recipe '%s'" % [where, effects["learn_recipe"]])
+	if effects.has("learn_dish"):
+		var dish := Cooking.meal(data, String(effects["learn_dish"]))
+		if dish.is_empty() or not bool(dish.get("taught", false)):
+			errors.append("%s: learn_dish '%s' is not a taught home meal" % [where, effects["learn_dish"]])
 	if effects.has("heal_injury"):
 		var injury := String(effects["heal_injury"])
 		if injury != "all" and not data.injuries.has(injury):
 			errors.append("%s: unknown injury '%s'" % [where, injury])
 	if effects.has("shorten_injury") and (not (effects["shorten_injury"] is int or effects["shorten_injury"] is float) or int(effects["shorten_injury"]) < 1 or int(effects["shorten_injury"]) > 60):
 		errors.append("%s: shorten_injury must be a number of days 1..60" % where)
+	if effects.has("injury") and not data.injuries.has(String(effects["injury"])):
+		errors.append("%s: unknown injury '%s'" % [where, effects["injury"]])
 	if effects.has("dao_insight") and not data.dao_insights.has(String(effects["dao_insight"])):
 		errors.append("%s: unknown dao insight '%s'" % [where, effects["dao_insight"]])
 	if effects.has("bloodline") and not data.bloodlines.has(String(effects["bloodline"])):

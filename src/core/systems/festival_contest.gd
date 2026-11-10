@@ -6,6 +6,9 @@ extends RefCounted
 const DEFAULT_RIVAL_ATTRIBUTE := 8
 const CHAMPION_BONUS := 2
 const MASTER_STREAK := 3
+## FOLK-012: friends cheering from the crowd.
+const CHEER_MAX := 3
+const COMPANY_FAVOR := 4
 ## FEST-008: practice in the week before the festival.
 const PRACTICE_WINDOW := 7
 const PRACTICE_PER_DAY := 2
@@ -22,6 +25,91 @@ static func flag_key(event_id: String, year: int) -> String:
 
 static func winner_key(event_id: String) -> String:
 	return "contest_winner_%s" % event_id
+
+
+const HISTORY_YEARS := 10
+
+
+## FEST-010: world flag {year: place} of the player's own results.
+static func history_key(event_id: String) -> String:
+	return "contest_history_%s" % event_id
+
+
+static func keepsake_key(event_id: String) -> String:
+	return "keepsake_won_%s" % event_id
+
+
+## FEST-010: win_text / lose_text may be a String or a non-empty Array of Strings (picked by year % size).
+static func pick_text(raw: Variant, year: int) -> String:
+	if raw is Array:
+		var list := raw as Array
+		return String(list[year % list.size()]) if not list.is_empty() else ""
+	return String(raw)
+
+
+## FEST-010: the 1st prize's keepsake item id ("keepsake" tag), or "".
+static func keepsake_of(data: GameData, event_id: String) -> String:
+	var prizes: Array = contest_of(data, event_id).get("prizes", [])
+	if prizes.is_empty():
+		return ""
+	for item_id: String in (prizes[0] as Dictionary).get("items", {}):
+		if data.items.has(item_id) and (data.items[item_id].get("tags", []) as Array).has("keepsake"):
+			return item_id
+	return ""
+
+
+## FEST-010: one entry per contest festival, ordered by month (see BACKLOG FEST-010).
+static func history(data: GameData, flags: Dictionary, c: CharacterData, year: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for event_id: String in data.world_events:
+		var contest := contest_of(data, event_id)
+		if contest.is_empty():
+			continue
+		var def: Dictionary = data.world_events[event_id]
+		var hist: Variant = flags.get(history_key(event_id), {})
+		var places: Dictionary = hist if hist is Dictionary else {}
+		var last_year := 0
+		for k: String in places:
+			last_year = maxi(last_year, int(k))
+		var streak := 0
+		var y := last_year
+		while places.has(str(y)) and int(places[str(y)]) == 1:
+			streak += 1
+			y -= 1
+		var rec := champion(flags, event_id, year + 1)
+		var champ := ""
+		if not rec.is_empty():
+			champ = "You" if bool(rec.get("you", false)) else String(rec.get("name", ""))
+		var keepsake := keepsake_of(data, event_id)
+		var months: Array = def.get("months", [0])
+		var regions: Array = def.get("regions", [])
+		out.append({
+			"event_id": event_id, "festival": String(def.get("name", event_id)),
+			"month": int(months[0]) if not months.is_empty() else 0,
+			"region": String(regions[0]) if not regions.is_empty() else "",
+			"contest": String(contest.get("name", event_id)),
+			"last_place": int(places.get(str(last_year), 0)) if last_year > 0 else 0,
+			"last_year": last_year, "champion": champ, "streak": streak, "keepsake": keepsake,
+			"keepsake_owned": keepsake != "" and (c.item_count(keepsake) > 0 or bool(flags.get(keepsake_key(event_id), false))),
+		})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["month"]) < int(b["month"]))
+	return out
+
+
+static func history_lines(data: GameData, flags: Dictionary, c: CharacterData, year: int) -> PackedStringArray:
+	var lines := PackedStringArray()
+	for h in history(data, flags, c, year):
+		var line := "%s (%s): " % [h["festival"], h["contest"]]
+		if int(h["last_place"]) == 0:
+			line += "not yet entered"
+		else:
+			line += "%s in year %d" % [ordinal(int(h["last_place"])), int(h["last_year"])]
+			if int(h["streak"]) > 1:
+				line += ", %d wins running" % int(h["streak"])
+		if h["keepsake"] != "":
+			line += "; keepsake %s" % ("won" if bool(h["keepsake_owned"]) else "not yet won")
+		lines.append(line + ".")
+	return lines
 
 
 static func master_key(event_id: String) -> String:
@@ -115,6 +203,17 @@ static func record(flags: Dictionary, event_id: String, year: int, result: Dicti
 	if you:
 		var prev: Variant = flags.get(winner_key(event_id), {})
 		streak = (int((prev as Dictionary).get("streak", 0)) if prev is Dictionary and bool((prev as Dictionary).get("you", false)) else 0) + 1
+	var hist_key := history_key(event_id)
+	var hist: Dictionary = (flags.get(hist_key, {}) as Dictionary).duplicate() if flags.get(hist_key, {}) is Dictionary else {}
+	hist[str(year)] = int(result.get("place", 0))
+	while hist.size() > HISTORY_YEARS:
+		var oldest := 1 << 30
+		for k: String in hist:
+			oldest = mini(oldest, int(k))
+		hist.erase(str(oldest))
+	flags[hist_key] = hist
+	if you:
+		flags[keepsake_key(event_id)] = true
 	flags[winner_key(event_id)] = {"year": year, "name": "You" if you else String(winner["name"]), "you": you, "streak": streak}
 	if streak >= MASTER_STREAK:
 		flags[master_key(event_id)] = true
@@ -134,13 +233,13 @@ static func check(data: GameData, active: Array, _c: CharacterData, event_id: St
 
 
 ## Run the contest. `rivals` are the villagers who enter (fewer than `rivals` is fine; missing ones become strangers).
-static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0) -> Dictionary:
+static func run(data: GameData, c: CharacterData, event_id: String, rivals: Array[CharacterData], rng: RandomNumberGenerator, champion_name: String = "", practice: int = 0, rival_name: String = "", text_year: int = 0, cheer: int = 0, rival_id: String = "") -> Dictionary:
 	var contest := contest_of(data, event_id)
 	if contest.is_empty():
 		return {}
 	var attribute := String(contest.get("attribute", ""))
 	var mine := c.attribute(attribute) + rng.randi_range(0, 10)
-	mine += practice
+	mine += practice + cheer
 	var profession := String(contest.get("profession", ""))
 	if profession != "":
 		mine += 2 * Professions.rank_of(c, profession)
@@ -148,14 +247,20 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 	var wanted := int(contest.get("rivals", 2))
 	for i in wanted:
 		var name := "a stranger"
+		var entrant_id := ""
 		var base := DEFAULT_RIVAL_ATTRIBUTE
 		if i < rivals.size():
 			name = rivals[i].name
+			entrant_id = rivals[i].id
 			base = rivals[i].attribute(attribute) if rivals[i].attributes.has(attribute) else DEFAULT_RIVAL_ATTRIBUTE
 		var score := base + rng.randi_range(0, 10)
 		if champion_name != "" and name == champion_name:
 			score += CHAMPION_BONUS
-		scores.append({"name": name, "score": score, "you": false})
+		var entry := {"name": name, "score": score, "you": false}
+		# FEST-009 / FEST-011: the rival is marked by character id (a namesake is not the rival).
+		if (rival_id != "" and entrant_id == rival_id) or (rival_id == "" and rival_name != "" and name == rival_name):
+			entry["rival"] = true
+		scores.append(entry)
 	# Stable sort high to low; the player is first in the list, so ties go to the player.
 	var order: Array[Dictionary] = []
 	for s in scores:
@@ -171,15 +276,82 @@ static func run(data: GameData, c: CharacterData, event_id: String, rivals: Arra
 			place = j + 1
 	var prizes: Array = contest.get("prizes", [])
 	var prize: Dictionary = prizes[place - 1] if place - 1 < prizes.size() else {}
-	var text := String(contest.get("win_text", "")) if place == 1 else String(contest.get("lose_text", "")).replace("{winner}", String(order[0]["name"]))
-	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text, "practice": practice}
+	var text := pick_text(contest.get("win_text", ""), text_year) if place == 1 else pick_text(contest.get("lose_text", ""), text_year).replace("{winner}", String(order[0]["name"]))
+	return {"event_id": event_id, "name": String(contest.get("name", event_id)), "place": place, "total": order.size(), "scores": order, "prize": prize, "text": text, "practice": practice, "cheer": cheer}
+
+
+## FOLK-012: villagers of `region_id` at friendship tier Friend or better, best friends first (name tiebreak).
+static func friends_of(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String, min_tier: int = 1) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for npc in Npcs.generated_in_region(npcs, data, region_id):
+		if Folk.tier_index(data, int(favor.get(npc.id, 0))) >= min_tier:
+			out.append(npc)
+	out.sort_custom(func(a: CharacterData, b: CharacterData) -> bool:
+		var fa := int(favor.get(a.id, 0))
+		var fb := int(favor.get(b.id, 0))
+		return fa > fb if fa != fb else a.id.naturalnocasecmp_to(b.id) < 0)
+	return out
+
+
+## FOLK-012: friends who cheer (max CHEER_MAX, +1 each). Friends in `competing` (the contest's entrants) do not cheer.
+static func cheerers(npcs: Dictionary, data: GameData, favor: Dictionary, region_id: String, competing: Array = []) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for npc in friends_of(npcs, data, favor, region_id, 1):
+		if out.size() >= CHEER_MAX:
+			break
+		if not competing.has(npc):
+			out.append(npc)
+	return out
+
+
+static func cheer_line(who: Array[CharacterData]) -> String:
+	if who.is_empty():
+		return ""
+	var names: Array[String] = []
+	for n in who:
+		names.append(n.name)
+	var joined := names[0] if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1]
+	return "%s cheer%s you on (+%d)." % [joined, "s" if names.size() == 1 else "", who.size()]
+
+
+## FOLK-012: the festival (event id) whose first day is `day` and the friend (Close friend or better, best favor)
+## of its region who invites the player: {event_id, npc} or {}. Pure.
+static func invitation(data: GameData, npcs: Dictionary, favor: Dictionary, day: int) -> Dictionary:
+	if Calendar.day_of(day) != 1:
+		return {}
+	for event_id: String in data.world_events:
+		if contest_of(data, event_id).is_empty():
+			continue
+		var def: Dictionary = data.world_events[event_id]
+		if not (def.get("months", []) as Array).any(func(m: Variant) -> bool: return int(m) == Calendar.month_of(day)):
+			continue
+		var regions: Array = def.get("regions", [])
+		if regions.is_empty():
+			continue
+		var friends := friends_of(npcs, data, favor, String(regions[0]), 2)
+		if not friends.is_empty():
+			return {"event_id": event_id, "npc": friends[0]}
+	return {}
+
+
+static func invitation_line(data: GameData, inv: Dictionary) -> String:
+	if inv.is_empty():
+		return ""
+	return "%s asked you to the %s tomorrow." % [(inv["npc"] as CharacterData).name, WorldEvents.event_name(data, String(inv["event_id"]))]
+
+
+## FOLK-012: a line from family.json `festival_company`, picked by year ("" if none).
+static func company_line(data: GameData, who: String, year: int) -> String:
+	var list: Array = data.family.get("festival_company", [])
+	return "" if list.is_empty() else String(list[year % list.size()]).replace("{name}", who)
 
 
 static func standings_lines(result: Dictionary) -> PackedStringArray:
 	var out := PackedStringArray()
 	var scores: Array = result.get("scores", [])
 	for i in mini(5, scores.size()):
-		out.append("%d. %s %d" % [i + 1, scores[i]["name"], int(scores[i]["score"])])
+		var tag := " (your rival)" if bool(scores[i].get("rival", false)) else ""
+		out.append("%d. %s%s %d" % [i + 1, scores[i]["name"], tag, int(scores[i]["score"])])
 	return out
 
 
@@ -198,8 +370,17 @@ static func validate(data: GameData) -> PackedStringArray:
 		if not data.world_events[event_id].has("contest"):
 			continue
 		var id := "World event '%s' contest" % event_id
-		if String(contest.get("name", "")) == "" or String(contest.get("text", "")) == "" or String(contest.get("win_text", "")) == "" or String(contest.get("lose_text", "")) == "":
-			errors.append("%s needs name, text, win_text and lose_text" % id)
+		if String(contest.get("name", "")) == "" or String(contest.get("text", "")) == "":
+			errors.append("%s needs name and text" % id)
+		for tk: String in ["win_text", "lose_text"]:
+			var tv: Variant = contest.get(tk, "")
+			var tok := false
+			if tv is String:
+				tok = String(tv) != ""
+			elif tv is Array:
+				tok = not (tv as Array).is_empty() and (tv as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "")
+			if not tok:
+				errors.append("%s %s must be a string or a non-empty list of strings" % [id, tk])
 		if not data.attributes.any(func(a: Dictionary) -> bool: return String(a["id"]) == String(contest.get("attribute", ""))):
 			errors.append("%s has unknown attribute '%s'" % [id, contest.get("attribute", "")])
 		var profession := String(contest.get("profession", ""))
@@ -236,7 +417,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("%s needs a champion_greeting" % id)
 		elif greeting.replace("{player}", "").contains("{"):
 			errors.append("%s champion_greeting may only use {player}" % id)
-		var stripped := String(contest.get("lose_text", "")).replace("{winner}", "")
+		var lose_all: Array = contest.get("lose_text", []) if contest.get("lose_text", "") is Array else [contest.get("lose_text", "")]
+		var stripped := "".join(PackedStringArray(lose_all.map(func(x: Variant) -> String: return String(x)))).replace("{winner}", "")
 		if stripped.contains("{"):
 			errors.append("%s lose_text may only use {winner}" % id)
 	return errors

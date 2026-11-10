@@ -20,14 +20,19 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters", "edge_belt"]
 ## map.decor.rock_clusters (GFX-053): boulder groups of 3-6 rocks in 2-3 sizes, seeded before the scatter.
 const MAX_ROCK_CLUSTERS := 12
 const ROCK_CLUSTER_RADIUS := 45.0
+## map.decor.edge_belt (GFX-089): 0..MAX_EDGE_BELT rows of dense trees along the map edges, EDGE_ROW_GAP px apart,
+## EDGE_STEP px between trees; blocked rects (paths, places) leave gaps.
+const MAX_EDGE_BELT := 3
+const EDGE_ROW_GAP := 26.0
+const EDGE_STEP := 34.0
 ## Decor keeps this far from a path rect (GFX-053).
 const PATH_CLEARANCE := 12.0
 ## map.landmarks kinds (GFX-008, GFX-012); the solid ones block the player, the rest can be walked over.
-const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty"]
+const LANDMARK_KINDS: PackedStringArray = ["house", "field", "pond", "fence", "well", "wall", "cliff", "stream", "lantern", "pine", "stall", "jetty", "steps", "clouds"]
 const SOLID_LANDMARKS: PackedStringArray = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
 ## Crop-row colour of the field landmark by season (GFX-037); transparent while the furrows lie bare.
 const CROP_COLORS := {"Spring": "7fc04a", "Summer": "4f9a3a", "Autumn": "d9aa3a", "Winter": "00000000"}
@@ -82,7 +87,31 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 				if is_clear(pos, blocked, spots):
 					out.append(_decor_item(kind, pos, color, cfg, rng))
 					break
+	var rows := clampi(int(cfg.get("edge_belt", 0)), 0, MAX_EDGE_BELT)
+	if rows > 0:
+		_place_edge_belt(out, cfg, Color(String(cfg["tree_color"])), rows, size, blocked, spots, rng)
 	return out
+
+
+## GFX-089: rows of trees hugging all four map edges so a forest closes in; skips blocked spots (path gaps).
+static func _place_edge_belt(out: Array[Dictionary], cfg: Dictionary, color: Color, rows: int, size: Vector2,
+		blocked: Array[Rect2], spots: Array[Vector2], rng: RandomNumberGenerator) -> void:
+	for r in rows:
+		var inset := EDGE + 10.0 + float(r) * EDGE_ROW_GAP
+		var x := inset
+		while x <= size.x - inset:
+			for y: float in [inset, size.y - inset]:
+				var pos := Vector2(x + rng.randf_range(-6.0, 6.0), y + rng.randf_range(-5.0, 5.0))
+				if is_clear(pos, blocked, spots):
+					out.append(_decor_item("tree", pos, color, cfg, rng))
+			x += EDGE_STEP
+		var y2 := inset + EDGE_STEP
+		while y2 <= size.y - inset - EDGE_STEP * 0.5:
+			for x2: float in [inset, size.x - inset]:
+				var pos2 := Vector2(x2 + rng.randf_range(-5.0, 5.0), y2 + rng.randf_range(-6.0, 6.0))
+				if is_clear(pos2, blocked, spots):
+					out.append(_decor_item("tree", pos2, color, cfg, rng))
+			y2 += EDGE_STEP
 
 
 static func _decor_item(kind: String, pos: Vector2, color: Color, cfg: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
@@ -192,6 +221,70 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 		if lm.get("kind", "") == "jetty":
 			rect = jetty_layout(region, lm)["rect"]
 		out.append(rect)
+	return out
+
+
+## WU-494: how much of the Village Pond Jetty is built at project `stage` (0..3; -1 = a jetty that is not the project's): the fraction of planks laid from the shore,
+## whether the planks still have gaps, and whether the lantern post stands.
+static func jetty_stage_look(stage: int) -> Dictionary:
+	if stage < 0:  # RV-019: not the village project's jetty: a plain, whole walkway with no lantern post
+		return {"frac": 1.0, "gaps": false, "lantern": false}
+	match clampi(stage, 0, 3):
+		0:
+			return {"frac": 0.0, "gaps": false, "lantern": false}
+		1:
+			return {"frac": 0.5, "gaps": false, "lantern": false}
+		2:
+			return {"frac": 1.0, "gaps": true, "lantern": false}
+	return {"frac": 1.0, "gaps": false, "lantern": true}
+
+
+## WU-502: how the Village Herb Slope looks at terrace project `stage` (0..3; -1 = no project): stone `edging` round the bed, stepped
+## `rows` of terrace (0, 0, 2, 3), tidy `herbs` lines on the rows and a small water `channel` down one side (finished only).
+static func terrace_look(stage: int) -> Dictionary:
+	match clampi(stage, 0, 3) if stage >= 0 else 0:
+		1:
+			return {"edging": true, "rows": 0, "herbs": false, "channel": false}
+		2:
+			return {"edging": true, "rows": 2, "herbs": false, "channel": false}
+		3:
+			return {"edging": true, "rows": 3, "herbs": true, "channel": true}
+	return {"edging": false, "rows": 0, "herbs": false, "channel": false}
+
+
+## WU-500: the jetty's post rects (6x6) at project `stage`. An unbuilt stretch (stage 0..1) shows bare posts in pairs along the
+## full length, but only those standing in the water or within 6 px of the pond's rim; a finished jetty keeps two posts at the water end.
+static func jetty_posts(region: Dictionary, lm: Dictionary, stage: int) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var lay := jetty_layout(region, lm)
+	if not bool(lay["on_water"]):
+		return out
+	var full: Rect2 = lay["rect"]
+	var vertical := bool(lay["vertical"])
+	var toward: int = int(lay.get("toward_water", -1))
+	var ponds: Array[Rect2] = []
+	for other: Dictionary in region.get("map", {}).get("landmarks", []):
+		if other.get("kind", "") == "pond":
+			var half := Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0
+			ponds.append(Rect2(Vector2(float(other["pos"][0]), float(other["pos"][1])) - half, half * 2.0))
+	var span := full.size.y if vertical else full.size.x
+	var along: Array[float] = [2.0]
+	if jetty_stage_look(stage)["frac"] < 1.0:
+		along = [4.0, 4.0 + (span - 8.0) / 2.0, 4.0 + (span - 8.0)]
+	for t in along:
+		for off: float in [-9.0, 9.0]:
+			var tip: Vector2
+			if vertical:
+				tip = Vector2(full.get_center().x + off, full.position.y + t if toward < 0 else full.end.y - t)
+			else:
+				tip = Vector2(full.position.x + t if toward < 0 else full.end.x - t, full.get_center().y + off)
+			var post := Rect2(tip - Vector2(3, 3), Vector2(6, 6))
+			var keep := false
+			for pond in ponds:
+				if pond.grow(6.0).intersects(post):
+					keep = true
+			if keep:
+				out.append(post)
 	return out
 
 
@@ -322,6 +415,288 @@ static func paved_zones(map: Dictionary, scale: float = 1.0) -> Array:
 	return zones
 
 
+## GFX-110: map.edge kinds and the props along the outer map edge.
+const EDGE_KINDS: PackedStringArray = ["hedge", "treeline", "wall", "cliff", "reeds"]
+const EDGE_INSIDE := 16.0  # how far a prop reaches into the map (never more than 24)
+const EDGE_DEPTH := {"hedge": 14.0, "treeline": 30.0, "wall": 10.0, "cliff": 22.0, "reeds": 18.0}
+const EDGE_PATH_GAP := 10.0
+
+
+## GFX-110: props along the four outer map edges for a region with `map.edge`, [{kind, rect: Rect2, seed: int, side: int}].
+## Each rect reaches at most EDGE_INSIDE px into the map and the rest out into the margin; none touches a path
+## (grown by EDGE_PATH_GAP, so a wall has a gap at each road). Seeded by region id; empty without map.edge.
+static func edge_props(region: Dictionary, size: Vector2) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	var kind := String(map.get("edge", ""))
+	if not EDGE_KINDS.has(kind):
+		return out
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|edge")
+	var gaps: Array[Rect2] = []
+	for r in map.get("paths", []):
+		gaps.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(EDGE_PATH_GAP))
+	var depth: float = EDGE_DEPTH[kind]
+	var total := EDGE_INSIDE + depth
+	for side in 4:
+		var length := size.x if side < 2 else size.y
+		var t := 0.0
+		while t < length:
+			var step := rng.randf_range(18.0, 34.0) if kind != "wall" else 40.0
+			step = minf(step, length - t)
+			var r: Rect2
+			match side:
+				0: r = Rect2(t, -depth, step, total)
+				1: r = Rect2(t, size.y - EDGE_INSIDE, step, total)
+				2: r = Rect2(-depth, t, total, step)
+				_: r = Rect2(size.x - EDGE_INSIDE, t, total, step)
+			t += step
+			var blocked := false
+			for g in gaps:
+				if g.intersects(r):
+					blocked = true
+					break
+			var seed_value := rng.randi()
+			if not blocked and step >= 8.0:
+				var prop := {"kind": kind, "rect": r, "seed": seed_value, "side": side}
+				if kind == "cliff":
+					prop["h"] = 0.65 + 0.35 * float(seed_value % 100) / 100.0  # GFX-111: per-prop height (fraction of the rect's depth)
+				out.append(prop)
+	return out
+
+
+## GFX-111: a rock silhouette for `rect`: [bottom-left, jagged top points..., bottom-right], deterministic from `seed`.
+## The top points run left to right across the rect, each lifted 0..`jitter` px below the top edge; every point lies inside rect.grow(jitter).
+static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var n := maxi(points, 4) - 2
+	out.append(Vector2(rect.position.x, rect.end.y))
+	for i in n:
+		var x := rect.position.x + rect.size.x * float(i) / float(n - 1)
+		out.append(Vector2(x, rect.position.y + rng.randf() * jitter))
+	out.append(Vector2(rect.end.x, rect.end.y))
+	return out
+
+
+## GFX-112: the road surface pieces laid over a path rect, seeded by region id and rect. Each is
+## {kind: slab|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
+## slabs; bog with map.water murky = planks across the path; other bog = a muddy track with puddles; grass/litter = two
+## worn ruts, a dark edge strip on each side and tufts creeping in. Every rect lies inside `path_rect`; none overlaps a stream crossing (a bridge).
+static func path_tiles(region: Dictionary, path_rect: Rect2) -> Array[Dictionary]:
+	var map: Dictionary = region.get("map", {})
+	var style := str(map.get("ground_style", "grass"))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|%s|roadtiles" % [region.get("id", ""), path_rect])
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var bridges: Array[Rect2] = []
+	for lm: Dictionary in map.get("landmarks", []):
+		if str(lm.get("kind", "")) == "stream":
+			var sz: Array = lm["size"]
+			var c: Array = lm["pos"]
+			bridges.append(Rect2(float(c[0]) - float(sz[0]) * 0.5, float(c[1]) - float(sz[1]) * 0.5, float(sz[0]), float(sz[1])).grow(6.0))
+	var out: Array[Dictionary] = []
+	var len_total := path_rect.size.x if along_x else path_rect.size.y
+	var width := path_rect.size.y if along_x else path_rect.size.x
+	var inset := 3.0
+	var pos := 0.0
+	if style == "scree" or style == "paved":
+		var rows := maxi(int(floor((width - inset * 2.0) / 14.0)), 1)
+		var row_w := (width - inset * 2.0) / float(rows)
+		for row in rows:
+			pos = inset
+			while pos < len_total - inset - 6.0:
+				var l := minf(10.0 + rng.randf() * 16.0, len_total - inset - pos)
+				var roll := rng.randf()
+				var flag := "crack" if roll < 0.12 else ("gap" if roll < 0.2 else "")
+				out.append({"kind": "slab", "rect": _road_rect(path_rect, along_x, pos, inset + row * row_w, l, row_w), "shade": rng.randf() * 2.0 - 1.0, "flag": flag})
+				pos += l
+	elif style == "bog" and str(map.get("water", "clear")) == "murky":
+		pos = inset
+		while pos < len_total - inset - 4.0:
+			var l := minf(7.0 + rng.randf() * 3.0, len_total - inset - pos)
+			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset, l - 1.0, width - inset * 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+			pos += l
+	else:
+		var strip := 3.0
+		var seg := 40.0
+		pos = 0.0
+		while pos < len_total:
+			var l := minf(seg, len_total - pos)
+			for side in 2:
+				var off := inset if side == 0 else width - inset - strip
+				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, pos, off, l, strip), "shade": -0.5, "flag": ""})
+			for off_f: float in [0.3, 0.62]:
+				out.append({"kind": "rut", "rect": _road_rect(path_rect, along_x, pos, width * off_f - 2.0, l, 4.0), "shade": -0.3, "flag": ""})
+			pos += seg
+		var n := int(len_total / 22.0)
+		for i in n:
+			var k := "puddle" if style == "bog" else "tuft"
+			var sz := Vector2(10.0, 4.0) if k == "puddle" else Vector2(3.0, 5.0)
+			var across := rng.randf_range(0.0, maxf(width - sz.y, 0.0)) if k == "puddle" else (inset if rng.randf() < 0.5 else width - inset - sz.y)
+			if k == "tuft" and rng.randf() < 0.4:
+				continue
+			out.append({"kind": k, "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - sz.x, 0.0), across, sz.x, sz.y), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+	var kept: Array[Dictionary] = []
+	for t in out:
+		var hit := false
+		for b in bridges:
+			if b.intersects(t["rect"]):
+				hit = true
+				break
+		if not hit:
+			kept.append(t)
+	return kept
+
+
+static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: float, length: float, thick: float) -> Rect2:
+	if along_x:
+		return Rect2(path_rect.position.x + along, path_rect.position.y + across, length, thick)
+	return Rect2(path_rect.position.x + across, path_rect.position.y + along, thick, length)
+
+
+## GFX-113: map.high (a sect on a mountain): rail (bool: a carved rail round the sect hall court), wisps (int 0-8 drifting cloud wisps)
+## and lean_pines (int 0-4 pines leaning out over the top cliffs).
+const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines"]
+const HIGH_PINE_MAX := 4
+const HIGH_WISP_MAX := 8
+
+
+## GFX-113: leaning pines for a `map.high` region: [{pos: Vector2 (the trunk's foot), lean: float (-1 left .. 1 right)}].
+## They stand on the lower lip of the top-half `cliff` landmarks, seeded by region id, clear of places, solid landmarks and paths.
+static func high_pines(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var high: Variant = region.get("map", {}).get("high", null)
+	if not high is Dictionary:
+		return out
+	var want := clampi(int(high.get("lean_pines", 0)), 0, HIGH_PINE_MAX)
+	if want == 0:
+		return out
+	var map_h := float(region["map"]["size"][1])
+	var cliffs: Array[Rect2] = []
+	for lm: Dictionary in region["map"].get("landmarks", []):
+		if String(lm.get("kind", "")) == "cliff" and float(lm["pos"][1]) < map_h / 2.0:
+			cliffs.append(Rect2(Vector2(float(lm["pos"][0]) - float(lm["size"][0]) / 2.0, float(lm["pos"][1]) - float(lm["size"][1]) / 2.0), Vector2(float(lm["size"][0]), float(lm["size"][1]))))
+	if cliffs.is_empty():
+		return out
+	var blocked := blocked_rects(region)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|high_pines")
+	for i in want * 12:
+		if out.size() >= want:
+			break
+		var c := cliffs[i % cliffs.size()]
+		var foot := Vector2(rng.randf_range(c.position.x + 40.0, c.end.x - 40.0), c.end.y + rng.randf_range(34.0, 52.0))
+		var box := Rect2(foot - Vector2(26.0, 8.0), Vector2(52.0, 16.0))
+		var ok := true
+		for b in blocked:
+			if b.intersects(box):
+				ok = false
+				break
+		for o in out:
+			if absf(o["pos"].x - foot.x) < 90.0:
+				ok = false
+		if ok:
+			# Lean away from the cliff-top's centre, toward the cliff edge (up on the map).
+			out.append({"pos": foot, "lean": -1.0 if foot.x < float(region["map"]["size"][0]) / 2.0 else 1.0})
+	return out
+
+
+## GFX-109: map.relief keys and limits.
+const RELIEF_KEYS: PackedStringArray = ["ledges", "snow", "boulders"]
+const RELIEF_MAX := 12
+const RELIEF_BORDER := 24.0
+const RELIEF_PATH_GAP := 12.0
+const RELIEF_PLACE_GAP := 16.0
+const RELIEF_POINT_RADIUS := 60.0
+const RELIEF_SPOT_RADIUS := 24.0
+const RELIEF_TRIES := 30
+
+
+## GFX-109: rock ledges, boulder clusters and snow drifts of a `map.relief` region, [{kind: "ledge"|"boulders"|"drift", rect: Rect2, seed: int}].
+## Seeded from the region id only; clear of paths, places, landmarks, the spawn and travel points, npc spots and the map border; never overlapping. Empty without map.relief.
+static func relief_layout(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	var relief: Variant = map.get("relief", null)
+	if not relief is Dictionary:
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var bounds := Rect2(Vector2.ZERO, Vector2(float(size_arr[0]), float(size_arr[1]))).grow(-RELIEF_BORDER)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|relief")
+	var forbid: Array[Rect2] = []
+	for r in map.get("paths", []):
+		forbid.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(RELIEF_PATH_GAP))
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		var pos: Array = p.get("pos", [0, 0])
+		var sz: Array = p.get("size", [64, 64])
+		var psize := Vector2(float(sz[0]), float(sz[1]))
+		forbid.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(RELIEF_PLACE_GAP))
+	forbid.append_array(landmark_rects(region))
+	var points: Array[Vector3] = []  # x, y, radius
+	if region.has("spawn"):
+		points.append(Vector3(float(region["spawn"][0]), float(region["spawn"][1]), RELIEF_POINT_RADIUS))
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) == "travel":
+			points.append(Vector3(float(p["pos"][0]), float(p["pos"][1]), RELIEF_POINT_RADIUS))
+	for s in region.get("npc_spots", []):
+		points.append(Vector3(float(s[0]), float(s[1]), RELIEF_SPOT_RADIUS))
+	var taken: Array[Rect2] = []
+	var snow := clampf(float(relief.get("snow", 0.0)), 0.0, 1.0)
+	var items: Array[Dictionary] = []
+	for i in clampi(int(relief.get("ledges", 0)), 0, RELIEF_MAX):
+		var r := Rect2(0, 0, rng.randf_range(60.0, 180.0), rng.randf_range(18.0, 36.0))
+		var it := _relief_try(r, "ledge", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			items.append(it)
+	for i in clampi(int(relief.get("boulders", 0)), 0, RELIEF_MAX):
+		var r := Rect2(0, 0, rng.randf_range(40.0, 70.0), rng.randf_range(40.0, 70.0))
+		var it := _relief_try(r, "boulders", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			items.append(it)
+	out.append_array(items)
+	for it in items:
+		if rng.randf() >= snow:
+			continue
+		var base: Rect2 = it["rect"]
+		var w := rng.randf_range(30.0, 90.0)
+		var r := Rect2(base.position.x + rng.randf_range(0.0, maxf(base.size.x - w, 0.0)), base.end.y, w, rng.randf_range(10.0, 16.0))
+		if not _relief_fits(r, bounds, forbid, points, taken):
+			continue
+		taken.append(r.grow(4.0))
+		out.append({"kind": "drift", "rect": r, "seed": rng.randi()})
+	return out
+
+
+static func _relief_try(r: Rect2, kind: String, rng: RandomNumberGenerator, bounds: Rect2, forbid: Array[Rect2], points: Array[Vector3], taken: Array[Rect2]) -> Dictionary:
+	for attempt in RELIEF_TRIES:
+		var cand := Rect2(Vector2(rng.randf_range(bounds.position.x, bounds.end.x - r.size.x), rng.randf_range(bounds.position.y, bounds.end.y - r.size.y)).round(), r.size.round())
+		if _relief_fits(cand, bounds, forbid, points, taken):
+			# leave room below for a drift
+			taken.append(cand.grow(4.0))
+			taken.append(Rect2(cand.position.x, cand.end.y, cand.size.x, 20.0))
+			return {"kind": kind, "rect": cand, "seed": rng.randi()}
+	return {}
+
+
+static func _relief_fits(r: Rect2, bounds: Rect2, forbid: Array[Rect2], points: Array[Vector3], taken: Array[Rect2]) -> bool:
+	if not bounds.encloses(r):
+		return false
+	for f in forbid:
+		if f.intersects(r):
+			return false
+	for p in points:
+		var near := Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y))
+		if near.distance_to(Vector2(p.x, p.y)) < p.z:
+			return false
+	for t in taken:
+		if t.intersects(r):
+			return false
+	return true
+
+
 ## Load errors for map.decor in data/regions.json.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -329,6 +704,40 @@ static func validate(data: GameData) -> PackedStringArray:
 		var plaza: Variant = region.get("map", {}).get("plaza", null)
 		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
 			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
+		var high: Variant = region.get("map", {}).get("high", null)
+		if high != null:
+			if not high is Dictionary:
+				errors.append("Region '%s' map.high must be an object" % region["id"])
+			else:
+				for key in high:
+					if not key in HIGH_KEYS:
+						errors.append("Region '%s' map.high has unknown key '%s'" % [region["id"], key])
+					elif key == "rail":
+						if not high[key] is bool:
+							errors.append("Region '%s' map.high.rail must be a bool" % region["id"])
+					else:
+						var cap := HIGH_WISP_MAX if key == "wisps" else HIGH_PINE_MAX
+						if not (high[key] is float or high[key] is int) or int(high[key]) < 0 or int(high[key]) > cap:
+							errors.append("Region '%s' map.high.%s must be 0-%d" % [region["id"], key, cap])
+		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
+		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
+			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
+		var relief: Variant = region.get("map", {}).get("relief", null)
+		if relief != null:
+			if not relief is Dictionary:
+				errors.append("Region '%s' map.relief must be an object" % region["id"])
+			else:
+				for key in relief:
+					if not RELIEF_KEYS.has(String(key)):
+						errors.append("Region '%s' map.relief has unknown key '%s'" % [region["id"], key])
+					elif key == "snow":
+						if not ((relief[key] is float or relief[key] is int) and float(relief[key]) >= 0.0 and float(relief[key]) <= 1.0):
+							errors.append("Region '%s' map.relief.snow must be 0-1" % region["id"])
+					elif not (relief[key] is float or relief[key] is int) or int(relief[key]) < 0 or int(relief[key]) > RELIEF_MAX:
+						errors.append("Region '%s' map.relief.%s must be 0-%d" % [region["id"], key, RELIEF_MAX])
+		var edge: Variant = region.get("map", {}).get("edge", null)
+		if edge != null and not (edge is String and EDGE_KINDS.has(edge)):
+			errors.append("Region '%s' map.edge must be one of %s" % [region["id"], ", ".join(EDGE_KINDS)])
 		var decor: Variant = region.get("map", {}).get("decor", {})
 		if not decor is Dictionary:
 			errors.append("Region '%s' map.decor must be an object" % region["id"])
@@ -342,6 +751,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CLUSTERS:
 					errors.append("Region '%s' map.decor.clusters must be 0-%d" % [region["id"], MAX_CLUSTERS])
+			elif key == "edge_belt":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_EDGE_BELT:
+					errors.append("Region '%s' map.decor.edge_belt must be 0-%d" % [region["id"], MAX_EDGE_BELT])
 			elif key == "rock_clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_ROCK_CLUSTERS:
 					errors.append("Region '%s' map.decor.rock_clusters must be 0-%d" % [region["id"], MAX_ROCK_CLUSTERS])
@@ -419,6 +831,29 @@ static func tree_look(season: String, seed_value: int, base: Color = Color("2e5a
 ## Crop-row colour of the big field in `season` (alpha 0 in winter: bare furrows).
 static func crop_color(season: String) -> Color:
 	return Color(String(CROP_COLORS.get(season, "4f9a3a")))
+
+
+## GFX-096: how a field landmark looks in `season`. `seed_value` (the field's position hash) varies neighbours:
+## `vertical` rows run north-south, `alt` swaps the crop tone. Returns {style, color, vertical, sheaves, snow}.
+## style: sprout (spring), tall (summer), golden (autumn), bare (winter).
+static func field_look(season: String, seed_value: int, no_snow: bool = false) -> Dictionary:
+	var h := absi(seed_value)
+	var style := "tall"
+	var color := Color("3f8a30")
+	match season:
+		"Spring":
+			style = "sprout"
+			color = Color("8fd16a")
+		"Autumn":
+			style = "golden"
+			color = Color("d9aa3a")
+		"Winter":
+			style = "bare"
+			color = Color("00000000")
+	if h % 3 == 0 and style != "bare":
+		color = color.darkened(0.12)
+	return {"style": style, "color": color, "vertical": h % 4 == 1, "sheaves": style == "golden",
+		"snow": style == "bare" and not no_snow}
 
 
 ## GFX-043: the newest footprint list: `prints` plus `pos`, oldest dropped beyond `cap` (default 12).

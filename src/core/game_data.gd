@@ -48,6 +48,10 @@ var fishing_rules: Dictionary = {}  # FISH-006: regions.json "fishing"
 var fishing_weather: Dictionary = {}  # FISH-001: regions.json "fishing_weather"
 var herb_lore: Dictionary = {}  # GATHER-001: regions.json "herb_lore" (HerbLore); {} = none
 var weather_effects: Dictionary = {}  # WEATHER-002: regions.json "weather_effects"
+## ENC-014: encounters.json `figure` values (what the encounter strip draws).
+const ENCOUNTER_FIGURES: Array = ["none", "beast", "robed", "villager", "child", "elder", "spirit", "treasure", "corpse"]
+## GFX-106: valid items.json `icon` values (ItemIcon must have a glyph and body colour for each; a unit test checks).
+const ITEM_ICON_KINDS: PackedStringArray = ["pill", "herb", "ore", "beast_material", "spirit_stone", "weapon", "armor", "accessory", "talisman", "manual", "scroll", "fish", "pouch", "food", "drink", "lantern", "incense", "charm", "kite", "thread", "trophy", "meat", "grain"]
 var road: Dictionary = {}  # TRAV-006: regions.json "road" (empty = no road encounters)
 var encounters: Dictionary = {}  # id -> Dictionary
 ## True for an int or a whole-number float (JSON numbers load as floats).
@@ -63,6 +67,7 @@ var bounties: Dictionary = {}
 var rumors: Dictionary = {}
 var rumor_rules: Dictionary = {"max_per_visit": 2}
 var bounty_config: Dictionary = {"hunt_chance": 0.3, "max_active": 1, "offers": 3}
+var scenes: Array = []  # data/npcs.json "scenes" (FOLK-013)
 var errands: Array = []  # data/npcs.json "errands" (journal reminders, GUIDE-003)
 var npcs: Dictionary = {}  # id -> Dictionary (definitions; live NPCs are in GameState.npcs)
 var names: Dictionary = {}  # data/names.json: {"surnames": [...], "given_names": {gender: [...]}}
@@ -119,6 +124,8 @@ var abodes: Dictionary = {}
 var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 ## recipes.json home_meals (FISH-002): cooked at a workshop or the Family Home by anyone, see Cooking.
 var home_meals: Array = []
+## data/season_tasks.json (SEASON-005), see SeasonTasks.
+var season_tasks: Dictionary = {}
 var material_value_cache: Dictionary = {}  # item id -> float, filled lazily by Items.material_value
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
@@ -283,6 +290,10 @@ func _load(dir: String) -> void:
 	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
 	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
+		if encounter.has("scene") and not (encounter["scene"] is String and (PlaceLooks.EXPLORE_LOOKS.has(String(encounter["scene"])) or encounter["scene"] == PlaceLooks.VILLAGE_SCENE)):
+			load_errors.append("encounter %s: scene %s is not one of %s or village" % [encounter["id"], encounter["scene"], PlaceLooks.EXPLORE_LOOKS])
+		if encounter.has("figure") and not (encounter["figure"] is String and String(encounter["figure"]) in ENCOUNTER_FIGURES):
+			load_errors.append("encounter %s: figure %s is not one of %s" % [encounter["id"], encounter["figure"], ENCOUNTER_FIGURES])
 
 	var bounty_file := _read(dir, "bounties.json")
 	for key: String in bounty_config:
@@ -299,6 +310,7 @@ func _load(dir: String) -> void:
 	for npc in npc_file.get("npcs", []):
 		npcs[npc["id"]] = npc
 	errands = npc_file.get("errands", [])
+	scenes = npc_file.get("scenes", [])
 
 	names = _read(dir, "names.json")
 	family = _read(dir, "family.json")
@@ -306,6 +318,7 @@ func _load(dir: String) -> void:
 	for bloodline in bloodline_rules.get("bloodlines", []):
 		bloodlines[bloodline["id"]] = bloodline
 	karma = _read(dir, "karma.json")
+	season_tasks = _read(dir, "season_tasks.json")
 	var karma_acts := {}
 	for act in karma.get("acts", []):
 		karma_acts[act["id"]] = act
@@ -446,6 +459,7 @@ func _validate() -> void:
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
+	load_errors.append_array(SeasonTasks.validate(self))
 	_validate_help()
 	_validate_milestones()
 	_validate_bounties()
@@ -465,6 +479,7 @@ func _validate() -> void:
 	load_errors.append_array(ClanEstate.validate(self))
 	load_errors.append_array(NpcClans.validate(self))
 	load_errors.append_array(FamilyHome.validate(self))
+	load_errors.append_array(Trophies.validate(self))
 	load_errors.append_array(Bloodlines.validate(self))
 	load_errors.append_array(Beasts.validate(self))
 	load_errors.append_array(Sects.validate_missions(self))
@@ -489,6 +504,10 @@ func _validate() -> void:
 	for item: Dictionary in items.values():
 		if (item.get("tags", []) as Array).has("untagged"):
 			load_errors.append("Item '%s': 'untagged' is a reserved stock tag" % item["id"])
+		if item.has("icon") and not (item["icon"] is String and ITEM_ICON_KINDS.has(item["icon"])):
+			load_errors.append("Item '%s': icon must be one of %s" % [item["id"], ", ".join(ITEM_ICON_KINDS)])
+		if item.has("forage_tint") and not (item["forage_tint"] is String and Color.html_is_valid(item["forage_tint"])):
+			load_errors.append("Item '%s': forage_tint must be a hex colour like '#8fb6c8'" % item["id"])
 		if item.get("effects", {}).has("buff"):
 			for error in Buffs.validate_effect(item["effects"]["buff"]):
 				load_errors.append("Item '%s': %s" % [item["id"], error])
@@ -557,7 +576,7 @@ func _validate_world() -> void:
 			load_errors.append("travel_speed mult must be a number in (0, 1]")
 		if String(speed.get("how", "")).strip_edges() == "":
 			load_errors.append("travel_speed entries need a non-empty 'how'")
-	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "field_plot", "secret_realm", "auction", "inheritance", "bounty_board"]
+	var place_types := ["meditation", "merchant", "sect_hall", "workshop", "clinic", "orphanage", "deed_giver", "explore", "travel", "gather", "fishing", "field_plot", "secret_realm", "auction", "inheritance", "bounty_board", "shrine", "well", "coop"]
 	for region: Dictionary in regions.values():
 		for route: Dictionary in region.get("routes", []):
 			if not regions.has(route.get("to", "")):
@@ -580,6 +599,8 @@ func _validate_world() -> void:
 			load_errors.append("Region '%s' discovery '%s' must be a discovery_only encounter" % [region["id"], region["discovery"]])
 		if region.has("discovery_rumor") and not (region.has("discovery") and region["discovery_rumor"] is String and (region["discovery_rumor"] as String).strip_edges() != ""):
 			load_errors.append("Region '%s' discovery_rumor must be a non-empty string and needs a discovery" % region["id"])
+		if region.has("short_name") and not (region["short_name"] is String and (region["short_name"] as String).strip_edges() != "" and (region["short_name"] as String).length() <= 14):
+			load_errors.append("Region '%s' short_name must be a non-empty string of at most 14 characters" % region["id"])
 		if region.has("first_visit") and not (region["first_visit"] is String and (region["first_visit"] as String).strip_edges() != ""):
 			load_errors.append("Region '%s' first_visit must be a non-empty string" % region["id"])
 		if region.has("map_pos"):
@@ -588,12 +609,16 @@ func _validate_world() -> void:
 				load_errors.append("Region '%s' map_pos must be [x, y] with values in 0..1" % region["id"])
 		if region.get("map", {}).has("no_snow") and not region["map"]["no_snow"] is bool:
 			load_errors.append("Region '%s' map.no_snow must be true or false" % region["id"])
+		if region.get("map", {}).has("building_style") and not PlaceLooks.BUILDING_STYLES.has(region["map"]["building_style"]):
+			load_errors.append("Region '%s' map.building_style must be one of %s" % [region["id"], PlaceLooks.BUILDING_STYLES])
 		if region.get("map", {}).has("ground_style") and not GroundTiles.STYLES.has(region["map"]["ground_style"]):
 			load_errors.append("Region '%s' map.ground_style must be one of %s" % [region["id"], GroundTiles.STYLES])
 		if region.get("map", {}).has("mist"):
 			var mist: Variant = region["map"]["mist"]
 			if not ((mist is float or mist is int) and float(mist) >= 0.0 and float(mist) <= 1.0):
 				load_errors.append("Region '%s' map.mist must be a number from 0 to 1" % region["id"])
+		for err in Critters.validate(region, items):  # GFX-086
+			load_errors.append(err)
 		var ambient: Variant = region.get("map", {}).get("ambient", {})
 		if not ambient is Dictionary:
 			load_errors.append("Region '%s' map.ambient must be an object" % region["id"])
@@ -620,15 +645,32 @@ func _validate_world() -> void:
 						elif not ((w is float or w is int) and w > 0):
 							load_errors.append("Region '%s' weather.%s.%s weight must be > 0" % [region["id"], key, kind])
 		load_errors.append_array(FieldPlots.validate(self, String(region["id"]), region))
+		if region.has("festival_square"):
+			load_errors.append_array(_festival_square_errors(region))
 		for spot in region.get("npc_spots", []):
 			if not (spot is Array and (spot as Array).size() == 2):
 				load_errors.append("Region '%s' has an npc_spot that is not [x, y]: %s" % [region["id"], spot])
+		load_errors.append_array(signpost_clearance_errors(region))
+		if region.get("map", {}).has("wild_look") and not PlaceLooks.EXPLORE_LOOKS.has(String(region["map"]["wild_look"])):
+			load_errors.append("Region '%s': unknown map.wild_look '%s' (use %s)" % [region["id"], region["map"]["wild_look"], ", ".join(PlaceLooks.EXPLORE_LOOKS)])
+		if region.get("map", {}).has("water") and not PlaceLooks.WATER_KINDS.has(String(region["map"]["water"])):
+			load_errors.append("Region '%s': unknown map.water '%s' (use %s)" % [region["id"], region["map"]["water"], ", ".join(PlaceLooks.WATER_KINDS)])
 		for place: Dictionary in region.get("places", []):
 			if place.has("look"):
 				var who := "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]
-				if place.get("type", "") != "deed_giver":
-					load_errors.append("%s: look is only for deed_giver places" % who)
-				load_errors.append_array(PlaceLooks.errors(place["look"], who))
+				if place.get("type", "") == "explore":
+					if not PlaceLooks.EXPLORE_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown explore look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.EXPLORE_LOOKS)])
+				elif place.get("type", "") == "gather":
+					if not PlaceLooks.GATHER_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown gather look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.GATHER_LOOKS)])
+				elif place.get("type", "") == "secret_realm":
+					if not PlaceLooks.REALM_LOOKS.has(String(place["look"])):
+						load_errors.append("%s: unknown secret_realm look '%s' (use %s)" % [who, place["look"], ", ".join(PlaceLooks.REALM_LOOKS)])
+				else:
+					if place.get("type", "") != "deed_giver":
+						load_errors.append("%s: look is only for deed_giver, explore, gather and secret_realm places" % who)
+					load_errors.append_array(PlaceLooks.errors(place["look"], who))
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
 			load_errors.append_array(Fishing.validate_table(self, place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))
@@ -648,6 +690,10 @@ func _validate_world() -> void:
 			if place.has("open_days"):
 				for problem in Places.validate(place["open_days"], "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)
+			if place.has("festival_only"):
+				if place.get("type", "") != "merchant":
+					load_errors.append("Region '%s' place '%s' festival_only is for merchants" % [region["id"], place.get("display_name", "")])
+				load_errors.append_array(Places.validate_festival_only(place["festival_only"], String(region["id"]), self, "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]))
 			if place.has("rotating_stock"):
 				for problem in Places.validate_rotating(place["rotating_stock"], place, items, restricted_item_tags, "Region '%s' place '%s'" % [region["id"], place.get("display_name", "")]):
 					load_errors.append(problem)
@@ -737,6 +783,16 @@ func _validate_world() -> void:
 			load_errors.append("NPC '%s' is in unknown region '%s'" % [npc["id"], npc.get("region", "")])
 		if realm_index_of(npc.get("realm", "mortal")) < 0:
 			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
+		load_errors.append_array(Folk.validate_spots(npc, self))
+		if npc.has("birthday"):
+			var bd: Variant = npc["birthday"]
+			if not (bd is Dictionary) or not (bd.get("month") is int or bd.get("month") is float) or not (bd.get("day") is int or bd.get("day") is float) \
+					or int(bd["month"]) < 1 or int(bd["month"]) > 12 or int(bd["day"]) < 1 or int(bd["day"]) > 30:
+				load_errors.append("NPC '%s' birthday must be {month 1..12, day 1..30}" % npc["id"])
+		if npc.has("birthday_line") and (not npc["birthday_line"] is String or String(npc["birthday_line"]) == "" or String(npc["birthday_line"]).length() > 160):
+			load_errors.append("NPC '%s' birthday_line must be a string of 1..160 characters" % npc["id"])
+		if npc.has("player_birthday_line") and (not npc["player_birthday_line"] is String or String(npc["player_birthday_line"]) == "" or String(npc["player_birthday_line"]).length() > 160):
+			load_errors.append("NPC '%s' player_birthday_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("hunter") and not npc["hunter"] is bool:
 			load_errors.append("NPC '%s' hunter must be a bool" % npc["id"])
 		if npc.has("dialogue") and not dialogues.has(npc["dialogue"]):
@@ -747,6 +803,33 @@ func _validate_world() -> void:
 		for key in ["asked_flag", "done_flag", "text"]:
 			if String(errand.get(key, "")) == "":
 				load_errors.append("Errand of '%s' has no %s" % [errand.get("npc", ""), key])
+	var scene_ids := {}
+	var tier_mins: Array = []
+	for tier: Dictionary in family.get("folk_tiers", []):
+		tier_mins.append(int(tier["min"]))
+	for scene: Dictionary in scenes:
+		var sid := String(scene.get("id", ""))
+		if sid == "" or scene_ids.has(sid):
+			load_errors.append("Scene '%s' has a missing or duplicate id" % sid)
+		scene_ids[sid] = true
+		var who := String(scene.get("npc", ""))
+		if who != "any_villager" and not npcs.has(who):
+			load_errors.append("Scene '%s' has unknown npc '%s'" % [sid, who])
+		if not tier_mins.has(int(scene.get("min_favor", -1))):
+			load_errors.append("Scene '%s' min_favor must be a folk_tiers min" % sid)
+		if String(scene.get("text", "")) == "":
+			load_errors.append("Scene '%s' has no text" % sid)
+		if scene.has("weather"):
+			var kinds: Variant = scene["weather"]
+			if not kinds is Array or (kinds as Array).is_empty():
+				load_errors.append("Scene '%s' weather must be a non-empty array" % sid)
+			else:
+				for kind: Variant in kinds:
+					if not Weather.KINDS.has(String(kind)):
+						load_errors.append("Scene '%s' has unknown weather '%s'" % [sid, kind])
+		if scene.has("gift") and not items.has(String(scene["gift"])):
+			load_errors.append("Scene '%s' has unknown gift '%s'" % [sid, scene["gift"]])
+	load_errors.append_array(Folk.validate_lessons(self))
 	for dialogue: Dictionary in dialogues.values():
 		load_errors.append_array(Dialogue.validate(dialogue, self))
 
@@ -1074,3 +1157,44 @@ func _validate_recipes() -> void:
 		var recipe_id: String = item.get("effects", {}).get("learn_recipe", "")
 		if recipe_id != "" and not recipes.has(recipe_id):
 			load_errors.append("Item '%s' teaches unknown recipe '%s'" % [item["id"], recipe_id])
+
+
+## WU-481: minimum distance from a travel signpost to any npc_spot.
+const SIGNPOST_CLEAR := 40.0
+
+
+## WU-481: npc_spots (and the npc spots of NPCs living in the region, checked by the caller) must be >= SIGNPOST_CLEAR from every travel place.
+static func signpost_clearance_errors(region: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	for spot: Variant in region.get("npc_spots", []):
+		if not (spot is Array and (spot as Array).size() == 2):
+			continue
+		var sp := Vector2(float(spot[0]), float(spot[1]))
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") != "travel":
+				continue
+			var pp: Array = place.get("pos", [0, 0])
+			if sp.distance_to(Vector2(float(pp[0]), float(pp[1]))) < SIGNPOST_CLEAR:
+				errors.append("Region '%s' npc_spot %s is within %d px of signpost '%s'" % [region["id"], spot, int(SIGNPOST_CLEAR), place.get("display_name", "")])
+	return errors
+
+
+## GFX-085: a region's festival_square must be [x, y] inside the map, 160 px clear of the map edges and 80 px clear of every place.
+static func _festival_square_errors(region: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	var sq: Variant = region["festival_square"]
+	var rid := String(region["id"])
+	if not (sq is Array and (sq as Array).size() == 2 and ((sq as Array)[0] is float or (sq as Array)[0] is int) and ((sq as Array)[1] is float or (sq as Array)[1] is int)):
+		errors.append("Region '%s' festival_square must be [x, y]" % rid)
+		return errors
+	var pos := Vector2(float(sq[0]), float(sq[1]))
+	var size: Array = region.get("map", {}).get("size", [1600, 1000])
+	if pos.x < 0.0 or pos.y < 0.0 or pos.x > float(size[0]) or pos.y > float(size[1]):
+		errors.append("Region '%s' festival_square is outside the map" % rid)
+	elif pos.x < 160.0 or pos.y < 160.0 or pos.x > float(size[0]) - 160.0 or pos.y > float(size[1]) - 160.0:
+		errors.append("Region '%s' festival_square is within 160 px of the map edge" % rid)
+	for place: Dictionary in region.get("places", []):
+		var pp: Array = place.get("pos", [0, 0])
+		if pos.distance_to(Vector2(float(pp[0]), float(pp[1]))) < 80.0:
+			errors.append("Region '%s' festival_square is within 80 px of '%s'" % [rid, place.get("display_name", "")])
+	return errors

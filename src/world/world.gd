@@ -22,6 +22,9 @@ const PLACE_SCRIPTS := {
 	"auction": preload("res://src/world/interactables/auction_house.gd"),
 	"bounty_board": preload("res://src/world/interactables/bounty_board.gd"),
 	"inheritance": preload("res://src/world/interactables/inheritance_grounds.gd"),
+	"shrine": preload("res://src/world/interactables/shrine.gd"),
+	"well": preload("res://src/world/interactables/well.gd"),
+	"coop": preload("res://src/world/interactables/coop.gd"),
 }
 ## Place keys that are layout, not script properties.
 const LAYOUT_KEYS := ["type", "pos"]
@@ -32,6 +35,8 @@ const FAMILY_HOME_SCRIPT := preload("res://src/world/interactables/family_home.g
 ## Placeholder body color of generated NPCs by gender.
 const GENDER_COLORS := {"male": Color("8fb3e0"), "female": Color("e6a3c4")}
 
+const CAMERA_MARGIN_TOP := 40
+const CAMERA_MARGIN_BOTTOM := 60
 var map_size := Vector2(1600, 1000)
 ## Canvas origin last seen by _process (WU-269).
 var _last_canvas_origin := Vector2.INF
@@ -43,7 +48,12 @@ var _decor: Array[Dictionary] = []
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
 var _season := ""
+var _relief: Array[Dictionary] = []  # GFX-109
+var _edge: Array[Dictionary] = []  # GFX-110
 var _ambient: Node
+var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
+var _cloud_wisps: CloudWisps  # GFX-113: drifting wisps over a mountain region (map.high.wisps)
+var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
@@ -59,6 +69,8 @@ var _lightning_timer: Timer
 var _strikes := 0
 ## Festival stalls beside merchants (WU-097), rebuilt when the day or region changes.
 var _stalls: Array[Node2D] = []
+## GFX-093: bunting and lanterns around the festival square.
+var _festival_decor: FestivalDecor = null
 var _merchant_spots: Array[Vector2] = []
 var _timed_places: Dictionary = {}  # display_name -> node, places with open_days (MARKET-002)
 
@@ -94,6 +106,7 @@ func _ready() -> void:
 	_build_npcs()
 	_build_roamers()
 	_build_forage()
+	_build_eggs()
 	_build_bounds()
 	_build_landmark_bodies()
 	_limit_camera()
@@ -108,13 +121,13 @@ func _ready() -> void:
 	if hud != null:
 		hud.hints_changed.connect(_mark_hinted.bind(hud))
 		_mark_hinted(hud)
-	EventBus.ui_modal_changed.connect(func(is_open: bool):
-		player.input_enabled = not is_open
-		_greet_modal = is_open)
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
 	EventBus.region_changed.connect(_on_region_changed)
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
 	EventBus.forage_changed.connect(_build_forage)
+	EventBus.pickup_noted.connect(_on_pickup_noted)
+	EventBus.forage_changed.connect(_build_eggs)
 	get_tree().auto_accept_quit = false
 
 
@@ -128,8 +141,10 @@ func _build_season_tint() -> void:
 
 
 func _on_days_advanced(_days: int) -> void:
+	queue_redraw()  # WU-494: the jetty project may have moved on
 	_build_roamers()
 	_build_forage()
+	_build_eggs()
 	_refresh_stalls()
 	_refresh_timed_places()
 	var season := Calendar.season_of(GameClock.total_days)
@@ -181,6 +196,8 @@ func _mist_strength() -> float:
 ## Rebuilds the particle layer for the region, season and "Ambient effects" setting.
 func _refresh_ambient() -> void:
 	_refresh_village_life()
+	_refresh_mist_bands()
+	_refresh_cloud_wisps()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -204,6 +221,28 @@ func _refresh_ambient() -> void:
 	_start_lightning()
 
 
+## GFX-113: slow cloud wisps over the cliffs of a map.high region; off with Ambient effects, still under reduced motion.
+func _refresh_cloud_wisps() -> void:
+	if _cloud_wisps == null:
+		_cloud_wisps = CloudWisps.new()
+		_cloud_wisps.name = "CloudWisps"
+		add_child(_cloud_wisps)
+	var on: bool = bool(Settings.get_value("ambient_effects"))
+	_cloud_wisps.setup(_region if on else {}, map_size, not MotionFx.reduced())
+
+
+## GFX-091: soft mist bands above the ground, under figures; off with Ambient effects.
+func _refresh_mist_bands() -> void:
+	if _mist_bands == null:
+		_mist_bands = MistBands.new()
+		_mist_bands.name = "MistBands"
+		add_child(_mist_bands)
+		move_child(_mist_bands, 0)
+	# Only regions that name map.mist are misty; the 1.0 default of _mist_strength() is for fog sheets.
+	var on: bool = bool(Settings.get_value("ambient_effects")) and _region.get("map", {}).has("mist")
+	_mist_bands.setup(GameState.current_region, _mist_strength() if on else 0.0, map_size, not MotionFx.reduced())
+
+
 ## GFX-040: chimney smoke, pond ripples, jumping fish and birds, rebuilt on season/weather change.
 func _refresh_village_life() -> void:
 	if _village_life == null:
@@ -218,6 +257,11 @@ func _refresh_village_life() -> void:
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
 	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced())
+	if _critters == null:
+		_critters = CritterLayer.new()
+		_critters.name = "Critters"
+		add_child(_critters)
+	_critters.setup(_region, _season, GameClock.total_days, bool(Settings.get_value("ambient_effects")), MotionFx.reduced())
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
@@ -255,6 +299,9 @@ func _refresh_stalls() -> void:
 	for stall in _stalls:
 		stall.queue_free()
 	_stalls.clear()
+	if _festival_decor != null:
+		_festival_decor.queue_free()
+		_festival_decor = null
 	var festival := ""
 	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, GameState.current_region):
 		if WorldEvents.is_festival(GameState.data, String(instance["id"])):
@@ -262,14 +309,37 @@ func _refresh_stalls() -> void:
 			break
 	if festival == "":
 		return
-	for spot in _merchant_spots:
+	var caption := FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
+	var spots: Array[Vector2] = []
+	var decor_square: Variant = festival_square()
+	if decor_square != null:
+		_festival_decor = FestivalDecor.new()
+		add_child(_festival_decor)
+		move_child(_festival_decor, player.get_index())
+		_festival_decor.setup(festival, decor_square as Vector2, Folk.festival_blockers(GameState.data, GameState.current_region), map_size)
+	# GFX-085: a region with a festival_square holds its contest stall (and crowd) there.
+	var square: Variant = festival_square()
+	if square != null and GameState.data.world_events.get(festival, {}).has("contest"):
+		spots.append(square as Vector2)
+		for spot in _merchant_spots:
+			spots.append(spot)
+	else:
+		spots.append_array(_merchant_spots)
+	for i in spots.size():
 		var stall := FestivalStall.new()
 		stall.event_id = festival
-		stall.position = spot
-		stall.caption = FestivalContest.crowd_caption(GameState.data, festival, _contest_open(festival))
+		stall.position = spots[i]
+		stall.caption = caption if i == 0 else ("" if square != null else caption)
 		add_child(stall)
 		move_child(stall, player.get_index())
 		_stalls.append(stall)
+
+
+## GFX-085: the region's festival_square in map px, or null.
+func festival_square() -> Variant:
+	if not _region.has("festival_square"):
+		return null
+	return _vec(_region["festival_square"])
 
 
 ## Whether `event_id` has a contest here the player has not entered this year (WU-457).
@@ -329,6 +399,17 @@ func _notification(what: int) -> void:
 
 ## Travel or an artifact respawn moved the player: rebuild the world for the
 ## new region (only when this world is the running scene, not a preview or test).
+func _on_modal_changed(is_open: bool) -> void:
+	player.input_enabled = not is_open
+	_greet_modal = is_open
+
+
+## GFX-092: "+1 <item>" with its icon floats above the player.
+func _on_pickup_noted(item_id: String, amount: int) -> void:
+	if player != null:
+		PickupFloat.spawn(self, GameState.data, item_id, amount, player.position)
+
+
 func _on_region_changed(region_id: String) -> void:
 	if get_tree().current_scene == self:
 		if GameState.last_travel_from != "" and GameState.last_travel_from != region_id and GameState.player != null and GameState.player.alive:
@@ -383,10 +464,15 @@ func _build_decor() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(GameState.current_region)
 	_decor = Scenery.place(_region, rng)
-	var g := SectCourt.gate(_region)
-	if not g.is_empty():  # GFX-071: nothing grows on the gate or its name stele
-		var keep := SectCourt.gate_rect(g).grow(SectCourt.GATE_KEEP)
-		_decor = _decor.filter(func(d: Dictionary) -> bool: return not keep.intersects(Rect2(d["pos"] - Vector2(16, 44), Vector2(32, 60))))
+	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
+	_relief = Scenery.relief_layout(_region)
+	_edge = Scenery.edge_props(_region, map_size)
+	if not _relief.is_empty():  # GFX-109: nothing grows on a rock ledge or boulder
+		_decor = _decor.filter(func(d: Dictionary) -> bool:
+			for it: Dictionary in _relief:
+				if (it["rect"] as Rect2).grow(6.0).has_point(d["pos"]):
+					return false
+			return true)
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
 
@@ -429,7 +515,7 @@ func _build_tracks(blocked: Array[Rect2], great_spot: Vector2) -> void:
 	if enemy != "":
 		var spot := great_spot
 		if spot.x < 0.0:
-			if Wildlife.next_great_day(GameState.data, GameState.current_region, day, GameState.player.realm_index) == day:
+			if Wildlife.next_great_day(GameState.data, GameState.current_region, day, GameState.player.realm_index, GameState.player) == day:
 				enemy = ""  # beast day, but it is down or gone: no prints
 			else:
 				var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
@@ -482,6 +568,8 @@ func _build_forage() -> void:
 	for d in _decor:
 		if d["kind"] == "tree":
 			trees.append(d["pos"])
+	if _festival_decor != null:  # GFX-097: no forage inside the festival ring on festival days
+		blocked.append(Rect2(_festival_decor.position, Vector2.ZERO).grow(FestivalDecor.RADIUS + 20.0))
 	var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
 	for node in get_children():
 		if node is Roamer and not node.is_queued_for_deletion():
@@ -501,12 +589,34 @@ func _build_forage() -> void:
 		move_child(pickup, player.get_index())
 
 
+## CRIT-001: one egg node per unpicked egg of today (the hens' spots are fixed, the eggs are seeded per day).
+func _build_eggs() -> void:
+	if not GameState.has_session():
+		return
+	var wanted := {}
+	for e: Dictionary in GameState.eggs_here():
+		wanted[int(e["index"])] = e
+	for node in get_children():
+		if node is EggPickup and not node.is_queued_for_deletion():
+			if wanted.has(node.index):
+				wanted.erase(node.index)
+			else:
+				node.queue_free()
+	for index: int in wanted:
+		var e: Dictionary = wanted[index]
+		var item_name := String(GameState.data.items.get(String(e["item"]), {}).get("name", "Egg"))
+		var egg := EggPickup.new()
+		egg.setup(index, item_name, e["pos"])
+		add_child(egg)
+		move_child(egg, player.get_index())
+
+
 ## An engaged beast fades away; the rest stay.
 func _on_roamers_changed() -> void:
 	var alive := {}
 	for r: Dictionary in GameState.roamers_here():
 		alive[int(r["slot"])] = true
-	if not alive.has(Wildlife.GREAT_SLOT) and not _tracks.is_empty() and Wildlife.next_great_day(GameState.data, GameState.current_region, GameClock.total_days, GameState.player.realm_index) == GameClock.total_days:
+	if not alive.has(Wildlife.GREAT_SLOT) and not _tracks.is_empty() and Wildlife.next_great_day(GameState.data, GameState.current_region, GameClock.total_days, GameState.player.realm_index, GameState.player) == GameClock.total_days:
 		_tracks = []  # WU-450: the beast was beaten today; its prints go with it
 		queue_redraw()
 	var present := {}
@@ -533,7 +643,7 @@ func _on_roamers_changed() -> void:
 func _build_places() -> void:
 	_timed_places.clear()
 	for place: Dictionary in _region.get("places", []):
-		if place.has("open_days"):
+		if place.has("open_days") or place.has("festival_only"):
 			continue  # MARKET-002: _refresh_timed_places() adds it on its open days
 		_make_place(place)
 	_refresh_timed_places()
@@ -544,11 +654,11 @@ func _build_places() -> void:
 ## MARKET-002: adds the places with `open_days` that are open today and removes the ones that closed.
 func _refresh_timed_places() -> void:
 	for place: Dictionary in _region.get("places", []):
-		if not place.has("open_days"):
+		if not place.has("open_days") and not place.has("festival_only"):
 			continue
 		var place_name := String(place.get("display_name", ""))
 		var existing: Node = _timed_places.get(place_name)
-		var open := Places.is_open(place, GameClock.total_days)
+		var open := Places.is_open(place, GameClock.total_days) and Places.festival_open(place, GameState.world_events, GameState.current_region, GameClock.total_days)
 		if open and existing == null:
 			_timed_places[place_name] = _make_place(place)
 		elif not open and existing != null:
@@ -560,14 +670,23 @@ func _make_place(place: Dictionary) -> Interactable:
 	var node: Interactable = PLACE_SCRIPTS[place["type"]].new()
 	node.position = _vec(place.get("pos", [0, 0]))
 	node.art_kind = place["type"]
+	node.building_style = String(_region.get("map", {}).get("building_style", "thatch"))
 	for key in place:
 		if LAYOUT_KEYS.has(key):
 			continue
 		node.set(key, _convert(place[key], node.get(key)))
+	if place["type"] == "explore":
+		node.art_kind = PixelPlace.explore_kind(String(place.get("look", "cave")), place.get("explore_tags", []))
+		if place.get("look", "") == "woods":
+			node.color = PixelPlace.woods_color(_region.get("map", {}), node.color)  # GFX-104
+	if place["type"] == "gather":
+		node.art_kind = PixelPlace.gather_kind(String(place.get("look", "patch")))
+	if place["type"] == "secret_realm":
+		node.art_kind = PixelPlace.realm_kind(String(place.get("look", "rift")))
 	# Add before the player so the player draws on top.
 	add_child(node)
 	move_child(node, player.get_index())
-	if place["type"] == "merchant" and not place.has("open_days"):
+	if place["type"] == "merchant" and not place.has("open_days") and not place.has("festival_only"):
 		_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
 	return node
 
@@ -623,7 +742,7 @@ func _build_npcs() -> void:
 		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
-		node.position = _vec(def.get("pos", [0, 0]))
+		node.position = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)  # FOLK-017, WU-484
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)
@@ -678,9 +797,8 @@ func _build_generated_npcs() -> void:
 	if _region.has("family_home"):
 		avoid.append(_vec(_region["family_home"].get("pos", [0, 0])))
 	var spots := Npcs.spot_positions(people.size() + family.size(), _region.get("npc_spots", []), player.position, avoid)
-	var gate := SectCourt.gate(_region)
-	for i in spots.size():  # GFX-076: nobody stands in the gate
-		spots[i] = SectCourt.nudge_off_gate(spots[i], gate)
+	for i in spots.size():  # GFX-076, WU-484: nobody stands in the gate
+		spots[i] = SectCourt.settle_stand(spots[i], _region, false)
 	if not family.is_empty():
 		var split := FamilyHome.split_spots(spots, family.size(), _vec(_region["family_home"].get("pos", [0, 0])))
 		spots = split[1]
@@ -692,10 +810,21 @@ func _build_generated_npcs() -> void:
 			neighbours.append(c)
 	var visitor := GameState.visitor_today()
 	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days), visitor, GameState.visit_place_for(visitor), GameState.together_places())
+	for id: String in stands:  # WU-484: nobody on a roof or in the gate
+		stands[id] = SectCourt.settle_stand(stands[id], _region, false)
 	var centre: Variant = _crowd_centre()
 	if centre != null:
 		var crowd_avoid: Array[Vector2] = avoid.duplicate()
+		for stall in _stalls:  # no villager stands on a stall or under its caption
+			crowd_avoid.append(stall.position)
+			if stall.caption != "":
+				crowd_avoid.append(stall.position + Vector2(0, -40))
 		var crowd := FestivalContest.crowd_positions(centre as Vector2, neighbours.size(), crowd_avoid)
+		if festival_square() != null:  # GFX-090: the square's crowd stands on the ring, off stalls and solid landmarks
+			var blockers := Folk.festival_blockers(GameState.data, GameState.current_region)
+			for stall in _stalls:
+				blockers.append(Rect2(stall.position - Vector2(35, 30), Vector2(70, 60)))
+			crowd = Folk.festival_ring(centre as Vector2 - Vector2(0, 20), mini(neighbours.size(), FestivalContest.CROWD_MAX), blockers, [player.position] as Array[Vector2])
 		for k in crowd.size():
 			stands[neighbours[k].id] = crowd[k]
 	for i in people.size():
@@ -749,6 +878,8 @@ func _build_celebration_lanterns(people: Array[CharacterData], stands: Dictionar
 ## Labels stay on screen as the camera moves (WU-269).
 func _process(_delta: float) -> void:
 	var origin := get_canvas_transform().origin
+	if _critters != null and player != null:
+		_critters.player_pos = player.position  # GFX-088
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
 	_track_footprints()
 	if moved:
@@ -862,9 +993,21 @@ func _limit_camera() -> void:
 	if camera == null:
 		return
 	camera.limit_left = 0
-	camera.limit_top = 0
+	camera.limit_top = 0  # WU-499: no empty band above the region (the margin strip stays painted as a fallback)
 	camera.limit_right = int(map_size.x)
-	camera.limit_bottom = int(map_size.y)
+	camera.limit_bottom = int(map_size.y) + CAMERA_MARGIN_BOTTOM  # WU-472: scroll clear of the HUD bars (the border draws past the edge)
+
+
+## WU-485: the four strips (top, bottom, left, right) that cover every camera-reachable area outside the map.
+static func margin_rects(size: Vector2) -> Array[Rect2]:
+	var side := 64.0
+	var out: Array[Rect2] = [
+		Rect2(-side, -CAMERA_MARGIN_TOP, size.x + 2.0 * side, CAMERA_MARGIN_TOP),
+		Rect2(-side, size.y, size.x + 2.0 * side, CAMERA_MARGIN_BOTTOM),
+		Rect2(-side, 0, side, size.y),
+		Rect2(size.x, 0, side, size.y),
+	]
+	return out
 
 
 ## The camera zoom that makes one sprite pixel a whole number of screen pixels (GFX-009).
@@ -910,7 +1053,7 @@ func _draw() -> void:
 		var sc := float(Sprites.scale())
 		var gseason := GroundTiles.ground_season(_season, map)
 		var flowers := ["Spring", "Summer"].has(_season)
-		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc))
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc), float(map.get("scree_density", 1.0)))
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
@@ -922,20 +1065,190 @@ func _draw() -> void:
 			var psc := float(Sprites.scale())
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
+			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
+	_draw_relief(map)
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	_draw_terraces()
+	_draw_high_pines(map)
 	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
 	for d in _decor:
 		_draw_decor(d)
+	_draw_margins(map, rid)
 	var border_tile := Sprites.first(["border_" + rid, "border"])
-	if border_tile != null:
+	if not _edge.is_empty():
+		_draw_edge()  # GFX-110: hedge, treeline, wall, cliff or reeds instead of the border line
+	elif border_tile != null:
 		for strip: Rect2 in [Rect2(0, 0, map_size.x, 6), Rect2(0, map_size.y - 6, map_size.x, 6), Rect2(0, 6, 6, map_size.y - 12), Rect2(map_size.x - 6, 6, 6, map_size.y - 12)]:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-110: the strips past the map edge show the region's own ground, darkening toward the outer edge (WU-485: no engine grey).
+func _draw_margins(map: Dictionary, rid: String) -> void:
+	var sc := float(Sprites.scale())
+	var ground_color := Color(map.get("ground", "4d6b3c"))
+	var gseason := GroundTiles.ground_season(_season, map)
+	var style := str(map.get("ground_style", "grass"))
+	var strips := margin_rects(map_size)
+	for i in strips.size():
+		var m: Rect2 = strips[i]
+		var tex := GroundTiles.ground_texture(ground_color, rid + "|margin%d" % i, Vector2i(ceili(m.size.x / sc), ceili(m.size.y / sc)), false, gseason, style, [], float(map.get("scree_density", 1.0)))
+		draw_texture_rect(tex, Rect2(m.position, Vector2(tex.get_size()) * sc), false)
+		var bands := 8
+		for b in bands:
+			var a := 0.08 + 0.09 * float(b)  # rising toward the outer edge
+			var f0 := float(b) / bands
+			var f1 := float(b + 1) / bands
+			var r: Rect2
+			match i:
+				0: r = Rect2(m.position.x, m.end.y - m.size.y * f1, m.size.x, m.size.y * (f1 - f0) + 1.0)  # top: outer edge is the top
+				1: r = Rect2(m.position.x, m.position.y + m.size.y * f0, m.size.x, m.size.y * (f1 - f0) + 1.0)
+				2: r = Rect2(m.end.x - m.size.x * f1, m.position.y, m.size.x * (f1 - f0) + 1.0, m.size.y)
+				_: r = Rect2(m.position.x + m.size.x * f0, m.position.y, m.size.x * (f1 - f0) + 1.0, m.size.y)
+			draw_rect(r, Color(0, 0, 0, a))
+
+
+## GFX-110: draws the code-drawn edge props (Scenery.edge_props).
+func _draw_edge() -> void:
+	var px := float(Sprites.scale())
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for it: Dictionary in _edge:
+		var r: Rect2 = it["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(it["seed"])
+		var c := r.get_center()
+		match it["kind"]:
+			"hedge":
+				var g := Color("3f7a35").darkened(rng.randf_range(0.0, 0.25))
+				draw_circle(c + Vector2(px, px * 2.0), minf(r.size.x, r.size.y) * 0.6, g.darkened(0.5))
+				draw_circle(c, minf(r.size.x, r.size.y) * 0.6, g)
+				draw_circle(c + Vector2(-px * 2.0, -px * 2.0), minf(r.size.x, r.size.y) * 0.3, g.lightened(0.25))
+				if rng.randf() < 0.3:
+					draw_rect(Rect2(c + Vector2(px, 0), Vector2(px, px)), Color("e8a0b8"))
+				if winter:
+					draw_rect(Rect2(c + Vector2(-px * 3.0, -px * 4.0), Vector2(px * 6.0, px * 2.0)), Color("e8eef4"))
+			"treeline":
+				var rad := minf(r.size.x, r.size.y) * 0.5 + px * 2.0
+				var leaf := Color("2c5a3a").darkened(rng.randf_range(0.0, 0.3))
+				draw_rect(Rect2(c.x - px, c.y + rad * 0.4, px * 2.0, rad * 0.6), Color("4a3524"))
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -rad), c + Vector2(rad * 0.8, rad * 0.5), c + Vector2(-rad * 0.8, rad * 0.5)]), leaf)
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -rad * 0.9), c + Vector2(rad * 0.3, rad * 0.1), c + Vector2(-rad * 0.5, rad * 0.1)]), leaf.lightened(0.2))
+				if winter:
+					draw_rect(Rect2(c.x - px, c.y - rad, px * 2.0, px * 2.0), Color("e8eef4"))
+			"wall":
+				var stone := Color("8a8478").darkened(rng.randf_range(0.0, 0.15))
+				draw_rect(r, stone.darkened(0.4))
+				var inner := r.grow(-px)
+				draw_rect(inner, stone)
+				if it["side"] < 2:
+					draw_rect(Rect2(inner.position, Vector2(inner.size.x, px * 2.0)), stone.lightened(0.25))
+					draw_line(Vector2(inner.position.x + inner.size.x * 0.5, inner.position.y + px * 2.0), Vector2(inner.position.x + inner.size.x * 0.5, inner.end.y), stone.darkened(0.35), px)
+				else:
+					draw_rect(Rect2(inner.position, Vector2(px * 2.0, inner.size.y)), stone.lightened(0.25))
+					draw_line(Vector2(inner.position.x + px * 2.0, inner.position.y + inner.size.y * 0.5), Vector2(inner.end.x, inner.position.y + inner.size.y * 0.5), stone.darkened(0.35), px)
+			"cliff":
+				_draw_rock_mass(r, int(it["seed"]), int(it["side"]), float(it.get("h", 1.0)), _rock_color(), winter)
+			"reeds":
+				var stalk := Color("7a8a4a").darkened(rng.randf_range(0.0, 0.3))
+				for n in 3:
+					var x := r.position.x + rng.randf_range(0.0, r.size.x)
+					var y := r.position.y + rng.randf_range(0.0, r.size.y)
+					draw_line(Vector2(x, y + px * 6.0), Vector2(x + rng.randf_range(-px, px), y - px * 4.0), stalk, px)
+					if n == 0:
+						draw_rect(Rect2(x - px * 0.5, y - px * 7.0, px, px * 3.0), Color("5a3a22"))
+
+
+## GFX-111: the region's rock colour (decor.rock_color).
+func _rock_color() -> Color:
+	return Color(String(_region.get("map", {}).get("decor", {}).get("rock_color", "8a939c")))
+
+
+## GFX-111: a rock mass with a jagged silhouette facing into the map: shaded face, cracks, a lit lip along the
+## top silhouette only, pebbles in front. `side` 0 top, 1 bottom, 2 left, 3 right edge (landmark cliffs use 1).
+func _draw_rock_mass(r: Rect2, seed_value: int, side: int, h: float, rock: Color, snowy: bool) -> void:
+	var px := float(Sprites.scale())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var horizontal := side < 2
+	var length := r.size.x if horizontal else r.size.y
+	var depth := (r.size.y if horizontal else r.size.x) * h
+	length += px * 3.0  # neighbours overlap a few px, so no seams show
+	var u0 := (r.position.x if horizontal else r.position.y) - px * 1.5
+	var local := Scenery.jagged_outline(Rect2(0, 0, length, depth), seed_value, maxi(5, int(length / 6.0)), minf(depth * 0.35, 10.0))
+	var pts := PackedVector2Array()
+	for p in local:
+		match side:
+			0: pts.append(Vector2(u0 + p.x, r.end.y - p.y))
+			1: pts.append(Vector2(u0 + p.x, r.position.y + (r.size.y - depth) + p.y))
+			2: pts.append(Vector2(r.end.x - p.y, u0 + p.x))
+			_: pts.append(Vector2(r.position.x + (r.size.x - depth) + p.y, u0 + p.x))
+	var shade := rock.darkened(0.3 + rng.randf_range(0.0, 0.1))
+	draw_colored_polygon(pts, shade)
+	var c := (pts[0] + pts[pts.size() - 1]) * 0.5
+	for k in rng.randi_range(1, 2):
+		var t := rng.randf_range(0.2, 0.8)
+		var tip: Vector2 = pts[1 + int(t * (pts.size() - 3))]
+		draw_line(tip, tip.lerp(c, rng.randf_range(0.5, 0.9)) + Vector2(px * 2.0, 0), shade.darkened(0.4), px)
+	var rim := pts.slice(1, pts.size() - 1)
+	draw_polyline(rim, rock.lightened(0.25), px * 2.0)
+	if snowy:
+		draw_polyline(rim, Color("e8eef4"), px * 3.0)
+	for k in rng.randi_range(0, 2):
+		var q: Vector2 = rim[rng.randi_range(0, rim.size() - 1)]
+		var off := Vector2(0, -px * 3.0) if side == 1 else (Vector2(0, px * 3.0) if side == 0 else (Vector2(px * 3.0, 0) if side == 2 else Vector2(-px * 3.0, 0)))
+		draw_rect(Rect2(q + off, Vector2(px * 2.0, px * 2.0)), rock.darkened(0.15))
+
+
+## GFX-109: rock ledges (lit top, dark face, cracks), boulder clusters and snow drifts, in crisp scaled pixels.
+func _draw_relief(map: Dictionary) -> void:
+	if _relief.is_empty():
+		return
+	var px := float(Sprites.scale())
+	var ground := Color(map.get("ground", "4d6b3c"))
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	var gseason := GroundTiles.ground_season(_season, map)
+	var winter := gseason == "Winter"
+	var summer := gseason == "Summer"
+	var snow_col := Color("e8eef4")
+	var shade_col := Color("9fb0c2")
+	for it: Dictionary in _relief:
+		var r: Rect2 = it["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(it["seed"])
+		match it["kind"]:
+			"ledge":
+				var face := rock.darkened(0.35)
+				draw_rect(Rect2(r.position.x + px, r.end.y, r.size.x - px * 2.0, px * 2.0), Color(0, 0, 0, 0.25))
+				var outline := Scenery.jagged_outline(r, int(it["seed"]), maxi(5, int(r.size.x / 10.0)), minf(px * 3.0, r.size.y * 0.3))
+				draw_colored_polygon(outline, face)
+				draw_polyline(outline.slice(1, outline.size() - 1), rock.lightened(0.15), px * 2.0)
+				for c in rng.randi_range(2, 3):
+					var cx := r.position.x + rng.randf_range(0.1, 0.9) * r.size.x
+					draw_line(Vector2(cx, r.position.y + px * 4.0), Vector2(cx + px * 2.0, r.end.y - px * 2.0), face.darkened(0.3), px)
+				draw_rect(r, face.darkened(0.5), false, px)
+				if winter:
+					draw_rect(Rect2(r.position.x, r.position.y - px, r.size.x, px * 2.0), snow_col)
+					draw_rect(Rect2(r.position.x, r.end.y, r.size.x * 0.7, px * 3.0), snow_col)
+			"boulders":
+				for n in rng.randi_range(3, 5):
+					var rad := rng.randf_range(8.0, 16.0)
+					var c := r.position + Vector2(rng.randf_range(rad, maxf(r.size.x - rad, rad)), rng.randf_range(rad, maxf(r.size.y - rad, rad)))
+					draw_circle(c + Vector2(px, px * 2.0), rad, rock.darkened(0.5))
+					draw_circle(c, rad, rock)
+					draw_circle(c + Vector2(rad * 0.3, rad * 0.35), rad * 0.6, rock.darkened(0.25))
+					draw_circle(c + Vector2(-rad * 0.3, -rad * 0.3), rad * 0.4, rock.lightened(0.3))
+			"drift":
+				var dr := r
+				if summer:
+					dr = Rect2(r.position + Vector2(r.size.x * 0.25, 0.0), Vector2(r.size.x * 0.5, r.size.y * 0.5))
+				draw_rect(Rect2(dr.position + Vector2(px, 0), dr.size - Vector2(px * 2.0, 0)), snow_col)
+				draw_rect(Rect2(dr.position.x, dr.position.y + px, dr.size.x, dr.size.y - px * 2.0), snow_col)
+				draw_rect(Rect2(dr.position.x + px, dr.end.y - px, dr.size.x - px * 2.0, px), shade_col)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).
@@ -944,7 +1257,11 @@ func _draw_sect_courts() -> void:
 	for place: Dictionary in _region.get("places", []):
 		if SectCourt.is_sect_hall(place):
 			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
-			SectCourt.draw_court(self, hall, SectCourt.court_rect(place, _region), snowy, SectCourt.court_style(_region))
+			var court := SectCourt.court_rect(place, _region)
+			SectCourt.draw_court(self, hall, court, snowy, SectCourt.court_style(_region))
+			var high: Variant = _region.get("map", {}).get("high", null)
+			if high is Dictionary and bool(high.get("rail", false)):
+				SectCourt.draw_rail(self, court, snowy)
 	var g := SectCourt.gate(_region)
 	if not g.is_empty():
 		SectCourt.draw_gate(self, g, ThemeDB.fallback_font)
@@ -967,6 +1284,60 @@ func _draw_tiled(tile: Texture2D, area: Rect2) -> void:
 		y += step.y
 
 
+## GFX-079: stone steps down a slope (walkable): pale treads with a dark riser line under each, side kerbs.
+func _draw_steps(r: Rect2) -> void:
+	draw_rect(r, Color("9aa3a8"))
+	var y := r.position.y
+	var i := 0
+	while y < r.end.y:
+		var h := minf(14.0, r.end.y - y)
+		draw_rect(Rect2(r.position.x, y, r.size.x, h), Color("b4bcc0") if i % 2 == 0 else Color("a5aeb2"))
+		draw_rect(Rect2(r.position.x, y, r.size.x, 2.0), Color("d6dde0"))  # GFX-113: the lit tread edge
+		draw_rect(Rect2(r.position.x, y + h - 3.0, r.size.x, 3.0), Color("6f787e"))
+		y += 14.0
+		i += 1
+	draw_rect(Rect2(r.position.x - 4.0, r.position.y, 4.0, r.size.y), Color("5f686e"))
+	draw_rect(Rect2(r.end.x, r.position.y, 4.0, r.size.y), Color("5f686e"))
+	# GFX-113: stone lanterns on both sides, every other tread, in a high (map.high) region.
+	if _region.get("map", {}).get("high", null) is Dictionary:
+		var ly := r.position.y + 10.0
+		while ly < r.end.y - 6.0:
+			for lx in [r.position.x - 14.0, r.end.x + 14.0]:
+				draw_rect(Rect2(lx - 5.0, ly + 8.0, 10.0, 4.0), Color("5f686e"))
+				draw_rect(Rect2(lx - 3.0, ly - 1.0, 6.0, 9.0), Color("8d959b"))
+				draw_rect(Rect2(lx - 6.0, ly - 8.0, 12.0, 7.0), Color("b4bcc0"))
+				draw_rect(Rect2(lx - 3.0, ly - 6.0, 6.0, 3.0), Color("f2c75c"))
+			ly += 56.0
+
+
+## GFX-113: pines leaning out over the top cliffs of a map.high region (Scenery.high_pines).
+func _draw_high_pines(map: Dictionary) -> void:
+	var base := Color(str(map.get("decor", {}).get("tree_color", "2e5a2a")))
+	var snowy := Scenery.is_snowy(_season) and not bool(map.get("no_snow", false))
+	for p: Dictionary in Scenery.high_pines(_region):
+		draw_set_transform(p["pos"], float(p["lean"]) * 0.28, Vector2.ONE)
+		_draw_tree_pine(Vector2.ZERO, 1.15, base, snowy)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## GFX-079: a cloud-sea band: layered pale translucent bands with rounded puffs; static (it never moves).
+func _draw_clouds(r: Rect2) -> void:
+	if _region.get("map", {}).get("high", null) is Dictionary:
+		# GFX-113: a pale cloud sea behind the landmark, fading downward.
+		for k in 6:
+			draw_rect(Rect2(r.position.x, r.end.y + float(k) * 10.0, r.size.x, 10.0), Color(0.93, 0.97, 1.0, 0.30 - 0.05 * k))
+	for layer in 3:
+		var band := Rect2(r.position.x, r.position.y + r.size.y * layer / 3.0, r.size.x, r.size.y / 3.0 + 4.0)
+		draw_rect(band, Color(0.92, 0.96, 1.0, 0.16 + 0.07 * layer))
+		var x := r.position.x + 30.0 * layer
+		var k := 0
+		while x < r.end.x:
+			var puff := 26.0 + float((k * 37 + layer * 19) % 24)
+			draw_circle(Vector2(x, band.position.y + 4.0), puff * 0.5, Color(0.95, 0.98, 1.0, 0.14 + 0.05 * layer))
+			x += 90.0 + float((k * 53) % 40)
+			k += 1
+
+
 ## One map.landmarks entry: its `landmark_<kind>` sprite scaled into the rect, else placeholder art (GFX-008).
 func _draw_landmark(lm: Dictionary) -> void:
 	var size := _vec(lm["size"])
@@ -983,11 +1354,23 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if lm["kind"] == "jetty":
 		_draw_jetty(lm)
 		return
+	if lm["kind"] == "steps":
+		_draw_steps(r)
+		return
+	if lm["kind"] == "clouds":
+		_draw_clouds(r)
+		return
+	if lm["kind"] == "cliff":
+		# GFX-111: landmark cliffs use the same rock template as the edge props, not the brown timber palette.
+		_draw_rock_mass(r, hash(str(lm["pos"])), 1, 1.0, _rock_color(), Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false)))
+		return
 	if PixelLandmark.supports(str(lm["kind"])):
-		var water := Color(str(lm["color"])) if lm.has("color") else Color("3f7fa8")
+		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced())
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")))
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
+		if lm["kind"] == "house":
+			PlaceArt.contact_shadow(self, Vector2(r.get_center().x, r.end.y), px.x)
 		var origin := Vector2(r.get_center().x - px.x / 2.0, r.end.y - px.y)
 		draw_texture_rect(ptex, Rect2(origin, px), false)
 		_draw_season_overlay(str(lm["kind"]), origin, r, ptex.get_size())
@@ -1120,14 +1503,49 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 					pts.append(r.get_center() + Vector2(cos(a) * r.size.x / 2.0, sin(a) * r.size.y / 2.0))
 				draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.9), 3.0)
 		"field":
-			var crop := Scenery.crop_color(_season)
-			var y := 2
-			while y < int(pix.y) - 2:
-				if crop.a > 0.0:
-					draw_rect(Rect2(origin + Vector2(3, y + 1) * sc, Vector2(pix.x - 6, 2) * sc), crop)
-				else:
-					draw_rect(Rect2(origin + Vector2(2, y) * sc, Vector2(pix.x - 4, 3) * sc), Color(0.92, 0.96, 1.0, 0.6))  # GFX-055: snow-covered furrows
-				y += 4
+			_draw_field_overlay(origin, r, pix)
+
+
+## GFX-096: the field's rows by season (sprouts, tall crop, golden rows with sheaves, bare furrows with snow),
+## varied per field position; no snow where map.no_snow.
+func _draw_field_overlay(origin: Vector2, r: Rect2, pix: Vector2) -> void:
+	var sc := float(Sprites.scale())
+	var no_snow := bool(_region.get("map", {}).get("no_snow", false))
+	var look := Scenery.field_look(_season, int(r.position.x) * 31 + int(r.position.y) * 17, no_snow)
+	var color: Color = look["color"]
+	var vertical: bool = look["vertical"]
+	var style: String = look["style"]
+	var cross := int(pix.x) if vertical else int(pix.y)
+	var along := int(pix.y) if vertical else int(pix.x)
+	var i := 2
+	while i < cross - 2:
+		var row := i + 1
+		if style == "bare":
+			if look["snow"]:
+				var a := Vector2(row if vertical else 2, 2 if vertical else row)
+				var b := Vector2(1, along - 4) if vertical else Vector2(along - 4, 1)
+				draw_rect(Rect2(origin + a * sc, b * sc), Color(0.92, 0.96, 1.0, 0.6))
+		elif style == "sprout":
+			var k := 3
+			while k < along - 3:  # small sprouts on dark tilled earth
+				var p := Vector2(row, k) if vertical else Vector2(k, row)
+				draw_rect(Rect2(origin + p * sc, Vector2(1, 1) * sc), color)
+				draw_rect(Rect2(origin + (p + Vector2(0, -1)) * sc, Vector2(1, 1) * sc), color.lightened(0.2))
+				k += 4
+		else:
+			var tall := 2 if style == "golden" else 3
+			var a2 := Vector2(row, 3) if vertical else Vector2(3, row - 1)
+			var b2 := Vector2(1, along - 6) if vertical else Vector2(along - 6, tall)
+			draw_rect(Rect2(origin + a2 * sc, b2 * sc), color)
+			draw_rect(Rect2(origin + a2 * sc, (Vector2(1, along - 6) if vertical else Vector2(along - 6, 1)) * sc), color.lightened(0.18))
+		i += 4
+	if look["sheaves"]:
+		for n in 3:
+			var sp := Vector2(8 + n * maxi(8, along / 4), 3 + n % 2 * 6)
+			if vertical:
+				sp = Vector2(sp.y, sp.x)
+			draw_rect(Rect2(origin + sp * sc, Vector2(2, 3) * sc), Color("e8c86a"))
+			draw_rect(Rect2(origin + (sp + Vector2(0, 2)) * sc, Vector2(2, 1) * sc), Color("8a5a2a"))
 
 
 ## GFX-046: the jetty runs out from the shore into its pond (Scenery.jetty_layout); darker posts stand in the water.
@@ -1136,25 +1554,113 @@ func _draw_jetty(lm: Dictionary) -> void:
 	var r: Rect2 = lay["rect"]
 	var size := _vec(lm["size"])
 	var winter := Scenery.is_snowy(_season)
-	if bool(lay["vertical"]):
-		_draw_jetty_vertical(r, int(lay["toward_water"]), winter)
-	else:
-		var ptex := PixelLandmark.texture("jetty", size)
-		var sc := float(Sprites.scale())
-		var px := Vector2(ptex.get_size()) * sc
-		draw_texture_rect(ptex, Rect2(r.get_center() - px / 2.0, px), false)
-		if winter:
-			draw_rect(Rect2(r.position, Vector2(px.x, sc)), Color("f4f8ff"))
-	if bool(lay["on_water"]):
-		var post := Color("2e2218")
-		var toward: int = int(lay["toward_water"])
-		for off: float in [-9.0, 9.0]:
-			var tip := r.get_center()
-			if bool(lay["vertical"]):
-				tip = Vector2(r.get_center().x + off, r.position.y + 2.0 if toward < 0 else r.end.y - 2.0)
-			else:
-				tip = Vector2(r.position.x + 2.0 if toward < 0 else r.end.x - 2.0, r.get_center().y + off)
-			draw_rect(Rect2(tip - Vector2(3, 3), Vector2(6, 6)), post)
+	var toward: int = -1 if int(lay.get("toward_water", 0)) == 0 else int(lay["toward_water"])
+	var look := Scenery.jetty_stage_look(_jetty_stage())  # WU-494: the village project builds it up in stages
+	var vertical := bool(lay["vertical"])
+	var frac: float = look["frac"]
+	var full := r
+	# The planked part keeps the shore end; the water end stays bare posts until built.
+	if frac < 1.0:
+		var keep := (r.size.y if vertical else r.size.x) * frac
+		var from_water_low := toward < 0
+		if vertical:
+			r = Rect2(r.position.x, r.end.y - keep if from_water_low else r.position.y, r.size.x, keep)
+		else:
+			r = Rect2(r.end.x - keep if from_water_low else r.position.x, r.position.y, keep, r.size.y)
+	if frac > 0.0:
+		if vertical:
+			_draw_jetty_vertical(r, toward, winter)
+		else:
+			var ptex := PixelLandmark.texture("jetty", size)
+			var sc := float(Sprites.scale())
+			var px := Vector2(ptex.get_size()) * sc
+			var src_w := ptex.get_width() * frac
+			var dst := Rect2(r.position.x, r.get_center().y - px.y / 2.0, px.x * frac, px.y)
+			if frac >= 1.0:
+				dst = Rect2(r.get_center() - px / 2.0, px)
+			var shore_right := toward < 0
+			draw_texture_rect_region(ptex, dst, Rect2(ptex.get_width() - src_w if shore_right else 0.0, 0, src_w, ptex.get_height()))
+			if winter:
+				draw_rect(Rect2(dst.position, Vector2(dst.size.x, sc)), Color("f4f8ff"))
+	if bool(look["gaps"]):
+		var gap := Color("4a3524")
+		if vertical:
+			var y := r.position.y + 6.0
+			while y < r.end.y:
+				draw_rect(Rect2(r.position.x + 2.0, y, r.size.x - 4.0, 3.0), gap)
+				y += 14.0
+		else:
+			var x := r.position.x + 6.0
+			while x < r.end.x:
+				draw_rect(Rect2(x, r.position.y + 3.0, 3.0, r.size.y - 6.0), gap)
+				x += 14.0
+	var post := Color("2e2218")
+	for post_rect: Rect2 in Scenery.jetty_posts(_region, lm, _jetty_stage()):  # WU-500: only posts in or at the water
+		draw_rect(post_rect, post)
+	if bool(look["lantern"]):  # a lantern post at the shore end
+		var shore := Vector2(full.get_center().x, full.end.y if toward < 0 else full.position.y) if vertical else Vector2(full.end.x if toward < 0 else full.position.x, full.get_center().y)
+		draw_rect(Rect2(shore + Vector2(-1, -22), Vector2(3, 22)), Color("5a4028"))
+		draw_rect(Rect2(shore + Vector2(-4, -30), Vector2(9, 9)), Color("d9503a"))
+		draw_rect(Rect2(shore + Vector2(-2, -28), Vector2(5, 5)), Color("f4d27a"))
+
+
+## WU-502: the terrace project's stage (0..3) in its own region; -1 anywhere else or with no session.
+func _terrace_stage() -> int:
+	if not GameState.has_session():
+		return -1
+	var idx := SeasonTasks.project_index(GameState.data, "terraces")
+	if idx < 0 or String(SeasonTasks.project_list(GameState.data)[idx].get("region", "")) != GameState.current_region:
+		return -1
+	return SeasonTasks.project_stage(GameState.player, GameState.data, idx)
+
+
+## WU-502: stone edging, stepped terrace rows (lit top edge, dark face), tidy herb lines and a water channel round the
+## Herb Slope place (the one tagged "terraces"), by Scenery.terrace_look. The herb bed itself is drawn over the middle.
+func _draw_terraces() -> void:
+	var stage := _terrace_stage()
+	if stage <= 0:
+		return
+	var look := Scenery.terrace_look(stage)
+	for place: Dictionary in _region.get("places", []):
+		if not (place.get("tags", []) as Array).has("terraces"):
+			continue
+		var size := Vector2(float(place["size"][0]), float(place["size"][1]))
+		var r := Rect2(_vec(place["pos"]) - size / 2.0, size).grow(8.0)
+		var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+		var soil := Color("6b5236") if not winter else Color("8c8f94")
+		var lit := Color("b8a37a") if not winter else Color("e8eef4")
+		var rows: int = look["rows"]
+		if rows > 0:
+			var rh := r.size.y / float(rows)
+			for i in rows:
+				var band := Rect2(r.position.x + float(i) * 6.0, r.position.y + float(i) * rh, r.size.x - float(i) * 12.0, rh)
+				draw_rect(band, soil.darkened(0.15 * float(rows - 1 - i)))
+				draw_rect(Rect2(band.position, Vector2(band.size.x, 3.0)), lit)  # lit stone lip
+				draw_rect(Rect2(band.position.x, band.position.y + 3.0, band.size.x, 3.0), soil.darkened(0.5))  # shadow face
+				if look["herbs"]:
+					var x := band.position.x + 8.0
+					while x < band.end.x - 8.0:
+						draw_rect(Rect2(x, band.position.y + rh * 0.55, 4.0, 5.0), Color("5fae4a") if not winter else Color("9fb0a0"))
+						x += 12.0
+		if look["edging"]:
+			var stone := Color("9a9a92")
+			var x2 := r.position.x
+			while x2 < r.end.x:
+				draw_rect(Rect2(x2, r.end.y - 3.0, 6.0, 4.0), stone)
+				draw_rect(Rect2(x2 + 3.0, r.position.y - 1.0, 6.0, 4.0), stone.lightened(0.15))
+				x2 += 9.0
+		if look["channel"]:
+			draw_rect(Rect2(r.end.x + 1.0, r.position.y + 2.0, 4.0, r.size.y - 4.0), Color("4f8fc0" if not winter else "b8d4e6"))
+
+
+## WU-494: the Village Pond Jetty's project stage (0..3) in its own region; -1 (plain whole jetty) anywhere else or with no session.
+func _jetty_stage() -> int:
+	if not GameState.has_session():
+		return -1
+	var idx := SeasonTasks.project_index(GameState.data, "jetty")
+	if idx < 0 or String(SeasonTasks.project_list(GameState.data)[idx].get("region", "")) != GameState.current_region:
+		return -1
+	return SeasonTasks.project_stage(GameState.player, GameState.data, idx)
 
 
 ## GFX-049: a north-south jetty: boards run across the walkway (3 px with 1 px gaps), dark side rails, and the
@@ -1182,6 +1688,41 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
+## GFX-112: the road surface (ruts, slabs, planks, puddles, tufts) over one path rect.
+func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
+	for t: Dictionary in Scenery.path_tiles(_region, rect):
+		var r: Rect2 = t["rect"]
+		var shade: float = t["shade"]
+		var c := base
+		match str(t["kind"]):
+			"slab":
+				c = base.lightened(0.05 * shade) if shade >= 0.0 else base.darkened(-0.07 * shade)
+				if t["flag"] == "gap":
+					draw_rect(r, base.darkened(0.45))
+					continue
+				draw_rect(r, c)
+				draw_rect(r, base.darkened(0.3), false, 1.0)
+				if t["flag"] == "crack":
+					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
+			"plank":
+				c = Color("7a5a38").lightened(0.06 * shade) if shade >= 0.0 else Color("7a5a38").darkened(-0.1 * shade)
+				draw_rect(r, c)
+				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
+			"rut", "edge":
+				draw_rect(r, base.darkened(0.22 if t["kind"] == "rut" else 0.12))
+			"puddle":
+				draw_rect(r, Color(0.2, 0.26, 0.3, 0.8))
+			"tuft":
+				var g := Color(map_grass_color())
+				draw_rect(r, g.lightened(0.1) if shade > 0.0 else g)
+		if snowy and str(t["kind"]) in ["edge", "tuft", "slab"]:
+			draw_rect(Rect2(r.position, Vector2(r.size.x, minf(2.0, r.size.y))), Color(0.93, 0.95, 1.0, 0.8))
+
+
+func map_grass_color() -> String:
+	return str(_region.get("map", {}).get("decor", {}).get("grass_color", "4f7a3a"))
+
+
 ## The plank bridge wherever a path crosses the stream `r`.
 func _draw_bridges(r: Rect2) -> void:
 	for pr: Array in _region.get("map", {}).get("paths", []):

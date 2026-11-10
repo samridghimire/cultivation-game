@@ -1,0 +1,154 @@
+extends TestCase
+## FOLK-013: friend scenes (data/npcs.json "scenes"): ordering, seen once, one a day, gift, save round-trip.
+
+
+func _root() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root
+
+
+func _start() -> CharacterData:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Scene", gs.data, seeded_rng(77))
+	gs.start_session(c)
+	return c
+
+
+func _set_rain_day(gs: Node) -> void:
+	gs.current_region = "qingshi_village"
+	var clock := _root().get_node("GameClock")
+	while Weather.of(gs.data, "qingshi_village", clock.total_days) != "rain":
+		clock.total_days += 1
+
+
+func test_weather_scene_validates_and_does_not_block_later_ones() -> void:
+	var swing: Dictionary = {}
+	for scene: Dictionary in data().scenes:
+		if String(scene["id"]) == "xiao_ling_old_swing":
+			swing = scene
+	assert_eq(swing["weather"], ["rain"])
+	for kind: Variant in swing["weather"]:
+		assert_true(Weather.KINDS.has(String(kind)))
+	var c := CharacterData.new()
+	assert_eq(String(Folk.scene_due(c, data(), "xiao_ling", 60, null, "", "clear")["id"]), "xiao_ling_lantern_wish",
+		"a waiting rain scene never blocks the later ones")
+
+
+func test_lesson_only_where_teacher_stands() -> void:
+	var c := _start()
+	var gs := _root().get_node("GameState")
+	var got: Array = []
+	var cb := func(id: String, _n: String, _t: String, _e: String) -> void: got.append(id)
+	EventBus.lesson_taught.connect(cb)
+	gs.npc_favor["hunter_ma"] = 70
+	gs.current_region = "misty_forest"
+	gs.check_friendships()
+	assert_eq(got.size(), 0, "teacher is in another region")
+	assert_false(c.lessons_taught.has("hunter_ma:0"))
+	gs.current_region = "qingshi_village"
+	gs._teach_lessons("hunter_ma")
+	EventBus.lesson_taught.disconnect(cb)
+	assert_eq(got, ["hunter_ma"])
+	assert_eq(c.lessons_taught.size(), 1)
+
+
+func test_scene_due_orders_specific_before_generic() -> void:
+	var c := CharacterData.new()
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 39).is_empty())
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 40).is_empty(), "the swing scene waits for rain")
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 40, null, "", "clear").is_empty())
+	assert_eq(String(Folk.scene_due(c, data(), "xiao_ling", 40, null, "", "rain")["id"]), "xiao_ling_old_swing")
+	var v := _villager("qingshi_village")
+	assert_eq(String(Folk.scene_due(c, data(), v.id, 40, v, "qingshi_village")["id"]), "villager_shared_bowl")
+	assert_true(Folk.scene_due(c, data(), "some_villager", 40).is_empty(), "no npc given: not a villager")
+
+
+func test_scene_seen_once() -> void:
+	var c := CharacterData.new()
+	Folk.mark_scene(c, "xiao_ling_old_swing", 5)
+	Folk.mark_scene(c, "xiao_ling_lantern_wish", 5)
+	var v := _villager("qingshi_village")
+	assert_true(Folk.scene_due(c, data(), "xiao_ling", 90).is_empty())
+	assert_eq(String(Folk.scene_due(c, data(), v.id, 90, v, "qingshi_village")["id"]), "villager_shared_bowl")
+	for scene: Dictionary in data().scenes:
+		if String(scene["npc"]) == "any_villager":
+			Folk.mark_scene(c, String(scene["id"]), 5)
+	assert_true(Folk.scene_due(c, data(), v.id, 90, v, "qingshi_village").is_empty())
+
+
+func test_talking_plays_scene_gift_once_and_one_per_day() -> void:
+	var c := _start()
+	var gs := _root().get_node("GameState")
+	var got: Array = []
+	var cb := func(id: String, n: String, _t: String, g: String, _gid: String) -> void: got.append([id, n, g])
+	EventBus.friend_scene.connect(cb)
+	gs.npc_favor["xiao_ling"] = 45
+	_set_rain_day(gs)
+	var rice := c.item_count("sweet_rice_ball")
+	gs.start_dialogue("xiao_ling")
+	EventBus.friend_scene.disconnect(cb)
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][0], "xiao_ling", "the signal carries the id")
+	assert_eq(got[0][2], String(gs.data.items["sweet_rice_ball"]["name"]), "and the gift's name")
+	assert_true(c.scenes_seen.has("xiao_ling_old_swing"))
+	assert_eq(c.item_count("sweet_rice_ball"), rice + 1)
+	# Same day: no second scene even though the generic one is due for another villager.
+	var v := _villager("qingshi_village", gs)
+	gs.npc_favor[v.id] = 45
+	gs.current_region = "qingshi_village"
+	gs._friend_scene(v.id)
+	assert_false(c.scenes_seen.has("villager_shared_bowl"))
+	gs.end_dialogue()
+	# Next day the generic scene may play.
+	_root().get_node("GameClock").total_days += 1
+	gs._friend_scene(v.id)
+	assert_true(c.scenes_seen.has("villager_shared_bowl"))
+
+
+func test_scenes_round_trip() -> void:
+	var c := CharacterData.new()
+	Folk.mark_scene(c, "xiao_ling_old_swing", 9)
+	var back := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_true(back.scenes_seen.has("xiao_ling_old_swing"))
+	assert_eq(back.scene_day, 9)
+	assert_eq(CharacterData.from_dict({}).scene_day, -1)
+
+
+func _villager(region: String, gs: Node = null) -> CharacterData:
+	var d: GameData = data() if gs == null else gs.data
+	var v := CharacterData.new()
+	v.id = "gen_test_villager"
+	v.home_region = region
+	if gs != null:
+		gs.npcs[v.id] = v
+	return v
+
+
+func test_any_villager_scene_needs_a_real_villager() -> void:
+	var c := CharacterData.new()
+	var v := _villager("qingshi_village")
+	assert_true(Folk.is_villager(v, data(), "qingshi_village"))
+	assert_false(Folk.is_villager(v, data(), "misty_forest"), "another region")
+	var sect_member := _villager("qingshi_village")
+	sect_member.sect = {"id": "x", "rank": 0, "contribution": 0}
+	assert_false(Folk.is_villager(sect_member, data(), "qingshi_village"))
+	var elder := CharacterData.new()
+	elder.id = "broker_qian"
+	elder.home_region = "qingshi_village"
+	assert_false(Folk.is_villager(elder, data(), "qingshi_village"))
+	assert_true(Folk.scene_due(c, data(), "broker_qian", 90, elder, "qingshi_village").is_empty())
+	assert_true(Folk.scene_due(c, data(), v.id, 90, v, "misty_forest").is_empty())
+
+
+func test_scene_posts_in_people_category() -> void:
+	var c := _start()
+	var gs := _root().get_node("GameState")
+	var v := _villager("qingshi_village", gs)
+	gs.npc_favor[v.id] = 45
+	gs.current_region = "qingshi_village"
+	var cats: Array = []
+	var cb := func(_t: String, cat: String) -> void: cats.append(cat)
+	EventBus.message_posted.connect(cb)
+	gs._friend_scene(v.id)
+	EventBus.message_posted.disconnect(cb)
+	assert_true(cats.has("people"))
+	assert_true(c.scenes_seen.has("villager_shared_bowl"))

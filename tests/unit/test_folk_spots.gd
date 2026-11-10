@@ -1,0 +1,164 @@
+extends TestCase
+## FOLK-017: named villagers keep their own days (Folk.spot_for, npcs.json spots).
+
+const MARKET_DAY := 9  # day of month 10, a Fireday: nobody rests
+const PLAIN_DAY := 1  # Moonday, no market
+
+
+func _def(id: String = "elder_mo") -> Dictionary:
+	return data().npcs[id]
+
+
+func _festival() -> Array:
+	return [{"id": "lantern_festival", "region": "qingshi_village", "start_day": 0, "end_day": 99, "done": false}]
+
+
+func test_market_day_returns_market_spot() -> void:
+	var r := Folk.spot_for(data(), _def(), MARKET_DAY, "clear", [])
+	assert_eq(r["why"], "market")
+	assert_eq(r["pos"], Vector2(660, 420))
+
+
+func test_plain_day_works_and_rain_beats_market() -> void:
+	assert_eq(Folk.spot_for(data(), _def(), PLAIN_DAY, "clear", [])["why"], "work")
+	assert_eq(Folk.spot_for(data(), _def(), MARKET_DAY, "rain", [])["why"], "rain")
+	assert_eq(Folk.spot_for(data(), _def(), PLAIN_DAY, "storm", [])["why"], "rain")
+
+
+func test_festival_beats_rain() -> void:
+	var r := Folk.spot_for(data(), _def(), MARKET_DAY, "rain", _festival())
+	assert_eq(r["why"], "festival")
+	var square := Vector2(660, 800)
+	assert_eq(r["pos"], Vector2(680, 660))  # C-323: Elder Mo's own festival spot
+	assert_true((r["pos"] as Vector2).distance_to(square) <= 160.0)
+
+
+func test_festival_offset_is_deterministic() -> void:
+	var a := Folk.spot_for(data(), _def(), 5, "clear", _festival())
+	var b := Folk.spot_for(data(), _def(), 5, "clear", _festival())
+	assert_eq(a["pos"], b["pos"])
+
+
+func test_rest_weekday_stays_home() -> void:
+	# Day 6 is an Earthday (6 % 7), not a market day.
+	var r := Folk.spot_for(data(), _def(), 6, "clear", [])
+	assert_eq(r["why"], "rest")
+	assert_eq(r["pos"], Vector2(450, 240))
+
+
+func test_villager_without_spots_is_home() -> void:
+	var bare := {"id": "bare", "region": "qingshi_village", "pos": [640, 720]}
+	var r := Folk.spot_for(data(), bare, MARKET_DAY, "rain", _festival())
+	assert_eq(r["why"], "home")
+	assert_eq(r["pos"], Vector2(640, 720))
+
+
+func test_validation_rejects_bad_spots() -> void:
+	var bad := {"id": "x", "region": "qingshi_village", "pos": [0, 0], "spots": {"work": [5000, 5], "rest_weekday": "Funday", "nap": [1, 1]}}
+	assert_eq(Folk.validate_spots(bad, data()).size(), 3)
+	assert_eq(Folk.validate_spots({"id": "x", "pos": [0, 0], "spots": {}}, data()).size(), 1)
+	assert_eq(data().load_errors.size(), 0)
+
+
+func test_qingshi_spots_keep_40px_from_places() -> void:
+	var places: Array = data().regions["qingshi_village"]["places"]
+	for npc: Dictionary in data().npcs.values():
+		if String(npc.get("region", "")) != "qingshi_village":
+			continue
+		for key: String in npc.get("spots", {}):
+			if key == "rest_weekday":
+				continue
+			var p := Vector2(float(npc["spots"][key][0]), float(npc["spots"][key][1]))
+			for place: Dictionary in places:
+				var pp := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+				assert_true(p.distance_to(pp) >= 40.0, "%s %s is near %s" % [npc["id"], key, place.get("display_name", "")])
+
+
+func test_game_state_places_villager_by_the_day() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Spots", gs.data, seeded_rng(4242)))
+	GameClock.total_days = MARKET_DAY
+	gs.world_events = []
+	var spot: Dictionary = gs.npc_spot("elder_mo")
+	if Weather.of(gs.data, "qingshi_village", MARKET_DAY) in ["rain", "storm"]:
+		assert_eq(spot["why"], "rain")
+	else:
+		assert_eq(spot["why"], "market")
+	assert_eq(gs.npc_spot("nobody")["why"], "home")
+
+
+## C-319: every named NPC with a region has a day; spots keep clear of places and solid landmarks.
+func test_every_named_npc_has_spots_and_clear_ground() -> void:
+	var solid := ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
+	var work := {}
+	for npc: Dictionary in data().npcs.values():
+		if String(npc.get("region", "")) == "":
+			continue
+		assert_true(npc.has("spots"), "%s has spots" % npc["id"])
+		var spots: Dictionary = npc.get("spots", {})
+		assert_true(spots.has("work") and spots.has("rain") and spots.has("rest_weekday"), "%s has work/rain/rest" % npc["id"])
+		var key := "%s|%s" % [npc["region"], str(spots.get("work"))]
+		assert_false(work.has(key), "%s work spot is distinct" % npc["id"])
+		work[key] = true
+		var region: Dictionary = data().regions[String(npc["region"])]
+		for k: String in spots:
+			if k == "rest_weekday":
+				continue
+			var p := Vector2(float(spots[k][0]), float(spots[k][1]))
+			for place: Dictionary in region.get("places", []):
+				var pp := Vector2(float(place["pos"][0]), float(place["pos"][1]))
+				assert_true(p.distance_to(pp) >= 40.0, "%s %s is near %s" % [npc["id"], k, place.get("display_name", "")])
+			for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+				if not solid.has(String(lm["kind"])):
+					continue
+				var c := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
+				var h := Vector2(float(lm["size"][0]), float(lm["size"][1])) / 2.0
+				var d := Vector2(maxf(absf(p.x - c.x) - h.x, 0.0), maxf(absf(p.y - c.y) - h.y, 0.0)).length()
+				assert_true(d >= (1.0 if k == "rain" else 40.0), "%s %s is near a %s" % [npc["id"], k, lm["kind"]])
+
+
+func test_festival_ring_spacing_and_blockers() -> void:
+	var blockers: Array[Rect2] = [Rect2(640, 700, 60, 40)]
+	var ring := Folk.festival_ring(Vector2(660, 800), 24, blockers)
+	assert_eq(ring.size(), 24)
+	for i in ring.size():
+		assert_true(not blockers[0].grow(24.0).has_point(ring[i]), "outside the blocker")
+		var d := ring[i].distance_to(Vector2(660, 800))
+		assert_true(d >= 69.0 and d <= 111.0, "on the ring")
+		for j in range(i + 1, ring.size()):
+			assert_true(ring[i].distance_to(ring[j]) >= 28.0, "28 px apart")
+	assert_eq(Folk.festival_ring(Vector2(660, 800), 24, blockers), ring)
+
+
+func test_qingshi_square_is_clear() -> void:
+	var sq: Array = data().regions["qingshi_village"]["festival_square"]
+	assert_true(float(sq[0]) >= 160.0 and float(sq[1]) >= 160.0 and float(sq[0]) <= 1440.0 and float(sq[1]) <= 840.0)
+
+
+## WU-478: nobody stands within 28 px of the player, even when the player stands on a ring slot.
+func test_festival_ring_keeps_clear_of_player() -> void:
+	var blockers: Array[Rect2] = []
+	var center := Vector2(660, 800)
+	var base := Folk.festival_ring(center, 12, blockers)
+	var player: Array[Vector2] = [base[3]]
+	var ring := Folk.festival_ring(center, 12, blockers, player)
+	assert_eq(ring.size(), 12)
+	for p in ring:
+		assert_true(p.distance_to(player[0]) >= Folk.FESTIVAL_GAP, "clear of the player")
+
+
+## C-323: Elder Mo, Xiao Ling and Hunter Ma have festival spots beyond the ring, 28+ px from each other and every ring slot.
+func test_named_festival_spots_clear_ring_and_each_other() -> void:
+	var square := Vector2(660, 800)
+	var slots := Folk.festival_ring(square, Folk.FESTIVAL_SLOTS, Folk.festival_blockers(data(), "qingshi_village"))
+	var spots: Array[Vector2] = []
+	for id: String in ["elder_mo", "xiao_ling", "hunter_ma"]:
+		var s: Array = data().npcs[id]["spots"]["festival"]
+		var p := Vector2(float(s[0]), float(s[1]))
+		assert_true(p.distance_to(square) >= 120.0, "%s is outside the ring" % id)
+		for q in slots:
+			assert_true(p.distance_to(q) >= 28.0, "%s keeps off ring slot" % id)
+		for o in spots:
+			assert_true(p.distance_to(o) >= 28.0, "%s keeps off the others" % id)
+		spots.append(p)
+		assert_eq(Folk.spot_for(data(), data().npcs[id], 5, "clear", _festival())["pos"], p)

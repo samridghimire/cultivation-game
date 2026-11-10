@@ -97,3 +97,19 @@ func test_topics_tag_and_filter() -> void:
 	assert_true(log_label.get_parsed_text().contains("A manual line"), "the HUD log starts from the history")
 	hud.free()
 	gs.end_session()
+
+
+func test_same_day_repeats_collapse_with_count() -> void:  # WU-464
+	var history: Array = [
+		{"text": "Fat Stags run here.", "category": "travel", "day": 5},
+		{"text": "Other.", "category": "travel", "day": 5},
+		{"text": "Fat Stags run here.", "category": "travel", "day": 5},
+		{"text": "Fat Stags run here.", "category": "travel", "day": 6},
+	]
+	var collapsed := MessageLogScreen.collapse_repeats(history)
+	assert_eq(collapsed.size(), 3)
+	assert_eq(int(collapsed[0]["count"]), 2)
+	var text := MessageLogScreen.format_entries(history)
+	assert_true(text.contains("Fat Stags run here. (x2)"))
+	assert_eq(text.count("Fat Stags run here."), 2, "next day adds its own row")
+	assert_false(history[0].has("count"), "input is not mutated")

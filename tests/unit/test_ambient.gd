@@ -151,3 +151,22 @@ func test_map_mist_validates_and_misty_forest_uses_it() -> void:
 func test_rain_tints_the_day() -> void:
 	var tint: Color = Ambient.weather_plan("rain")["tint"]
 	assert_true(tint.r < 1.0 and tint.r > Ambient.STORM_TINT.r)
+
+
+## GFX-091: mist bands are 3-5, seeded by region, soft, and only in misty regions.
+func test_mist_bands_layout() -> void:
+	var a := MistBands.layout("misty_forest", 0.6, Vector2(1600, 1000))
+	assert_true(a.size() >= 3 and a.size() <= 5)
+	assert_eq(a, MistBands.layout("misty_forest", 0.6, Vector2(1600, 1000)), "stable per region")
+	for b in a:
+		assert_true(float(b["alpha"]) >= 0.08 * 0.6 - 0.0001 and float(b["alpha"]) <= 0.15 * 0.6 + 0.0001)
+		assert_true(float(b["speed"]) >= 8.0 and float(b["speed"]) <= 15.0)
+	assert_true(MistBands.layout("qingshi_village", 0.4, Vector2(1600, 1000)).is_empty())
+	assert_true(MistBands.layout("qingshi_village", 1.0, Vector2(1600, 1000)).size() >= 3)
+
+
+func test_mist_band_wraps() -> void:
+	var b := {"w": 800.0, "x0": 0.0, "speed": 10.0}
+	assert_eq(MistBands.band_x(b, 0.0, 1600.0), -800.0)
+	assert_eq(MistBands.band_x(b, 10.0, 1600.0), -700.0)
+	assert_eq(MistBands.band_x(b, 240.0, 1600.0), -800.0, "wraps after one period")

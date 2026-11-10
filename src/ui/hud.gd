@@ -10,7 +10,9 @@ const QI_FILL := Color("6fd3c1")
 const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
 const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
 const LOG_IDLE_ALPHA := 0.55
-const HINT_MAX_CHARS := 120  ## WU-305: a status-panel hint line is cut past this (about three wrapped lines).
+const HINT_ICON_W := 16  ## WU-471: the icon column left of the hint lines.
+const HINT_W := 300.0  ## The hint label's width (the card's 316 minus the icon column).
+const HINT_MAX_CHARS := 84  ## WU-468: a status-panel hint line is cut past this (about two wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
 ## Lifespan cue thresholds (fraction of the lifespan left).
 const LIFESPAN_WARNING := 0.15
@@ -35,12 +37,14 @@ var _bottleneck: Label
 var _injuries: Label
 var _hint: Label
 var _lives_badge: Label  # WU-340: the same gold "!" beside the Lives label while the first hint is the artifact lives line
+var _hint_icons: Control  # WU-471: the icon column left of the hint label
 var _hint_badge: Label  # WU-284: gold "!" over the first hint when it names a place here
 var _hint_lines: PackedStringArray = []
 var _hint_full := ""  ## GFX-016: the hint text before the line cap.
 var _goal: Label
 var _hunt: Label
 var _fair: Label
+var _season_task: Label  ## WU-462: "One more for spring: ..." when one season task is left.
 var _fair_queued := false
 var _log: RichTextLabel
 var _last_text: String = ""
@@ -54,6 +58,7 @@ var _companion_label: Label
 var _log_panel: Control
 var _fade_timer := 0.0
 var _fade_targets := Vector3.ONE  # status, log, guide
+var _key_bar_fade := 1.0  ## WU-472: the key-hint bar's target alpha.
 var _guide_panel: Control
 var _realm: Label
 var _qi_text: Label
@@ -96,6 +101,7 @@ var _last_source: Node
 var _encounter: EncounterWindow
 var _quarrel: QuarrelWindow
 var _cast_bar: CastBar
+var _arrival_title: String = ""  # WU-491: title of the region name card, so a modal can dismiss it
 var _arrival_waiting: String = ""  # arrival card held back while a road encounter window is open (WU-080)
 var _pause_menu: PauseMenu
 var _settings: SettingsScreen
@@ -123,12 +129,18 @@ var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
+var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
+var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
 static var _showing_skip: Dictionary = {}
 var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
+var _friend_card: FriendSceneCard  # WU-467
+var _season_card: SeasonCard  # WU-495
+var _pending_friend_scenes: Array = []
+var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
 var _recent_notices: Array = []
 ## [realm name, description, details, notices] of a realm card waiting for the tribulation screen to close ([] = none).
@@ -200,12 +212,14 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_child_training))
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
+	_combat_report.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # WU-495
 	add_child(UIStyle.centered(_combat_report))
 	_dialogue = DialogueWindow.new()
 	_dialogue.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_dialogue))
 	_encounter = EncounterWindow.new()
 	_encounter.closed.connect(_update_modal)
+	_encounter.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # WU-495
 	_encounter.closed.connect(_show_waiting_arrival)
 	add_child(UIStyle.centered(_encounter))
 	_quarrel = QuarrelWindow.new()
@@ -240,17 +254,35 @@ func _ready() -> void:
 	_tribulation.closed.connect(_update_modal)
 	_tribulation.closed.connect(_open_pending_respawn)
 	_tribulation.closed.connect(_open_pending_realm_card)
+	_tribulation.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # review: the season card waits for the waves
 	add_child(UIStyle.centered(_tribulation))
 	_breakthrough = BreakthroughScreen.new()
 	_breakthrough.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_breakthrough))
 	_realm_card = RealmCard.new()
 	_realm_card.closed.connect(_update_modal)
+	_realm_card.closed.connect(_flush_year_review)  # review: a season that turned during a breakthrough waits for the realm card
 	add_child(UIStyle.centered(_realm_card))
 	_contest_card = ContestCard.new()
 	_contest_card.closed.connect(_update_modal)
+	_contest_card.closed.connect(_flush_friend_scenes, CONNECT_DEFERRED)  # FOLK-016
 	add_child(UIStyle.centered(_contest_card))
+	_friend_card = FriendSceneCard.new()
+	_friend_card.closed.connect(_update_modal)
+	_friend_card.closed.connect(_flush_friend_scenes)
+	add_child(UIStyle.centered(_friend_card))
+	_season_card = SeasonCard.new()
+	_season_card.closed.connect(_update_modal)
+	_season_card.closed.connect(_flush_year_review)
+	add_child(UIStyle.centered(_season_card))
+	_friend_card.closed.connect(_flush_year_review)
+	_contest_card.closed.connect(_flush_year_review)
+	_season_board = SeasonBoard.new()
+	_season_board.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
+	EventBus.friend_scene.connect(_on_friend_scene)
+	EventBus.lesson_taught.connect(_on_lesson_taught)
 	_banner = Banner.new()
 	add_child(_banner)
 	_digest_card = DigestCard.new()
@@ -269,9 +301,9 @@ func _ready() -> void:
 	EventBus.session_started.connect(_refresh)
 	EventBus.player_changed.connect(_queue_fair_fight)
 	EventBus.session_started.connect(_queue_fair_fight)
-	EventBus.region_changed.connect(func(_id): _queue_fair_fight())
-	GameClock.days_advanced.connect(func(_d): _queue_fair_fight())
-	EventBus.region_changed.connect(func(_id): _refresh())
+	EventBus.region_changed.connect(_on_region_changed_fair_fight)
+	GameClock.days_advanced.connect(_on_days_advanced_fair_fight)
+	EventBus.region_changed.connect(_on_region_changed_refresh)
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
 	Settings.changed.connect(_on_setting_changed)
@@ -281,22 +313,23 @@ func _ready() -> void:
 	EventBus.crafting_requested.connect(_on_crafting_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.mission_board_requested.connect(_on_mission_board_requested)
+	EventBus.season_board_requested.connect(_on_season_board_requested)
 	EventBus.auction_requested.connect(_on_auction_requested)
 	EventBus.sect_balance_requested.connect(_on_sect_balance_requested)
 	EventBus.gossip_requested.connect(_on_gossip_requested)
 	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
 	EventBus.player_died.connect(_on_player_died)
-	EventBus.player_respawned.connect(func(_anchor_id: String, _lives: int): _refresh(); _open_pending_respawn())
+	EventBus.player_respawned.connect(_on_player_respawned)
 	EventBus.combat_started.connect(_on_combat_started)
 	EventBus.combat_finished.connect(_on_combat_finished)
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.breakthrough_prepare_requested.connect(_on_breakthrough_prepare)
 	EventBus.tribulation_endured.connect(_on_tribulation_endured)
-	EventBus.breakthrough_details.connect(func(text: String) -> void: _breakthrough_details = text)
+	EventBus.breakthrough_details.connect(_on_breakthrough_details)
 	EventBus.breakthrough_attempted.connect(_on_breakthrough)
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
-	EventBus.dialogue_ended.connect(func(_id): _dialogue.close())
+	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.encounter_choice_requested.connect(_on_encounter_choice_requested)
 	EventBus.encounter_choice_resolved.connect(_encounter.close)
 	EventBus.quarrel_requested.connect(_on_quarrel_requested)
@@ -304,7 +337,10 @@ func _ready() -> void:
 	EventBus.threat_sensed.connect(_on_threat_sensed)
 	EventBus.time_skipped.connect(_on_time_skipped)
 	EventBus.year_reviewed.connect(_on_year_reviewed)
+	EventBus.season_reviewed.connect(_on_season_reviewed)
+	EventBus.season_began.connect(_on_season_began)
 	EventBus.milestone_reached.connect(_on_milestone)
+	EventBus.season_tasks_done.connect(_on_season_tasks_done)
 	EventBus.feature_unlocked.connect(_on_feature_unlocked)
 	EventBus.festival_started.connect(_on_festival_started)
 	EventBus.bounty_claimed.connect(_on_bounty_claimed)
@@ -321,7 +357,7 @@ func _ready() -> void:
 	_sync_goals_done()
 	_season = Calendar.season_of(GameClock.total_days)
 	GameClock.days_advanced.connect(_on_days_advanced)
-	EventBus.session_started.connect(func(): _season = Calendar.season_of(GameClock.total_days))
+	EventBus.session_started.connect(_on_session_started_season)
 	_refresh()
 	_refresh_fair_fight()
 	# A respawn that moved the player reloads the world; ask where to awaken now.
@@ -333,7 +369,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -393,6 +429,12 @@ func _on_shop_requested(merchant_name: String, max_price: int, stock_tags: Array
 	_update_modal()
 
 
+func _on_season_board_requested() -> void:
+	_close_screens()
+	_season_board.open()
+	_update_modal()
+
+
 func _on_mission_board_requested() -> void:
 	_mission_board.open()
 	_update_modal()
@@ -443,6 +485,7 @@ func _build_status_panel() -> void:
 	_realm = UIStyle.label("", 14, UIStyle.ACCENT)
 	box.add_child(_realm)
 	_qi_bar = UIStyle.bar(Vector2(300, 16), QI_FILL)
+	UIStyle.add_end_cap(_qi_bar)
 	box.add_child(_qi_bar)
 	_qi_text = UIStyle.label("", 12)
 	_qi_text.add_theme_constant_override("outline_size", 3)
@@ -535,17 +578,26 @@ func _build_guide_panel() -> void:
 	_fair.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-435: the whole line, on two lines when needed
 	_fair.custom_minimum_size = Vector2(316, 0)
 	box.add_child(_fair)
+	_season_task = UIStyle.label("", 14, Color("a8e08a"))
+	_season_task.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_season_task.custom_minimum_size = Vector2(316, 0)
+	box.add_child(_season_task)
+	_season_task.visible = false
 	_hint = UIStyle.label("", 14, Color("9fd3c7"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.custom_minimum_size = Vector2(316, 0)
-	# WU-406: the bullet sits beside the label (not in leading spaces, which autowrap trims).
+	_hint.custom_minimum_size = Vector2(HINT_W, 0)
+	# WU-471: a 16 px icon column (one 12 px icon per hint line) sits beside the label; the badge overlays its corner.
 	var hint_row := HBoxContainer.new()
-	hint_row.add_theme_constant_override("separation", 4)
+	hint_row.add_theme_constant_override("separation", 0)
 	box.add_child(hint_row)
+	_hint_icons = Control.new()
+	_hint_icons.custom_minimum_size = Vector2(HINT_ICON_W, 0)
+	_hint_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_row.add_child(_hint_icons)
 	_hint_badge = UIStyle.label("●", 9, Color("9fd3c7"))  # GFX-017: a real bullet, not a thin "!" that reads as a bar
-	_hint_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_hint_badge.position = Vector2(6, -3)
 	_hint_badge.visible = false
-	hint_row.add_child(_hint_badge)
+	_hint_icons.add_child(_hint_badge)
 	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint_row.add_child(_hint)
 	_hint.visibility_changed.connect(func() -> void: hint_row.visible = _hint.visible)
@@ -557,6 +609,12 @@ func _build_guide_panel() -> void:
 	_key_bar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_key_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_key_bar.visible = bool(Settings.get_value("key_help"))
+	var caps := KeyCaps.new()
+	caps.bar = _key_bar
+	caps.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caps.set_anchors_preset(Control.PRESET_FULL_RECT)
+	caps.show_behind_parent = true
+	_key_bar.add_child(caps)
 	add_child(_key_bar)
 	_refresh_key_hints()
 
@@ -671,7 +729,7 @@ func _refresh() -> void:
 	_refresh_date_row(data)
 	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
-	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), String.num(density, 2), ", " + qi_why if qi_why != "" else ""]
+	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), Exploration.format_density(density), ", " + qi_why if qi_why != "" else ""]
 	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
 		region += "   (Secret realm open)"
@@ -685,18 +743,21 @@ func _refresh() -> void:
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density, GameState.current_region, GameClock.total_days) if hint_count > 0 else ""
-	_goal.text = goal
+	_goal.text = Guidance.short_goal(goal, data)
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
 	var hints: PackedStringArray = []
 	if hint_count > 0:
 		# GUIDE-031: ask for a few extra so hints that repeat the goal can be dropped without leaving the panel short.
-		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count + 2, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor)
+		hints = Guidance.hints(p, data, GameState.hint_density(), hint_count + 2, GameState.npcs, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npc_favor, true)
 		hints = Guidance.drop_goal_echoes(goal, hints).slice(0, hint_count)
 	var hunt := hunt_line(p, data, GameClock.total_days)
-	_hunt.text = hunt
+	_hunt.text = Guidance.short_fight_line(hunt, data)
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
+	var one_left := season_one_left_line(GameState.season_tasks(), SeasonTasks.season_name(GameClock.total_days)) if hint_count > 0 and SeasonBoard.near_village(data, GameState.current_region) else ""
+	_season_task.text = one_left
+	_season_task.visible = one_left != ""
 	_hint_lines = hints
 	hints_changed.emit()
 	_set_hint_text(hints)
@@ -729,7 +790,7 @@ func _refresh_fair_fight() -> void:
 	if int(Settings.get_value("hud_hints")) > 0 and GameState.player != null:
 		entries = Guidance.fair_fights(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days, GameState.current_region, GameState.npcs, GameState.npc_favor)
 	var line := fair_fight_line(entries, _fair.get_theme_font("font"), 14, _fair.custom_minimum_size.x)
-	_fair.text = line
+	_fair.text = Guidance.short_fight_line(line, GameState.data)  # GUIDE-223: one line; the tooltip keeps the full text
 	_fair.tooltip_text = "\n".join(entries.map(func(e: Dictionary) -> String: return String(e.get("text", ""))))
 	_fair.visible = line != ""
 	_fit_panels.call_deferred()
@@ -743,16 +804,20 @@ static func fair_fight_line(entries: Array, font: Font = null, font_size: int = 
 		return ""
 	var best: Dictionary = entries[0]
 	var enemy := String(best.get("enemy", ""))
+	var prefix := Guidance.fair_fight_prefix(best)
 	if enemy == "" or not best.has("chance"):
-		return "Fair fight: %s" % String(best.get("text", ""))
+		return "%s: %s" % [prefix, String(best.get("text", ""))]
 	var chance := float(best["chance"])
-	var label := Combat.label_for_chance(chance)
 	var named := String(best.get("short", ""))
 	if named == "":
 		named = enemy
-	var full := "Fair fight: %s (%s, %d in 100)" % [named, label, roundi(chance * 100.0)]
+	# GUIDE-215: the odds once, no rating word after the prefix; "(6 days)" and the odds share one bracket.
+	var odds := "%d in 100" % roundi(chance * 100.0)
+	var full := "%s: %s (%s)" % [prefix, named, odds]
+	if named.ends_with(")"):
+		full = "%s: %s, %s)" % [prefix, named.trim_suffix(")"), odds]
 	if font != null and max_width > 0.0 and wrapped_lines(full, font, font_size, max_width).size() > 2:
-		full = "Fair fight: %s (%s)" % [named, label]
+		full = "%s: %s" % [prefix, named]
 	return full
 
 
@@ -848,7 +913,7 @@ static func lives_color(lives: int) -> Color:
 func occupied_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	for c: Control in [_status_panel, _guide_panel, _log_panel, _key_bar]:
-		if c != null and c.is_visible_in_tree():
+		if c != null and c.is_visible_in_tree() and not (c == _log_panel and _log_lines.is_empty()):
 			var r := c.get_global_rect()
 			if c == _key_bar:
 				r = r.grow_side(SIDE_TOP, KEY_STRIP_CLEARANCE)  # WU-441: labels keep off the key strip
@@ -865,7 +930,7 @@ func current_prompt_rect() -> Rect2:
 
 ## WU-441: where the "[E] <name>" chip goes: just above the target's name label, else just below it, clamped
 ## inside `screen` and clear of `avoid` rects whenever a free spot exists (else the clamped spot above).
-static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30)) -> Rect2:
+static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Rect2], chip_size: Vector2 = Vector2(190, 30), figure: Vector2 = NO_FIGURE) -> Rect2:
 	var x := target_label_rect.get_center().x - chip_size.x / 2.0
 	var above_y := target_label_rect.position.y - chip_size.y - 2.0
 	var below_y := target_label_rect.end.y + 2.0
@@ -882,9 +947,23 @@ static func prompt_rect(target_label_rect: Rect2, screen: Rect2, avoid: Array[Re
 			if r.intersects(a):
 				hit = true
 				break
-		if not hit:
+		if not hit and _near_figure(r, figure):
 			return r
+	# WU-475: no free spot by the label: sit just above the figure (may overlap faded labels).
+	if figure != NO_FIGURE:
+		var r := Rect2(figure + Vector2(-chip_size.x / 2.0, -chip_size.y - 24.0), chip_size)
+		r.position.x = clampf(r.position.x, screen.position.x, maxf(screen.position.x, screen.end.x - chip_size.x))
+		r.position.y = clampf(r.position.y, screen.position.y, maxf(screen.position.y, screen.end.y - chip_size.y))
+		return r
 	return first
+
+
+const NO_FIGURE := Vector2(-1.0e9, -1.0e9)
+const PROMPT_MAX_FROM_FIGURE := 120.0
+
+
+static func _near_figure(chip: Rect2, figure: Vector2) -> bool:
+	return figure == NO_FIGURE or chip.get_center().distance_to(figure) <= PROMPT_MAX_FROM_FIGURE
 
 
 ## WU-441: moves the prompt next to its target's label; the bottom-centre spot stays the fallback.
@@ -894,14 +973,24 @@ func _place_prompt() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var target: Interactable = player.current_target() if player != null and player.has_method("current_target") else null
 	var parent := target.get_parent() as CanvasItem if target != null else null
-	if target == null or parent == null or not target.label_drawn_ignoring_target():
+	if target == null or parent == null:
 		_prompt_to_bottom()
 		return
 	var xf := parent.get_global_transform_with_canvas()
-	var label_rect: Rect2 = xf * target.label_rect()
+	# WU-474: a target whose own label is hidden still gets a chip beside its (virtual) label spot.
+	var label_rect: Rect2 = xf * target.label_rect("" if target.label_drawn_ignoring_target() else _target_name)
 	var screen := get_viewport().get_visible_rect()
 	var chip := _prompt.get_combined_minimum_size()
-	var rect := prompt_rect(label_rect, screen, occupied_rects(), chip)
+	var figure: Vector2 = xf * target.position
+	if not screen.grow(40.0).has_point(figure):  # WU-475: target off screen
+		_prompt_to_bottom()
+		return
+	var avoid := occupied_rects()
+	for stall in get_tree().get_nodes_in_group("festival_stalls"):  # WU-485: the festival caption is a blocker
+		var cr: Rect2 = (stall as FestivalStall).caption_screen_rect()
+		if cr.size != Vector2.ZERO:
+			avoid.append(cr)
+	var rect := prompt_rect(label_rect, screen, avoid, chip, figure)
 	if _prompt_floating == false:
 		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		_prompt_floating = true
@@ -909,10 +998,15 @@ func _place_prompt() -> void:
 	_prompt.size = chip
 
 
+## WU-474: the fallback is still a compact chip sized to its text, centred above the bottom HUD.
 func _prompt_to_bottom() -> void:
-	if _prompt_floating:
-		_set_anchored_rect(_prompt, Vector4(0.5, 1, 0.5, 1), Vector4(-300, -170, 300, -132))
-		_prompt_floating = false
+	var chip := _prompt.get_combined_minimum_size()
+	var screen := get_viewport().get_visible_rect()
+	if not _prompt_floating:
+		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_prompt_floating = true
+	_prompt.position = Vector2((screen.size.x - chip.x) / 2.0, screen.end.y - 170.0)
+	_prompt.size = chip
 
 
 ## Drops the lowest-priority lines until each card clears the log (WU-091, GFX-010): the status card loses its
@@ -924,7 +1018,7 @@ func _fit_panels() -> void:
 	var limit := height - _status_panel.position.y
 	_status_panel.reset_size()
 	var glimit := height - _guide_panel.position.y
-	for label: Label in [_fair, _hint, _goal]:
+	for label: Label in [_season_task, _fair, _hint, _goal]:
 		_guide_panel.reset_size()
 		if _guide_panel.size.y <= glimit:
 			break
@@ -944,19 +1038,20 @@ func _apply_line_cap() -> void:
 		return
 	var font := _hint.get_theme_font("font")
 	var used := 0
-	for label: Label in [_goal, _hunt, _fair]:
+	for label: Label in [_goal, _hunt, _fair, _season_task]:
 		if label.visible:
-			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label == _goal or label == _fair else 1
+			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label != _hunt else 1
 	var budget := maxi(1, GUIDE_MAX_LINES - used)
-	var cut := cut_entries(_hint_full.split("\n"), font, 14, 316.0, budget)
+	var cut := cut_entries(_hint_full.split("\n"), font, 14, HINT_W, budget)
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
 		_hint.text = "\n".join(cut)
+	_sync_hint_icons()
 
 
 ## The guide card shows only while one of its lines does. With hints off only the hunt line can (an active
 ## bounty's deadline is state, not a hint, and showed with hints off before GFX-010).
 func _update_guide_visibility() -> void:
-	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _hint.visible
+	var any_line: bool = _goal.visible or _hunt.visible or _fair.visible or _season_task.visible or _hint.visible
 	_guide_panel.visible = any_line and _status_panel.visible
 
 
@@ -974,13 +1069,52 @@ func _set_hint_text(lines: PackedStringArray) -> void:
 	var out: Array = []
 	var cut := false
 	for i in lines.size():
-		out.append(("" if i == 0 and marked else "> ") + cap_hint(lines[i]))
+		out.append(cap_hint(lines[i]))
 		cut = cut or cap_hint(lines[i]) != lines[i]
 	_hint_full = "\n".join(out)
 	_hint.text = _hint_full
 	# WU-315: mouse hover shows the whole text when a line was cut.
 	_hint.tooltip_text = "\n".join(lines) if cut else ""
 	_hint.mouse_filter = Control.MOUSE_FILTER_PASS
+	_sync_hint_icons()
+
+
+## WU-471: "goal", "fight", "today", "season" or "other" by the line's prefix. Pure.
+static func hint_kind(line: String) -> String:
+	var t := line.strip_edges().trim_prefix("> ")
+	if t.begins_with("Goal"):
+		return "goal"
+	if t.begins_with("Easy") or t.begins_with("Fair"):
+		return "fight"
+	if t.begins_with("Today"):
+		return "today"
+	if t.begins_with("One more for"):
+		return "season"
+	return "other"
+
+
+## WU-471: one 12 px icon per shown hint line, at the line's first wrapped row.
+func _sync_hint_icons() -> void:
+	if _hint_icons == null:
+		return
+	for c in _hint_icons.get_children():
+		if c != _hint_badge:
+			_hint_icons.remove_child(c)
+			c.free()
+	if not _hint.visible and _hint.text == "":
+		return
+	var font := _hint.get_theme_font("font")
+	var line_h := font.get_height(14)
+	var y := 0.0
+	for e in _hint.text.split("\n"):
+		var icon := TextureRect.new()
+		icon.texture = HudIcons.hint_glyph(hint_kind(e))
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.position = Vector2(1, y + (line_h - 12.0) * 0.5)
+		icon.size = Vector2(12, 12)
+		_hint_icons.add_child(icon)
+		y += maxi(1, wrapped_lines(e, font, 14, HINT_W).size()) * line_h
 
 
 ## Names of the places and NPCs in the current region (what the world marks with its "!" badge).
@@ -1014,13 +1148,33 @@ func _shrink_hint(limit: float) -> bool:
 ## WU-305: a hint line longer than `max_chars` is cut at a word boundary and ends with "… (J)" (about three wrapped
 ## lines in the status panel); the journal keeps the full text.
 static func cap_hint(text: String, max_chars: int = HINT_MAX_CHARS) -> String:
+	text = short_today(text)
 	if text.length() <= max_chars:
 		return text
 	var cut := text.substr(0, max_chars)
-	var sp := cut.rfind(" ")
-	if sp > max_chars / 2:
-		cut = cut.substr(0, sp)
+	# WU-468: prefer a clause boundary (", " or ": " or "; "), else a word boundary.
+	var best := -1
+	for sep in [", ", ": ", "; "]:
+		best = maxi(best, cut.rfind(sep))
+	if best <= max_chars / 3:
+		best = cut.rfind(" ")
+	if best > max_chars / 3:
+		cut = cut.substr(0, best)
 	return cut.rstrip(" ,;:.") + "\u2026 (J)"
+
+
+## WU-468: "Today in Azure Peak: the Cloud Crane roams, 3 things by the path." -> "Today: the Cloud Crane roams (J)".
+## Other lines are unchanged.
+static func short_today(text: String) -> String:
+	if not text.begins_with("Today in "):
+		return text
+	var colon := text.find(": ")
+	if colon < 0:
+		return text
+	var body := text.substr(colon + 2)
+	var comma := body.find(", ")
+	var first := body.substr(0, comma) if comma >= 0 else body
+	return "Today: " + Guidance.short_today_phrase(first.rstrip(".")) + " (J)"
 
 
 ## The text up to the first ". ", plus " (J)" so the player knows the journal has the rest. Unchanged without one.
@@ -1041,7 +1195,7 @@ static func goal_text(c: CharacterData, data: GameData, flags: Dictionary, clan:
 		return "Goal: " + lines[0] if not lines.is_empty() else ""
 	for goal in Guidance.first_goals(c, data, flags):
 		if not goal["done"]:
-			return "Goal: " + str(goal["text"])
+			return "Goal: " + str(goal["text"]) + Guidance.goal_trip_note(c, data, str(goal["text"]), region_id)
 	return ""
 
 
@@ -1124,6 +1278,7 @@ func _log_line(color: Color, text: String) -> String:
 func _on_target_changed(display_name: String) -> void:
 	_target_name = display_name
 	_refresh_key_hints()
+	_place_prompt()  # WU-478: the chip follows its target at once, not at the next modal change
 
 
 ## Rebuilds the key bar and the interact prompt from the current bindings.
@@ -1145,7 +1300,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1296,6 +1451,23 @@ func _on_encounter_choice_requested(_encounter_id: String) -> void:
 ## A long action skipped time: show the overlay unless fast skips are on or
 ## another window (combat report, encounter, death...) has taken the screen.
 ## Several milestones in one step: each call replaces the banner, so the last one shows (the log lists all).
+## WU-462: "One more for spring: <task>" when exactly one of the season's tasks is left, "" otherwise.
+static func season_one_left_line(tasks: Array, season_name: String) -> String:
+	var left: Array = tasks.filter(func(t: Dictionary) -> bool: return not bool(t["done"]))
+	if tasks.is_empty() or left.size() != 1:
+		return ""
+	var where := String(left[0].get("where", ""))
+	var text := String(left[0]["text"])
+	if where != "":
+		text = "%s %s." % [text.trim_suffix("."), where]
+	return "One more for %s: %s" % [season_name, text]
+
+
+## WU-462: a banner when the season's set is complete.
+func _on_season_tasks_done(season_name: String, reward: String) -> void:
+	_banner.announce("The %s tasks are done" % season_name, reward, UIStyle.CATEGORY_COLORS.get("good", UIStyle.ACCENT), 2.5)
+
+
 func _on_milestone(_id: String, milestone_name: String) -> void:
 	_banner.announce("Milestone", milestone_name, UIStyle.ACCENT, 1.2)
 
@@ -1552,11 +1724,74 @@ func _on_year_reviewed(year: int, lines: PackedStringArray, start_year: int = 0)
 	_flush_year_review.call_deferred()
 
 
+## SEASON-012: the season recap banner; a pending year review wins when both are queued.
+func _on_season_reviewed(season: String, year: int, lines: PackedStringArray) -> void:
+	if not Settings.get_value("yearly_recap") or lines.is_empty():
+		return
+	_pending_season = [season, year, lines]
+	_flush_year_review.call_deferred()
+
+
+## SEASON-013: the kickoff banner queues behind the recap (or the year review).
+func _on_season_began(season: String, year: int, lines: PackedStringArray) -> void:
+	if not Settings.get_value("yearly_recap") or lines.is_empty():
+		return
+	_pending_kickoff = [season, year, lines]
+	_flush_year_review.call_deferred()
+
+
 func _flush_year_review() -> void:
+	_flush_recap_banner()
+	if _pending_kickoff.is_empty() and _pending_season.is_empty():
+		return
+	if not _pending_year.is_empty():
+		return
+	if _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
+		return
+	if GameState.player == null or not GameState.player.alive:
+		_pending_kickoff = []
+		_pending_season = []
+		return
+	if _season_card_blocked():
+		return  # WU-495: queued behind dialogue, friend, road and contest cards; their close re-runs this
+	var season := ""
+	var year := 1
+	var back := PackedStringArray()
+	var coming := PackedStringArray()
+	if not _pending_season.is_empty():
+		season = _pending_season[0]
+		year = int(_pending_season[1])
+		back = _pending_season[2]
+	if not _pending_kickoff.is_empty():
+		season = _pending_kickoff[0]
+		year = int(_pending_kickoff[1])
+		coming = _pending_kickoff[2]
+	_pending_kickoff = []
+	_pending_season = []
+	_choice_menu.close()
+	_close_screens()
+	_season_card.open(season, year, back, coming)
+	Audio.play("chime_info")
+	_update_modal()
+
+
+## WU-495: true while another card or dialogue is up; the season card waits for it.
+func _season_card_blocked() -> bool:
+	if _dialogue.visible and not _dialogue.closed.is_connected(_flush_year_review):
+		_dialogue.closed.connect(_flush_year_review, CONNECT_ONE_SHOT)
+	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
+		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
+	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _encounter.visible or _combat_report.visible \
+			or _realm_card.visible or _tribulation.visible
+
+
+## The year review stays a banner (WU-031); the season recap now rides on the season card.
+func _flush_recap_banner() -> void:
 	if _pending_year.is_empty() or _time_skip.visible or _respawn.visible or _death_screen.visible or not GameState.pending_respawn.is_empty():
 		return
 	if GameState.player == null or not GameState.player.alive:
 		return
+	_pending_season = []
 	var lines: PackedStringArray = _pending_year[1]
 	_banner.announce("%s of your journey" % LifeStats.review_title(int(_pending_year[2]), int(_pending_year[0])), "\n".join(lines), UIStyle.ACCENT, 4.0)
 	_pending_year = []
@@ -1630,7 +1865,7 @@ func _show_waiting_arrival() -> void:
 ## Arrival banner subtitle (WU-192): "First visit · Qi x1.5 · Danger: Calm · Known here: Respected".
 ## `c` may be null (no title).
 static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool) -> String:
-	var sub := "Qi x%s · Danger: %s" % [String.num(qi, 2), danger]
+	var sub := "Qi x%s · Danger: %s" % [Exploration.format_density(qi), danger]
 	if first_visit:
 		sub = "First visit · " + sub
 	var title := Renown.title(c, data, region_id) if c != null else ""
@@ -1643,14 +1878,17 @@ func _show_arrival(region_id: String) -> void:
 	var data: GameData = GameState.data
 	if data == null or not data.regions.has(region_id):
 		return
-	var qi := Exploration.qi_density(data, region_id, GameState.world_flags, GameClock.total_days)
+	var qi := Exploration.effective_density(data, region_id, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.player)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
 	var extra := arrival_extra(GameState.world_flags, region_id)
 	if extra != "":
 		sub += "\n" + extra
 	var hold := 2.4 if first_visit else 2.0
-	_banner.announce(Exploration.region_name(data, region_id), sub, UIStyle.ACCENT, hold)
+	_arrival_title = Exploration.region_name(data, region_id)
+	if _blocking_except_encounter():
+		return # WU-491: a screen is open; the name card is not shown over it
+	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold)
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
@@ -1700,6 +1938,45 @@ func _on_contest_finished(result: Dictionary) -> void:
 		RoadCard.current.finished.connect(func(): _show_contest_card(result), CONNECT_ONE_SHOT)
 	else:
 		_show_contest_card.call_deferred(result)
+
+
+## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.
+func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, gift_id: String = "") -> void:
+	_queue_friend_card([npc_id, npc_name, text, gift_name, gift_id, ""])
+
+
+## WU-479: a friend's lesson shows on the same card, queued exactly like a scene.
+func _on_lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String) -> void:
+	_queue_friend_card([npc_id, npc_name, text, "", "", effect_line])
+
+
+func _queue_friend_card(entry: Array) -> void:
+	_pending_friend_scenes.append(entry)
+	if _contest_card.visible:
+		pass  # FOLK-016: shown when the contest card closes (_flush_friend_scenes is connected to its `closed`)
+	elif _dialogue.visible:
+		if not _dialogue.closed.is_connected(_flush_friend_scenes):
+			_dialogue.closed.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
+	elif is_instance_valid(RoadCard.current):
+		if not RoadCard.current.finished.is_connected(_flush_friend_scenes):
+			RoadCard.current.finished.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
+	else:
+		_flush_friend_scenes.call_deferred()
+
+
+func _flush_friend_scenes() -> void:
+	if _pending_friend_scenes.is_empty() or _friend_card.visible or _season_card.visible or _contest_card.visible:
+		return
+	if _dialogue.visible:  # review: queued just before start_dialogue opened it; show once it closes
+		if not _dialogue.closed.is_connected(_flush_friend_scenes):
+			_dialogue.closed.connect(_flush_friend_scenes, CONNECT_ONE_SHOT)
+		return
+	if GameState.player == null or not GameState.player.alive:
+		_pending_friend_scenes.clear()
+		return
+	var scene: Array = _pending_friend_scenes.pop_front()
+	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "", String(scene[5]) if scene.size() > 5 else "")
+	_update_modal()
 
 
 func _show_contest_card(result: Dictionary) -> void:
@@ -1804,21 +2081,36 @@ func _process(delta: float) -> void:
 	if _fade_timer <= 0.0:
 		_fade_timer = 0.1
 		_fade_targets = _compute_fade_targets()
+		if _target_name != "" and _prompt != null and _prompt.visible:
+			_place_prompt()  # WU-478: the player and camera move; keep the chip beside its figure
 	if _status_panel == null or _log_panel == null:
 		return
 	var k := 1.0 if MotionFx.reduced() else minf(1.0, 8.0 * delta)
 	var log_target := _fade_targets.y
+	if _log_lines.is_empty():  # WU-489: no empty framed box on a new game; fades in with the first message
+		log_target = 0.0
 	var idle := log_idle_alpha(float(Time.get_ticks_msec() - _last_message_msec) / 1000.0)
 	if idle < 1.0 and not _log_panel.get_global_rect().has_point(_log_panel.get_global_mouse_position()):
 		log_target = minf(log_target, idle)
 	_status_panel.modulate.a = lerpf(_status_panel.modulate.a, _fade_targets.x, k)
 	_log_panel.modulate.a = lerpf(_log_panel.modulate.a, log_target, k)
 	_guide_panel.modulate.a = lerpf(_guide_panel.modulate.a, _fade_targets.z, k)
+	if _key_bar != null:
+		_key_bar.modulate.a = lerpf(_key_bar.modulate.a, _key_bar_fade, k)
 
 
 ## GFX-010: the log's target alpha after `seconds_since` seconds without a new message.
 static func log_idle_alpha(seconds_since: float) -> float:
 	return LOG_IDLE_ALPHA if seconds_since >= LOG_IDLE_SECONDS else 1.0
+
+
+## WU-472: names of the panels (keys of panel_rects) whose rect touches the player's rect.
+static func fade_targets(panel_rects: Dictionary, player_rect: Rect2) -> Array[String]:
+	var out: Array[String] = []
+	for key: String in panel_rects:
+		if (panel_rects[key] as Rect2).intersects(player_rect):
+			out.append(key)
+	return out
 
 
 ## Target alphas (status, log, guide). Always 1 while a modal is open or no player is in the world.
@@ -1831,6 +2123,11 @@ func _compute_fade_targets() -> Vector3:
 	var xf := get_viewport().get_canvas_transform()
 	var covered: Array[Rect2] = []
 	var pp := xf * player.global_position
+	_key_bar_fade = 1.0
+	if _key_bar != null and _key_bar.visible:
+		var behind := fade_targets({"key_bar": _key_bar.get_global_rect()}, Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
+		if not behind.is_empty():
+			_key_bar_fade = 0.3
 	covered.append(Rect2(pp - Vector2(20, 25), Vector2(40, 50)))
 	var parent := player.get_parent()
 	if parent != null:
@@ -1872,8 +2169,20 @@ func digest_blocked() -> bool:
 	return GameState.player == null or not GameState.player.alive or not GameState.pending_respawn.is_empty() or _death_screen.visible
 
 
+## WU-491: true while any HUD modal is open (the name card never draws over one).
+func _is_blocking() -> bool:
+	return _blocking_except_encounter() or _encounter.visible
+
+
+func _blocking_except_encounter() -> bool:
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+
+
 func _update_modal() -> void:
-	var blocking := _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	var blocking := _is_blocking()
+	if blocking and _arrival_title != "":
+		_banner.dismiss_titled(_arrival_title)  # WU-491: the name card never stays over an open screen
+		_arrival_title = ""
 	# The status panel, hints and log hide behind modals; a time-skip overlay alone keeps them.
 	_status_panel.visible = not blocking
 	if blocking and _digest_card != null:
@@ -1890,7 +2199,7 @@ func _update_modal() -> void:
 
 ## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
 
 
 func _return_to_menu() -> void:
@@ -1995,7 +2304,7 @@ static func ellipsize_first_line(text: String, font: Font, font_size: int, width
 
 ## The key strip's translucent dark backing (GFX-016).
 static func key_bar_style() -> StyleBoxFlat:
-	var style := UIStyle.panel_style().duplicate() as StyleBoxFlat
+	var style := UIStyle.flat_panel_style()
 	style.bg_color.a = 0.6
 	style.border_width_left = 0
 	style.border_width_right = 0
@@ -2008,3 +2317,48 @@ static func key_bar_style() -> StyleBoxFlat:
 ## Alpha a card takes while the player (screen position) is within CARD_FADE_MARGIN of its rect.
 static func card_fade_target(card_rect: Rect2, player_screen_pos: Vector2) -> float:
 	return CARD_FADE_ALPHA if card_rect.grow(CARD_FADE_MARGIN).has_point(player_screen_pos) else 1.0
+
+
+func _on_region_changed_fair_fight(_id: String) -> void:
+	_queue_fair_fight()
+
+
+func _on_days_advanced_fair_fight(_d: int) -> void:
+	_queue_fair_fight()
+
+
+func _on_region_changed_refresh(_id: String) -> void:
+	_refresh()
+
+
+func _on_player_respawned(_anchor_id: String, _lives: int) -> void:
+	_refresh()
+	_open_pending_respawn()
+
+
+func _on_breakthrough_details(text: String) -> void:
+	_breakthrough_details = text
+
+
+func _on_dialogue_ended(_id: String) -> void:
+	_dialogue.close()
+
+
+func _on_session_started_season() -> void:
+	_season = Calendar.season_of(GameClock.total_days)
+
+
+## GFX-099: draws the key bar's "[X]" keys as small key caps (lighter box, 1 px shadow) behind its text.
+class KeyCaps extends Control:
+	var bar: Label
+
+	func _draw() -> void:
+		if bar == null or bar.text == "":
+			return
+		var font := bar.get_theme_font("font")
+		var fs := bar.get_theme_font_size("font_size")
+		var sb := bar.get_theme_stylebox("normal")
+		var mr := sb.get_margin(SIDE_RIGHT) if sb != null else 0.0
+		for r in UIStyle.key_cap_rects(font, fs, bar.text, size.x, mr, size.y):
+			draw_rect(Rect2(r.position + Vector2(0, 1), r.size), Color(0, 0, 0, 0.6))
+			draw_rect(r, Color(0.28, 0.29, 0.34, 0.9))

@@ -49,11 +49,15 @@ static func court_style(region: Dictionary) -> String:
 ## GFX-071: what a place really covers: the drawn landmark (about 1.3x its size), the 22 px label band above
 ## it and 12 px of clearance.
 static func place_footprint(place: Dictionary) -> Rect2:
-	var r := _rect(place)
-	var big := Rect2(r.get_center() - r.size * 0.65, r.size * 1.3)
-	big.position.y -= 22.0
-	big.size.y += 22.0
-	return big.grow(12.0)
+	return Npcs.building_footprint(place)  # WU-489: one set of numbers
+
+
+## WU-484: a person's final position: off the gate and off every building (Npcs.settle_stand).
+static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vector2:
+	var g := gate(region)
+	var out := nudge_off_gate(pos, g)
+	out = Npcs.settle_stand(out, region, named)
+	return nudge_off_gate(out, g)
 
 
 static func _clear(r: Rect2, hall: Dictionary, region: Dictionary) -> bool:
@@ -177,11 +181,59 @@ static func _draw_marsh_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: 
 		ci.draw_line(Vector2(rx, court.position.y - 1.0), Vector2(rx - 1.0, court.position.y - 9.0), reed, 1.0)
 
 
-const STELE_W := 136.0  ## the hanging name board
+const STELE_W := 136.0  ## the hanging name board (its minimum width)
+const STELE_MAX_W := 160.0  ## GFX-103: the board grows to fit the name up to this width
+const STELE_PAD := 12.0
+const STELE_SIZES: Array[int] = [13, 12, 11]  ## font sizes tried, largest first, before the name goes on two lines
 const POST_H := 64.0  ## post height above its foot line (GFX-076)
 const POST_BASE := 8.0  ## plinth below the foot line
 const ROOF_W := 40.0
 const GATE_KEEP := 24.0  ## decor and idle villagers stay this far off the gate
+const DECOR_KEEP := 40.0  ## GFX-082: trees and rocks stay this far off the gate and every travel place
+
+
+## GFX-082: `decor` (Scenery.place output) without anything within DECOR_KEEP px of the gate's rect or of a travel
+## place's rect, or whose tree footprint touches the gate. One rule for every region.
+static func filter_decor(region: Dictionary, decor: Array[Dictionary]) -> Array[Dictionary]:
+	var keeps: Array[Rect2] = []
+	var g := gate(region)
+	if not g.is_empty():
+		keeps.append(gate_rect(g).grow(DECOR_KEEP))
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) != "travel":
+			continue
+		var pos: Array = place.get("pos", [0, 0])
+		var sz: Array = place.get("size", [64, 64])
+		var size := Vector2(float(sz[0]), float(sz[1]))
+		keeps.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size).grow(DECOR_KEEP))
+	var out: Array[Dictionary] = []
+	for d in decor:
+		var foot := Rect2(d["pos"] - Vector2(16, 44), Vector2(32, 60))
+		var hit := false
+		for k in keeps:
+			if k.has_point(d["pos"]) or k.intersects(foot):
+				hit = true
+				break
+		if not hit:
+			out.append(d)
+	return out
+
+
+## GFX-103: how the name fits the board: {w, size, lines}. Widen up to STELE_MAX_W, then the next smaller size,
+## then two lines (split at the space nearest the middle) at the smallest size.
+static func board_layout(name: String, font: Font) -> Dictionary:
+	for fs: int in STELE_SIZES:
+		var need := font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + STELE_PAD
+		if need <= STELE_MAX_W:
+			return {"w": maxf(STELE_W, need), "size": fs, "lines": [name]}
+	var fs: int = STELE_SIZES[-1]
+	var mid := name.length() / 2
+	var cut := -1
+	for i in name.length():
+		if name[i] == " " and (cut < 0 or absi(i - mid) < absi(cut - mid)):
+			cut = i
+	var lines: Array = [name] if cut < 0 else [name.substr(0, cut), name.substr(cut + 1)]
+	return {"w": STELE_MAX_W, "size": fs, "lines": lines}
 
 
 ## GFX-076: the gate in 3/4 view. Posts stand on the north and south road verges (feet 4 px off the path); the roof
@@ -194,10 +246,11 @@ static func gate_parts(g: Dictionary) -> Dictionary:
 	var south_foot := path.end.y + 4.0
 	var top := north_foot - POST_H
 	var roof_end := south_foot - POST_H
+	var board_w := float(board_layout(String(g.get("name", "")), ThemeDB.fallback_font)["w"])
 	return {
 		"roof": Rect2(gx - ROOF_W / 2.0, top, ROOF_W, roof_end - top),
 		"posts": [Rect2(gx - 13.0, top, 26.0, POST_H + POST_BASE), Rect2(gx - 13.0, roof_end, 26.0, POST_H + POST_BASE)],
-		"stele": Rect2(gx - STELE_W / 2.0, roof_end + 10.0, STELE_W, 22.0),
+		"stele": Rect2(gx - board_w / 2.0, roof_end + 10.0, board_w, 22.0),
 	}
 
 
@@ -257,7 +310,11 @@ static func draw_gate(ci: CanvasItem, g: Dictionary, font: Font) -> void:
 	ci.draw_rect(board, wood.darkened(0.2))
 	ci.draw_line(Vector2(board.position.x + 10.0, board.position.y - 2.0), Vector2(board.position.x + 10.0, board.position.y - 8.0), dark, 2.0)
 	ci.draw_line(Vector2(board.end.x - 10.0, board.position.y - 2.0), Vector2(board.end.x - 10.0, board.position.y - 8.0), dark, 2.0)
-	ci.draw_string(font, board.position + Vector2(0.0, 16.0), String(g["name"]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, 13, Color("f2e3b8"))
+	var fit := board_layout(String(g["name"]), font)
+	var lines: Array = fit["lines"]
+	for i in lines.size():
+		var dy := 16.0 if lines.size() == 1 else 10.0 + 10.0 * i
+		ci.draw_string(font, board.position + Vector2(0.0, dy), String(lines[i]), HORIZONTAL_ALIGNMENT_CENTER, board.size.x, int(fit["size"]), Color("f2e3b8"))
 
 
 static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> void:
@@ -270,3 +327,42 @@ static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> vo
 	ci.draw_rect(Rect2(cx - 6.0, r.position.y + 4.0, 3.0, foot_y - r.position.y - 5.0), wood.lightened(0.2))
 	ci.draw_rect(Rect2(cx - 10.0, r.position.y, 20.0, 6.0), dark)
 	ci.draw_rect(Rect2(cx - 9.0, r.position.y + 1.0, 18.0, 4.0), wood.lightened(0.1))
+
+
+## GFX-113: a carved rail along the court's open sides (west, east and south), as posts every 24 px and a rail between them;
+## the south side leaves a 40 px gap at the court's centre for the walk. Returns {posts: Array[Rect2], rails: Array[Rect2]}.
+static func rail_parts(court: Rect2) -> Dictionary:
+	var posts: Array[Rect2] = []
+	var rails: Array[Rect2] = []
+	var inner := court.grow(-3.0)
+	var gap_l := court.get_center().x - 20.0
+	var gap_r := court.get_center().x + 20.0
+	var y := inner.position.y + 24.0
+	while y <= inner.end.y:
+		posts.append(Rect2(inner.position.x - 2.0, y - 8.0, 4.0, 10.0))
+		posts.append(Rect2(inner.end.x - 2.0, y - 8.0, 4.0, 10.0))
+		y += 24.0
+	rails.append(Rect2(inner.position.x - 1.0, inner.position.y + 14.0, 2.0, inner.size.y - 14.0))
+	rails.append(Rect2(inner.end.x - 1.0, inner.position.y + 14.0, 2.0, inner.size.y - 14.0))
+	var x := inner.position.x
+	while x <= inner.end.x:
+		if x < gap_l - 4.0 or x > gap_r + 4.0:
+			posts.append(Rect2(x - 2.0, inner.end.y - 8.0, 4.0, 10.0))
+		x += 24.0
+	rails.append(Rect2(inner.position.x, inner.end.y - 6.0, gap_l - inner.position.x, 2.0))
+	rails.append(Rect2(gap_r, inner.end.y - 6.0, inner.end.x - gap_r, 2.0))
+	return {"posts": posts, "rails": rails}
+
+
+static func draw_rail(ci: CanvasItem, court: Rect2, snowy: bool) -> void:
+	var parts := rail_parts(court)
+	var wood := Color("6b5a48")
+	var lit := Color("a58c6c")
+	for r: Rect2 in parts["rails"]:
+		ci.draw_rect(r, wood)
+		ci.draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 1.0), lit)
+	for p: Rect2 in parts["posts"]:
+		ci.draw_rect(p, wood)
+		ci.draw_rect(Rect2(p.position.x - 1.0, p.position.y - 2.0, p.size.x + 2.0, 3.0), lit)
+		if snowy:
+			ci.draw_rect(Rect2(p.position.x - 1.0, p.position.y - 3.0, p.size.x + 2.0, 2.0), Color("eef3f7"))

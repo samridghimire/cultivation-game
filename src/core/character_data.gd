@@ -9,6 +9,8 @@ var name := ""
 var gender := ""
 var surname := ""
 var given_name := ""
+## FOLK-027: day of the year (0-based) the player is said to be born; -1 = unrolled (old saves hash the name).
+var birthday: int = -1
 ## Family links: character ids (the player is "player", NPCs use their GameState.npcs id).
 var parents: Array[String] = []
 var children: Array[String] = []
@@ -95,12 +97,18 @@ var bound_artifacts: Array[String] = []
 var visited_regions: Array[String] = []
 ## Seasons in which the player gathered a season-only herb (SEASON-003).
 var seasonal_gathers: Array[String] = []
+## SEASON-005: the village's seasonal tasks {season_key, progress: {task_id: n}, done}.
+var season_tasks: Dictionary = {}
+## SEASON-006: season keys whose three village tasks were finished (unique).
+var seasons_completed: Array[String] = []
 ## Cultivators whose cultivation this character has devoured (Devouring, DEM-001).
 var devoured := 0
 ## Id of the player's named rival NPC (Rivals, RIV-002), "" if none.
 var rival := ""
 ## Claimed cave abode id (data/regions.json "abodes"), "" if none (Abodes).
 var abode := ""
+## Great-beast trophies hung on the home's wall, at most Trophies.MAX_HUNG (WILD-022).
+var hung_trophies: Array[String] = []
 ## Items kept in the abode's storage chest: item id -> count.
 var abode_storage: Dictionary = {}
 ## Item id of the array set up at the abode (items.json `array`), "" if none (G-006).
@@ -136,6 +144,9 @@ var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-0
 var year_start_year: int = 0  # the year the snapshot was taken in (YEAR-002); 0 = unknown (old saves)
 var last_meditated_day: int = -1  # GameClock day the last cultivation ended (GUIDE-057); -1 = never/unknown
 var year_start_realm: String = ""  # realm label then; "" = no snapshot yet
+var season_start_sets: int = -1  # seasons_completed.size() at the last season start; -1 = unknown (GUIDE-224)
+var season_start_stats: Dictionary = {}  # life_stats at the last season start (SEASON-012)
+var season_start_day: int = -1  # GameClock day of that snapshot; -1 = none yet (old saves)
 var milestones: Array[String] = []  # earned Milestones ids
 var deed_days: Dictionary = {}  # deed id -> GameClock day it was last done
 ## Inheritance id -> trial stages passed (W-006, Inheritances).
@@ -155,6 +166,10 @@ var letter_requests: Array[Dictionary] = []
 var folk_gift_day: Dictionary = {}
 ## Highest friendship tier already celebrated per villager (FOLK-007): npc id -> tier index; seeded once on old saves.
 var folk_tier_seen: Dictionary = {}
+var lessons_taught: Dictionary = {}  # FOLK-020: "<npc_id>:<index>" -> day
+## Friend scenes already shown (FOLK-013) and the day the last one played.
+var scenes_seen: Array[String] = []
+var scene_day: int = -1
 var folk_tiers_seeded: bool = false
 ## Fishing skill (FISH-003): one point per trip, two for a rare catch.
 var fishing_xp: int = 0
@@ -178,6 +193,8 @@ var great_beast_realms: Dictionary = {}
 var market_regular: Dictionary = {}
 ## Home meals cooked (GOAL-006): meal id -> times cooked.
 var cooked_meals: Dictionary = {}
+## COOK-001: ids of taught home meals (recipes.json `taught`) the character has learned.
+var known_dishes: Array[String] = []
 ## Forage pickups taken in a lifetime (FORAGE-005): drives the forager's eye tiers.
 var forage_picks: int = 0
 ## World day each generated villager last came to visit and shared tea with the player (WORLD-007): npc id -> day.
@@ -227,6 +244,7 @@ func to_dict() -> Dictionary:
 		"gender": gender,
 		"surname": surname,
 		"given_name": given_name,
+		"birthday": birthday,
 		"parents": parents.duplicate(),
 		"children": children.duplicate(),
 		"spouses": spouses.duplicate(),
@@ -287,6 +305,9 @@ func to_dict() -> Dictionary:
 		"year_start_year": year_start_year,
 		"last_meditated_day": last_meditated_day,
 		"year_start_realm": year_start_realm,
+		"season_start_stats": season_start_stats.duplicate(),
+		"season_start_sets": season_start_sets,
+		"season_start_day": season_start_day,
 		"commissions": commissions.duplicate(true),
 		"milestones": milestones.duplicate(),
 		"trial_progress": trial_progress.duplicate(),
@@ -294,10 +315,13 @@ func to_dict() -> Dictionary:
 		"bound_artifacts": bound_artifacts.duplicate(),
 		"visited_regions": visited_regions.duplicate(),
 		"seasonal_gathers": seasonal_gathers.duplicate(),
+		"season_tasks": season_tasks.duplicate(true),
+		"seasons_completed": seasons_completed.duplicate(),
 		"devoured": devoured,
 		"rival": rival,
 		"abode": abode,
 		"abode_storage": abode_storage.duplicate(),
+		"hung_trophies": hung_trophies.duplicate(),
 		"grudges": grudges.duplicate(),
 		"gratitude": gratitude.duplicate(),
 		"letters": letters.duplicate(),
@@ -313,11 +337,15 @@ func to_dict() -> Dictionary:
 		"great_beast_realms": great_beast_realms.duplicate(),
 		"market_regular": market_regular.duplicate(),
 		"cooked_meals": cooked_meals.duplicate(),
+		"known_dishes": known_dishes.duplicate(),
 		"forage_picks": forage_picks,
 		"gather_xp": gather_xp,
 		"herb_log": herb_log.duplicate(),
 		"folk_visit_day": folk_visit_day.duplicate(),
 		"folk_tier_seen": folk_tier_seen.duplicate(),
+		"lessons_taught": lessons_taught.duplicate(),
+		"scenes_seen": scenes_seen.duplicate(),
+		"scene_day": scene_day,
 		"folk_tiers_seeded": folk_tiers_seeded,
 		"folk_companion": folk_companion.duplicate(),
 		"folk_companion_day": folk_companion_day.duplicate(),
@@ -342,6 +370,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.gender = String(d.get("gender", ""))
 	c.surname = String(d.get("surname", ""))
 	c.given_name = String(d.get("given_name", ""))
+	c.birthday = int(d.get("birthday", -1))
 	c.parents = _strings(d.get("parents", []))
 	c.children = _strings(d.get("children", []))
 	c.spouses = _strings(d.get("spouses", []))
@@ -421,7 +450,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			var crops: Array = []
 			for crop in saved.get("crops", []):
 				if crop is Dictionary:
-					crops.append({"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))})
+					var saved_crop := {"item": String(crop.get("item", "")), "days_left": int(crop.get("days_left", 0))}
+					if crop.has("bonus_acc"):
+						saved_crop["bonus_acc"] = float(crop["bonus_acc"])  # SEASON-008: the well's partial extra growing day
+					crops.append(saved_crop)
 			var entry := {"paid_until": int(saved.get("paid_until", 0)), "crops": crops}
 			if saved.has("watered_day"):
 				entry["watered_day"] = int(saved["watered_day"])
@@ -436,6 +468,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.year_start_year = int(d.get("year_start_year", 0))
 	c.last_meditated_day = int(d.get("last_meditated_day", -1))
 	c.year_start_realm = String(d.get("year_start_realm", ""))
+	c.season_start_stats = _int_values(d.get("season_start_stats", {}))
+	c.season_start_sets = int(d.get("season_start_sets", -1))
+	c.season_start_day = int(d.get("season_start_day", -1))
 	for order in d.get("commissions", []):
 		if order is Dictionary:
 			c.commissions.append({"profession": String(order.get("profession", "")), "recipe": String(order.get("recipe", "")),
@@ -450,10 +485,18 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.visited_regions.append(String(region_id))
 	for season in d.get("seasonal_gathers", []):
 		c.seasonal_gathers.append(String(season))
+	for sk in d.get("seasons_completed", []):
+		if not c.seasons_completed.has(String(sk)):
+			c.seasons_completed.append(String(sk))
+	var st: Variant = d.get("season_tasks", {})
+	if st is Dictionary and not (st as Dictionary).is_empty():
+		c.season_tasks = {"season_key": String(st.get("season_key", "")), "progress": _int_values(st.get("progress", {})), "done": bool(st.get("done", false))}
 	c.devoured = int(d.get("devoured", 0))
 	c.rival = String(d.get("rival", ""))
 	c.abode = String(d.get("abode", ""))
 	c.abode_storage = _int_values(d.get("abode_storage", {}))
+	for t: Variant in d.get("hung_trophies", []):
+		c.hung_trophies.append(String(t))
 	c.grudges = _int_values(d.get("grudges", {}))
 	c.gratitude = _int_values(d.get("gratitude", {}))
 	for letter in d.get("letters", []):
@@ -464,6 +507,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.catch_log = _int_values(d.get("catch_log", {}))
 	c.hunt_log = _int_values(d.get("hunt_log", {}))
 	c.cooked_meals = _int_values(d.get("cooked_meals", {}))
+	for dish: Variant in d.get("known_dishes", []):
+		c.known_dishes.append(String(dish))
 	c.forage_picks = int(d.get("forage_picks", 0))
 	c.great_beasts = _int_values(d.get("great_beasts", {}))
 	var saved_marks: Dictionary = d.get("marked_days", {})
@@ -480,6 +525,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.herb_log = _int_values(d.get("herb_log", {}))
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
 	c.folk_tier_seen = _int_values(d.get("folk_tier_seen", {}))
+	c.lessons_taught = _int_values(d.get("lessons_taught", {}))
+	for sid in d.get("scenes_seen", []):
+		c.scenes_seen.append(String(sid))
+	c.scene_day = int(d.get("scene_day", -1))
 	c.folk_tiers_seeded = bool(d.get("folk_tiers_seeded", false))
 	var companion: Dictionary = d.get("folk_companion", {})
 	if not companion.is_empty():

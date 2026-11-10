@@ -1,0 +1,281 @@
+class_name Critters
+extends RefCounted
+## GFX-086: pure rules for the small ambient critters of a village map (hens, ducks, butterflies).
+## regions.json `map.ambient_critters: [{kind, pos: [x, y]}]`; the world draws what `today` returns.
+## Chimney smoke already lives in VillageLife (GFX-040), so it is not a critter kind.
+
+const KINDS: PackedStringArray = ["hen", "duck", "butterfly"]
+## Every critter kind that may appear in a given season (lower-case or capitalised both work).
+const SEASONS := {
+	"hen": ["spring", "summer", "autumn", "winter"],
+	"duck": ["spring", "summer", "autumn"],  # the pond is frozen in winter
+	"butterfly": ["spring", "summer"],
+}
+## A duck must float this far inside a pond's bounding rect.
+const WATER_MARGIN := 6.0
+
+
+## CRIT-001: world flag key holding {day, taken: [entry indexes]} of the eggs picked today.
+static func egg_flag(region_id: String) -> String:
+	return "eggs_" + region_id
+
+
+## CRIT-002: world flag key holding the day the hens were last fed in a region.
+static func fed_flag(region_id: String) -> String:
+	return "hens_fed_" + region_id
+
+
+## CRIT-002: the first hen's `lays.feed` block {item_tag, eggs_min, eggs_max} among `entries`, or {}.
+static func feed_of(entries: Array) -> Dictionary:
+	for e: Variant in entries:
+		if e is Dictionary and String(e.get("kind", "")) == "hen" and e.has("lays") and (e["lays"] as Dictionary).has("feed"):
+			return (e["lays"] as Dictionary)["feed"]
+	return {}
+
+
+## CRIT-002: true when the hens were fed the day before `day`.
+static func fed_for(flags: Dictionary, region_id: String, day: int) -> bool:
+	return int(flags.get(fed_flag(region_id), -99)) == day - 1
+
+
+## CRIT-002: true when the hens were fed today (the Today line says so).
+static func fed_today(flags: Dictionary, region_id: String, day: int) -> bool:
+	return int(flags.get(fed_flag(region_id), -99)) == day
+
+
+## CRIT-002: why the hens cannot be fed ("" = they can): no feed data, already fed today, or no grain.
+static func feed_refusal(data: GameData, c: CharacterData, entries: Array, flags: Dictionary, region_id: String, day: int) -> String:
+	var feed := feed_of(entries)
+	if feed.is_empty():
+		return "There are no hens to feed here."
+	if fed_today(flags, region_id, day):
+		return "The hens are already fed today."
+	if grain_item(data, c, String(feed.get("item_tag", ""))) == "":
+		return "You have no grain to scatter."
+	return ""
+
+
+## CRIT-002: the cheapest owned item carrying `tag`, or "".
+static func grain_item(data: GameData, c: CharacterData, tag: String) -> String:
+	var best := ""
+	for item_id: Variant in c.inventory:
+		if c.item_count(String(item_id)) > 0 and Items.has_tag(data, String(item_id), [tag]):
+			if best == "" or String(item_id) < best:
+				best = String(item_id)
+	return best
+
+
+## CRIT-001: today's eggs for a region's `entries` (its map.ambient_critters): [{index, pos, item}], at most one per
+## hen that has `lays`, near the hen's pos. Pure, seeded by region id and day; hens only lay in season.
+static func eggs_today(region_id: String, entries: Array, day: int, season: String = "spring", fed: bool = false) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in entries.size():
+		var e: Dictionary = entries[i]
+		if String(e.get("kind", "")) != "hen" or not e.has("lays") or not in_season("hen", season):
+			continue
+		var lays: Dictionary = e["lays"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("egg:%s:%d:%d" % [region_id, day, i])
+		var feed: Dictionary = lays.get("feed", {}) if fed else {}  # CRIT-002: fed hens lay surely, maybe two
+		if rng.randf() >= (1.0 if not feed.is_empty() else float(lays.get("chance", 0.0))):
+			continue
+		var pos := Vector2(float(e["pos"][0]), float(e["pos"][1])) + Vector2(rng.randf_range(-26.0, 26.0), rng.randf_range(10.0, 26.0))
+		var count := 1
+		if not feed.is_empty():
+			count = rng.randi_range(int(feed.get("eggs_min", 1)), maxi(int(feed.get("eggs_min", 1)), int(feed.get("eggs_max", 1))))
+		out.append({"index": i, "pos": pos, "item": String(lays["item"]), "count": count})
+	return out
+
+
+## Eggs not yet picked today, given the world flags.
+static func eggs_left(region_id: String, entries: Array, day: int, flags: Dictionary, season: String = "spring") -> Array[Dictionary]:
+	var rec: Variant = flags.get(egg_flag(region_id))
+	var taken: Array = []
+	if rec is Dictionary and int(rec.get("day", -1)) == day:
+		for t: Variant in rec.get("taken", []):
+			taken.append(int(t))  # JSON saves hand back floats
+	return eggs_today(region_id, entries, day, season, fed_for(flags, region_id, day)).filter(func(e: Dictionary) -> bool: return not taken.has(int(e["index"])))
+
+
+## Marks entry `index` picked today (the record is overwritten on a new day).
+static func mark_egg(flags: Dictionary, region_id: String, index: int, day: int) -> void:
+	var rec: Variant = flags.get(egg_flag(region_id))
+	var taken: Array = []
+	if rec is Dictionary and int(rec.get("day", -1)) == day:
+		for t: Variant in rec.get("taken", []):
+			taken.append(int(t))
+	taken.append(index)
+	flags[egg_flag(region_id)] = {"day": day, "taken": taken}
+
+
+## Errors for one region's `map.ambient_critters` (empty when fine).
+static func validate(region: Dictionary, items: Dictionary = {}) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var map: Dictionary = region.get("map", {})
+	if not map.has("ambient_critters"):
+		return errors
+	var rid := String(region.get("id", "?"))
+	var list: Variant = map["ambient_critters"]
+	if not list is Array:
+		errors.append("Region '%s' map.ambient_critters must be an array" % rid)
+		return errors
+	var size := Vector2(1600, 1000)
+	if map.has("size") and map["size"] is Array and (map["size"] as Array).size() == 2:
+		size = Vector2(float(map["size"][0]), float(map["size"][1]))
+	for i in (list as Array).size():
+		var e: Variant = list[i]
+		if not e is Dictionary:
+			errors.append("Region '%s' map.ambient_critters[%d] must be an object" % [rid, i])
+			continue
+		var kind := String(e.get("kind", ""))
+		if not KINDS.has(kind):
+			errors.append("Region '%s' map.ambient_critters[%d] kind '%s' is not one of %s" % [rid, i, kind, ", ".join(KINDS)])
+			continue
+		var pos: Variant = e.get("pos", null)
+		if not (pos is Array and (pos as Array).size() == 2 and (pos[0] is float or pos[0] is int) and (pos[1] is float or pos[1] is int)):
+			errors.append("Region '%s' map.ambient_critters[%d] pos must be [x, y]" % [rid, i])
+			continue
+		if e.has("lays"):
+			var lays: Variant = e["lays"]
+			if kind != "hen" or not (lays is Dictionary):
+				errors.append("Region '%s' map.ambient_critters[%d] lays is only for a hen, as {item, chance}" % [rid, i])
+			else:
+				var ch: Variant = lays.get("chance")
+				if not (ch is float or ch is int) or float(ch) < 0.0 or float(ch) > 1.0:
+					errors.append("Region '%s' map.ambient_critters[%d] lays.chance must be 0..1" % [rid, i])
+				if lays is Dictionary and lays.has("feed"):
+					var fd: Variant = lays["feed"]
+					if not fd is Dictionary or String(fd.get("item_tag", "")) == "" or int(fd.get("eggs_min", 0)) < 1 or int(fd.get("eggs_max", 0)) < int(fd.get("eggs_min", 0)) or int(fd.get("eggs_max", 0)) > 4:
+						errors.append("Region '%s' map.ambient_critters[%d] lays.feed needs item_tag and 1 <= eggs_min <= eggs_max <= 4" % [rid, i])
+				if not items.is_empty() and not items.has(String(lays.get("item", ""))):
+					errors.append("Region '%s' map.ambient_critters[%d] lays.item '%s' is not an item" % [rid, i, lays.get("item", "")])
+		var p := Vector2(float(pos[0]), float(pos[1]))
+		if p.x < 0.0 or p.y < 0.0 or p.x > size.x or p.y > size.y:
+			errors.append("Region '%s' map.ambient_critters[%d] pos is outside the map" % [rid, i])
+		elif kind == "duck" and pond_at(region, p).size == Vector2.ZERO:
+			errors.append("Region '%s' map.ambient_critters[%d] duck must be on a pond landmark" % [rid, i])
+	return errors
+
+
+## The pond landmark rect (shrunk by WATER_MARGIN) containing `p`; a zero Rect2 when none does.
+static func pond_at(region: Dictionary, p: Vector2) -> Rect2:
+	for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+		if String(lm.get("kind", "")) != "pond":
+			continue
+		var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
+		var rect := Rect2(Vector2(float(lm["pos"][0]), float(lm["pos"][1])) - size / 2.0, size).grow(-WATER_MARGIN)
+		if rect.has_point(p):
+			return rect
+	return Rect2()
+
+
+## True when `kind` shows in `season` ("Spring" or "spring").
+static func in_season(kind: String, season: String) -> bool:
+	return (SEASONS.get(kind, []) as Array).has(season.to_lower())
+
+
+## Today's critters: [{kind, pos, home (Rect2: the roaming box), seed (int)}], none when `enabled` is false.
+## Deterministic from the region id and day (no global randomness).
+static func today(region: Dictionary, season: String, day: int, enabled: bool, fed: bool = false) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var coop := coop_rect(region)
+	var hens_total := 0
+	for e: Variant in region.get("map", {}).get("ambient_critters", []):
+		if String((e as Dictionary).get("kind", "")) == "hen":
+			hens_total += 1
+	var hen_n := 0
+	if not enabled:
+		return out
+	var list: Array = region.get("map", {}).get("ambient_critters", [])
+	for i in list.size():
+		var e: Dictionary = list[i]
+		var kind := String(e["kind"])
+		if not in_season(kind, season):
+			continue
+		var pos := Vector2(float(e["pos"][0]), float(e["pos"][1]))
+		var seed_value := hash([String(region.get("id", "")), day, i])
+		var home := Rect2(pos - Vector2(18, 10), Vector2(36, 20))
+		if kind == "hen":
+			if fed and coop.size != Vector2.ZERO:  # WU-490: fed hens cluster pecking in front of the coop
+				pos = cluster_pos(coop_front_rect(coop), hen_n, hens_total)
+				home = Rect2(pos - Vector2(4, 3), Vector2(8, 6))
+			hen_n += 1
+		if kind == "duck":
+			home = pond_at(region, pos)
+		elif kind == "butterfly":
+			home = Rect2(pos - Vector2(40, 30), Vector2(80, 60))
+		out.append({"kind": kind, "pos": pos, "home": home, "seed": seed_value})
+	return out
+
+
+## Where a critter is at time `t` (seconds): a slow, seeded wander inside its home box. Still (the
+## start position) when `still`. Pure.
+static func position_at(c: Dictionary, t: float, still: bool) -> Vector2:
+	var pos: Vector2 = c["pos"]
+	if still:
+		return pos
+	var home: Rect2 = c["home"]
+	var s := float(int(c["seed"]) % 628) / 100.0
+	var speed := 0.5 if c["kind"] != "butterfly" else 1.3
+	var off := Vector2(sin(t * speed + s), cos(t * speed * 0.7 + s * 1.7)) * 0.5
+	var p := pos + Vector2(off.x * home.size.x * 0.5, off.y * home.size.y * 0.5)
+	if home.size != Vector2.ZERO:
+		p = Vector2(clampf(p.x, home.position.x, home.end.x), clampf(p.y, home.position.y, home.end.y))
+	return p
+
+
+## GFX-088: how close the player must be before a critter notices, by kind.
+const FLEE_RADIUS := {"hen": 28.0, "duck": 56.0, "butterfly": 32.0}
+## ...and how far it moves at contact (a hen runs 40-60 px, a duck paddles, a butterfly rises 20 px).
+const FLEE_DIST := {"hen": 24.0, "duck": 36.0, "butterfly": 20.0}
+
+
+## Offset a critter takes to get away from the player: zero beyond `radius`, pointing directly away,
+## `max_dist` long at contact and shrinking linearly to nothing at the radius. Pure.
+static func flee_offset(critter_pos: Vector2, player_pos: Vector2, radius: float, max_dist: float) -> Vector2:
+	var d := critter_pos - player_pos
+	var dist := d.length()
+	if radius <= 0.0 or dist >= radius:
+		return Vector2.ZERO
+	var dir := Vector2.RIGHT if dist < 0.001 else d / dist
+	return dir * max_dist * (1.0 - dist / radius)
+
+
+## `p` pulled inside a pond rect (a zero rect leaves it alone). Pure.
+static func clamp_to_pond(p: Vector2, pond: Rect2) -> Vector2:
+	if pond.size == Vector2.ZERO:
+		return p
+	return Vector2(clampf(p.x, pond.position.x, pond.end.x), clampf(p.y, pond.position.y, pond.end.y))
+
+
+## Offset for critter `c` (with its wander position `p`) given the player: ducks and hens flee away,
+## butterflies rise straight up by the same strength.
+static func startle_offset(c: Dictionary, p: Vector2, player_pos: Vector2) -> Vector2:
+	var kind := String(c["kind"])
+	var away := flee_offset(p, player_pos, float(FLEE_RADIUS.get(kind, 0.0)), float(FLEE_DIST.get(kind, 0.0)))
+	if kind == "butterfly":
+		return Vector2(0.0, -away.length())
+	return away
+
+
+## WU-490: the rect of the region's first coop place (Rect2 of pos +/- size/2), or an empty Rect2.
+static func coop_rect(region: Dictionary) -> Rect2:
+	for p: Variant in region.get("places", []):
+		if String((p as Dictionary).get("type", "")) == "coop":
+			var pos: Array = p["pos"]
+			var sz: Array = p["size"]
+			return Rect2(float(pos[0]) - float(sz[0]) / 2.0, float(pos[1]) - float(sz[1]) / 2.0, float(sz[0]), float(sz[1]))
+	return Rect2()
+
+
+## WU-490: the strip of ground just below a coop where fed hens peck (coop width, 28 px deep).
+static func coop_front_rect(coop: Rect2) -> Rect2:
+	return Rect2(coop.position.x + 6.0, coop.end.y + 4.0, maxf(coop.size.x - 12.0, 8.0), 24.0)
+
+
+## WU-490: slot `i` of `n` hens inside `front`: spread along its width on two staggered rows. Always inside.
+static func cluster_pos(front: Rect2, i: int, n: int) -> Vector2:
+	var count := maxi(n, 1)
+	var x := front.position.x + front.size.x * (float(i) + 0.5) / float(count)
+	var y := front.position.y + front.size.y * (0.3 if i % 2 == 0 else 0.7)
+	return Vector2(clampf(x, front.position.x + 4.0, front.end.x - 4.0), y)

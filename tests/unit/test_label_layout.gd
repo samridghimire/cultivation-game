@@ -74,3 +74,47 @@ func test_figure_blocker_moves_other_labels_not_its_own() -> void:
 	assert_false(res[0]["faded"], "own label visible")
 	var moved: Rect2 = Rect2(rects[1].position + Vector2(0, float(res[1]["offset"])), rects[1].size)
 	assert_true(bool(res[1]["faded"]) or not moved.intersects(figure), "other label leaves the figure or fades")
+
+
+## WU-475: a 7-label cluster keeps the focus, a place and the nearest villager only.
+func test_crowd_keep_cluster_keeps_three() -> void:
+	var rects: Array[Rect2] = []
+	var prio: Array[int] = []
+	for i in 7:
+		rects.append(Rect2(400 + i * 15, 300 + (i % 2) * 10, 70, 14))
+		prio.append(2)
+	prio[5] = 1
+	var keep := LabelLayout.crowd_keep(rects, prio, 3)
+	assert_eq(keep.count(true), 3)
+	assert_true(keep[3], "focus kept")
+	assert_true(keep[5], "place kept")
+	assert_true(keep[0], "nearest kept")
+
+
+func test_crowd_keep_spread_set_keeps_all() -> void:
+	var rects: Array[Rect2] = []
+	var prio: Array[int] = []
+	for i in 6:
+		rects.append(Rect2(i * 400, 100, 70, 14))
+		prio.append(2)
+	assert_eq(LabelLayout.crowd_keep(rects, prio, -1).count(true), 6)
+
+
+func test_blocker_at_bottom_pushes_label_up() -> void:
+	var bar := Rect2(0, 740, 1280, 60)
+	var blockers: Array[Rect2] = [bar]
+	var rects: Array[Rect2] = [Rect2(600, 735, 80, 14)]
+	var res := LabelLayout.resolve(rects, SCREEN, blockers)
+	var moved := Rect2(rects[0].position + Vector2(0, float(res[0]["offset"])), rects[0].size)
+	assert_false(moved.intersects(bar))
+	assert_true(float(res[0]["offset"]) < 0.0)
+
+
+func test_label_moves_below_a_building_it_would_sit_on() -> void:
+	var rects: Array[Rect2] = [Rect2(100, 100, 80, 16)]
+	var roof := Rect2(90, 60, 100, 50)
+	var out := LabelLayout.resolve(rects, Rect2(0, 0, 1280, 800), [], {}, {0: [roof]})
+	assert_gt(float(out[0]["offset"]), 0.0, "moved down, not up")
+	assert_false(bool(out[0]["faded"]))
+	var free := LabelLayout.resolve(rects, Rect2(0, 0, 1280, 800), [], {}, {0: [Rect2(600, 600, 50, 50)]})
+	assert_eq(float(free[0]["offset"]), 0.0)

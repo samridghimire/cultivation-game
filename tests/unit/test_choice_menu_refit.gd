@@ -74,3 +74,26 @@ func test_short_menu_fits_content() -> void:
 	print("panel=%s buttons=%s title=%s" % [menu.size.y, buttons_h, title_h])
 	assert_true(menu.size.y < buttons_h + title_h + 120.0, "panel %s too tall for %s buttons + title" % [menu.size.y, buttons_h])
 	vp.free()
+
+
+## WU-485: opening a short menu after a long one shrinks the panel back to its content.
+func test_panel_shrinks_after_long_menu() -> void:
+	var vp := SubViewport.new()
+	vp.size = Vector2i(1280, 800)
+	_tree().root.add_child(vp)
+	var menu := ChoiceMenu.new()
+	vp.add_child(menu)
+	var long_src := FakeSource.new()
+	vp.add_child(long_src)
+	menu.open_for(long_src)
+	for i in 3:
+		await _tree().process_frame
+	var tall: float = menu.size.y
+	var short_src := ShortSource.new()
+	vp.add_child(short_src)
+	menu.open_for(short_src)
+	for i in 4:
+		await _tree().process_frame
+	assert_true(menu.size.y < tall, "panel shrank")
+	assert_eq(menu.size.y, menu.get_combined_minimum_size().y, "panel height == content height")
+	vp.free()

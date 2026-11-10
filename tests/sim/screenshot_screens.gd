@@ -1183,7 +1183,7 @@ func _start_banner_shot(gs: Node) -> void:
 	var long_sub := ""
 	for region_id: String in gs.data.regions:
 		Renown.add(c, gs.data, region_id, top_amount)
-		var qi := Exploration.qi_density(gs.data, region_id, gs.world_flags)
+		var qi := Exploration.effective_density(gs.data, region_id, gs.world_flags, 0)
 		var danger: String = load("res://src/ui/world_map_screen.gd").danger_name(gs.data, region_id)
 		var sub: String = hud.get_script().arrival_subtitle(c, gs.data, region_id, qi, danger, true)
 		var name := Exploration.region_name(gs.data, region_id)
@@ -4309,6 +4309,8 @@ func _process(_d: float) -> bool:
 	var shot: Dictionary = shots[index]
 	if not opened:
 		(shot["open"] as Callable).call()
+		if hud != null:
+			hud.call("_update_modal")  # WU-496: as the game does, so the backdrop and name-card dismissal happen
 		opened = true
 		frames = 0
 		return false

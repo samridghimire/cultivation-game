@@ -22,11 +22,11 @@ const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
 	["cloud_crane", "crane"], ["toad", "toad"], ["_ram", "ram"], ["ram_", "ram"],
-	["wolf", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
+	["wolf", "wolf"], ["alpha", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
 	["boar", "boar"], ["pig", "boar"],
 	["stag", "deer"], ["deer", "deer"], ["antler", "deer"], ["elk", "deer"], ["ape", "ape"], ["monkey", "ape"],
 	["tiger", "tiger"], ["leopard", "tiger"], ["cat", "tiger"],
-	["snake", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
+	["snake", "snake"], ["caiman", "snake"], ["serpent", "snake"], ["python", "snake"], ["viper", "snake"],
 	["bird", "bird"], ["crow", "bird"], ["hawk", "bird"], ["crane", "bird"], ["eagle", "bird"], ["roc", "bird"], ["condor", "bird"],
 ]
 
@@ -43,6 +43,10 @@ const SKY_BY_SEASON := {
 }
 
 var _foe_beast: bool = false
+## WU-501: a backdrop kind that replaces the region's own near layer (pines, reeds, cave, ruins, crags, hills); "" = the region's.
+var look_kind: String = ""
+## WU-501: {ground: hex, sky: [top hex, horizon hex]} that replaces the region's ground and the clock's sky (the season card); {} = none.
+var season_look: Dictionary = {}
 var _foe_id: String = ""
 var _foe_texture: Texture2D
 var _offset: Array[float] = [0.0, 0.0]  # [player, foe] x offsets
@@ -56,6 +60,14 @@ var _stage_shake_start := -1.0  # ticks (s) when the heavy-hit shake began
 
 const STAGE_SHAKE_SECONDS := 0.15
 const STAGE_SHAKE_PIXELS := 3.0
+
+
+## WU-473: blows you can see. `_floaters`: [{who (struck 0 you / 1 foe), text, color, size, start (s), life (s),
+## rise (px), banner (bool: a technique name over the attacker)}].
+var _floaters: Array[Dictionary] = []
+const NUMBER_RISE := 24.0
+const NUMBER_SECONDS := 0.6
+const BANNER_SECONDS := 0.8
 
 
 func _init() -> void:
@@ -75,12 +87,103 @@ static func blow_side(prev: Array, cur: Array) -> int:
 	return 0
 
 
+## The numbers behind a revealed blow: {side, amount, kind}. `side` as blow_side, `amount` the hp the
+## struck figure lost (from the trace, not the text), `kind` crit | solid | glance | hit. `line` only
+## classifies the weight. Pure.
+static func blow_info(prev: Array, cur: Array, line: String) -> Dictionary:
+	var side := blow_side(prev, cur)
+	if side == 0:
+		return {"side": 0, "amount": 0, "kind": "hit"}
+	var struck := 1 if side == 1 else 0
+	var kind := "hit"
+	if line.contains("critically") or line.contains(Combat.BLOW_WORD_CRUSHING) or line.contains(Combat.BLOW_WORD_SOLID):
+		kind = "crit" if line.contains("critically") or line.contains(Combat.BLOW_WORD_CRUSHING) else "solid"
+	elif line.contains(Combat.BLOW_WORD_GLANCING):
+		kind = "glance"
+	return {"side": side, "amount": int(prev[struck]) - int(cur[struck]), "kind": kind}
+
+
+## The technique a log line names ("You strike with Cloud Palm for 9", "Wolf attacks with Pounce for 4"), or "".
+static func technique_of(line: String) -> String:
+	for lead in [" strike with ", " attacks with "]:
+		var at := line.find(lead)
+		if at < 0:
+			continue
+		var rest := line.substr(at + lead.length())
+		var end := rest.length()
+		for stop in [" critically", ":", " for "]:
+			var k := rest.find(stop)
+			if k >= 0:
+				end = mini(end, k)
+		return rest.substr(0, end).strip_edges()
+	return ""
+
+
+## Floats a damage number over the struck figure and, when `technique` is set, its name over the attacker.
+func show_blow(info: Dictionary, technique: String = "") -> void:
+	var side := int(info.get("side", 0))
+	if side == 0:
+		return
+	var struck := 1 if side == 1 else 0
+	var kind := String(info["kind"])
+	var color := Color.WHITE
+	var font_size := 16
+	if kind == "crit" or kind == "solid":
+		color = UIStyle.ACCENT
+		font_size = 22
+	elif kind == "glance":
+		color = Color("9a9a9a")
+	var now := Time.get_ticks_msec() / 1000.0
+	_floaters.append({"who": struck, "text": str(int(info["amount"])), "color": color, "size": font_size, "start": now, "life": NUMBER_SECONDS, "banner": false})
+	if technique != "":
+		_floaters.append({"who": 1 - struck, "text": technique, "color": Color("e8d9b0"), "size": 13, "start": now, "life": BANNER_SECONDS, "banner": true})
+	set_process(true)
+
+
+func clear_floaters() -> void:
+	_floaters.clear()
+	set_process(false)
+	queue_redraw()
+
+
+func floater_count() -> int:
+	return _floaters.size()
+
+
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	_floaters = _floaters.filter(func(f: Dictionary) -> bool: return now - float(f["start"]) < float(f["life"]))
+	if _floaters.is_empty():
+		set_process(false)
+	queue_redraw()
+
+
+func _draw_floaters(base_y: float, dx: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	var font := ThemeDB.fallback_font
+	for f in _floaters:
+		var t := clampf((now - float(f["start"])) / float(f["life"]), 0.0, 1.0)
+		var cx := size.x * (0.25 if int(f["who"]) == 0 else 0.75) + dx
+		var rise := 0.0 if (MotionFx.reduced() or bool(f["banner"])) else NUMBER_RISE * t
+		var y := base_y - _body_size(int(f["who"])).y - 8.0 - rise
+		if bool(f["banner"]):
+			y = base_y - _body_size(int(f["who"])).y - 24.0
+		var col: Color = f["color"]
+		col.a = 1.0 - t * t
+		var fs := int(f["size"])
+		var w := font.get_string_size(String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var pos := Vector2(cx - w / 2.0, maxf(y, float(fs)))
+		draw_string_outline(font, pos, String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(0, 0, 0, col.a))
+		draw_string(font, pos, String(f["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+
 ## Picks the foe's art: a mapped `enemy_<id>`/`enemy` sprite, a beast silhouette for
 ## enemies tagged "beast", otherwise a robed cultivator. Resets both fighters.
 func setup(enemy_id: String, tags: Array) -> void:
 	_foe_beast = tags.has("beast")
 	_foe_id = enemy_id
 	_foe_texture = null
+	clear_floaters()
 	if enemy_id != "":
 		_foe_texture = Sprites.first(PackedStringArray(["enemy_" + enemy_id, "enemy"]))
 	reset_pose()
@@ -235,6 +338,7 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
+	_draw_floaters(base_y, dx)
 	for who in 2:
 		if is_fallen(who):
 			var font := ThemeDB.fallback_font
@@ -298,13 +402,15 @@ static func hill_arc(cx: float, base_y: float, r: float, max_h: float, steps: in
 func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var top_h := size.y - GROUND_BAND
 	var sky := sky_colors(Calendar.season_of(GameClock.total_days))
+	if season_look.has("sky"):
+		sky = [Color(String(season_look["sky"][0])), Color(String(season_look["sky"][1]))]
 	var bands := 12
 	for i in bands:
 		var c: Color = (sky[0] as Color).lerp(sky[1], float(i) / float(bands - 1))
 		draw_rect(Rect2(0.0, top_h * i / bands, size.x, ceilf(top_h / bands) + 1.0), c)
 	var haze: Color = sky[1]
 	var col := Color(map.get("ground", "4d6b3c")).darkened(0.45).lerp(haze, HAZE)
-	var kind := silhouette_for(rid)
+	var kind := look_kind if look_kind != "" else silhouette_for(rid)
 	var horizon := top_h
 	if is_raining():
 		draw_rect(Rect2(0.0, 0.0, size.x, top_h), Color(0.12, 0.14, 0.2, 0.55))
@@ -313,11 +419,25 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
 			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55)  # distant mountain line
-	for s in silhouette_shapes(rid + "_far", "hills", size.x):
+	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55).lerp(haze, 0.4)  # distant ridge, 40% lighter (GFX-107)
+	col = col.darkened(0.2)  # the near layer sits darker than the ridge
+	var layers := backdrop_layers(rid, size.x)
+	if look_kind != "":
+		layers["near"] = silhouette_shapes(rid + look_kind, kind, size.x)
+	var crags := rid in PEAK_REGIONS
+	for s in layers["far"]:
 		var fr := 60.0 + float(s["h"]) * 0.6
-		draw_colored_polygon(hill_arc(s["x"], horizon, fr, minf(float(s["h"]) + 14.0, top_h * 0.45)), far)
-	for s in silhouette_shapes(rid, kind, size.x):
+		var fh := minf(float(s["h"]) + 14.0, top_h * 0.45)
+		if crags:  # jagged crag line instead of rounded hills
+			var cx: float = s["x"]
+			draw_colored_polygon(PackedVector2Array([Vector2(cx - fr, horizon), Vector2(cx - fr * 0.3, horizon - fh * 0.7),
+				Vector2(cx - fr * 0.1, horizon - fh * 0.55), Vector2(cx + fr * 0.05, horizon - fh), Vector2(cx + fr * 0.4, horizon - fh * 0.5),
+				Vector2(cx + fr, horizon)]), far)
+		else:
+			draw_colored_polygon(hill_arc(s["x"], horizon, fr, fh), far)
+	var piece_i := -1
+	for s in layers["near"]:
+		piece_i += 1
 		var x: float = s["x"]
 		var w: float = s["w"]
 		var h: float = s["h"]
@@ -328,6 +448,8 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				for row in int(h / PIXEL):
 					var rw := (float(row) + 1.0) * PIXEL * 0.5 * (w / 34.0)
 					draw_rect(Rect2(x - rw / 2.0, horizon - h + row * PIXEL, rw, PIXEL), col)
+				draw_rect(Rect2(x - 2.0, horizon - 8.0, 4.0, 8.0), col.darkened(0.3))  # trunk
+				draw_rect(Rect2(x - 1.0, horizon - h * 0.5, 1.0, h * 0.5), col.darkened(0.15))  # trunk line
 			"roofs":
 				var wall := 12.0 + h * 0.2
 				draw_rect(Rect2(x, horizon - wall, w, wall), col.darkened(0.15))
@@ -338,11 +460,29 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col)
 				draw_rect(Rect2(x - 9.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
 				draw_rect(Rect2(x + w + 4.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
+				if piece_i == 2:  # one taller two-tier roof
+					draw_rect(Rect2(x + w * 0.2, horizon - wall - rows * PIXEL - 10.0, w * 0.6, 10.0), col.darkened(0.1))
+					draw_rect(Rect2(x + w * 0.1, horizon - wall - rows * PIXEL - 14.0, w * 0.8, PIXEL), col)
+					draw_rect(Rect2(x + w * 0.1 - 4.0, horizon - wall - rows * PIXEL - 17.0, 5.0, 3.0), col)
+					draw_rect(Rect2(x + w * 0.9 - 1.0, horizon - wall - rows * PIXEL - 17.0, 5.0, 3.0), col)
 				if s.get("lantern", false):
 					draw_rect(Rect2(x + w + 8.0, horizon - 34.0, 2.0, 34.0), col)
 					draw_rect(Rect2(x + w + 5.0, horizon - 28.0, 8.0, 10.0), Color("e0a040").lerp(haze, 0.3))
+			"cave":  # WU-501: a rounded hill with a dark mouth
+				draw_colored_polygon(hill_arc(x, horizon, w, h), col)
+				draw_colored_polygon(hill_arc(x, horizon, w * 0.3, h * 0.45), Color(0.05, 0.04, 0.06))
+			"ruins":  # broken wall stubs with a gap in the top
+				draw_rect(Rect2(x, horizon - h * 0.6, w, h * 0.6), col.darkened(0.1))
+				draw_rect(Rect2(x, horizon - h * 0.6 - PIXEL, w * 0.35, PIXEL), col)
+				draw_rect(Rect2(x + w * 0.65, horizon - h * 0.6 - 2.0 * PIXEL, w * 0.35, 2.0 * PIXEL), col)
+				draw_rect(Rect2(x + w * 0.4, horizon - h * 0.25, w * 0.2, h * 0.25), col.darkened(0.5))
+			"crags":  # jagged rock
+				draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.5, horizon), Vector2(x - w * 0.2, horizon - h * 0.8),
+					Vector2(x, horizon - h * 0.5), Vector2(x + w * 0.2, horizon - h), Vector2(x + w * 0.5, horizon)]), col)
 			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
+				if s.get("tuft", false):  # cattail head
+					draw_rect(Rect2(x - 1.0, horizon - h - 6.0, 4.0, 8.0), col.darkened(0.25))
 				if s.get("tuft", false):
 					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
 			_:
@@ -350,6 +490,11 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 
 
 const HAZE := 0.45
+const PEAK_REGIONS := ["azure_peak", "myriad_peaks_ridge"]
+## Foreground prop kinds on the ground strip by backdrop kind (GFX-107).
+const PROP_KINDS := {"roofs": ["fence", "lantern"], "pines": ["stump", "ferns"], "reeds": ["deadtree", "pool"], "hills": ["rocks", "stump"]}
+## Fractions of the stage width where a prop centre may sit: clear of the fighters' feet (15-30% and 70-85%, plus margin).
+const PROP_ZONES := [[0.04, 0.12], [0.33, 0.67], [0.88, 0.96]]
 const PIXEL := 4.0
 
 
@@ -399,6 +544,25 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 	return out
 
 
+## The layered backdrop for a region (GFX-107): {far: ridge pieces, near: silhouette pieces, props: [{kind, x, y}]}.
+## Deterministic per region id; no prop centre lies inside a fighter's foot zone.
+static func backdrop_layers(rid: String, width: float) -> Dictionary:
+	var kind := silhouette_for(rid)
+	var kinds: Array = PROP_KINDS.get(kind, PROP_KINDS["hills"])
+	if rid in PEAK_REGIONS:
+		kinds = ["rocks", "rocks"]
+	elif rid == "fallen_star_market":
+		kinds = ["awning", "fence"]
+	var props: Array = []
+	var count := 2 + int(unit_hash(rid, 700) * 2.99)
+	for i in count:
+		var zone: Array = PROP_ZONES[i % PROP_ZONES.size()]
+		var t := unit_hash(rid, 710 + i)
+		props.append({"kind": kinds[i % kinds.size()], "x": width * lerpf(float(zone[0]), float(zone[1]), t),
+			"y": 8.0 + unit_hash(rid, 720 + i) * 18.0})
+	return {"far": silhouette_shapes(rid + "_far", "hills", width), "near": silhouette_shapes(rid, kind, width), "props": props}
+
+
 static func size_hills_step(r: float) -> float:
 	return 120.0 + r * 160.0
 
@@ -422,7 +586,10 @@ func _draw_ground() -> void:
 	if GameState.data == null or not GameState.data.regions.has(rid):
 		draw_rect(band, Color("33402a"))
 		return
-	var map: Dictionary = GameState.data.regions[rid].get("map", {})
+	var map: Dictionary = GameState.data.regions[rid].get("map", {}).duplicate(true)
+	if season_look.has("ground"):
+		map["ground"] = season_look["ground"]
+		map.get("decor", {}).erase("grass_color")
 	_draw_backdrop(map, rid)
 	var base := Color(map.get("ground", "4d6b3c"))
 	var decor: Dictionary = map.get("decor", {})
@@ -436,6 +603,45 @@ func _draw_ground() -> void:
 		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
 		draw_rect(Rect2(tx, ty, 2.0, 4.0), base.lightened(0.25))
 		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), base.lightened(0.25))
+	for p in backdrop_layers(rid, size.x)["props"]:
+		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
+
+
+func _draw_prop(kind: String, at: Vector2, ground: Color) -> void:
+	var dark := ground.darkened(0.6)
+	var wood := Color("6b4a2e")
+	match kind:
+		"fence":
+			for i in 3:
+				draw_rect(Rect2(at.x - 12.0 + i * 10.0, at.y - 10.0, 4.0, 14.0), wood)
+			draw_rect(Rect2(at.x - 12.0, at.y - 6.0, 24.0, 3.0), wood.lightened(0.15))
+		"lantern":
+			draw_rect(Rect2(at.x - 1.0, at.y - 26.0, 3.0, 28.0), wood)
+			draw_rect(Rect2(at.x - 5.0, at.y - 26.0, 11.0, 10.0), Color("c8503c"))
+			draw_rect(Rect2(at.x - 3.0, at.y - 24.0, 7.0, 6.0), Color("f0c060"))
+		"stump":
+			draw_rect(Rect2(at.x - 8.0, at.y - 8.0, 16.0, 12.0), wood.darkened(0.2))
+			draw_rect(Rect2(at.x - 8.0, at.y - 10.0, 16.0, 4.0), wood.lightened(0.2))
+		"ferns":
+			for i in 4:
+				draw_rect(Rect2(at.x - 8.0 + i * 4.0, at.y - 4.0 - (i % 2) * 5.0, 3.0, 8.0 + (i % 2) * 5.0), ground.lightened(0.2))
+		"deadtree":
+			draw_rect(Rect2(at.x - 2.0, at.y - 24.0, 4.0, 28.0), dark)
+			draw_rect(Rect2(at.x - 10.0, at.y - 20.0, 9.0, 3.0), dark)
+			draw_rect(Rect2(at.x + 1.0, at.y - 14.0, 9.0, 3.0), dark)
+		"pool":
+			draw_set_transform(at, 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, 16.0, Color("3a5a5c"))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"rocks":
+			draw_rect(Rect2(at.x - 10.0, at.y - 6.0, 14.0, 10.0), Color("7a7a78"))
+			draw_rect(Rect2(at.x + 2.0, at.y - 10.0, 10.0, 14.0), Color("8e8c88"))
+			draw_rect(Rect2(at.x - 10.0, at.y - 6.0, 14.0, 2.0), Color("a8a6a0"))
+		"awning":
+			draw_rect(Rect2(at.x - 12.0, at.y - 4.0, 3.0, 8.0), wood)
+			draw_rect(Rect2(at.x + 9.0, at.y - 4.0, 3.0, 8.0), wood)
+			for i in 6:
+				draw_rect(Rect2(at.x - 14.0 + i * 5.0, at.y - 12.0, 5.0, 8.0), Color("b83c3c") if i % 2 == 0 else Color("e8d9b0"))
 
 
 ## The whole-stage offset of a heavy hit's 3 px, 0.15 s shake.

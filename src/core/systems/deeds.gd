@@ -15,6 +15,18 @@ static func available(data: GameData, context: String, flags: Dictionary) -> Arr
 	return result
 
 
+## GUIDE-230: whether `deed` comes back after it is done: a `cooldown_days` deed that is not `once`,
+## or one whose own `blocked_by_flag` is a flag its effects set for only `flag_days`. One-time deeds never repeat.
+static func is_repeatable(deed: Dictionary) -> bool:
+	if bool(deed.get("once", false)):
+		return false
+	if int(deed.get("cooldown_days", 0)) >= 1:
+		return true
+	var blocker := String(deed.get("blocked_by_flag", ""))
+	var effects: Dictionary = deed.get("effects", {})
+	return blocker != "" and int(effects.get("flag_days", 0)) >= 1 and Effects.flag_list(effects.get("set_flag", "")).has(blocker)
+
+
 ## Why `c` cannot perform `deed` right now, or "". Optional `requires`
 ## ({min_realm, min_alignment, max_alignment, flag}, like encounter choices),
 ## the deed's effects must be payable, and `cooldown_days` / `once` (see

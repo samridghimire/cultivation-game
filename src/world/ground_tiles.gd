@@ -68,7 +68,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 				img.fill_rect(Rect2i(x, y, 2, 2), clover)
 				img.set_pixel(x, y, base.lightened(0.22))
 		2:
-			var dark := base.darkened(0.1)
+			# GFX-082: a barely darker tint (mean luminance within 3% of the plain cell), so cells never meet in hard blocks.
+			var dark := base.darkened(0.03)
 			for y in SIZE:
 				for x in SIZE:
 					if rng.randf() < 0.55:
@@ -88,8 +89,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
-static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = []) -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones]
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = [], scree_density: float = 1.0) -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
@@ -102,7 +103,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
-	_apply_style(img, base, rid, style, zones)
+	_apply_style(img, base, rid, style, zones, scree_density)
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
@@ -158,7 +159,7 @@ const STYLES := ["grass", "paved", "scree", "bog", "litter"]
 
 ## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes
 ## from hashes of (rid, cell), so the same inputs give the same image.
-static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = []) -> void:
+static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = [], scree_density: float = 1.0) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	match style:
@@ -187,7 +188,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|scree" % [rid, cx, cy]))
-					for i in 1 + roll % 3:  # GFX-068: half the blobs
+					for i in roundi((1 + roll % 3) * scree_density):  # GFX-068: half the blobs; GFX-079: map.scree_density
 						var r2 := absi(hash("%s|%d|%d|scree|%d" % [rid, cx, cy, i]))
 						var pw := 2 + r2 % 3
 						var ph := 2 + (r2 / 8) % 2

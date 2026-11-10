@@ -894,8 +894,37 @@ func test_birthday_is_stable_and_generated_only() -> void:
 	assert_false(Folk.birthday_today(npc, data(), b + 1))
 	assert_eq(Folk.days_to_birthday(npc, data(), b + 1), Calendar.DAYS_PER_YEAR - 1)
 	var named := CharacterData.new()
-	named.id = data().npcs.keys()[0]
-	assert_eq(Folk.birthday_day(named, data()), -1)
+	named.id = "elder_mo"
+	assert_eq(Folk.birthday_day(named, data()), (3 - 1) * Calendar.DAYS_PER_MONTH + 11)
+	for id: String in data().npcs:
+		if not data().npcs[id].has("birthday"):
+			named.id = id
+			assert_eq(Folk.birthday_day(named, data()), -1)
+			break
+
+
+func test_named_birthday_line_gift_and_validation() -> void:
+	var npcs := {}
+	Npcs.ensure_all(npcs, data(), seeded_rng(3))
+	var mo: CharacterData = npcs["elder_mo"]
+	var day := Folk.birthday_day(mo, data()) + Calendar.DAYS_PER_YEAR
+	assert_eq(Folk.greeting(mo, 50, day, data()), String(data().npcs["elder_mo"]["birthday_line"]))
+	var flags := {}
+	assert_eq(Folk.birthday_gift_multiplier(flags, mo, data(), day, true), 2)
+	assert_eq(Folk.birthday_gift_multiplier(flags, mo, data(), day, true), 1)
+	assert_eq(Folk.birthdays_soon(npcs, data(), "qingshi_village", day - 2, {"elder_mo": 20})[0]["npc"].id, "elder_mo")
+	var d := data()
+	var original: Variant = d.npcs["elder_mo"]["birthday"]
+	d.npcs["elder_mo"]["birthday"] = {"month": 13, "day": 1}
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("birthday"))
+	d.npcs["elder_mo"]["birthday"] = {"month": 3, "day": 0}
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("birthday"))
+	d.npcs["elder_mo"]["birthday"] = original
+	d.load_errors.clear()
 
 
 func test_birthday_greeting_uses_birthday_line() -> void:
@@ -938,6 +967,26 @@ func test_birthdays_soon_needs_favor_and_window() -> void:
 	assert_true("\n".join(lines).contains("birthday is today"))
 
 
+func test_is_birthday_today_needs_favor_and_the_day() -> void:
+	var npcs := {}
+	_village(npcs, 3)
+	var npc: CharacterData = npcs[npcs.keys()[0]]
+	var b := Folk.birthday_day(npc, data())
+	var day := b + Calendar.DAYS_PER_YEAR
+	assert_true(Folk.is_birthday_today(npc, data(), day, {npc.id: 10}))
+	assert_false(Folk.is_birthday_today(npc, data(), day, {npc.id: 9}), "strangers are not marked")
+	assert_false(Folk.is_birthday_today(npc, data(), day + 1, {npc.id: 50}))
+	assert_false(Folk.is_birthday_today(null, data(), day, {}))
+	var named: CharacterData = null
+	for id: String in data().npcs:
+		if data().npcs[id].has("birthday"):
+			named = CharacterData.new()
+			named.id = id
+			break
+	if named != null:
+		assert_true(Folk.is_birthday_today(named, data(), Folk.birthday_day(named, data()), {named.id: 20}))
+
+
 func test_people_entries_filter_order_and_tastes() -> void:
 	var npcs := {}
 	_village(npcs, 3)
@@ -956,10 +1005,86 @@ func test_people_entries_filter_order_and_tastes() -> void:
 	assert_eq(Folk.people_entries(npcs, data(), "qingshi_village", favor, flags, 0)[0]["id"], ids[2], "favor desc")
 
 
-func test_people_entries_named_npc_has_no_birthday() -> void:
+func test_people_entries_named_npc_birthday() -> void:
 	var npcs := {}
 	Npcs.ensure_all(npcs, data(), seeded_rng(3))
 	var rows := Folk.people_entries(npcs, data(), "qingshi_village", {"elder_mo": 20}, {}, 0)
-	assert_eq(rows[0]["birthday_text"], "")
-	assert_eq(rows[0]["birthday_in"], -1)
+	assert_eq(rows[0]["birthday_text"], "Month 3, Day 12")
+	assert_true(int(rows[0]["birthday_in"]) >= 0)
 	assert_true(int(rows[0]["likes_total"]) > 0)
+
+
+func test_news_line_fresh_local_villager_only() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	assert_eq(Folk.news_line(npc, flags, data(), "qingshi_village", 10), "")
+	Folk.record_news(flags, "great_beast", "Great Wolf", "qingshi_village", 10)
+	var line := Folk.news_line(npc, flags, data(), "qingshi_village", 11)
+	assert_true(line.contains("Great Wolf"))
+	assert_false(line.contains("{subject}"))
+	assert_eq(Folk.news_line(npc, flags, data(), "qingshi_village", 17), "", "stale after news_days")
+	for rid: String in data().regions:
+		if rid != "qingshi_village" and not Exploration.is_nearby(data(), "qingshi_village", rid):
+			assert_eq(Folk.news_line(npc, flags, data(), rid, 11), "", "far region " + rid)
+	var elder := CharacterData.new()
+	elder.id = "elder_x"
+	elder.sect = {"id": "azure_cloud"}
+	assert_eq(Folk.news_line(elder, flags, data(), "qingshi_village", 11), "")
+
+
+func test_news_beats_warm_but_not_birthday_or_cool() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var flags := {}
+	var day := Folk.birthday_day(npc, data()) + Calendar.DAYS_PER_YEAR
+	Folk.record_news(flags, "breakthrough", "Foundation Establishment", "qingshi_village", day - 1)
+	var cake: Array = data().family["folk_greetings"]["birthday"]
+	assert_true(cake.has(Folk.greeting(npc, 50, day, data(), flags, "", "qingshi_village")))
+	var news := Folk.greeting(npc, 50, day + 1, data(), flags, "", "qingshi_village")
+	assert_true(news.contains("Foundation Establishment"))
+	assert_eq(Folk.greeting(npc, 0, day + 1, data(), flags, "", "qingshi_village"), news, "neutral villagers talk too")
+	var cool: Array = data().family["folk_greetings"]["cool"]["lines"]
+	assert_true(cool.has(Folk.greeting(npc, -50, day + 1, data(), flags, "", "qingshi_village")))
+	assert_false(Folk.greeting(npc, 50, day + 1, data(), flags).contains("Foundation"), "no region, no news")
+
+
+func test_news_validation() -> void:
+	var d := data()
+	var saved: Variant = d.family["folk_greetings"].get("news")
+	d.family["folk_greetings"]["news"] = {"news_days": 7, "bogus": ["x"]}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = {"contest_win": [""]}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = {"news_days": 31}
+	assert_false(Folk.validate_greetings(d).is_empty())
+	d.family["folk_greetings"]["news"] = saved
+	assert_true(Folk.validate_greetings(d).is_empty())
+
+
+func test_gift_memory_window_and_once() -> void:
+	var d := data()
+	var flags := {}
+	Folk.record_gift(flags, "x", "spirit_herb", 100, 1)
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 100, true), "", "same day: nothing")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 101, false).contains("spirit herb"), "next day")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 101, true) != "")
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 102, true), "", "once")
+	Folk.record_gift(flags, "x", "spirit_herb", 100, -1)
+	assert_eq(Folk.gift_memory_line(flags, "x", d, 131, true), "", "after 30 days")
+	assert_true(Folk.gift_memory_line(flags, "x", d, 130, true) != "", "day 30 still counts")
+	assert_eq(Folk.last_gift_text(flags, "x", d), "Last gift: Spirit Herb (disliked)")
+	assert_eq(Folk.last_gift_text({}, "x", d), "", "old save without the flag")
+
+
+func test_gift_memory_validation() -> void:
+	var d := data()
+	var saved: Variant = d.family["gift_memory"]
+	d.family["gift_memory"] = {"days": 30, "liked": ["no placeholder"], "neutral": ["{item}"], "disliked": ["{item}"]}
+	assert_false(Folk.validate_gift_memory(d).is_empty())
+	d.family["gift_memory"] = {"days": 0, "liked": ["{item}"], "neutral": ["{item}"], "disliked": ["{item}"]}
+	assert_false(Folk.validate_gift_memory(d).is_empty())
+	d.family["gift_memory"] = saved
+	assert_true(Folk.validate_gift_memory(d).is_empty())

@@ -148,3 +148,24 @@ func test_arrival_card_carries_the_arrival_line() -> void:
 	gs.load_save_dict(gs.to_save_dict())
 	assert_false(gs.arrival_banner_pending, "a load does not ask for the name card")
 	gs.end_session()
+
+
+## WU-496: pressing M right after arriving dismisses the name card (the screen shots rely on the same path).
+func test_map_over_name_card_dismisses_it() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.arrival_banner_pending = false
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var banner: Banner = hud.get("_banner")
+	var dest: String = String(gs.data.regions[gs.current_region]["routes"][0]["to"])
+	bus.region_changed.emit(dest)
+	assert_true(banner.visible, "card shows on arrival")
+	var screen: Control = hud.get("_screens")["toggle_map"]
+	screen.open()
+	hud.call("_update_modal")
+	assert_false(banner.visible, "the map hides the name card")
+	hud.free()
+	gs.end_session()

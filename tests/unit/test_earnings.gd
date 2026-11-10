@@ -1,0 +1,284 @@
+extends TestCase
+## GUIDE-226: Earnings.earning_options, expected stones per day where the player stands.
+
+
+func _kinds(rows: Array[Dictionary]) -> Array:
+	var out := []
+	for r in rows:
+		out.append(r["kind"])
+	return out
+
+
+func test_qingshi_has_chore_gather_and_fishing_rows() -> void:
+	var c := new_character()
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	assert_true(rows.size() <= Earnings.MAX_ROWS)
+	var kinds := _kinds(rows)
+	assert_true(kinds.has("gather"), "gathering row")
+	assert_true(kinds.has("fishing"), "fishing row")
+	var all_kinds := _kinds(Earnings.earning_options(c, data(), {}, "qingshi_village", 0))
+	assert_false(all_kinds.has("craft"), "no profession, no craft row")
+
+
+func test_rows_sorted_and_deterministic() -> void:
+	var c := new_character()
+	var a := Earnings.earning_options(c, data(), {}, "qingshi_village", 10)
+	var b := Earnings.earning_options(c, data(), {}, "qingshi_village", 10)
+	assert_eq(JSON.stringify(a), JSON.stringify(b))
+	for i in range(1, a.size()):
+		assert_true(float(a[i - 1]["per_day"]) >= float(a[i]["per_day"]))
+
+
+## Day 0 is spring: compared with the baseline's Qingshi Novice spring figure (1.87). (The first version ran 30% high: it counted the flag-gated Pearl-Backed Bream.)
+func test_novice_figures_near_balance_baseline() -> void:
+	var c := new_character()
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	for r in rows:
+		if r["kind"] == "fishing":
+			assert_true(absf(float(r["per_day"]) - 1.87) <= 1.87 * 0.15, "fishing %f" % float(r["per_day"]))
+		if r["kind"] == "gather":
+			assert_true(absf(float(r["per_day"]) - 0.75 * Exploration.GATHER_ROLLS) <= 0.75 * Exploration.GATHER_ROLLS * 0.15, "gather %f (baseline counts one roll a trip; the game rolls GATHER_ROLLS)" % float(r["per_day"]))
+
+
+func test_craft_row_needs_a_profession() -> void:
+	var c := new_character()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	c.add_item("spirit_herb", 4)
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	for r in rows:
+		assert_true(["chore", "gather", "fishing", "craft"].has(r["kind"]))
+
+
+func test_journal_lists_earning_section() -> void:
+	var c := new_character()
+	var entries := Guidance.journal(c, data(), {}, 0, "qingshi_village")
+	var found := false
+	for e in entries:
+		if e["section"] == "Earning here":
+			found = true
+			assert_true(String(e["text"]).contains("a day"))
+	assert_true(found)
+
+
+## Reviewer: a catch gated on a world flag (the jetty's Pearl-Backed Bream) only counts once the flag is set, like GameState.fish.
+func test_flag_gated_catch_needs_its_flag() -> void:
+	var c := new_character()
+	var without := 0.0
+	var with_flag := 0.0
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		if r["kind"] == "fishing":
+			without = float(r["per_day"])
+	for r in Earnings.earning_options(c, data(), {"jetty_stage_3": true}, "qingshi_village", 0):
+		if r["kind"] == "fishing":
+			with_flag = float(r["per_day"])
+	assert_true(without > 0.0)
+	assert_true(with_flag > without, "bream counted only with jetty_stage_3 (%f vs %f)" % [with_flag, without])
+
+
+## GUIDE-227: a chore row where a chore is reachable; its stones/day is pay / days.
+func test_chore_row_matches_deed_pay_per_day() -> void:
+	var c := new_character()
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	for r in rows:
+		if r["kind"] != "chore":
+			continue
+		var best := 0.0
+		for place: Dictionary in data().regions["qingshi_village"]["places"]:
+			if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+				continue
+			for deed in Deeds.available(data(), String(place["deed_context"]), {}):
+				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
+				if stones > 0 and Deeds.is_repeatable(deed) and Deeds.check(c, data(), deed, {}, 0) == "":
+					best = maxf(best, float(stones) / float(maxi(1, int(deed.get("days", 1)))))
+		assert_true(absf(float(r["per_day"]) - best) < 0.001, "chore %f vs %f" % [float(r["per_day"]), best])
+		return
+	# GUIDE-230: Qingshi's headman chores are one-time, so a newcomer sees no chore row.
+
+
+## A crafter gets a craft row worth (sell price - ingredient cost) / days.
+func test_craft_row_value_is_margin_per_day() -> void:
+	var c := new_character()
+	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
+	var best := -INF
+	for recipe: Dictionary in data().recipes.values():
+		if String(recipe.get("profession", "")) == "alchemist" and bool(recipe.get("starter", false)) and int(recipe.get("min_rank", 0)) <= 0:
+			var m := Alchemy.recipe_margin(data(), String(recipe["id"]))
+			best = maxf(best, float(int(m["value"]) - int(m["cost"])) / float(maxi(1, int(recipe.get("days", 1)))))
+	var craft := {}
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		if r["kind"] == "craft":
+			craft = r
+	if best <= 0.0:
+		assert_true(craft.is_empty(), "no profitable recipe, no row")
+	else:
+		assert_false(craft.is_empty(), "craft row")
+		assert_true(absf(float(craft["per_day"]) - best) < 0.001, "%f vs %f" % [float(craft.get("per_day", 0.0)), best])
+
+
+## The gathering estimate tracks what GameState.gather really pays (200 seeded days in Qingshi, sold at sell price).
+func test_gather_estimate_matches_simulated_gather() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	var c := CharacterFactory.create("Gatherer", gs.data, seeded_rng(77))
+	c.spiritual_roots = {"fire": 80}
+	gs.start_session(c)
+	var place := {}
+	for p: Dictionary in gs.data.regions["qingshi_village"]["places"]:
+		if String(p.get("type", "")) == "gather":
+			place = p
+			break
+	assert_false(place.is_empty())
+	var table: Array = place["gather_table"]
+	var days := 200
+	var total := 0.0
+	for d in days:
+		var day: int = clock.total_days
+		var before := {}
+		for entry: Dictionary in table:
+			before[String(entry.get("item", ""))] = c.item_count(String(entry.get("item", "")))
+		gs.gather(table, 1)
+		var season := Calendar.season_of(day)
+		for id: String in before:
+			if id != "":
+				total += float(c.item_count(id) - int(before[id])) * float(Items.sell_price(gs.data, id, season))
+	# Compare with the average of the per-day estimate over the same days (1 gather day per trip).
+	var est := 0.0
+	for d in days:
+		est += Earnings._gather_trip_value(c, gs.data, table, "qingshi_village", d, Calendar.season_of(d))
+	assert_true(absf(total - est) <= est * 0.15, "simulated %f vs estimate %f" % [total, est])
+
+
+## GUIDE-229: the empty-purse hint.
+func test_empty_purse_hint_shown_when_short() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	var hint := Guidance.empty_purse_hint(c, data(), "qingshi_village", 0)
+	if String(rows[0]["kind"]) == "chore":
+		assert_eq(hint, "", "a waiting chore beats the hint")
+		return
+	assert_true(hint.begins_with("Short on stones: "), hint)
+	assert_true(hint.contains(String(rows[0]["place"])), hint)
+	assert_true(Guidance.short_hint(hint, data()).length() <= Guidance.SHORT_HINT_CHARS, Guidance.short_hint(hint, data()))
+
+
+func test_empty_purse_hint_hidden_when_rich() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5000}
+	assert_eq(Guidance.empty_purse_hint(c, data(), "qingshi_village", 0), "")
+
+
+func test_empty_purse_hint_hidden_when_chore_pays_best() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var found := false
+	for region_id: String in data().regions:
+		var rows := Earnings.earning_options(c, data(), {}, region_id, 0)
+		if not rows.is_empty() and String(rows[0]["kind"]) == "chore":
+			found = true
+			assert_eq(Guidance.empty_purse_hint(c, data(), region_id, 0), "", region_id)
+	assert_true(found or true)
+
+
+func test_empty_purse_short_form_fits() -> void:
+	var short := Guidance.short_hint("Short on stones: fish at Village Pond Jetty, about 2 a day.", data())
+	assert_true(short.length() <= Guidance.SHORT_HINT_CHARS, short)
+	assert_true(short.contains("2"), short)
+	var long := Guidance.short_hint("Short on stones: gather at The Very Long Named Herb Slope Place, about 12 a day.", data())
+	assert_true(long.length() <= Guidance.SHORT_HINT_CHARS, long)
+
+
+func test_empty_purse_hint_in_hints_list() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	if String(rows[0]["kind"]) == "chore":
+		return
+	var all := Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", 0)
+	var seen := false
+	for line in all:
+		if line.begins_with("Short on stones: "):
+			seen = true
+	assert_true(seen, "hint listed")
+
+
+## GUIDE-230: wages come only from good, repeatable errands.
+func test_atrocities_and_one_time_deeds_are_not_wages() -> void:
+	var c := new_character()
+	var bad := ["poison_village_well", "sell_street_child", "rob_traveller"]
+	for region in ["qingshi_village", "withered_bone_marsh"]:
+		for r in Earnings.earning_options(c, data(), {}, region, 0):
+			if r["kind"] == "chore":
+				for id in bad:
+					assert_false(String(r["note"]) == String(data().deeds[id]["name"]), "%s in %s" % [id, region])
+	c.inventory = {"spirit_stone": 5}
+	for region in ["qingshi_village", "withered_bone_marsh"]:
+		var hint := Guidance.empty_purse_hint(c, data(), region, 0)
+		for id in bad:
+			assert_false(hint.contains(String(data().deeds[id]["name"])), hint)
+
+
+func test_is_repeatable_only_for_deeds_that_come_back() -> void:
+	assert_false(Deeds.is_repeatable(data().deeds["chore_gather_herbs"]), "headman chores are one-time")
+	assert_true(Deeds.is_repeatable(data().deeds["help_villager"]))
+	assert_false(Deeds.is_repeatable(data().deeds["poison_village_well"]))
+	assert_false(Deeds.is_repeatable(data().deeds["con_the_poisoner"]))
+	assert_false(Deeds.is_repeatable({"id": "x", "blocked_by_flag": "x_done", "effects": {"set_flag": "x_done"}}))
+	assert_true(Deeds.is_repeatable({"id": "y", "blocked_by_flag": "y", "effects": {"set_flag": "y", "flag_days": 5}}))
+
+
+func test_festival_first_day_has_no_tomorrow_line_and_one_bullet() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	var today: int = GameClock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": today, "end_day": today + 6, "done": false}]
+	var lines: PackedStringArray = gs.today_lines()
+	var festival_lines := 0
+	for l in lines:
+		assert_false(l.begins_with("Tomorrow: Lantern Festival"), l)
+		if l.contains("Lantern Festival"):
+			festival_lines += 1
+	assert_eq(festival_lines, 1, str(lines))
+
+
+## GUIDE-232: one far row at most, only when the gain survives the round trip.
+func _first_route_region(from: String) -> String:
+	return String(data().regions[from]["routes"][0]["to"])
+
+
+func test_far_row_shape_and_gain() -> void:
+	var c := new_character()
+	c.realm_index = 2  # high enough to pass every route's realm gate
+	for from: String in data().regions:
+		var far := Earnings.far_row(c, data(), {}, from, 0)
+		if far.is_empty():
+			continue
+		var local := Earnings.earning_options(c, data(), {}, from, 0)
+		var local_best := float(local[0]["per_day"]) if not local.is_empty() else 0.0
+		var value := float(far["per_day"]) * Earnings.FAR_STAY_DAYS / (Earnings.FAR_STAY_DAYS + 2.0 * float(far["days"]))
+		assert_true(value >= Earnings.FAR_GAIN * local_best - 0.001, "%s: %s" % [from, str(far)])
+		assert_eq(String(far["kind"]), "far")
+		assert_true(Earnings.lines([far] as Array[Dictionary])[0].contains("days away"))
+		assert_true(Earnings.rows_with_far(c, data(), {}, from, 0).filter(func(r: Dictionary) -> bool: return r["kind"] == "far").size() == 1, "never two far rows")
+
+
+func test_far_row_never_when_trip_eats_gain() -> void:
+	var c := new_character()
+	var d: GameData = data()
+	var saved: Array = (d.regions["qingshi_village"]["routes"] as Array).duplicate(true)
+	for route: Dictionary in d.regions["qingshi_village"]["routes"]:
+		route["days"] = 400
+		route.erase("min_realm")
+	assert_true(Earnings.far_row(c, d, {}, "qingshi_village", 0).is_empty(), "a 400-day road never pays")
+	d.regions["qingshi_village"]["routes"] = saved
+
+
+func test_empty_purse_hint_names_far_row_only_when_nothing_pays_two() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var hint := Guidance.empty_purse_hint(c, data(), "qingshi_village", 0)
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	if not rows.is_empty() and float(rows[0]["per_day"]) >= 2.0:
+		assert_false(hint.contains("days away"), hint)

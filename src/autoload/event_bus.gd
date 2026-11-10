@@ -2,7 +2,7 @@ extends Node
 ## Global signal hub. Gameplay systems emit here and UI listens, so neither
 ## needs a direct reference to the other.
 
-## A line for the in-game message log. category: info, progress, warning, danger, karma.
+## A line for the in-game message log. category: info, progress, warning, danger, karma, people.
 signal message_posted(text: String, category: String)
 ## Any player state changed; UI should refresh.
 signal player_changed
@@ -77,6 +77,10 @@ signal dialogue_ended(npc_id: String)
 signal time_skipped(days: int, summary: Dictionary)
 ## A new year began and the year just ended was summed up (YEAR-001).
 signal year_reviewed(year: int, lines: PackedStringArray, start_year: int)
+## A season ended and was summed up (SEASON-012): its name, year and up to 4 lines.
+signal season_reviewed(season: String, year: int, lines: PackedStringArray)
+## A season began (SEASON-013): its name, year and up to 3 kickoff lines.
+signal season_began(season: String, year: int, lines: PackedStringArray)
 ## A milestone was just earned (GOAL-001).
 signal milestone_reached(id: String, name: String)
 ## A festival began in the current region (WU-072); the HUD shows a banner.
@@ -97,6 +101,20 @@ signal renown_tier_reached(region_id: String, title: String)
 signal region_mastered(region_id: String)
 ## A newly available feature was announced (GUIDE-008, WU-042); the HUD shows a banner.
 signal feature_unlocked(text: String)
+## WU-462: the season's village tasks are all done (season name, reward text).
+signal season_tasks_done(season: String, reward: String)
+## WU-466: the village bounty board asks for the season's task card.
+signal season_board_requested
+## FOLK-013: a friend scene played (for a card).
+signal friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, gift_id: String)
+## GFX-092: an item was picked up or drawn by hand (egg, well water): the world floats "+1 <name>" above the player.
+signal pickup_noted(item_id: String, amount: int)
+## WU-486: a villager reacts with an emote bubble; kind is "love", "happy" or "sweat".
+@warning_ignore("unused_signal")
+signal npc_reaction(npc_id: String, kind: String)
+## FOLK-021: a friend taught a lesson; effect_line is the effect notes joined by ", " (may be empty).
+@warning_ignore("unused_signal")
+signal lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String)
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).
 var last_notice_id: String = ""
 

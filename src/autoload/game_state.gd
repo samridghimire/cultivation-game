@@ -66,6 +66,8 @@ var pending_encounter := ""
 var pending_cast: Dictionary = {}
 ## True when the last explore day used a region discovery (TRAV-005).
 var last_explore_discovery := false
+## WU-501: the look of the explore place being explored ("" off a place), so an encounter card draws that place.
+var last_explore_look := ""
 var last_explore_deep_path := false
 ## True while a bounty's foe is fought, so the hunt does not lapse mid-fight (BOUNTY-001).
 var _bounty_fight := false
@@ -108,6 +110,7 @@ func _ready() -> void:
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
+	EventBus.region_changed.connect(func(_id: String) -> void: birthday_at_home())
 
 
 func has_session() -> bool:
@@ -130,6 +133,7 @@ func start_session(character: CharacterData) -> void:
 	clan = null
 	dialogue_npc = ""
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
@@ -148,6 +152,7 @@ func start_session(character: CharacterData) -> void:
 		world_flags["notice_" + String(notice["id"])] = true  # roads already open are not news
 	GameClock.reset()
 	_store_year_snapshot()
+	_store_season_snapshot()
 	_announced_tier = Alignment.tier_name(player.alignment, data)
 	EventBus.clear_history()
 	EventBus.session_started.emit()
@@ -170,6 +175,7 @@ func end_session() -> void:
 	npc_clans = {}
 	dialogue_npc = ""
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	pending_respawn = {}
@@ -221,6 +227,32 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	if skip_title == "In seclusion":
 		LifeStats.add(player, "days_in_seclusion", days)
 	_pass_time(days, skip_title)
+
+
+## WILD-022: hang a great-beast trophy from the pack on the wall of your home in this region (no time passes).
+func hang_trophy(item_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var result := Trophies.hang(player, npcs, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You hang the %s on the wall of your home." % data.items[item_id]["name"], "progress")
+	EventBus.player_changed.emit()
+
+
+## WILD-022: take a hung trophy back into the pack.
+func take_down_trophy(item_id: String) -> void:
+	EventBus.topic = "world"
+	if not _can_act():
+		return
+	var result := Trophies.take_down(player, npcs, data, current_region, item_id)
+	if not result["ok"]:
+		EventBus.post(result["reason"], "warning")
+	else:
+		EventBus.post("You take the %s down from the wall." % data.items[item_id]["name"])
+	EventBus.player_changed.emit()
 
 
 ## Claim a cave abode in the current region for spirit stones. Its anchor is
@@ -357,6 +389,7 @@ func attempt_breakthrough() -> void:
 	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		Folk.record_news(world_flags, "breakthrough", String(result["realm_name"]), current_region, GameClock.total_days)
 		var lifespan_gain := Cultivation.lifespan_years(player, data) - lifespan_before
 		if lifespan_gain > 0:
 			EventBus.post("Your lifespan grows to %d years (+%d)." % [Cultivation.lifespan_years(player, data), lifespan_gain], "progress")
@@ -677,18 +710,41 @@ func today_lines() -> PackedStringArray:
 	return Guidance.today_lines(player, data, world_flags, world_events, GameClock.total_days, current_region, npcs, npc_favor)
 
 
+## WU-504: the friends' lines of today_lines (birthday today, lesson waiting) for the journal's People card.
+func people_today_lines() -> PackedStringArray:
+	if player == null:
+		return PackedStringArray()
+	return Guidance.people_today_lines(player, data, world_events, GameClock.total_days, current_region, npcs, npc_favor, world_flags)
+
+
+## WU-504: the top 3 earning rows here, as text lines.
+func earning_lines_here() -> PackedStringArray:
+	if player == null:
+		return PackedStringArray()
+	return Earnings.lines(Earnings.rows_with_far(player, data, world_flags, current_region, GameClock.total_days, 2 if not Earnings.far_row(player, data, world_flags, current_region, GameClock.total_days).is_empty() else 3))
+
+
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
 func _post_arrival_line() -> void:
 	var day := GameClock.total_days
+	# TODAY-002: once per day and region (the line was posted again by any second caller).
+	if int(world_flags.get("arrival_day", -1)) == day and String(world_flags.get("arrival_region", "")) == current_region:
+		return
 	var line := Guidance.arrival_line(player, data, current_region, day, world_flags, Weather.of(data, current_region, day), world_events)
 	world_flags["arrival_day"] = day
 	world_flags["arrival_region"] = current_region
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")
-	var season_line := Wildlife.season_clause(data, current_region, day)  # WILD-013
-	if season_line != "":
-		EventBus.post(season_line, "travel")
+	# WILD-013 / TODAY-002: the in-season line once a season per region.
+	var season_line := Wildlife.season_clause(data, current_region, day)
+	var season_key := "%d-%s" % [Calendar.year_of(day), Calendar.season_of(day)]
+	var seen: Dictionary = world_flags.get("season_line_seen", {})
+	if season_line != "" and String(seen.get(current_region, "")) != season_key:
+		seen[current_region] = season_key
+		world_flags["season_line_seen"] = seen
+		if not line.contains(season_line):  # WU-464: the arrival line may already say it
+			EventBus.post(season_line, "travel")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
@@ -712,16 +768,19 @@ func _road_ambush() -> bool:
 
 
 ## Explore a place tagged with `tags` (defaults to the region's encounter tags).
-func explore(tags: Array = []) -> void:
+func explore(tags: Array = [], look: String = "") -> void:
+	last_explore_look = look
 	_explore_once(tags, false)
+	_clear_explore_look()
 
 
 ## Explore for up to `max_days` days (1..30), one day at a time, stopping as
 ## soon as anything happens that needs the player (an encounter, a choice, a
 ## sensed threat, a fight, death). Returns the days spent. Quiet days are
 ## summed up in one line at the end (FH-025).
-func explore_many(max_days: int, tags: Array = []) -> int:
+func explore_many(max_days: int, tags: Array = [], look: String = "") -> int:
 	EventBus.topic = "world"
+	last_explore_look = look
 	var limit := clampi(max_days, 1, 30)
 	var days := 0
 	var quiet_days := 0
@@ -733,7 +792,14 @@ func explore_many(max_days: int, tags: Array = []) -> int:
 		quiet_days += 1
 	if quiet_days > 0 and _can_act():
 		EventBus.post(("You explore for %s and find nothing of note. %s" % [Calendar.format_duration(quiet_days), Exploration.quiet_line(data, current_region, GameClock.total_days)]).strip_edges())
+	_clear_explore_look()
 	return days
+
+
+## The look only matters while an encounter card of this exploration is pending.
+func _clear_explore_look() -> void:
+	if pending_encounter == "":
+		last_explore_look = ""
 
 
 ## What exploring here (or a place with `tags`) might bring, as one line.
@@ -777,7 +843,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 		if not quiet:  # explore_many would repeat it every storm day
 			EventBus.post("A storm rolls over the sky; lightning walks the horizon.", "warning")
 		_storm_strike()
-	if Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index) \
+	if Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index, player) \
 			and int(world_flags.get("tracks_day_" + current_region, -1)) != GameClock.total_days:
 		world_flags["tracks_day_" + current_region] = GameClock.total_days
 		EventBus.post(Wildlife.TRACKS_LINE, "world")
@@ -813,7 +879,7 @@ func _explore_day(tags: Array, quiet: bool) -> Dictionary:
 ## WILD-015: the bait item the player could set on today's trail, "" when it is not a tracks day, the trail is
 ## already baited, or they hold none.
 func bait_offer() -> String:
-	if not _can_act() or not Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index):
+	if not _can_act() or not Wildlife.tracks_today(data, current_region, GameClock.total_days, player.realm_index, player):
 		return ""
 	if int(world_flags.get(Wildlife.bait_flag(current_region), -1)) == GameClock.total_days + 1:
 		return ""
@@ -1133,6 +1199,7 @@ func choose_encounter(index: int) -> void:
 		return
 	pending_encounter = ""
 	pending_threat = ""
+	last_explore_look = ""
 	var picked: Dictionary = encounter["choices"][index]
 	if result["failed"]:
 		picked = picked["on_fail"]
@@ -1248,6 +1315,7 @@ func dismiss_encounter() -> void:
 		return
 	pending_encounter = ""
 	pending_threat = ""
+	last_explore_look = ""
 	EventBus.post("You leave the matter be and walk away.")
 	EventBus.encounter_choice_resolved.emit()
 	EventBus.player_changed.emit()
@@ -1272,10 +1340,15 @@ func gather(table: Array, days: int) -> void:
 	var tipped := Folk.tip_bonus(data, world_flags, GameClock.total_days, current_region, Exploration.gather_table_for(player, data, table, season))
 	for item_id in tipped:
 		found[item_id] = int(found.get(item_id, 0)) + int(tipped[item_id])
+	var terrace := SeasonTasks.gather_bonus(player, data, current_region)  # SEASON-015
+	if terrace > 0.0 and not found.is_empty() and rng.randf() < terrace:
+		var top := SeasonTasks.top_unit_item(found)
+		found[top] = int(found[top]) + 1
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+		_season_note("gather", String(item_id), int(found[item_id]))
 	var first_finds: PackedStringArray = []
 	for item_id in found:
 		if data.items.get(item_id, {}).get("tags", []).has("herb") and HerbLore.record_find(player, item_id, int(found[item_id])):
@@ -1323,8 +1396,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if Fishing.too_wild(weather_kind):
 		EventBus.post(Fishing.STORM_REFUSAL, "warning")
 		return
-	var mult := Weather.fishing_multiplier(data, weather_kind)
-	var base := Exploration.gather_table_for(player, data, Fishing.filter_weather(table, weather_kind), season)
+	var mult := Weather.fishing_multiplier(data, weather_kind) * (1.0 + SeasonTasks.fish_bonus(player, data, current_region))
+	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_weather(table, weather_kind), world_flags), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
 	if Fishing.got_away(quality, rng):
@@ -1335,6 +1408,10 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 			var more := Exploration.gather(player, usable, rng)
 			for id: String in more:
 				found[id] = int(found.get(id, 0)) + int(more[id])
+		for i in Fishing.bonus_draws(player.fishing_xp, rng):
+			var bonus := Exploration.gather(player, usable, rng)
+			for id: String in bonus:
+				found[id] = int(found.get(id, 0)) + int(bonus[id])
 		var trophy := Fishing.trophy_in(base, found)
 		if trophy != "" and not Fishing.trophy_allowed(quality, player.fishing_xp):
 			# Only the trophy draw comes to nothing; the trip's other fish are still caught.
@@ -1342,6 +1419,13 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 			if quality >= 0.5:
 				EventBus.post("Something huge takes the bait and snaps the line.")
 	base = Fishing.filter_trophy(base, quality, player.fishing_xp)
+	var beginner := ""
+	if found.is_empty() and player.catch_log.is_empty():
+		var pick := Fishing.beginner_catch(base, data)
+		if pick != "":
+			found[pick] = 1
+			beginner = String(data.items[pick]["name"])
+			EventBus.post("Beginner's luck: +1 %s." % beginner, "progress")
 	var old_rank := Fishing.rank_name(player.fishing_xp)
 	player.fishing_xp += Fishing.xp_gain(base, found)
 	var notes: PackedStringArray = []
@@ -1350,6 +1434,7 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
 		notes.append("+%d %s" % [found[item_id], Items.item_plural(data, item_id, found[item_id])])
+		_season_note("catch", String(item_id), int(found[item_id]))
 		if data.items.get(item_id, {}).get("tags", []).has("fish") and Fishing.record_catch(player, item_id, int(found[item_id])):
 			first_catches.append(String(data.items[item_id]["name"]))
 			player.fishing_xp += Fishing.FIRST_CATCH_XP
@@ -1366,7 +1451,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		EventBus.post("Pond legend: you landed the %s!" % trophy_caught, "progress")
 	# After the first-catch bonus, so a rank reached through it is announced too.
 	if Fishing.rank_name(player.fishing_xp) != old_rank:
-		EventBus.post("Your fishing has improved: %s." % Fishing.rank_name(player.fishing_xp), "progress")
+		var perk := Fishing.rank_perk(player.fishing_xp)
+		EventBus.post("Your fishing has improved: %s.%s" % [Fishing.rank_name(player.fishing_xp), " " + perk if perk != "" else ""], "progress")
 	_pass_time(days)
 
 
@@ -1375,10 +1461,13 @@ func cook_meal(meal_id: String) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
+	var first_time := int(player.cooked_meals.get(meal_id, 0)) == 0
 	var result := Cooking.cook(player, data, meal_id)
 	if not result["ok"]:
 		EventBus.post(String(result["reason"]), "warning")
 		return
+	if first_time:
+		Folk.record_dish_cooked(world_flags, player, data, meal_id, GameClock.total_days)  # COOK-003
 	EventBus.post("You cook %s: +%d %s." % [Cooking.meal(data, meal_id)["name"], result["count"], Items.item_plural(data, String(result["item"]), int(result["count"]))], "progress")
 	EventBus.player_changed.emit()
 	_pass_time(int(result["days"]))
@@ -1434,6 +1523,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		result["stones"] = int(result["stones"]) + int(bonus["stones"])
 		if bonus["ok"]:
 			_record_wanted_sale(bonus_units)
+			_season_note("sell_wanted", "", bonus_units)
 	if result["ok"]:
 		EventBus.post("You sell %d %s for %d spirit stones." % [quantity, Items.item_plural(data, item_id, quantity), result["stones"]])
 	else:
@@ -1537,7 +1627,148 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_event = ""
 	dialogue_node = node
 	_greet_renowned(npc_id)
+	_friend_scene(npc_id)
+	_named_remembers(npc_id)
+	_teach_lessons(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
+
+
+## FOLK-020: a close named villager teaches one lasting lesson (at most one per NPC per day), once.
+func _teach_lessons(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not npc.alive or player == null:
+		return
+	if Npcs.region_of(npc, data) != current_region:  # FOLK-021: taught only where the teacher stands
+		return
+	var today := GameClock.total_days
+	if Folk.taught_today(npc_id, player.lessons_taught, today):
+		return
+	var due := Folk.due_lessons(data, npc_id, Folk.tier_index(data, int(npc_favor.get(npc_id, 0))), player.lessons_taught)
+	if due.is_empty():
+		return
+	var lesson: Dictionary = due[0]["lesson"]
+	var notes := Effects.apply(player, data, lesson.get("effects", {}), world_flags, current_region, today)
+	player.lessons_taught[String(due[0]["key"])] = today
+	EventBus.post("%s: \"%s\"" % [npc.name, Folk.lesson_line(lesson, npc.name, player.name)], "people")
+	for note in notes:
+		EventBus.post(note, "progress")
+	EventBus.lesson_taught.emit(npc_id, String(npc.name), Folk.lesson_line(lesson, npc.name, player.name), ", ".join(notes))
+	EventBus.npc_reaction.emit(npc_id, "happy")  # WU-486
+	EventBus.player_changed.emit()
+
+
+## FOLK-020: lessons of a named villager for the UI: [{tier_name, taught, text_if_taught}].
+func lessons_for(npc_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var npc: CharacterData = npcs.get(npc_id)
+	var lessons := Folk.lessons_of(data, npc_id)
+	for i in lessons.size():
+		var taught := player != null and player.lessons_taught.has("%s:%d" % [npc_id, i])
+		result.append({"tier_name": String(data.family["folk_tiers"][int(lessons[i]["tier"])]["name"]), "taught": taught,
+			"text_if_taught": Folk.lesson_line(lessons[i], npc.name if npc != null else npc_id, player.name if player != null else "") if taught else ""})
+	return result
+
+
+## FOLK-019: a named villager opening their dialogue says at most one remembered line: the gift
+## memory if due (consumed), else the village news once per NPC per news item.
+func _named_remembers(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return
+	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)
+	if remembered != "":
+		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
+		return
+	if _dish_noticed(npc_id) or _family_birthday_words(npc_id) or _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
+		return
+	var news: Variant = world_flags.get("village_news")
+	if not (news is Dictionary):
+		return
+	var key := "news_told_" + npc_id
+	if world_flags.has(key) and int(world_flags[key]) == int(news.get("day", -1)):
+		return
+	var line := Folk.news_line(npc, world_flags, data, current_region, GameClock.total_days, true)
+	if line == "":
+		return
+	world_flags[key] = int(news.get("day", -1))
+	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+
+
+## FOLK-026: a friend who went to a festival with you recalls it on their first chat within 10 days (+2 favor, once).
+func _festival_memory(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var line := Folk.festival_memory_line(npc, data, world_flags, GameClock.total_days, true)
+	if line == "":
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.FESTIVAL_MEMORY_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "info")
+	return true
+
+
+## COOK-003: the friend who taught a dish remarks on it the first time they see you after you cooked it (+3 favor, once per dish).
+func _dish_noticed(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or player == null:
+		return false
+	var found := Folk.dish_noticed(npc, data, world_flags, GameClock.total_days, true)
+	if found.is_empty():
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.DISH_NOTICED_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, String(found["line"])], "info")
+	return true
+
+
+## CAL-009: a spouse or child chatting on their own birthday: a family line, +3 favor, once a year.
+func _family_birthday_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	var line := Folk.family_birthday_line(npc, player, data, GameClock.total_days, world_flags, true)
+	if line == "":
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.FAMILY_BIRTHDAY_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, line], "people")
+	return true
+
+
+## FOLK-027: on your birthday a villager you know wishes you well (+2 favor once a year), and family gives a dish.
+func _player_birthday_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var told := false
+	var line := Folk.player_birthday_line(npc, player, data, GameClock.total_days, int(npc_favor.get(npc_id, 0)), world_flags, true)
+	if line != "":
+		npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.PLAYER_BIRTHDAY_FAVOR, -100, 100)
+		EventBus.post("%s: \"%s\"" % [npc.name, line], "info")
+		told = true
+		var gift := Folk.player_birthday_gift_of(npc_id, data)  # FOLK-030
+		if not gift.is_empty() and Folk.player_birthday_own_line(npc_id, data):
+			player.add_item(String(gift["item"]), int(gift["count"]))
+			EventBus.post("%s gives you %d %s." % [npc.name, int(gift["count"]), Items.item_plural(data, String(gift["item"]), int(gift["count"]))], "info")
+			EventBus.player_changed.emit()
+	if player.spouses.has(npc_id) or player.children.has(npc_id):
+		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
+		if dish != "":
+			player.add_item(dish, 1)
+			EventBus.post("%s brings you %s for your birthday." % [npc.name, String(data.items[dish]["name"])], "people")
+			EventBus.player_changed.emit()
+			told = true
+	return told
+
+
+## FOLK-025: a villager chatting while a festival runs in their region says their festival line, once per festival per year.
+func _festival_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return false
+	var region := String(data.npcs.get(npc_id, {}).get("region", current_region))
+	var said := Folk.festival_line(npc, data, world_events, region, GameClock.total_days, world_flags)
+	if said.is_empty():
+		return false
+	Folk.mark_festival_told(world_flags, npc_id, String(said["event"]), GameClock.total_days)
+	EventBus.post("%s: \"%s\"" % [npc.name, String(said["line"]).replace("{player}", player.name)], "info")
+	return true
 
 
 ## Start a story event: a dialogue file (data/dialogue/) not bound to an NPC.
@@ -1662,17 +1893,47 @@ func court(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## FOLK-013: when you talk to a villager and a friend scene is due (one a day), play it once.
+func _friend_scene(npc_id: String) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or player.scene_day == GameClock.total_days:
+		return
+	var scene := Folk.scene_due(player, data, npc_id, int(npc_favor.get(npc_id, 0)), npc, current_region, Weather.of(data, current_region, GameClock.total_days))
+	if scene.is_empty():
+		return
+	Folk.mark_scene(player, String(scene["id"]), GameClock.total_days)
+	var text := String(scene["text"]).replace("{name}", String(npc.name))
+	EventBus.post(text, "people")
+	var gift_name := ""
+	var gift_id := ""
+	if scene.has("gift"):
+		gift_id = String(scene["gift"])
+		player.add_item(String(scene["gift"]), 1)
+		gift_name = String(data.items[String(scene["gift"])].name)
+		EventBus.post("%s gives you %s." % [npc.name, gift_name], "people")
+	EventBus.friend_scene.emit(npc_id, String(npc.name), text, gift_name, gift_id)
+	EventBus.npc_reaction.emit(npc_id, "happy")  # WU-486
+
+
 ## WORLD-003: what a neighbour says in passing today given your favor with them ("" if nothing).
 func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
-	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days)).replace("{player}", player.name)
+	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")
 	if line.contains("{child}"):
 		line = line.replace("{child}", String(npcs[npc.children.back()].name) if not npc.children.is_empty() and npcs.has(npc.children.back()) else "the little one")
 	return line
+
+
+## FOLK-017: where named villager `npc_id` stands today ({pos, why}, Folk.spot_for with today's weather).
+func npc_spot(npc_id: String) -> Dictionary:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	if def.is_empty():
+		return {"pos": Vector2.ZERO, "why": "home"}
+	return Folk.spot_for(data, def, GameClock.total_days, Weather.of(data, String(def.get("region", "")), GameClock.total_days), world_events)
 
 
 ## WORLD-007: the generated villager dropping by today ("" = nobody). The world places them and the Look line reports it.
@@ -1913,6 +2174,22 @@ func chat(npc_id: String) -> void:
 	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
+	_friend_scene(npc_id)
+	_teach_lessons(npc_id)
+	var wall_line := Trophies.comment(player, npcs, data, world_flags, current_region, GameClock.total_days)  # WILD-022
+	if wall_line != "":
+		EventBus.post("%s: %s" % [npcs[npc_id].name, wall_line], "info")
+	var remembered := Folk.gift_memory_line(world_flags, npc_id, data, GameClock.total_days, true)  # FOLK-018
+	if remembered != "":
+		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
+	elif _dish_noticed(npc_id):  # COOK-003
+		pass
+	elif _family_birthday_words(npc_id):  # CAL-009
+		pass
+	elif _player_birthday_words(npc_id):  # FOLK-027
+		pass
+	elif not _festival_memory(npc_id):  # FOLK-026
+		_festival_words(npc_id)  # FOLK-025 (generated villagers; named ones go through start_dialogue)
 	var hint := Family.taste_hint(data, npc_id, npcs[npc_id].name)
 	if hint != "" and int(npc_favor[npc_id]) >= Family.taste_hint_favor(data) and not world_flags.has("taste_told_" + npc_id):
 		world_flags["taste_told_" + npc_id] = true
@@ -2026,21 +2303,31 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
 	var taste := int(result["taste"])
 	var gain := int(result["favor"])
+	var birthday_gift := false
 	if taste >= 0:
 		gain *= Folk.gift_multiplier(world_flags, npc_id, GameClock.total_days, data, true)
-		gain *= Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
+		var cake := Folk.birthday_gift_multiplier(world_flags, npcs[npc_id], data, GameClock.total_days, true)
+		gain *= cake
+		birthday_gift = cake > 1
+		if cake > 1 and taste > 0 and data.npcs.has(npc_id):  # FOLK-022
+			var thanks: Array = data.family.get("folk_greetings", {}).get("birthday_thanks", [])
+			if not thanks.is_empty():
+				var item_label: String = String(data.items[item_id].get("name", item_id)).to_lower()
+				EventBus.post(String(thanks[absi(hash(npc_id + str(GameClock.total_days))) % thanks.size()]).replace("{name}", npcs[npc_id].name).replace("{item}", item_label), "progress")
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
 	if taste >= 0:
 		Karma.on_kindness(player, data, npc_id, "gift")
+	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018
 	var item_name: String = data.items[item_id].get("name", item_id)
 	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else ""))
 	if taste != 0:
 		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
 		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
 	_post_attitude_change(before)
+	EventBus.npc_reaction.emit(npc_id, Folk.gift_reaction(taste, birthday_gift))  # WU-486
 	if taste >= 0:
 		_clan_deed(npc_id, "gift")  # a disliked gift (taken even at the favor cap) earns no clan kindness
 	_pass_time(result["days"])
@@ -2902,7 +3189,7 @@ func journal_entries() -> Array[Dictionary]:
 ## Qi density of the current region, including active world events (LW-001) and today's weather for the player's root (WEATHER-003).
 ## With `days` > 1 the weather factor is the mean over those days (RV-016).
 func region_qi_density(days: int = 1) -> float:
-	return Exploration.qi_density(data, current_region, world_flags, GameClock.total_days) * WorldEvents.qi_multiplier(data, world_events, current_region) * Weather.mean_qi_mult(data, current_region, player, GameClock.total_days, days)
+	return Exploration.effective_density(data, current_region, world_flags, GameClock.total_days, world_events, player, days)
 
 
 ## Merchant price multiplier of the current region's active world events.
@@ -3204,7 +3491,11 @@ func festival_contest(event_id: String) -> Dictionary:
 	var year := Calendar.year_of(GameClock.total_days)
 	var champ_name := FestivalContest.champion_rival(world_flags, event_id, year)
 	var rivals: Array[CharacterData] = []
+	var invite := FestivalContest.invitation(data, npcs, npc_favor, GameClock.total_days)
+	var invited: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id else null
 	for npc in Folk.candidates(npcs, data, player, current_region):
+		if invited != null and npc.id == invited.id:
+			continue  # FEST-011: the invited friend comes as your guest, not as an entrant
 		if npc.name == champ_name:
 			rivals.push_front(npc)  # last year's champion always enters
 		else:
@@ -3213,13 +3504,42 @@ func festival_contest(event_id: String) -> Dictionary:
 		rivals.resize(int(contest["rivals"]))
 	if champ_name != "" and (rivals.is_empty() or rivals[0].name != champ_name):
 		champ_name = ""  # not in this village any more
+	# FEST-009: your rival came down for the festival.
+	var rival := Rivals.rival_of(player, npcs)
+	var rival_name := ""
+	var rival_id := ""
+	if Rivals.enters_festival(player, rival, world_flags):
+		rivals.erase(rival)
+		var at := 1 if champ_name != "" and not rivals.is_empty() else 0
+		rivals.insert(at, rival)
+		if rivals.size() > int(contest["rivals"]):
+			rivals.resize(int(contest["rivals"]))
+		rival_name = rival.name if rivals.has(rival) else ""
+		rival_id = rival.id if rivals.has(rival) else ""
 	var practice := FestivalContest.practice_bonus(world_flags, event_id, year)
-	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice)
+	var cheerers := FestivalContest.cheerers(npcs, data, npc_favor, current_region, rivals)  # FOLK-012: entrants compete, not cheer
+	var result := FestivalContest.run(data, player, event_id, rivals, rng, champ_name, practice, rival_name, year, cheerers.size(), rival_id)
+	var cheer_names: Array = []
+	for n in cheerers:
+		cheer_names.append(n.name)
+	result["cheerers"] = cheer_names  # WU-463
+	var companion: CharacterData = invite["npc"] if not invite.is_empty() and String(invite["event_id"]) == event_id and current_region == String(data.world_events[event_id].get("regions", [""])[0]) else null
 	world_flags[FestivalContest.flag_key(event_id, year)] = true
+	if int(result["place"]) == 1:
+		Folk.record_news(world_flags, "contest_win", String(data.world_events[event_id].get("name", event_id)), current_region, GameClock.total_days)
+	_season_note("contest", event_id, 1)
 	EventBus.post(String(contest["text"]), "world")
 	if champ_name != "":
 		EventBus.post("%s: %s" % [champ_name, String(contest.get("champion_greeting", "")).replace("{player}", player.name)], "world")
 	EventBus.post("%s You place %s of %d.%s" % [String(result["text"]), FestivalContest.ordinal(int(result["place"])), int(result["total"]), (" Your practice told (+%d)." % practice) if practice > 0 else ""], "world")
+	if not cheerers.is_empty():
+		EventBus.post(FestivalContest.cheer_line(cheerers), "world")
+	if companion != null:
+		Folk.note_festival_company(world_flags, companion.id, event_id, GameClock.total_days)  # FOLK-026
+		npc_favor[companion.id] = clampi(int(npc_favor.get(companion.id, 0)) + FestivalContest.COMPANY_FAVOR, -100, 100)
+		var company := FestivalContest.company_line(data, companion.name, year)
+		if company != "":
+			EventBus.post(company, "world")
 	var prize: Dictionary = result["prize"]
 	for item_id: String in prize.get("items", {}):
 		player.add_item(item_id, int(prize["items"][item_id]))
@@ -3231,6 +3551,19 @@ func festival_contest(event_id: String) -> Dictionary:
 				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
 	if int(prize.get("renown", 0)) > 0:
 		Renown.add(player, data, current_region, int(prize["renown"]))
+	if rival_name != "":
+		var above := true
+		for sc: Dictionary in result["scores"]:
+			if bool(sc.get("rival", false)):
+				above = false
+				break
+			if bool(sc["you"]):
+				break
+		Rivals.note_festival(world_flags, above)
+		var rline := Rivals.festival_line(data, rival, above, year)
+		if rline != "":
+			EventBus.post(rline, "world")
+			result["rival_remark"] = rline  # WU-463
 	var streak := FestivalContest.record(world_flags, event_id, year, result)
 	if streak == FestivalContest.MASTER_STREAK:
 		EventBus.post("Three years running: the %s is yours." % String(contest["name"]), "progress")
@@ -3263,6 +3596,54 @@ func forage_today(region_id: String) -> Array[Dictionary]:
 	return Foraging.unpicked(data, region_id, GameClock.total_days, player.realm_index, world_flags, Foraging.tier_for(player.forage_picks))
 
 
+## CRIT-001: today's unpicked hen eggs here, [{index, pos, item}].
+func eggs_here() -> Array[Dictionary]:
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	return Critters.eggs_left(current_region, entries, GameClock.total_days, world_flags, Calendar.season_of(GameClock.total_days).to_lower())
+
+
+## CRIT-002: why the hens here cannot be fed today ("" = they can).
+func feed_hens_refusal() -> String:
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	return Critters.feed_refusal(data, player, entries, world_flags, current_region, GameClock.total_days)
+
+
+## CRIT-002: scatter one grain item for the hens, once a day. Tomorrow's egg roll is sure and may give more. No time.
+func feed_hens() -> bool:
+	if not _can_act():
+		return false
+	var why := feed_hens_refusal()
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	var entries: Array = data.regions.get(current_region, {}).get("map", {}).get("ambient_critters", [])
+	var grain := Critters.grain_item(data, player, String(Critters.feed_of(entries).get("item_tag", "")))
+	player.add_item(grain, -1)
+	world_flags[Critters.fed_flag(current_region)] = GameClock.total_days
+	EventBus.post("You scatter a handful of %s; the hens crowd round, clucking." % String(data.items.get(grain, {}).get("name", "grain")).to_lower(), "world")
+	EventBus.player_changed.emit()
+	return true
+
+
+## CRIT-001: pick up the egg of ambient critter `index`. Takes no time; it is gone until the next day.
+func pick_egg(index: int) -> bool:
+	if not _can_act():
+		return false
+	for e in eggs_here():
+		if int(e["index"]) != index:
+			continue
+		var item_id := String(e["item"])
+		var count := int(e.get("count", 1))
+		player.add_item(item_id, count)
+		Critters.mark_egg(world_flags, current_region, index, GameClock.total_days)
+		EventBus.post("You pick up %s from the grass." % ("a " + String(data.items.get(item_id, {}).get("name", item_id)).to_lower() if count == 1 else "%d %s" % [count, String(data.items.get(item_id, {}).get("plural", item_id)).to_lower()]), "world")
+		EventBus.pickup_noted.emit(item_id, count)
+		EventBus.forage_changed.emit()
+		EventBus.player_changed.emit()
+		return true
+	return false
+
+
 ## Pick up the forage in `slot`. Takes no time (a stoop, not an action).
 func pick_forage(slot: int) -> bool:
 	if not _can_act():
@@ -3278,11 +3659,12 @@ func pick_forage(slot: int) -> bool:
 			player.gather_xp += 1
 			HerbLore.record_find(player, item_id, amount)
 		LifeStats.add(player, "foraged")
+		_season_note("gather", item_id, amount)
 		var tier_before := Foraging.tier_for(player.forage_picks)
 		player.forage_picks += 1
 		var tier_line := Foraging.tier_line(Foraging.tier_for(player.forage_picks)) if Foraging.tier_for(player.forage_picks) > tier_before else ""
 		var find_text := "You pick %d %s by the path." % [amount, Items.item_plural(data, item_id, amount)]
-		var find_note := Guidance.find_note(data, item_id, current_region)
+		var find_note := Guidance.find_note(data, item_id, current_region, player)
 		if find_note != "":
 			find_text += " " + find_note + "."
 		EventBus.post(find_text, "world")
@@ -3340,6 +3722,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 			won = fight(String(r["enemy"]))
 		if won:
 			Wildlife.record_hunt(player, String(r["enemy"]))
+			_season_note("hunt", String(r["enemy"]), 1)
 			# The bounty's pay is not the beast's spoils (REVIEW of WILD-005).
 			if not bounty:
 				spoils = Wildlife.inventory_gain(before, player.inventory)
@@ -3356,8 +3739,15 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
 				LifeStats.add(player, "great_beasts")
+				Folk.record_news(world_flags, "great_beast", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				_gain_renown("great_beast")  # WILD-010: the hunter is known (the beast walks and falls once a day)
+				var first_win := not player.great_beasts.has(String(r["enemy"]))
 				var trophy := Wildlife.record_great(player, data, String(r["enemy"]), region, GameClock.total_days)
+				var trail_line := Wildlife.finish_trail(data, world_flags, region, String(r["enemy"]), first_win)
+				if trail_line != "":
+					# WILD-021: the end of the trail; the village hears of it (replaces the plain great-beast news).
+					EventBus.post(trail_line, "world")
+					Folk.record_news(world_flags, "great_trail", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				if trophy != "":
 					player.add_item(trophy, 1)
 					EventBus.post("You take the %s as a token of the hunt." % String(data.items[trophy]["name"]).to_lower(), "progress")
@@ -3373,6 +3763,85 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 		return won
 	EventBus.post("There is no such beast about.", "warning")
 	return false
+
+
+## SEASON-007: light incense at the restored shrine (takes no time).
+func offer_incense() -> bool:
+	var why := SeasonTasks.can_offer_incense(player, data, world_flags, GameClock.total_days)
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	EventBus.post(SeasonTasks.offer_incense(player, data, world_flags, GameClock.total_days), "progress")
+	EventBus.player_changed.emit()
+	return true
+
+
+## SEASON-008: draw the day's water from the restored village well (takes no time).
+func draw_well_water() -> bool:
+	var why := SeasonTasks.can_draw(player, data, world_flags, GameClock.total_days)
+	if why != "":
+		EventBus.post(why, "warning")
+		return false
+	var water := String(SeasonTasks.daily_project(data).get("daily", {}).get("item", ""))
+	EventBus.post(SeasonTasks.draw_daily(player, data, world_flags, GameClock.total_days), "progress")
+	EventBus.pickup_noted.emit(water, 1)
+	EventBus.player_changed.emit()
+	return true
+
+
+## SEASON-005: counts progress on the season's village tasks, posts the lines and pays the reward once.
+func _season_note(kind: String, target: String, n: int) -> void:
+	var day := GameClock.total_days
+	var was_done := bool(player.season_tasks.get("done", false)) and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)
+	var stage_before := SeasonTasks.restoration_stage(player, data)
+	var done_before := player.seasons_completed.size()
+	var lines := SeasonTasks.note(player, data, kind, target, n, day)
+	for flag in SeasonTasks.restoration_flags(player, data):
+		world_flags[flag] = true
+	for line in lines:
+		EventBus.post(line, "progress")
+	if not lines.is_empty():
+		EventBus.player_changed.emit()  # GFX-081: the shrine redraws at its new stage
+	if was_done or lines.is_empty() or not bool(player.season_tasks.get("done", false)):
+		return
+	var reached := SeasonTasks.stage_reached(data, player.seasons_completed.size()) if player.seasons_completed.size() > done_before else {}
+	if not reached.is_empty() and int(reached["index"]) > 0:
+		var proj: Dictionary = reached["project"]
+		Folk.record_news(world_flags, "project_stage", String(proj["name"]), String(proj.get("region", SeasonTasks.REGION)), day)
+		var flag := "project_done_" + String(proj["id"])
+		if bool(reached["final"]) and String(proj.get("done_line", "")) != "" and not world_flags.has(flag):
+			EventBus.post(String(proj["done_line"]), "people")
+			world_flags[flag] = true
+	elif SeasonTasks.restoration_stage(player, data) > stage_before:
+		Folk.record_news(world_flags, "shrine_stage", "the old shrine", SeasonTasks.REGION, day)
+	else:
+		Folk.record_news(world_flags, "season_done", SeasonTasks.season_name(day).to_lower(), SeasonTasks.REGION, day)
+	var reward: Dictionary = SeasonTasks.def(data, day).get("payout", {})
+	if int(reward.get("stones", 0)) > 0:
+		player.add_item("spirit_stone", int(reward["stones"]))
+	if String(reward.get("item", "")) != "":
+		player.add_item(String(reward["item"]), 1)
+	if int(reward.get("renown", 0)) > 0:
+		Renown.add(player, data, SeasonTasks.REGION, int(reward["renown"]))
+	var favor := int(reward.get("favor_all", 0))
+	if favor > 0:
+		for npc in Npcs.in_region(npcs, data, SeasonTasks.REGION):
+			if npc.id != player.id:
+				npc_favor[npc.id] = clampi(int(npc_favor.get(npc.id, 0)) + favor, -100, 100)
+	EventBus.season_tasks_done.emit(SeasonTasks.season_name(day), SeasonTasks.reward_text(data, day))
+
+
+## SEASON-005: this season's village tasks as [{text, n, count, done}] (for the journal).
+func season_tasks() -> Array[Dictionary]:
+	return SeasonTasks.list(player, data, GameClock.total_days)
+
+
+## WU-462: "" or the season's reward text once all tasks are done (for the journal), by today's season.
+func season_reward_line() -> String:
+	var tasks := season_tasks()
+	if tasks.is_empty() or tasks.any(func(t: Dictionary) -> bool: return not bool(t["done"])):
+		return ""
+	return "The village thanks you for the %s: %s." % [SeasonTasks.season_name(GameClock.total_days), SeasonTasks.reward_text(data, GameClock.total_days)]
 
 
 ## WILD-016: the beast of the village hunt posted here today, "" when none is.
@@ -3407,6 +3876,7 @@ func join_village_hunt() -> bool:
 		_pass_time(extra)
 	if won:
 		Wildlife.record_hunt(player, enemy_id)
+		_season_note("hunt", enemy_id, 1)
 		var spoils := Wildlife.inventory_gain(before, player.inventory)
 		for item_id: String in spoils:
 			var n := int(spoils[item_id])
@@ -3914,6 +4384,7 @@ func load_save_dict(d: Dictionary) -> void:
 	dialogue_event = ""
 	pending_event = ""  # a loaded game never replays the intro event
 	pending_encounter = ""
+	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
 	if not data.regions.has(current_region):
@@ -3927,6 +4398,7 @@ func load_save_dict(d: Dictionary) -> void:
 	rng.state = String(d.get("rng_state", "0")).to_int()
 	# Milestones reached before this save (or before GOAL-001) are awarded silently, so
 	# loading never re-announces them; every earned one is re-synced to Steam (idempotent).
+	Wildlife.backfill_trails(player, data, world_flags)  # pre-WILD-021 saves
 	LifeStats.backfill(player, data, world_flags)
 	Milestones.award(player, data, world_flags, clan, GameClock.total_days)
 	for id in player.milestones:
@@ -4125,6 +4597,9 @@ func check_friendships() -> void:
 			player.folk_tier_seen[id] = maxi(int(player.folk_tier_seen.get(id, -1)), Folk.tier_index(data, int(npc_favor.get(id, 0))))
 		player.folk_tiers_seeded = true
 		return
+	for id: String in data.npcs:
+		if not Folk.lessons_of(data, id).is_empty():
+			_teach_lessons(id)
 	for hit in Folk.new_tiers(data, player.folk_tier_seen, npc_favor, ids):
 		var tier: Dictionary = data.family["folk_tiers"][int(hit["tier"])]
 		var npc: CharacterData = npcs[hit["id"]]
@@ -4185,9 +4660,82 @@ func _on_year_changed(year: int) -> void:
 	_store_year_snapshot()
 
 
+## SEASON-012: remembers life_stats at the start of a season.
+func _store_season_snapshot() -> void:
+	player.season_start_stats = player.life_stats.duplicate()
+	player.season_start_day = GameClock.total_days
+	player.season_start_sets = player.seasons_completed.size()
+
+
+## The first fixed-date festival of the season after `day`'s: "Coming: the Dragon Boat Festival in month 5." or "".
+func _coming_festival_line(day: int) -> String:
+	var next_day := day + Calendar.days_left_in_season(day) + 1
+	var next_season := Calendar.season_of(next_day)
+	var best := 99
+	var best_name := ""
+	for ev: Dictionary in data.world_events.values():
+		if not bool(ev.get("festival", false)):
+			continue
+		for m in ev.get("months", []):
+			var month := int(m)
+			var probe := (month - 1) * Calendar.DAYS_PER_MONTH
+			if Calendar.season_of(probe) == next_season and month < best:
+				best = month
+				best_name = String(ev.get("name", ""))
+	if best_name == "":
+		return ""
+	return "Coming: the %s in month %d." % [best_name, best]
+
+
+## SEASON-012: looks back when a season ends. Only the last season ended is reviewed after a long skip.
+func _review_season_if_changed() -> void:
+	var now := GameClock.total_days
+	if player.season_start_day < 0:
+		_store_season_snapshot()
+		return
+	var ended_day := player.season_start_day
+	if Calendar.season_of(ended_day) == Calendar.season_of(now) and Calendar.year_of(ended_day) == Calendar.year_of(now):
+		return
+	# the season that ended last: the one before today's
+	var last_ended := now - Calendar.day_of(now) - (Calendar.month_of(now) - 1) % 3 * Calendar.DAYS_PER_MONTH - 1
+	var extras := {"coming": _coming_festival_line(last_ended)}
+	var tasks := SeasonTasks.tasks_for(data, last_ended)
+	if not tasks.is_empty() and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(last_ended):
+		var progress: Dictionary = player.season_tasks.get("progress", {})
+		var done := 0
+		for t: Dictionary in tasks:
+			if int(progress.get(String(t["id"]), 0)) >= int(t["count"]):
+				done += 1
+		extras["tasks_done"] = done
+		extras["tasks_total"] = tasks.size()
+	elif not tasks.is_empty():
+		extras["tasks_done"] = 0
+		extras["tasks_total"] = tasks.size()
+	extras["project_line"] = SeasonTasks.project_recap_line(data, player.season_start_sets, player.seasons_completed.size())
+	var recap_rng := RandomNumberGenerator.new()  # own stream: wording must not shift GameState.rng
+	recap_rng.seed = hash([now, rng.seed])
+	var lines := LifeStats.season_summary(player.season_start_stats, player.life_stats, extras, data, recap_rng)
+	for line in lines:
+		EventBus.post(line, "progress")
+	var new_year := Calendar.year_of(now) != Calendar.year_of(last_ended)
+	if not new_year:
+		EventBus.season_reviewed.emit(Calendar.season_of(last_ended), Calendar.year_of(last_ended), lines)
+	_store_season_snapshot()
+	_announce_season_start(now)
+
+
+## SEASON-013: after the recap, the new season's kickoff lines.
+func _announce_season_start(now: int) -> void:
+	var lines := SeasonTasks.kickoff_lines(data, now, current_region)
+	if lines.is_empty():
+		return
+	EventBus.season_began.emit(Calendar.season_of(now), Calendar.year_of(now), lines)
+
+
 func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
+	_review_season_if_changed()
 	var action_topic := EventBus.topic
 	EventBus.topic = "cultivation"
 	var age_before := player.age_days
@@ -4248,6 +4796,7 @@ func _on_days_advanced(days: int) -> void:
 	if player.age_years() > age_before / Calendar.DAYS_PER_YEAR:
 		_prune_dead_npcs()
 	_advance_pregnancies(days)
+	birthday_at_home()  # FOLK-028
 	for legacy: Dictionary in data.inheritances.values():
 		if Inheritances.lost_between(legacy, GameClock.total_days - days, GameClock.total_days, world_flags):
 			if Inheritances.player_knew(player, legacy):
@@ -4284,6 +4833,13 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(event["text"], event["category"])
 	for repaid in Karma.repay_debts(player, npcs, data, months, rng, world_flags):
 		EventBus.post("%s repays a debt of gratitude. (%s)" % [npcs[repaid["npc_id"]].name, ", ".join(repaid["notes"])], "progress")
+	var wall_renown := Trophies.monthly_renown(player, npcs, data, months)  # WILD-022
+	if wall_renown > 0:
+		var wall_region := Trophies.home_region(player, npcs, data)
+		var before_region := current_region
+		current_region = wall_region
+		_announce_renown(Renown.add(player, data, wall_region, wall_renown))
+		current_region = before_region
 	for i in months:
 		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days, current_region)
 		if not letter.is_empty():
@@ -4330,11 +4886,35 @@ func _on_days_advanced(days: int) -> void:
 		_kill("Your lifespan is exhausted. You die of old age at %d." % player.age_years())
 
 
+## FOLK-028: on your birthday, family at your Family Home sets out the dish as you enter or wake there; without
+## family, a Close friend (2+ needed) brings a small gift in the morning. Once a year each; no time passes.
+func birthday_at_home() -> void:
+	if player == null or not Folk.player_birthday_today(player, data, GameClock.total_days):
+		return
+	var topic := EventBus.topic
+	EventBus.topic = "people"
+	if FamilyHome.has_home(player, npcs, data, current_region):
+		var dish := Folk.player_birthday_gift(player, data, GameClock.total_days, world_flags, true)
+		if dish != "":
+			var who: CharacterData = FamilyHome.at_home(player, npcs, data, current_region)[0]
+			var dish_name := String(data.items[dish]["name"])
+			player.add_item(dish, 1)
+			EventBus.post(Folk.birthday_home_line(data, who.name, dish_name, GameClock.total_days), "people")
+			EventBus.player_changed.emit()
+	else:
+		var gift := Folk.birthday_friend_gift(player, npcs, npc_favor, data, GameClock.total_days, world_flags, true)
+		if not gift.is_empty():
+			player.add_item(String(gift["item"]), 1)
+			EventBus.post("%s leaves %s for your birthday, with a note: \"Many happy returns.\"" % [npcs[gift["npc_id"]].name, String(data.items[gift["item"]]["name"])], "people")
+			EventBus.player_changed.emit()
+	EventBus.topic = topic
+
+
 ## RIVAL-005: word of the rival's breakthroughs once you have met them.
 func _rival_news() -> void:
 	if player.alive and Rivals.successor_due(world_flags, GameClock.total_days):
 		var heir := Rivals.spawn(player, npcs, data, rng, current_region if current_region != "" else data.start_region)
-		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news", Rivals.BOUTS_WON_FLAG, Rivals.BOUTS_LOST_FLAG]:
+		for flag in [Rivals.SUCCESSOR_DAY_FLAG, Rivals.FIRST_MEETING_FLAG, Rivals.SEEN_REALM_FLAG, Rivals.SURPASSED_FLAG, "rival_death_news", Rivals.BOUTS_WON_FLAG, Rivals.BOUTS_LOST_FLAG, Rivals.CONTESTS_FLAG]:
 			world_flags.erase(flag)
 		world_flags[Rivals.MEETING_FROM_FLAG] = GameClock.total_days
 		EventBus.post(Rivals.successor_line(heir, String(world_flags.get("rival_predecessor", "your old rival"))), "world")

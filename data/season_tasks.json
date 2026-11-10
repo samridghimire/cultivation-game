@@ -1,0 +1,116 @@
+{
+  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {sets (SEASON-009): [one or more sets of exactly 3 {id (unique across all sets), text (non-empty), kind, target, count (int 1..5)}]; the year's set is sets[(year - 1) % sets.size()] via SeasonTasks.tasks_for; a season may use `tasks` (exactly 3) instead, meaning one set], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). restoration (optional, SEASON-006): {region (regions.json id), name (e.g. \"the old shrine\"), stages: [1..8 {flag (unique world flag), text}], qi_flag: {flag (unique), bonus (0 < b <= 0.1), text}, incense (optional, SEASON-007): {item (items.json id), flag (unique world flag), days (int 1..3), bonus (0 < b <= 0.1), text (non-empty)}}: each season whose three tasks are finished (CharacterData.seasons_completed, unique season keys) repairs one stage and sets its world flag; when all are reached qi_flag.flag is set too, and the region must list that flag with the same bonus in its qi_flags. Once restored, the shrine takes one `incense` item (SeasonTasks.offer_incense) and sets the timed world flag {until: day + days}; the region must list that flag with the same bonus too. projects (optional, SEASON-008): after the shrine, further village projects in order: [{id, name, region (regions.json id), stages: [1..8 {flag (unique), text}], done_text, fish_bonus (optional, SEASON-011, 0 < b <= 0.1: per stage reached, the fraction of extra catch weight at fishing places of that region, SeasonTasks.fish_bonus), crop_bonus (optional, 0 < b <= 0.1: per stage reached, the fraction of an extra growing day per day for crops in field plots of that region), daily (optional): {item (items.json id), flag (unique timed world flag), text}, gather_bonus (optional, SEASON-015, 0 < b <= 0.2: per stage reached, the chance of one extra unit of the most plentiful item on a gather in that region, SeasonTasks.gather_bonus)}]; finished seasons beyond the shrine fill the next project (SeasonTasks.project_stage); SeasonTasks.draw_daily gives one daily item once whole. Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done. recap (SEASON-014): {key: [1..3 template strings, each non-empty and <= 100 chars]} for every line LifeStats.season_summary builds; keys tasks ({done},{n}), fights_won/fights_lost ({n},{s}), fights_mixed ({won},{lost},{s}), great_beast_one, great_beast_many ({n}), harvests/foraged/crafted/missions ({n},{s}), festival_one, festival_many ({n}), breakthrough_one, breakthrough_many ({n}), quiet; {s} is the plural s; one template is picked with the game rng; the first is the default.",
+  "recap": {
+    "tasks": ["Village tasks: {done} of {n} done.", "The elder's list: {done} of {n} tasks done.", "The chronicle notes {done} of {n} village tasks."],
+    "fights_won": ["You won {n} fight{s}.", "The village heard of {n} fight{s} you won.", "{n} fight{s} won; the village sleeps easier."],
+    "fights_lost": ["You lost {n} fight{s}.", "You limped home from {n} lost fight{s}.", "{n} fight{s} lost; the village hopes you mend soon."],
+    "fights_mixed": ["You won {won} fight{s} and lost {lost}.", "Fights this season: {won} won, {lost} lost.", "{won} won, {lost} lost; the chronicle keeps both."],
+    "great_beast_one": ["You brought down a great beast.", "Villagers still talk of the great beast you felled.", "The chronicle records one great beast felled by your hand."],
+    "great_beast_many": ["You brought down {n} great beasts.", "Villagers tell of the {n} great beasts you felled.", "The chronicle records {n} great beasts felled by your hand."],
+    "harvests": ["You harvested {n} crop{s}.", "Your fields gave {n} harvest{s}.", "{n} harvest{s} came in from your fields."],
+    "foraged": ["You foraged {n} time{s}.", "You wandered the wilds {n} time{s} for forage.", "{n} trip{s} to the wilds for forage."],
+    "crafted": ["You crafted {n} item{s}.", "Your hands made {n} item{s}.", "{n} item{s} made at your bench."],
+    "festival_one": ["You joined a festival event.", "You took part in a festival.", "You kept the festival with the village."],
+    "festival_many": ["You joined {n} festival events.", "You took part in {n} festival events.", "You kept {n} festivals with the village."],
+    "missions": ["You finished {n} sect mission{s}.", "Your sect saw {n} mission{s} done.", "{n} sect mission{s} done, and noted."],
+    "breakthrough_one": ["You broke through.", "Your cultivation broke through.", "The chronicle marks your breakthrough."],
+    "breakthrough_many": ["You broke through {n} times.", "Your cultivation broke through {n} times.", "The chronicle marks {n} breakthroughs."],
+    "quiet": ["A quiet season.", "A quiet season: you kept to yourself.", "A quiet season, and the village is glad of it."]
+  },
+  "restoration": {
+    "region": "qingshi_village", "name": "the old shrine",
+    "stages": [
+      {"flag": "shrine_stage_1", "text": "Villagers clear the weeds and rubble from the old shrine."},
+      {"flag": "shrine_stage_2", "text": "A new roof of grey tile goes up over the old shrine."},
+      {"flag": "shrine_stage_3", "text": "The old shrine's cracked altar stone is set straight and polished."},
+      {"flag": "shrine_stage_4", "text": "Incense is lit at the old shrine for the first time in a generation."}
+    ],
+    "incense": {"item": "village_mugwort", "flag": "shrine_incense", "days": 1, "bonus": 0.05, "text": "Incense smoke curls from the old shrine."}, "qi_flag": {"flag": "shrine_restored", "bonus": 0.05, "text": "the restored shrine"},
+    "projects": [
+      {"id": "well", "name": "the Founder's Old Well", "region": "qingshi_village", "done_line": "Old women weep and children cheer as the first bucket rises from the Founder's Old Well.", "crop_bonus": 0.05,
+        "stages": [
+          {"flag": "well_stage_1", "text": "Villagers haul the rotten cover off the Founder's Old Well and bail out the muck."},
+          {"flag": "well_stage_2", "text": "Masons re-lay the well's fallen stones and hang a new windlass."},
+          {"flag": "well_stage_3", "text": "Clear water rises in the Founder's Old Well for the first time in a generation."}
+        ],
+        "done_text": "The old well is whole: Qingshi's fields grow faster, and you may draw well water once a day.",
+        "daily": {"item": "well_water", "flag": "well_drawn", "text": "You draw a bucket of cold, sweet water from the old well."}},
+      {"id": "jetty", "name": "the Village Pond Jetty", "region": "qingshi_village", "done_line": "Our jetty stands whole again, friend, and something long-shadowed has come to lurk under its planks.", "fish_bonus": 0.05,
+        "stages": [
+          {"flag": "jetty_stage_1", "text": "Old Fisher Wen's neighbours pull the rotten planks off the jetty, and every one of them has a story about the fish that got away."},
+          {"flag": "jetty_stage_2", "text": "New posts go into the pond mud. The children count each blow of the mallet aloud and lose count every time."},
+          {"flag": "jetty_stage_3", "text": "Fresh planks are laid, and the old folk walk out to the end of the jetty just to feel it hold."}
+        ],
+        "done_text": "The pond jetty is whole: fish bite more readily at Qingshi's pond, and a pearl-backed rarity has been seen beneath the planks."}
+      ,      {"id": "terraces", "name": "the Herb Slope Terraces", "region": "qingshi_village", "done_line": "The slope climbs in green steps again, friend, and Lan says every basket comes down heavier.", "gather_bonus": 0.1,
+        "stages": [
+          {"flag": "terraces_stage_1", "text": "Herbalist Lan and the slope's old women hack the brambles off the terraces, grumbling that their mothers kept them tidier."},
+          {"flag": "terraces_stage_2", "text": "Stone by stone the fallen walls go back up. The old women swear each one sits where their grandmothers laid it."},
+          {"flag": "terraces_stage_3", "text": "Baskets of dark soil are carried up, and Herbalist Lan plants the first row herself, humming off-key."}
+        ],
+        "done_text": "The Herb Slope terraces are whole: the old women say the slope gives freely again, and a day's gathering may turn up a little more."}
+    ]
+  },
+  "seasons": {
+    "spring": {
+      "sets": [
+        [
+          {"id": "spring_bream", "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
+          {"id": "spring_petals", "text": "Gather 3 Peach Blossom Petals for the shrine.", "kind": "gather", "target": "peach_blossom_petal", "count": 3},
+          {"id": "spring_stag", "text": "Drive off a Fog-Antler Stag that is trampling the fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1}
+        ],
+        [
+          {"id": "spring_carp", "text": "Land 2 Silver Carp for the Qingming offering table.", "kind": "catch", "target": "silver_carp", "count": 2},
+          {"id": "spring_mugwort", "text": "Gather 4 Village Mugwort for the Qingming rice cakes.", "kind": "gather", "target": "village_mugwort", "count": 4},
+          {"id": "spring_qingming", "text": "Join the Qingming Festival contest.", "kind": "contest", "target": "qingming_festival", "count": 1}
+        ]
+      ],
+      "payout": {"stones": 60, "renown": 2, "favor_all": 1, "item": "paper_lantern"}
+    },
+    "summer": {
+      "sets": [
+        [
+          {"id": "summer_bass", "text": "Land a Lotus Bass from the forest pond.", "kind": "catch", "target": "lotus_bass", "count": 1},
+          {"id": "summer_grass", "text": "Gather 2 Qi Condensing Grass for the elder's tonic.", "kind": "gather", "target": "qi_condensing_grass", "count": 2},
+          {"id": "summer_boats", "text": "Race in the Dragon Boat Festival.", "kind": "contest", "target": "dragon_boat_festival", "count": 1}
+        ],
+        [
+          {"id": "summer_koi", "text": "Land a Mist Koi from the forest pond.", "kind": "catch", "target": "mist_koi", "count": 1},
+          {"id": "summer_herb", "text": "Gather 3 Spirit Herbs for the summer fever tea.", "kind": "gather", "target": "spirit_herb", "count": 3},
+          {"id": "summer_boar", "text": "Drive a Wild Boar out of the forest edge.", "kind": "hunt", "target": "wild_boar", "count": 1}
+        ]
+      ],
+      "payout": {"stones": 80, "renown": 2, "favor_all": 1, "item": "realgar_wine"}
+    },
+    "autumn": {
+      "sets": [
+        [
+          {"id": "autumn_roach", "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
+          {"id": "autumn_fox", "text": "Hunt a Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
+          {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
+        ],
+        [
+          {"id": "autumn_eel", "text": "Land 2 Marsh Eels for the harvest soup.", "kind": "catch", "target": "marsh_eel", "count": 2},
+          {"id": "autumn_dew", "text": "Gather 3 Dew Grass before the first frost.", "kind": "gather", "target": "dew_grass", "count": 3},
+          {"id": "autumn_moon", "text": "Join the Mid-Autumn Festival contest.", "kind": "contest", "target": "mid_autumn_festival", "count": 1}
+        ]
+      ],
+      "payout": {"stones": 100, "renown": 2, "favor_all": 1, "item": "moon_cake"}
+    },
+    "winter": {
+      "sets": [
+        [
+          {"id": "winter_perch", "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
+          {"id": "winter_wolf", "text": "Hunt a Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},
+          {"id": "winter_lanterns", "text": "Join the Lantern Festival contest.", "kind": "contest", "target": "lantern_festival", "count": 1}
+        ],
+        [
+          {"id": "winter_carp", "text": "Land 2 Silver Carp for the winter larder.", "kind": "catch", "target": "silver_carp", "count": 2},
+          {"id": "winter_iron", "text": "Gather 2 Iron Essence for the village smith.", "kind": "gather", "target": "iron_essence", "count": 2},
+          {"id": "winter_market", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
+        ]
+      ],
+      "payout": {"stones": 120, "renown": 2, "favor_all": 1, "item": "osmanthus_wine"}
+    }
+  }
+}

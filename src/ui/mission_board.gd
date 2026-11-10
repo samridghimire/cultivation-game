@@ -106,7 +106,7 @@ func _init() -> void:
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 func _wrapped(l: Label) -> Label:
@@ -710,3 +710,8 @@ func _focus_selected() -> void:
 		b.grab_focus()
 	else:
 		_close_button.grab_focus()
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

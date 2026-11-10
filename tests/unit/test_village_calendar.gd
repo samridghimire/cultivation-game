@@ -39,7 +39,7 @@ func test_active_festival_once_with_end_date() -> void:
 	var act := _kinds(e, "festival_active")
 	assert_eq(act.size(), 1)
 	assert_eq(int(act[0]["day"]), start)
-	assert_true(String(act[0]["text"]).contains("until " + Calendar.format_date(start + 5)))
+	assert_true(String(act[0]["text"]).contains("to " + Calendar.format_date(start + 4)))
 	assert_eq(_kinds(e, "festival_month").size(), 0)
 
 
@@ -164,7 +164,7 @@ func test_one_region_festival_month_has_region() -> void:
 ## CAL-003: tomorrow's reminders.
 func test_reminder_market_tomorrow() -> void:
 	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, null)
-	assert_eq(r.size(), 1)
+	assert_eq(r.size(), 2, "market day and the spring hunt (C-309)")
 	assert_true(r[0].begins_with("Tomorrow: market day at "), r[0])
 	assert_eq(VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 10, null).size(), 0)
 
@@ -285,3 +285,116 @@ func test_game_state_mark_day() -> void:
 	gs.player.marked_days[day] = "Market: Qingshi"
 	assert_eq(Array(VillageCalendar.mark_lines(gs.player, day - 1)), ["Tomorrow: Market: Qingshi."])
 	gs.end_session()
+
+
+func test_festival_fills_every_day_cell() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms, "end_day": ms + 8}
+	var g := VillageCalendar.month_grid(VillageCalendar.upcoming(data(), {}, {}, [inst], "qingshi_village", ms), ms)
+	for d in range(1, 9):
+		var kinds: Array = (g[d] as Array).map(func(x: Dictionary) -> String: return String(x["kind"]))
+		assert_true(kinds.has("festival_active" if d == 1 else "festival_day"), "day %d" % d)
+	assert_false(g.has(9) and ((g[9] as Array).any(func(x: Dictionary) -> bool: return String(x["kind"]) == "festival_day")))
+	var full := 0
+	for d in g:
+		for x: Dictionary in g[d]:
+			if x["kind"] == "festival_active":
+				full += 1
+	assert_eq(full, 1)
+
+
+func test_festival_from_last_month_fills_from_day_one() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms - 3, "end_day": ms + 4}
+	var g := VillageCalendar.month_grid(VillageCalendar.upcoming(data(), {}, {}, [inst], "qingshi_village", ms - 3), ms)
+	for d in range(1, 5):
+		assert_true((g[d] as Array).any(func(x: Dictionary) -> bool: return x["kind"] == "festival_day"), "day %d" % d)
+	assert_false(g.has(5) and ((g[5] as Array).any(func(x: Dictionary) -> bool: return String(x["kind"]) == "festival_day")))
+
+
+func test_today_line_names_festival_day() -> void:
+	var ms := 9 * Calendar.DAYS_PER_MONTH
+	var inst := {"id": "lantern_festival", "region": "qingshi_village", "start_day": ms, "end_day": ms + 8}
+	var c := CharacterData.new()
+	var l3 := Guidance.today_lines(c, data(), {}, [inst], ms + 2, "qingshi_village")
+	assert_true(l3[0].contains("(day 3 of 8)"), l3[0])
+	var l1 := Guidance.today_lines(c, data(), {}, [inst], ms, "qingshi_village")
+	assert_false(l1[0].contains("(day"), l1[0])
+
+
+## WILD-020: a wild region still has something to plan in a 40-day window.
+func test_wild_region_has_great_beast_and_season_entries() -> void:
+	var c := CharacterFactory.create("Lin Feng", data(), seeded_rng(), "male")
+	c.visited_regions = ["misty_forest"]
+	var start := 0  # spring, no season change inside 40 days
+	var e := VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", start, 40, c)
+	assert_eq(_kinds(e, "great_beast").size() > 0, true, "great beast")
+	assert_true(_kinds(e, "forage").size() >= 1, "forage/season entry")
+	assert_true(String(_kinds(e, "forage")[0]["text"]).contains("in season now"))
+
+
+func test_foundation_sees_the_return_beast() -> void:
+	var c := CharacterFactory.create("Lin Feng", data(), seeded_rng(), "male")
+	c.visited_regions = ["misty_forest"]
+	var e := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", 0, 40, c), "great_beast")
+	assert_true(e.size() > 0)
+	assert_eq(e[0]["enemy"], "old_tusker_boar")
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	c.great_beasts["old_tusker_boar"] = 1
+	var f := _kinds(VillageCalendar.upcoming(data(), {}, {}, [], "misty_forest", 0, 40, c), "great_beast")
+	assert_true(f.size() > 0)
+	assert_eq(f[0]["enemy"], "scarred_old_tusker")
+
+
+## CAL-008: far reminders carry the travel time, or vanish when you could not arrive in time.
+func _far_fest(region: String, today: int, length: int) -> Array:
+	return [{"id": "lantern_festival", "region": region, "start_day": today + 1, "end_day": today + 1 + length}]
+
+
+func _travelling_char() -> CharacterData:
+	var c := new_character()
+	c.realm_index = data().realms.size() - 1
+	return c
+
+
+func test_far_festival_too_short_gives_no_reminder() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	assert_true(days > 3)
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, 3), "qingshi_village", 100, c)
+	assert_eq(r.size(), 0, str(r))
+
+
+## GUIDE-227: leave today, arrive on day today + route_days: a festival whose last day is exactly then is kept.
+func test_far_festival_ending_on_arrival_day_is_kept_one_day_earlier_is_dropped() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	assert_true(days >= 1)
+	var kept := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days), "qingshi_village", 100, c)
+	assert_eq(kept.size(), 1, str(kept))
+	var dropped := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days - 1), "qingshi_village", 100, c)
+	assert_eq(dropped.size(), 0, str(dropped))
+
+
+func test_far_festival_long_enough_gets_travel_note() -> void:
+	var c := _travelling_char()
+	var days := Guidance.route_days(c, data(), "qingshi_village", "fallen_star_market")
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, days + 5), "qingshi_village", 100, c)
+	assert_eq(r.size(), 1, str(r))
+	assert_true(r[0].contains("(%d days' travel)" % days), r[0])
+
+
+func test_near_and_local_festival_reminders_unchanged() -> void:
+	var c := _travelling_char()
+	for region in ["qingshi_village", "misty_forest"]:
+		var inst := _far_fest(region, 100, 3)
+		var with_c := VillageCalendar.reminders(data(), {}, {}, inst, "qingshi_village", 100, c)
+		var without := VillageCalendar.reminders(data(), {}, {}, inst, "qingshi_village", 100, null)
+		assert_eq(with_c, without)
+		for line in with_c:
+			assert_false(line.contains("travel)"), line)
+
+
+func test_far_festival_without_character_is_dropped() -> void:
+	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, 30), "qingshi_village", 100, null)
+	assert_eq(r.size(), 0, str(r))

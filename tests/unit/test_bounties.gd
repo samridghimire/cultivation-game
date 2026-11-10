@@ -228,7 +228,7 @@ func test_board_lists_nearby_hunts_first() -> void:
 	var c := _qi(3)
 	gs.start_session(c)
 	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
-	var first: Dictionary = board.get_options()[0]
+	var first: Dictionary = board.get_options()[1]  # WU-466: the season task entry comes first in Qingshi
 	var near := Bounties.offers(c, gs.data, GameClock.total_days, gs.current_region)
 	assert_eq(String(first["label"]).contains(Exploration.region_name(gs.data, String(near[0]["region"]))), true, first["label"])
 	gs.end_session()

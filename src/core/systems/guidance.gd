@@ -216,12 +216,72 @@ static func _festival_today(data: GameData, events: Array, region_id: String, da
 	return ""
 
 
-## "3 things by the path", "" when nothing is unpicked.
-static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
-	var forage := Foraging.unpicked(data, region_id, day, c.realm_index, flags).size()
-	if forage <= 0:
+## CAL-007: " (day 3 of 8)" on days 2..N of a festival running in `region_id`, "" on day 1.
+static func _festival_day_note(data: GameData, events: Array, region_id: String, day: int) -> String:
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		if not WorldEvents.is_festival(data, String(instance.get("id", ""))) or int(instance.get("end_day", -1)) < day:
+			continue
+		var first := int(instance.get("start_day", day))
+		var total := int(instance.get("end_day", day)) - first
+		if day > first and total > 1:
+			return " (day %d of %d)" % [day - first + 1, total]
 		return ""
-	return "%d %s by the path" % [forage, "thing" if forage == 1 else "things"]
+	return ""
+
+
+## GUIDE-217: the shared "ends today" / "last day tomorrow" wording for a festival on its last two days, else "".
+static func _festival_ends_note(data: GameData, events: Array, region_id: String, day: int) -> String:
+	for instance: Dictionary in WorldEvents.active_in(events, region_id):
+		if WorldEvents.is_festival(data, String(instance.get("id", ""))) and int(instance.get("end_day", -1)) >= day:
+			var end_day := int(instance["end_day"])
+			return ends_phrase(end_day, day) if end_day - day <= 2 else ""
+	return ""
+
+
+## GUIDE-217: "Hen's Egg by the coop (2 left)" while today's hens' eggs here are unpicked, else "".
+static func _egg_line(data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
+	var entries: Array = data.regions.get(region_id, {}).get("map", {}).get("ambient_critters", [])
+	var left := Critters.eggs_left(region_id, entries, day, flags, Calendar.season_of(day).to_lower())
+	if left.is_empty():
+		return ""
+	var nm := String(data.items.get(String(left[0]["item"]), {}).get("name", "Egg"))
+	return "%s by the coop (%d left)" % [nm, left.size()]
+
+
+## TODAY-002: what lies by the path, by name: "Village Mugwort and Dew Grass by the path", "" when nothing is unpicked.
+## Names are distinct, rarest (lowest forage weight in the region) first; 3+ names give "A, B and N more".
+static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, day: int, flags: Dictionary) -> String:
+	var nodes := Foraging.unpicked(data, region_id, day, c.realm_index, flags)
+	if nodes.is_empty():
+		return ""
+	var weights := {}
+	for entry: Dictionary in data.regions.get(region_id, {}).get("forage", {}).get("items", []):
+		var id := String(entry.get("item", ""))
+		weights[id] = minf(float(weights.get(id, 1e9)), float(entry.get("weight", 1.0)))
+	var names: Array[String] = []
+	for n: Dictionary in nodes:
+		var nm := String(data.items.get(String(n["item"]), {}).get("name", n["item"]))
+		if not names.has(nm):
+			names.append(nm)
+	var rank := {}
+	for n: Dictionary in nodes:
+		var nm2 := String(data.items.get(String(n["item"]), {}).get("name", n["item"]))
+		rank[nm2] = float(weights.get(String(n["item"]), 1e9))
+	names.sort_custom(func(a: String, b: String) -> bool:
+		if rank[a] != rank[b]:
+			return rank[a] < rank[b]
+		return a < b)
+	var more := nodes.size() - mini(names.size(), 2) if names.size() > 2 else 0
+	var phrase: String
+	if names.size() == 1:
+		phrase = names[0]
+	elif names.size() == 2:
+		phrase = "%s and %s" % [names[0], names[1]]
+	else:
+		phrase = "%s, %s and %d more" % [names[0], names[1], more]
+	if phrase.length() + 12 > 60:
+		phrase = "%s and %d more" % [names[0], nodes.size() - 1] if nodes.size() > 1 else names[0]
+	return phrase + " by the path"
 
 
 ## "rain-fish biting" when the weather helps the region's fishing place, else "".
@@ -233,6 +293,57 @@ static func _fish_phrase(data: GameData, region_id: String, weather: String) -> 
 	return ""
 
 
+## WU-504: the friends' lines of today_lines: a birthday today, and a lesson waiting. Pure.
+static func people_today_lines(c: CharacterData, data: GameData, active_events: Array, day: int, region_id: String,
+		npcs: Dictionary = {}, favor: Dictionary = {}, flags: Dictionary = {}) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var guests := festival_guest_line(data, active_events, day, region_id, npcs, favor, flags)
+	if guests != "":
+		out.append(guests)
+	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
+		if data.npcs.has(b["npc"].id):
+			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
+	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught, day):
+		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
+	return out
+
+
+const FESTIVAL_LINE_MAX := 160
+const GUEST_LINE_DEFAULT := "At the {festival}: {names} will cheer for you; last year's champion {champion} is back."
+const GUEST_NAMES_MAX := 3
+
+
+## FOLK-031: who is at today's festival here: friends who will cheer (at most 3 names, "and N more") and last year's
+## champion. "" off festival days, in other regions, or with neither. Optional world_events.json `guest_line`
+## ({festival}, {names}, {champion}) is used when both are present. Pure.
+static func festival_guest_line(data: GameData, active_events: Array, day: int, region_id: String,
+		npcs: Dictionary, favor: Dictionary, flags: Dictionary) -> String:
+	for instance: Dictionary in WorldEvents.active_in(active_events, region_id):
+		var eid := String(instance.get("id", ""))
+		if not WorldEvents.is_festival(data, eid) or int(instance.get("end_day", -1)) < day:
+			continue
+		var festival := WorldEvents.event_name(data, eid)
+		var friends := FestivalContest.friends_of(npcs, data, favor, region_id, 1)
+		var names: Array[String] = []
+		for f in friends.slice(0, GUEST_NAMES_MAX):
+			names.append(f.name)
+		var name_text := ""
+		if not names.is_empty():
+			name_text = names[0] if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1]
+			if friends.size() > GUEST_NAMES_MAX:
+				name_text = ", ".join(names) + " and %d more" % (friends.size() - GUEST_NAMES_MAX)
+		var champion := FestivalContest.champion_rival(flags, eid, Calendar.year_of(day))
+		if name_text == "" and champion == "":
+			return ""
+		var template := String(WorldEvents.def_of(data, eid).get("guest_line", GUEST_LINE_DEFAULT))
+		if name_text != "" and champion != "":
+			return template.format({"festival": festival, "names": name_text, "champion": champion})
+		if name_text != "":
+			return "At the %s: %s will cheer for you." % [festival, name_text]
+		return "At the %s: last year's champion %s is back." % [festival, champion]
+	return ""
+
+
 ## TODAY-001: up to TODAY_MAX short lines on what today holds here, in a fixed order, each only when true: a festival
 ## and its contest, a great beast (tracks, baited), market day now or within 3 days, a stall's wanted item, in-season
 ## beasts and forage/fishing, today's and tomorrow's calendar reminders, the season's ending. Pure.
@@ -241,10 +352,12 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var out: PackedStringArray = []
 	var rname := Exploration.region_name(data, region_id)
 	var year := Calendar.year_of(day)
+	# 0. The days the player marked on the calendar (CAL-006): today's and tomorrow's.
+	out.append_array(VillageCalendar.mark_lines(c, day))
 	# 1. Festival and its contest.
 	var fest := _festival_today(data, active_events, region_id, day)
 	if fest != "":
-		var line := "The %s is on in %s" % [fest, rname]
+		var line := "The %s%s is on in %s" % [fest, _festival_day_note(data, active_events, region_id, day), rname]
 		for instance: Dictionary in WorldEvents.active_in(active_events, region_id):
 			var eid := String(instance.get("id", ""))
 			if not WorldEvents.is_festival(data, eid):
@@ -257,13 +370,38 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 				if champ != "":
 					line += " (%s)" % champ
 			break
-		out.append(line + ".")
+		var stalls := Places.festival_stalls_open(data, active_events, region_id, day)  # FEST-012
+		if not stalls.is_empty():
+			line += "; festival stall open"
+		var ends := _festival_ends_note(data, active_events, region_id, day)
+		if ends != "":
+			line += "; " + ends
+		# GUIDE-230: the stall's wares join the festival's one line when it fits, else they get their own.
+		var wares := Places.festival_wares_line(data, active_events, region_id, day)  # GUIDE-221
+		if wares != "" and (line + "; " + wares + ".").length() <= FESTIVAL_LINE_MAX:
+			out.append(line + "; " + wares + ".")
+		else:
+			out.append(line + ".")
+			if wares != "":
+				out.append(wares + ".")
+	else:
+		var eve := Places.festival_eve_line(data, active_events, region_id, day)  # GUIDE-221
+		if eve != "":
+			out.append(eve + ".")
+	if Folk.player_birthday_today(c, data, day):  # FOLK-027
+		out.append("Today is your birthday.")
+	# 1b. Named friends (GUIDE-218): a birthday today, and a lesson waiting.
+	out.append_array(people_today_lines(c, data, active_events, day, region_id, npcs, favor))
+	var named_birthday := {}
+	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, day, favor, 0):
+		if data.npcs.has(b["npc"].id):
+			named_birthday[b["npc"].id] = true
 	# 2. A great beast walking here today, or its tracks.
 	var great := Wildlife.great_roamer(c, data, region_id, day, flags)
 	if not great.is_empty():
 		var bn := String(data.enemies.get(String(great["enemy"]), {}).get("name", "great beast"))
 		out.append("The %s walks %s today%s." % [bn, rname, " (you baited its trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day else ""])
-	elif Wildlife.tracks_today(data, region_id, day, c.realm_index):
+	elif Wildlife.tracks_today(data, region_id, day, c.realm_index, c):
 		out.append("Fresh tracks in %s: a great beast walks tomorrow%s." % [rname, " (you baited the trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day + 1 else ""])
 	# 3. Market day here, or the next within 3 days.
 	var market := _market_today_line(data, region_id, day)
@@ -297,16 +435,37 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 			continue
 		if ["market", "great_beast", "festival_active", "festival_month", "forage", "season"].has(String(e["kind"])):
 			continue
+		if String(e["kind"]) == "birthday" and named_birthday.has(String(e.get("npc_id", ""))) and int(e["day"]) == day:
+			continue
 		var rem := VillageCalendar.reminder_line(data, npcs, flags, e)
 		if rem != "":
 			out.append(rem.replace("Tomorrow: ", "Today: "))
 	for rem in VillageCalendar.reminders(data, npcs, favor, active_events, region_id, day, c, flags):
 		if not rem.begins_with("Tomorrow: market") and not rem.contains("great beast"):
 			out.append(rem)
+	# 6b. The shrine's repair (SEASON-006), while this season's set is still open.
+	if region_id == SeasonTasks.REGION and not bool(c.season_tasks.get("done", false) and String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(day)):
+		var shrine := SeasonTasks.restoration_line(c, data)
+		if shrine != "":
+			out.append(shrine)
+	if region_id == SeasonTasks.REGION:
+		var incense_text := SeasonTasks.incense_line(c, data, flags, day)
+		if incense_text != "":
+			out.append(incense_text)
+	if region_id == SeasonTasks.REGION:
+		var project_text := SeasonTasks.project_line(c, data, flags, day)
+		if project_text != "":
+			out.append(project_text)
 	# 7. The season ending.
 	var ending := season_ending(c, data, day, flags)
 	if ending != "":
 		out.append(ending)
+	# 8. Eggs by the coop: lowest priority, cut first when the list is full.
+	var egg := _egg_line(data, region_id, day, flags)
+	if egg != "":
+		out.append(egg)
+	if Critters.fed_today(flags, region_id, day):  # CRIT-002
+		out.append("The hens are fed")
 	if out.size() > TODAY_MAX:
 		out.resize(TODAY_MAX)
 	return out
@@ -324,11 +483,184 @@ static func _market_today_line(data: GameData, region_id: String, day: int) -> S
 	return ""
 
 
+const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" fits 46 characters.
+
+## GUIDE-220: `line` squeezed to SHORT_HINT_CHARS keeping the verb and the target: known long forms are
+## rewritten, others fall back to their first sentence, then a word-boundary cut (never "...").
+static func short_hint(line: String, data: GameData = null) -> String:
+	if line.length() <= SHORT_HINT_CHARS:
+		return line
+	var fight := _short_fight(line, data)
+	if fight != "":
+		return fight
+	var re := RegEx.new()
+	# GUIDE-229: "Short on stones: fish at Village Pond Jetty, about 2 a day." -> "Fish at Village Pond Jetty: ~2 a day"
+	re.compile("^Short on stones: (\\w+) at (.+?), about (\\d+) a day")
+	var purse := re.search(line)
+	if purse != null:
+		var tight := "%s at %s: ~%s a day" % [purse.get_string(1).capitalize(), purse.get_string(2), purse.get_string(3)]
+		return tight if tight.length() <= SHORT_HINT_CHARS else "%s: ~%s stones a day" % [purse.get_string(1).capitalize(), purse.get_string(3)]
+	# GUIDE-228: "Eat an Eel Congee before you fight the Mist Fox: Even 55 -> 63." -> "Eat Eel Congee: 55 -> 63"
+	re.compile("^(Eat|Cook) (?:an? )?(.+?)(?: at .+?)? before you fight the .+?[:(] ?\\w+ (\\d+) -> (\\d+)")
+	var meal := re.search(line)
+	if meal != null:
+		var meal_short := "%s %s: %s -> %s" % [meal.get_string(1), meal.get_string(2), meal.get_string(3), meal.get_string(4)]
+		if meal_short.length() <= SHORT_HINT_CHARS:
+			return meal_short
+		return "%s: %s -> %s" % [meal.get_string(1), meal.get_string(3), meal.get_string(4)]
+	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
+	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
+	var m := re.search(line)
+	if m != null:
+		var style := m.get_string(1)
+		var where := m.get_string(2)
+		if where != "":
+			var words := where.split(" ")
+			where = "the " + (words[words.size() - 1] as String).to_lower() if where.begins_with("Wandering ") else where
+			var tried := "No fighting style: %s at %s" % [style, where]
+			if tried.length() <= SHORT_HINT_CHARS:
+				return tried
+		var plain := "No fighting style: " + style
+		if plain.length() <= SHORT_HINT_CHARS:
+			return plain
+	# "Chore: ..." style hints keep the head up to the first colon-led target.
+	var first := line
+	for sep in [". ", "; "]:
+		var at := first.find(sep)
+		if at > 0:
+			first = first.substr(0, at)
+	first = first.rstrip(".:;, ")
+	if first.length() <= SHORT_HINT_CHARS:
+		return first
+	# Drop a trailing parenthetical or "for/to ..." tail, then cut at a word boundary.
+	var cut := first.substr(0, SHORT_HINT_CHARS + 1)
+	var space := cut.rfind(" ")
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_HINT_CHARS)
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
+
+
+## GUIDE-223: words a shortened line must not end on.
+const STOP_WORDS: PackedStringArray = ["a", "an", "the", "and", "or", "by", "to", "of", "in", "at", "for", "with"]
+
+## GUIDE-223: `text` without trailing stop words ("Mugwort by the" -> "Mugwort"), and without trailing punctuation.
+static func drop_trailing_stop_words(text: String) -> String:
+	var t := text.rstrip(" .:;,-(")
+	while true:
+		var space := t.rfind(" ")
+		if space <= 0 or not STOP_WORDS.has(t.substr(space + 1).to_lower()):
+			break
+		t = t.substr(0, space).rstrip(" .:;,-(")
+	return t
+
+
+## GUIDE-223: `text` without a trailing place phrase as a whole ("Mugwort by the path" -> "Mugwort",
+## "Hen's Egg by the coop (2 left)" -> "Hen's Egg (2 left)"); unchanged when nothing would be left.
+static func short_today_phrase(text: String) -> String:
+	var re := RegEx.new()
+	re.compile("^(.+?) (?:by|in|at|near) (?:the )?[^()]+?( \\(.*\\))?$")
+	var m := re.search(text)
+	if m == null:
+		return text
+	return drop_trailing_stop_words(m.get_string(1)) + m.get_string(2)
+
+
+## GUIDE-223: the short form of a HUD fight line: "Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)" ->
+## "Easy fight: Wild Boar, Bone Marsh · 99%"; "Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)" ->
+## "Hunting: Blood-Eyed Wolf, Bone Marsh". Other lines are returned unchanged.
+static func short_fight_line(line: String, data: GameData) -> String:
+	var fight := _short_fight(line, data)
+	if fight != "":
+		return fight
+	var re := RegEx.new()
+	re.compile("^Hunting: (.+?)(?: in (.+?))? \\(\\d+ days? left\\)$")
+	var m := re.search(line)
+	if m == null:
+		return line
+	var foe := m.get_string(1)
+	var where := m.get_string(2)
+	if where == "":
+		return "Hunting: " + foe
+	if data != null:
+		for id: String in data.regions:
+			if String(data.regions[id].get("name", "")) == where:
+				where = Places.short_region_name(data, id)
+	var tried := "Hunting: %s, %s" % [foe, where]
+	return tried if tried.length() <= SHORT_HINT_CHARS else "Hunting: " + foe
+
+
+## GUIDE-222: "Easy fight: Wild Boar, Bone Marsh · 99%" from "Easy fight: Chore for Headman Zhou: Wild Boar in
+## Withered Bone Marsh (9 days, 99 in 100)". Drops the chore giver, then the region, until it fits; "" when `line` is no fight line.
+static func _short_fight(line: String, data: GameData) -> String:
+	var re := RegEx.new()
+	re.compile("^(Easy fight|Fair fight): (.+) \\((?:.+, )?(\\d+) in 100\\)$")
+	var m := re.search(line)
+	if m == null:
+		return ""
+	var rest := m.get_string(2)
+	var tail := " · %s%%" % m.get_string(3)
+	var head := m.get_string(1) + ": "
+	var chore := rest.find(": ")
+	var no_chore := rest.substr(chore + 2) if rest.begins_with("Chore for ") and chore > 0 else rest
+	var foe := no_chore
+	var where := ""
+	var at := no_chore.find(" in ")
+	if at > 0:
+		foe = no_chore.substr(0, at)
+		where = no_chore.substr(at + 4)
+		if data != null:
+			for id: String in data.regions:
+				if String(data.regions[id].get("name", "")) == where:
+					where = Places.short_region_name(data, id)
+	var tries: Array[String] = []
+	if where != "":
+		tries.append(head + foe + ", " + where + tail)
+	tries.append(head + foe + tail)
+	for t in tries:
+		if t.length() <= SHORT_HINT_CHARS:
+			return t
+	return tries[tries.size() - 1]
+
+
+## GUIDE-222: the HUD goal line in <= SHORT_GOAL_CHARS: "(N days)" -> "· Nd", full region names -> short names,
+## "Talk to X in R" -> "See X in R", then the word-boundary cut of short_hint.
+const SHORT_GOAL_CHARS := 46
+static func short_goal(goal_line: String, data: GameData) -> String:
+	var line := goal_line
+	if line.length() <= SHORT_GOAL_CHARS:
+		return line
+	var re := RegEx.new()
+	re.compile(" \\((\\d+) days?\\)$")
+	var m := re.search(line)
+	if m != null:
+		line = line.substr(0, m.get_start()) + " · %sd" % m.get_string(1)
+	for id: String in data.regions:
+		var full := String(data.regions[id].get("name", ""))
+		if full != "" and line.contains(full):
+			line = line.replace(full, Places.short_region_name(data, id))
+	line = line.replace("Goal: Talk to ", "Goal: See ")
+	if line.length() <= SHORT_GOAL_CHARS:
+		return line
+	var cut := line.substr(0, SHORT_GOAL_CHARS + 1)
+	var space := cut.rfind(" ")
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS)
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
+
+
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
 ## stands (region x sect bonus), used for the days-to-next-stage estimate.
 ## `people` (the NPCs, optional) enables the family hints. `flags` (world flags)
 ## and `region_id` drive the newcomer hints shown while Mortal or Qi Refining.
-static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}) -> PackedStringArray:
+static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit: int = 5, people: Dictionary = {}, flags: Dictionary = {}, region_id: String = "", today: int = -1, favor: Dictionary = {}, short: bool = false) -> PackedStringArray:
+	if short:
+		# GUIDE-220: the HUD's Next steps panel is narrow; ask for a few extra so duplicates after shortening can go.
+		var shorts: PackedStringArray = []
+		for line in hints(c, data, density, limit + 2, people, flags, region_id, today, favor, false):
+			var one := short_hint(line, data)
+			if one != "" and not shorts.has(one):
+				shorts.append(one)
+		if shorts.size() > limit:
+			shorts.resize(limit)
+		return shorts
 	var out: PackedStringArray = []
 	flags = with_season(flags, today)
 	# GUIDE-209: the arrival line leads for the day it was posted; GUIDE-210: only in the region it was posted for.
@@ -404,6 +736,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var odd_jobs := _odd_jobs_hint(c, data, region_id)
 		if odd_jobs != "":
 			out.append(odd_jobs)
+	if today >= 0 and not _has_work_hint(out):
+		var purse := empty_purse_hint(c, data, region_id, today, flags)
+		if purse != "":
+			out.append(purse)
 	if due != "" and not due_urgent:
 		out.append(due)
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
@@ -566,9 +902,7 @@ static func empty_fair_fights_note(c: CharacterData, data: GameData, region_id: 
 	if missing != "":
 		return lead + missing + "."
 	if region_id != "" and not c.injuries.is_empty():
-		var healed := CharacterData.from_dict(c.to_dict())
-		healed.injuries = {}
-		var could := fair_fights(healed, data, flags, today, region_id)
+		var could: Array = _with_probe(c, "injuries", {}, func() -> Variant: return fair_fights(c, data, flags, today, region_id))
 		if not could.is_empty():
 			return lead + "heal your injuries first (healed, you could win: %s)." % String(could[0]["text"])
 	var best := _best_unmastered_combat(c, data)
@@ -824,12 +1158,22 @@ static func nearest_selling(c: CharacterData, data: GameData, region_id: String,
 	return {}
 
 
+## GUIDE-225: runs `f` with `c.<field>` temporarily set to `value`, restores it and returns f's result (no character copy).
+static func _with_probe(c: CharacterData, field: String, value: Variant, f: Callable) -> Variant:
+	var saved: Variant = c.get(field)
+	c.set(field, value)
+	var result: Variant = f.call()
+	c.set(field, saved)
+	return result
+
+
 ## GUIDE-083: shortest total base route days from `from_id` to `to_id` (no hop limit, routes failing
 ## Exploration.check_travel skipped). 0 when equal, -1 when unreachable or unknown.
-static func route_days(c: CharacterData, data: GameData, from_id: String, to_id: String) -> int:
+## GUIDE-224: `ignore_realm_gates` also walks roads closed by a route's min_realm (the length only, no copy of `c`).
+static func route_days(c: CharacterData, data: GameData, from_id: String, to_id: String, ignore_realm_gates: bool = false) -> int:
 	if not data.regions.has(from_id) or not data.regions.has(to_id):
 		return -1
-	var days: Dictionary = _route_day_map(c, data, from_id, -1)["days"]
+	var days: Dictionary = _route_day_map(c, data, from_id, -1, ignore_realm_gates)["days"]
 	return int(days[to_id]) if days.has(to_id) else -1
 
 
@@ -859,7 +1203,7 @@ static func hinted_region(data: GameData, hint: String, current_id: String) -> S
 
 ## Dijkstra over region routes: {"days": region_id -> total days, "order": regions in settle order, "prev": region_id -> region it was reached from}.
 ## `max_hops` < 0 means unlimited.
-static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int) -> Dictionary:
+static func _route_day_map(c: CharacterData, data: GameData, region_id: String, max_hops: int, ignore_realm_gates: bool = false) -> Dictionary:
 	var best_days := {region_id: 0}
 	var prev := {}
 	var hops := {region_id: 0}
@@ -876,7 +1220,9 @@ static func _route_day_map(c: CharacterData, data: GameData, region_id: String, 
 			continue
 		for route: Dictionary in data.regions.get(cur, {}).get("routes", []):
 			var to: String = route["to"]
-			if not data.regions.has(to) or not Exploration.check_travel(c, data, cur, to)["ok"] or order.has(to):
+			if not data.regions.has(to) or order.has(to):
+				continue
+			if not ignore_realm_gates and not Exploration.check_travel(c, data, cur, to)["ok"]:
 				continue
 			var d := int(best_days[cur]) + int(route.get("days", 1))
 			if not best_days.has(to) or d < int(best_days[to]):
@@ -1336,6 +1682,39 @@ static func _meditation_spot(c: CharacterData, data: GameData, region_id: String
 	out["needed"] = maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
 	out["rate"] = Cultivation.qi_per_day(c, data, float(best["density"]))
 	return out
+
+
+## GUIDE-229: true when an earlier hint already sends the player to earn stones.
+static func _has_work_hint(out: PackedStringArray) -> bool:
+	for line in out:
+		if line.begins_with("Short of stones?") or line.begins_with("Short on stones:"):
+			return true
+	return false
+
+
+const EMPTY_PURSE_FLOOR := 15
+
+## GUIDE-229: stones held below the price of the next wanted manual (or below EMPTY_PURSE_FLOOR): name the best
+## way to earn here ("Short on stones: fish at Village Pond Jetty, about 2 a day."). "" when a free chore pays best.
+static func empty_purse_hint(c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	var wanted := EMPTY_PURSE_FLOOR
+	var manual := _body_manual_merchant(c, data, region_id)
+	if not manual.is_empty():
+		wanted = maxi(wanted, merchant_price(c, data, region_id, String(manual["item_id"]), _season_in(flags)))
+	if c.item_count("spirit_stone") >= wanted:
+		return ""
+	var rows := Earnings.earning_options(c, data, flags, region_id, today)
+	# GUIDE-232: only when nothing here pays 2 a day, a better road away may be named.
+	if rows.is_empty() or float(rows[0]["per_day"]) < 2.0:
+		var far := Earnings.far_row(c, data, flags, region_id, today)
+		if not far.is_empty():
+			return "Short on stones: %s" % Earnings.lines([far] as Array[Dictionary])[0]
+	if rows.is_empty() or String(rows[0]["kind"]) == "chore":
+		return ""
+	var best: Dictionary = rows[0]
+	var verb: String = {"gather": "gather", "fishing": "fish", "craft": "craft"}.get(String(best["kind"]), "work")
+	var n := maxi(1, roundi(float(best["per_day"])))
+	return "Short on stones: %s at %s, about %d a day." % [verb, best["place"], n]
 
 
 ## GUIDE-047: a broke crafter (nothing craftable, too few stones for any recipe in rank) hears
@@ -2305,9 +2684,7 @@ static func trial_odds(c: CharacterData, data: GameData) -> float:
 static func odds_unhurt(c: CharacterData, data: GameData, enemy: Dictionary) -> float:
 	if c.injuries.is_empty():
 		return -1.0
-	var copy := CharacterData.from_dict(c.to_dict())
-	copy.injuries.clear()
-	return Combat.win_chance(copy, data, enemy)
+	return float(_with_probe(c, "injuries", {}, func() -> Variant: return Combat.win_chance(c, data, enemy)))
 
 
 ## GUIDE-121: "you face the X (Even, 80 in 100)", or "" when no trial is open.
@@ -2415,11 +2792,19 @@ static func trial_practice_payoff(c: CharacterData, data: GameData) -> Dictionar
 	if style == "":
 		return {}
 	var opponent := Sects.trial_opponent(data, Sects.trial_enemy(c, data))
-	var copy := CharacterData.from_dict(c.to_dict())
-	copy.injuries.clear()
-	var base := Combat.win_chance(copy, data, opponent)
-	copy.techniques[style] = {"level": Techniques.level(c, style) + 1, "xp": 0.0}
-	var next := Combat.win_chance(copy, data, opponent)
+	var level_now := Techniques.level(c, style)
+	var saved_injuries: Dictionary = c.injuries
+	var had_entry := c.techniques.has(style)
+	var saved_entry: Variant = c.techniques.get(style)
+	c.injuries = {}
+	var base := Combat.win_chance(c, data, opponent)
+	c.techniques[style] = {"level": level_now + 1, "xp": 0.0}
+	var next := Combat.win_chance(c, data, opponent)
+	if had_entry:
+		c.techniques[style] = saved_entry
+	else:
+		c.techniques.erase(style)
+	c.injuries = saved_injuries
 	if next - base < 0.1:
 		return {}
 	return {"style": style, "style_name": data.techniques[style].name, "level": Techniques.level(c, style) + 1, "days": Techniques.days_to_next(c, data, style), "next": next}
@@ -2454,9 +2839,9 @@ static func _mortal_sect_hint(c: CharacterData, data: GameData, open: PackedStri
 	for sect: SectDef in data.sects.values():
 		if Sects.check_join(c, data, sect.id)["ok"]:
 			continue
-		var probe := CharacterData.from_dict(c.to_dict())
-		probe.realm_index = maxi(c.realm_index, data.realm_index_of(sect.min_realm))
-		if Sects.check_join(probe, data, sect.id)["ok"]:
+		var probed: Dictionary = _with_probe(c, "realm_index", maxi(c.realm_index, data.realm_index_of(sect.min_realm)),
+				func() -> Variant: return Sects.check_join(c, data, sect.id))
+		if probed["ok"]:
 			later.append(sect.name)
 	if later.is_empty():
 		return "" if open.is_empty() else "As a rogue cultivator you could join %s at a sect hall." % " or ".join(open)
@@ -2965,7 +3350,7 @@ static func _abode_seat_clause(c: CharacterData, data: GameData, region_id: Stri
 static func _abode_hint(c: CharacterData, data: GameData, region_id: String = "", flags: Dictionary = {}) -> String:
 	if c.abode != "":
 		var density := float(Abodes.get_def(data, c.abode).get("qi_density", 1.0)) * (1.0 + Abodes.array_bonus(c, data))
-		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), String.num(density, 2)]
+		return "Cultivate in seclusion at %s (qi x%s)." % [Abodes.abode_name(data, c.abode), Exploration.format_density(density)]
 	if c.realm_index < 1 or data.abodes.is_empty():
 		return ""
 	var stones := c.item_count("spirit_stone")
@@ -2982,7 +3367,7 @@ static func _abode_hint(c: CharacterData, data: GameData, region_id: String = ""
 	var cost := int(abode.get("cost", 0))
 	var short := "" if stones >= cost else " (you have %d)" % stones
 	var seclusion := float(abode.get("qi_density", 1.0))
-	var qi_clause := "qi x%s in seclusion" % String.num(seclusion, 2)
+	var qi_clause := "qi x%s in seclusion" % Exploration.format_density(seclusion)
 	var has_anchor := String(abode.get("anchor_id", "")) != ""
 	if region_id != "" and data.regions.has(region_id):
 		var here := best_qi_in_region(c, data, region_id, flags)
@@ -3127,14 +3512,19 @@ static func _rated_region_fights(c: CharacterData, data: GameData, region_id: St
 	var rated: Array[Dictionary] = []
 	if region_id == "" or today < 0 or not data.regions.has(region_id):
 		return rated
-	var unhurt := CharacterData.from_dict(c.to_dict())
-	unhurt.injuries.clear()
 	var tags: Array = data.regions[region_id].get("encounter_tags", [])
 	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
 		if rated.size() >= OUTGROWN_RATED_MAX:
 			break
 		var foe: Dictionary = data.enemies[enemy_id]
-		rated.append({"name": String(foe.get("name", enemy_id)), "chance": Combat.win_chance(unhurt, data, foe), "floor": fight_floor(c, foe)})
+		rated.append({"name": String(foe.get("name", enemy_id)), "chance": 0.0, "floor": fight_floor(c, foe)})
+		rated[rated.size() - 1]["foe"] = foe
+	_with_probe(c, "injuries", {}, func() -> Variant:
+		for r: Dictionary in rated:
+			r["chance"] = Combat.win_chance(c, data, r["foe"])
+		return null)
+	for r: Dictionary in rated:
+		r.erase("foe")
 	return rated
 
 
@@ -3189,20 +3579,28 @@ static func practice_payoff(c: CharacterData, data: GameData, tech_id: String, r
 	if region_id == "" or today < 0 or not Techniques.knows(c, tech_id) or Techniques.is_mastered(c, data, tech_id):
 		return {}
 	# GUIDE-095: rated unhurt, so an injury the clinic fixes is not credited to practice.
-	var unhurt := CharacterData.from_dict(c.to_dict())
-	unhurt.injuries.clear()
-	var upgraded := CharacterData.from_dict(unhurt.to_dict())
-	upgraded.techniques[tech_id] = {"level": Techniques.level(c, tech_id) + 1, "xp": 0.0}
 	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
 	var best: Dictionary = {}
 	var rated := 0
-	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today):
+	var level_now := Techniques.level(c, tech_id)
+	var saved_injuries: Dictionary = c.injuries
+	var had_entry := c.techniques.has(tech_id)
+	var saved_entry: Variant = c.techniques.get(tech_id)
+	var fights: Array = Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), region_id, today)
+	for enemy_id in fights:
 		if rated >= FAIR_FIGHT_EXPLORE_MAX:
 			break
 		rated += 1
 		var foe: Dictionary = data.enemies[enemy_id]
-		var now := Combat.win_chance(unhurt, data, foe)
-		var next := Combat.win_chance(upgraded, data, foe)
+		c.injuries = {}
+		var now := Combat.win_chance(c, data, foe)
+		c.techniques[tech_id] = {"level": level_now + 1, "xp": 0.0}
+		var next := Combat.win_chance(c, data, foe)
+		if had_entry:
+			c.techniques[tech_id] = saved_entry
+		else:
+			c.techniques.erase(tech_id)
+		c.injuries = saved_injuries
 		if now < FAIR_FIGHT_MIN_CHANCE and next >= 0.5 and next - now >= 0.1 and next > float(best.get("next", 0.0)):
 			best = {"enemy": String(foe.get("name", enemy_id)), "now": now, "next": next, "level": Techniques.level(c, tech_id) + 1}
 	return best
@@ -3501,7 +3899,7 @@ static func _next_great(c: CharacterData, data: GameData, today: int, min_realm:
 			continue
 		if min_realm != "" and String(def.get("min_realm", "")) != min_realm:
 			continue
-		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index)
+		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index, c)
 		if nd < 0:
 			continue  # REVIEW: never name a great beast this realm cannot meet (the Ridge's ram needs Foundation)
 		if best_day < 0 or nd < best_day:
@@ -4160,8 +4558,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	for instance in WorldEvents.active_in(events, region_id):
 		var event_id := String(instance["id"])
 		var def := WorldEvents.def_of(data, event_id)
-		var days_left := maxi(0, int(instance["end_day"]) - today)
-		_add(out, "World events", "%s here (%d days left)" % [WorldEvents.event_name(data, event_id), days_left], "normal")
+		_add(out, "World events", "%s here (%s)" % [WorldEvents.event_name(data, event_id), ends_phrase(int(instance["end_day"]), today)], "normal")
 		for kind in ["tournament", "defence"]:
 			if def.has(kind):
 				var reason := WorldEvents.check_join(data, events, c, event_id, kind, region_id)
@@ -4189,6 +4586,9 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	if village.size() > 1:
 		for line in village:
 			_add(out, "Around the village", line, "normal")
+	# GUIDE-226: what a day is worth here.
+	for line in Earnings.lines(Earnings.rows_with_far(c, data, flags, region_id, today)):
+		_add(out, "Earning here", line, "normal")
 	return out
 
 
@@ -4244,6 +4644,8 @@ static func village_lines(c: CharacterData, data: GameData, people: Dictionary, 
 			out.append("%s: %s" % [npc.name, Folk.celebration_label(flags, npc.id, data)])
 	for b: Dictionary in Folk.birthdays_soon(people, data, region_id, today, favor):
 		out.append("%s's birthday is today: a gift counts double." % b["npc"].name if int(b["in_days"]) == 0 else "%s's birthday in %s." % [b["npc"].name, Calendar.format_duration(int(b["in_days"]))])
+	for w: Dictionary in Folk.lessons_waiting(people, data, region_id, favor, c.lessons_taught, today):  # GUIDE-218
+		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, maxi(today, 0), [])])
 	var friends := Folk.friends_line(people, data, region_id, favor)
 	if friends != "":
 		out.append(friends)
@@ -4330,7 +4732,7 @@ static func _field_line(out: PackedStringArray, c: CharacterData, data: GameData
 ## GUIDE-203: before a foe rated Even or harder (a taken bounty, else a fair fight) a buff dish is held or cookable.
 static func _meal_line(out: PackedStringArray, c: CharacterData, data: GameData, people: Dictionary, region_id: String, today: int, fights: Array) -> void:
 	if Injuries.has_any(c):
-		for m: Dictionary in data.home_meals:
+		for m: Dictionary in Cooking.known_meals(c, data):
 			var days := int(data.items.get(String(m["output"]["item"]), {}).get("effects", {}).get("shorten_injury", 0))
 			if days > 0 and Cooking.check(c, data, String(m["id"])) == "":
 				out.append("Cook %s at a workshop: it eases your injury by %d days." % [m["name"], days])
@@ -4364,7 +4766,7 @@ static func meal_before_fight(c: CharacterData, data: GameData, region_id: Strin
 	var can_cook_here := workshop != "" or FamilyHome.has_home(c, people, data, region_id)
 	var best_held := {}
 	var best_cook := {}
-	for m: Dictionary in data.home_meals:
+	for m: Dictionary in Cooking.known_meals(c, data):
 		var item_id := String(m["output"]["item"])
 		var item: Dictionary = data.items.get(item_id, {})
 		var buff: Dictionary = item.get("effects", {}).get("buff", {})
@@ -4378,9 +4780,10 @@ static func meal_before_fight(c: CharacterData, data: GameData, region_id: Strin
 		var held := c.item_count(item_id) > 0
 		if not held and not (can_cook_here and Cooking.check(c, data, String(m["id"])) == ""):
 			continue
-		var copy := CharacterData.from_dict(c.to_dict())
-		Buffs.add_from_effect(copy, buff)
-		var after := Combat.win_chance(copy, data, foe)
+		var saved_buffs: Dictionary = c.buffs.duplicate(true)
+		Buffs.add_from_effect(c, buff)
+		var after := Combat.win_chance(c, data, foe)
+		c.buffs = saved_buffs
 		if after - base < MEAL_MIN_GAIN - 0.0001:
 			continue
 		var entry := {"item": item_id, "meal": m, "after": after, "price": int(item.get("price", 0))}
@@ -4469,6 +4872,25 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 				continue
 			rated += 1
 			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "Chore for %s: %s" % [place.get("display_name", "the village"), deed_enemy.get("name", "Foe")])
+	# GUIDE-215: chores one route away, so a nearer chore beats a far roamer.
+	for route: Dictionary in data.regions.get(region_id, {}).get("routes", []):
+		var away := String(route.get("to", ""))
+		var away_days := int(route.get("days", 1))
+		for place: Dictionary in data.regions.get(away, {}).get("places", []):
+			if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+				continue
+			var away_hidden := String(place.get("hidden_by_flag", ""))
+			if away_hidden != "" and Effects.flag_active(flags, away_hidden, today):
+				continue
+			for deed in Deeds.available(data, String(place["deed_context"]), flags):
+				if rated >= FAIR_FIGHT_MAX_RATED:
+					break
+				var far_enemy: Dictionary = data.enemies.get(String(deed.get("enemy", "")), {})
+				if far_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
+					continue
+				rated += 1
+				var trip := Calendar.format_duration(away_days)
+				_rate_fight(found, c, data, far_enemy, "deed", "%s in %s, %s away: %s" % [place.get("display_name", "Chore"), _region_name(data, away), trip, deed["name"]], _item_stones(deed.get("effects", {})), "%s in %s (%s)" % [far_enemy.get("name", "Foe"), _region_name(data, away), trip], away_days)
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
@@ -4537,7 +4959,7 @@ static func _roamer_fight(found: Array[Dictionary], c: CharacterData, data: Game
 			if int(spot["days"]) > 0:
 				label = "A %s roams %s today, %s away" % [name, _region_name(data, where), Calendar.format_duration(int(spot["days"]))]
 				short = "%s in %s (%s)" % [name, _region_name(data, where), Calendar.format_duration(int(spot["days"]))]
-			_rate_fight(found, c, data, enemy, "roamer", label, 0, short)
+			_rate_fight(found, c, data, enemy, "roamer", label, 0, short, int(spot["days"]))
 			return {enemy_id: true}
 	return {}
 
@@ -4557,8 +4979,57 @@ static func _keep_trial(found: Array[Dictionary], n: int) -> Array[Dictionary]:
 	return shown
 
 
-## fair_fights order: stones paid (most first), then win chance, then text.
+## GUIDE-212: win chance from which a fight is "Easy" (label "Weak") rather than a fair one.
+const EASY_FIGHT_CHANCE := 0.9
+
+
+## GUIDE-215: " (N days)" when goal text names a region (e.g. "in Qingshi Village") other than `region_id`, else "".
+static func goal_trip_note(c: CharacterData, data: GameData, goal: String, region_id: String) -> String:
+	if region_id == "":
+		return ""
+	var target := hinted_region(data, goal, region_id)
+	if target == "":
+		return ""
+	var days := route_days(c, data, region_id, target)
+	if days < 0:
+		# GUIDE-223: roads gated by min_realm (the Ridge's) still have a length worth telling.
+		days = route_days(c, data, region_id, target, true)
+	return " (%s)" % Calendar.format_duration(days) if days > 0 else ""
+
+
+## "Fair fight" when the entry's chance is below EASY_FIGHT_CHANCE (or it has none), "Easy fight" otherwise.
+static func fair_fight_prefix(entry: Dictionary) -> String:
+	if entry.has("chance") and float(entry["chance"]) >= EASY_FIGHT_CHANCE:
+		return "Easy fight"
+	return "Fair fight"
+
+
+## GUIDE-216: "Fair fight: <label> (80 in 100)": the one wording for the journal text, so HUD and journal agree.
+static func fight_text(entry: Dictionary, label: String) -> String:
+	return "%s: %s (%d in 100)" % [fair_fight_prefix(entry), label, roundi(float(entry.get("chance", 0.0)) * 100.0)]
+
+
+## GUIDE-216: how long an event lasts from `end_day` (first day after it): "ends today" on its last day,
+## "last day tomorrow", else "N days left". Never "0 days left".
+static func ends_phrase(end_day: int, today: int) -> String:
+	var n := end_day - today
+	if n <= 1:
+		return "ends today"
+	if n == 2:
+		return "last day tomorrow"
+	return "%d days left" % n
+
+
+## fair_fights order: an even fight (chance below EASY_FIGHT_CHANCE) before an easy one, then within each band
+## stones paid (most first), then win chance, then text.
 static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
+	# GUIDE-215: the nearest fight first (travel days from here).
+	if int(a.get("days", 0)) != int(b.get("days", 0)):
+		return int(a.get("days", 0)) < int(b.get("days", 0))
+	var a_easy := float(a["chance"]) >= EASY_FIGHT_CHANCE
+	var b_easy := float(b["chance"]) >= EASY_FIGHT_CHANCE
+	if a_easy != b_easy:
+		return not a_easy
 	if int(a["stones"]) != int(b["stones"]):
 		return int(a["stones"]) > int(b["stones"])
 	if not is_equal_approx(float(a["chance"]), float(b["chance"])):
@@ -4569,11 +5040,11 @@ static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
 	return String(a["text"]) < String(b["text"])
 
 
-static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "") -> void:
+static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "", days: int = 0) -> void:
 	var chance := Combat.win_chance(c, data, enemy)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": "%s (%s, %d in 100)" % [label, Combat.label_for_chance(chance), roundi(chance * 100.0)], "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "walkup": kind == "roamer" and short.ends_with("roams here")})
+	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here")})
 
 
 ## Spirit stones in a reward/effects dict's `items`, 0 when none.
@@ -4594,7 +5065,7 @@ static func pill_gap_note(c: CharacterData, data: GameData, fights: Array) -> St
 			best = f
 	if best.is_empty():
 		return "%d stones short. Bounties, sect missions and selling herbs and ore pay best." % short
-	return "%d stones short. %s pays %d." % [short, String(best["text"]).get_slice(" (", 0), int(best["stones"])]
+	return "%d stones short. %s pays %d." % [short, String(best["text"]).get_slice(" (", 0).trim_prefix("Fair fight: ").trim_prefix("Easy fight: "), int(best["stones"])]
 
 
 ## " A fairer fight: <text>." for the best fair fight, "" when there is none or it is the foe just lost to.
@@ -4623,13 +5094,12 @@ static func _other_region_event_entries(out: Array[Dictionary], c: CharacterData
 			continue
 		var event_id := String(instance["id"])
 		var def := WorldEvents.def_of(data, event_id)
-		var days_left := maxi(0, int(instance["end_day"]) - today)
 		var label := "%s in %s" % [WorldEvents.event_name(data, event_id), _region_name(data, where)]
 		for kind in ["tournament", "defence"]:
 			if not def.has(kind):
 				continue
 			var reason := WorldEvents.check_join(data, events, c, event_id, kind, where)
-			_add(out, "World events", "%s: you can enter, %d days left" % [label, days_left] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
+			_add(out, "World events", "%s: you can enter, %s" % [label, ends_phrase(int(instance["end_day"]), today)] if reason == "" else "%s: %s" % [label, reason], "normal" if reason == "" else "dim")
 
 
 ## Festivals in this region or a neighbouring one.
@@ -4638,7 +5108,7 @@ static func _festival_entries(out: Array[Dictionary], data: GameData, today: int
 		var event_id := String(instance["id"])
 		var where := String(instance.get("region", ""))
 		if WorldEvents.is_festival(data, event_id) and Exploration.is_nearby(data, region_id, where):
-			_add(out, "Opportunities", "%s in %s: %d days left" % [WorldEvents.event_name(data, event_id), _region_name(data, where), maxi(0, int(instance["end_day"]) - today)], "normal")
+			_add(out, "Opportunities", "%s in %s: %s" % [WorldEvents.event_name(data, event_id), _region_name(data, where), ends_phrase(int(instance["end_day"]), today)], "normal")
 		var activity := WorldEvents.activity_of(data, event_id)
 		if where == region_id and not activity.is_empty() and not bool(instance.get("activity_done", false)):
 			_add(out, "Opportunities", "Festival: %s at %s (ask a merchant; once this festival)." % [activity["name"], _region_name(data, where)], "normal")
@@ -5067,12 +5537,15 @@ static func artifact_lives_hint(c: CharacterData, data: GameData) -> String:
 
 ## GUIDE-211: what a picked find is good for, one sentence tail: "Used in Fish Stew (cook at the Village Workshop); sells for about 2."
 ## Home meals first (with the nearest workshop, `region_id` first), then profession recipes; at most two uses.
+## GUIDE-219: taught dishes show only once `c` knows them (c == null hides them all).
 ## Items with no use give only the sell note; items that cannot be sold give "".
-static func find_note(data: GameData, item_id: String, region_id: String) -> String:
+static func find_note(data: GameData, item_id: String, region_id: String, c: CharacterData = null) -> String:
 	var uses: PackedStringArray = []
 	var workshop := _workshop_name(data, region_id)
 	for meal: Dictionary in data.home_meals:
 		if meal.get("ingredients", {}).has(item_id) and uses.size() < 2:
+			if bool(meal.get("taught", false)) and (c == null or not Cooking.is_known(c, data, String(meal["id"]))):
+				continue  # GUIDE-219: never promise a dish the player was not taught
 			uses.append("%s (cook at %s)" % [String(meal.get("name", meal["id"])), workshop] if workshop != "" else String(meal.get("name", meal["id"])))
 	for recipe_name in Items.recipes_using(data, item_id):
 		if uses.size() < 2 and not uses.has(recipe_name):

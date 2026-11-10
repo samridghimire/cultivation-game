@@ -230,3 +230,27 @@ func test_keeps_round_skips_named_npcs_family_and_other_regions() -> void:
 	assert_false(Npcs.keeps_round(named, player, npcs, data(), Npcs.region_of(named, data())), "named NPC")
 	player.spouses.append(villager.id)
 	assert_false(Npcs.keeps_round(villager, player, npcs, data(), home_region), "family stands by the Family Home")
+
+
+## WU-483: a walking villager keeps 40 px from every travel point and 24 px from every place rect.
+func test_haunts_keep_clear_of_travel_points_and_places() -> void:
+	var bad: Array[String] = []
+	for rid: String in data().regions:
+		var region: Dictionary = data().regions[rid]
+		for i in 10:
+			var c := _villager("walker_%d" % i)
+			for day in 40:
+				var weather := "rain" if day % 5 == 0 else ""
+				var pos := Npcs.haunt(c, region, day, i % 4 != 0, weather)
+				if pos == Vector2.ZERO:
+					continue
+				if not Npcs.stop_is_clear(pos, region):
+					bad.append("%s %s day %d at %s" % [rid, c.id, day, pos])
+	assert_eq(bad.size(), 0, "walkers on signposts or places: " + "; ".join(bad.slice(0, 5)))
+
+
+func test_nudge_stop_moves_out_of_a_travel_radius_and_leaves_clear_stops() -> void:
+	var region := {"places": [{"type": "travel", "display_name": "Gate", "pos": [100, 100], "size": [40, 120]}]}
+	var inside := Npcs.nudge_stop(Vector2(110, 100), region)
+	assert_true(Npcs.stop_is_clear(inside, region), "moved out: %s" % inside)
+	assert_eq(Npcs.nudge_stop(Vector2(500, 500), region), Vector2(500, 500))

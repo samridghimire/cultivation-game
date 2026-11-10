@@ -8,6 +8,30 @@ const KEYS := ["robe", "hair", "style", "child", "kind"]
 const HAIR := {"dark": Color("2a2018"), "grey": Color("b8b8b8")}
 const STYLES := ["bun", "long", "hood"]
 const KINDS := ["figure", "camp"]
+## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
+const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
+## WU-506: the scene an encounter happens in: its own `scene`, else the explore place's look, else the region's
+## `map.wild_look`, else "village". Unknown values are skipped. Pure.
+const VILLAGE_SCENE := "village"
+
+
+static func scene_look(enc_scene: String, explore_look: String, wild_look: String) -> String:
+	for candidate: String in [enc_scene, explore_look, wild_look]:
+		if EXPLORE_LOOKS.has(candidate) or candidate == VILLAGE_SCENE:
+			return candidate
+	return VILLAGE_SCENE
+
+
+## Gather-place looks (GFX-102, regions.json `look` on gather places); "patch" is the original herb bed.
+const GATHER_LOOKS := ["patch", "rubble", "crater", "crystal", "frost", "terrace", "bog"]
+## Pond water kinds (GFX-103, regions.json `map.water`); "clear" is the original blue pond.
+const WATER_KINDS := ["clear", "murky", "icy"]
+## The water colour of a pond landmark without its own `color`.
+const WATER_TINTS := {"clear": "3f7fa8", "murky": "3a4a2c", "icy": "bcd8ea"}
+## Secret-realm entrance looks (GFX-098); "rift" is the original ring.
+const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
+## Region building styles (regions.json `map.building_style`, GFX-100); PixelPlace.STYLE_COLORS colours each.
+const BUILDING_STYLES := ["thatch", "tile", "stone", "stilt", "log"]
 
 
 ## Error strings for `look` (empty when valid); `who` names the place in messages.

@@ -2,7 +2,7 @@ class_name BeastArrow
 extends Control
 ## GFX-075: while a great beast walks in this region and is off screen, a small arrow at the screen edge
 ## points at it, tinted with its danger colour, with its short name under it. Hidden once it is on screen,
-## beaten or gone. The arrow keeps clear of the HUD panels. reduce_motion: no pulse.
+## beaten or gone. The arrow keeps clear of the HUD panels and hides behind open menus. reduce_motion: no pulse.
 
 const MARGIN := 36.0
 const ARROW_SIZE := 14.0
@@ -44,10 +44,44 @@ static func clear_of(rect: Rect2, avoid: Array[Rect2], view: Rect2) -> Rect2:
 	return rect
 
 
+## WU-505: the point nearest `pos` that lies inside `view` and outside every `blocked` rect (6 px gap).
+## A free point is returned unchanged; when nothing fits, the clamped point.
+static func clamp_marker(pos: Vector2, view: Rect2, blocked: Array[Rect2]) -> Vector2:
+	var start := Vector2(clampf(pos.x, view.position.x, view.end.x), clampf(pos.y, view.position.y, view.end.y))
+	var grown: Array[Rect2] = []
+	for b: Rect2 in blocked:
+		grown.append(b.grow(6.0))
+	if _free(start, grown):
+		return start
+	var best := start
+	var best_d := INF
+	for g: Rect2 in grown:
+		if not g.has_point(start):
+			continue
+		for c: Vector2 in [Vector2(g.position.x, start.y), Vector2(g.end.x, start.y), Vector2(start.x, g.position.y), Vector2(start.x, g.end.y)]:
+			if view.has_point(c) and _free(c, grown) and start.distance_to(c) < best_d:
+				best_d = start.distance_to(c)
+				best = c
+	return best
+
+
+static func _free(p: Vector2, grown: Array[Rect2]) -> bool:
+	for g: Rect2 in grown:
+		if g.has_point(p):
+			return false
+	return true
+
+
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_to_group("beast_arrow")
+	# It sits on a layer above the HUD, so it hides while a menu or report is open.
+	EventBus.ui_modal_changed.connect(_on_modal_changed)
+
+
+func _on_modal_changed(is_open: bool) -> void:
+	visible = not is_open
 
 
 func _process(delta: float) -> void:
@@ -64,8 +98,12 @@ func _process(delta: float) -> void:
 			var avoid: Array[Rect2] = []
 			if hud != null and hud.has_method("occupied_rects"):
 				avoid = hud.occupied_rects()
-			var placed := clear_of(box, avoid, screen)
-			_info["position"] = placed.position + Vector2(NAME_SIZE.x / 2.0, ARROW_SIZE)
+			var half := box.size / 2.0
+			var grown: Array[Rect2] = []
+			for a: Rect2 in avoid:
+				grown.append(a.grow_individual(half.x, half.y, half.x, half.y))
+			var centre := clamp_marker(box.get_center(), screen.grow_individual(-half.x, -half.y, -half.x, -half.y), grown)
+			_info["position"] = centre - half + Vector2(NAME_SIZE.x / 2.0, ARROW_SIZE)
 			_name = beast.short_name()
 			_color = beast.danger_color()
 	if bool(_info["visible"]) or was:

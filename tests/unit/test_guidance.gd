@@ -457,6 +457,18 @@ func test_better_qi_keeps_standalone_line_without_a_gather_line() -> void:
 	assert_eq(Guidance._merge_better_qi(lines, c, d, 1.0, "qingshi_village"), lines)
 
 
+func test_route_days_ignoring_realm_gates_matches_strong_copy() -> void:  # GUIDE-224
+	var c := _fresh()
+	c.realm_index = 1
+	var strong := CharacterData.from_dict(c.to_dict())
+	strong.realm_index = data().realms.size() - 1
+	var want := Guidance.route_days(strong, data(), "qingshi_village", "myriad_peaks_ridge")
+	assert_true(want > 0)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "myriad_peaks_ridge", true), want)
+	assert_eq(Guidance.route_days(c, data(), "qingshi_village", "myriad_peaks_ridge"), -1, "default still gated")
+	assert_eq(c.realm_index, 1, "character untouched")
+
+
 func test_route_days_follows_routes_and_gating() -> void:
 	var c := _fresh()
 	c.realm_index = 1
@@ -1526,7 +1538,7 @@ func test_every_region_with_a_merchant_sells_a_fighting_style() -> void:
 	for region_id: String in d.regions.keys():
 		var has_merchant := false
 		for place: Dictionary in d.regions[region_id].get("places", []):
-			if place.get("type", "") == "merchant":
+			if place.get("type", "") == "merchant" and not place.has("festival_only"):  # FEST-012
 				has_merchant = true
 		if not has_merchant:
 			continue
@@ -1545,6 +1557,22 @@ func _fighter() -> CharacterData:
 	return c
 
 
+## GUIDE-212: an even fight with no pay sorts before an easy one that pays; inside a band stones lead.
+func test_fair_fight_order_puts_even_before_easy() -> void:
+	var even := {"text": "A", "chance": 0.8, "stones": 0}
+	var easy := {"text": "B", "chance": 1.0, "stones": 50}
+	var easy2 := {"text": "C", "chance": 0.95, "stones": 10}
+	var list: Array[Dictionary] = [easy2, easy, even]
+	list.sort_custom(Guidance.fair_fight_before)
+	assert_eq(list, [even, easy, easy2] as Array[Dictionary])
+
+
+func test_fair_fight_prefix() -> void:
+	assert_eq(Guidance.fair_fight_prefix({"chance": 0.95}), "Easy fight")
+	assert_eq(Guidance.fair_fight_prefix({"chance": 0.8}), "Fair fight")
+	assert_eq(Guidance.fair_fight_prefix({}), "Fair fight")
+
+
 func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 	var c := _fighter()
 	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
@@ -1554,6 +1582,11 @@ func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 		if i > 0:
 			var prev: Dictionary = fights[i - 1]
 			var cur: Dictionary = fights[i]
+			var prev_easy: bool = float(prev["chance"]) >= Guidance.EASY_FIGHT_CHANCE
+			var cur_easy: bool = float(cur["chance"]) >= Guidance.EASY_FIGHT_CHANCE
+			assert_false(prev_easy and not cur_easy, "even fights come before easy ones")
+			if prev_easy != cur_easy:
+				continue
 			assert_true(int(prev["stones"]) >= int(cur["stones"]))
 			if int(prev["stones"]) == int(cur["stones"]):
 				assert_true(float(prev["chance"]) >= float(cur["chance"]))
@@ -1573,7 +1606,7 @@ func test_fair_fights_list_an_open_sect_trial() -> void:
 	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "")
 	var trials := fights.filter(func(f: Dictionary) -> bool: return f["kind"] == "trial")
 	assert_eq(trials.size(), 1, "the open trial is listed")
-	assert_true(String(trials[0]["text"]).begins_with("Sect trial: Inner Disciple"))
+	assert_true(String(trials[0]["text"]).contains("Sect trial: Inner Disciple"))
 	assert_true(String(trials[0]["short"]).contains("sect trial"), "GUIDE-207: the trial carries a where-label")
 
 
@@ -1629,7 +1662,7 @@ func test_active_hunt_shows_as_your_hunt() -> void:
 	var id: String = data().bounties.keys()[0]
 	Bounties.take(c, data(), id, c.age_days)
 	var texts: Array = Guidance.fair_fights(c, data(), {}, c.age_days, String(data().bounties[id]["region"])).map(func(f: Dictionary) -> String: return f["text"])
-	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Your hunt:")), str(texts))
+	assert_true(texts.any(func(t: String) -> bool: return t.contains("Your hunt:")), str(texts))
 
 
 ## GUIDE-028: an unfair first bounty offer does not hide a fair one behind it.
@@ -1944,7 +1977,7 @@ func test_fair_fights_include_open_chore_fights() -> void:
 	c.sect = {}
 	var texts := _deed_texts(c, {})
 	assert_eq(texts.size(), 1)
-	assert_true(String(texts[0]).begins_with("Headman Zhou: Drive off the wild boar"))
+	assert_true(String(texts[0]).contains("Headman Zhou: Drive off the wild boar"))
 	assert_true(_deed_texts(c, {"chore_boar_done": true}).is_empty(), "done chore is gone")
 
 
@@ -2109,7 +2142,7 @@ func test_fair_fights_list_exploration_foes_when_little_else() -> void:
 	var foes := Exploration.eligible_fights(c, data(), data().regions["misty_forest"]["encounter_tags"], {}, Calendar.season_of(c.age_days), "misty_forest")
 	assert_false(foes.is_empty(), "the forest has fight encounters")
 	for f in explore:
-		assert_true(String(f["text"]).begins_with("Explore here: "))
+		assert_true(String(f["text"]).contains("Explore here: "))
 		assert_true(float(f["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
 
 
@@ -2529,7 +2562,7 @@ func test_fair_fights_list_a_fair_rival_bout() -> void:
 	assert_true(_rival_kinds(fights).has("rival"), "fair bout listed")
 	for f in fights:
 		if f["kind"] == "rival":
-			assert_true(String(f["text"]).begins_with("Challenge %s" % rival.name))
+			assert_true(String(f["text"]).contains("Challenge %s" % rival.name))
 	assert_false(_rival_kinds(Guidance.fair_fights(c, d, flags, c.age_days, "qingshi_village")).has("rival"), "no people: none")
 
 
@@ -6112,9 +6145,9 @@ func test_core_road_goal_beast_skipped_when_all_beaten_and_region_pointers() -> 
 		if not def.is_empty():
 			c.great_beasts[String(def["enemy"])] = 1
 			c.great_beast_realms[String(def["enemy"])] = 2
-			var ret: Variant = def.get("return")
-			if ret is Dictionary:
-				c.great_beast_realms[String(ret["enemy"])] = 2
+			for step: Dictionary in Wildlife.great_chain(def):
+				c.great_beasts[String(step["enemy"])] = 1
+				c.great_beast_realms[String(step["enemy"])] = 2
 	var goals := Guidance.road_goals(c, data(), flags, 100)
 	assert_eq(goals.size(), 14)
 	assert_true(String(goals[12]["text"]).begins_with("Get a Core Formation pill"), String(goals[12]["text"]))
@@ -6249,6 +6282,20 @@ func test_season_ending_said_right() -> void:
 	assert_true(Guidance.season_ending(c, data(), 87, {}).contains("Qingming"), Guidance.season_ending(c, data(), 87, {}))
 
 
+## QA-198: the player's own marked day (CAL-006) is in Today, first, and tomorrow's mark too.
+func test_today_lines_show_marked_days() -> void:
+	var d := data()
+	var c := new_character()
+	c.visited_regions.append("qingshi_village")
+	assert_eq(Guidance.today_lines(c, d, {}, [], 40, "qingshi_village").size() > 0 and Guidance.today_lines(c, d, {}, [], 40, "qingshi_village")[0].contains("you marked it"), false)
+	c.marked_days[40] = "Shrine visit"
+	c.marked_days[41] = "Fish at dawn"
+	var lines := Guidance.today_lines(c, d, {}, [], 40, "qingshi_village")
+	assert_eq(lines[0], "Today: Shrine visit (you marked it).", str(lines))
+	assert_true(lines.has("Tomorrow: Fish at dawn."), str(lines))
+	assert_true(lines.size() <= Guidance.TODAY_MAX)
+
+
 ## TODAY-001: market day first/next, wanted item, great beast, season ending, order and cap.
 func test_today_lines_market_wanted_beast_and_cap() -> void:
 	var d := data()
@@ -6295,3 +6342,284 @@ func test_today_lines_market_wanted_beast_and_cap() -> void:
 	var end := Guidance.today_lines(c, d, {}, [], 268, "misty_forest")
 	assert_true(end[end.size() - 1].begins_with("Autumn ends"), str(end))
 	assert_eq(Guidance.today_lines(c, d, {}, [], 0, "no_such_region").size(), 0)
+
+
+func test_forage_phrase_names_pickups_rarest_first() -> void:  # TODAY-002
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("F", d, seeded_rng(1))
+	var seen := {}
+	for day in range(0, 120):
+		var n := Foraging.unpicked(d, "qingshi_village", day, c.realm_index, {}).size()
+		var phrase := Guidance._forage_phrase(c, d, "qingshi_village", day, {})
+		if n == 0:
+			assert_eq(phrase, "")
+			continue
+		assert_true(phrase.ends_with(" by the path"), phrase)
+		assert_false(phrase.begins_with("%d thing" % n), phrase)
+		assert_true(phrase.length() <= 60, phrase)
+		seen[n] = true
+	assert_true(seen.size() > 0)
+	# every pickup picked: nothing to name
+	var flags := {}
+	for node: Dictionary in Foraging.unpicked(d, "qingshi_village", 10, c.realm_index, {}):
+		flags[Foraging.flag_key("qingshi_village", int(node["slot"]))] = {"day": 10}
+	assert_true(Guidance._forage_phrase(c, d, "no_such_region", 10, {}) == "")
+
+
+## GUIDE-215: a nearer chore beats a far roamer; the goal names the trip; sort puts days first.
+func test_fair_fight_nearest_first() -> void:
+	var near := {"text": "a", "chance": 0.8, "stones": 0, "days": 0}
+	var far := {"text": "b", "chance": 0.99, "stones": 50, "days": 6}
+	assert_true(Guidance.fair_fight_before(near, far))
+	assert_false(Guidance.fair_fight_before(far, near))
+	var c := CharacterData.new()
+	c.realm_index = 0
+	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "misty_forest")
+	for i in range(1, fights.size()):
+		assert_true(int(fights[i - 1].get("days", 0)) <= int(fights[i].get("days", 0)), "days ascend")
+
+
+func test_goal_trip_note() -> void:
+	var c := CharacterData.new()
+	var goal := "Talk to Elder Mo in Qingshi Village"
+	assert_eq(Guidance.goal_trip_note(c, data(), goal, "qingshi_village"), "")
+	assert_eq(Guidance.goal_trip_note(c, data(), goal, "misty_forest"), " (3 days)")
+	assert_eq(Guidance.goal_trip_note(c, data(), "Reach Qi Refining", "misty_forest"), "")
+
+
+## GUIDE-216: the shared fight text and festival-end wording.
+func test_fight_text_has_the_rating_word_once() -> void:
+	assert_eq(Guidance.fight_text({"chance": 0.99}, "Mission: Boar"), "Easy fight: Mission: Boar (99 in 100)")
+	assert_eq(Guidance.fight_text({"chance": 0.55}, "Bounty: Wolf"), "Fair fight: Bounty: Wolf (55 in 100)")
+
+
+func test_ends_phrase_last_day_wording() -> void:
+	assert_eq(Guidance.ends_phrase(11, 10), "ends today")
+	assert_eq(Guidance.ends_phrase(12, 10), "last day tomorrow")
+	assert_eq(Guidance.ends_phrase(13, 10), "3 days left")
+	assert_eq(Guidance.ends_phrase(10, 10), "ends today")
+
+
+func test_journal_festival_lines_use_last_day_wording() -> void:
+	var d := data()
+	var festival_id := ""
+	for id: String in d.world_events:
+		if WorldEvents.is_festival(d, id):
+			festival_id = id
+			break
+	var events: Array = [{"id": festival_id, "region": "qingshi_village", "start_day": 10, "end_day": 13}]
+	var texts: Array[String] = []
+	for today in [11, 12]:
+		var out: Array[Dictionary] = []
+		Guidance._festival_entries(out, d, today, "qingshi_village", events, {})
+		texts.append(String(out[0]["text"]))
+	assert_true(texts[0].ends_with("last day tomorrow"), texts[0])
+	assert_true(texts[1].ends_with("ends today"), texts[1])
+
+
+## GUIDE-217: Today names unpicked hen eggs by the coop, drops them once picked; a festival's last days use ends_phrase;
+## the well's draw line is gone after the draw.
+func test_today_lines_coop_festival_and_well() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	var entries: Array = d.regions["qingshi_village"]["map"]["ambient_critters"]
+	var day := -1
+	for t in range(1, 400):
+		if Critters.eggs_today("qingshi_village", entries, t, Calendar.season_of(t).to_lower()).size() >= 1:
+			day = t
+			break
+	assert_true(day > 0, "some day has an egg")
+	var flags := {}
+	var eggs := Critters.eggs_left("qingshi_village", entries, day, flags, Calendar.season_of(day).to_lower())
+	var line := "%s by the coop (%d left)" % [String(d.items[String(eggs[0]["item"])]["name"]), eggs.size()]
+	assert_true(Guidance.today_lines(c, d, flags, [], day, "qingshi_village").has(line), str(Guidance.today_lines(c, d, flags, [], day, "qingshi_village")))
+	for e in eggs:
+		Critters.mark_egg(flags, "qingshi_village", int(e["index"]), day)
+	for l in Guidance.today_lines(c, d, flags, [], day, "qingshi_village"):
+		assert_false(l.contains("by the coop"), l)
+	# Festival ends wording matches ends_phrase.
+	var festival_id := ""
+	for id: String in d.world_events:
+		if WorldEvents.is_festival(d, id):
+			festival_id = id
+			break
+	var events: Array = [{"id": festival_id, "region": "qingshi_village", "start_day": day - 3, "end_day": day + 1}]
+	var fl := Guidance.today_lines(c, d, {}, events, day, "qingshi_village")
+	assert_true(fl[0].contains(Guidance.ends_phrase(day + 1, day)), str(fl))
+	events[0]["end_day"] = day + 5
+	assert_false(Guidance.today_lines(c, d, {}, events, day, "qingshi_village")[0].contains("ends today"))
+
+
+func test_today_knows_your_friends() -> void:
+	var d := data()
+	var npcs := {}
+	Npcs.ensure_all(npcs, d, seeded_rng(3))
+	var c := CharacterData.new()
+	var favor := {"elder_mo": 60}
+	var b := Folk.birthday_day(npcs["elder_mo"], d)
+	var quiet := Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, {})
+	assert_false("\n".join(quiet).contains("something to show you"))
+	var lines := Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, favor)
+	var text := "\n".join(lines)
+	assert_true(text.contains("Elder Mo has something to show you (find them at "), text)
+	assert_false(text.contains("birthday"), "not their birthday yet")
+	var party := "\n".join(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR, "qingshi_village", npcs, favor))
+	assert_true(party.contains("It is Elder Mo's birthday (find them at "), party)
+	assert_eq(party.count("birthday"), 1, "one birthday line")
+	c.lessons_taught["elder_mo:0"] = 1
+	assert_false("\n".join(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR - 5, "qingshi_village", npcs, favor)).contains("something to show you"))
+	assert_true(Guidance.today_lines(c, d, {}, [], b + Calendar.DAYS_PER_YEAR, "qingshi_village", npcs, favor).size() <= Guidance.TODAY_MAX)
+
+
+func test_find_note_names_only_dishes_you_know() -> void:
+	var d := data()
+	assert_true(d.home_meals.any(func(m: Dictionary) -> bool: return m["id"] == "honey_egg_cake" and m.get("taught", false)))
+	var c := CharacterData.new()
+	assert_false(Guidance.find_note(d, "hen_egg", "qingshi_village", c).contains("Honey Egg Cake"))
+	assert_false(Guidance.find_note(d, "hen_egg", "qingshi_village").contains("Honey Egg Cake"), "null hides taught meals")
+	Cooking.learn(c, d, "honey_egg_cake")
+	assert_true(Guidance.find_note(d, "hen_egg", "qingshi_village", c).contains("Honey Egg Cake"))
+
+
+# GUIDE-220: short hints for the HUD's narrow Next steps panel.
+func _assert_short_set(c: CharacterData, region: String, label: String) -> void:
+	var gs := _root().get_node("GameState")
+	var long_hints := Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor)
+	var short_hints := Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor, true)
+	assert_false(short_hints.is_empty(), label)
+	for h in short_hints:
+		assert_true(h.length() <= 42, "%s: '%s' (%d)" % [label, h, h.length()])
+		assert_false(h.ends_with("..."), h)
+	for h in long_hints:
+		assert_eq(h, Guidance.hints(c, data(), 1.0, 99, gs.npcs, gs.world_flags, region, 0, gs.npc_favor, false)[long_hints.find(h)], "long unchanged")
+
+
+func test_short_hints_fit_for_a_fresh_mortal() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	_assert_short_set(c, "qingshi_village", "mortal")
+
+
+func test_short_hints_fit_for_a_rogue_and_a_disciple() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 2
+	_assert_short_set(c, "misty_forest", "rogue QR3")
+	c.realm_index = 1
+	c.stage = 4
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0}
+	_assert_short_set(c, "azure_peak", "azure QR5")
+
+
+func test_short_hint_rewrites_the_fighting_style_line() -> void:
+	var line := "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches Iron Fist for 15 spirit stones."
+	assert_eq(Guidance.short_hint(line), "No fighting style: Iron Fist")
+	assert_eq(Guidance.short_hint("Short line."), "Short line.")
+	assert_true(Guidance.short_hint("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.").length() <= 42)
+
+
+# GUIDE-222
+func test_short_goal_fits_and_keeps_the_target() -> void:
+	var g := Guidance.short_goal("Goal: Talk to Elder Mo in Qingshi Village (10 days)", data())
+	assert_eq(g, "Goal: See Elder Mo in Qingshi · 10d")
+	assert_true(g.length() <= 46)
+	assert_eq(Guidance.short_goal("Goal: Reach the 2nd layer", data()), "Goal: Reach the 2nd layer")
+	var long := Guidance.short_goal("Goal: Sell your herbs to the Wandering Merchant at Fallen Star Market (9 days)", data())
+	assert_true(long.length() <= 46, long)
+	assert_false(long.ends_with("..."))
+
+
+func test_short_fight_lines() -> void:
+	assert_eq(Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+
+
+func test_short_hints_fit_in_every_region() -> void:
+	for region: String in data().regions:
+		var c := _fresh()
+		c.techniques = {}
+		_assert_short_set(c, region, "mortal in " + region)
+
+
+func test_short_hints_fit_with_an_injury() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 3
+	Injuries.inflict(c, data(), String(data().injuries.keys()[0]))
+	_assert_short_set(c, "qingshi_village", "injured")
+
+
+func test_region_short_name_falls_back_and_validates() -> void:
+	assert_eq(Places.short_region_name(data(), "withered_bone_marsh"), "Bone Marsh")
+	assert_eq(Places.short_region_name(data(), "azure_peak"), "Azure Peak")
+	var d := GameData.new()
+	d.regions = {"r": {"id": "r", "short_name": "A name far too long"}}
+	d.load_errors.clear()
+	d._validate()
+	var found := false
+	for e in d.load_errors:
+		if "short_name" in e:
+			found = true
+	assert_true(found, "long short_name rejected")
+
+
+# GUIDE-223
+func test_short_fight_line_and_hunt_line() -> void:
+	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_fight_line("Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)", data()), "Hunting: Blood-Eyed Wolf, Bone Marsh")
+	assert_eq(Guidance.short_fight_line("Rest a while.", data()), "Rest a while.")
+
+
+func test_short_today_phrase_drops_whole_place_phrases() -> void:
+	assert_eq(Guidance.short_today_phrase("Mugwort by the path"), "Mugwort")
+	assert_eq(Guidance.short_today_phrase("Hen's Egg by the coop (2 left)"), "Hen's Egg (2 left)")
+	assert_eq(Guidance.short_today_phrase("the Cloud Crane roams"), "the Cloud Crane roams")
+
+
+func test_short_hint_never_ends_on_a_stop_word() -> void:
+	for line in ["Reach Qi Refining and Azure Cloud Sect or somewhere else", "Gather Mugwort by the path near the old well today", "Reach Qi Refining stage two and then the Azure Cloud Sect or"]:
+		var s := Guidance.short_hint(line, data())
+		var last := s.split(" ")[-1].to_lower()
+		assert_false(Guidance.STOP_WORDS.has(last), s)
+	assert_eq(Guidance.drop_trailing_stop_words("Mugwort by the"), "Mugwort")
+
+
+func test_goal_trip_note_counts_realm_gated_roads() -> void:
+	var c := _fresh()
+	var note := Guidance.goal_trip_note(c, data(), "Talk to Elder Mo in Qingshi Village", "myriad_peaks_ridge")
+	assert_true(note.contains("days"), note)
+
+
+## GUIDE-225: probes swap-and-restore on the character itself and give what a copy would.
+func test_probes_leave_the_character_untouched_and_match_a_copy() -> void:
+	var c := _payoff_fighter()
+	assert_true(c != null)
+	Injuries.inflict(c, data(), "broken_bones")
+	c.buffs = {"test_buff": {"name": "Test", "days": 3, "mults": {}}}
+	var before := JSON.stringify(c.to_dict())
+	var copy := CharacterData.from_dict(c.to_dict())
+	var d := data()
+	var foe: Dictionary = d.enemies["azure_sword_examiner"]
+	assert_eq(Guidance.odds_unhurt(c, d, foe), Guidance.odds_unhurt(copy, d, foe))
+	var ref := CharacterData.from_dict(c.to_dict())
+	ref.injuries.clear()
+	assert_eq(Guidance.odds_unhurt(c, d, foe), Combat.win_chance(ref, d, foe), "same as the old unhurt copy")
+	var payoff := Guidance.practice_payoff(c, d, "iron_fist", "misty_forest", 10)
+	assert_eq(payoff, Guidance.practice_payoff(copy, d, "iron_fist", "misty_forest", 10))
+	assert_eq(Guidance._rated_region_fights(c, d, "misty_forest", 10, {}), Guidance._rated_region_fights(copy, d, "misty_forest", 10, {}))
+	assert_eq(Guidance.empty_fair_fights_note(c, d, "misty_forest", 10), Guidance.empty_fair_fights_note(copy, d, "misty_forest", 10))
+	assert_eq(Guidance.meal_before_fight(c, d, "misty_forest", 10), Guidance.meal_before_fight(copy, d, "misty_forest", 10))
+	assert_eq(Guidance.trial_practice_payoff(c, d), Guidance.trial_practice_payoff(copy, d))
+	assert_eq(Guidance._mortal_sect_hint(c, d, PackedStringArray()), Guidance._mortal_sect_hint(copy, d, PackedStringArray()))
+	assert_eq(JSON.stringify(c.to_dict()), before, "no probe leaves a trace")
+	assert_eq(JSON.stringify(copy.to_dict()), before)
+
+
+func test_short_hint_rewrites_the_meal_line() -> void:
+	var held := Guidance.short_hint("Eat an Eel Congee before you fight the Mist Fox: Even 55 -> 63.")
+	assert_eq(held, "Eat Eel Congee: 55 -> 63")
+	var cook := Guidance.short_hint("Cook Eel Congee at Village Workshop before you fight the Mist Fox (Even 41 -> 55).")
+	assert_eq(cook, "Cook Eel Congee: 41 -> 55")
+	assert_true(Guidance.short_hint("Eat a Mountain Hotpot Supreme Feast before you fight the Iron-Backed Great Boar: Hard 20 -> 34.").length() <= Guidance.SHORT_HINT_CHARS)

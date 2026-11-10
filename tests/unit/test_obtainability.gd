@@ -115,6 +115,9 @@ func _collect_grants(granted: Dictionary) -> void:
 	for house: Dictionary in gd.auction_houses.values():
 		for lot: Dictionary in house.get("lot_table", []):
 			granted[String(lot["item"])] = "auctions.json lot"
+	for proj: Dictionary in SeasonTasks.project_list(gd):
+		if proj.has("daily"):
+			granted[String(proj["daily"]["item"])] = "season_tasks.json project daily"
 	for region: Dictionary in gd.regions.values():
 		for place: Dictionary in region.get("places", []):
 			for entry: Dictionary in place.get("gather_table", []):
@@ -125,11 +128,14 @@ func _collect_grants(granted: Dictionary) -> void:
 				var item_id: String = entry.get("item", "")
 				if item_id != "":
 					granted[item_id] = "regions.json catch_table"
+		for crit: Dictionary in region.get("map", {}).get("ambient_critters", []):
+			if crit.has("lays"):
+				granted[String(crit["lays"]["item"])] = "regions.json ambient_critters lays"
 		var great: Dictionary = (region.get("roamers", {}) as Dictionary).get("great", {})
 		if great.has("trophy"):
 			granted[String(great["trophy"])] = "regions.json roamers.great.trophy"
-		if great.has("return"):
-			granted[String(great["return"]["trophy"])] = "regions.json roamers.great.return.trophy"
+		for step: Dictionary in Wildlife.great_chain(great).slice(1):
+			granted[String(step["trophy"])] = "regions.json roamers.great.return.trophy"
 
 
 ## Positive counts under an `items` key are grants; `requires.items` are costs.

@@ -2,6 +2,143 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-10 (planner, 06:10 UTC)
+- 15 tasks landed (GUIDE-230, GFX-111, WU-505, WU-506, GFX-112, WU-502, FISH-008, CAL-009, GUIDE-228, FOLK-031, GUIDE-232,
+  C-204, C-340, C-341, QA-208 part 4). Review 2430218..eeed8bc fixed a doubled family birthday inline; its notes -> GUIDE-233
+  (beginner's luck after "got away"), WU-509 (empty Today card), C-347 (no wage in Qingshi). Live claim: GFX-113.
+- Planner shots (first hour `--terraces=3`; Qingshi, marsh, Misty Forest `--season=Winter`; 1280x720): rock, roads and the
+  encounter strip read well. Winter: grey shadow discs under snowy pines, green woods and herb patch, jetties beside frozen
+  ponds -> GFX-114 (spec file). NPC labels over the player, [E] chip over place labels, marsh signpost crowd -> WU-508.
+  Arrival card covers the village top -> WU-510. Flat water -> GFX-115.
+- Curious sim (1 seed, 3 months): 31 stones at day 143, Mortal until day 44 -> C-347 repeatable errands (planner default in
+  DESIGN.md) and GUIDE-233 one-time jobs on the Earning card (spec file). GUIDE-234: sect missions as a disciple's earning.
+- **Systems is thin (3 ready: GUIDE-233, SEASON-016, GUIDE-234).** Nearly every first-hour idea exists already (forecast, fish
+  log, chores, birthdays, projects). The big levers wait on the owner: pacing (F-005d), first fights (C-009), rogue speed
+  (QA-158). Next planner: look for systems work in what the content and GFX tasks surface, not another village layer; view
+  GFX-113/114 and WU-508 shots when they land; GFX-002 still waits on the owner.
+
+## State on 2026-11-10 (planner, 00:10 UTC)
+- 13 tasks landed (GFX-109, WU-500, C-334, C-335, GUIDE-227, FOLK-030, GFX-110, QA-042, WU-501, GUIDE-229, SEASON-015,
+  WU-504, C-339). Review 99c86db..2430218 fixed two slips inline; its QA-042 note -> C-343. Live claims: C-204, C-340,
+  CAL-009, WU-502. The 12:10 planner run on 11-09 never happened (no commit).
+- Planner shots at 1280x720 (six regions `--edge`, default first hour, screens): **Earnings recommends atrocities** (the
+  journal's top "Earning here" row is "Poison the village well", 120/day; sell_street_child and rob_traveller qualify too,
+  and GUIDE-229's empty-purse hint reads the same rows) -> GUIDE-230 at the top of P0. Peak rims look like town walls and
+  brown boards -> GFX-111; great-beast pointer over the stats panel, ridge labels overlap -> WU-505; encounter strip roofs
+  -> WU-506; flat roads -> GFX-112; Azure Peak flat -> GFX-113; stats panel lines clip -> WU-507.
+- screenshot_screens.gd's combat_report fixture never lowers the Stone Ape's hp (synthetic log, not a game bug).
+- Next planner: view GFX-111/WU-505/WU-506 shots when they land; check C-343's histogram; GFX-002 still waits on the owner.
+
+## State on 2026-11-09 (planner, 06:10 UTC)
+- 12 tasks landed (C-310, SEASON-013, WU-496, QA-206, GUIDE-224, SEASON-014, FOLK-029, WU-497, C-313, C-331, WU-498,
+  QA-203 part 1 -> remainder QA-207). Review c85ddec..023bcd2 fixed the kickoff task lines inline; its notes -> RV-019
+  (jetty lantern everywhere, creation at 720) and C-338/QA-199. Live claims: GFX-105, WU-495.
+- **screenshot_screens.gd `--first-hour`/`--title`/`--creation` are broken on main** since WU-496 (`hud` is null at
+  ~4312). Local workaround (do not commit): `if hud != null: hud.call("_update_modal")`. RV-019 fixes it.
+- Planner shots: creation screen good but hints clip at 720; Qingshi jetty posts at stage 0 stand on grass; inventory icons
+  all blobs -> GFX-106 (spec file); fight backdrops flat -> GFX-107; world map flat -> GFX-108; top-of-map dark band ->
+  WU-499.
+- Sims: first_hour `--curious --trace` (1 seed, 6 months) and quiet_stretches look healthy (curious median stretch 2 days);
+  log_noise shows far-off festival "Tomorrow" reminders -> CAL-008. CAL-007 was already taken by an old commit.
+- Systems has 4 ready tasks (FISH-007, CAL-008, GUIDE-225, GUIDE-226). Next planner: more systems from first-hour
+  friction, not new village layers; view GFX-105/106/107 and RV-019 shots when they land; GFX-002 still waits on the owner.
+
+## State on 2026-11-09 (planner, 00:10 UTC)
+- 13 tasks landed (COOK-003, WU-491..494, GUIDE-223, C-329, C-332, C-333, ENC-014, GFX-104, FOLK-028, SEASON-012).
+  Review 49b988c..c85ddec backfilled trail flags inline; its notes -> GUIDE-224 and WU-496. Live claims: C-310, SEASON-013.
+- Planner shots: woods, crafting, family portraits, encounter figures good. `screenshot_screens.gd` opens screens without
+  `_update_modal` (name card over map.png is a harness artifact, WU-496 checks the real path too). Title and creation
+  screens are plain vector/text -> GFX-105, WU-497 (spec files). The screens fixture's children have random surnames
+  (fixture only; core `Children` uses the father's surname).
+- Systems is thin (GUIDE-224, SEASON-014, FOLK-029 ready). Next planner: if systems runs dry, look for first-hour friction in
+  a `first_hour.gd --trace` run rather than adding more village-project/birthday layers; the SEASON/FOLK/birthday defaults
+  are still waiting on the owner in DESIGN.md.
+
+## State on 2026-11-08 (planner, 12:10 UTC)
+- 9 tasks landed (WU-484, GUIDE-220, GUIDE-221, CRIT-002, WU-485, GFX-100, FOLK-026, WU-486, WU-487). Review
+  877015a..b872ed1 fixed two slips inline, nothing filed. Live claims: GFX-101, WILD-021, C-327, C-313 (5h old, expiring).
+- **ID collision found:** the open COOK-002 row shared its id with a landed 2026-10 commit `[COOK-002] Meals that carry
+  you...`, so workers' `git log | grep [COOK-002]` said done and nobody took it. Renamed COOK-003; C-330 split (festival part
+  ready now, dish part -> C-331). Planner: check new ids against `git log --format=%s` before using them.
+- Screenshots render fine under xvfb in the cloud; workers kept writing "not rendered (no GPU)". Added a Screenshots
+  section to CLAUDE.md. Planner shots this run: five regions + the default first-hour set (see BACKLOG header).
+- Next planner: view GFX-101/102/103 and WU-488 shots when they land; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-08 (planner, 00:10 UTC)
+- 10 tasks landed (GFX-094, C-323, FOLK-022, GUIDE-218, COOK-001, C-324, GFX-095, WU-480, WU-481, C-325). Review
+  d56a580..d259ccc fixed old saves losing cooked dishes inline; its notes -> GUIDE-219. Live claim: C-326.
+- Planner shots (`--region=` five regions, `--festival`, `--book`): forage sprites, explore looks and People cards good.
+  Secret-realm entrances are flat donuts -> GFX-098 (spec file); a villager on the marsh signpost and a name on a roof ->
+  WU-483; HUD panels flat -> GFX-099; birthdays/untaught dishes invisible in the world -> WU-482. GFX-096/097 still queued.
+- New systems: GUIDE-219 (reviewer notes), WILD-020 great-beast chains -> C-327 middle steps, FOLK-025 festival lines ->
+  C-328. QA-204 (balance baseline) moved to the top of QA: C-324 could not explain its drift.
+- Systems has 3 ready tasks; more ideas once these land: a third village project (if the owner keeps SEASON-008's default),
+  a player's own birthday (needs a decision: today it falls on New Year's day for every character).
+- Next planner: view GFX-096/097/098 and WU-482/483 shots when they land; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-07 (planner, 18:10 UTC, 2nd run)
+- The entry below labelled 18:10 was really the 12:10 run (its commit is dated 12:16).
+- 12 tasks landed (GFX-091, WU-478, C-321, WU-477, FOLK-021, ENC-012, QA-205, GUIDE-217, GFX-092, GFX-093, WU-479, C-322).
+  Review ac23991..d56a580 fixed a lost friend/lesson card inline; notes -> C-324 (tiger text) and COOK-001 (shorten_injury).
+- Screenshots work on main again (QA-205). `--region=` runs skip the festival/book flags: use separate runs.
+- Planner shots (all six regions, `--festival --friend-scene --book`): forage herbs are an 8x8 green checkerboard at 4x ->
+  GFX-094; ten identical grey-dome explore places -> GFX-095 (spec file); People cards overflow -> WU-480; overlapping
+  labels in Fallen Star, the marsh, Misty Forest and the festival -> WU-481; static fields -> GFX-096; thin festival decor and
+  a grey band under the map -> GFX-097. Friend card, mist and pickup floats looked fine.
+- New systems: COOK-001 (spec file), FOLK-022 (named friends had no birthday at all), GUIDE-218. Systems has only 3 ready
+  tasks; candidates for more once these land: a Qi Refining great-beast step between the first beast and its Foundation
+  return (Misty Forest, Azure Peak, the marsh), a third village project if the owner keeps SEASON-008's default.
+- Next planner: view GFX-094/GFX-095/WU-480 shots when they land; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-07 (planner, 18:10 UTC)
+- 13 tasks landed (RV-018, WU-475, FOLK-019, C-311, C-319, FOLK-020, GFX-087, GFX-090, GUIDE-216, SEASON-010, WU-476,
+  CRIT-001, C-320). Review aa54fa8..ac23991 merged RV-018's duplicate well into the Founder's Old Well inline.
+- **Screenshots are broken on main** since GFX-087: tests/sim/screenshot_first_hour.gd names `Well`, whose script uses the
+  GameState autoload, so the `-s` script fails to compile and the run exits 0 with no PNGs -> QA-205 (P0). Local workaround
+  (do not commit): replace `Well.project_index(gs.data)` with `load("res://src/world/interactables/well.gd").project_index(gs.data)`.
+  A fresh container also needs `tools/godot.sh --headless --path . --import` before the first shot.
+- Planner shots (`--festival --friend-scene --well=3`, 1280x800): friend card portrait good; whole well (roof, ribbon) good.
+  Festival: [E] chip at the top of the screen, a crowd figure on the player -> WU-478 (spec); square not festive -> GFX-093.
+  Xiao Ling's rain scene on a clear day -> FOLK-021 (spec file).
+- New: ENC-012 (injury effect, tag offerings) -> C-324, GUIDE-217 eggs in Today, GFX-092 pickup floats + gift icon, WU-479
+  lesson card, C-323 festival spots. Systems has 3 ready tasks; ideas for more: a Qi Refining great-beast step after the
+  capped first beast (C-317 note), a third village project once the owner answers SEASON-008.
+- Next planner: view WU-478/GFX-093 festival shots once QA-205 lands; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-07 (planner, 12:10 UTC)
+- 15 tasks landed (WU-472, GFX-088, GFX-089, WU-473, WU-474, FOLK-016, GUIDE-215, SEASON-009, FOLK-017, FOLK-018,
+  SEASON-008, C-312, C-318, C-316, QA-202). Review 3f308f5..aa54fa8 filed RV-018 (claimed 11:50).
+- Planner shots (`--festival --friend-scene --critters`, `--region=qingshi_village,misty_forest`, 1280x800): GFX-089
+  forest good. Festival crowd labels pile up and the [E] chip draws at the screen top -> WU-475 (spec file); square on
+  the south edge -> GFX-090; friend card face tiny -> WU-476. "Founder's Old Well" is the inheritance place drawn as a
+  stele (the landmark well by the workshop is a plain village well) -> note on RV-018, GFX-087 spec.
+- New: FOLK-019, FOLK-020 friends who teach (spec file) -> C-321/WU-477, GUIDE-216, SEASON-010 -> C-322, CRIT-001 hen eggs,
+  C-319 spots, C-320 tiger choices, GFX-091 mist bands. Systems has 5 ready tasks (no 6th worth writing yet).
+- Next planner: view RV-018/GFX-087 well shots and WU-475/GFX-090 festival shots; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-06 (planner, 12:10 UTC)
+- 13 tasks landed (WU-462, GFX-078, WU-463, GUIDE-212, WU-464, C-309, WILD-018, C-272, GFX-079, SEASON-006, GFX-081,
+  FEST-012, C-315). Review 5b5b907..dd1e14a filed C-315 (landed 11:25). Live claims: MISSION-003, QA-198.
+- Planner shots (`--great --shrine=2 --region=qingshi_village,azure_peak,misty_forest`, `--calendar --book`): calendar,
+  Festivals page and Azure steps good. Azure ground blocky + pine on the gate -> GFX-082 (spec file). Arrival line posted
+  twice and vague, in-season line every arrival -> TODAY-002 (spec file). Foundation sees "Great Old Tusker (Weak)" and a
+  Deadly leopard -> WILD-019 (spec file) -> C-317, C-312 (3). HUD panel cuts lines -> WU-468.
+- New: WU-466 season board (spec file), GUIDE-214, SEASON-007 shrine incense (planner default, spec file) -> GFX-084,
+  GFX-083 festival stalls (spec file), FOLK-013 friend scenes -> WU-467, C-316, QA-200 settings leak + calendar months.
+- Next planner: view GFX-082/GFX-083/WU-466 shots when they land; GFX-002 (art pack) still waits on the owner.
+
+## State on 2026-11-06 (planner, 06:10 UTC)
+- 14 tasks landed (QA-197, GFX-076, WILD-017, FEST-009, FEST-010, WU-458, WU-459, FOLK-012, SEASON-005, QA-196, GFX-077,
+  MARKET-012, WU-460, C-308). Review d8b322a..5b5b907 fixed two things inline; notes -> FEST-011. Live claim: WU-462.
+- Planner shots (`--great --region=azure_peak,misty_forest`, `--book`, `--calendar`): GFX-076 gate and GFX-077 crane good.
+  Foundation player sees only Weak roamers, HUD "Fair fight ... (Weak, 100 in 100)" -> WILD-018 (spec file), GUIDE-212,
+  MISSION-003 -> C-312/C-313 -> QA-199. Calendar 6 cols for a 7-day week -> GFX-078 (spec file). Keepsake icons are black
+  blobs -> WU-463. Azure Peak flat grey -> GFX-079. Log repeats lines -> WU-464.
+- New: SEASON-006 shrine restoration (planner small default in DESIGN.md, spec file) -> GFX-081; FEST-012 festival stalls -> C-314.
+- Several pre-ebae72c commits (FEST-009, WILD-017, GFX-076, QA-197) carry Co-Authored-By trailers; history is not rewritten.
+- Next planner: view GFX-078/WU-463/GFX-079 shots when they land, and the QA-198 festival/journal shots; GFX-002 (art pack)
+  still waits on the owner.
+
 ## State on 2026-11-06 (planner, 00:10 UTC)
 - 17 tasks landed (WU-453, GFX-074, WU-456, WU-454, GFX-075, WU-457, WILD-016, SEASON-004, TODAY-001, MARKET-011, FEST-008,
   CAL-006, C-307, C-306, C-303, C-273, QA-045). Review ebed75d..d8b322a fixed two things inline. Live claim: QA-197.
@@ -1025,3 +1162,6 @@ Looked at all 8 PNGs from `screenshot_first_hour.gd` against WU-157's list. Noth
 
 ## Village look (QA-186)
 Viewed at 1280x800 under xvfb: `--field` (field plot, fence, labels), `--season=Autumn` hud_arrival (orange/red trees, leaf-strewn ground, seasonal chip in the HUD card) and the `--season=Spring` shop shot (WU-415: seasonal price tag, quantity row with `-10 < x1 > +10 Max`, category tabs). Nothing clipped or overlapping, no layout changes. Not viewed: the WU-413 invited-friend chip and the field menu with tool icons (no screenshot flag shows them; a `--companion` flag is still needed). Village sim `-- 10 12 --village` (10 seeds): fishing 527 stones over 480 days = ~1.10 stones/day (C-279 measured ~1.43; the later trophy/weather changes shifted it), field 151 stones vs rent 159 (net -8), 38 harvests, 37 quarrels.
+
+## Shot pass (QA-203), partial
+Fixed in `screenshot_first_hour.gd`: `--hud-panel` crop now scales by window/viewport ratio (viewed at 1280x720: whole panel, no clipping); multi-region `--region=a,b` clears the log per region (viewed qingshi_village,misty_forest at 1280x720: only that region's lines). Misty Forest arrival shot: no clipping or overlap. Not yet viewed: --season-board, --regular, calendar months, --festival, --contest, --season=Winter, --critters, --lesson flag, GFX-096 crop shots.

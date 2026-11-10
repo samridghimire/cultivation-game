@@ -329,3 +329,10 @@ static func _add_roamers(data: GameData, out: Array[Dictionary]) -> void:
 		var great: Dictionary = roamers.get("great", {})
 		if data.enemies.has(String(great.get("enemy", ""))):
 			out.append({"enemy": String(great["enemy"]), "source": "great roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})
+		var chain := Wildlife.great_chain(great)
+		var min_idx := maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal"))))
+		for i in range(1, chain.size()):  # WILD-020: every later step of the trail
+			var ret: Dictionary = chain[i]
+			min_idx = maxi(0, data.realm_index_of(String(ret.get("min_realm", "mortal")))) if ret.has("min_realm") else min_idx
+			if data.enemies.has(String(ret.get("enemy", ""))):
+				out.append({"enemy": String(ret["enemy"]), "source": "great roamer return " + region_id, "realm_index": min_idx, "stage": 0, "forced": false, "optional": true})

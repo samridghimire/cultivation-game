@@ -54,6 +54,7 @@ const CALENDAR_MORE := {
 	"secret_realm": {"colors": {"a": Color("7a5cd6"), "b": Color("c9b8ff"), "c": Color("3a2a7a")}, "rows": ["............", "....oooo....", "..ooabbaoo..", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oabaccabao.", ".oooooooooo.", "............", "............"]},
 	"forage": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a"), "c": Color("8a5a2c")}, "rows": ["............", "......oo....", "....ooabo...", "...oabbao...", "..oabaaao...", "..oaaaao.o..", "...oaaoooao.", "....ooabao..", "....oc.oo...", "...oc.......", "..oc........", "............"]},
 	"great_beast": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "o..oo..oo..o", "oo.oaooao.oo", ".oooabbaooo.", "..oaabbaao..", ".oabaaaabao.", ".oaoacccaoao", ".oao.oaao.oa", "..o..oaao..o", "....oaoao...", "....ooooo...", "............"]},
+	"hunt": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("d9d9e0")}, "rows": ["............", ".occ....cco.", "..oab..bao..", "...oabbao...", "....oaao....", ".....oo.....", "....oaao....", "...oabbao...", "..oab..bao..", ".occ....cco.", "............", "............"]},
 	"event": {"colors": {"a": Color("f0a050"), "b": Color("fff1a8"), "c": Color("d9702f")}, "rows": ["............", ".....oo.....", ".....oo.....", "....oabo....", ".ooooabboooo", ".oaabbbbbaao", "..oaabbbaao.", "...oabbbao..", "..oabaaabao.", "..oao..oaao.", "...o....o...", "............"]},
 }
 
@@ -69,6 +70,21 @@ const MARKS := {
 const HEART := ["oo.oo", "oaooa", "oaaao", ".oao.", "..o.."]
 const HEART_FILL := Color("e0553c")
 const HEART_EMPTY := Color("3a2f33")
+
+## WU-458: a small calendar page for reminders on the Today page.
+const TODAY_EXTRA := {
+	"calendar": {"colors": {"a": Color("f4e9d0"), "b": Color("d9534f"), "c": Color("b8a98a")}, "rows": ["............", ".oooooooooo.", ".obbbbbbbbo.", ".oooooooooo.", ".oaaaaaaaao.", ".oacacacaao.", ".oaaaaaaaao.", ".oacacacaao.", ".oaaaaaaaao.", ".oooooooooo.", "............", "............"]},
+	"check": {"colors": {"a": Color("5fbf5a"), "b": Color("a8e08a")}, "rows": ["............", "............", "..........o.", ".........oao", "........oabo", "..o....oabo.", ".oao..oabo..", "..oaooabo...", "...oaabo....", "....oao.....", ".....o......", "............"]},
+	"dot": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8")}, "rows": ["............", "............", "............", "....oooo....", "...oabba....", "...oabaao...", "...oaaaao...", "....oooo....", "............", "............", "............", "............"]},
+	"fish": {"colors": {"a": Color("6fa8d6"), "b": Color("b9dcf2"), "c": Color("3a6a9a")}, "rows": ["............", "............", "............", "....oooo..o.", "..ooabbaooco", ".oabaaaaaaco", ".oaoaaaaaaco", "..ooaaaaooco", "...ooooo..o.", "............", "............", "............"]},
+}
+
+## WU-471: Next-steps line kinds: goal scroll, fight swords, plain dot (sun and leaf reuse the weather and mark glyphs).
+const HINTS := {
+	"scroll": {"colors": {"a": Color("f4e9d0"), "b": Color("e8c76a"), "c": Color("8a6a3a")}, "rows": ["............", "..oooooooo..", ".oabbbbbbao.", ".oaaaaaaaao.", "..oacccaao..", "..oaaaaaao..", "..oacccaao..", "..oaaaaaao..", ".oaaaaaaaao.", ".oabbbbbbao.", "..oooooooo..", "............"]},
+	"swords": {"colors": {"a": Color("d9d9e0"), "b": Color("f4f4fa"), "c": Color("c9873a")}, "rows": ["............", "oo........oo", "obo......obo", ".obo....obo.", "..obo..obo..", "...obbbbo...", "....obbo....", "...ocooco...", "..occo.occo.", "..oo....oo..", "............", "............"]},
+	"plain": {"colors": {"a": Color("9fd3c7"), "b": Color("d8f2ec")}, "rows": ["............", "............", "............", "....oooo....", "...oabbao...", "...oabaao...", "...oaaaao...", "....oooo....", "............", "............", "............", "............"]},
+}
 
 static var _cache: Dictionary = {}
 
@@ -90,6 +106,61 @@ static func season(season_name: String) -> Texture2D:
 ## A 12x12 weather glyph for a Weather.KINDS id; null for anything else.
 static func weather(kind: String) -> Texture2D:
 	return _glyph("weather_" + kind, WEATHER, kind)
+
+
+## WU-458: which icon a Today line gets, by keyword: "lantern", "paw", "coin", "fish", "leaf", "calendar",
+## "snow" or "dot" (default). Pure.
+static func today_icon(line: String) -> String:
+	var t := line.to_lower()
+	if t.contains("festival") or t.contains("contest"):
+		return "lantern"
+	if t.contains("great beast") or t.contains("tracks") or t.contains("bait") or t.contains("walks") or t.contains("hunt"):
+		return "paw"
+	if t.contains("market") or t.contains("wanted") or t.contains("wants"):
+		return "coin"
+	if t.contains("fish"):
+		return "fish"
+	if t.contains("herb") or t.contains("forage"):
+		return "leaf"
+	if t.contains("reminder") or t.contains("marked") or t.contains("today:") or t.contains("tomorrow:"):
+		return "calendar"
+	if t.contains("winter") or t.contains("snow"):
+		return "snow"
+	if t.contains("season") or t.contains("spring") or t.contains("summer") or t.contains("autumn"):
+		return "leaf"
+	return "dot"
+
+
+## WU-458: the 12x12 texture for a `today_icon` name; null for none.
+static func today_glyph(name: String) -> Texture2D:
+	match name:
+		"lantern":
+			return _glyph("cal_festival", CALENDAR, "festival")
+		"paw":
+			return _glyph("mark_paw", MARKS, "paw")
+		"coin":
+			return _glyph("mark_coin", MARKS, "coin")
+		"leaf":
+			return _glyph("mark_leaf", MARKS, "leaf")
+		"snow":
+			return season("Winter")
+		"calendar", "dot", "fish", "check":
+			return _glyph("today_" + name, TODAY_EXTRA, name)
+	return null
+
+
+## WU-471: the 12x12 icon for a `Hud.hint_kind` ("goal", "fight", "today", "season", "other").
+static func hint_glyph(kind: String) -> Texture2D:
+	match kind:
+		"goal":
+			return _glyph("hint_scroll", HINTS, "scroll")
+		"fight":
+			return _glyph("hint_swords", HINTS, "swords")
+		"today":
+			return weather("clear")
+		"season":
+			return _glyph("mark_leaf", MARKS, "leaf")
+	return _glyph("hint_plain", HINTS, "plain")
 
 
 ## A 12x12 world-map mark glyph ("coin", "paw", "leaf"); null for anything else.
@@ -117,14 +188,14 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return _glyph("cal_market", CALENDAR, "market")
 		"birthday":
 			return _glyph("cal_birthday", CALENDAR, "birthday")
-		"festival_active", "festival_month":
+		"festival_active", "festival_day", "festival_month":
 			return _glyph("cal_festival", CALENDAR, "festival")
 		"season":
 			return season(season_name)
 		"field", "rent", "request", "secret_realm", "event", "forage":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
-		"great_beast", "hunt":  # WILD-017: the hunt shares the beast glyph
-			return _glyph("cal_great_beast", CALENDAR_MORE, "great_beast")
+		"great_beast", "hunt":  # GFX-078: the hunt has its own crossed-spears glyph
+			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 	return null
 
 

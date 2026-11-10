@@ -21,6 +21,7 @@ extends Area2D
 var tags: Array = []
 ## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
 var art_kind := ""
+var building_style := "thatch"  ## GFX-100: regions.json map.building_style, set by the world builder
 ## The player's current interaction target pulses (set by Player).
 var highlighted := false:
 	set(value):
@@ -49,6 +50,7 @@ var screen_lift := 0.0
 var label_fade := 1.0
 ## Set by spread_on_screen when a HUD panel covers the label and it cannot move clear: drawn dimmed.
 var label_covered := false
+var crowd_hidden := false  ## WU-475: another label in a crowd keeps the screen; this one is not drawn
 ## GFX-073: sideways slide (px) that keeps the label clear of HUD panels, and whether the anchor is off screen / under a panel.
 var screen_shift_x := 0.0
 var label_offscreen := false
@@ -140,6 +142,11 @@ func _on_body_exited(body: Node2D) -> void:
 
 ## The text of the name label.
 func label_text() -> String:
+	return display_name
+
+
+## The text after the key on the [E] chip (NPCs add a birthday note, WU-482).
+func prompt_text() -> String:
 	return display_name
 
 
@@ -240,6 +247,24 @@ static func spread_labels(nodes: Array) -> void:
 ## The interact prompt already names the current target, so its own label is not drawn
 ## (it sat under the player sprite and the prompt, WU-176). The HUD shows the prompt
 ## whenever a target exists, so the target's own label is always hidden.
+## GFX-101: the 8 rects (two 4x2 / 2x4 arms per corner) of the four pixel corner brackets around `box`.
+static func bracket_rects(box: Rect2, arm: float = 4.0, thick: float = 2.0) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var l := box.position.x
+	var t := box.position.y
+	var r := box.end.x
+	var b := box.end.y
+	out.append(Rect2(l, t, arm, thick))
+	out.append(Rect2(l, t, thick, arm))
+	out.append(Rect2(r - arm, t, arm, thick))
+	out.append(Rect2(r - thick, t, thick, arm))
+	out.append(Rect2(l, b - thick, arm, thick))
+	out.append(Rect2(l, b - arm, thick, arm))
+	out.append(Rect2(r - arm, b - thick, arm, thick))
+	out.append(Rect2(r - thick, b - arm, thick, arm))
+	return out
+
+
 static func label_visible(is_target: bool) -> bool:
 	return not is_target
 
@@ -265,7 +290,7 @@ func label_drawn_ignoring_target() -> bool:
 
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
-	return visible and not label_offscreen and label_visible(highlighted) and label_fade > 0.0
+	return visible and not label_offscreen and not crowd_hidden and label_visible(highlighted) and label_fade > 0.0
 
 
 ## How visible the name label is for a player standing at `player_pos` (parent coordinates).
@@ -301,11 +326,19 @@ const RESPREAD_INTERVAL := 0.25
 const RESPREAD_MOVE := 4.0
 
 
-## GFX-069: 0 = highlighted (or faded and within FADED_NEAR of the player), 1 = a great beast, 2 = everything else.
+## GFX-069: 0 = highlighted (or faded and within FADED_NEAR of the player), 1 = a great beast, 2 = places, 3 = villagers and other beasts.
 static func label_rank(node: Interactable, player_pos: Vector2) -> int:
 	if node.highlighted or (node.label_covered and node.position.distance_to(player_pos) <= FADED_NEAR):
 		return 0
-	return 1 if node.get("great") == true else 2
+	if node.get("great") == true:
+		return 1
+	# WU-481: place labels never move; villagers and wandering beasts yield to them.
+	return 3 if is_moving_label(node) else 2
+
+
+## WU-481: whether a node's label belongs to something that walks (a villager or a wandering beast).
+static func is_moving_label(node: Interactable) -> bool:
+	return node.get("npc_id") != null or node is Roamer
 
 
 ## GFX-069: whether a label re-spread is due: something moved more than RESPREAD_MOVE and RESPREAD_INTERVAL passed.
@@ -331,6 +364,9 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		var was_off: bool = node.label_offscreen
 		node.screen_shift_x = 0.0
 		node.label_offscreen = anchor_hidden(node.position, view, occupied)
+		if node.crowd_hidden:  # WU-475: re-decided below
+			node.crowd_hidden = false
+			node._redraw_label()
 		if node.label_offscreen != was_off or was_shift != 0.0:
 			node._redraw_label()
 		if node.label_drawn():
@@ -350,6 +386,22 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if an != bn:
 			return not an
 		return a.position.distance_to(player_pos) < b.position.distance_to(player_pos))
+	var crowd_rects: Array[Rect2] = []
+	var crowd_prio: Array[int] = []
+	for node: Interactable in ranked:
+		crowd_rects.append(node.drawn_label_rect(view))
+		crowd_prio.append(2 if node.get("npc_id") != null else 1)
+	var keep := LabelLayout.crowd_keep(crowd_rects, crowd_prio, -1)
+	var kept: Array = []
+	for i in ranked.size():
+		if keep[i]:
+			kept.append(ranked[i])
+		else:
+			(ranked[i] as Interactable).crowd_hidden = true
+			(ranked[i] as Interactable).screen_lift = 0.0
+			(ranked[i] as Interactable).label_covered = false
+			(ranked[i] as Interactable)._redraw_label()
+	ranked = kept
 	var rects: Array[Rect2] = []
 	for node: Interactable in ranked:
 		var r := node.drawn_label_rect(view)
@@ -366,7 +418,15 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if gn.get("great") == true:
 			own[i] = blockers.size()
 			blockers.append(Rect2(gn.position - GREAT_FIGURE / 2.0, GREAT_FIGURE))
-	var result := LabelLayout.resolve(rects, view, blockers, own)
+	var covers := {}
+	for i in ranked.size():  # WU-483: a villager's name never sits on the roof of a building behind them
+		if (ranked[i] as Interactable).get("npc_id") != null:
+			var roofs: Array[Rect2] = []
+			for other: Interactable in nodes:
+				if other != ranked[i] and other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
+					roofs.append(Rect2(other.position - other.size / 2.0, other.size))
+			covers[i] = roofs
+	var result := LabelLayout.resolve(rects, view, blockers, own, covers)
 	for i in ranked.size():
 		var node: Interactable = ranked[i]
 		var lift: float = result[i]["offset"]
@@ -482,7 +542,9 @@ func _draw() -> void:
 		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))
 		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
 	elif not draw_generated_art():
-		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name)
+		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name, building_style)
+	if art_kind == "family_home" or (art_kind == "abode" and has_method("is_owned") and call("is_owned")):
+		_draw_trophies()  # WU-494
 	if highlighted:
 		var glow := 0.5 + 0.5 * sin(_pulse_time * 5.0)
 		var ring := Rect2(-size / 2.0, size).grow(6.0 + 2.0 * glow)
@@ -490,9 +552,19 @@ func _draw() -> void:
 		if ring_tex != null:
 			Sprites.draw_nine_patch(self, ring_tex, ring, float(Sprites.scale() * 4), Color(1, 1, 1, 0.45 + 0.4 * glow))
 		else:
-			draw_rect(ring, Color(1.0, 0.9, 0.5, 0.45 + 0.4 * glow), false, 2.0)
+			for br in bracket_rects(ring.grow(-2.0 * glow)):  # GFX-101: four gold corner brackets, not a selection box
+				draw_rect(br, UIStyle.ACCENT)
 	if anchor_id != "":
 		_draw_anchor_marker()
+
+
+## WU-494: the hung trophies as plaques on the front wall of the player's home.
+func _draw_trophies() -> void:
+	if not GameState.has_session() or GameState.player.hung_trophies.is_empty():
+		return
+	if Trophies.home_region(GameState.player, GameState.npcs, GameState.data) != GameState.current_region:
+		return
+	TrophyPlaques.draw(self, size, TrophyPlaques.kinds_for(GameState.player.hung_trophies, GameState.data.items))
 
 
 ## Asks the label layer to redraw.
@@ -520,7 +592,7 @@ func _draw_label() -> void:
 		_label_node.draw_arc(center, 10.0, 0.0, TAU, 24, Color(0.1, 0.08, 0.04), 1.5)
 		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
-	if not label_visible(highlighted):
+	if not label_visible(highlighted) or crowd_hidden:
 		return
 	var fade := minf(label_fade, PLACE_FAR_ALPHA) if label_covered else label_fade
 	if fade <= 0.0:

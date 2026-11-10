@@ -50,11 +50,14 @@ func test_refine_batch_crafts_until_ingredients_run_out() -> void:
 		assert_eq(gs.player.item_count(item_id), 0)
 
 
+const GENERIC_NOTE := CraftingScreen.GENERIC_SOURCE_NOTE
+
+
 func test_missing_ingredients_list_sources() -> void:
 	var c := new_character()
 	c.inventory = {}
 	var text := CraftingScreen.missing_sources_text(c, data(), "qi_gathering_pill")
-	assert_true(text.contains("Sold at") or text.contains("Gathered at"), text)
+	assert_true(text.contains("(here)") or text.contains("more") or text.contains(GENERIC_NOTE), text)
 	var recipe: Dictionary = data().recipes["qi_gathering_pill"]
 	for item_id in recipe["ingredients"]:
 		c.add_item(item_id, int(recipe["ingredients"][item_id]))
@@ -257,3 +260,54 @@ func test_non_herb_ingredient_says_found_at() -> void:
 			assert_true(Array(lines).any(func(l: String) -> bool: return l.ends_with(" - found at " + place)), str(lines))
 	if not checked:
 		print("  (no non-herb ingredient has a gather place; verb branch untested)")
+
+
+## WU-492: nearest sources: this region first, at most `limit`, generic lines dropped.
+func test_nearest_sources_here_first_and_limited() -> void:
+	var c := new_character()
+	var all := CraftingScreen.nearest_sources(c, data(), "spirit_herb", "qingshi_village", -1)
+	assert_true(all.size() > 2)
+	var two := CraftingScreen.nearest_sources(c, data(), "spirit_herb", "qingshi_village", 2)
+	assert_eq(two.size(), 2)
+	assert_eq(two[0], all[0])
+	assert_true(two[0].ends_with("(here)"), two[0])
+	for s in all:
+		assert_false(s.begins_with("Dropped by"), s)
+		assert_false(s.begins_with("Reward from"), s)
+
+
+func test_missing_sources_short_lines_with_more_count() -> void:
+	var c := new_character()
+	c.inventory = {}
+	var text := CraftingScreen.missing_sources_text(c, data(), "qi_gathering_pill", "qingshi_village")
+	var lines := text.split("\n")
+	assert_eq(lines.size(), (data().recipes["qi_gathering_pill"]["ingredients"] as Dictionary).size())
+	for line in lines:
+		assert_true(line.length() <= 110, line)
+	var all := CraftingScreen.all_sources_text(c, data(), "qi_gathering_pill")
+	assert_true(all.length() > text.length())
+
+
+## WU-492: the Refine buttons stay on screen at 1280x720 and the window keeps its top margin.
+func test_crafting_layout_fits_720() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var root := tree.root
+	var old_size := root.size
+	root.size = Vector2i(1280, 720)
+	root.get_node("GameState").start_session(new_character())
+	var layer := CanvasLayer.new()
+	var screen := CraftingScreen.new()
+	layer.add_child(UIStyle.centered(screen))
+	root.add_child(layer)
+	screen.open("alchemist")
+	for i in 4:
+		await tree.process_frame
+	var craft := screen.find_child("Craft", true, false) as Button
+	assert_true(craft != null)
+	var view := root.get_visible_rect().size
+	if craft != null:
+		assert_true(craft.get_global_rect().end.y <= view.y, str(craft.get_global_rect()))
+	assert_true(screen.get_global_rect().position.y >= 8.0, str(screen.get_global_rect()))
+	assert_true(screen.get_global_rect().size.y <= 720.0 - 16.0, str(screen.get_global_rect()))
+	layer.queue_free()
+	root.size = old_size

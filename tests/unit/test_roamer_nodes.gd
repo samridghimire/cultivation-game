@@ -196,7 +196,12 @@ func test_great_roamer_is_gold_and_labelled() -> void:
 	assert_true(great.display_name.begins_with("Great Fog-Antler Stag ("), great.display_name)
 	assert_eq(great.label_color(), Roamer.GREAT_GOLD)
 	assert_eq(plain.label_color(), Color.WHITE)
-	assert_eq(Roamer.GREAT_SCALE, 1.5)
+	assert_eq(Roamer.GREAT_SCALE, 1.6)
+	assert_eq(great.size, Vector2(48, 32) * 1.6)
+	assert_eq(plain.size, Vector2(48, 32))
+	var rise_plain := plain.position.y - plain.label_rect().position.y
+	var rise_great := great.position.y - great.label_rect().position.y
+	assert_almost_eq(rise_great - rise_plain, (great.size.y - plain.size.y) / 2.0 + Roamer.GREAT_LABEL_GAP, 0.01)
 	plain.free()
 	great.free()
 	world.free()

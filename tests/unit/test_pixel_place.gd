@@ -27,7 +27,7 @@ func test_templates_are_well_formed() -> void:
 func test_supports() -> void:
 	for kind in PixelPlace.KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
-	assert_eq(PixelPlace.KINDS.size(), 9)
+	assert_eq(PixelPlace.KINDS.size(), 10)
 	for kind in PixelPlace.NATURE_KINDS:
 		assert_true(PixelPlace.supports(kind), kind)
 	assert_true(PixelPlace.supports("fishing"))
@@ -135,3 +135,208 @@ func test_big_shops_are_buildings() -> void:
 	assert_eq(smithy.get_size(), shop.get_size())
 	assert_true(Vector2(shop.get_size()) * float(Sprites.scale()) <= Vector2(118, 88), "110 px shop fits its rect")
 
+
+
+func test_explore_looks_are_well_formed() -> void:
+	for look: String in PixelPlace.EXPLORE_LOOKS:
+		var kind := PixelPlace.explore_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		var r := PixelPlace.rows(kind)
+		assert_true(r.size() > 8, look + " has rows")
+		for row in r:
+			assert_eq(row.length(), r[0].length(), look + " row width")
+			for ch in row:
+				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+	assert_eq(PixelPlace.explore_kind("cave"), "explore")
+	assert_eq(PixelPlace.explore_kind("bogus"), "explore")
+	assert_eq(PixelPlace.rows("explore"), PixelPlace.rows(PixelPlace.explore_kind("cave")))
+	var distinct := {}
+	for look: String in PixelPlace.EXPLORE_LOOKS:
+		distinct["".join(PixelPlace.rows(PixelPlace.explore_kind(look)))] = true
+	assert_eq(distinct.size(), PixelPlace.EXPLORE_LOOKS.size(), "every look is its own picture")
+
+
+func test_every_explore_place_has_a_valid_look() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "explore":
+				assert_true(PixelPlace.EXPLORE_LOOKS.has(String(place.get("look", ""))), "%s needs a look" % place.get("display_name", ""))
+
+
+func test_game_data_rejects_unknown_explore_look() -> void:
+	for look: String in PixelPlace.EXPLORE_LOOKS + ["swamp"]:
+		var data := GameData.load_from_dir()
+		var place: Dictionary = {}
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "explore":
+				place = p
+		place["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		var bad := look == "swamp"
+		assert_eq("\n".join(data.load_errors).contains("unknown explore look"), bad, look)
+
+
+func test_realm_looks_are_well_formed() -> void:
+	var distinct := {}
+	for look: String in PixelPlace.REALM_LOOKS:
+		var kind := PixelPlace.realm_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		for active: bool in [false, true]:
+			var r := PixelPlace.rows(kind, true, active)
+			assert_true(r.size() > 8, look + " has rows")
+			for row in r:
+				assert_eq(row.length(), r[0].length(), look + " row width")
+				for ch in row:
+					assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+			distinct["".join(r)] = true
+		assert_true("".join(PixelPlace.rows(kind, true, true)) != "".join(PixelPlace.rows(kind, true, false)), look + " open differs from closed")
+	assert_eq(distinct.size(), PixelPlace.REALM_LOOKS.size() * 2, "every look and state is its own picture")
+	assert_eq(PixelPlace.realm_kind("rift"), "secret_realm")
+	assert_eq(PixelPlace.realm_kind("gate"), "secret_realm_gate")
+	assert_eq(PixelPlace.realm_kind("castle"), "secret_realm")
+
+
+func test_every_secret_realm_place_has_a_look() -> void:
+	var data := GameData.load_from_dir()
+	var n := 0
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "secret_realm":
+				n += 1
+				assert_true(PixelPlace.REALM_LOOKS.has(String(place.get("look", ""))), "%s needs a look" % place.get("display_name", ""))
+	assert_eq(n, 6)
+
+
+func test_game_data_rejects_unknown_realm_look() -> void:
+	for look: String in PixelPlace.REALM_LOOKS + ["castle"]:
+		var data := GameData.load_from_dir()
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "secret_realm":
+				p["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("unknown secret_realm look"), look == "castle", look)
+
+
+## GFX-100
+func test_building_styles() -> void:
+	var size := Vector2(60, 50)
+	var base := PixelPlace.texture("workshop", size, Color("a0522d"))
+	assert_eq(PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "thatch"), base)
+	for style: String in PixelPlace.STYLES:
+		for kind in ["workshop", "clinic", "orphanage", "family_home", "auction", "merchant"]:
+			var t := PixelPlace.texture(kind, size, Color("a0522d"), false, "", style)
+			var t0 := PixelPlace.texture(kind, size, Color("a0522d"))
+			assert_eq(t.get_size(), t0.get_size(), "%s %s keeps its size" % [style, kind])
+	var tile := PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "tile")
+	assert_true(tile != base)
+	assert_true(tile.get_image().get_data() != base.get_image().get_data())
+	# Non-building kinds ignore the style.
+	assert_eq(PixelPlace.texture("sect_hall", size, Color("a0522d"), false, "", "stone"), PixelPlace.texture("sect_hall", size, Color("a0522d")))
+	var stilt := PixelPlace.texture("workshop", size, Color("a0522d"), false, "", "stilt").get_image()
+	assert_eq(stilt.get_pixel(3, stilt.get_height() - 1).a, 0.0, "gap between posts")
+
+
+func test_game_data_rejects_unknown_building_style() -> void:
+	for style: String in PixelPlace.STYLES + ["pagoda"]:
+		var data := GameData.load_from_dir()
+		data.regions["qingshi_village"]["map"]["building_style"] = style
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("building_style"), style == "pagoda", style)
+	var fresh := GameData.load_from_dir()
+	assert_eq(fresh.load_errors.size(), 0, str(fresh.load_errors))
+
+
+func test_gather_looks_are_well_formed() -> void:
+	var base := PixelPlace.rows("gather")
+	var distinct := {}
+	for look: String in PixelPlace.GATHER_LOOKS:
+		var kind := PixelPlace.gather_kind(look)
+		assert_true(PixelPlace.supports(kind), look + " supported")
+		var r := PixelPlace.rows(kind)
+		assert_eq(r.size(), base.size(), look + " same height as the herb bed")
+		for row in r:
+			assert_eq(row.length(), base[0].length(), look + " row width")
+			for ch in row:
+				assert_true(PixelPlace.PALETTE.contains(ch), "%s unknown char %s" % [look, ch])
+		distinct["".join(r)] = true
+	assert_eq(distinct.size(), PixelPlace.GATHER_LOOKS.size(), "every gather look is its own picture")
+	assert_eq(PixelPlace.gather_kind("patch"), "gather")
+	assert_eq(PixelPlace.gather_kind("bogus"), "gather")
+
+
+func test_every_gather_place_has_a_valid_look() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	for region: Dictionary in data.regions.values():
+		for place: Dictionary in region.get("places", []):
+			if place.get("type", "") == "gather":
+				assert_true(PixelPlace.GATHER_LOOKS.has(String(place.get("look", "patch"))), place.get("display_name", ""))
+
+
+func test_game_data_rejects_unknown_gather_look() -> void:
+	for look: String in PixelPlace.GATHER_LOOKS + ["swamp"]:
+		var data := GameData.load_from_dir()
+		for p: Dictionary in data.regions["qingshi_village"]["places"]:
+			if p.get("type", "") == "gather":
+				p["look"] = look
+		data.load_errors.clear()
+		data._validate_world()
+		assert_eq("\n".join(data.load_errors).contains("unknown gather look"), look == "swamp", look)
+
+
+## GFX-104: woods are separate crowns on a 54x38 canvas; herb woods add sprigs; the crown colour follows the region.
+func test_woods_canvas_and_herb_variant() -> void:
+	var plain := PixelPlace.rows("explore_woods")
+	assert_eq(plain.size(), 38)
+	assert_eq(plain[0].length(), 54)
+	var herbs := PixelPlace.rows(PixelPlace.explore_kind("woods", ["herbs"]))
+	assert_eq(herbs.size(), 38)
+	assert_eq(herbs[0].length(), 54)
+	assert_true("".join(herbs) != "".join(plain))
+	assert_eq(PixelPlace.explore_kind("woods", ["ruins"]), "explore_woods")
+	assert_true(PixelPlace.supports("explore_woods_herbs"))
+	assert_false(plain[37].contains("o") and plain[37].count("o") > 20, "no full-width bar along the bottom")
+
+
+func test_woods_color_falls_back_to_place_color() -> void:
+	var place := Color("6f9f4a")
+	assert_eq(PixelPlace.woods_color({}, place), place)
+	assert_eq(PixelPlace.woods_color({"decor": {"trees": 3}}, place), place)
+	assert_eq(PixelPlace.woods_color({"decor": {"tree_color": "183427"}}, place), Color("183427"))
+
+
+## WU-496: a crown shades only its own pixels; drawing crown 2 leaves crown 1's shading and pixel count alone.
+func test_crown_shades_only_its_own_pixels() -> void:
+	var c := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(c, 10, 10, 8, 7)
+	var before := c.duplicate(true)
+	var count_before := 0
+	for row: Array in c:
+		for ch: Variant in row:
+			count_before += 1 if ch != "." else 0
+	PixelPlace.crown(c, 30, 10, 8, 7)  # far apart: no overlap
+	for y in 20:
+		for x in 20:
+			assert_eq(c[y][x], before[y][x], "crown 1 unchanged at %d,%d" % [x, y])
+	var lone := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(lone, 30, 10, 8, 7)
+	var count_after := 0
+	for row: Array in c:
+		for ch: Variant in row:
+			count_after += 1 if ch != "." else 0
+	var lone_count := 0
+	for row: Array in lone:
+		for ch: Variant in row:
+			lone_count += 1 if ch != "." else 0
+	assert_eq(count_after, count_before + lone_count, "pixel count is the sum of both crowns")
+	# overlapping: crown 1's far upper-left stays highlighted after crown 2 overlaps its lower right
+	var o := PixelPlace.canvas(40, 20)
+	PixelPlace.crown(o, 12, 10, 8, 7)
+	var tl: String = o[5][8]
+	PixelPlace.crown(o, 20, 10, 8, 7)
+	assert_eq(o[5][8], tl, "crown 1's shading survives an overlapping crown 2")

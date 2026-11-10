@@ -13,6 +13,7 @@ const CATEGORY_COLORS := {
 	"warning": Color("e8a04a"),
 	"danger": Color("e85a4a"),
 	"karma": Color("b58ae8"),
+	"people": Color("e8a0b4"),
 }
 ## Colors for Combat.danger_label ratings.
 const DANGER_COLORS := {
@@ -120,7 +121,17 @@ static func _box(bg: Color, border: Color, width: int, radius: int, margin: int)
 	return s
 
 
-static func panel_style() -> StyleBoxFlat:
+## GFX-099: the framed look (FramedPanel) every HUD panel and modal uses.
+static func panel_style() -> FramedPanel:
+	var style := FramedPanel.new()
+	style.bg_color = PANEL
+	style.border_color = ACCENT
+	style.set_content_margin_all(12)
+	return style
+
+
+## The plain flat box, for callers that tweak borders, radii or fill (banner, calendar, key bar).
+static func flat_panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL
 	style.set_corner_radius_all(6)
@@ -152,11 +163,28 @@ static func bar(size: Vector2, fill: Color) -> ProgressBar:
 	return b
 
 
+## WU-485: x of the 1 px gold end cap at the right edge of a bar's fill; -1 when the bar is empty.
+static func end_cap_x(width: float, value: float, max_value: float) -> float:
+	if value <= 0.0 or max_value <= 0.0:
+		return -1.0
+	return clampf(roundf(width * minf(value / max_value, 1.0)) - 1.0, 0.0, maxf(width - 1.0, 0.0))
+
+
+## WU-485: gives a UIStyle.bar a 1 px gold cap at the end of its fill.
+static func add_end_cap(b: ProgressBar) -> void:
+	b.draw.connect(func() -> void:
+		var x := end_cap_x(b.size.x, b.value, b.max_value)
+		if x >= 0.0:
+			b.draw_rect(Rect2(x, 1, 1, maxf(b.size.y - 2.0, 1.0)), ACCENT))
+
+
 ## Swaps the fill colour of a UIStyle.bar.
 static func set_bar_fill(b: ProgressBar, fill: Color) -> void:
 	var f := StyleBoxFlat.new()
 	f.bg_color = fill
 	f.set_corner_radius_all(2)
+	f.border_color = fill.lightened(0.35)  # GFX-099: 1 px inner highlight
+	f.set_border_width_all(1)
 	b.add_theme_stylebox_override("fill", f)
 
 
@@ -186,3 +214,24 @@ static func centered(child: Control) -> CenterContainer:
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.add_child(child)
 	return c
+
+
+## GFX-099: rects (in the label's local space, right-aligned with `margin_right`) of each "[X]" key in `text`,
+## so the key bar can draw them as small key caps.
+static func key_cap_rects(font: Font, font_size: int, text: String, width: float, margin_right: float, height: float) -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	var total := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var x0 := width - margin_right - total
+	var from := 0
+	while true:
+		var a := text.find("[", from)
+		if a < 0:
+			break
+		var b := text.find("]", a)
+		if b < 0:
+			break
+		var left := font.get_string_size(text.substr(0, a), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var w := font.get_string_size(text.substr(a, b - a + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		rects.append(Rect2(roundf(x0 + left) - 2, 3.0, roundf(w) + 4, height - 6))
+		from = b + 1
+	return rects

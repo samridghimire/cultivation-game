@@ -43,6 +43,7 @@ fresh() {
 	run "peak curve (100 fights per foe)" res://tests/sim/peak_curve.gd -- 100
 	run "economy (seed defaults)" res://tests/sim/simulate_economy.gd
 	run "economy, bounty hunter (seeds 1-10, 12 months)" res://tests/sim/simulate_bounty.gd -- 10 12
+	run "fishing (Novice/Angler/Old Hand, 100 trips per cell)" res://tests/sim/simulate_fishing.gd -- 100
 	run "profession income (Qi Refining, seeds 1-5, 24 months)" res://tests/sim/profession_income.gd -- 5 24
 	run "crafter start (new Alchemist, seeds 1-10, 180 days)" res://tests/sim/crafter_start.gd -- 10 180
 	run "crafter crafts: blacksmith (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=blacksmith
@@ -52,6 +53,7 @@ fresh() {
 	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 	run "first Foundation Establishment year, fighting sensed threats (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2 --threats=fight
+	run "first Core Formation year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 3
 	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
 }
 CHECK=0

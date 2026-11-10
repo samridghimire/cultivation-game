@@ -12,6 +12,7 @@ signal closed
 const MAX_QUANTITY := 99
 
 var _title: Label
+var _title_notes: Label
 var _stones: Label
 var _buy_tab: Button
 var _sell_tab: Button
@@ -61,11 +62,19 @@ func _init() -> void:
 	add_child(box)
 	var header := HBoxContainer.new()
 	box.add_child(header)
+	var title_box := VBoxContainer.new()
+	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_box.add_theme_constant_override("separation", 0)
+	header.add_child(title_box)
 	_title = UIStyle.label("", 24, UIStyle.ACCENT)
-	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.custom_minimum_size.x = 200
-	header.add_child(_title)
+	title_box.add_child(_title)
+	_title_notes = UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
+	_title_notes.name = "TitleNotes"
+	_title_notes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_title_notes.custom_minimum_size.x = 200
+	title_box.add_child(_title_notes)
 	_season_line = UIStyle.label("", 15, Color(0.75, 0.75, 0.75))
 	_season_line.name = "SeasonLine"
 	_season_line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -167,7 +176,7 @@ func _init() -> void:
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 ## WU-415: "Winter prices" under the title; "" without a season.
@@ -228,7 +237,9 @@ func regular_title_note() -> String:
 ## Opens the merchant's wares (see merchant.gd for max_price / stock_tags / faction).
 func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Array = [], faction: String = "", buy_tags: Array = []) -> void:
 	GameState.shop_name = merchant_name
-	_title.text = merchant_name + friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days) + Places.new_today_note(GameState.data.regions.get(GameState.current_region, {}), merchant_name, GameClock.total_days, GameState.data) + regular_title_note()
+	_title.text = merchant_name
+	_title_notes.text = (friend_note(GameState.data, GameState.current_region, merchant_name, GameState.world_flags, GameClock.total_days) + price_note(GameState.player, GameState.data, faction) + renown_note(GameState.player, GameState.data, GameState.current_region) + deal_note(GameState.player, GameState.current_region, GameClock.total_days) + Places.new_today_note(GameState.data.regions.get(GameState.current_region, {}), merchant_name, GameClock.total_days, GameState.data) + regular_title_note()).strip_edges()
+	_title_notes.visible = _title_notes.text != ""
 	_max_price = max_price
 	_stock_tags = stock_tags
 	_buy_tags = buy_tags
@@ -759,3 +770,8 @@ func _focus_selected() -> void:
 		_sell_tab.grab_focus()
 	else:
 		_close_button.grab_focus()
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

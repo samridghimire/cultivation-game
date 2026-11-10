@@ -103,7 +103,7 @@ func test_every_region_has_landmarks_inside_the_map() -> void:
 		var map_rect := Rect2(0, 0, float(size[0]), float(size[1]))
 		var rects := Scenery.landmark_rects(region)
 		assert_gt(rects.size(), 5, "%s needs landmarks" % region["id"])
-		var cap := 20 if region["id"] == "fallen_star_market" else 13  # GFX-054: a lantern-lined main street
+		var cap := 20 if region["id"] == "fallen_star_market" else (16 if region["id"] == "azure_peak" else 13)  # GFX-054: a lantern-lined main street; GFX-079: steps + clouds
 		assert_true(rects.size() < cap, "%s has too many landmarks" % region["id"])
 		for r in rects:
 			assert_true(map_rect.encloses(r), "%s: landmark %s leaves the map" % [region["id"], r])
@@ -294,6 +294,24 @@ func test_jetty_meets_the_pond() -> void:
 	assert_eq(lay2["rect"], Rect2(56, 86, 88, 28))
 
 
+## RV-019: every jetty within 200 px of a pond lays out on the water (no bare posts on grass).
+func test_near_pond_jetties_are_on_water() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var checked := 0
+	for region: Dictionary in gs.data.regions.values():
+		var lms: Array = region.get("map", {}).get("landmarks", [])
+		for lm: Dictionary in lms:
+			if lm["kind"] != "jetty":
+				continue
+			var pos := Vector2(lm["pos"][0], lm["pos"][1])
+			for other: Dictionary in lms:
+				if other["kind"] == "pond" and pos.distance_to(Vector2(other["pos"][0], other["pos"][1])) <= 200.0:
+					checked += 1
+					assert_true(bool(Scenery.jetty_layout(region, lm)["on_water"]), "%s: jetty near a pond is on_water" % region["id"])
+					break
+	assert_true(checked >= 3, "several jetties checked")
+
+
 ## GFX-046: a landmark tree_kind must be a known kind and only goes on a pine.
 func test_landmark_tree_kind_validation() -> void:
 	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
@@ -394,3 +412,170 @@ func test_no_decor_or_pine_on_roads_or_spots_in_any_region() -> void:
 				assert_false(p.grow(12.0).has_point(pos), "%s: %s within 12 px of a path" % [region["id"], d["kind"]])
 			for s in spots:
 				assert_gt(pos.distance_to(Vector2(float(s[0]), float(s[1]))), 20.0, "%s: %s on an npc spot" % [region["id"], d["kind"]])
+
+
+## GFX-079: steps and clouds are valid, never solid; scree_density is validated and thins the speckle.
+func test_steps_and_clouds_are_walkable_landmarks() -> void:
+	for kind in ["steps", "clouds"]:
+		assert_true(Scenery.LANDMARK_KINDS.has(kind), kind)
+		assert_false(Scenery.SOLID_LANDMARKS.has(kind), kind)
+	var d := GameData.new()
+	d.regions = {"ok": {"id": "ok", "map": {"scree_density": 0.4, "landmarks": [{"kind": "steps", "pos": [1, 2], "size": [3, 4]}]}},
+		"bad": {"id": "bad", "map": {"scree_density": 2.0}}}
+	assert_eq(Scenery.validate(d).size(), 1)
+
+
+func test_azure_peak_has_steps_clouds_and_more_trees() -> void:
+	var data := GameData.load_from_dir()
+	var map: Dictionary = data.regions["azure_peak"]["map"]
+	var kinds: Array = map["landmarks"].map(func(l: Dictionary) -> String: return l["kind"])
+	assert_true(kinds.has("steps") and kinds.has("clouds"))
+	assert_true(int(map["decor"]["trees"]) >= 25)
+	assert_true(float(map["scree_density"]) <= 0.5)
+
+
+func test_scree_density_thins_the_speckle() -> void:
+	var base := Color("5f7a74")
+	var full := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 1.0).get_image()
+	var thin := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 0.4).get_image()
+	var diff := 0
+	var diff_thin := 0
+	for y in 160:
+		for x in 160:
+			if full.get_pixel(x, y) != base:
+				diff += 1
+			if thin.get_pixel(x, y) != base:
+				diff_thin += 1
+	assert_true(diff_thin < diff)
+
+
+func test_ground_variants_have_matching_luminance() -> void:
+	var base := Color("7a8c74")
+	var lums: Array[float] = []
+	for v in 4:
+		var img := GroundTiles.make_variant(base, "azure_peak", v, true).get_image()
+		var total := 0.0
+		for y in img.get_height():
+			for x in img.get_width():
+				total += img.get_pixel(x, y).get_luminance()
+		lums.append(total / float(img.get_width() * img.get_height()))
+	for a in lums:
+		for b in lums:
+			assert_true(absf(a - b) <= base.get_luminance() * 0.03, "variants differ by more than 3%% (%s vs %s)" % [a, b])
+
+
+func test_no_decor_near_gates_or_travel_places() -> void:
+	var gd := GameData.load_from_dir()
+	for rid: String in gd.regions:
+		var region: Dictionary = gd.regions[rid]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(rid)
+		var decor := SectCourt.filter_decor(region, Scenery.place(region, rng))
+		var rects: Array[Rect2] = []
+		var g := SectCourt.gate(region)
+		if not g.is_empty():
+			rects.append(SectCourt.gate_rect(g))
+		for p: Dictionary in region.get("places", []):
+			if String(p.get("type", "")) == "travel":
+				var sz: Array = p.get("size", [64, 64])
+				var size := Vector2(float(sz[0]), float(sz[1]))
+				rects.append(Rect2(Vector2(float(p["pos"][0]), float(p["pos"][1])) - size / 2.0, size))
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if String(lm.get("kind", "")) == "pine":  # landmark trees are data, so check them too
+				decor.append({"kind": "pine landmark", "pos": Vector2(float(lm["pos"][0]), float(lm["pos"][1]))})
+		for d in decor:
+			for r in rects:
+				assert_true(r.grow(SectCourt.DECOR_KEEP - 1.0).has_point(d["pos"]) == false, "%s: %s at %s within 40 px of a gate or travel place" % [rid, d["kind"], d["pos"]])
+
+
+func test_edge_belt_validation() -> void:
+	var d := GameData.new()
+	d.regions = {"bad": {"id": "bad", "map": {"decor": {"edge_belt": 4}}}, "ok": {"id": "ok", "map": {"decor": {"edge_belt": 3}}}}
+	assert_eq(Scenery.validate(d).size(), 1)
+
+
+func test_edge_belt_hugs_edges_and_leaves_path_gaps() -> void:
+	var region := _region()
+	region["map"]["decor"] = {"trees": 0, "rocks": 0, "grass": 0, "flowers": 0, "edge_belt": 2}
+	var blocked := Scenery.blocked_rects(region)
+	var near_edge := 0
+	for d in Scenery.place(region, seeded_rng(2)):
+		var pos: Vector2 = d["pos"]
+		for r in blocked:
+			assert_false(r.has_point(pos), "belt tree on a blocked rect")
+		if pos.x < 70.0 or pos.y < 70.0 or pos.x > 730.0 or pos.y > 530.0:
+			near_edge += 1
+	assert_gt(near_edge, 40, "a dense belt")
+
+
+func test_misty_forest_is_denser_than_qingshi_and_clear_of_places() -> void:
+	var misty: Dictionary = data().regions["misty_forest"]
+	var trees := 0
+	var blocked := Scenery.blocked_rects(misty)
+	for d in Scenery.place(misty, seeded_rng(1)):
+		if d["kind"] != "tree":
+			continue
+		trees += 1
+		for r in blocked:
+			assert_false(r.has_point(d["pos"]), "tree on a path or place")
+	var qingshi := 0
+	for d in Scenery.place(data().regions["qingshi_village"], seeded_rng(1)):
+		if d["kind"] == "tree":
+			qingshi += 1
+	assert_gt(trees, qingshi * 3)
+
+
+func test_field_look_follows_the_season() -> void:
+	assert_eq(Scenery.field_look("Spring", 5)["style"], "sprout")
+	assert_eq(Scenery.field_look("Summer", 5)["style"], "tall")
+	assert_eq(Scenery.field_look("Autumn", 5)["style"], "golden")
+	assert_true(Scenery.field_look("Autumn", 5)["sheaves"])
+	var w := Scenery.field_look("Winter", 5)
+	assert_eq(w["style"], "bare")
+	assert_true(w["snow"])
+	assert_false(Scenery.field_look("Winter", 5, true)["snow"])
+	assert_true(Scenery.field_look("Summer", 1)["vertical"] and not Scenery.field_look("Summer", 0)["vertical"])
+
+
+## WU-500: at every project stage every jetty post stands in the water or within 6 px of the pond's rim.
+func test_jetty_posts_stand_in_the_water() -> void:
+	var region: Dictionary = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data.regions["qingshi_village"]
+	var ponds: Array[Rect2] = []
+	for lm: Dictionary in region["map"]["landmarks"]:
+		if lm["kind"] == "pond":
+			var sz := Vector2(lm["size"][0], lm["size"][1])
+			ponds.append(Rect2(Vector2(lm["pos"][0], lm["pos"][1]) - sz / 2.0, sz))
+	for lm: Dictionary in region["map"]["landmarks"]:
+		if lm["kind"] != "jetty":
+			continue
+		for stage in 4:
+			var posts := Scenery.jetty_posts(region, lm, stage)
+			assert_true(posts.size() >= 2, "stage %d keeps a pair of posts" % stage)
+			for post in posts:
+				var ok := false
+				for pond in ponds:
+					if pond.grow(6.0).intersects(post):
+						ok = true
+				assert_true(ok, "stage %d post %s stands on dry grass" % [stage, post])
+
+
+## WU-502: the Herb Slope's terrace look grows by stage: edging, then two rows, then three rows with herbs and a channel.
+func test_terrace_look_by_stage() -> void:
+	var rows: Array[int] = []
+	for st in range(-1, 5):
+		rows.append(int(Scenery.terrace_look(st)["rows"]))
+	assert_eq(rows, [0, 0, 0, 2, 3, 3])
+	assert_false(bool(Scenery.terrace_look(0)["edging"]))
+	assert_true(bool(Scenery.terrace_look(1)["edging"]))
+	assert_false(bool(Scenery.terrace_look(2)["channel"]))
+	assert_true(bool(Scenery.terrace_look(3)["channel"]) and bool(Scenery.terrace_look(3)["herbs"]))
+
+
+## WU-502: the Village Herb Slope place carries the "terraces" tag the world and its label key on.
+func test_herb_slope_has_terraces_tag() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var found := false
+	for p: Dictionary in gs.data.regions["qingshi_village"]["places"]:
+		if String(p.get("display_name", "")) == "Village Herb Slope":
+			found = (p.get("tags", []) as Array).has("terraces")
+	assert_true(found)

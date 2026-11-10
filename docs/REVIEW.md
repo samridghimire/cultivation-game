@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d8b322a
+Last reviewed commit: eeed8bc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1532,3 +1532,259 @@ Last reviewed commit: d8b322a
   - Notes, not filed: WILD-016 fights the Misty Forest beast from Qingshi's board without travelling, marks the
     season's hunt used before the fight (a loss spends it), and its "spoils come twice over" line is not reflected in
     the combat report's spoils list; TODAY-001 calls VillageCalendar's private `_reminder_line`.
+- 2026-11-06 (reviewer): reviewed d8b322a..5b5b907 (CAL-006, MARKET-011, FEST-008, GFX-075, C-303, C-273, WU-457, QA-197,
+  GFX-076, WILD-017, ebae72c, FEST-009, FEST-010, WU-458, WU-459, FOLK-012; [PLAN]/[REVIEW] skipped). Main green before
+  and after (3282 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`marked_days` defaults to {};
+  `market_sold`, practice, contest history and rival festival tally are world flags); no binary assets. Commits after
+  ebae72c follow the new authorship rule (owner-authored, no Co-Authored-By).
+  - Fixed (cross-feature, FOLK-012 x FEST-006): contest entrants are the region's first villagers and friends cheer by
+    favor, so a friend could compete against you *and* cheer you on (+1). `FestivalContest.cheerers` now skips the
+    entrants (the next friend steps in); tests updated.
+  - Fixed (GFX-075): the beast arrow lives on CanvasLayer 5, above the HUD (layer 1), so it and the beast's name were
+    drawn over open menus, the combat report and the death screen. It now hides on `EventBus.ui_modal_changed`; test added.
+  - CAL-006, WU-459 (focus returns to the cell), MARKET-011 (wanted units exempt, per-unit pricing), FEST-008 (place
+    `tags` reach Interactable through the generic place setter), WU-457, WILD-017 (fixes the last review's notes),
+    FEST-009, FEST-010, WU-458 (Tab switches pages, focus on the tab), GFX-076, QA-197, C-273, C-303 OK.
+  - Notes, not filed: FOLK-012's invite reminder is posted in any region; the invited friend may also be an entrant;
+    FEST-009 marks the rival in the standings by name, so a villager sharing the rival's name would be marked too.
+- 2026-11-06 (reviewer, 2nd run): reviewed 5b5b907..dd1e14a (SEASON-005, QA-196, GFX-077, MARKET-012, WU-460, C-308,
+  WU-462, GFX-078, WU-463, GUIDE-212, WU-464, C-309 + baseline, WILD-018 + baseline, C-272, GFX-079, SEASON-006;
+  [PLAN]/[REVIEW] skipped). Main green (3314 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`season_tasks` and `seasons_completed` default in from_dict; shrine stages are world flags); no binary assets.
+  - Filed C-315 (cross-feature, SEASON-005 x WILD-018/C-308): autumn's "Hunt a Mist Fox" task can only be done at
+    Foundation through the season's single village hunt, since every Mist Fox roamer and encounter is now capped at
+    qi_refining; losing that hunt costs autumn's set and a shrine stage.
+  - WILD-018 (every tracks_today/next_great_day caller passes the character), GUIDE-212, WU-464, MARKET-012 (tomorrow line
+    respects open days), GFX-079 (steps/clouds are not solid), GFX-078 (spacers unfocusable, focus by day), WU-462,
+    WU-463, WU-460, GFX-077, C-308, C-309, C-272, SEASON-006, QA-196 OK.
+  - Notes, not filed: test_save_data's every-field test does not set `seasons_completed` (covered in test_season_tasks);
+    the HUD's "One more for <season>" and Today's task list show in every region, though tasks pay in Qingshi;
+    `SeasonTasks.list` (called each HUD refresh) resets stale progress as a side effect; Hunter Ma (C-309) now also
+    counts for favor_all and cheering.
+- 2026-11-06 (reviewer, 3rd run): reviewed dd1e14a..e3e2aa0 (GFX-081, FEST-012, C-315, MISSION-003, FEST-011, QA-198,
+  GFX-082, TODAY-002, WILD-019, SEASON-007, GUIDE-214, WU-466, GFX-083, QA-200, FOLK-013; [PLAN]/[REVIEW] skipped).
+  No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (`scenes_seen`/`scene_day` default in from_dict;
+  incense, arrival and season-line state are world flags); no binary assets.
+  - Fixed (cross-feature, SEASON-007 x QI-001): the shrine incense is the first *timed* qi_flag ({"until": day}), and
+    `Exploration.qi_flag_bonus/qi_flag_reasons` with no day (NPC and child cultivation, `best_qi_in_region`, the abode
+    hint) treated it as on forever after one stick was lit (`Effects.flag_active` with today = -1). Timed qi flags now
+    only count when a day is given; test added.
+  - Fixed (GUIDE-214): `SeasonTasks.where` read `GameClock` (an autoload) from src/core as its default day; `day` is
+    now required (its only caller passes it).
+  - FEST-012 (stalls skipped as haunts/shelters and merchant spots), FEST-011, MISSION-003, WILD-019 (`_great_pick`
+    keeps the old behaviour without max_realm), TODAY-002, GFX-082, GFX-083, WU-466 (focus, Esc, modal lists), QA-198,
+    QA-200, GFX-081, C-315, FOLK-013 OK.
+  - Notes, not filed: FOLK-013's "any_villager" scene can play with any NPC you talk to (sect elders, far-region NPCs),
+    not only villagers; `SeasonTasks.where` for hunt tasks scans 90 days x every region of roamers and runs on each HUD
+    refresh via `SeasonTasks.list` (cache it if the HUD stutters); MISSION-003 adds `max_realm` but no mission uses it yet.
+- 2026-11-06 (reviewer, 4th run): reviewed e3e2aa0..3f308f5 (WU-468, GFX-084, WU-467, GFX-085, FOLK-014, QA-201, C-317 +
+  baseline, QI-003, WU-471, WU-469, GFX-086, CAL-007; [PLAN]/[REVIEW] skipped). Main green (3383 -> 3384 tests). No
+  BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (no new persistent state); no binary assets (critters,
+  hint icons and shrine glow are code-drawn). C-317's empty `claim C-317` commit landed on main (rebase without
+  --no-keep-empty); harmless.
+  - Fixed (QI-003): the world map's qi line called `effective_density` without the character, so it left out the
+    weather that the HUD and the travel note include and quoted a different number on rain/storm/fog days.
+    `WorldMapScreen.qi_line` takes the character (the map passes the player); test compares map line and travel note on
+    a day whose weather moves qi.
+  - Fixed (FOLK-014): `SeasonTasks.where`'s static memo was keyed by task/day/realm only, so a different GameData
+    (tests, a reloaded data set) could get another data set's answer on the same day. The key now includes the data's
+    instance id.
+  - CAL-007 (end_day is exclusive; "day 3 of 8" arithmetic checks out), GFX-086 (seeded by region+day, validated,
+    no collision), GFX-085 (validated square, crowd avoids stalls/caption), C-317 (outgrown first beast hands the slot to
+    the Foundation return; baseline refreshed), WU-467 (focus, Esc/accept close, queued behind dialogue/road card),
+    QA-201, WU-471, WU-469, GFX-084, WU-468 OK.
+  - Notes, not filed: a Qi Refining player who beat a capped first beast has no great beast there until Foundation (by
+    C-317's design); WU-467 picks the card's figure by NPC name (a namesake shows the wrong look) and a scene arriving
+    while the contest card is up waits until the next dialogue closes; the "(J)" journal hints are keyboard-only labels.
+- 2026-11-07 (reviewer): reviewed 3f308f5..aa54fa8 (FOLK-015, WILD-020, WU-470, C-312 + baseline, SEASON-008, FOLK-016,
+  GUIDE-215, WU-472, SEASON-009, FOLK-018, GFX-089, GFX-088, C-318, WU-473, C-316, FOLK-017, QA-202; [PLAN]/[REVIEW]
+  skipped). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (news, gift memory and the well's daily draw are
+  world flags; project stages derive from `seasons_completed`); no binary assets.
+  - Fixed (SEASON-008, save): field crops keep a fractional `bonus_acc` for the well's growth bonus, but
+    `CharacterData.from_dict` rebuilt crops as {item, days_left} only, so every load threw the partial extra day away.
+    It is kept now; the every-field save test covers it.
+  - Filed RV-018 (SEASON-008): `GameState.draw_well_water` has no caller (the well is only a landmark), yet the Today
+    line tells the player to draw well water once the well is whole; and the season board still says "the old shrine:
+    4 of 4 stages restored" instead of naming the current project.
+  - SEASON-009 (no `["tasks"]` reader left), FOLK-017 (spot priority as specced; bound method on days_advanced),
+    FOLK-015/C-318 (news lines fit every subject kind), FOLK-016, FOLK-018, GUIDE-215 (nearest first, odds once), WILD-020
+    (ongoing lines skip Tomorrow reminders), C-312 (baseline rows OK), GFX-088, GFX-089, WU-470, WU-472, WU-473, QA-202,
+    C-316 OK.
+  - Notes, not filed: FOLK-017 gave spots only to Elder Mo, Xiao Ling and Hunter Ma (the spec named Farmer Tian and
+    Headman Zhou too); festival offsets around the square are not checked against stalls; a well stage posts
+    "season_done" news, not a project line; gift memory and village news reach only generated villagers who chat
+    (named NPCs with dialogue files never say them, per FOLK-018's follow-up).
+- 2026-11-07 (reviewer, 2nd run): reviewed aa54fa8..ac23991 (RV-018, WU-475, FOLK-019, C-311, C-319, FOLK-020, GFX-087,
+  GFX-090, GUIDE-216; [PLAN] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (FOLK-020's `lessons_taught` defaults to {} and is in the every-field save test); no binary assets (well art is code-drawn).
+  - Fixed (RV-018 x GFX-087, duplicate work): RV-018 added a new `well` place "Old Well" by the workshop landmark, against
+    the planner note that the project lives on the Founder's Old Well (`inheritance` place); GFX-087 then labelled that one
+    "(n/3)" too, so Qingshi showed two "(n/3)" wells and only the wrong one could draw water. The extra place is removed
+    from regions.json; `Well.project_options()` (need line / Draw water) is now added at the top of the Founder's Old
+    Well's options (inheritance options kept). test_well checks there is no second well place and drives the draw
+    through InheritanceGrounds.
+  - FOLK-019 (one remembered line, news once per item per NPC), FOLK-020 (validation as specced, once per NPC per day,
+    taught from the tier hook and chat/dialogue), C-311 (payout items exist and are validated), C-319, GFX-090 (square
+    160 px from edges, ring off stalls), GUIDE-216 (ends_phrase matches exclusive end_day; pill gap trims the new prefix),
+    WU-475 OK.
+  - Notes, not filed: FOLK-020 does not queue a lesson behind the festival contest card (spec asked for it), and
+    `check_friendships` tries every lesson NPC, so a lesson can arrive while the teacher is in another region; WU-475
+    skipped the 0.15 s fade; GFX-087/GFX-090/WU-475 shots were never rendered.
+- 2026-11-07 (reviewer, 3rd run): reviewed ac23991..d56a580 (SEASON-010, WU-476, CRIT-001, C-320, GFX-091, WU-478, C-321,
+  WU-477, FOLK-021, ENC-012, QA-205, GUIDE-217, GFX-092, GFX-093, WU-479, C-322; [PLAN]/[REVIEW] skipped). Main green
+  (3485 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (eggs and `project_done_*` are world flags);
+  no binary assets (egg, bunting, mist and pickup float are code-drawn).
+  - Fixed (WU-467 x WU-479, lost card): `start_dialogue` runs `_friend_scene` / `_teach_lessons` before it emits
+    `dialogue_requested`, so the HUD queued the card with the dialogue still closed and flushed it deferred; by then the
+    conversation was open, `_flush_friend_scenes` returned, and nothing re-flushed when it closed. The scene or lesson
+    card stayed pending until some later card closed. The flush now waits on `dialogue.closed`; test added.
+  - FOLK-021 (weather scenes, lessons only where the teacher stands, gift_id/lesson_taught signals), ENC-012 (offer taken
+    only on success, cheapest first; injury validated also in on_fail), CRIT-001 (seeded per region/day/hen, taken list
+    survives JSON floats), SEASON-010 (done_line once per project), C-321/C-322 (home meals, lesson effects allowed),
+    GUIDE-217, WU-476..479, GFX-091..093, QA-205, C-320 OK.
+  - Notes, not filed: C-320's tiger offering names venison only (C-324 will move it to ENC-012's `offer`); its on_fail text
+    says "half a day" but costs 1 day; C-322 added recipes without a test that they cook (home_meals validation covers
+    the data); `shorten_injury` still posts "injuries ease" for Clear Well Tea drunk while healthy.
+- 2026-11-07 (reviewer, 4th run): reviewed d56a580..d259ccc (GFX-094, C-323, FOLK-022, GUIDE-218, COOK-001, C-324, GFX-095,
+  WU-480; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change
+  (`known_dishes` defaults to []); no binary assets (forage sprites and explore looks are code-drawn).
+  - Fixed (COOK-001 save compat): four existing home meals became `taught`, so a save that had already cooked Boar Roast
+    etc. lost the dish with no way to relearn it (no teacher until C-325). `Cooking.is_known` now also counts a dish in
+    `cooked_meals`; `learn` / the `learn_dish` check use it. Test added.
+  - FOLK-022 (named birthdays, day 1..30 = DAYS_PER_MONTH), GUIDE-218, C-324 (torn_shoulder, offer tags), C-323,
+    GFX-094/095, WU-480 OK.
+  - Notes, not filed: until C-325 lands, the four taught dishes have no source on main (C-325 is queued); GUIDE-211
+    `find_note` still names taught dishes the player does not know; GameData (core) reads `PixelPlace.EXPLORE_LOOKS`
+    from src/world (a RefCounted const, works, but belongs in PlaceLooks); GUIDE-218's "has something to show you" also
+    shows on a day the NPC already taught one lesson (one a day), so it can promise the next tier a day early; C-324's
+    balance drift vs the baseline is unexplained (its Follow-up asks QA to refresh docs/balance_baseline.txt).
+- 2026-11-08 (reviewer): reviewed d259ccc..877015a (C-326, GFX-097, GUIDE-219, FOLK-025, GFX-098, WU-482, C-314;
+  [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (FOLK-025's
+  `festival_lines_<year>` is a world flag); no binary assets (drum, realm entrances, cake marker are code-drawn or
+  existing icons).
+  - Nothing to fix. GUIDE-219 closes the three notes from the last run (find_note hides untaught dishes, lessons_waiting
+    skips a teacher who taught today, EXPLORE_LOOKS now in core PlaceLooks). FOLK-025 (birthday wins, once per festival
+    per year, validated), GFX-097 (decor in data, validated, forage kept out of the ring), GFX-098 (look validated per
+    secret_realm), WU-482, C-314 (wares sold by each festival stall, test added), C-326 OK.
+  - Notes, not filed: C-326 added birthdays without a test that none falls in a festival month/market day of the
+    villager's region (checked by hand: none do); the `drum` decor look is drawn and validated but no festival uses it;
+    GFX-097/098 and WU-482 shots were not rendered (already routed to planner/QA shots).
+- 2026-11-08 (reviewer, 2nd run): reviewed 877015a..b872ed1 (WILD-020, GFX-099, WU-483, WU-484, GUIDE-220, GUIDE-221,
+  CRIT-002, WU-485, GFX-100; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (CRIT-002's `hens_fed_<region>` is a world flag); no binary assets (coop, panel frame, key caps,
+  building styles are code-drawn).
+  - Fixed: GFX-100 made GameData (core) read `PixelPlace.STYLES` from src/world again (same layering slip GUIDE-219
+    fixed for EXPLORE_LOOKS); the list now lives in `PlaceLooks.BUILDING_STYLES` and PixelPlace aliases it.
+  - Fixed: GUIDE-220 committed two orphan `.uid` files (`tests/zz_probe.gd.uid`, `tests/unit/test_zz_probe.gd.uid`)
+    for a probe script it never committed; removed.
+  - WILD-020 (chain walk keeps WILD-019 behaviour for 1-2 steps, recursive validation, tests), CRIT-002 (seeded roll,
+    fed flag is yesterday's day, integration test of the action), GUIDE-221 (`starting_on` rolls a copy, fixed-date
+    events use their own seeded stream so no shared-rng drift), WU-483/484 (keepout + door spots), GUIDE-220,
+    GFX-099 (FramedPanel; callers that tweak borders moved to flat_panel_style), WU-485 OK.
+  - Notes, not filed: `Critters.grain_item` doc says "cheapest" but picks the lowest id (only Millet is tagged grain
+    today); the coop sits on the west dead end of Qingshi's main road (no exit there, so harmless); shots for
+    WU-484/485, GFX-099/100 were not rendered (headless runs, already in their Follow-ups).
+- 2026-11-08 (reviewer, 3rd run): reviewed b872ed1..49b988c (FOLK-026, WU-486, WU-487, GFX-101, GFX-102, GFX-103, C-327,
+  GUIDE-222, C-328, FOLK-027, WU-488, WU-489, C-330; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change (FOLK-027's `birthday` defaults to -1 and hashes the name; FOLK-026's
+  `festival_memory` is a world flag); no binary assets (gather looks, water, brackets, encounter strip are code-drawn).
+  - Fixed (FOLK-027): the birthday greeting / family dish only ran from Chat; Talk with a named villager
+    (`start_dialogue` -> `_named_remembers`) skipped it, though FOLK-026 had wired both paths. `_named_remembers` now
+    tries `_player_birthday_words` first. GameState test added.
+  - Fixed: WU-486 inserted `npc_reaction` between FOLK-021's doc comment and `lesson_taught` in EventBus.
+  - FOLK-026 (validated, once per shared festival, both chat paths), WU-486 (pure `gift_reaction`), WU-487, GFX-101..103
+    (looks/water validated in core PlaceLooks), C-327 (odds in commit), GUIDE-222 (short_name validated <= 14),
+    C-328, C-330, WU-488, WU-489 (one footprint owner in Npcs) OK.
+  - Notes, not filed: FOLK-027 spec's HUD cake marker over the player and the Family Home gift are in its Follow-ups
+    (the dish comes on a chat with spouse/child instead); C-327 says the refreshed balance baseline absorbed unexplained
+    drift from earlier work (first-hour wolf win day, sect contribution); WU-488's 120 px strip makes the encounter card
+    taller, not checked on a many-choice encounter at 1280x800.
+- 2026-11-08 (reviewer, 4th run): reviewed 49b988c..c85ddec (WILD-021, WU-490, SEASON-011 (landed during the last
+  review), WILD-022, QA-204, COOK-003, WU-491, GUIDE-223, C-329, C-333, ENC-014, WU-492, GFX-104, WU-493, FOLK-028,
+  SEASON-012; [PLAN]/[REVIEW] skipped). Main green (3631 -> 3632 tests). No BACKLOG/CHANGELOG edits by workers; no
+  binary assets; no SAVE_VERSION change (`hung_trophies` defaults to [], `season_start_*` to {}/-1 and the first day
+  advance snapshots; `dish_memory` and the birthday-friend year are world flags).
+  - Fixed (WILD-021): the trail flag (and the four "End of the ... Trail" milestones) was only set on the *first* win
+    over a chain's last beast, so a save that had already felled it could never earn them. New
+    `Wildlife.backfill_trails` flags those regions silently on load (before the milestone award). Test added.
+  - Fixed: WILD-022 and FOLK-028 inserted their functions between another function's doc comment and its body
+    (claim_abode's and _rival_news's docs ended up on hang_trophy / birthday_at_home).
+  - SEASON-012 (season key still the old one at review time since SeasonTasks resets lazily; winter->spring only logs),
+    WILD-022 (home-gated hang/take-down, renown in the home region), COOK-003, FOLK-028 (has_home guarantees someone
+    at home before `[0]`), SEASON-011 (scale_catch leaves the "nothing" weight alone, so the bonus is real), ENC-014
+    (figure validated), WU-491, WU-492, WU-493, WU-490, GUIDE-223 OK.
+  - Notes, not filed: WILD-022's trophy remark fires on the first chat with anyone in a home region that month, not
+    only inside the home; SEASON-012's recap now takes the slot of the "Summer arrives" banner (in its Follow-ups);
+    GUIDE-223's gated-road trip note copies the whole character (to_dict/from_dict) on each HUD refresh while the
+    goal's road is realm-gated; GFX-104's `crown` re-shades every "r" pixel on the canvas against the newest crown, so
+    overlapping crowns' shading follows the last one drawn. Several UI tasks (WU-491/492, GFX-104, GUIDE-223) say
+    their screenshots were not rendered.
+- 2026-11-09 (reviewer, 1st run): reviewed c85ddec..023bcd2 (WU-494, C-332, C-310, SEASON-013, WU-496, QA-206, GUIDE-224,
+  SEASON-014, FOLK-029, WU-497, C-313, C-331; [PLAN]/[REVIEW] skipped). Main green (3657 -> 3659 tests). No
+  BACKLOG/CHANGELOG edits by workers; no binary assets (plaques, jetty stages, cake marker are code-drawn); no
+  SAVE_VERSION change (GUIDE-224's `season_start_sets` defaults to -1 = no project line that season).
+  - Fixed (SEASON-013): the kickoff banner's `task_short` read the empty `sell_wanted` target as an item, so autumn and
+    winter showed "sell a  and ..."; catch tasks ignored their count ("land a Silver Carp" for 2) and gather tasks used
+    the singular name. Now "sell N wanted goods at a market", "land 2 Silver Carps", plural gather names. Test added.
+  - WU-494 (jetty stage look pure in Scenery, label via SeasonTasks.project_progress), C-332 (`requires_flag` on the
+    bream is honoured by Fishing.filter_flags; jetty_stage_3 is the last stage flag), GUIDE-224 (route_days without a
+    character copy), SEASON-014 (recap templates validated, own rng stream), FOLK-029 (validated), C-313 (max_realm
+    caps validated by Sects), WU-497 (focus path name -> sex -> buttons), WU-496, QA-206, C-310, C-331 OK.
+  - Notes, not filed: WU-494's `_jetty_stage` returns 3 outside the project's region, so every other jetty/ford
+    landmark now draws the lantern post; C-313 changes mission contribution but balance.sh --check was not run (in its
+    Follow-ups, QA-199); QA-206 measured fishing at 3.9x-10x a gathering day outside Qingshi (its Follow-ups suggest
+    price cuts, a planner call); WU-497's layout was not screenshotted at 1280x720.
+- 2026-11-09 (reviewer, 2nd run): reviewed 023bcd2..6b0ab87 (QA-203 part 1, WU-498, RV-019, WU-495, FISH-007, CAL-008,
+  GUIDE-225, C-338, GFX-105, GFX-106, GFX-107; [PLAN]/[REVIEW] skipped). Main green (3681 -> 3682 tests). No
+  BACKLOG/CHANGELOG edits by workers (QA-203 added a HANDOFF note); no binary assets (title scene, icons, fight props are
+  code-drawn); no SAVE_VERSION change.
+  - Fixed (WU-495): the season card was not held behind the realm card or the tribulation, so a season that turned
+    during a long breakthrough opened the card on top of the realm card (both modal). Both now block it and re-run the
+    flush on close. Test added.
+  - GUIDE-225 OK: the swap-and-restore probes are safe because Combat.win_chance's cache key (fight_fingerprint) covers
+    injuries, buffs and technique levels, and Combat.resolve does not mutate the character. FISH-007 (bonus draws only
+    on a caught trip, before the trophy check), CAL-008 (route-days gate on far festival/event/realm reminders), C-338
+    and FISH-007 refreshed balance_baseline, GFX-106 (`icon` validated against ITEM_ICON_KINDS), RV-019, GFX-105
+    (menu focus unchanged), GFX-107, WU-498, QA-203 OK.
+  - Notes, not filed: CAL-008 needs arrival by `today + 1 + days`, a day stricter than leaving today; FISH-007's
+    integration test silently skips on stormy/rainy seeds; GFX-107's fight-region screenshot flag was not added.
+- 2026-11-09 (reviewer, 3rd run): reviewed 6b0ab87..99c86db (GFX-108, GUIDE-226, C-336, WU-499, C-337; [PLAN]/[REVIEW]
+  skipped). Main green (3689 tests -> 3690). No BACKLOG/CHANGELOG edits by workers; no binary assets (the parchment map
+  is code-drawn); no SAVE_VERSION change.
+  - Fixed (GUIDE-226): Earnings' fishing estimate counted flag-gated catches (the jetty's Pearl-Backed Bream, 12 stones,
+    `requires_flag: jetty_stage_3`) that GameState.fish drops with Fishing.filter_flags, and left out the jetty
+    project's SeasonTasks.fish_bonus that GameState.fish applies. That was the "unknown" 30% overestimate in its
+    Follow-ups: Qingshi Novice spring is now 1.86 vs the baseline's 1.87, so the test bound is back to the spec's 15%.
+    Test added (the bream counts only with its flag).
+  - GFX-108 (terrain_kind tested, focus colours only), WU-499 (camera top clamped, label pairs tested), C-336 (lines
+    <= 160 chars, `{player}` only), C-337 (3 templates per key, all <= 100 chars) OK.
+  - Notes, not filed: GUIDE-226's craft test never asserts a craft row appears, and no test checks a chore row (spec
+    asked for one); its gathering figure is 3x simulate_fishing's (the sim counts one roll, in its Follow-ups); some
+    C-336 birthday lines promise a gift ("this warm pill", "half price today") that no mechanic gives. WU-499 and
+    GFX-108 say their screenshots were not re-rendered.
+- 2026-11-09 (reviewer, 4th run): reviewed 99c86db..2430218 (GFX-109, WU-500, C-334, C-335, GUIDE-227, FOLK-030, GFX-110,
+  QA-042, WU-501; [PLAN]/[REVIEW] skipped). Main green (3709 tests -> 3710). No BACKLOG/CHANGELOG edits by workers; no
+  binary assets (relief, edges, jetty posts, strips are code-drawn); no SAVE_VERSION change (`last_explore_look` is transient).
+  - Fixed (WU-501): `last_explore_look` was not reset by start_session/end_session/load_save_dict, so a cave look left
+    pending at quit could dress the next loaded game's saved pending encounter. Now reset there; test added.
+  - Fixed (FOLK-030): the gift line used the singular item name for count 2-3 (fine for Venison, wrong for any other
+    future gift) -> Items.item_plural.
+  - GUIDE-227 (binomial gather estimate with herb-lore table, bonus units and weather; CAL-008's off-by-one from my last
+    note fixed), GFX-109/GFX-110 (seeded layouts in Scenery, validated, tested), WU-500 (posts only in/at the pond, label
+    test), C-334 (figures all valid ENCOUNTER_FIGURES; spot-checked subjects), C-335, QA-042 OK.
+  - Notes, not filed: QA-042 found Core Formation fights almost all trivial (98% rated >95%), a planner/content call;
+    the new year-sim guard adds ~7 s to the suite. GFX-109/110, WU-500 and WU-501 did not render 1280x720 or their
+    encounter/season-card shots.
+- 2026-11-10 (reviewer): reviewed 2430218..eeed8bc (GUIDE-229, SEASON-015, WU-504, C-339, WU-502, C-340, CAL-009, GFX-111,
+  GUIDE-230, FISH-008, WU-505, WU-506, C-204, C-341, GUIDE-228; [PLAN]/[REVIEW] skipped). Main green (3740 tests -> 3741).
+  No BACKLOG/CHANGELOG edits by workers; no binary assets (terraces, rock rims are code-drawn); no SAVE_VERSION change
+  (CAL-009's `family_birthday_<id>` and SEASON-015's stage flags live in world_flags). An empty `claim C-204` commit
+  landed on main again (d0af415; the worker skipped the rebase that drops it).
+  - Fixed (CAL-009): a spouse or child living in the region you stand in, with favor >= 10, was listed twice in the
+    calendar (once by Folk.birthdays_soon, once by family_birthdays), so also twice in "Tomorrow" reminders. Now one
+    entry each; test added (the CAL-009 test only used another region).
+  - SEASON-015 (rng drawn only with a bonus, Earnings includes it), GUIDE-229/228 (short forms tested), GUIDE-230
+    (repeatable, non-negative, enemy-free chores), FISH-008, WU-504, WU-505, WU-506 (scene validated), C-339/340/341 OK.
+  - Notes, not filed: SEASON-015 did not run tools/balance.sh --check (in its Follow-ups); GUIDE-230 left Qingshi with no
+    chore row for a newcomer (a planner call); FISH-008 posts "Beginner's luck" right after "it got away"; WU-504 shows
+    an empty main Today card when every line is a People line; WU-502/505/506 did not render 1280x720 shots.

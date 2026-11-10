@@ -98,7 +98,7 @@ func _walk(value: Variant, where: String) -> void:
 				for id: Variant in child:
 					if not _dict_keys[k].has(String(id)):
 						_errors.append("%s: unknown item '%s'" % [here, id])
-			if k == "set_flag" and child is String:
+			if (k == "set_flag" or (k == "flag" and here.contains("stages"))) and child is String:
 				_flags_set[child] = true
 			if FLAG_READ_KEYS.has(k) and child is String:
 				_flags_read.append([here, child])

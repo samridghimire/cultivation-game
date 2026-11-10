@@ -92,7 +92,7 @@ func _init() -> void:
 	_family_button = UIStyle.button("Family tree", func(): EventBus.family_requested.emit())
 	_action_row.add_child(_family_button)
 	_action_row.add_child(UIStyle.button("Close", close))
-	EventBus.player_changed.connect(func(): if visible: _rebuild())
+	EventBus.player_changed.connect(_on_player_changed_rebuild)
 
 
 func _build_left_column() -> VBoxContainer:
@@ -138,7 +138,7 @@ func _rebuild_left() -> void:
 	var data := GameState.data
 	_portrait.texture = PixelFigure.frame(PlayerLook.of(p, data), "down", 0)
 	_name_label.text = p.name
-	_age_label.text = "Age %d of %d" % [p.age_years(), Cultivation.lifespan_years(p, data)]
+	_age_label.text = "Age %d of %d · Born %s" % [p.age_years(), Cultivation.lifespan_years(p, data), Folk.player_birthday_text(p).replace("Month ", "M").replace(", Day ", " D")]
 	_realm_label.text = Cultivation.realm_label(p, data)
 	var need := Cultivation.qi_required(p, data)
 	_qi_bar.max_value = maxf(need, 1.0)
@@ -459,10 +459,18 @@ static func craft_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 	if c.fishing_xp <= 0 and c.gather_xp <= 0 and c.catch_log.is_empty():
 		return rows
 	rows.append({"name": "Fishing", "rank": Fishing.rank_name(c.fishing_xp), "xp": c.fishing_xp,
-		"progress": Fishing.progress(c.fishing_xp), "note": Fishing.log_summary(c, data)})
+		"progress": Fishing.progress(c.fishing_xp), "note": _join_notes([Fishing.rank_perk(c.fishing_xp), Fishing.log_summary(c, data)])})
 	rows.append({"name": "Herb lore", "rank": HerbLore.rank_name(data.herb_lore, c.gather_xp), "xp": c.gather_xp,
 		"progress": HerbLore.progress(data.herb_lore, c.gather_xp), "note": ""})
 	return rows
+
+
+static func _join_notes(parts: Array) -> String:
+	var out: PackedStringArray = []
+	for p: String in parts:
+		if p != "":
+			out.append(p)
+	return " ".join(out)
 
 
 func _craft_row(row: Dictionary) -> Control:
@@ -685,3 +693,8 @@ func _unequip(slot: String) -> void:
 	# The row was rebuilt by player_changed; keep gamepad focus inside the sheet.
 	var target: Button = _equip_row.get_child(0) if _equip_row.get_child_count() > 0 else _default_focus()
 	target.grab_focus.call_deferred()
+
+
+func _on_player_changed_rebuild() -> void:
+	if visible:
+		_rebuild()

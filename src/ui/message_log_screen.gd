@@ -15,6 +15,7 @@ const FILTERS := [
 	["Warnings", "warning"],
 	["Danger", "danger"],
 	["Karma", "karma"],
+	["People", "people"],
 ]
 ## [label, topic] pairs (EventBus.TOPICS); "" shows every topic.
 const TOPIC_FILTERS := [
@@ -93,7 +94,7 @@ func _init() -> void:
 	_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(_count)
 	footer.add_child(UIStyle.label("[PgUp/PgDn] or right stick: scroll", 14, DATE_COLOR))
-	EventBus.message_posted.connect(func(_t, _c): if visible: _rebuild())
+	EventBus.message_posted.connect(_on_message_posted_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -133,17 +134,34 @@ static func filtered(history: Array, category: String, topic: String = "") -> Ar
 		return (category == "" or e.get("category", "") == category) and (topic == "" or e.get("topic", "") == topic))
 
 
+## WU-464: entries with identical text and category on the same day collapse into the first one, with a "count" key.
+static func collapse_repeats(entries: Array) -> Array:
+	var out: Array = []
+	var seen := {}  # "day|category|text" -> index in out
+	for e: Dictionary in entries:
+		var key := "%d|%s|%s" % [int(e.get("day", 0)), e.get("category", ""), e.get("text", "")]
+		if seen.has(key):
+			var first: Dictionary = out[seen[key]]
+			first["count"] = int(first["count"]) + 1
+		else:
+			seen[key] = out.size()
+			var copy := e.duplicate()
+			copy["count"] = 1
+			out.append(copy)
+	return out
+
+
 ## BBCode for `entries`, with a date line whenever the day changes.
 static func format_entries(entries: Array) -> String:
 	var out := PackedStringArray()
 	var last_day := -1
-	for e: Dictionary in entries:
+	for e: Dictionary in collapse_repeats(entries):
 		var day := int(e.get("day", 0))
 		if day != last_day:
 			out.append("[color=#%s]%s[/color]" % [DATE_COLOR.to_html(false), Calendar.format_date(day)])
 			last_day = day
 		var color: Color = UIStyle.CATEGORY_COLORS.get(e.get("category", "info"), Color.WHITE)
-		out.append("  [color=#%s]%s[/color]" % [color.to_html(false), String(e.get("text", "")).replace("[", "[lb]")])
+		out.append("  [color=#%s]%s[/color]" % [color.to_html(false), String(e.get("text", "")).replace("[", "[lb]") + (" (x%d)" % int(e["count"]) if int(e["count"]) > 1 else "")])
 	return "\n".join(out)
 
 
@@ -170,3 +188,8 @@ func _rebuild() -> void:
 
 func _scroll_to_end() -> void:
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+
+
+func _on_message_posted_rebuild(_t: String, _c: String) -> void:
+	if visible:
+		_rebuild()

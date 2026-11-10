@@ -80,6 +80,29 @@ func test_lives_text_and_color() -> void:
 	assert_eq(HudScript.lives_color(4), Color.WHITE)
 
 
+func test_cap_hint_cuts_at_clauses() -> void:
+	var samples: Array[String] = [
+		"Easy fight: the Wild Boar at the forest edge (Weak, 100 in 100), good for your first win.",
+		"Earn 440 more sect contribution to reach the next rank, by Relieve a Fevered Village, which is ready again soon.",
+		"Visit the Alchemy Hall to learn a recipe: it teaches pills that heal injuries and speed your qi, and costs little.",
+	]
+	for line in samples:
+		var out := HudScript.cap_hint(line)
+		var body := out.trim_suffix("\u2026 (J)")
+		assert_true(out.length() <= HudScript.HINT_MAX_CHARS + 8, out)
+		assert_true(line.begins_with(body), "prefix: " + out)
+		var next: String = line.substr(body.length(), 1)
+		assert_true(next in [",", ":", ";", " "], "cut at a boundary: " + out)
+	assert_true(HudScript.cap_hint(samples[0]).ends_with(", good for your first win.") == false)
+	assert_eq(HudScript.cap_hint(samples[0]), "Easy fight: the Wild Boar at the forest edge (Weak, 100 in 100)\u2026 (J)")
+
+
+func test_short_today() -> void:
+	assert_eq(HudScript.short_today("Today in Azure Peak: the Cloud Crane roams, 3 things by the path, rain."), "Today: the Cloud Crane roams (J)")
+	assert_eq(HudScript.short_today("Today in Misty Forest: rain-fish biting."), "Today: rain-fish biting (J)")
+	assert_eq(HudScript.short_today("Rest a while."), "Rest a while.")
+
+
 func test_first_sentence() -> void:
 	assert_eq(HudScript.first_sentence("A b. C d."), "A b. (J)")
 	assert_eq(HudScript.first_sentence("No stop here"), "No stop here")

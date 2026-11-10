@@ -8,10 +8,10 @@ const RARE_WEIGHT := 2.0  # a non-empty catch_table entry at or below this weigh
 const XP_CAP := 100
 const GOT_AWAY_CHANCE := 0.3
 const RANKS: Array[Dictionary] = [
-	{"min": 0, "name": "Novice"},
-	{"min": 10, "name": "Angler"},
-	{"min": 40, "name": "Old Hand"},
-	{"min": 100, "name": "Master"},
+	{"min": 0, "name": "Novice", "bonus_chance": 0.0, "perk": ""},
+	{"min": 10, "name": "Angler", "bonus_chance": 0.25, "perk": "An Angler lands an extra fish one trip in four."},
+	{"min": 40, "name": "Old Hand", "bonus_chance": 0.5, "perk": "An Old Hand lands an extra fish every other trip."},
+	{"min": 100, "name": "Master", "bonus_chance": 1.0, "perk": "A Master always lands an extra fish."},
 ]
 
 
@@ -26,6 +26,34 @@ static func rank_name(xp: int) -> String:
 		if xp >= int(r["min"]):
 			name = String(r["name"])
 	return name
+
+
+## Chance (0..1) of the rank's extra catch draw at `xp`.
+static func bonus_chance(xp: int) -> float:
+	var chance := 0.0
+	for r in RANKS:
+		if xp >= int(r["min"]):
+			chance = float(r["bonus_chance"])
+	return chance
+
+
+## FISH-007: extra catch draws (0 or 1) a trip earns at this rank; draws from `rng` only when the chance is fractional.
+static func bonus_draws(xp: int, rng: RandomNumberGenerator) -> int:
+	var chance := bonus_chance(xp)
+	if chance <= 0.0:
+		return 0
+	if chance >= 1.0:
+		return 1
+	return 1 if rng.randf() < chance else 0
+
+
+## One line describing the rank's fishing perk; "" for Novice.
+static func rank_perk(xp: int) -> String:
+	var perk := ""
+	for r in RANKS:
+		if xp >= int(r["min"]):
+			perk = String(r["perk"])
+	return perk
 
 
 ## 0..1 progress from the current rank's threshold to the next; 1.0 at the top rank.
@@ -188,6 +216,24 @@ static func filter_trophy(table: Array, quality: float, xp: int) -> Array:
 	return out
 
 
+## FISH-008: the fish a first, empty trip lands: the highest-weight entry that is a fish and neither
+## rare nor trophy (ties by id). "" when the table has no plain fish. No rng.
+static func beginner_catch(table: Array, data: GameData) -> String:
+	var best := ""
+	var best_w := -1.0
+	for entry: Dictionary in table:
+		var id := String(entry.get("item", ""))
+		if id == "" or is_rare(entry) or is_trophy(entry):
+			continue
+		if not data.items.get(id, {}).get("tags", []).has("fish"):
+			continue
+		var w := float(entry.get("weight", 1))
+		if w > best_w or (is_equal_approx(w, best_w) and id < best):
+			best = id
+			best_w = w
+	return best
+
+
 ## The item id of the table's trophy entry that is in `found`, or "".
 static func trophy_in(table: Array, found: Dictionary) -> String:
 	for entry: Dictionary in table:
@@ -214,6 +260,8 @@ static func validate_table(data: GameData, table: Array, who: String) -> PackedS
 	var errors: PackedStringArray = []
 	var count := 0
 	for entry: Dictionary in table:
+		if entry.has("requires_flag") and String(entry["requires_flag"]) == "":
+			errors.append("%s: requires_flag must be a non-empty world flag" % who)
 		if not is_trophy(entry):
 			continue
 		count += 1
@@ -236,6 +284,16 @@ static func filter_weather(table: Array, kind: String) -> Array:
 	var out: Array = []
 	for entry: Dictionary in table:
 		if entry.has("weather") and not (entry["weather"] as Array).has(kind):
+			continue
+		out.append(entry)
+	return out
+
+
+## SEASON-011: `table` without entries whose `requires_flag` world flag is not set.
+static func filter_flags(table: Array, flags: Dictionary) -> Array:
+	var out: Array = []
+	for entry: Dictionary in table:
+		if entry.has("requires_flag") and not bool(flags.get(String(entry["requires_flag"]), false)):
 			continue
 		out.append(entry)
 	return out

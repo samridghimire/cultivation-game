@@ -95,17 +95,23 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 ## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
 ## WEATHER-006: with today's `weather` and a warm villager, `folk_greetings.weather[weather]` lines come first.
-static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "") -> String:
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "", region_id: String = "") -> String:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
 		return String(party[absi(hash(npc.id + str(day))) % party.size()])
 	var cake: Array = bands.get("birthday", [])
+	if birthday_today(npc, data, day) and data.npcs.has(npc.id) and String(data.npcs[npc.id].get("birthday_line", "")) != "":
+		return String(data.npcs[npc.id]["birthday_line"])  # FOLK-022
 	if not cake.is_empty() and birthday_today(npc, data, day):
 		return String(cake[absi(hash(npc.id + str(day))) % cake.size()])
 	var shunned: Array = bands.get("shunned", [])
 	if not shunned.is_empty() and shunned_by_mark(flags, npc.id, day):
 		return String(shunned[absi(hash(npc.id + str(day))) % shunned.size()])
+	if region_id != "" and favor > int(bands.get("cool", {}).get("max_favor", -1000)):
+		var news := news_line(npc, flags, data, region_id, day)
+		if news != "":
+			return news
 	var band: Dictionary = {}
 	var rainy: Array = bands.get("weather", {}).get(weather, [])
 	if weather != "" and not rainy.is_empty() and favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
@@ -118,6 +124,303 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 	if lines.is_empty():
 		return ""
 	return String(lines[absi(hash(npc.id + str(day))) % lines.size()])
+
+
+## FOLK-025: the festival line `npc` says while a festival runs in `region_id`: {"event": id, "line": text} or {}.
+## A named villager's own `festival_lines[event]` first, else the shared family.json folk_greetings.festival pool
+## (picked by day + npc id hash, {name}/{festival} filled). Birthdays win, and a line is told once per festival per year.
+static func festival_line(npc: CharacterData, data: GameData, events: Array, region_id: String, day: int, flags: Dictionary) -> Dictionary:
+	if birthday_today(npc, data, day):
+		return {}
+	var year := Calendar.year_of(day)
+	var told: Dictionary = flags.get("festival_lines_%d" % year, {})
+	for e in WorldEvents.active_in(events, region_id):
+		var fid := String(e.get("id", ""))
+		if not WorldEvents.is_festival(data, fid) or (told.get(npc.id, []) as Array).has(fid):
+			continue
+		var own: Dictionary = data.npcs.get(npc.id, {}).get("festival_lines", {})
+		var pool: Array = data.family.get("folk_greetings", {}).get("festival", [])
+		var line := ""
+		if own.has(fid):
+			line = String(own[fid])
+		elif not pool.is_empty():
+			line = String(pool[absi(hash(npc.id + str(day))) % pool.size()])
+		if line != "":
+			line = line.replace("{name}", npc.name).replace("{festival}", String(WorldEvents.def_of(data, fid).get("name", fid)))
+			return {"event": fid, "line": line}
+	return {}
+
+
+## FOLK-025: remember that `npc_id` told the `event_id` line this year.
+static func mark_festival_told(flags: Dictionary, npc_id: String, event_id: String, day: int) -> void:
+	var key := "festival_lines_%d" % Calendar.year_of(day)
+	var told: Dictionary = flags.get(key, {})
+	var list: Array = told.get(npc_id, [])
+	if not list.has(event_id):
+		list.append(event_id)
+	told[npc_id] = list
+	flags[key] = told
+
+
+## FOLK-025: load errors for npcs.json festival_lines and family.json folk_greetings.festival.
+static func validate_festival_lines(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var pool: Variant = data.family.get("folk_greetings", {}).get("festival", [])
+	if not (pool is Array):
+		errors.append("family.json folk_greetings.festival must be an array of strings")
+	else:
+		for line: Variant in pool:
+			if not (line is String) or String(line) == "" or String(line).length() > 160:
+				errors.append("family.json folk_greetings.festival lines must be strings of 1..160 characters")
+	for id: String in data.npcs:
+		var lines: Variant = data.npcs[id].get("festival_lines", {})
+		if not (lines is Dictionary):
+			errors.append("NPC '%s' festival_lines must be an object" % id)
+			continue
+		for fid: String in lines:
+			if not WorldEvents.is_festival(data, fid):
+				errors.append("NPC '%s' festival_lines: '%s' is not a festival world event" % [id, fid])
+			if not (lines[fid] is String) or String(lines[fid]) == "" or String(lines[fid]).length() > 160:
+				errors.append("NPC '%s' festival_lines.%s must be a string of 1..160 characters" % [id, fid])
+	return errors
+
+
+## FOLK-026: remember that `npc_id` went to `event_id` with the player (a Close friend's invitation, FOLK-012).
+static func note_festival_company(flags: Dictionary, npc_id: String, event_id: String, day: int) -> void:
+	var memory: Dictionary = flags.get("festival_memory", {})
+	memory[npc_id] = {"event": event_id, "day": day, "told": false}
+	flags["festival_memory"] = memory
+
+
+## FOLK-026: favor a friend gives when they recall the festival you shared.
+const FESTIVAL_MEMORY_FAVOR := 2
+## FOLK-026: days after the festival in which the friend still remembers it.
+const FESTIVAL_MEMORY_DAYS := 10
+
+
+## FOLK-026: the remembered festival line `npc` says on their first chat within FESTIVAL_MEMORY_DAYS of a shared festival,
+## or "". Own `festival_memory_line` first, else family.json folk_greetings.festival_memory ({name}/{festival}/{player}).
+## With `consume` it is marked told (once per festival per year).
+static func festival_memory_line(npc: CharacterData, data: GameData, flags: Dictionary, day: int, consume: bool) -> String:
+	var memory: Dictionary = flags.get("festival_memory", {})
+	var entry: Variant = memory.get(npc.id)
+	if not (entry is Dictionary) or bool(entry.get("told", false)):
+		return ""
+	var since := day - int(entry.get("day", day))
+	if since < 0 or since > FESTIVAL_MEMORY_DAYS:
+		return ""
+	var fid := String(entry.get("event", ""))
+	var pool: Array = data.family.get("folk_greetings", {}).get("festival_memory", [])
+	var line := String(data.npcs.get(npc.id, {}).get("festival_memory_line", ""))
+	if line == "" and not pool.is_empty():
+		line = String(pool[absi(hash(npc.id + fid)) % pool.size()])
+	if line == "":
+		return ""
+	if consume:
+		entry["told"] = true
+		memory[npc.id] = entry
+		flags["festival_memory"] = memory
+	return line.replace("{name}", npc.name).replace("{festival}", String(WorldEvents.def_of(data, fid).get("name", fid)))
+
+
+## FOLK-026: load errors for npcs.json festival_memory_line and family.json folk_greetings.festival_memory.
+static func validate_festival_memory(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var pool: Variant = data.family.get("folk_greetings", {}).get("festival_memory", [])
+	if not (pool is Array):
+		errors.append("family.json folk_greetings.festival_memory must be an array of strings")
+	else:
+		for line: Variant in pool:
+			if not (line is String) or String(line) == "" or String(line).length() > 160:
+				errors.append("family.json folk_greetings.festival_memory lines must be strings of 1..160 characters")
+	for id: String in data.npcs:
+		if data.npcs[id].has("festival_memory_line"):
+			var l: Variant = data.npcs[id]["festival_memory_line"]
+			if not (l is String) or String(l) == "" or String(l).length() > 160:
+				errors.append("NPC '%s' festival_memory_line must be a string of 1..160 characters" % id)
+	return errors
+
+
+## FOLK-030: load errors for npcs.json player_birthday_gift {item, count 1..3}.
+static func validate_player_birthday_gifts(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for id: String in data.npcs:
+		if not data.npcs[id].has("player_birthday_gift"):
+			continue
+		var g: Variant = data.npcs[id]["player_birthday_gift"]
+		if not (g is Dictionary) or not data.items.has(String(g.get("item", ""))):
+			errors.append("NPC '%s' player_birthday_gift.item must be an items.json id" % id)
+		elif not (g.get("count") is int or g.get("count") is float) or int(g["count"]) < 1 or int(g["count"]) > 3:
+			errors.append("NPC '%s' player_birthday_gift.count must be 1..3" % id)
+	return errors
+
+
+## FOLK-030: true when the villager has their own player_birthday_line (the gift rides that line, not the shared pool).
+static func player_birthday_own_line(npc_id: String, data: GameData) -> bool:
+	return String(data.npcs.get(npc_id, {}).get("player_birthday_line", "")) != ""
+
+
+## FOLK-030: the gift a named villager gives on the player's birthday with their own line: {item, count} or {}.
+static func player_birthday_gift_of(npc_id: String, data: GameData) -> Dictionary:
+	var g: Variant = data.npcs.get(npc_id, {}).get("player_birthday_gift", {})
+	if not (g is Dictionary) or not data.items.has(String(g.get("item", ""))):
+		return {}
+	return {"item": String(g["item"]), "count": clampi(int(g.get("count", 1)), 1, 3)}
+
+
+## COOK-003: favor a friend's remark about their dish gives (once per dish).
+const DISH_NOTICED_FAVOR := 3
+## COOK-003: days after the first cook in which the teacher's next chat mentions it.
+const DISH_NOTICED_DAYS := 14
+
+
+## COOK-003: the named friend whose lesson teaches `meal_id` (effects.learn_dish) and that `c` has been taught
+## ("npc_id:index" in lessons_taught), or "".
+static func dish_teacher(c: CharacterData, data: GameData, meal_id: String) -> String:
+	for npc_id: String in data.npcs:
+		var lessons: Array = data.npcs[npc_id].get("lessons", [])
+		for i in lessons.size():
+			if String(lessons[i].get("effects", {}).get("learn_dish", "")) == meal_id and c.lessons_taught.has("%s:%d" % [npc_id, i]):
+				return npc_id
+	return ""
+
+
+## COOK-003: the first time `c` cooks a dish a friend taught, remember it (world flag "dish_memory", one entry per
+## dish) so that friend's next chat can say a line. True when something was recorded.
+static func record_dish_cooked(flags: Dictionary, c: CharacterData, data: GameData, meal_id: String, day: int) -> bool:
+	var memory: Dictionary = flags.get("dish_memory", {})
+	if memory.has(meal_id):
+		return false
+	var npc_id := dish_teacher(c, data, meal_id)
+	if npc_id == "" or String(data.npcs[npc_id].get("taught_dish_line", "")) == "":
+		return false
+	memory[meal_id] = {"npc": npc_id, "day": day, "told": false}
+	flags["dish_memory"] = memory
+	return true
+
+
+## COOK-003: the line `npc` says about a dish they taught that you cooked, within DISH_NOTICED_DAYS (once per dish),
+## or "". With `consume` the entry is marked told. Returns {line, dish} fields as a dictionary, empty when nothing.
+static func dish_noticed(npc: CharacterData, data: GameData, flags: Dictionary, day: int, consume: bool) -> Dictionary:
+	var memory: Variant = flags.get("dish_memory", {})
+	if not (memory is Dictionary) or not data.npcs.has(npc.id):
+		return {}
+	var template := String(data.npcs[npc.id].get("taught_dish_line", ""))
+	if template == "":
+		return {}
+	for meal_id: String in (memory as Dictionary):
+		var m: Dictionary = memory[meal_id]
+		var age := day - int(m.get("day", -9999))
+		if String(m.get("npc", "")) != npc.id or bool(m.get("told", false)) or age < 0 or age > DISH_NOTICED_DAYS:
+			continue
+		if consume:
+			m["told"] = true
+		var dish_name := String(Cooking.meal(data, meal_id).get("name", meal_id)).to_lower()
+		return {"line": template.replace("{dish}", dish_name), "dish": meal_id}
+	return {}
+
+
+## COOK-003: load errors in npcs.json taught_dish_line.
+static func validate_taught_dish_line(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for id: String in data.npcs:
+		if data.npcs[id].has("taught_dish_line"):
+			var l: Variant = data.npcs[id]["taught_dish_line"]
+			if not (l is String) or String(l) == "" or String(l).length() > 160 or not String(l).contains("{dish}"):
+				errors.append("NPC '%s' taught_dish_line must be a string of 1..160 characters containing {dish}" % id)
+	return errors
+
+
+## FOLK-018: remember `npc_id`'s newest gift from the player (taste 1 liked, 0 neutral, -1 disliked).
+static func record_gift(flags: Dictionary, npc_id: String, item_id: String, day: int, taste: int) -> void:
+	var memory: Dictionary = flags.get("gift_memory", {})
+	memory[npc_id] = {"item": item_id, "day": day, "taste": taste, "told": false}
+	flags["gift_memory"] = memory
+
+
+static func _taste_key(taste: int) -> String:
+	return "liked" if taste > 0 else ("disliked" if taste < 0 else "neutral")
+
+
+## FOLK-018: the line `npc_id` says about the last gift (once, from the day after, within gift_memory.days), or "".
+## With `consume` the line is marked told. Pure apart from that mark.
+static func gift_memory_line(flags: Dictionary, npc_id: String, data: GameData, day: int, consume: bool) -> String:
+	var rules: Dictionary = data.family.get("gift_memory", {})
+	var memory: Variant = flags.get("gift_memory", {})
+	if rules.is_empty() or not (memory is Dictionary) or not (memory as Dictionary).has(npc_id):
+		return ""
+	var m: Dictionary = memory[npc_id]
+	var age := day - int(m.get("day", -9999))
+	if bool(m.get("told", false)) or age < 1 or age > int(rules.get("days", 30)):
+		return ""
+	var lines: Array = rules.get(_taste_key(int(m.get("taste", 0))), [])
+	if lines.is_empty():
+		return ""
+	if consume:
+		m["told"] = true
+	var item_name := String(data.items.get(String(m["item"]), {}).get("name", m["item"])).to_lower()
+	return String(lines[absi(hash(npc_id + str(day))) % lines.size()]).replace("{item}", item_name)
+
+
+## FOLK-018: "Last gift: Mugwort (liked)" for the village book, "" when nothing was given.
+static func last_gift_text(flags: Dictionary, npc_id: String, data: GameData) -> String:
+	var memory: Variant = flags.get("gift_memory", {})
+	if not (memory is Dictionary) or not (memory as Dictionary).has(npc_id):
+		return ""
+	var m: Dictionary = memory[npc_id]
+	var item_name := String(data.items.get(String(m.get("item", "")), {}).get("name", m.get("item", "")))
+	return "Last gift: %s (%s)" % [item_name, _taste_key(int(m.get("taste", 0)))]
+
+
+## Load errors in family.json gift_memory.
+static func validate_gift_memory(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if not data.family.has("gift_memory"):
+		return errors
+	var rules: Dictionary = data.family["gift_memory"]
+	var days: Variant = rules.get("days", 0)
+	if not (days is int or days is float) or int(days) < 1 or int(days) > 90:
+		errors.append("family.json gift_memory.days must be 1..90")
+	for key in ["liked", "neutral", "disliked"]:
+		var lines: Variant = rules.get(key, [])
+		if not (lines is Array) or (lines as Array).is_empty():
+			errors.append("family.json gift_memory.%s must be a non-empty array" % key)
+			continue
+		for line: Variant in lines:
+			if not (line is String) or not String(line).contains("{item}"):
+				errors.append("family.json gift_memory.%s lines need {item}" % key)
+	return errors
+
+
+const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "great_trail", "shrine_stage", "project_stage", "season_done", "breakthrough"]
+
+
+## FOLK-015: remember the newest notable deed (a newer one replaces it).
+static func record_news(flags: Dictionary, kind: String, subject: String, region_id: String, day: int) -> void:
+	flags["village_news"] = {"kind": kind, "subject": subject, "region": region_id, "day": day}
+
+
+## FOLK-015: the line a villager says about the newest deed ({player} left for the caller), or "" when there is no
+## fresh news, it happened far away, `npc` is not a villager here, or the kind has no lines. Pure.
+static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, region_id: String, day: int, named: bool = false) -> String:
+	var news: Variant = flags.get("village_news")
+	if not (news is Dictionary) or region_id == "":
+		return ""
+	var bands: Dictionary = data.family.get("folk_greetings", {}).get("news", {})
+	if bands.is_empty() or day - int(news.get("day", -9999)) >= int(bands.get("news_days", 7)) or day < int(news.get("day", 0)):
+		return ""
+	var where := String(news.get("region", ""))
+	if where != region_id and not Exploration.is_nearby(data, where, region_id):
+		return ""
+	if named:  # FOLK-019: a named NPC with a dialogue file hears the news too
+		if npc == null or not npc.alive or Npcs.region_of(npc, data) != region_id:
+			return ""
+	elif not is_villager(npc, data, Npcs.region_of(npc, data)):
+		return ""
+	var lines: Array = bands.get(String(news.get("kind", "")), [])
+	if lines.is_empty():
+		return ""
+	return String(lines[absi(hash(npc.id + str(day))) % lines.size()]).replace("{subject}", String(news.get("subject", ""))).replace("{project}", String(news.get("subject", ""))).replace("{beast}", String(news.get("subject", "")))
 
 
 ## Load errors in folk_greetings: both bands, non-empty string lines, min_favor above max_favor.
@@ -138,9 +441,36 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 			for line: Variant in plines:
 				if not (line is String) or String(line) == "":
 					errors.append("family.json folk_greetings.celebration.%s: lines must be non-empty strings" % kind)
+	var tidings: Variant = bands.get("news", {})
+	if not (tidings is Dictionary):
+		errors.append("family.json folk_greetings.news must be an object")
+	else:
+		for kind: String in tidings:
+			if kind == "news_days":
+				if not (tidings[kind] is int or tidings[kind] is float) or int(tidings[kind]) < 1 or int(tidings[kind]) > 30:
+					errors.append("family.json folk_greetings.news.news_days must be 1..30")
+			elif not NEWS_KINDS.has(kind):
+				errors.append("family.json folk_greetings.news: unknown kind %s" % kind)
+			elif not (tidings[kind] is Array) or tidings[kind].is_empty() or not (tidings[kind] as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+				errors.append("family.json folk_greetings.news.%s: lines must be a non-empty array of strings" % kind)
 	var cake: Variant = bands.get("birthday", [])
 	if not (cake is Array) or not (cake as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
 		errors.append("family.json folk_greetings.birthday must be an array of non-empty strings")
+	var mine: Variant = bands.get("player_birthday", [])
+	if not (mine is Array) or not (mine as Array).all(func(v: Variant) -> bool: return v is String and String(v) != "" and String(v).length() <= 160):
+		errors.append("family.json folk_greetings.player_birthday must be an array of 1..160 character strings")
+	var pgift: Variant = data.family.get("player_birthday_gift", "")
+	if not (pgift is String) or (String(pgift) != "" and not data.items.has(String(pgift))):
+		errors.append("family.json player_birthday_gift must be an items.json id")
+	var fam_lines: Variant = data.family.get("family_birthday_lines", [])
+	if not (fam_lines is Array) or not (fam_lines as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "" and String(x).length() <= 160):
+		errors.append("family.json family_birthday_lines must be an array of 1..160 character strings")
+	var home_lines: Variant = data.family.get("birthday_home_lines", [])
+	if not (home_lines is Array) or not (home_lines as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "" and String(x).length() <= 160):
+		errors.append("family.json birthday_home_lines must be an array of 1..160 character strings")
+	var thanks: Variant = bands.get("birthday_thanks", [])
+	if not (thanks is Array) or not (thanks as Array).all(func(v: Variant) -> bool: return v is String and String(v) != ""):
+		errors.append("family.json folk_greetings.birthday_thanks must be an array of non-empty strings")
 	var skies: Variant = bands.get("weather", {})
 	if not (skies is Dictionary):
 		errors.append("family.json folk_greetings.weather must be an object")
@@ -258,7 +588,7 @@ static func friends_line(npcs: Dictionary, data: GameData, region_id: String, fa
 
 ## FOLK-009: the people page. Every living NPC of `region_id` (generated villagers and named story NPCs) with favor >= 10,
 ## favor desc then name. Entry: {id, name, favor, tier_index, tier_name, birthday_text, birthday_in, likes_known,
-## dislikes_known, likes_total}. Tastes come from the `taste_<npc>_<item>` world flags a gift leaves. Pure.
+## dislikes_known, likes_total, last_gift}. Tastes come from the `taste_<npc>_<item>` world flags a gift leaves. Pure.
 static func people_entries(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, flags: Dictionary, today: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for c in Npcs.in_region(npcs, data, region_id):
@@ -279,7 +609,8 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),
 			"birthday_text": "" if b < 0 else "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)],
 			"birthday_in": days_to_birthday(c, data, today), "likes_known": likes, "dislikes_known": dislikes,
-			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size()})
+			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size(),
+			"last_gift": last_gift_text(flags, c.id, data)})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a["favor"] != b["favor"]:
 			return int(a["favor"]) > int(b["favor"])
@@ -303,6 +634,119 @@ static func new_tiers(data: GameData, seen: Dictionary, favor_by_id: Dictionary,
 		if t > int(seen.get(id, -1)):
 			result.append({"id": id, "tier": t})
 	return result
+
+
+## WU-486: the emote a gift draws: "love" (liked, or any non-disliked gift on their birthday), "happy" (neutral),
+## "sweat" (disliked). `taste` is the gift's taste (-1 disliked, 0 neutral, 1 liked). Pure.
+static func gift_reaction(taste: int, birthday: bool) -> String:
+	if taste < 0:
+		return "sweat"
+	if taste > 0 or birthday:
+		return "love"
+	return "happy"
+
+
+## FOLK-020: the lessons a named villager teaches (npcs.json `lessons`), [] when none. Pure.
+static func lessons_of(data: GameData, npc_id: String) -> Array:
+	var raw: Variant = data.npcs.get(npc_id, {}).get("lessons", [])
+	return raw if raw is Array else []
+
+
+## FOLK-020: lessons with tier <= `tier` not yet in `taught` ("<npc_id>:<index>" -> day): [{key, index, lesson}]. Pure.
+static func due_lessons(data: GameData, npc_id: String, tier: int, taught: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var lessons := lessons_of(data, npc_id)
+	for i in lessons.size():
+		var key := "%s:%d" % [npc_id, i]
+		if int(lessons[i].get("tier", 99)) <= tier and not taught.has(key):
+			result.append({"key": key, "index": i, "lesson": lessons[i]})
+	return result
+
+
+## GUIDE-219: true when `npc_id` already taught a lesson on `day` (one lesson a day per teacher).
+static func taught_today(npc_id: String, taught: Dictionary, day: int) -> bool:
+	for key: String in taught:
+		if key.begins_with(npc_id + ":") and int(taught[key]) == day:
+			return true
+	return false
+
+
+## GUIDE-218: named villagers of `region_id` with a lesson due at their friendship tier, as [{npc, key}] by name.
+static func lessons_waiting(npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, taught: Dictionary, day: int = -1) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for npc in Npcs.in_region(npcs, data, region_id):
+		if not data.npcs.has(npc.id) or (day >= 0 and taught_today(npc.id, taught, day)):
+			continue
+		var due := due_lessons(data, npc.id, tier_index(data, int(favor.get(npc.id, 0))), taught)
+		if not due.is_empty():
+			out.append({"npc": npc, "key": String(due[0]["key"])})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return String(a["npc"].name) < String(b["npc"].name))
+	return out
+
+
+## GUIDE-218: where named villager `npc_id` stands today in words: the nearest place on their region map (within 200 px)
+## by display name, else the region's name. "" for a generated villager.
+static func stand_phrase(data: GameData, npc_id: String, day: int, events: Array) -> String:
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	if def.is_empty():
+		return ""
+	var region_id := String(def.get("region", ""))
+	var spot := spot_for(data, def, day, Weather.of(data, region_id, day), events)
+	var best := ""
+	var best_d := 200.0
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("festival_only") or not place.has("pos"):
+			continue
+		var d: float = _point(place["pos"]).distance_to(spot["pos"])
+		if d < best_d:
+			best_d = d
+			best = String(place.get("display_name", ""))
+	return best if best != "" else Exploration.region_name(data, region_id)
+
+
+static func lesson_line(lesson: Dictionary, npc_name: String, player_name: String) -> String:
+	return String(lesson.get("text", "")).replace("{name}", npc_name).replace("{player}", player_name)
+
+
+const LESSON_EFFECT_KEYS: Array[String] = ["learn_recipe", "learn_dish", "learn_technique", "profession_xp", "attributes", "dao_insight", "practice_days", "items"]
+
+
+## FOLK-020: load errors in npcs.json lessons.
+static func validate_lessons(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var tier_count: int = data.family.get("folk_tiers", []).size()
+	for npc_id: String in data.npcs:
+		var lessons := lessons_of(data, npc_id)
+		if lessons.size() > 2:
+			errors.append("npc %s: at most 2 lessons" % npc_id)
+		var last := 0
+		for i in lessons.size():
+			var l: Dictionary = lessons[i]
+			var where := "npc %s lesson %d" % [npc_id, i]
+			var t := int(l.get("tier", 0))
+			if t < 1 or t >= tier_count:
+				errors.append("%s: tier must be 1..%d" % [where, tier_count - 1])
+			if t <= last:
+				errors.append("%s: tiers must rise strictly" % where)
+			last = t
+			var text := String(l.get("text", ""))
+			if text.is_empty() or text.length() > 220:
+				errors.append("%s: text must be 1..220 characters" % where)
+			var fx: Variant = l.get("effects", {})
+			if not (fx is Dictionary) or fx.is_empty():
+				errors.append("%s: effects must be a non-empty Dictionary" % where)
+				continue
+			for key: Variant in fx:
+				if not LESSON_EFFECT_KEYS.has(String(key)):
+					errors.append("%s: effect '%s' is not allowed in a lesson" % [where, key])
+			if fx.has("attributes"):
+				for v: Variant in fx["attributes"].values():
+					if int(v) < 1 or int(v) > 2:
+						errors.append("%s: attributes values must be 1..2" % where)
+			if fx.has("practice_days") and (int(fx["practice_days"]) < 1 or int(fx["practice_days"]) > 10):
+				errors.append("%s: practice_days must be 1..10" % where)
+			errors.append_array(Effects.validate(data, fx, where))
+	return errors
 
 
 ## Load errors in folk_tiers: strictly rising mins 1..100, names, known gift items with count 1..3.
@@ -339,6 +783,13 @@ static func validate_tastes(data: GameData) -> PackedStringArray:
 				errors.append("family.json folk_tastes %s_pool entries must be non-empty strings" % key)
 		if t.has(key) and (int(t[key]) < 0 or int(t[key]) > pool.size()):
 			errors.append("family.json folk_tastes %s must be 0..%d" % [key, pool.size()])
+	var company: Variant = data.family.get("festival_company", [])
+	if not (company is Array):
+		errors.append("family.json festival_company must be a list")
+	else:
+		for line in company:
+			if typeof(line) != TYPE_STRING or not String(line).contains("{name}"):
+				errors.append("family.json festival_company lines must be strings with {name}")
 	return errors
 
 
@@ -424,6 +875,11 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 ## Load errors: favor effects are ints within +-FAVOR_LIMIT and need their placeholder in the encounter's texts.
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = validate_greetings(data)
+	errors.append_array(validate_festival_lines(data))
+	errors.append_array(validate_festival_memory(data))
+	errors.append_array(validate_player_birthday_gifts(data))
+	errors.append_array(validate_taught_dish_line(data))
+	errors.append_array(validate_gift_memory(data))
 	errors.append_array(validate_requests(data))
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
@@ -573,7 +1029,12 @@ static func attend(flags: Dictionary, npc_id: String, partner_id: String, today:
 ## FOLK-008: the day of the year (0..DAYS_PER_YEAR-1) of a generated villager's birthday: a stable hash of the id, never rng.
 ## Named story NPCs have none (-1).
 static func birthday_day(npc: CharacterData, data: GameData) -> int:
-	if npc == null or data.npcs.has(npc.id):
+	if npc == null:
+		return -1
+	if data.npcs.has(npc.id):  # FOLK-022: a named NPC has a birthday only when npcs.json gives one
+		var bd: Variant = data.npcs[npc.id].get("birthday", null)
+		if bd is Dictionary:
+			return (int(bd["month"]) - 1) * Calendar.DAYS_PER_MONTH + int(bd["day"]) - 1
 		return -1
 	return absi(hash("birthday:" + npc.id)) % Calendar.DAYS_PER_YEAR
 
@@ -591,11 +1052,16 @@ static func days_to_birthday(npc: CharacterData, data: GameData, day: int) -> in
 	return posmod(b - day, Calendar.DAYS_PER_YEAR)
 
 
+## WU-482: true when it is `npc`'s birthday on `day` and you know them (favor >= min_favor), so the world marks it. Pure.
+static func is_birthday_today(npc: CharacterData, data: GameData, day: int, favor: Dictionary, min_favor: int = 10) -> bool:
+	return npc != null and int(favor.get(npc.id, 0)) >= min_favor and birthday_today(npc, data, day)
+
+
 ## FOLK-008: living generated villagers of `region_id` you know (favor >= min_favor) whose birthday falls within
 ## `span` days of `day`, as [{npc, in_days}] soonest first (ties by id). Pure.
 static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, day: int, favor: Dictionary, span: int = 7, min_favor: int = 10) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	for npc in Npcs.generated_in_region(npcs, data, region_id):
+	for npc in Npcs.in_region(npcs, data, region_id):
 		if int(favor.get(npc.id, 0)) < min_favor:
 			continue
 		var n := days_to_birthday(npc, data, day)
@@ -609,6 +1075,114 @@ static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, 
 
 
 const BIRTHDAY_GIFT_PREFIX := "birthday_gift_"
+const PLAYER_BIRTHDAY_PREFIX := "player_birthday_"
+const PLAYER_BIRTHDAY_FAVOR := 2
+const FAMILY_BIRTHDAY_PREFIX := "family_birthday_"
+const FAMILY_BIRTHDAY_FAVOR := 3
+
+
+## CAL-009: chatting with a living spouse or child on their own birthday says a family.json family_birthday_lines line
+## (+FAMILY_BIRTHDAY_FAVOR, applied by the caller), once per year per person. `consume` marks it told. "" when nothing.
+static func family_birthday_line(npc: CharacterData, c: CharacterData, data: GameData, day: int, flags: Dictionary, consume: bool) -> String:
+	if npc == null or c == null or not npc.alive or not (c.spouses.has(npc.id) or c.children.has(npc.id)) or not birthday_today(npc, data, day):
+		return ""
+	var pool: Array = data.family.get("family_birthday_lines", [])
+	var year := Calendar.year_of(day)
+	if pool.is_empty() or int(flags.get(FAMILY_BIRTHDAY_PREFIX + npc.id, -1)) == year:
+		return ""
+	if consume:
+		flags[FAMILY_BIRTHDAY_PREFIX + npc.id] = year
+	return String(pool[absi(hash(npc.id + str(day))) % pool.size()]).replace("{name}", npc.name).replace("{player}", c.name)
+
+
+## FOLK-027: the player's birthday as a day of the year; a missing one (old saves) hashes the name, never rng.
+static func player_birthday_day(c: CharacterData) -> int:
+	if c.birthday >= 0:
+		return c.birthday % Calendar.DAYS_PER_YEAR
+	return absi(hash("birthday:" + c.name)) % Calendar.DAYS_PER_YEAR
+
+
+static func player_birthday_today(c: CharacterData, _data: GameData, day: int) -> bool:
+	return day >= 0 and day % Calendar.DAYS_PER_YEAR == player_birthday_day(c)
+
+
+## FOLK-027: "Month M, Day D" for the character sheet.
+static func player_birthday_text(c: CharacterData) -> String:
+	var b := player_birthday_day(c)
+	return "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)]
+
+
+## FOLK-027: on the player's birthday the first chat with each villager you know (favor reaches the first tier) says a
+## line from family.json folk_greetings.player_birthday, once per villager per year. The villager's own birthday wins.
+## `consume` marks it told. Returns "" when nothing is said.
+static func player_birthday_line(npc: CharacterData, c: CharacterData, data: GameData, day: int, favor: int, flags: Dictionary, consume: bool) -> String:
+	if npc == null or not player_birthday_today(c, data, day) or birthday_today(npc, data, day) or tier_index(data, favor) < 0:
+		return ""
+	var own := String(data.npcs.get(npc.id, {}).get("player_birthday_line", ""))  # FOLK-029
+	var pool: Array = data.family.get("folk_greetings", {}).get("player_birthday", [])
+	var year := Calendar.year_of(day)
+	if (own == "" and pool.is_empty()) or int(flags.get(PLAYER_BIRTHDAY_PREFIX + npc.id, -1)) == year:
+		return ""
+	if consume:
+		flags[PLAYER_BIRTHDAY_PREFIX + npc.id] = year
+	if own != "":
+		return own.replace("{player}", c.name)
+	return String(pool[absi(hash(npc.id + str(day))) % pool.size()]).replace("{player}", c.name)
+
+
+## FOLK-027: the dish family gives on the player's birthday (family.json player_birthday_gift), once per year, to a
+## player who has a spouse or child. Returns the item id or "". `consume` marks the year.
+static func player_birthday_gift(c: CharacterData, data: GameData, day: int, flags: Dictionary, consume: bool) -> String:
+	var item := String(data.family.get("player_birthday_gift", ""))
+	if item == "" or not player_birthday_today(c, data, day) or (c.spouses.is_empty() and c.children.is_empty()):
+		return ""
+	var year := Calendar.year_of(day)
+	if int(flags.get(PLAYER_BIRTHDAY_PREFIX + "family", -1)) == year:
+		return ""
+	if consume:
+		flags[PLAYER_BIRTHDAY_PREFIX + "family"] = year
+	return item
+
+
+## FOLK-028: the line posted when family sets out the birthday dish at home (family.json birthday_home_lines,
+## {name}/{dish}), picked by day. "" when the file has none.
+static func birthday_home_line(data: GameData, name: String, dish_name: String, day: int) -> String:
+	var pool: Array = data.family.get("birthday_home_lines", [])
+	if pool.is_empty():
+		return ""
+	return String(pool[absi(day) % pool.size()]).replace("{name}", name).replace("{dish}", dish_name)
+
+
+## FOLK-028: a player without family who has 2+ Close friends (tier 2 and up) gets one small gift on their birthday,
+## once a year (world flag player_birthday_friend). Returns {npc_id, item} or {}. The friend is the closest (then by id)
+## whose first liked item id is cheap (price <= FRIEND_GIFT_MAX_PRICE). `consume` marks the year.
+const FRIEND_GIFT_MAX_PRICE := 20
+const CLOSE_FRIEND_TIER := 2
+
+static func birthday_friend_gift(c: CharacterData, people: Dictionary, favor: Dictionary, data: GameData, day: int, flags: Dictionary, consume: bool) -> Dictionary:
+	if not player_birthday_today(c, data, day) or not (c.spouses.is_empty() and c.children.is_empty()):
+		return {}
+	var year := Calendar.year_of(day)
+	if int(flags.get(PLAYER_BIRTHDAY_PREFIX + "friend", -1)) == year:
+		return {}
+	var close: Array[String] = []
+	for id: String in people:
+		var npc: CharacterData = people[id]
+		if npc != null and npc.alive and tier_index(data, int(favor.get(id, 0))) >= CLOSE_FRIEND_TIER:
+			close.append(id)
+	if close.size() < 2:
+		return {}
+	close.sort_custom(func(a: String, b: String) -> bool:
+		var fa := int(favor.get(a, 0))
+		var fb := int(favor.get(b, 0))
+		return fa > fb if fa != fb else a < b)
+	for id in close:
+		for entry: Variant in Family.taste_lists(data, id)["likes"]:
+			if data.items.has(String(entry)) and int(data.items[String(entry)].get("price", 999)) <= FRIEND_GIFT_MAX_PRICE:
+				if consume:
+					flags[PLAYER_BIRTHDAY_PREFIX + "friend"] = year
+				return {"npc_id": id, "item": String(entry)}
+	return {}
 
 
 ## FOLK-008: 2 for the first gift to `npc` on their birthday this year, else 1. `consume` marks it used.
@@ -1212,3 +1786,163 @@ static func finish_companion(c: CharacterData, people: Dictionary, favors: Dicti
 	if not won and people.has(npc_id) and rng.randf() < float(r["injury_chance"]):
 		Injuries.inflict(people[npc_id], data, String(r["injury"]))
 	return delta
+
+
+## FOLK-013: the first unseen scene due for `npc_id` at `favor` ({} = none). A scene for this villager comes
+## before an "any_villager" one. A scene with `weather` waits for that weather (FOLK-021). Pure.
+static func scene_due(c: CharacterData, data: GameData, npc_id: String, favor: int, npc: CharacterData = null, region_id: String = "", weather: String = "") -> Dictionary:
+	var generic := {}
+	var villager := is_villager(npc, data, region_id)
+	for scene: Dictionary in data.scenes:
+		if c.scenes_seen.has(String(scene["id"])) or favor < int(scene["min_favor"]):
+			continue
+		if scene.has("weather") and not (scene["weather"] as Array).has(weather):  # FOLK-021
+			continue
+		if String(scene["npc"]) == npc_id:
+			return scene
+		if villager and generic.is_empty() and String(scene["npc"]) == "any_villager":
+			generic = scene
+	return generic
+
+
+## FOLK-014: whether `npc` is an ordinary villager of `region_id`: a living generated NPC (no data/npcs.json
+## entry, so no role such as elder or merchant) who lives there and belongs to no sect. Pure.
+static func is_villager(npc: CharacterData, data: GameData, region_id: String) -> bool:
+	if npc == null or not npc.alive or data.npcs.has(npc.id) or not npc.sect.is_empty():
+		return false
+	return Npcs.region_of(npc, data) == region_id
+
+
+## FOLK-013: remember that `scene_id` played on `day`.
+static func mark_scene(c: CharacterData, scene_id: String, day: int) -> void:
+	if not c.scenes_seen.has(scene_id):
+		c.scenes_seen.append(scene_id)
+	c.scene_day = day
+
+
+## FOLK-017: where a named NPC stands on `day`: {pos: Vector2, why: String}, why one of "home", "work", "market",
+## "rain", "festival", "rest". `events` are the active world events. Priority: festival > rain/storm > rest weekday
+## > market day > work > home; a missing optional spot falls through. Pure, no randomness except a seeded offset.
+static func spot_for(data: GameData, npc_def: Dictionary, day: int, weather: String, events: Array) -> Dictionary:
+	var home := _point(npc_def.get("pos", [0, 0]))
+	var spots: Dictionary = npc_def.get("spots", {})
+	var region_id := String(npc_def.get("region", ""))
+	if spots.is_empty():
+		return {"pos": home, "why": "home"}
+	for e in WorldEvents.active_in(events, region_id):
+		if WorldEvents.is_festival(data, String(e.get("id", ""))):
+			if spots.has("festival"):
+				return {"pos": _point(spots["festival"]), "why": "festival"}
+			var square: Variant = data.regions.get(region_id, {}).get("festival_square")
+			if square is Array:
+				var ring := festival_ring(_point(square), FESTIVAL_SLOTS, festival_blockers(data, region_id))
+				var slot := posmod(hash(String(npc_def.get("id", ""))), maxi(ring.size(), 1))
+				return {"pos": _point(square) if ring.is_empty() else ring[slot], "why": "festival"}
+			break
+	if (weather == "rain" or weather == "storm") and spots.has("rain"):
+		return {"pos": _point(spots["rain"]), "why": "rain"}
+	if spots.has("rest_weekday") and Calendar.weekday_name(day) == String(spots["rest_weekday"]):
+		return {"pos": home, "why": "rest"}
+	if spots.has("market") and _market_day(data, region_id, day):
+		return {"pos": _point(spots["market"]), "why": "market"}
+	if spots.has("work"):
+		return {"pos": _point(spots["work"]), "why": "work"}
+	return {"pos": home, "why": "home"}
+
+
+## GFX-090: slots on the festival ring a named villager picks from.
+const FESTIVAL_SLOTS := 24
+const FESTIVAL_RADII: Array[float] = [70.0, 90.0, 110.0]
+const FESTIVAL_GAP := 28.0
+const FESTIVAL_CLEAR := 24.0
+const SOLID_LANDMARKS: Array[String] = ["house", "well", "wall", "cliff", "lantern", "pine", "stall"]
+
+
+## GFX-090: `count` spots on rings (radius 70-110 px) around `center`, evenly spaced, at least 28 px apart and
+## 24 px clear of every blocker rect. WU-478: `keep_clear` points (the player) get no slot within 28 px.
+## Pure and deterministic; may return fewer if the rings are crowded out.
+static func festival_ring(center: Vector2, count: int, blockers: Array[Rect2], keep_clear: Array[Vector2] = []) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for ring in FESTIVAL_RADII.size():
+		var radius := FESTIVAL_RADII[ring]
+		var slots := clampi(count, 1, int(TAU * radius / (FESTIVAL_GAP + 2.0)))
+		for k in slots:
+			if out.size() >= count:
+				return out
+			var pos := center + Vector2.from_angle(TAU * float(k) / float(slots) + 0.5 * float(ring)) * radius
+			var ok := true
+			for b in blockers:
+				if b.grow(FESTIVAL_CLEAR).has_point(pos):
+					ok = false
+					break
+			for o in out:
+				if ok and pos.distance_to(o) < FESTIVAL_GAP:
+					ok = false
+			for q in keep_clear:
+				if ok and pos.distance_to(q) < FESTIVAL_GAP:
+					ok = false
+			if ok:
+				out.append(pos)
+	return out
+
+
+## GFX-090: rects festival villagers must keep off in `region_id`: festival stalls and solid landmarks.
+static func festival_blockers(data: GameData, region_id: String) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var region: Dictionary = data.regions.get(region_id, {})
+	for place: Dictionary in region.get("places", []):
+		if place.has("festival_only"):
+			out.append(_rect(place))
+	for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+		if SOLID_LANDMARKS.has(String(lm.get("kind", ""))):
+			out.append(_rect(lm))
+	return out
+
+
+static func _rect(d: Dictionary) -> Rect2:
+	var size := _point(d.get("size", [0, 0]))
+	return Rect2(_point(d.get("pos", [0, 0])) - size / 2.0, size)
+
+
+static func _market_day(data: GameData, region_id: String, day: int) -> bool:
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if place.has("open_days") and Places.is_open(place, day):
+			return true
+	return false
+
+
+static func _point(v: Variant) -> Vector2:
+	var a: Array = v
+	return Vector2(float(a[0]), float(a[1]))
+
+
+## Load-time errors for the optional `spots` of named NPC `npc` (FOLK-017).
+static func validate_spots(npc: Dictionary, data: GameData) -> Array[String]:
+	var errors: Array[String] = []
+	if not npc.has("spots"):
+		return errors
+	var who := String(npc.get("id", ""))
+	if not npc.get("spots") is Dictionary or String(npc.get("region", "")) == "":
+		errors.append("NPC '%s' spots must be an object on an NPC with a region" % who)
+		return errors
+	var size: Array = data.regions.get(String(npc["region"]), {}).get("map", {}).get("size", [1600, 1000])
+	for key: String in npc["spots"]:
+		var v: Variant = npc["spots"][key]
+		if key == "rest_weekday":
+			if not Calendar.WEEKDAY_NAMES.has(String(v)):
+				errors.append("NPC '%s' spots rest_weekday '%s' is not a weekday name" % [who, str(v)])
+		elif key in ["work", "market", "rain", "festival"]:
+			if not (v is Array and (v as Array).size() == 2 and ((v as Array)[0] is float or (v as Array)[0] is int) and ((v as Array)[1] is float or (v as Array)[1] is int)):
+				errors.append("NPC '%s' spots %s must be [x, y]" % [who, key])
+			else:
+				var p := _point(v)
+				if p.x < 0.0 or p.y < 0.0 or p.x > float(size[0]) or p.y > float(size[1]):
+					errors.append("NPC '%s' spots %s is outside the map" % [who, key])
+				for place: Dictionary in data.regions.get(String(npc["region"]), {}).get("places", []):
+					if place.get("type", "") == "travel":
+						var pp: Array = place.get("pos", [0, 0])
+						if p.distance_to(Vector2(float(pp[0]), float(pp[1]))) < GameData.SIGNPOST_CLEAR:
+							errors.append("NPC '%s' spots %s is within %d px of signpost '%s'" % [who, key, int(GameData.SIGNPOST_CLEAR), place.get("display_name", "")])
+		else:
+			errors.append("NPC '%s' spots has unknown key '%s'" % [who, key])
+	return errors

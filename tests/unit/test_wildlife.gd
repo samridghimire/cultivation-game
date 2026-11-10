@@ -58,14 +58,14 @@ func test_validation() -> void:
 	_with(d, old)
 
 
-## C-287: every wild region has roamers, 3-5 entries, a non-lethal beast, at least one seasonal entry.
+## C-287: every wild region has roamers, 3-7 entries, a non-lethal beast, at least one seasonal entry.
 func test_wild_regions_have_roamers() -> void:
 	var d := _gdata()
 	assert_true(Wildlife.validate(d).is_empty())
 	for id: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
 		var def: Dictionary = d.regions[id].get("roamers", {})
 		var entries: Array = def.get("enemies", [])
-		assert_true(entries.size() >= 3 and entries.size() <= 5, "%s entries" % id)
+		assert_true(entries.size() >= 3 and entries.size() <= 7, "%s entries" % id)
 		var seasonal := false
 		for e: Dictionary in entries:
 			assert_false(bool(d.enemies[e["enemy"]].get("lethal", false)))
@@ -232,15 +232,19 @@ func test_validate_rejects_bad_great() -> void:
 ## WILD-014: the first beast, beaten, comes back as the `return` enemy.
 func test_great_return_switches_after_first_win() -> void:
 	var d := _gdata()
-	var c := _player()
+	var c := _player(1)
 	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "old_tusker_boar")
 	var wd := Wildlife.great_day("misty_forest", d.regions["misty_forest"]["roamers"]["great"])
 	var day := 7 * 40 + wd
 	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day, {})["enemy"]), "old_tusker_boar")
 	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "tuskers_sow_boar", "C-327: a Qi Refining middle step follows")
+	assert_eq(Wildlife.record_great(c, d, "tuskers_sow_boar", "misty_forest", day + 7), "tuskers_sow_bristle")
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "", "C-317: the return is a Foundation fight")
+	c.realm_index = d.realm_index_of("foundation_establishment")
 	assert_eq(Wildlife.active_great_enemy(c, d, "misty_forest"), "scarred_old_tusker")
 	assert_eq(String(Wildlife.great_roamer(c, d, "misty_forest", day + 7, {})["enemy"]), "scarred_old_tusker")
-	assert_eq(Wildlife.next_great_day(d, "misty_forest", day + 1, 0), day + 7, "same weekday")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day + 1, c.realm_index, c), day + 7, "same weekday")
 	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 7), "scarred_tuskers_spear_head")
 	assert_eq(Wildlife.record_great(c, d, "scarred_old_tusker", "misty_forest", day + 14), "", "once")
 	assert_eq(Wildlife.record_great(c, d, "old_tusker_boar", "misty_forest", day + 14), "", "once")
@@ -425,7 +429,7 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_false(Wildlife.in_season_now(d, "misty_forest", "mist_fox", summer_day))
 	assert_false(Wildlife.in_season_now(d, "misty_forest", "wild_boar", autumn_day))
 	assert_eq(Wildlife.season_clause(d, "misty_forest", autumn_day), "Fat Mist Foxes run in Misty Forest this autumn.")
-	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "")
+	assert_eq(Wildlife.season_clause(d, "misty_forest", summer_day), "Fat Wild Boars run in Misty Forest this summer.")
 	assert_eq(Wildlife.season_clause(d, "misty_forest", 9 * 30), "Fat Den Wolves run in Misty Forest this winter.")
 	assert_true(Wildlife.season_clause(d, "withered_bone_marsh", summer_day).begins_with("Fat Mist Pythons"))
 	var old: Dictionary = d.regions["misty_forest"]["roamers"]
@@ -437,7 +441,7 @@ func test_in_season_helpers_and_validation() -> void:
 	assert_eq(Wildlife.validate(d).size(), 0)
 
 
-## C-300: at most two in-season beasts per region, each in a season it can appear in.
+## C-300: at most four in-season beasts per region, each in a season it can appear in.
 func test_in_season_limits() -> void:
 	var d := _gdata()
 	var old: Dictionary = d.regions["misty_forest"]["roamers"]
@@ -446,8 +450,10 @@ func test_in_season_limits() -> void:
 	d.regions["misty_forest"]["roamers"] = {"count": [1, 1], "enemies": [
 		{"enemy": "mist_fox", "weight": 1, "in_season": ["autumn"]},
 		{"enemy": "wild_boar", "weight": 1, "in_season": ["spring"]},
-		{"enemy": "den_wolf", "weight": 1, "in_season": ["winter"]}]}
-	assert_eq(Wildlife.validate(d).size(), 1, "three in-season beasts")
+		{"enemy": "den_wolf", "weight": 1, "in_season": ["winter"]},
+		{"enemy": "mist_python", "weight": 1, "in_season": ["summer"]},
+		{"enemy": "fog_antler_stag", "weight": 1, "in_season": ["summer"]}]}
+	assert_eq(Wildlife.validate(d).size(), 1, "five in-season beasts")
 	d.regions["misty_forest"]["roamers"] = old
 	assert_eq(Wildlife.validate(d).size(), 0)
 	for rid: String in ["misty_forest", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]:
@@ -455,7 +461,7 @@ func test_in_season_limits() -> void:
 		for e: Dictionary in d.regions[rid]["roamers"]["enemies"]:
 			if e.has("in_season"):
 				n += 1
-		assert_true(n >= 1 and n <= 2, rid)
+		assert_true(n >= 1 and n <= 4, rid)
 
 
 func test_in_season_spoils_double_only_in_season() -> void:
@@ -506,3 +512,281 @@ func test_bait_item_weaken_and_validation() -> void:
 	assert_true(Wildlife.validate(d).size() > 0)
 	d.regions["misty_forest"]["roamers"]["great"].erase("bait_weaken")
 	assert_eq(Wildlife.validate(d).size(), 0)
+
+
+## WILD-018: max_realm on roamers, own min_realm on return beasts.
+func test_max_realm_filters_and_validates() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"]
+	_with(d, {"count": [3, 3], "enemies": [{"enemy": "wild_boar", "weight": 1, "max_realm": "qi_refining"}, {"enemy": "mist_fox", "weight": 1, "min_realm": "foundation_establishment"}]})
+	assert_eq(Wildlife.roamers(d, "misty_forest", 5, 1, {}).size(), 3)
+	for r in Wildlife.roamers(d, "misty_forest", 5, 1, {}):
+		assert_eq(r["enemy"], "wild_boar")
+	for r in Wildlife.roamers(d, "misty_forest", 5, 3, {}):
+		assert_eq(r["enemy"], "mist_fox", "boar is beneath a Foundation cultivator")
+	_with(d, {"count": [3, 3], "enemies": [{"enemy": "wild_boar", "weight": 1, "max_realm": "mortal"}]})
+	assert_true(Wildlife.roamers(d, "misty_forest", 5, 1, {}).is_empty(), "empty pool is fine")
+	assert_true(Wildlife.validate(d).is_empty())
+	_with(d, {"count": [1, 1], "enemies": [{"enemy": "wild_boar", "weight": 1, "max_realm": "nope"}]})
+	assert_false(Wildlife.validate(d).is_empty())
+	_with(d, {"count": [1, 1], "enemies": [{"enemy": "wild_boar", "weight": 1, "min_realm": "foundation_establishment", "max_realm": "qi_refining"}]})
+	assert_false(Wildlife.validate(d).is_empty(), "max below min")
+	_with(d, old)
+	assert_true(Wildlife.validate(d).is_empty())
+
+
+func test_foundation_misty_forest_has_no_weak_beasts() -> void:
+	var d := _gdata()
+	for day in range(0, 14):
+		for r in Wildlife.roamers(d, "misty_forest", day, 3, {}):
+			assert_false(["wild_boar", "mist_fox"].has(String(r["enemy"])), "day %d" % day)
+
+
+func test_return_beast_own_min_realm() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	var def: Dictionary = d.regions["misty_forest"]["roamers"]
+	def["great"]["min_realm"] = "foundation_establishment"
+	def["great"]["return"]["min_realm"] = "qi_refining"
+	var c := CharacterData.new()
+	c.realm_index = 1
+	var day := Wildlife.next_great_day(d, "misty_forest", 0, 3)
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", 0, 1, c), -1, "parent gate before the first win")
+	c.great_beasts[String(def["great"]["enemy"])] = true
+	assert_true(Wildlife.next_great_day(d, "misty_forest", 0, 1, c) >= 0, "return beast walks at its own realm")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", 0, 0, c), -1, "not below it")
+	assert_true(day >= 0)
+	d.regions["misty_forest"]["roamers"] = old
+
+
+## WILD-019: great beasts you have outgrown step aside.
+func test_great_max_realm_hands_slot_to_return_beast() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	_collapse_trail(d, "misty_forest")
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	great["max_realm"] = "qi_refining"
+	var wd := Wildlife.great_day("misty_forest", great)
+	var day := 7 * 40 + wd
+	var qr := _player(1)
+	var fe := _player(1)
+	fe.realm_index = d.realm_index_of("foundation_establishment")
+	assert_eq(Wildlife.great_enemy_for(qr, d, "misty_forest"), "old_tusker_boar")
+	assert_eq(Wildlife.great_enemy_for(fe, d, "misty_forest"), "scarred_old_tusker", "outgrown: the return beast walks")
+	assert_eq(Wildlife.great_enemy_for(null, d, "misty_forest"), "old_tusker_boar", "no character: unchanged")
+	assert_eq(String(Wildlife.great_roamer(fe, d, "misty_forest", day, {})["enemy"]), "scarred_old_tusker")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day, fe.realm_index, fe), day)
+	assert_true(Wildlife.tracks_today(d, "misty_forest", day - 1, fe.realm_index, fe))
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", fe), String(great["return"]["rumor"]))
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", qr), String(great["rumor"]))
+	# Beaten the first beast and above the return's max_realm: nothing walks.
+	great["return"]["max_realm"] = "qi_refining"
+	fe.great_beasts["old_tusker_boar"] = 1
+	assert_eq(Wildlife.great_enemy_for(fe, d, "misty_forest"), "")
+	assert_eq(Wildlife.next_great_day(d, "misty_forest", day, fe.realm_index, fe), -1)
+	assert_true(Wildlife.great_roamer(fe, d, "misty_forest", day, {}).is_empty())
+	var line := Guidance.arrival_line(fe, d, "misty_forest", day, {}, "")
+	assert_false(line.contains("roams"), line)
+	d.regions["misty_forest"]["roamers"] = old
+
+
+func test_great_max_realm_validation() -> void:
+	var d := _gdata()
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	great["max_realm"] = "nope"
+	assert_false(Wildlife.validate(d).is_empty(), "unknown max_realm")
+	great["min_realm"] = "foundation_establishment"
+	great["max_realm"] = "qi_refining"
+	assert_false(Wildlife.validate(d).is_empty(), "max below min")
+	great.erase("min_realm")
+	great["max_realm"] = "foundation_establishment"
+	great["return"]["min_realm"] = "foundation_establishment"
+	great["return"]["max_realm"] = "qi_refining"
+	assert_false(Wildlife.validate(d).is_empty(), "return max below min")
+	great["return"]["max_realm"] = "nope"
+	assert_false(Wildlife.validate(d).is_empty(), "return unknown max_realm")
+	d.regions["misty_forest"]["roamers"] = old
+	assert_true(Wildlife.validate(d).is_empty())
+
+
+## C-317: every region's great beast is a fight for each realm it serves, and the returns are Foundation fights.
+func test_great_beasts_for_every_realm() -> void:
+	var d := _gdata()
+	var foundation_only := ["myriad_peaks_ridge"]  # its first great beast is built for Foundation
+	var qr := _player(d.realm_index_of("qi_refining"))
+	var fe := _player(d.realm_index_of("foundation_establishment"))
+	for rid: String in d.regions:
+		var g: Dictionary = d.regions[rid].get("roamers", {}).get("great", {})
+		if g.is_empty():
+			continue
+		assert_true(Wildlife.next_great_day(d, rid, 100, fe.realm_index, fe) >= 0, "%s: a great beast walks for Foundation" % rid)
+		if not foundation_only.has(rid):
+			assert_true(Wildlife.next_great_day(d, rid, 100, qr.realm_index, qr) >= 0, "%s: a great beast walks for Qi Refining" % rid)
+			assert_eq(String(g.get("max_realm", "")), "qi_refining", "%s: the first beast is Qi Refining only" % rid)
+		var ret: Dictionary = Wildlife.great_chain(g).back()
+		assert_eq(String(d.enemies[String(ret["enemy"])]["realm"]), "foundation_establishment", "%s: the return beast is a Foundation foe" % rid)
+
+
+## C-312: every region with roamers keeps a Foundation roster; the weakest beasts step aside for it.
+func test_every_roaming_region_has_foundation_beasts() -> void:
+	var d := _gdata()
+	var fe := d.realm_index_of("foundation_establishment")
+	for region_id: String in d.regions:
+		var def: Dictionary = d.regions[region_id].get("roamers", {})
+		if def.is_empty():
+			continue
+		var has_foundation := false
+		for entry: Dictionary in def["enemies"]:
+			if String(d.enemies[String(entry["enemy"])].get("realm", "")) != "foundation_establishment":
+				continue
+			if entry.has("min_realm") and d.realm_index_of(String(entry["min_realm"])) > fe:
+				continue
+			if entry.has("max_realm") and d.realm_index_of(String(entry["max_realm"])) < fe:
+				continue
+			has_foundation = true
+		assert_true(has_foundation, "%s has a Foundation roamer entry" % region_id)
+		var seen := {}  # season -> Foundation-realm roamers met
+		for day in range(0, 360):
+			for r in Wildlife.roamers(d, region_id, day, fe, {}):
+				if String(d.enemies[String(r["enemy"])]["realm"]) == "foundation_establishment":
+					var season := Calendar.season_of(day)
+					seen[season] = int(seen.get(season, 0)) + 1
+		assert_true(seen.size() >= 1, "%s: a Foundation Early player meets Foundation beasts" % region_id)
+
+
+## C-327: cut a region's real trail down to first beast + last step, for tests that script their own middle.
+func _collapse_trail(d: GameData, rid: String) -> void:
+	var great: Dictionary = d.regions[rid]["roamers"]["great"]
+	great["return"] = Wildlife.great_chain(great).back()
+
+
+## WILD-020: a great-beast trail of three steps: first -> middle -> last.
+func _chain_fixture(d: GameData) -> Dictionary:
+	var old: Dictionary = d.regions["misty_forest"]["roamers"].duplicate(true)
+	_collapse_trail(d, "misty_forest")
+	var great: Dictionary = d.regions["misty_forest"]["roamers"]["great"]
+	great.erase("max_realm")
+	great["return"]["min_realm"] = "foundation_establishment"
+	great["return"]["max_realm"] = "foundation_establishment"
+	great["return"]["return"] = {"enemy": "mist_fox", "trophy": "old_tuskers_broken_tusk", "min_realm": "foundation_establishment", "rumor": "A third beast walks the fog."}
+	return old
+
+
+func test_great_chain_walks_in_order() -> void:
+	var d := _gdata()
+	var old := _chain_fixture(d)
+	var c := _player(2)
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "old_tusker_boar")
+	c.great_beasts["old_tusker_boar"] = 1
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "scarred_old_tusker")
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", c), String(d.regions["misty_forest"]["roamers"]["great"]["return"]["rumor"]))
+	c.great_beasts["scarred_old_tusker"] = 2
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "mist_fox")
+	assert_eq(Wildlife.rumor_of(d, "misty_forest", c), "A third beast walks the fog.")
+	assert_eq(Wildlife.record_great(c, d, "mist_fox", "misty_forest", 9), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.great_trophy(d, "mist_fox"), "old_tuskers_broken_tusk")
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "mist_fox", "the last step keeps walking")
+	assert_true(Wildlife.validate(d).is_empty())
+	d.regions["misty_forest"]["roamers"] = old
+
+
+func test_great_chain_skips_outgrown_and_stops_below() -> void:
+	var d := _gdata()
+	var old := _chain_fixture(d)
+	var c := _player(3)  # Core Formation: above the middle's max_realm
+	c.great_beasts["old_tusker_boar"] = 1
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "mist_fox", "middle skipped")
+	var q := _player(1)  # Qi Refining, first beaten, below the middle
+	q.great_beasts["old_tusker_boar"] = 1
+	assert_eq(Wildlife.great_enemy_for(q, d, "misty_forest"), "", "below the middle: nothing walks")
+	d.regions["misty_forest"]["roamers"]["great"]["return"]["return"]["max_realm"] = "qi_refining"
+	assert_eq(Wildlife.great_enemy_for(c, d, "misty_forest"), "", "nothing fits")
+	d.regions["misty_forest"]["roamers"] = old
+
+
+func test_great_chain_validation_is_recursive() -> void:
+	var d := _gdata()
+	var old := _chain_fixture(d)
+	var third: Dictionary = d.regions["misty_forest"]["roamers"]["great"]["return"]["return"]
+	third["enemy"] = "salt_road_captain"
+	assert_false(Wildlife.validate(d).is_empty(), "lethal nested return")
+	third["enemy"] = "mist_fox"
+	third["trophy"] = "spirit_stone"
+	assert_false(Wildlife.validate(d).is_empty(), "trophy must be tagged")
+	third["trophy"] = "old_tuskers_broken_tusk"
+	third["rumor"] = "x".repeat(141)
+	assert_false(Wildlife.validate(d).is_empty(), "long rumor")
+	d.regions["misty_forest"]["roamers"] = old
+
+
+## C-327: the Qi Refining great-beast trails have a middle step between the first beast and the Foundation return.
+func test_qi_refining_trails_have_a_middle_step() -> void:
+	var d := _gdata()
+	for rid: String in ["misty_forest", "azure_peak", "withered_bone_marsh"]:
+		var chain := Wildlife.great_chain(d.regions[rid]["roamers"]["great"])
+		assert_eq(chain.size(), 3, "%s: first, middle, return" % rid)
+		var mid: Dictionary = chain[1]
+		var e: Dictionary = d.enemies[String(mid["enemy"])]
+		assert_eq(String(e["realm"]), "qi_refining", rid)
+		assert_false(bool(e.get("lethal", false)), rid)
+		assert_eq(String(mid.get("min_realm", "")), "qi_refining", rid)
+		assert_eq(String(mid.get("max_realm", "")), "qi_refining", rid)
+		assert_true(String(mid.get("rumor", "")) != "", "%s middle rumor" % rid)
+		assert_true((d.items[String(mid["trophy"])]["tags"] as Array).has("trophy"), rid)
+		assert_true(int(d.items[String(mid["trophy"])]["price"]) > 0, rid)
+		var last: Dictionary = chain[2]
+		assert_true(mid["trophy"] != last["trophy"] and mid["trophy"] != chain[0]["trophy"], "%s trophies differ" % rid)
+		# A Qi Refining player walks first -> middle, then waits for Foundation; Foundation skips an unbeaten middle.
+		var q := _player(d.realm_index_of("qi_refining"))
+		q.great_beasts[String(chain[0]["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(q, d, rid), String(mid["enemy"]), rid)
+		q.great_beasts[String(mid["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(q, d, rid), "", "%s: the return waits for Foundation" % rid)
+		var f := _player(d.realm_index_of("foundation_establishment"))
+		f.great_beasts[String(chain[0]["enemy"])] = 1
+		assert_eq(Wildlife.great_enemy_for(f, d, rid), String(last["enemy"]), "%s: Foundation skips the middle" % rid)
+
+
+## WILD-021: the end of a great-beast trail.
+func test_trail_end_flag_once() -> void:
+	var data := GameData.load_from_dir()
+	var flags := {}
+	var chain := Wildlife.great_chain(data.regions["misty_forest"]["roamers"]["great"])
+	var first := String(chain[0]["enemy"])
+	var last := String(chain.back()["enemy"])
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", first, true), "", "an early step does not finish the trail")
+	assert_false(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", last, false), "", "a re-win does not")
+	var line := Wildlife.finish_trail(data, flags, "misty_forest", last, true)
+	assert_true(line.contains("Misty Forest"), line)
+	assert_true(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.finish_trail(data, flags, "misty_forest", last, true), "", "only once")
+
+
+
+func test_trail_backfill_for_old_saves() -> void:
+	var data := GameData.load_from_dir()
+	var flags := {}
+	var chain := Wildlife.great_chain(data.regions["misty_forest"]["roamers"]["great"])
+	var c := _player(0)
+	c.great_beasts[String(chain[0]["enemy"])] = 1
+	assert_eq(Wildlife.backfill_trails(c, data, flags).size(), 0, "an early step is not the end")
+	c.great_beasts[String(chain.back()["enemy"])] = 1
+	var flagged := Wildlife.backfill_trails(c, data, flags)
+	assert_eq(flagged.size(), 1)
+	assert_eq(flagged[0], "misty_forest")
+	assert_true(flags.has(Wildlife.trail_flag("misty_forest")))
+	assert_eq(Wildlife.backfill_trails(c, data, flags).size(), 0, "only once")
+
+func test_trail_data_valid() -> void:
+	var data := GameData.load_from_dir()
+	assert_eq(Wildlife.validate(data).size(), 0)
+	var ids: Array = []
+	for m: Dictionary in data.milestones:
+		ids.append(m["id"])
+	for rid: String in data.regions:
+		if Wildlife.great_chain(data.regions[rid].get("roamers", {}).get("great", {})).size() >= 2:
+			assert_true(ids.has("great_trail_" + rid), "milestone for " + rid)
+	data.regions["misty_forest"]["roamers"]["great"]["trail_done_text"] = ""
+	assert_true(Wildlife.validate(data).size() > 0)

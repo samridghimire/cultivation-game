@@ -745,6 +745,18 @@ func test_qi_flags_raise_density_only_while_flag_is_set() -> void:
 	assert_eq(Exploration.qi_flag_reasons(d, "azure_peak", {}).size(), 0)
 
 
+func test_timed_qi_flag_counts_only_with_a_day() -> void:
+	# REVIEW (SEASON-007): the shrine incense is a timed flag; callers without a day (NPC cultivation, hints) must
+	# not count it forever after it was lit once.
+	var d := data()
+	var base := Exploration.qi_density(d, "qingshi_village")
+	var flags := {"shrine_incense": {"until": 11}}
+	assert_true(absf(Exploration.qi_density(d, "qingshi_village", flags, 10) - base * 1.05) < 0.0001, "lit today")
+	assert_eq(Exploration.qi_density(d, "qingshi_village", flags, 11), base, "burnt out the next day")
+	assert_eq(Exploration.qi_density(d, "qingshi_village", flags), base, "no day given: not counted")
+	assert_eq(Exploration.qi_flag_reasons(d, "qingshi_village", flags).size(), 0)
+
+
 func test_qi_flags_add_up_and_validate() -> void:
 	var d := data()
 	var region: Dictionary = d.regions["azure_peak"]

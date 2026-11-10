@@ -57,3 +57,33 @@ func test_chip_replaces_bottom_prompt_for_a_labelled_target() -> void:
 	assert_false(hud.get("_prompt_floating"), "bottom-centre fallback with no target")
 	hud.free()
 	gs.end_session()
+
+
+## WU-474: a target near the bottom edge still gets a chip of its own width, inside the screen.
+func test_prompt_rect_near_bottom_keeps_chip_width() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var chip := Vector2(310, 30)
+	var r: Rect2 = HUD.prompt_rect(Rect2(600, 780, 120, 18), screen, [], chip)
+	assert_eq(r.size.x, 310.0, "chip width tracks its text")
+	assert_true(screen.encloses(r), "chip inside the screen")
+
+
+## WU-475: with every spot blocked the chip still sits within 120 px of the figure.
+func test_prompt_rect_blocked_stays_near_figure() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var figure := Vector2(640, 600)
+	var label := Rect2(600, 560, 80, 14)
+	var avoid: Array[Rect2] = [Rect2(0, 400, 1280, 400)]
+	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(180, 30), figure)
+	assert_true(r.get_center().distance_to(figure) < 120.0)
+
+
+## WU-478: with every nearby spot occupied the chip is within 120 px of the figure (never the screen top).
+func test_prompt_rect_stays_near_figure_in_a_crowd() -> void:
+	var screen := Rect2(0, 0, 1280, 800)
+	var figure := Vector2(640, 610)
+	var label := Rect2(560, 520, 160, 20)
+	var avoid: Array[Rect2] = [Rect2(0, 0, 1280, 400), Rect2(400, 400, 500, 280)]
+	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(300, 30), figure)
+	assert_true(r.get_center().distance_to(figure) <= HUD.PROMPT_MAX_FROM_FIGURE + 1.0, "near the figure")
+	assert_true(r.position.y > 100.0, "not at the top")

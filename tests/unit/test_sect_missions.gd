@@ -35,9 +35,9 @@ func test_missions_offered_per_sect() -> void:
 	var azure := Sects.available_missions(_disciple("azure_cloud_sect"), data())
 	var blood := Sects.available_missions(_disciple("blood_lotus_sect"), data())
 	assert_true(azure.has("gather_spirit_herbs") and blood.has("gather_spirit_herbs"), "generic missions for everyone")
-	assert_true(azure.has("escort_mortal_villagers"))
-	assert_false(blood.has("escort_mortal_villagers"), "sect-specific missions")
-	assert_true(Sects.check_mission(_disciple("blood_lotus_sect"), data(), "escort_mortal_villagers") != "")
+	assert_true(azure.has("drive_off_fog_antler_stag"))
+	assert_false(blood.has("drive_off_fog_antler_stag"), "sect-specific missions")
+	assert_true(Sects.check_mission(_disciple("blood_lotus_sect"), data(), "drive_off_fog_antler_stag") != "")
 
 
 func test_mission_requirements() -> void:
@@ -69,7 +69,7 @@ func test_mission_min_stage() -> void:
 	assert_eq(Sects.check_mission(c, data(), "cull_mist_wolves"), "")
 	c.realm_index = 2
 	c.stage = 0
-	assert_eq(Sects.check_mission(c, data(), "cull_mist_wolves"), "", "a higher realm always qualifies")
+	assert_true(Sects.check_mission(c, data(), "cull_mist_wolves").begins_with("Beneath you now"), "C-313: a Foundation disciple has outgrown the wolf hunt")
 
 
 func test_mission_danger() -> void:
@@ -137,13 +137,13 @@ func test_game_state_take_missions() -> void:
 	assert_eq(days, int(gs.data.sect_missions["gather_spirit_herbs"]["days"]))
 	var contribution := int(c.sect["contribution"])
 	var alignment := c.alignment
-	gs.take_mission("escort_mortal_villagers")
+	gs.take_mission("drive_off_fog_antler_stag")
 	assert_gt(int(c.sect["contribution"]), contribution, "won the fight, mission done")
 	assert_gt(c.alignment, alignment, "righteous mission")
-	assert_gt(clock.total_days, days + int(gs.data.sect_missions["escort_mortal_villagers"]["days"]) - 1, "fight + mission days")
+	assert_gt(clock.total_days, days + int(gs.data.sect_missions["drive_off_fog_antler_stag"]["days"]) - 1, "fight + mission days")
 	var saved: Dictionary = gs.to_save_dict()
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(saved)))
-	assert_gt(Sects.mission_cooldown_left(gs.player, "escort_mortal_villagers"), 0, "cooldown survives a save")
+	assert_gt(Sects.mission_cooldown_left(gs.player, "drive_off_fog_antler_stag"), 0, "cooldown survives a save")
 	gs.end_session()
 
 
@@ -305,3 +305,31 @@ func test_validation_rejects_unknown_hall_sect() -> void:
 	d.load_errors.clear()
 	d._validate_world()
 	assert_true("unknown sect 'nope'" in "\n".join(d.load_errors))
+
+
+## C-313: a rank-0 disciple of every sect has a mission to take at every Qi Refining and Foundation stage.
+func test_every_sect_has_a_mission_through_foundation() -> void:
+	for sect_id: String in data().sects:
+		for realm_id: String in ["qi_refining", "foundation_establishment"]:
+			for stage in range(0, 4):
+				var c := _disciple(sect_id)
+				c.realm_index = data().realm_index_of(realm_id)
+				c.stage = stage
+				var found := false
+				for id: String in Sects.available_missions(c, data()):
+					var m: Dictionary = data().sect_missions[id]
+					if Sects.mission_beneath(c, data(), m) or Sects.mission_rank_realm_reason(c, data(), m) != "":
+						continue
+					found = true
+					break
+				assert_true(found, "%s has a mission at %s stage %d" % [sect_id, realm_id, stage])
+
+
+## C-313: the Foundation boards offer at least two missions of their own per sect.
+func test_foundation_missions_per_sect() -> void:
+	for sect_id: String in data().sects:
+		var n := 0
+		for m: Dictionary in data().sect_missions.values():
+			if String(m.get("min_realm", "")) == "foundation_establishment" and m.get("sects", []) == [sect_id] and int(m.get("min_rank", 0)) == 0:
+				n += 1
+		assert_true(n >= 2, "%s has 2+ rank-0 Foundation missions" % sect_id)

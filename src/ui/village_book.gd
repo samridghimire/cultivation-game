@@ -1,13 +1,13 @@
 class_name VillageBook
 extends PanelContainer
-## WU-414/WU-417: the village book, two pages (Fish, Herbs), each a grid of everything the village yields. Found ones show
+## WU-414/WU-417/WU-460: the village book, pages (Fish, Hunts, Herbs, People, Festivals), each a grid of everything the village yields. Found ones show
 ## in colour with a count, missing ones as dark silhouettes with a hint. Opened from the journal or the character sheet;
 ## Esc/B closes; Tab / Shift+Tab (ui_focus_next/prev) switch pages.
 
 signal closed
 
 const COLUMNS := 6
-const PAGES: Array[String] = ["fish", "hunts", "herbs", "people"]
+const PAGES: Array[String] = ["fish", "hunts", "herbs", "people", "festivals"]
 const PEOPLE_COLUMNS := 3
 const CARD_SIZE := Vector2(320, 120)
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
@@ -95,6 +95,11 @@ func set_page(page: String) -> void:
 func page_ids() -> PackedStringArray:
 	if _page == "hunts":
 		return Wildlife.huntable(GameState.data)
+	if _page == "festivals":
+		var fids: PackedStringArray = []
+		for h in _festival_rows():
+			fids.append(String(h["event_id"]))
+		return fids
 	if _page == "people":
 		var ids: PackedStringArray = []
 		for e in GameState.people_entries():
@@ -216,6 +221,9 @@ func _build() -> void:
 	if _page == "hunts":
 		_build_hunts()
 		return
+	if _page == "festivals":
+		_build_festivals()
+		return
 	_grid.columns = COLUMNS
 	var herbs := _page == "herbs"
 	var summary := HerbLore.log_summary(c, data) if herbs else Fishing.log_summary(c, data)
@@ -265,6 +273,72 @@ func _build_people() -> void:
 		_detail.text = "You have not got to know anyone here yet."
 	for e in entries:
 		_grid.add_child(_card(e))
+
+
+func _festival_rows() -> Array[Dictionary]:
+	return FestivalContest.history(GameState.data, GameState.world_flags, GameState.player, Calendar.year_of(GameClock.total_days))
+
+
+## WU-460: the card text for one `FestivalContest.history` row: festival and month/region, contest, your last placing,
+## the reigning champion and your streak. Pure.
+static func festival_card_lines(h: Dictionary, region_name: String) -> PackedStringArray:
+	var lines := PackedStringArray()
+	lines.append(String(h["festival"]))
+	lines.append("Month %d · %s" % [int(h["month"]), region_name] if int(h["month"]) > 0 else region_name)
+	lines.append(String(h["contest"]))
+	if int(h["last_place"]) == 0:
+		lines.append("Not entered yet")
+	else:
+		lines.append("Last: %s, year %d" % [FestivalContest.ordinal(int(h["last_place"])), int(h["last_year"])])
+	lines.append("Champion: %s" % h["champion"] if String(h["champion"]) != "" else "Champion: not yet crowned")
+	var streak := int(h["streak"])
+	if streak > 0:
+		lines.append("%d years running" % streak if streak > 1 else "Won last time")
+	return lines
+
+
+## WU-460: one card per contest festival in month order, with the 1st-place keepsake icon (dim until held or held once).
+func _build_festivals() -> void:
+	var data: GameData = GameState.data
+	var rows := _festival_rows()
+	_grid.columns = 3
+	_header.text = "Festival contests: %d" % rows.size() if not rows.is_empty() else "Festivals"
+	if rows.is_empty():
+		_detail.text = "No festival contests are held yet."
+	for h in rows:
+		var region_name := String(data.regions.get(h["region"], {}).get("name", h["region"]))
+		var b := UIStyle.button("\n".join(festival_card_lines(h, region_name)), Callable())
+		b.name = String(h["event_id"])
+		b.custom_minimum_size = Vector2(310, 150)
+		b.add_theme_font_size_override("font_size", 15)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var tex := ItemIcon.for_id(data, String(h["keepsake"])) if String(h["keepsake"]) != "" else null
+		if tex != null:
+			var icon := TextureRect.new()
+			icon.name = "Keepsake"
+			icon.texture = tex
+			icon.custom_minimum_size = Vector2(40, 40)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			icon.offset_left = -48.0
+			icon.offset_right = -8.0
+			icon.offset_top = 8.0
+			icon.offset_bottom = 48.0
+			if not bool(h["keepsake_owned"]):
+				icon.texture = ItemIcon.greyscale(tex)  # WU-463: the shape stays readable
+				icon.modulate = Color(1, 1, 1, 0.4)
+			icon.set_meta("owned", bool(h["keepsake_owned"]))
+			b.add_child(icon)
+		var line := ""
+		if String(h["keepsake"]) != "":
+			line = "1st prize keepsake: %s (%s)" % [data.items[h["keepsake"]].get("name", h["keepsake"]), "won" if bool(h["keepsake_owned"]) else "not yet won"]
+		var show := func() -> void: _detail.text = line
+		b.focus_entered.connect(show)
+		b.mouse_entered.connect(show)
+		_grid.add_child(b)
 
 
 func _birthday_line(e: Dictionary) -> String:
@@ -342,10 +416,21 @@ func _card(e: Dictionary) -> Button:
 	var tier := UIStyle.label(String(e["tier_name"]), 14)
 	tier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(tier)
-	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, DIM)
+	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= 7  # WU-482: gold within a week
+	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
+	for line in lesson_lines(id, GameState.lessons_for(id), data, int(e["tier_index"]), String(e["name"])):
+		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else (UIStyle.ACCENT.darkened(0.3) if line.begins_with("Talk") else DIM))
+		lesson_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(lesson_label)
+	if String(e.get("last_gift", "")) != "":
+		var gift_label := UIStyle.label(String(e["last_gift"]), 12, DIM)
+		gift_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(gift_label)
+	# WU-480: the card grows to its content (never below CARD_SIZE) so no line spills out.
+	b.custom_minimum_size.y = maxf(CARD_SIZE.y, col.get_combined_minimum_size().y + 16.0)
 	var show := func() -> void: _detail.text = people_detail(e, data)
 	b.focus_entered.connect(show)
 	b.mouse_entered.connect(show)
@@ -362,7 +447,44 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 	var dislikes: Array = e["dislikes_known"]
 	if not dislikes.is_empty():
 		parts.append("Dislikes: %s." % names.call(dislikes))
+	if String(e.get("last_gift", "")) != "":
+		parts.append(String(e["last_gift"]) + ".")
 	return " ".join(parts)
+
+
+## WU-477: a short phrase for a lesson's effects, e.g. "5 days of practice".
+static func effect_short(effects: Dictionary, data: GameData) -> String:
+	var bits: PackedStringArray = []
+	if effects.has("practice_days"):
+		bits.append("%d days of practice" % int(effects["practice_days"]))
+	if effects.has("dao_insight"):
+		bits.append("Dao insight")
+	if effects.has("learn_recipe"):
+		bits.append("a recipe")
+	if effects.has("learn_technique"):
+		bits.append("a technique")
+	if effects.has("profession_xp"):
+		bits.append("craft experience")
+	if effects.has("attributes"):
+		bits.append("better " + ", ".join(PackedStringArray((effects["attributes"] as Dictionary).keys())))
+	if effects.has("items"):
+		bits.append("a keepsake")
+	return ", ".join(bits) if not bits.is_empty() else "something useful"
+
+
+## WU-477: one text line per lesson of `npc_id`: "Taught you: <effect>" or "At <tier>: ???".
+## WU-480: a lesson whose tier is reached (`tier_index` >= its tier) but not yet taught reads "Talk to <name> to learn something".
+static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData, tier_index: int = -1, npc_name: String = "") -> PackedStringArray:
+	var lines: PackedStringArray = []
+	var lessons := Folk.lessons_of(data, npc_id)
+	for i in rows.size():
+		if bool(rows[i]["taught"]):
+			lines.append("Taught you: " + effect_short(lessons[i].get("effects", {}), data))
+		elif tier_index >= int(lessons[i].get("tier", 0)):
+			lines.append("Talk to %s to learn something" % (npc_name if npc_name != "" else "them"))
+		else:
+			lines.append("At %s: ???" % rows[i]["tier_name"])
+	return lines
 
 
 ## WU-425: the regions whose roamer rosters can field `enemy_id`, by name.
@@ -412,14 +534,17 @@ static func trophy_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
 		var g: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
 		if g.is_empty():
 			continue
-		var blocks: Array[Dictionary] = [g]
-		var ret: Variant = g.get("return")
-		# WU-451: a region with a `return` beast always shows a second slot beside the first.
-		if ret is Dictionary:
-			blocks.append(ret)
+		# WU-451/WILD-020: every step of the chain gets its own slot beside the first.
+		var blocks := Wildlife.great_chain(g)
 		for block: Dictionary in blocks:
 			_trophy_row(rows, c, data, rid, g, block)
 	return rows
+
+
+static func _previous_step_beaten(c: CharacterData, g: Dictionary, block: Dictionary) -> bool:
+	var chain := Wildlife.great_chain(g)
+	var i := chain.find(block)
+	return i <= 0 or c.great_beasts.has(String(chain[i - 1].get("enemy", "")))
 
 
 static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameData, rid: String, g: Dictionary, block: Dictionary) -> void:
@@ -433,8 +558,8 @@ static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameDat
 		row["day"] = int(c.great_beasts[enemy]) + 1
 		row["text"] = "%s\n%s" % [Wildlife.display_name(data, enemy, true), String(item.get("name", "no trophy"))]
 		row["detail"] = "%s, slain day %d. %s" % [Wildlife.display_name(data, enemy, true), row["day"], String(item.get("description", ""))]
-	elif block != g and not c.great_beasts.has(String(g["enemy"])):
-		# WU-451: the return beast stays a mystery until the first has fallen (its rumour would spoil it).
+	elif block != g and not _previous_step_beaten(c, g, block):
+		# WU-451: the return beast stays a mystery until the one before it has fallen (its rumour would spoil it).
 		row["text"] = "???\n(%s)" % region
 		row["detail"] = "Some say a great beast never walks alone."
 	else:
@@ -445,6 +570,10 @@ static func _trophy_row(rows: Array[Dictionary], c: CharacterData, data: GameDat
 		if rumor != "":
 			row["rumor"] = rumor
 			row["detail"] = "%s\nHunters say: %s" % [row["detail"], rumor]
+	if won and Wildlife.is_trail_end(data, rid, enemy):
+		# WILD-021: the last beast of a chain closes the trail.
+		row["trail_done"] = true
+		row["detail"] = "Trail finished. %s" % row["detail"]
 	rows.append(row)
 
 

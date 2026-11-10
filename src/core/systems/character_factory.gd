@@ -19,6 +19,7 @@ static func create(character_name: String, data: GameData, rng: RandomNumberGene
 	CreationArtifact.ensure(c, data)
 	# Rolled last so earlier rolls stay the same for a given seed.
 	c.gender = gender if Names.is_gender(data, gender) else Names.roll_gender(data, rng)
+	c.birthday = rng.randi_range(0, Calendar.DAYS_PER_YEAR - 1)  # FOLK-027, rolled after everything else
 	return c
 
 

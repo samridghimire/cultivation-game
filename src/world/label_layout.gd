@@ -10,7 +10,8 @@ const MAX_STEPS := 2
 ## (or a `blockers` rect) is nudged down then up by its height (max MAX_STEPS tries each way,
 ## and never off `screen`); if it still overlaps it is marked faded and left in place.
 ## `own_blocker` (GFX-071) maps a rect index to the blocker index that rect belongs to; that one is ignored for it.
-static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = [], own_blocker: Dictionary = {}) -> Array[Dictionary]:
+## WU-483: `covers` maps a rect index to extra rects (building sprites) only that label must clear; it then moves down first.
+static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] = [], own_blocker: Dictionary = {}, covers: Dictionary = {}) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var placed: Array[Rect2] = blockers.duplicate()
 	for ri in rects.size():
@@ -19,7 +20,9 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 		var chosen := rect
 		var offset := 0.0
 		var faded := false
-		if _hits(rect, placed, skip):
+		var extra: Array[Rect2] = []
+		extra.assign(covers.get(ri, []))
+		if _hits(rect, placed, skip) or _hits(rect, extra):
 			faded = true
 			var step := rect.size.y + 2.0
 			var tries: Array[float] = []
@@ -31,7 +34,7 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 				var moved := Rect2(rect.position + Vector2(0, dy), rect.size)
 				if screen.size != Vector2.ZERO and not screen.encloses(moved):
 					continue
-				if not _hits(moved, placed, skip):
+				if not _hits(moved, placed, skip) and not _hits(moved, extra):
 					chosen = moved
 					offset = dy
 					faded = false
@@ -74,6 +77,38 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 					break
 		placed.append(chosen)
 	return out
+
+
+## WU-475: which labels stay in a crowd. A label whose neighbourhood (rect centres within `radius`, itself
+## included) holds more than `max_shown` labels is kept only if fewer than `max_shown` of those neighbours
+## outrank it: the `focus` index first, then a lower `priority` number, then the earlier index (callers sort
+## by distance to the player). Labels in a thin neighbourhood are always kept.
+static func crowd_keep(rects: Array[Rect2], priority: Array[int], focus: int, radius: float = 160.0, max_shown: int = 3) -> Array[bool]:
+	var keep: Array[bool] = []
+	for i in rects.size():
+		var near: Array[int] = []
+		for j in rects.size():
+			if rects[i].get_center().distance_to(rects[j].get_center()) <= radius:
+				near.append(j)
+		if near.size() <= max_shown:
+			keep.append(true)
+			continue
+		var outranking := 0
+		for j in near:
+			if j != i and _outranks(j, i, priority, focus):
+				outranking += 1
+		keep.append(outranking < max_shown)
+	return keep
+
+
+static func _outranks(a: int, b: int, priority: Array[int], focus: int) -> bool:
+	if (a == focus) != (b == focus):
+		return a == focus
+	var pa: int = priority[a] if a < priority.size() else 0
+	var pb: int = priority[b] if b < priority.size() else 0
+	if pa != pb:
+		return pa < pb
+	return a < b
 
 
 static func _hits(rect: Rect2, others: Array[Rect2], skip: int = -1) -> bool:

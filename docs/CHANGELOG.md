@@ -2,6 +2,212 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [GFX-112] Roads look like roads: slabs on the ridge, planks across the bog, rutted tracks through the grass.
+- 2026-11-10 [QA-208] The fishing rank-up test always runs, whatever the weather (part 4 of 5).
+- 2026-11-10 [GUIDE-232] The Earning card names a better-paying job one road away when the trip is worth it.
+- 2026-11-10 [FOLK-031] The People card says which friends will cheer you at the festival, and who won last year.
+- 2026-11-10 [GUIDE-228] The HUD tells you which meal to eat before a hard fight, and how much it helps.
+- 2026-11-10 [C-341] The Herb Slope terraces are told in the village's own voice.
+- 2026-11-10 [C-204] Talisman Master income checked: in line with the other crafts, no change.
+- 2026-11-10 [WU-506] Encounter scenes show where they happen: pines in the valley, reeds in the marsh, a cave mouth.
+- 2026-11-10 [WU-505] The beast pointer stays clear of the HUD panels, and labels no longer overlap in any region.
+- 2026-11-10 [FISH-008] Beginner's luck: your first fishing trip never comes home empty.
+- 2026-11-10 [GUIDE-230] The earning tips only suggest honest, repeatable work.
+- 2026-11-10 [GFX-111] Mountain rims and ledges look like jagged rock.
+- 2026-11-10 [CAL-009] The calendar remembers your own, your spouse's and your children's birthdays.
+- 2026-11-10 [C-340] More villagers bring a small gift with their birthday wish.
+- 2026-11-10 [WU-502] You can see the Herb Slope terraces being rebuilt, stage by stage.
+- 2026-11-09 [C-339] Food, drink, lanterns, charms and scrolls show their own icons in the bag and shops.
+- 2026-11-09 [WU-504] The journal's Today tab shows what earns best here and who to see today.
+- 2026-11-09 [SEASON-015] Finished season sets now repair Qingshi's Herb Slope Terraces, for richer gathering.
+- 2026-11-09 [GUIDE-229] Short on stones? The hints name the best way to earn where you stand.
+- 2026-11-09 [WU-501] The season card wears the season's colours; encounter scenes show the place you explored.
+- 2026-11-09 [QA-042] A first-Core-Formation-year balance sim (and a guard against artifact lives spent).
+- 2026-11-09 [GFX-110] Map edges belong to the land: hedges, treelines, walls, cliffs and reeds instead of a dark band.
+- 2026-11-09 [FOLK-030] Some villagers bring a small gift with their birthday wish for you.
+- 2026-11-09 [GUIDE-227] Reminders for far-off events and the earnings estimates are accurate.
+- 2026-11-09 [C-335] Visitors talk about the trophies on your wall, and every trophy has a description.
+- 2026-11-09 [C-334] Encounter scenes show who you meet: beasts, cultivators, villagers, spirits.
+- 2026-11-09 [WU-500] Qingshi's pond jetty stands in the water and village labels no longer cover each other.
+- 2026-11-09 [GFX-109] Myriad Peaks Ridge and Azure Peak have rock ledges, boulders and snow drifts.
+- 2026-11-09 [C-337] The season recap speaks in the village's own voice.
+- 2026-11-09 [WU-499] Qingshi's labels no longer crowd each other, and no empty band shows above the map.
+- 2026-11-09 [C-336] Every named friend has their own birthday wish for you.
+- 2026-11-09 [GUIDE-226] The journal tells you what a day of work, gathering, fishing or crafting is worth here.
+- 2026-11-09 [GFX-108] The world map looks like a painted map.
+- 2026-11-09 [GFX-107] Fights show the place they happen in: ridges, pines, reeds and rooftops.
+- 2026-11-09 [GFX-106] Item icons you can tell apart: food, drink, lanterns, charms, trophies.
+- 2026-11-09 [GFX-105] A pixel-art title screen.
+- 2026-11-09 [C-338] Fishing pays like a pastime, not the best job in the world.
+- 2026-11-09 [GUIDE-225] Hints are cheaper to compute.
+- 2026-11-09 [CAL-008] Reminders for far-off festivals tell you how long the road is, or stay quiet if you can't make it.
+- 2026-11-09 [FISH-007] A better angler lands more fish.
+- 2026-11-09 [WU-495] Each season opens with one card: a look back and what's coming.
+- 2026-11-09 [RV-019] Screenshot tools work again, and the pond jetty stands in the water.
+- 2026-11-09 [WU-498] Qingshi's pond corner is tidy: the Wandering Merchant moved to open ground, no more overlapping labels.
+- 2026-11-09 [QA-203] Screenshot tooling: the HUD panel crop works at 1280x720 and multi-region runs start each region clean.
+- 2026-11-09 [C-331] Every villager who teaches you a dish remembers it in their own words.
+- 2026-11-09 [C-313] Foundation disciples get missions of their own at every sect hall.
+- 2026-11-09 [WU-497] A new character creation screen: a pixel portrait, colourful root bars and readable attributes.
+- 2026-11-09 [FOLK-029] Villagers can wish you a happy birthday in their own words.
+- 2026-11-09 [SEASON-014] The season recap's wording lives in data, so it can speak in the village's voice.
+- 2026-11-09 [GUIDE-224] Cheaper HUD hints, and the season recap mentions the village project.
+- 2026-11-09 [WU-496] Screenshots now open screens exactly the way the game does.
+- 2026-11-09 [SEASON-013] Each new season opens with its village tasks, festivals and what is in season nearby.
+- 2026-11-09 [QA-206] A fishing balance report: what a day at each pond is worth, by rank and season.
+- 2026-11-09 [C-310] Festival contests and your rival have more to say when you win or lose.
+- 2026-11-09 [C-332] The finished pond jetty brings a new rare fish, and the village talks about each stage of the work.
+- 2026-11-09 [WU-494] The world shows what you did: trophies on your wall, a jetty that grows plank by plank, a cake on your birthday.
+- 2026-11-08 [SEASON-012] Each season ends with a short look back at what you did.
+- 2026-11-08 [FOLK-028] On your birthday the family has your favourite dish waiting at home.
+- 2026-11-08 [WU-493] The Family screen shows everyone's portrait, age and realm.
+- 2026-11-08 [GFX-104] Forest explore sites look like real woods.
+- 2026-11-08 [WU-492] The crafting window fits the screen and names the nearest places to get each ingredient.
+- 2026-11-08 [ENC-014] Encounters show who you actually meet: a spirit, an elder, a child, a beast.
+- 2026-11-08 [C-333] More ways for the village to wish you a happy birthday.
+- 2026-11-08 [C-329] Finishing a great-beast trail gets its own words in each region.
+- 2026-11-08 [GUIDE-223] The HUD's fight line and Today line fit on one line.
+- 2026-11-08 [WU-491] The region name card no longer covers open screens; fight ratings match the HUD.
+- 2026-11-08 [COOK-003] Friends notice when you cook the dish they taught you.
+- 2026-11-08 [QA-204] A clean balance baseline: every number the sims track is explained again.
+- 2026-11-08 [WILD-022] Hang great-beast trophies in your home: a little renown each month, and visitors notice.
+- 2026-11-08 [SEASON-011] A third village project: finished seasons repair the pond jetty for better fishing and a new fish.
+- 2026-11-08 [WU-490] The hen coop looks like a coop, and fed hens gather round it.
+- 2026-11-08 [WILD-021] Finishing a region's great-beast trail is remembered: a world line and a deed of its own.
+- 2026-11-08 [C-330] Friends who came to a festival with you each remember it in their own words.
+- 2026-11-08 [WU-489] A tidier first morning: the empty log box waits for its first line, village labels no longer touch.
+- 2026-11-08 [WU-488] Encounters open with a little scene of where you are and who you meet.
+- 2026-11-08 [FOLK-027] You have a birthday: friends greet you and your family cooks for you.
+- 2026-11-08 [C-328] Villagers have something to say at each festival.
+- 2026-11-08 [GUIDE-222] Shorter goal and hint lines on the HUD.
+- 2026-11-08 [C-327] The great-beast trails in the forest, the peak and the marsh gain a middle step.
+- 2026-11-08 [GFX-103] Region signs fit their names, and ponds look clear, murky or icy by region.
+- 2026-11-08 [GFX-102] Gather sites look like what they are: herb beds, rubble, craters, crystal, frost, terraces, bog.
+- 2026-11-08 [GFX-101] You can always find yourself: a light outline and gold corner brackets on your target.
+- 2026-11-08 [WU-487] Secret realms that are open look open in the world (shot flag for checking it).
+- 2026-11-08 [WU-486] Villagers show a little heart, smile or sweat drop when you give gifts, share scenes or learn from them.
+- 2026-11-08 [FOLK-026] A friend who came with you to a festival remembers it the next time you talk.
+- 2026-11-08 [GFX-100] Every region builds its own way: thatch, tile, stone, stilts or logs.
+- 2026-11-08 [WU-485] Clean screen edges, a readable [E] prompt at festivals and menus that fit their content.
+- 2026-11-08 [CRIT-002] Feed the village hens with grain and they lay surely the next day.
+- 2026-11-08 [GUIDE-221] The day's notes say what a festival stall sells, and the eve of a festival is announced.
+- 2026-11-08 [GUIDE-220] Next steps on the HUD are short enough to read at a glance.
+- 2026-11-08 [WU-484] Nobody stands on a roof or in the gate; shopkeepers wait at their door.
+- 2026-11-08 [WU-483] Villagers on their daily rounds stop clear of signs, exits and buildings.
+- 2026-11-08 [GFX-099] Every HUD panel and menu has a gold pixel frame, and the key bar shows real key caps.
+- 2026-11-08 [WILD-020] Great-beast trails can run several steps, each beast stronger than the last.
+- 2026-11-08 [C-314] Festival stalls sell festival foods and keepsakes, some of them welcome gifts.
+- 2026-11-08 [WU-482] A cake floats over a friend on their birthday, and the Cook menu hints at dishes still to learn.
+- 2026-11-08 [GFX-098] Each secret-realm entrance looks like where it leads: rifts, clefts, seals, gates, tombs and pavilions.
+- 2026-11-08 [FOLK-025] Villagers have something to say about the festival when you talk to them.
+- 2026-11-08 [GUIDE-219] Hints no longer name dishes you haven't been taught or lessons promised a day early.
+- 2026-11-08 [C-326] Every named villager has a birthday and something you can give them in your first year.
+- 2026-11-08 [GFX-097] Festival bunting and a festival ground cloth you can see from across the village.
+- 2026-11-08 [GFX-096] Fields change with the seasons and your rented plots show what grows in them.
+- 2026-11-07 [C-325] Xiao Ling, Hunter Ma and Herbalist Lan teach you their dishes as you become friends.
+- 2026-11-07 [WU-481] Place names no longer hide under villagers and beasts.
+- 2026-11-07 [WU-480] Friend cards in the village book fit their lines and say when someone has something to teach.
+- 2026-11-07 [GFX-095] Places to explore look like woods, ruins, reeds, ridges, trails or caves.
+- 2026-11-07 [C-324] The crowned tiger can really hurt you, and offerings take any fitting meat or herbs.
+- 2026-11-07 [COOK-001] Some home dishes must be taught by a friend before you can cook them.
+- 2026-11-07 [GUIDE-218] Today tells you about friends' birthdays and friends with something to teach.
+- 2026-11-07 [FOLK-022] Named villagers have birthdays and thank you for a gift on the day.
+- 2026-11-07 [C-323] Elder Mo, Xiao Ling and Hunter Ma come to the festival square.
+- 2026-11-07 [GFX-094] Forage herbs, mushrooms and ore are small readable sprites.
+- 2026-11-07 [GFX-091] Mist drifts through the Misty Forest.
+- 2026-11-07 [WU-478] At the festival the [E] prompt stays by its person and nobody stands on you.
+- 2026-11-07 [C-321] Five villagers and wanderers now teach real lessons as you become friends.
+- 2026-11-07 [WU-477] The village book shows what each friend taught you, and what they still might.
+- 2026-11-07 [FOLK-021] Rainy friend scenes wait for rain, and friends teach only when you are with them.
+- 2026-11-07 [ENC-012] Encounter choices can injure you, and offerings take any fitting goods.
+- 2026-11-07 [QA-205] The screenshot tool compiles again, and test.sh now catches broken sim scripts.
+- 2026-11-07 [GUIDE-217] Today reminds you of eggs by the coop and when a festival ends.
+- 2026-11-07 [GFX-092] Picking up an egg or drawing water pops a small "+1" with the item icon.
+- 2026-11-07 [GFX-093] On festival days Qingshi's square is hung with bunting and lanterns.
+- 2026-11-07 [WU-479] A friend's lesson shows on its own card so you notice what you learned.
+- 2026-11-07 [C-322] New dishes from well water and eggs: tea, custard, egg-drop soup and honey egg cake.
+- 2026-11-07 [C-320] The Mist-Crowned Tiger can be backed away from or paid off with venison, not only fought.
+- 2026-11-07 [CRIT-001] Qingshi's hens leave an egg by the coop some days; pick it up.
+- 2026-11-07 [WU-476] The friend scene card shows the villager's face in a framed portrait.
+- 2026-11-07 [SEASON-010] The village talks about each stage of the Founder's Old Well.
+- 2026-11-07 [GUIDE-216] Journal fight and festival lines match the Next steps wording.
+- 2026-11-07 [GFX-090] The festival square sits in the middle of Qingshi with room for a ring of villagers.
+- 2026-11-07 [GFX-087] The Founder's Old Well is visibly rebuilt stage by stage.
+- 2026-11-07 [FOLK-020] Close friends in the village can teach you a lasting lesson.
+- 2026-11-07 [C-319] Every named person in the wider world keeps a daily routine of work, market, shelter and rest.
+- 2026-11-07 [C-311] Village season tasks have a second set each season and a seasonal keepsake reward.
+- 2026-11-07 [FOLK-019] Named villagers remember your gifts and the village news when you talk to them.
+- 2026-11-07 [WU-475] Crowds show only the nearest names, and the [E] prompt stays near its person.
+- 2026-11-07 [RV-018] Draw water at the Founder's Old Well once it is restored.
+- 2026-11-07 [WU-474] The interact prompt sits beside the person as a small chip.
+- 2026-11-07 [QA-202] The HUD no longer leaks signal connections when the world is rebuilt.
+- 2026-11-07 [FOLK-017] Elder Mo, Xiao Ling and Hunter Ma keep their own days: work, market, shelter from rain, the festival, a day of rest.
+- 2026-11-07 [C-316] Every named Qingshi villager has friend scenes of their own.
+- 2026-11-07 [WU-473] Fights show damage numbers and technique names as each blow lands.
+- 2026-11-07 [C-318] The village talks about your wins, beasts, the shrine and your breakthroughs in many voices.
+- 2026-11-07 [GFX-088] Hens scatter, ducks paddle off and butterflies rise when you walk close.
+- 2026-11-07 [GFX-089] Misty Forest looks like a forest: dark pines closing in and mist all year.
+- 2026-11-07 [FOLK-018] Villagers remember your last gift and mention it.
+- 2026-11-07 [SEASON-009] Village season tasks can change from year to year.
+- 2026-11-07 [WU-472] You are never lost behind the HUD: the key bar fades and the camera can scroll past it.
+- 2026-11-07 [GUIDE-215] Next steps point to the nearest fight you can win and say the odds once.
+- 2026-11-07 [FOLK-016] Friend scene cards say who it is and what they give you.
+- 2026-11-07 [SEASON-008] The next village project: restore the Founder's Old Well for better crops and daily well water.
+- 2026-11-07 [C-312] Foundation-level beasts roam the marsh and the ridge too.
+- 2026-11-07 [WU-470] The calendar shows every festival day and its labels fit their cells.
+- 2026-11-06 [WILD-020] The calendar and Today in a wild region say what comes into season there.
+- 2026-11-06 [FOLK-015] Villagers talk about what you did lately: contest wins, great beasts, the shrine, breakthroughs.
+- 2026-11-06 [CAL-007] A festival marks every one of its days on the calendar.
+- 2026-11-06 [GFX-086] Hens, ducks and butterflies live in Qingshi.
+- 2026-11-06 [WU-469] The village tasks board reads cleanly, with drawn check boxes.
+- 2026-11-06 [WU-471] Next steps lines have icons by kind.
+- 2026-11-06 [QI-003] The qi number is the same in the HUD, the arrival card, the map and the travel note.
+- 2026-11-06 [C-317] Outgrown great beasts make way: their angrier returns are now Foundation fights.
+- 2026-11-06 [QA-201] World nodes no longer leave stale signal connections behind when the world is rebuilt.
+- 2026-11-06 [FOLK-014] Friend scene fixes and a rose-coloured "people" message category.
+- 2026-11-06 [GFX-085] Qingshi has a festival square, so the contest crowd no longer piles up at the start.
+- 2026-11-06 [WU-467] A card shows a moment with a friend, with their figure.
+- 2026-11-06 [GFX-084] The restored shrine smokes and glows only while your incense burns, and a restored stage bursts into confetti.
+- 2026-11-06 [WU-468] The Next steps panel no longer cuts lines off or pushes hints out.
+- 2026-11-06 [FOLK-013] Close villagers share a small moment with you, sometimes with a gift.
+- 2026-11-06 [QA-200] Tests no longer leave settings changed behind them; calendar months can be screenshotted.
+- 2026-11-06 [GFX-083] Festival stalls are decorated for their festival.
+- 2026-11-06 [WU-466] The village board lists this season's village tasks, where to do them and the reward.
+- 2026-11-06 [GUIDE-214] Season tasks say where to do them.
+- 2026-11-06 [SEASON-007] Light incense at the restored shrine for a day of better qi in Qingshi.
+- 2026-11-06 [WILD-019] Great beasts you have outgrown no longer roam for you.
+- 2026-11-06 [TODAY-002] Arriving in a region says what is there once, by name.
+- 2026-11-06 [GFX-082] Smoother ground and clear gates in every region.
+- 2026-11-06 [QA-198] Screenshots of the festival, contest, practice, regular's shop and journal.
+- 2026-11-06 [FEST-011] Festival reminders only near the festival; your invited friend stays by your side instead of entering the contest.
+- 2026-11-06 [MISSION-003] Sect missions can be limited to lower realms.
+- 2026-11-06 [C-315] Foundation hunters can still find a Mist Fox in Misty Forest each autumn.
+- 2026-11-06 [FEST-012] Festival days bring their own stalls to Qingshi, Azure Peak and the market.
+- 2026-11-06 [GFX-081] Qingshi's old shrine is drawn coming back stage by stage.
+- 2026-11-06 [SEASON-006] Finishing a season's village tasks restores a stage of the old shrine; a restored shrine raises Qingshi's qi.
+- 2026-11-06 [GFX-079] Azure Peak looks like a sect mountain: alpine ground, stone steps, pines, boulders and a cloud sea.
+- 2026-11-06 [C-272] Heart visions for the five later realms.
+- 2026-11-06 [WILD-018] A Foundation cultivator meets beasts of their own realm in Misty Forest and Azure Peak.
+- 2026-11-06 [C-309] The village hunt runs in every season, led by Hunter Ma.
+- 2026-11-06 [WU-464] The message log no longer repeats the same line on the same day.
+- 2026-11-06 [GUIDE-212] The HUD tells an even fight from an easy one.
+- 2026-11-06 [WU-463] The contest card says who cheered you on and marks your rival; keepsakes have their own icons.
+- 2026-11-06 [GFX-078] The calendar reads at a glance: a 7-day week, clear icons and labels.
+- 2026-11-06 [WU-462] The season's village tasks show on the Today page and the HUD, with a banner when done.
+- 2026-11-06 [C-308] Foundation players meet foes worth fighting in the forest, peak, marsh and market.
+- 2026-11-06 [WU-460] The village book has a Festivals page with your placings, the champion and your keepsakes.
+- 2026-11-06 [MARKET-012] A market regular hears the day before what the stall will want.
+- 2026-11-06 [GFX-077] Great beasts are drawn big, with a shadow and a danger aura.
+- 2026-11-06 [QA-196] The balance baseline is refreshed after roads, return beasts, regulars and contests.
+- 2026-11-06 [SEASON-005] Each season Qingshi posts three village tasks with a reward for finishing them.
+- 2026-11-06 [FOLK-012] Friends cheer you on at festival contests, and a close friend invites you along.
+- 2026-11-06 [WU-459] Mark or unmark a day straight from the calendar.
+- 2026-11-06 [WU-458] The journal opens on a Today page with the date, weather and what the day holds.
+- 2026-11-06 [FEST-010] Festival contests remember your placings, streaks and keepsakes.
+- 2026-11-06 [FEST-009] Your rival turns up at festival contests and has something to say about the result.
+- 2026-11-06 [WILD-017] The village hunt takes its days, shows on the calendar and is led by a village hunter.
+- 2026-11-06 [GFX-076] The sect gate reads as a gate: two posts, a roof and a name board.
+- 2026-11-06 [QA-197] The screenshot scripts run all the way through again.
 - 2026-11-05 [WU-457] On a festival day the stall announces its contest and villagers gather round it.
 - 2026-11-05 [C-273] Eighteen neighbourly asks, tied to each region and season.
 - 2026-11-05 [C-303] Ten more road encounters on the market and ridge routes, in fog, snow, spring and winter.
