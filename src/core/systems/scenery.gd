@@ -392,6 +392,18 @@ static func tree_shadow(season: String, bare: bool) -> String:
 	return "foot" if bare or season == "Winter" else "round"
 
 
+## GFX-117: the ground shadow ellipse under a person's feet, relative to the feet point (`size` = the figure's footprint).
+static func figure_shadow(size: Vector2, snowy: bool) -> Rect2:
+	var w := clampf(size.x * 0.75, 14.0, 40.0) * (1.1 if snowy else 1.0)
+	var h := w * 0.32
+	return Rect2(Vector2(-w / 2.0, -h / 2.0), Vector2(w, h))
+
+
+## GFX-117: soft dark, or snow-blue on snowy ground (matches GFX-114's tree shadows).
+static func figure_shadow_color(snowy: bool) -> Color:
+	return Color(0.2, 0.3, 0.5, 0.3) if snowy else Color(0, 0, 0, 0.3)
+
+
 ## GFX-049: a jetty never crosses a path. Its land end (opposite the water end) stops JETTY_PATH_GAP px before a
 ## path it would enter, but stays at least JETTY_MIN_LEN long (overlapping the water more). Unchanged if no path is in the way.
 const JETTY_PATH_GAP := 6.0

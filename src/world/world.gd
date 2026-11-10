@@ -94,6 +94,7 @@ func _ready() -> void:
 	var map: Dictionary = _region.get("map", {})
 	map_size = _vec(map.get("size", [map_size.x, map_size.y]))
 	Interactable.ground_style = str(map.get("ground_style", "grass"))
+	player.snowy = GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"  # GFX-117
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_season_tint()
 	_build_beast_arrow()

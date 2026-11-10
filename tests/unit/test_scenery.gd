@@ -647,3 +647,18 @@ func test_jetty_runs_out_over_water() -> void:
 			assert_true(best_rim <= 6.0, "%s: jetty shore end within 6 px of the rim (%.1f)" % [region["id"], best_rim])
 			checked += 1
 	assert_true(checked >= 4, "several jetties checked")
+
+
+func test_figure_shadow_is_flat_ellipse_centered_on_feet() -> void:  # GFX-117
+	for snowy in [false, true]:
+		var r := Scenery.figure_shadow(Vector2(28, 28), snowy)
+		assert_true(r.size.x > r.size.y * 2.0)
+		assert_eq(r.get_center(), Vector2.ZERO)
+	assert_true(Scenery.figure_shadow(Vector2(28, 28), true).size.x > Scenery.figure_shadow(Vector2(28, 28), false).size.x)
+	assert_true(Scenery.figure_shadow_color(true).b > Scenery.figure_shadow_color(false).b)
+
+
+func test_player_idle_bob() -> void:  # GFX-117
+	assert_eq(Player.idle_bob(0.1, false), 0.0)
+	assert_eq(Player.idle_bob(0.6, false), -1.0)
+	assert_eq(Player.idle_bob(0.6, true), 0.0)

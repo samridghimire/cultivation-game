@@ -26,6 +26,8 @@ func draw_generated_art() -> bool:
 	var tex := PixelFigure.frame(PlaceLooks.figure_look(look, color), "down", 0)
 	var s := float(Sprites.scale())
 	var tex_size := Vector2(tex.get_size()) * s
+	var sh := Scenery.figure_shadow(tex_size, winter)
+	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
 	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
 	return true
 

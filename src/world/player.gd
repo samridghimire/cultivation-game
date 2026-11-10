@@ -44,7 +44,10 @@ func refresh_look() -> void:
 
 
 func _process(delta: float) -> void:
+	var phase := int(_time * 2.0) % 2
 	_time += delta
+	if int(_time * 2.0) % 2 != phase and not MotionFx.reduced():
+		queue_redraw()  # GFX-117: idle bob frame changed
 	_update_camera_shake(delta)
 	if _celebrate_left > 0.0:
 		_celebrate_left = maxf(0.0, _celebrate_left - delta)
@@ -154,6 +157,15 @@ func _update_target() -> void:
 		EventBus.interaction_target_changed.emit(best.prompt_text() if best else "")
 
 
+## GFX-117: set by the world when the ground is snowy (snow-blue shadow).
+var snowy := false
+
+
+## GFX-117: a gentle 2-frame idle bob (0 or -1 px, about once a second); none when motion is reduced.
+static func idle_bob(t: float, reduced: bool) -> float:
+	return 0.0 if reduced or int(t * 2.0) % 2 == 0 else -1.0
+
+
 ## GFX-101: the player figure's 1 px silhouette outline.
 const OUTLINE_COLOR := Color("f3e6c4")
 
@@ -167,11 +179,11 @@ func _draw() -> void:
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
 	_draw_aura()
 	# Shadow stays on the ground; the body bobs while walking.
-	draw_set_transform(Vector2(0, RADIUS - 2), 0.0, Vector2(1.0, 0.4))
-	draw_circle(Vector2.ZERO, RADIUS, Color(0, 0, 0, 0.3))
-	draw_circle(Vector2.ZERO, RADIUS + 2.0, Color(0, 0, 0, 0.18))  # GFX-101: darker, wider than villagers' shadows
-	draw_set_transform(Vector2.ZERO)
-	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else 0.0
+	var sh := Scenery.figure_shadow(Vector2(RADIUS * 2.0 + 8.0, RADIUS * 2.0), snowy)  # GFX-117: same helper as villagers
+	var shc := Scenery.figure_shadow_color(snowy)
+	PlaceArt.ellipse(self, Vector2(0, 11.0), sh.size / 2.0 * 1.15, Color(shc, 0.18))
+	PlaceArt.ellipse(self, Vector2(0, 11.0), sh.size / 2.0, shc)
+	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else idle_bob(_time, MotionFx.reduced())
 	var o := Vector2(shake, bob)
 	_draw_cake(o)
 	if _draw_sprite(o, sash):
