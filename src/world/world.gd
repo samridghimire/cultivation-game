@@ -971,6 +971,7 @@ func _spread_on_screen() -> void:
 	var nodes: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
 	var view := get_canvas_transform().affine_inverse() * get_viewport_rect()
 	var occupied: Array[Rect2] = []
+	var chip_world := Rect2()
 	var hud := get_node_or_null("HUD")
 	if hud != null and hud.has_method("occupied_rects"):
 		var to_world := get_canvas_transform().affine_inverse()
@@ -980,6 +981,7 @@ func _spread_on_screen() -> void:
 			var chip: Rect2 = hud.current_prompt_rect()
 			if chip.size != Vector2.ZERO:
 				occupied.append(to_world * chip)
+				chip_world = to_world * chip
 	var gate := SectCourt.gate(_region)
 	if not gate.is_empty():  # GFX-074: the gate's name board is a blocker, so the exit label moves off it
 		occupied.append((SectCourt.gate_parts(gate)["stele"] as Rect2).grow(4.0))
@@ -989,6 +991,20 @@ func _spread_on_screen() -> void:
 			if not box.intersects(node.drawn_label_rect(view)):
 				occupied.append(box)
 	Interactable.spread_on_screen(nodes, view, occupied, player.position if player != null else Vector2.ZERO)
+	_fade_labels(nodes, view, chip_world)
+
+
+## WU-508: labels over the player fade to 35%; a place label under the [E] chip hides while the chip shows.
+func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
+	var body := LabelFade.player_rect(player.position) if player != null else Rect2()
+	for node: Interactable in nodes:
+		var a := 1.0
+		if node.label_drawn() and player != null:
+			var r := node.drawn_label_rect(view)
+			a = LabelFade.alpha_for(r, body)
+			if node.get("npc_id") == null and not node is Roamer and not node.highlighted and LabelFade.hidden_by_chip(r, chip):
+				a = 0.0
+		node.set_label_player_alpha(a)
 
 
 func _limit_camera() -> void:

@@ -151,6 +151,12 @@ func prompt_text() -> String:
 	return display_name
 
 
+## WU-508: sets the label layer's alpha (faded over the player, hidden under the [E] chip).
+func set_label_player_alpha(a: float) -> void:
+	if _label_node != null and not is_equal_approx(_label_node.modulate.a, a):
+		_label_node.modulate.a = a
+
+
 ## The color of the name label (NPCs override it, WU-138).
 func label_color() -> Color:
 	return Color.WHITE
