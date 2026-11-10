@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-09 [C-339] Food, drink, lanterns, charms and scrolls show their own icons in the bag and shops.
+- 2026-11-09 [WU-504] The journal's Today tab shows what earns best here and who to see today.
+- 2026-11-09 [SEASON-015] Finished season sets now repair Qingshi's Herb Slope Terraces, for richer gathering.
+- 2026-11-09 [GUIDE-229] Short on stones? The hints name the best way to earn where you stand.
+- 2026-11-09 [WU-501] The season card wears the season's colours; encounter scenes show the place you explored.
+- 2026-11-09 [QA-042] A first-Core-Formation-year balance sim (and a guard against artifact lives spent).
+- 2026-11-09 [GFX-110] Map edges belong to the land: hedges, treelines, walls, cliffs and reeds instead of a dark band.
+- 2026-11-09 [FOLK-030] Some villagers bring a small gift with their birthday wish for you.
+- 2026-11-09 [GUIDE-227] Reminders for far-off events and the earnings estimates are accurate.
+- 2026-11-09 [C-335] Visitors talk about the trophies on your wall, and every trophy has a description.
+- 2026-11-09 [C-334] Encounter scenes show who you meet: beasts, cultivators, villagers, spirits.
+- 2026-11-09 [WU-500] Qingshi's pond jetty stands in the water and village labels no longer cover each other.
+- 2026-11-09 [GFX-109] Myriad Peaks Ridge and Azure Peak have rock ledges, boulders and snow drifts.
 - 2026-11-09 [C-337] The season recap speaks in the village's own voice.
 - 2026-11-09 [WU-499] Qingshi's labels no longer crowd each other, and no empty band shows above the map.
 - 2026-11-09 [C-336] Every named friend has their own birthday wish for you.

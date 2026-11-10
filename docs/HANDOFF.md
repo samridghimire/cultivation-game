@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-10 (planner, 00:10 UTC)
+- 13 tasks landed (GFX-109, WU-500, C-334, C-335, GUIDE-227, FOLK-030, GFX-110, QA-042, WU-501, GUIDE-229, SEASON-015,
+  WU-504, C-339). Review 99c86db..2430218 fixed two slips inline; its QA-042 note -> C-343. Live claims: C-204, C-340,
+  CAL-009, WU-502. The 12:10 planner run on 11-09 never happened (no commit).
+- Planner shots at 1280x720 (six regions `--edge`, default first hour, screens): **Earnings recommends atrocities** (the
+  journal's top "Earning here" row is "Poison the village well", 120/day; sell_street_child and rob_traveller qualify too,
+  and GUIDE-229's empty-purse hint reads the same rows) -> GUIDE-230 at the top of P0. Peak rims look like town walls and
+  brown boards -> GFX-111; great-beast pointer over the stats panel, ridge labels overlap -> WU-505; encounter strip roofs
+  -> WU-506; flat roads -> GFX-112; Azure Peak flat -> GFX-113; stats panel lines clip -> WU-507.
+- screenshot_screens.gd's combat_report fixture never lowers the Stone Ape's hp (synthetic log, not a game bug).
+- Next planner: view GFX-111/WU-505/WU-506 shots when they land; check C-343's histogram; GFX-002 still waits on the owner.
+
 ## State on 2026-11-09 (planner, 06:10 UTC)
 - 12 tasks landed (C-310, SEASON-013, WU-496, QA-206, GUIDE-224, SEASON-014, FOLK-029, WU-497, C-313, C-331, WU-498,
   QA-203 part 1 -> remainder QA-207). Review c85ddec..023bcd2 fixed the kickoff task lines inline; its notes -> RV-019
