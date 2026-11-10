@@ -60,6 +60,7 @@ const CALENDAR_MORE := {
 
 ## World map node marks (GFX-051): an open stall's coin, a roaming beast's paw, a forage leaf.
 const MARKS := {
+	"gift": {"colors": {"a": Color("d9534f"), "b": Color("f08a84"), "c": Color("e8c76a")}, "rows": ["............", "...oo..oo...", "..occo.occo.", "...ocooco...", ".oooooooooo.", ".obbbcabbbo.", ".oaaaccaaao.", ".oaaaccaaao.", ".oaaaccaaao.", ".oaaaccaaao.", ".oooooooooo.", "............"]},
 	"coin": {"colors": {"a": Color("e8c76a"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "....oooo....", "...oabbao...", "..oabccaao..", "..oabcaaao..", "..oabccaao..", "..oaaaaaco..", "...oaaaco...", "....oooo....", "............", "............", "............"]},
 	"paw_gold": {"colors": {"a": Color("f2c94c"), "b": Color("fff1a8"), "c": Color("b8943a")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oa.oaaaao.ao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
 	"paw": {"colors": {"a": Color("c9873a"), "b": Color("e8b070"), "c": Color("8a4a22")}, "rows": ["............", "..oo....oo..", ".oabo..obao.", ".oaao..oaao.", "..oo.oo.oo..", "oo.oabbao.oo", "oa.oaaaao.ao", ".oo.oaaao.oo", "....oacao...", ".....ooo....", "............", "............"]},
@@ -161,6 +162,25 @@ static func hint_glyph(kind: String) -> Texture2D:
 		"season":
 			return _glyph("mark_leaf", MARKS, "leaf")
 	return _glyph("hint_plain", HINTS, "plain")
+
+
+## CAL-010/WU-513: the glyph for each almanac boost key (data-driven: a new omen's boost key needs a row here).
+const OMEN_GLYPHS := {
+	"fishing_mult": "fish", "gather_bonus": "leaf", "gift_favor": "gift", "sell_mult": "coin", "practice_mult": "swords",
+}
+
+
+## The 12x12 glyph for an almanac omen; null for a plain day (or an unmapped boost key).
+static func omen_glyph(omen: Dictionary) -> Texture2D:
+	var kind: String = String(OMEN_GLYPHS.get(Almanac.boost_key(omen), ""))
+	match kind:
+		"fish":
+			return today_glyph("fish")
+		"leaf", "coin", "gift":
+			return map_mark(kind)
+		"swords":
+			return hint_glyph("fight")
+	return null
 
 
 ## A 12x12 world-map mark glyph ("coin", "paw", "leaf"); null for anything else.

@@ -18,6 +18,7 @@ var _cards: VBoxContainer
 const PAGES: Array[String] = ["today", "journal"]
 var _page := "today"
 var _today: VBoxContainer
+var _almanac := PackedStringArray()  ## WU-513: the almanac lines shown under the Today date
 var _tabs: HBoxContainer
 ## Every card's text joined, for tests and search.
 var _text: RichTextLabel
@@ -101,7 +102,7 @@ func open() -> void:
 	_text.clear()
 	_text.append_text(format_entries(list))
 	_build_cards(list)
-	_build_today(GameState.almanac_lines() + GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines())
+	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines(), GameState.almanac_lines())
 	set_page("today")
 	visible = true
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
@@ -160,7 +161,8 @@ static func parse_goal(text: String) -> Dictionary:
 
 
 ## WU-458: the date, weather and one icon row per Today line (a quiet-day line when there are none).
-func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: String = "", earning: PackedStringArray = PackedStringArray(), people: PackedStringArray = PackedStringArray()) -> void:
+func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: String = "", earning: PackedStringArray = PackedStringArray(), people: PackedStringArray = PackedStringArray(), almanac: PackedStringArray = PackedStringArray()) -> void:
+	_almanac = almanac
 	for c in _today.get_children():
 		_today.remove_child(c)
 		c.queue_free()
@@ -176,7 +178,7 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	# WU-509: no empty main card; the date heading moves to the first card that has lines.
 	var main_empty: bool = tasks.is_empty() and main_lines.is_empty() and not lines.is_empty()
 	if not main_empty:
-		inner.add_child(_today_head())
+		_add_head(inner)
 	# WU-462: the season's village tasks sit at the top; a done task gets a check.
 	if not tasks.is_empty():
 		var sh := UIStyle.label(season_header(GameState.current_region), 15, UIStyle.ACCENT)
@@ -200,6 +202,21 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	_today_card("PeopleCard", "People today", people, "calendar", main_empty and earning.is_empty())
 
 
+## WU-513: the date heading, then the almanac lines straight under it (today's with its omen glyph, tomorrow's dim).
+func _add_head(inner: VBoxContainer) -> void:
+	inner.add_child(_today_head())
+	for i in _almanac.size():
+		var plain := Almanac.is_plain(GameState.today_omen())
+		var dim: bool = i > 0 or plain
+		var row := _today_row(_almanac[i], HudIcons.omen_glyph(GameState.today_omen()) if i == 0 and not plain else null, "almanac_row")
+		row.name = "AlmanacToday" if i == 0 else "AlmanacTomorrow"
+		if dim:
+			for c in row.get_children():
+				if c is RichTextLabel:
+					(c as RichTextLabel).add_theme_color_override("default_color", DIM)
+		inner.add_child(row)
+
+
 ## The Today page's date and weather heading.
 func _today_head() -> Label:
 	var day: int = GameClock.total_days
@@ -219,7 +236,7 @@ func _today_card(card_name: String, title: String, lines: PackedStringArray, ico
 	inner.add_theme_constant_override("separation", 6)
 	card.add_child(inner)
 	if with_date:
-		inner.add_child(_today_head())
+		_add_head(inner)
 	inner.add_child(UIStyle.label(title, 15, UIStyle.ACCENT))
 	for line in lines:
 		inner.add_child(_today_row(line, HudIcons.today_glyph(icon_kind), "today_row"))

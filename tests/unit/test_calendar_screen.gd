@@ -307,3 +307,27 @@ func test_cell_label_fits_inside_the_cell() -> void:
 	assert_true(body.get_combined_minimum_size().y <= CalendarScreen.CELL_SIZE.y, "number row + label fit the cell height")
 	screen.queue_free()
 	await _frames()
+
+
+## WU-513: a day cell carries its omen glyph; the legend lists one entry per boost key.
+func test_omen_glyphs_and_legend() -> void:
+	var s := _screen()
+	var screen: CalendarScreen = s[1]
+	screen.open()
+	await _frames()
+	var omen_cells := 0
+	for d in range(1, 31):
+		var cell := screen.get("_cells")[d] as Button
+		var omen := GameState.today_omen(screen._month_start() + d - 1 - GameClock.total_days)
+		var has := cell.find_child("Omen", true, false) != null
+		assert_eq(has, not Almanac.is_plain(omen), "day %d glyph iff non-plain" % d)
+		if has:
+			omen_cells += 1
+	assert_true(omen_cells > 0, "some day has an omen")
+	var keys := {}
+	for o: Dictionary in GameState.data.almanac["omens"]:
+		if not Almanac.is_plain(o):
+			keys[Almanac.boost_key(o)] = true
+	for k: String in keys:
+		assert_true(screen.get("_omen_legend").find_child("Omen_" + k, true, false) != null, "legend " + k)
+	screen.queue_free()

@@ -130,3 +130,30 @@ func test_people_today_lines_empty_for_new_game() -> void:
 	root.get_node("GameState").start_session(new_character())
 	assert_true(root.get_node("GameState").earning_lines_here().size() <= 5)
 	assert_true(root.get_node("GameState").people_today_lines().size() >= 0)
+
+
+## WU-513: every non-plain omen id maps to a glyph through its boost key; plain days have none.
+func test_every_omen_has_a_glyph() -> void:
+	var d := data()
+	for o: Dictionary in d.almanac["omens"]:
+		var tex := HudIcons.omen_glyph(o)
+		if Almanac.is_plain(o):
+			assert_true(tex == null, "%s is plain: no glyph" % o["id"])
+		else:
+			assert_true(HudIcons.OMEN_GLYPHS.has(Almanac.boost_key(o)), "%s boost key mapped" % o["id"])
+			assert_true(tex != null, "%s has a glyph" % o["id"])
+
+
+## WU-513: the almanac line sits in the header block under the date, not among the season's tasks.
+func test_almanac_in_header_block() -> void:
+	var s := _screen()
+	s._build_today(PackedStringArray(["Market day today at X."]), [{"text": "Plant a seed.", "done": false, "n": 0, "count": 1}], "", PackedStringArray(), PackedStringArray(), PackedStringArray(["Almanac: Good for fishing. Calm.", "Tomorrow is good for gifts."]))
+	var inner: Node = s._today.find_child("TodayHeader", true, false).get_parent()
+	var head_i := s._today.find_child("TodayHeader", true, false).get_index()
+	var alm := inner.get_node("AlmanacToday")
+	var tomorrow := inner.get_node("AlmanacTomorrow")
+	var tasks := inner.get_node("SeasonHeader")
+	assert_eq(alm.get_index(), head_i + 1, "almanac straight under the date")
+	assert_eq(tomorrow.get_index(), head_i + 2)
+	assert_true(alm.get_index() < tasks.get_index(), "before the season's tasks")
+	s.queue_free()

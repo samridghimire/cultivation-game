@@ -57,6 +57,17 @@ static func practice_mult(omen: Dictionary) -> float:
 	return _eff(omen, "practice_mult", 1.0)
 
 
+## The boost key that names an omen's glyph ("fishing_mult", ...; "" for a plain day or none).
+static func boost_key(omen: Dictionary) -> String:
+	var boost: Dictionary = omen.get("boost", {})
+	for k: String in EFFECT_KEYS:
+		if boost.has(k):
+			return k
+	for k: String in boost:
+		return k
+	return ""
+
+
 static func is_plain(omen: Dictionary) -> bool:
 	return (omen.get("boost", {}) as Dictionary).is_empty()
 

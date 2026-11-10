@@ -28,6 +28,7 @@ var _header: GridContainer
 var _cells: Dictionary = {}  ## day of month -> its Button (the grid also holds spacers)
 var _detail: Label
 var _legend: HBoxContainer
+var _omen_legend: HBoxContainer  ## WU-513: the almanac glyph legend row
 var _close_button: Button
 var _offset := 0  ## 0 = this month, 1 = next month
 var _grid_entries: Dictionary = {}
@@ -63,6 +64,9 @@ func _init() -> void:
 	_legend = HBoxContainer.new()
 	_legend.add_theme_constant_override("separation", 14)
 	box.add_child(_legend)
+	_omen_legend = HBoxContainer.new()
+	_omen_legend.add_theme_constant_override("separation", 14)
+	box.add_child(_omen_legend)
 	_detail = UIStyle.label("", 16)
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail.custom_minimum_size = Vector2(940, 84)
@@ -202,6 +206,19 @@ func _build() -> void:
 		icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icons.add_theme_constant_override("separation", 2)
 		top.add_child(icons)
+		var omen := GameState.today_omen(total - today)
+		var omen_tex := HudIcons.omen_glyph(omen)
+		if omen_tex != null:  # WU-513: the day's almanac omen, first in the icon row
+			var orect := TextureRect.new()
+			orect.name = "Omen"
+			orect.texture = omen_tex
+			orect.custom_minimum_size = Vector2(ICON_PX, ICON_PX)
+			orect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			orect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			orect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			orect.modulate = Color(1, 1, 1, 0.55) if past else Color.WHITE
+			orect.set_meta("omen", String(omen.get("id", "")))
+			icons.add_child(orect)
 		var shown := 0
 		for e: Dictionary in day_entries:
 			if shown >= MAX_ICONS:
@@ -243,6 +260,7 @@ func _build() -> void:
 		_grid.add_child(cell)
 		_cells[d] = cell
 	_build_legend(season)
+	_add_omen_legend()
 	_show_day(Calendar.day_of(today) if _offset == 0 else 1)
 
 
@@ -428,6 +446,9 @@ func _show_day(d: int) -> void:
 			lines.append(_next_text(total))
 	for e: Dictionary in entries:
 		lines.append("- " + String(e["text"]))
+	var omen := GameState.today_omen(total - GameClock.total_days)
+	if not omen.is_empty() and not Almanac.is_plain(omen):
+		lines.append("Almanac: " + String(omen.get("name", "")))
 	var marked: Dictionary = GameState.player.marked_days
 	if marked.has(total):
 		lines.append("Marked: %s  [Enter] Unmark" % String(marked[total]))
@@ -446,3 +467,30 @@ func _next_text(total: int) -> String:
 	if found.is_empty():
 		return "Nothing planned."
 	return next_summary(found)
+
+
+## WU-513: a one-row legend of the omen glyphs (one per boost key the data uses) under the kind legend.
+func _add_omen_legend() -> void:
+	for c in _omen_legend.get_children():
+		_omen_legend.remove_child(c)
+		c.queue_free()
+	var seen := {}
+	for o: Dictionary in GameState.data.almanac.get("omens", []):
+		var key := Almanac.boost_key(o)
+		if key == "" or seen.has(key):
+			continue
+		seen[key] = true
+		var tex := HudIcons.omen_glyph(o)
+		if tex == null:
+			continue
+		var item := HBoxContainer.new()
+		item.name = "Omen_%s" % key
+		item.add_theme_constant_override("separation", 4)
+		var rect := TextureRect.new()
+		rect.texture = tex
+		rect.custom_minimum_size = Vector2(LEGEND_PX, LEGEND_PX)
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		item.add_child(rect)
+		item.add_child(UIStyle.label(String(o.get("name", "")).trim_prefix("Good for ").capitalize(), 13, DIM))
+		_omen_legend.add_child(item)
