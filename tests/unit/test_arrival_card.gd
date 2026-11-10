@@ -139,7 +139,7 @@ func test_arrival_card_carries_the_arrival_line() -> void:
 	gs.world_flags["arrival_region"] = dest
 	gs.world_flags["arrival_line"] = "A festival fills the lanes."
 	bus.region_changed.emit(dest)
-	assert_true(banner.subtitle_text().contains("\nA festival fills the lanes."))
+	assert_true(banner.subtitle_text().contains(" · A festival fills the lanes."))
 	banner.visible = false
 	gs.world_flags["arrival_line"] = ""
 	bus.region_changed.emit(dest)
@@ -169,3 +169,29 @@ func test_map_over_name_card_dismisses_it() -> void:
 	assert_false(banner.visible, "the map hides the name card")
 	hud.free()
 	gs.end_session()
+
+
+## WU-510: the arrival banner is slim, and the first movement input or its timer hides it.
+func test_arrival_banner_slim_and_dismisses() -> void:
+	var banner := Banner.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(banner)
+	banner.announce("Misty Forest", "Qi x1.05 · Danger: Safe\nToday: Mugwort by the path", UIStyle.ACCENT, Banner.SLIM_HOLD_SECONDS, false, null, true)
+	assert_true(banner.visible)
+	assert_true(banner.slim_showing)
+	assert_false(banner.subtitle_text().contains("\n"), "one line")
+	assert_true(banner.ribbon_size().y < 100.0, "slim ribbon is short")
+	var ev := InputEventAction.new()
+	ev.action = "interact"
+	ev.pressed = true
+	banner._input(ev)
+	assert_true(banner.visible, "a non-move input leaves it")
+	var mv := InputEventAction.new()
+	mv.action = "move_left"
+	mv.pressed = true
+	banner._input(mv)
+	assert_false(banner.visible, "first move input hides it")
+	assert_false(banner.slim_showing)
+	banner.announce("Again", "x", UIStyle.ACCENT, 3.0, false, null, true)
+	banner.finish_current()
+	assert_false(banner.visible, "timer end hides it")
+	banner.free()

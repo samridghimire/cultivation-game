@@ -22,6 +22,9 @@ var _queue: Array = []
 var held: bool = false
 var _current: Array = []
 var _played_msec: int = 0
+var _holder: HBoxContainer
+## WU-510: the slim banner (arrival card) is showing; the first movement input dismisses it.
+var slim_showing: bool = false
 
 
 func _init() -> void:
@@ -33,6 +36,7 @@ func _init() -> void:
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_flash)
 	var holder := HBoxContainer.new()
+	_holder = holder
 	holder.alignment = BoxContainer.ALIGNMENT_CENTER
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.anchor_left = 0.125  # WU-202: a 960 px column, so a long subtitle trims instead of wrapping into a window title
@@ -79,6 +83,26 @@ func _init() -> void:
 	box.add_child(_subtitle)
 
 
+## WU-510: seconds the arrival banner stays up.
+const SLIM_HOLD_SECONDS := 3.0
+
+
+## WU-510: the first movement input dismisses a slim banner so the village is visible at once.
+func _input(event: InputEvent) -> void:
+	if not slim_showing or not visible:
+		return
+	if is_dismiss_event(event):
+		finish_current()
+
+
+## True for a pressed movement action (keyboard, d-pad or stick).
+static func is_dismiss_event(event: InputEvent) -> bool:
+	for a in ["move_up", "move_down", "move_left", "move_right"]:
+		if InputMap.has_action(a) and event.is_action_pressed(a):
+			return true
+	return false
+
+
 ## Seconds a banner is held: a notice with others waiting behind it is shortened (WU-409).
 static func hold_for(hold: float, queued: int) -> float:
 	if queued <= 0:
@@ -104,16 +128,16 @@ func subtitle_text() -> String:
 
 
 ## `low` banners (the turn of the seasons) never wait in the queue: if something is showing they are dropped.
-func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false, portrait: Texture2D = null) -> void:
+func announce(title: String, subtitle: String, color: Color, hold: float = HOLD_SECONDS, low: bool = false, portrait: Texture2D = null, slim: bool = false) -> void:
 	if low and (visible or held):
 		return
 	if held or (visible and _tween != null):
-		_queue.append([title, subtitle, color, hold, portrait])
+		_queue.append([title, subtitle, color, hold, portrait, slim])
 		while _queue.size() > MAX_QUEUE:
 			_drop_oldest()
 		_shorten_current()
 		return
-	_play(title, subtitle, color, hold, portrait)
+	_play(title, subtitle, color, hold, portrait, slim)
 
 
 ## Hold or release the banner. Releasing plays the next queued banner if none is showing.
@@ -152,11 +176,12 @@ func finish_current() -> void:
 		_tween.kill()
 		_tween = null
 	_current = []
+	slim_showing = false
 	if _queue.is_empty() or held:
 		hide()
 		return
 	var next: Array = _queue.pop_front()
-	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()), next[4] if next.size() > 4 else null)
+	_play(next[0], next[1], next[2], hold_for(float(next[3]), _queue.size()), next[4] if next.size() > 4 else null, bool(next[5]) if next.size() > 5 else false)
 
 
 ## WU-409: a banner on screen with another waiting behind it fades after QUEUED_HOLD_SECONDS in total.
@@ -180,8 +205,16 @@ func _drop_oldest() -> void:
 	_queue.remove_at(0)
 
 
-func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null) -> void:
-	_current = [title, subtitle, color, hold, portrait]
+func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null, slim: bool = false) -> void:
+	_current = [title, subtitle, color, hold, portrait, slim]
+	slim_showing = slim
+	_holder.anchor_top = 0.02 if slim else 0.03
+	_holder.anchor_bottom = 0.09 if slim else 0.2
+	_title.add_theme_font_size_override("font_size", 28 if slim else 44)
+	_title.add_theme_constant_override("outline_size", 5 if slim else 8)
+	_subtitle.add_theme_font_size_override("font_size", 18 if slim else 20)
+	if slim:
+		subtitle = subtitle.replace("\n", " · ")
 	_portrait.set_portrait(portrait)
 	_played_msec = Time.get_ticks_msec()
 	if _tween != null:
@@ -196,11 +229,12 @@ func _play(title: String, subtitle: String, color: Color, hold: float, portrait:
 		widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
 	_subtitle.custom_minimum_size.x = minf(widest + 12.0, MAX_TEXT_WIDTH)
 	_ribbon.reset_size()
-	_flash.color = Color(color, 0.35)
+	_flash.color = Color(color, 0.0 if slim else 0.35)
 	modulate.a = 1.0
 	visible = true
 	_tween = create_tween()
 	_tween.tween_property(_flash, "color:a", 0.0, 0.5)
 	_tween.tween_interval(maxf(hold - 0.5, 0.0))
-	_tween.tween_property(self, "modulate:a", 0.0, FADE_SECONDS)
+	var instant: bool = slim and Settings.get_value("reduce_motion") == true
+	_tween.tween_property(self, "modulate:a", 0.0, 0.0 if instant else FADE_SECONDS)
 	_tween.tween_callback(finish_current)

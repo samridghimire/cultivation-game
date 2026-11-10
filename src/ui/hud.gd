@@ -1884,11 +1884,11 @@ func _show_arrival(region_id: String) -> void:
 	var extra := arrival_extra(GameState.world_flags, region_id)
 	if extra != "":
 		sub += "\n" + extra
-	var hold := 2.4 if first_visit else 2.0
+	var hold := Banner.SLIM_HOLD_SECONDS  # WU-510: a slim banner that leaves the village visible
 	_arrival_title = Exploration.region_name(data, region_id)
 	if _blocking_except_encounter():
 		return # WU-491: a screen is open; the name card is not shown over it
-	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold)
+	_banner.announce(_arrival_title, sub, UIStyle.ACCENT, hold, false, null, true)
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
