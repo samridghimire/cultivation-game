@@ -2,6 +2,21 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [GFX-112] Roads look like roads: slabs on the ridge, planks across the bog, rutted tracks through the grass.
+- 2026-11-10 [QA-208] The fishing rank-up test always runs, whatever the weather (part 4 of 5).
+- 2026-11-10 [GUIDE-232] The Earning card names a better-paying job one road away when the trip is worth it.
+- 2026-11-10 [FOLK-031] The People card says which friends will cheer you at the festival, and who won last year.
+- 2026-11-10 [GUIDE-228] The HUD tells you which meal to eat before a hard fight, and how much it helps.
+- 2026-11-10 [C-341] The Herb Slope terraces are told in the village's own voice.
+- 2026-11-10 [C-204] Talisman Master income checked: in line with the other crafts, no change.
+- 2026-11-10 [WU-506] Encounter scenes show where they happen: pines in the valley, reeds in the marsh, a cave mouth.
+- 2026-11-10 [WU-505] The beast pointer stays clear of the HUD panels, and labels no longer overlap in any region.
+- 2026-11-10 [FISH-008] Beginner's luck: your first fishing trip never comes home empty.
+- 2026-11-10 [GUIDE-230] The earning tips only suggest honest, repeatable work.
+- 2026-11-10 [GFX-111] Mountain rims and ledges look like jagged rock.
+- 2026-11-10 [CAL-009] The calendar remembers your own, your spouse's and your children's birthdays.
+- 2026-11-10 [C-340] More villagers bring a small gift with their birthday wish.
+- 2026-11-10 [WU-502] You can see the Herb Slope terraces being rebuilt, stage by stage.
 - 2026-11-09 [C-339] Food, drink, lanterns, charms and scrolls show their own icons in the bag and shops.
 - 2026-11-09 [WU-504] The journal's Today tab shows what earns best here and who to see today.
 - 2026-11-09 [SEASON-015] Finished season sets now repair Qingshi's Herb Slope Terraces, for richer gathering.

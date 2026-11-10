@@ -2,6 +2,21 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-10 (planner, 06:10 UTC)
+- 15 tasks landed (GUIDE-230, GFX-111, WU-505, WU-506, GFX-112, WU-502, FISH-008, CAL-009, GUIDE-228, FOLK-031, GUIDE-232,
+  C-204, C-340, C-341, QA-208 part 4). Review 2430218..eeed8bc fixed a doubled family birthday inline; its notes -> GUIDE-233
+  (beginner's luck after "got away"), WU-509 (empty Today card), C-347 (no wage in Qingshi). Live claim: GFX-113.
+- Planner shots (first hour `--terraces=3`; Qingshi, marsh, Misty Forest `--season=Winter`; 1280x720): rock, roads and the
+  encounter strip read well. Winter: grey shadow discs under snowy pines, green woods and herb patch, jetties beside frozen
+  ponds -> GFX-114 (spec file). NPC labels over the player, [E] chip over place labels, marsh signpost crowd -> WU-508.
+  Arrival card covers the village top -> WU-510. Flat water -> GFX-115.
+- Curious sim (1 seed, 3 months): 31 stones at day 143, Mortal until day 44 -> C-347 repeatable errands (planner default in
+  DESIGN.md) and GUIDE-233 one-time jobs on the Earning card (spec file). GUIDE-234: sect missions as a disciple's earning.
+- **Systems is thin (3 ready: GUIDE-233, SEASON-016, GUIDE-234).** Nearly every first-hour idea exists already (forecast, fish
+  log, chores, birthdays, projects). The big levers wait on the owner: pacing (F-005d), first fights (C-009), rogue speed
+  (QA-158). Next planner: look for systems work in what the content and GFX tasks surface, not another village layer; view
+  GFX-113/114 and WU-508 shots when they land; GFX-002 still waits on the owner.
+
 ## State on 2026-11-10 (planner, 00:10 UTC)
 - 13 tasks landed (GFX-109, WU-500, C-334, C-335, GUIDE-227, FOLK-030, GFX-110, QA-042, WU-501, GUIDE-229, SEASON-015,
   WU-504, C-339). Review 99c86db..2430218 fixed two slips inline; its QA-042 note -> C-343. Live claims: C-204, C-340,
