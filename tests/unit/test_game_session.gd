@@ -596,7 +596,7 @@ func test_cook_meal_spends_fish_and_a_day() -> void:
 	gs.cook_meal("fish_stew")
 	assert_eq(c.item_count("fish_stew"), 1)
 	assert_eq(c.item_count("silver_carp"), 0)
-	assert_eq(GameClock.total_days, day + 1)
+	assert_eq(_root().get_node("GameClock").total_days, day + 1)
 
 
 func test_snow_adds_a_day_to_travel() -> void:
@@ -2527,10 +2527,10 @@ func test_attend_celebration_gives_favor_to_both_once() -> void:
 	assert_eq(int(gs.npc_favor.get(a.id, 0)), 6)
 	assert_eq(int(gs.npc_favor.get(b.id, 0)), 6)
 	assert_eq(c.alignment, align + 1)
-	assert_eq(GameClock.total_days, day + 1)
+	assert_eq(_root().get_node("GameClock").total_days, day + 1)
 	gs.attend_celebration(b.id)
 	assert_eq(int(gs.npc_favor.get(b.id, 0)), 6)
-	assert_eq(GameClock.total_days, day + 1)
+	assert_eq(_root().get_node("GameClock").total_days, day + 1)
 	gs.end_session()
 
 
@@ -3860,3 +3860,19 @@ func test_almanac_gift_favor_and_sell_and_practice() -> void:
 	gs.sell_item("spirit_herb", 10)
 	assert_true(c.item_count("spirit_stone") - before >= base_gain)
 	_restore_weather(gs)
+
+
+## SECT-006: the steward's chore pays contribution toward the monthly duty and takes a day.
+func test_sect_hall_steward_chore() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	gs.join_sect("azure_cloud_sect")
+	assert_eq(c.sect.get("id", ""), "azure_cloud_sect")
+	var before := Sects.duty_progress(c)
+	var stones := c.item_count("spirit_stone")
+	var day: int = _root().get_node("GameClock").total_days
+	gs.perform_deed("hall_chore_azure_light")
+	assert_eq(Sects.duty_progress(c), before + 5)
+	assert_eq(c.item_count("spirit_stone"), stones + 1)
+	assert_eq(_root().get_node("GameClock").total_days, day + 1)

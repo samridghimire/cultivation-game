@@ -24,13 +24,15 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 				continue
 			for deed in Deeds.available(data, String(place["deed_context"]), flags):
 				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
+				var contribution := int(deed.get("effects", {}).get("contribution", 0))
+				var worth := float(contribution) * (Sects.contribution_value(data, String(c.sect["id"])) if not c.is_rogue() else 0.0)
 				# GUIDE-230: a wage is a good, repeatable errand, never a one-time crime or a fight.
-				if stones <= 0 or not Deeds.is_repeatable(deed) or int(deed.get("effects", {}).get("alignment", 0)) < 0 \
+				if (stones <= 0 and worth <= 0.0) or not Deeds.is_repeatable(deed) or int(deed.get("effects", {}).get("alignment", 0)) < 0 \
 						or String(deed.get("enemy", "")) != "" or Deeds.check(c, data, deed, flags, today) != "":
 					continue
-				var per_day := float(stones) / float(maxi(1, int(deed.get("days", 1))))
+				var per_day := (float(stones) + worth) / float(maxi(1, int(deed.get("days", 1))))
 				if per_day > float(best_chore.get("per_day", 0.0)):
-					best_chore = {"kind": "chore", "place": name, "per_day": per_day, "note": String(deed.get("name", ""))}
+					best_chore = {"kind": "chore", "place": name, "per_day": per_day, "note": String(deed.get("name", "")), "contribution": contribution}
 		elif kind == "gather":
 			var v := _gather_trip_value(c, data, place.get("gather_table", []), region_id, today, season) * (1.0 + Almanac.gather_bonus(omen)) / float(maxi(1, int(place.get("gather_days", 1))))
 			if v > float(best_gather.get("per_day", 0.0)):
@@ -282,7 +284,8 @@ static func lines(rows: Array[Dictionary], data: GameData = null) -> PackedStrin
 			var verb: String = {"gather": "Gathering", "fishing": "Fishing", "chore": "Errands"}.get(String(r["note"]), "Work")
 			out.append("%s at %s (%d days away): about %d a day." % [verb, r["place"], int(r["days"]), n])
 			continue
-		out.append("%s%s: about %d %s a day." % [(String(r["note"]).substr(0, 1).to_upper() + String(r["note"]).substr(1)), _paren(String(r["note"]), String(r["place"])), n, stones_word])
+		var extra := ", +%d contribution" % int(r["contribution"]) if int(r.get("contribution", 0)) > 0 else ""
+		out.append("%s%s: about %d %s a day%s." % [(String(r["note"]).substr(0, 1).to_upper() + String(r["note"]).substr(1)), _paren(String(r["note"]), String(r["place"])), n, stones_word, extra])
 	return out
 
 

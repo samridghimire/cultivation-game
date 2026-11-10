@@ -131,6 +131,7 @@
         {"type": "workshop", "display_name": "Artisan Quarter", "pos": [460, 660], "size": [150, 100], "color": "8c6640"},
         {"type": "clinic", "display_name": "Hall of Gentle Hands Clinic", "pos": [800, 380], "size": [120, 85], "color": "7fbf9f"},
         {"type": "sect_hall", "display_name": "Sect Envoy Hall", "pos": [1200, 750], "size": [160, 110], "color": "b33f33"},
+        {"type": "deed_giver", "display_name": "Pavilion Clerk", "pos": [1330, 620], "size": [30, 30], "color": "b08a2e", "look": {"robe": "b08a2e"}, "deed_context": "pavilion_steward"},
         {"type": "meditation", "anchor_id": "fallen_star_room", "display_name": "Rented Cultivation Room", "pos": [1450, 120], "size": [90, 70], "color": "8c919e", "qi_density": 1.3},
         {"type": "gather", "display_name": "Meteor Crater Field", "look": "crater", "pos": [800, 760], "size": [130, 80], "color": "7a3b2a", "gather_days": 15,
          "gather_table": [{"item": "fire_marrow_crystal", "weight": 0.06, "min": 1, "max": 1}, {"item": "earth_vein_jade", "weight": 0.09, "min": 1, "max": 1}, {"item": "scarlet_flame_fruit", "weight": 0.06, "min": 1, "max": 1}, {"item": "iron_essence", "weight": 6, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.012, "min": 1, "max": 1}, {"item": "", "weight": 5.3}]},
@@ -163,6 +164,7 @@
       "places": [
         {"type": "merchant", "display_name": "Qingming Offering Stall", "festival_only": "qingming_festival", "pos": [740, 530], "size": [70, 60], "color": "9fbf7a", "stock_tags": ["sweet_rice_ball"]},
         {"type": "sect_hall", "display_name": "Azure Cloud Hall", "sect": "azure_cloud_sect", "pos": [980, 730], "size": [160, 110], "color": "6f9fd0"},
+        {"type": "deed_giver", "display_name": "Hall Steward Qiu", "pos": [960, 935], "size": [30, 30], "color": "3f6fb5", "look": {"robe": "3f6fb5"}, "deed_context": "azure_steward"},
         {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (5x qi)", "tags": ["ridge"], "pos": [1400, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
         {"type": "gather", "display_name": "Crystal Vein", "look": "crystal", "pos": [600, 350], "size": [120, 80], "color": "7fa8c9", "gather_days": 10,
          "gather_table": [{"item": "iron_essence", "weight": 6, "min": 1, "max": 1}, {"item": "cold_iron", "weight": 0.9, "min": 1, "max": 1}, {"item": "azure_crystal", "weight": 0.18, "min": 1, "max": 1}, {"item": "star_silver", "weight": 0.018, "min": 1, "max": 1}, {"item": "profound_iron", "weight": 0.09, "min": 1, "max": 1}, {"item": "dragonblood_gold", "weight": 0.006, "min": 1, "max": 1}, {"item": "formation_jade", "weight": 0.06, "min": 1, "max": 1, "min_realm": "foundation_establishment"}, {"item": "", "weight": 6.1}]},
@@ -199,6 +201,7 @@
       "quiet_lines": ["Black water shivers though there is no wind.", "Your boots suck at the mud; something small plops into the reeds.", "Pale lights drift over the far pools and do not come closer.", "The air tastes of old iron and rot. You breathe through your sleeve.", "A rusted spearhead juts from the peat, and you leave it where it lies.", "Frogs fall silent as you pass and resume behind you.", "Fog crawls over the bog, carrying a faint, tuneless humming."], "encounter_tags": ["marsh", "wild"],
       "places": [
         {"type": "sect_hall", "display_name": "Blood Lotus Reed Hall", "sect": "blood_lotus_sect", "pos": [450, 230], "size": [160, 110], "color": "8a2f3a"},
+        {"type": "deed_giver", "display_name": "Reed Hall Overseer", "pos": [450, 85], "size": [30, 30], "color": "8b1e2d", "look": {"robe": "8b1e2d"}, "deed_context": "lotus_steward"},
         {"type": "meditation", "anchor_id": "bone_marsh_altar", "display_name": "Yin Gathering Altar (2.9x qi)", "pos": [1385, 180], "size": [110, 80], "color": "4a3a5c", "qi_density": 1.6},
         {"type": "meditation", "anchor_id": "bone_marsh_isle", "display_name": "Pure Lotus Isle", "pos": [560, 370], "size": [100, 70], "color": "c9d9b0", "qi_density": 1.2},
         {"type": "explore", "look": "ruins", "display_name": "Drowned Battlefield", "pos": [1150, 780], "size": [180, 100], "color": "3a3530", "explore_tags": ["marsh", "ruins"]},

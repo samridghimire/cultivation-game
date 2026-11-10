@@ -684,7 +684,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var injuries := Injuries.describe(c, data)
 		out.append("Treat your injuries: %s %s %s your cultivation to x%s.%s" % [heal, ", ".join(injuries), "slows" if injuries.size() == 1 else "slow", String.num(Injuries.cultivation_multiplier(c, data), 2), cost])
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
-		var duty := duty_hint(c, data, flags)
+		var duty := duty_hint(c, data, flags, region_id, today)
 		if duty != "":
 			out.append(duty)
 	var due := ""
@@ -3116,7 +3116,7 @@ static func _merge_sell_advice(out: PackedStringArray, sell_line: String) -> Pac
 
 
 ## GUIDE-167: the duty reminder plus the quickest ready mission that covers what is owed, else what missing it costs.
-static func duty_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
+static func duty_hint(c: CharacterData, data: GameData, flags: Dictionary = {}, region_id: String = "", today: int = 0) -> String:
 	var line := Sects.duty_reminder(c, data)
 	if line == "":
 		return ""
@@ -3134,6 +3134,9 @@ static func duty_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) 
 	if pick != "":
 		var m: Dictionary = data.sect_missions[pick]
 		return "%s %s (%d contribution, %s) covers it." % [line, m["name"], int(m.get("contribution", 0)), Calendar.format_duration(int(m.get("days", 1)))]
+	var chore := _steward_chore_line(c, data, flags, region_id, today)
+	if chore != "":
+		return "%s %s" % [line, chore]
 	var pay := Sects.stipend(c, data)
 	var parts: PackedStringArray = []
 	var stones := int(pay.get("spirit_stones", 0))
@@ -3147,6 +3150,25 @@ static func duty_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) 
 	if parts.is_empty():
 		return line
 	return "%s Missing it skips this month's stipend (%s)." % [line, " and ".join(parts)]
+
+
+## SECT-006: "<Steward> has chores (N contribution a day)." when a sect-only deed giver stands in `region_id` and a chore passes Deeds.check.
+static func _steward_chore_line(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int) -> String:
+	if region_id == "" or c.is_rogue():
+		return ""
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+			continue
+		var best := 0.0
+		for deed in Deeds.available(data, String(place["deed_context"]), flags):
+			var req: Dictionary = deed.get("requires", {})
+			var gain := int(deed.get("effects", {}).get("contribution", 0))
+			if not req.has("sect") or gain <= 0 or Deeds.check(c, data, deed, flags, today) != "":
+				continue
+			best = maxf(best, float(gain) / float(maxi(1, int(deed.get("days", 1)))))
+		if best > 0.0:
+			return "%s has chores (%d contribution a day)." % [place.get("display_name", "The steward"), roundi(best)]
+	return ""
 
 
 static func _duty_mission_beats(a: Dictionary, b: Dictionary) -> bool:
@@ -4475,7 +4497,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	if Injuries.has_any(c):
 		urgent += 1
 	# The duty reminder lives in the Sect section; keep it out of Next steps.
-	var duty_line := duty_hint(c, data, flags) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
+	var duty_line := duty_hint(c, data, flags, region_id, today) if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS else ""
 	var method_line := _method_hint(c, data)
 	# Newcomers only: past Qi Refining (or on saves from before the Elder Mo flag
 	# and life stats) the ladder would otherwise never go away.

@@ -39,6 +39,10 @@ static func check(c: CharacterData, data: GameData, deed: Dictionary, flags: Dic
 		var left := cooldown_left(c, deed, today)
 		if left > 0:
 			return "You did this recently. Try again in %d days." % left
+	var need := String(deed.get("requires", {}).get("sect", ""))
+	if need != "":
+		if c.is_rogue() or (need != "any" and String(c.sect["id"]) != need):
+			return "Only disciples of the %s may do this." % String(data.sects[need].name) if data.sects.has(need) else "Only sect disciples may do this."
 	return Exploration.check_choice(c, data, deed, flags, today)
 
 
@@ -78,8 +82,10 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("Deed '%s' needs cooldown_days >= 1" % deed["id"])
 		var req: Dictionary = deed.get("requires", {})
 		for key in req:
-			if not key in ["min_realm", "min_alignment", "max_alignment", "flag"]:
+			if not key in ["min_realm", "min_alignment", "max_alignment", "flag", "sect"]:
 				errors.append("Deed '%s' has unknown requirement '%s'" % [deed["id"], key])
+		if req.has("sect") and String(req["sect"]) != "any" and not data.sects.has(String(req["sect"])):
+			errors.append("Deed '%s' has unknown sect '%s'" % [deed["id"], req["sect"]])
 		if req.has("min_realm") and data.realm_index_of(String(req["min_realm"])) < 0:
 			errors.append("Deed '%s' has unknown min_realm '%s'" % [deed["id"], req["min_realm"]])
 	return errors

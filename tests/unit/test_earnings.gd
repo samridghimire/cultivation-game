@@ -407,3 +407,53 @@ func test_far_mission_wording_and_no_duplicate_giver() -> void:
 	assert_false(u.contains("(Headman Zhou)"), u)
 	var chore: Array[Dictionary] = [{"kind": "chore", "place": "Headman Zhou", "note": "Run errands for Headman Zhou", "per_day": 4.0}]
 	assert_false(Earnings.lines(chore, data())[0].contains("(Headman Zhou)"))
+
+
+## SECT-006: a sect member in their home region sees the steward's chore row with contribution; a rogue does not.
+func test_steward_chore_row_for_disciple_only() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(Sects.join(c, data(), "azure_cloud_sect")["ok"])
+	var rows := Earnings.earning_options(c, data(), {}, "azure_peak", 0)
+	var chore := {}
+	for r in rows:
+		if r["kind"] == "chore":
+			chore = r
+	assert_false(chore.is_empty(), "chore row")
+	assert_true(int(chore["contribution"]) > 0)
+	assert_eq(chore["place"], "Hall Steward Qiu")
+	assert_true(" ".join(Earnings.lines(rows, data())).contains("contribution"))
+	var rogue := new_character()
+	for r in Earnings.earning_options(rogue, data(), {}, "azure_peak", 0):
+		assert_true(String(r.get("place", "")) != "Hall Steward Qiu")
+	# After the best chore, the row switches to the other one.
+	var first := String(chore["note"])
+	var id := "hall_chore_azure_heavy" if first == String(data().deeds["hall_chore_azure_heavy"]["name"]) else "hall_chore_azure_light"
+	Deeds.perform(c, data(), id, {}, 0)
+	var after := {}
+	for r in Earnings.earning_options(c, data(), {}, "azure_peak", 1):
+		if r["kind"] == "chore":
+			after = r
+	assert_true(after.is_empty() or after["note"] != first, "next chore differs")
+
+
+## SECT-006: requires.sect on deeds.
+func test_deed_requires_sect() -> void:
+	var deed: Dictionary = data().deeds["hall_chore_azure_light"]
+	var rogue := new_character()
+	assert_true(Deeds.check(rogue, data(), deed, {}, 0).begins_with("Only disciples of the Azure Cloud Sect"))
+	var other := new_character()
+	other.realm_index = 1
+	assert_true(Sects.join(other, data(), "blood_lotus_sect")["ok"])
+	assert_true(Deeds.check(other, data(), deed, {}, 0) != "")
+	var member := new_character()
+	member.realm_index = 1
+	assert_true(Sects.join(member, data(), "azure_cloud_sect")["ok"])
+	assert_eq(Deeds.check(member, data(), deed, {}, 0), "")
+	var any_deed := {"id": "x", "requires": {"sect": "any"}, "effects": {}}
+	assert_true(Deeds.check(rogue, data(), any_deed, {}, 0) != "")
+	assert_eq(Deeds.check(other, data(), any_deed, {}, 0), "")
+	data().deeds["bad_sect"] = {"id": "bad_sect", "requires": {"sect": "nope"}, "effects": {}}
+	var errs := Deeds.validate(data())
+	data().deeds.erase("bad_sect")
+	assert_true(" ".join(errs).contains("unknown sect"))

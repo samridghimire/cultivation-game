@@ -144,6 +144,8 @@ func test_every_deed_context_has_a_giver_and_a_moral_choice() -> void:
 	for deed: Dictionary in data().deeds.values():
 		var ctx: String = deed.get("context", "")
 		var shift := int(deed.get("effects", {}).get("alignment", 0))
+		if deed.get("requires", {}).has("sect"):
+			continue  # SECT-006: steward chores are sect work, not moral choices
 		if not contexts.has(ctx):
 			contexts[ctx] = {"good": false, "evil": false}
 		if shift > 0:
@@ -245,6 +247,7 @@ func test_deed_validation() -> void:
 	d.items = data().items
 	d.enemies = data().enemies
 	d.realms = data().realms
+	d.sects = data().sects
 	d.deeds = {"a": {"id": "a", "enemy": "nobody", "requires": {"min_realm": "nowhere", "height": 3}, "effects": {}}}
 	assert_eq(Deeds.validate(d).size(), 3)
 	d.deeds = data().deeds
