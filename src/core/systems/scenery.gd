@@ -480,6 +480,82 @@ static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -
 	return out
 
 
+## GFX-112: the road surface pieces laid over a path rect, seeded by region id and rect. Each is
+## {kind: slab|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
+## slabs; bog with map.water murky = planks across the path; other bog = a muddy track with puddles; grass/litter = two
+## worn ruts, a dark edge strip on each side and tufts creeping in. Every rect lies inside `path_rect`; none overlaps a stream crossing (a bridge).
+static func path_tiles(region: Dictionary, path_rect: Rect2) -> Array[Dictionary]:
+	var map: Dictionary = region.get("map", {})
+	var style := str(map.get("ground_style", "grass"))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|%s|roadtiles" % [region.get("id", ""), path_rect])
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var bridges: Array[Rect2] = []
+	for lm: Dictionary in map.get("landmarks", []):
+		if str(lm.get("kind", "")) == "stream":
+			var sz: Array = lm["size"]
+			var c: Array = lm["pos"]
+			bridges.append(Rect2(float(c[0]) - float(sz[0]) * 0.5, float(c[1]) - float(sz[1]) * 0.5, float(sz[0]), float(sz[1])).grow(6.0))
+	var out: Array[Dictionary] = []
+	var len_total := path_rect.size.x if along_x else path_rect.size.y
+	var width := path_rect.size.y if along_x else path_rect.size.x
+	var inset := 3.0
+	var pos := 0.0
+	if style == "scree" or style == "paved":
+		var rows := maxi(int(floor((width - inset * 2.0) / 14.0)), 1)
+		var row_w := (width - inset * 2.0) / float(rows)
+		for row in rows:
+			pos = inset
+			while pos < len_total - inset - 6.0:
+				var l := minf(10.0 + rng.randf() * 16.0, len_total - inset - pos)
+				var roll := rng.randf()
+				var flag := "crack" if roll < 0.12 else ("gap" if roll < 0.2 else "")
+				out.append({"kind": "slab", "rect": _road_rect(path_rect, along_x, pos, inset + row * row_w, l, row_w), "shade": rng.randf() * 2.0 - 1.0, "flag": flag})
+				pos += l
+	elif style == "bog" and str(map.get("water", "clear")) == "murky":
+		pos = inset
+		while pos < len_total - inset - 4.0:
+			var l := minf(7.0 + rng.randf() * 3.0, len_total - inset - pos)
+			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset, l - 1.0, width - inset * 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+			pos += l
+	else:
+		var strip := 3.0
+		var seg := 40.0
+		pos = 0.0
+		while pos < len_total:
+			var l := minf(seg, len_total - pos)
+			for side in 2:
+				var off := inset if side == 0 else width - inset - strip
+				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, pos, off, l, strip), "shade": -0.5, "flag": ""})
+			for off_f: float in [0.3, 0.62]:
+				out.append({"kind": "rut", "rect": _road_rect(path_rect, along_x, pos, width * off_f - 2.0, l, 4.0), "shade": -0.3, "flag": ""})
+			pos += seg
+		var n := int(len_total / 22.0)
+		for i in n:
+			var k := "puddle" if style == "bog" else "tuft"
+			var sz := Vector2(10.0, 4.0) if k == "puddle" else Vector2(3.0, 5.0)
+			var across := rng.randf_range(0.0, maxf(width - sz.y, 0.0)) if k == "puddle" else (inset if rng.randf() < 0.5 else width - inset - sz.y)
+			if k == "tuft" and rng.randf() < 0.4:
+				continue
+			out.append({"kind": k, "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - sz.x, 0.0), across, sz.x, sz.y), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+	var kept: Array[Dictionary] = []
+	for t in out:
+		var hit := false
+		for b in bridges:
+			if b.intersects(t["rect"]):
+				hit = true
+				break
+		if not hit:
+			kept.append(t)
+	return kept
+
+
+static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: float, length: float, thick: float) -> Rect2:
+	if along_x:
+		return Rect2(path_rect.position.x + along, path_rect.position.y + across, length, thick)
+	return Rect2(path_rect.position.x + across, path_rect.position.y + along, thick, length)
+
+
 ## GFX-109: map.relief keys and limits.
 const RELIEF_KEYS: PackedStringArray = ["ledges", "snow", "boulders"]
 const RELIEF_MAX := 12

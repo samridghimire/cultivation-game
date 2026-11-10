@@ -1053,6 +1053,7 @@ func _draw() -> void:
 			var psc := float(Sprites.scale())
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
+			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_relief(map)
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
@@ -1645,6 +1646,41 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
+## GFX-112: the road surface (ruts, slabs, planks, puddles, tufts) over one path rect.
+func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
+	for t: Dictionary in Scenery.path_tiles(_region, rect):
+		var r: Rect2 = t["rect"]
+		var shade: float = t["shade"]
+		var c := base
+		match str(t["kind"]):
+			"slab":
+				c = base.lightened(0.05 * shade) if shade >= 0.0 else base.darkened(-0.07 * shade)
+				if t["flag"] == "gap":
+					draw_rect(r, base.darkened(0.45))
+					continue
+				draw_rect(r, c)
+				draw_rect(r, base.darkened(0.3), false, 1.0)
+				if t["flag"] == "crack":
+					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
+			"plank":
+				c = Color("7a5a38").lightened(0.06 * shade) if shade >= 0.0 else Color("7a5a38").darkened(-0.1 * shade)
+				draw_rect(r, c)
+				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
+			"rut", "edge":
+				draw_rect(r, base.darkened(0.22 if t["kind"] == "rut" else 0.12))
+			"puddle":
+				draw_rect(r, Color(0.2, 0.26, 0.3, 0.8))
+			"tuft":
+				var g := Color(map_grass_color())
+				draw_rect(r, g.lightened(0.1) if shade > 0.0 else g)
+		if snowy and str(t["kind"]) in ["edge", "tuft", "slab"]:
+			draw_rect(Rect2(r.position, Vector2(r.size.x, minf(2.0, r.size.y))), Color(0.93, 0.95, 1.0, 0.8))
+
+
+func map_grass_color() -> String:
+	return str(_region.get("map", {}).get("decor", {}).get("grass_color", "4f7a3a"))
+
+
 ## The plank bridge wherever a path crosses the stream `r`.
 func _draw_bridges(r: Rect2) -> void:
 	for pr: Array in _region.get("map", {}).get("paths", []):
