@@ -27,6 +27,11 @@ func test_outcome_lines() -> void:
 	assert_eq(CastBar.outcome_text(0.0, false), "You strike too late.")
 
 
+func test_lost_cast_has_no_bar_line() -> void:
+	assert_eq(CastBar.outcome_text(0.0, true), "")
+	assert_eq(CastBar.outcome_text(1.0, true), "")
+
+
 func test_strike_fishes_with_the_quality() -> void:
 	var bar := CastBar.new()
 	_session()

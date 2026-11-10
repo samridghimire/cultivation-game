@@ -62,13 +62,15 @@ static func zone_center_from(rng: RandomNumberGenerator) -> float:
 	return rng.randf_range(0.2, 0.8)
 
 
-## Outcome line posted to the message log.
+## Outcome line posted to the message log; "" for a lost cast (GameState.fish tells that story).
 static func outcome_text(quality: float, lost: bool) -> String:
+	if lost:
+		return ""  # GameState.fish posts the one "got away" story
 	if quality >= 1.0:
 		return "A clean strike!"
 	if quality >= 0.5:
 		return "A fair cast."
-	return "You strike too late." if not lost else "The fish slips away before you strike."
+	return "You strike too late."
 
 
 func open_for(catch_table: Array, trip_days: int, place: String, rng: RandomNumberGenerator = null) -> void:
@@ -142,7 +144,9 @@ func _finish(quality: float, lost: bool) -> void:
 	if _finished:
 		return
 	_finished = true
-	EventBus.post(outcome_text(quality, lost))
+	var line := outcome_text(quality, lost)
+	if line != "":
+		EventBus.post(line)
 	var t := table
 	var d := days
 	var p := place_name

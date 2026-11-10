@@ -3770,6 +3770,28 @@ func test_fishing_first_trip_slipped_has_one_line() -> void:
 	_restore_weather(gs)
 
 
+func test_slipped_first_cast_posts_one_fishing_line() -> void:  # FISH-010
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "clear")
+	var table := [{"item": "", "weight": 1000}, {"item": "silver_carp", "weight": 3, "min": 1, "max": 1}]
+	for seed_i in 200:
+		var probe := RandomNumberGenerator.new()
+		probe.seed = seed_i
+		if not Fishing.got_away(0.0, probe):
+			continue
+		c.catch_log = {}
+		gs.rng.seed = seed_i
+		EventBus.history.clear()
+		gs.fish(table, 1, "", 0.0)
+		var texts: Array = EventBus.history.map(func(e: Dictionary) -> String: return String(e["text"]))
+		var slips := texts.filter(func(t: String) -> bool: return t.begins_with("A fish takes the bait and slips free") or t == Fishing.GOT_AWAY)
+		assert_eq(slips.size(), 1, str(texts))
+		assert_false(texts.has(Fishing.GOT_AWAY))
+		break
+	_restore_weather(gs)
+
+
 ## FISH-009: a fresh character's first trip at the Qingshi jetty always lands a fish and posts exactly one
 ## beginner's-luck line, in every season, on clear and rain days, whatever the cast quality or rng.
 func test_fishing_first_trip_in_qingshi_never_empty() -> void:

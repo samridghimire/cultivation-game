@@ -782,7 +782,9 @@ func _cast_shots(gs: Node) -> void:
 		cast.open_for([{"item": "spirit_herb", "weight": 100, "min": 1, "max": 1}], 1, "Qingshi Jetty", rng)
 		cast.set("marker", 0.45)
 		cast.set_process(false)
-		cast.get("_bar").queue_redraw(), "close": cast.close})
+		cast.get("_bar").queue_redraw(), "close": func() -> void:
+		cast.set("_finished", true)  # FISH-010: closing a shot must never resolve a trip
+		cast.close()})
 
 
 func _find_gather_site(site_name: String) -> Node:
