@@ -8,6 +8,9 @@
     "GIT_AUTHOR_NAME": "Samriddha Ghimire",
     "GIT_AUTHOR_EMAIL": "samriddhaghimire@gmail.com",
     "GIT_COMMITTER_NAME": "Samriddha Ghimire",
-    "GIT_COMMITTER_EMAIL": "samriddhaghimire@gmail.com"
+    "GIT_COMMITTER_EMAIL": "samriddhaghimire@gmail.com",
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "commit.gpgsign",
+    "GIT_CONFIG_VALUE_0": "false"
   }
 }
