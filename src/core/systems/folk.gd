@@ -396,8 +396,10 @@ const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "great_trail", 
 
 
 ## FOLK-015: remember the newest notable deed (a newer one replaces it).
-static func record_news(flags: Dictionary, kind: String, subject: String, region_id: String, day: int) -> void:
+static func record_news(flags: Dictionary, kind: String, subject: String, region_id: String, day: int, project_id: String = "") -> void:
 	flags["village_news"] = {"kind": kind, "subject": subject, "region": region_id, "day": day}
+	if project_id != "":
+		flags["village_news"]["project"] = project_id
 
 
 ## FOLK-015: the line a villager says about the newest deed ({player} left for the caller), or "" when there is no
@@ -418,9 +420,15 @@ static func news_line(npc: CharacterData, flags: Dictionary, data: GameData, reg
 	elif not is_villager(npc, data, Npcs.region_of(npc, data)):
 		return ""
 	var lines: Array = bands.get(String(news.get("kind", "")), [])
+	var seed_n := absi(hash(npc.id + str(day)))
+	if String(news.get("kind", "")) == "project_stage" and String(news.get("project", "")) != "":  # SEASON-016
+		for proj: Dictionary in SeasonTasks.project_list(data):
+			var own: Variant = proj.get("news", [])
+			if String(proj.get("id", "")) == String(news["project"]) and own is Array and not (own as Array).is_empty() and seed_n % 10 < 7:
+				lines = own
 	if lines.is_empty():
 		return ""
-	return String(lines[absi(hash(npc.id + str(day))) % lines.size()]).replace("{subject}", String(news.get("subject", ""))).replace("{project}", String(news.get("subject", ""))).replace("{beast}", String(news.get("subject", "")))
+	return String(lines[seed_n % lines.size()]).replace("{subject}", String(news.get("subject", ""))).replace("{project}", String(news.get("subject", ""))).replace("{beast}", String(news.get("subject", "")))
 
 
 ## Load errors in folk_greetings: both bands, non-empty string lines, min_favor above max_favor.

@@ -1088,3 +1088,44 @@ func test_gift_memory_validation() -> void:
 	assert_false(Folk.validate_gift_memory(d).is_empty())
 	d.family["gift_memory"] = saved
 	assert_true(Folk.validate_gift_memory(d).is_empty())
+
+
+func test_project_news_uses_own_lines_when_present() -> void:  # SEASON-016
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	var d := data()
+	var jetty: Dictionary = {}
+	for p: Dictionary in SeasonTasks.project_list(d):
+		if p["id"] == "jetty":
+			jetty = p
+	var own: Array = jetty["news"]
+	var generic: Array = d.family["folk_greetings"]["news"]["project_stage"]
+	var own_hits := 0
+	for day in range(10, 60):
+		var flags := {}
+		Folk.record_news(flags, "project_stage", "the Village Pond Jetty", "qingshi_village", day, "jetty")
+		var line := Folk.news_line(npc, flags, d, "qingshi_village", day)
+		var plain := {}
+		Folk.record_news(plain, "project_stage", "the Village Pond Jetty", "qingshi_village", day)
+		var base := Folk.news_line(npc, plain, d, "qingshi_village", day)
+		assert_true(line != "")
+		if own.has(line):
+			own_hits += 1
+		else:
+			assert_eq(line, base, "falls back to the generic pool")
+		assert_true(generic.size() > 0)
+	assert_true(own_hits > 20 and own_hits < 50, "about 70 percent own lines: %d" % own_hits)
+
+
+func test_project_news_validation_rejects_unknown_placeholder() -> void:  # SEASON-016
+	var d := data()
+	var proj: Dictionary = {}
+	for p: Dictionary in d.season_tasks["restoration"]["projects"]:
+		if p["id"] == "jetty":
+			proj = p
+	var saved: Variant = proj["news"]
+	proj["news"] = ["Hello {nobody}"]
+	assert_true(SeasonTasks.validate(d).size() > 0)
+	proj["news"] = saved
+	assert_eq(SeasonTasks.validate(d).size(), 0)

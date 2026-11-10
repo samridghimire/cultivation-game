@@ -3810,7 +3810,7 @@ func _season_note(kind: String, target: String, n: int) -> void:
 	var reached := SeasonTasks.stage_reached(data, player.seasons_completed.size()) if player.seasons_completed.size() > done_before else {}
 	if not reached.is_empty() and int(reached["index"]) > 0:
 		var proj: Dictionary = reached["project"]
-		Folk.record_news(world_flags, "project_stage", String(proj["name"]), String(proj.get("region", SeasonTasks.REGION)), day)
+		Folk.record_news(world_flags, "project_stage", String(proj["name"]), String(proj.get("region", SeasonTasks.REGION)), day, String(proj["id"]))
 		var flag := "project_done_" + String(proj["id"])
 		if bool(reached["final"]) and String(proj.get("done_line", "")) != "" and not world_flags.has(flag):
 			EventBus.post(String(proj["done_line"]), "people")

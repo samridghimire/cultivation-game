@@ -638,6 +638,16 @@ static func _validate_restoration(data: GameData) -> Array[String]:
 			errs.append("season_tasks.json project '%s' fish_bonus must be in (0, 0.1]" % pid)
 		if p.has("gather_bonus") and (float(p["gather_bonus"]) <= 0.0 or float(p["gather_bonus"]) > 0.2):
 			errs.append("season_tasks.json project '%s' gather_bonus must be in (0, 0.2]" % pid)
+		if p.has("news"):  # SEASON-016
+			var nw: Variant = p["news"]
+			if not (nw is Array) or (nw as Array).is_empty():
+				errs.append("season_tasks.json project '%s' news must be a non-empty array" % pid)
+			else:
+				for nl: Variant in nw:
+					var tmpl := String(nl) if nl is String else ""
+					var stripped := tmpl.replace("{project}", "").replace("{subject}", "").replace("{beast}", "")
+					if tmpl == "" or stripped.contains("{") or stripped.contains("}"):
+						errs.append("season_tasks.json project '%s' news lines must be non-empty with only {project}/{subject}/{beast}" % pid)
 		if p.has("daily"):
 			var dd: Dictionary = p["daily"]
 			if not data.items.has(String(dd.get("item", ""))) or String(dd.get("flag", "")) == "" or String(dd.get("text", "")) == "":
