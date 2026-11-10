@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: eeed8bc
+Last reviewed commit: ce5bcc1
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1788,3 +1788,17 @@ Last reviewed commit: eeed8bc
   - Notes, not filed: SEASON-015 did not run tools/balance.sh --check (in its Follow-ups); GUIDE-230 left Qingshi with no
     chore row for a newcomer (a planner call); FISH-008 posts "Beginner's luck" right after "it got away"; WU-504 shows
     an empty main Today card when every line is a People line; WU-502/505/506 did not render 1280x720 shots.
+- 2026-11-10 (reviewer, 2nd run): reviewed eeed8bc..ce5bcc1 (GFX-112, GFX-113, GFX-114, GUIDE-233, C-347, SEASON-016, WU-508,
+  GUIDE-234, plus the owner's commits ebae72c/f25d762/24188a2/344f7a5/1f1ad2b; [PLAN]/[REVIEW] skipped). Main green
+  (3768 tests -> 3769). No BACKLOG/CHANGELOG edits by workers; no binary assets (road tiles, wisps, rails, ice holes are
+  code-drawn); no SAVE_VERSION change (SEASON-016's `project` key rides in the village_news world flag).
+  - Owner merge 24188a2 is content-neutral (no diff against its main parent 7d69631); it only re-lists old history in
+    `git log eeed8bc..`. GFX-112/GFX-114 carry the owner's name as author (settings from ebae72c, reverted by 1f1ad2b).
+  - Fixed (GFX-114): `Interactable.winter` was set only when a place was built, so a season turning while you stayed in
+    a region left woods without snow caps and herb beds green all winter (and snowy all spring) until you re-entered.
+    World._on_days_advanced now updates it on a season change; test added.
+  - GUIDE-233 (one-time jobs skip repeatable/evil/fight deeds; FISH-008's double got-away/beginner's-luck line fixed),
+    GUIDE-234 (skips Dangerous/Deadly missions, rogue gets none), C-347 (both chores repeatable, Qingshi has a chore row
+    again), SEASON-016 (news validated, deterministic), WU-508 (pure LabelFade tested), GFX-112/113 OK.
+  - Notes, not filed: GUIDE-234 ignores mission item costs and a far mission row reads "Work at ..."; C-347's
+    balance drift is already QA-208 (3); WU-508 parts 3 and 4 and several GFX shots (winter, grass) were not done.

@@ -153,6 +153,11 @@ func _on_days_advanced(_days: int) -> void:
 		return
 	_season = season
 	_weather_kind = weather
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for node: Node in get_children():  # GFX-114: snow caps / dormant beds follow a season change while you stay
+		if node is Interactable and (node as Interactable).winter != winter:
+			(node as Interactable).winter = winter
+			(node as Interactable).queue_redraw()
 	queue_redraw()
 	_refresh_ambient()
 	var tween := create_tween()

@@ -352,3 +352,28 @@ func test_winter_look() -> void:
 	assert_eq(PixelPlace.rows("explore_ruins"), PixelPlace.rows("explore_ruins", true, false, false, "thatch", true))
 	assert_false(PixelPlace.winter_kind("gather_frost"))
 	assert_true(PixelPlace.winter_crown(Color("2e7a2a")).get_luminance() < Color("2e7a2a").get_luminance())
+
+
+## GFX-114 (review): places switch to their winter look when the season turns while the player stays in the region.
+func test_places_follow_season_change() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var clock := root.get_node("GameClock")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	clock.total_days = Calendar.DAYS_PER_MONTH * 9 - 1  # the last day of autumn
+	assert_eq(Calendar.season_of(clock.total_days), "Autumn")
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	var places: Array = world.get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	assert_true(not places.is_empty())
+	assert_false((places[0] as Interactable).winter)
+	clock.total_days += 1
+	assert_eq(Calendar.season_of(clock.total_days), "Winter")
+	world._on_days_advanced(1)
+	for p: Interactable in places:
+		if is_instance_valid(p):
+			assert_true(p.winter, "%s turns wintry" % p.name)
+	world.free()
+	gs.end_session()
+	clock.total_days = 0
