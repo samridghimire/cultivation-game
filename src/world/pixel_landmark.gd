@@ -30,6 +30,8 @@ static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), 
 	var px := pixel_size(kind, size)
 	if frozen and kind == "pond":
 		return frozen_pond(px, tint)
+	if frozen and kind == "stream":
+		return frozen_stream(px)
 	if kind != "pond" or not PlaceLooks.WATER_KINDS.has(water):
 		water = "clear"
 	var key := "%s|%s|%s|%s|%s|%s" % [kind, px, tint.to_html(), dashes, style, water]
@@ -66,6 +68,47 @@ static func frozen_pond(px: Vector2i, water: Color) -> ImageTexture:
 			var cy := y + i
 			if cx >= 2 and cy >= 2 and cx < w - 2 and cy < h - 2 and img.get_pixel(cx, cy).a > 0.0:
 				img.set_pixel(cx, cy, crack)
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+
+## GFX-116: a stream frozen over: pale ice, a few 1-px white crack lines along its length, snow lips on both banks.
+static func frozen_stream(px: Vector2i) -> ImageTexture:
+	var key := "frozen_stream|%s" % px
+	if _cache.has(key):
+		return _cache[key]
+	var w := px.x
+	var h := px.y
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color("dcebf7"))
+	var lip := Color("f8fbff")
+	var crack := Color("ffffff")
+	var shade := Color("b4cde0")
+	var along_x := w >= h
+	var thick := mini(w, h)
+	for y in h:
+		for x in w:
+			var across := y if along_x else x
+			if across < 2 or across >= thick - 2:
+				img.set_pixel(x, y, lip)
+			elif across == 2 or across == thick - 3:
+				img.set_pixel(x, y, shade)
+	# 1-px white crack lines: short staggered dashes at fixed fractions of the width.
+	for k in 3:
+		var lane := 4 + (thick - 8) * (k + 1) / 4
+		var pos := (k * 37) % 23
+		var length := w if along_x else h
+		while pos < length:
+			var run := 5 + (pos * 7 + k) % 6
+			for i in run:
+				var a := pos + i
+				if a >= length:
+					break
+				var off := lane + ((a / 4 + k) % 3 - 1)
+				off = clampi(off, 3, thick - 4)
+				img.set_pixel(a if along_x else off, off if along_x else a, crack)
+			pos += run + 12 + (pos * 3 + k * 5) % 14
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex

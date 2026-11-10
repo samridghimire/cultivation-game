@@ -285,7 +285,7 @@ func test_jetty_meets_the_pond() -> void:
 				if i.size.x >= 4.0 and i.size.y >= 4.0:
 					overlap = true
 			assert_true(overlap, "%s: jetty overlaps its pond by 4+ px" % region["id"])
-			assert_true(rect.grow(10.0).has_point(Vector2(lm["pos"][0], lm["pos"][1])), "%s: the place stays at the jetty" % region["id"])
+			assert_true(rect.grow(80.0).has_point(Vector2(lm["pos"][0], lm["pos"][1])), "%s: the place stays at the jetty's foot" % region["id"])
 	assert_true(checked >= 3, "several jetties sit on ponds")
 	# No pond near: the landmark keeps its own rect.
 	var lone := {"map": {"landmarks": [{"kind": "jetty", "pos": [100, 100], "size": [88, 28]}]}}
@@ -608,3 +608,42 @@ func test_ice_hole_inside_pond() -> void:
 			assert_true(inside, "ice hole of %s jetty lies in a pond" % region["id"])
 			checked += 1
 	assert_true(checked >= 4, "several regions have a jetty on a pond")
+
+
+## GFX-116: a jetty runs from its shore point (within 6 px of the pond rim) out over the water; its water end lies inside the pond ellipse.
+func test_jetty_runs_out_over_water() -> void:
+	var checked := 0
+	for region: Dictionary in data().regions.values():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm.get("kind", "") != "jetty":
+				continue
+			var lay := Scenery.jetty_layout(region, lm)
+			if not bool(lay["on_water"]):
+				continue
+			var r: Rect2 = lay["rect"]
+			var vertical := bool(lay["vertical"])
+			var toward := int(lay["toward_water"])
+			var water_end: Vector2
+			var shore_end: Vector2
+			var c := r.get_center()
+			if vertical:
+				water_end = Vector2(c.x, r.position.y if toward < 0 else r.end.y)
+				shore_end = Vector2(c.x, r.end.y if toward < 0 else r.position.y)
+			else:
+				water_end = Vector2(r.position.x if toward < 0 else r.end.x, c.y)
+				shore_end = Vector2(r.end.x if toward < 0 else r.position.x, c.y)
+			var best_in := false
+			var best_rim := INF
+			for other: Dictionary in region["map"]["landmarks"]:
+				if other.get("kind", "") != "pond":
+					continue
+				var pc := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+				var half := Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0
+				if ((water_end - pc) / half).length() < 1.0:
+					best_in = true
+				var q := ((shore_end - pc) / half).length()
+				best_rim = minf(best_rim, absf(q - 1.0) * minf(half.x, half.y))
+			assert_true(best_in, "%s: jetty water end is inside its pond" % region["id"])
+			assert_true(best_rim <= 6.0, "%s: jetty shore end within 6 px of the rim (%.1f)" % [region["id"], best_rim])
+			checked += 1
+	assert_true(checked >= 4, "several jetties checked")

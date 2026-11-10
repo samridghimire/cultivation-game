@@ -1698,9 +1698,12 @@ func _jetty_stage() -> int:
 func _draw_ice_hole(at: Vector2) -> void:
 	if at == Vector2.INF:
 		return
-	PlaceArt.ellipse(self, at, Vector2(7, 4.5), Color("f4f8ff"))
-	PlaceArt.ellipse(self, at, Vector2(5, 3), Color("1f3a5c"))
-	PlaceArt.ellipse(self, at + Vector2(-1, -1), Vector2(2, 1), Color("3c6a9a"))
+	PlaceArt.ellipse(self, at, Vector2(11, 7), Color("1b2a3c"))  # GFX-116: dark ring, then the white rim, then the water
+	PlaceArt.ellipse(self, at, Vector2(10, 6), Color("f4f8ff"))
+	PlaceArt.ellipse(self, at, Vector2(7.5, 4.5), Color("1f3a5c"))
+	PlaceArt.ellipse(self, at + Vector2(-1.5, -1.5), Vector2(3, 1.5), Color("3c6a9a"))
+	PlaceArt.ellipse(self, at + Vector2(15, 3), Vector2(6, 3.5), Color("dfe9f4"))  # a small snow mound beside it
+	PlaceArt.ellipse(self, at + Vector2(14, 2), Vector2(4.5, 2.5), Color("ffffff"))
 
 
 func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:

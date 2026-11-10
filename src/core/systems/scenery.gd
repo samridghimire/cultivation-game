@@ -294,6 +294,8 @@ static func jetty_posts(region: Dictionary, lm: Dictionary, stage: int) -> Array
 ## the map, vertical: bool (true = the long side runs north-south), on_water: bool}.
 const JETTY_REACH := 160.0
 const JETTY_OVERLAP := 8.0
+## GFX-116: the shore end of a jetty stands this far outside the rim; the planks run from there out over the water toward the pond centre.
+const JETTY_SHORE := 4.0
 
 
 static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
@@ -325,21 +327,23 @@ static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 	if vertical:
 		var x := clampf(pos.x, c.x - half.x * 0.8, c.x + half.x * 0.8)
 		var t := sqrt(maxf(0.0, 1.0 - pow((x - c.x) / half.x, 2.0)))
+		long_side = minf(long_side, maxf(JETTY_MIN_LEN, half.y * t * 1.5))  # GFX-116: the water end stays inside a shallow pond
 		if delta.y >= 0.0:
 			var rim := c.y + half.y * t
-			rect = Rect2(x - short_side / 2.0, rim - JETTY_OVERLAP, short_side, long_side)
+			rect = Rect2(x - short_side / 2.0, rim + JETTY_SHORE - long_side, short_side, long_side)
 		else:
 			var rim2 := c.y - half.y * t
-			rect = Rect2(x - short_side / 2.0, rim2 + JETTY_OVERLAP - long_side, short_side, long_side)
+			rect = Rect2(x - short_side / 2.0, rim2 - JETTY_SHORE, short_side, long_side)
 	else:
 		var y := clampf(pos.y, c.y - half.y * 0.8, c.y + half.y * 0.8)
 		var t2 := sqrt(maxf(0.0, 1.0 - pow((y - c.y) / half.y, 2.0)))
+		long_side = minf(long_side, maxf(JETTY_MIN_LEN, half.x * t2 * 1.5))
 		if delta.x >= 0.0:
 			var rim3 := c.x + half.x * t2
-			rect = Rect2(rim3 - JETTY_OVERLAP, y - short_side / 2.0, long_side, short_side)
+			rect = Rect2(rim3 + JETTY_SHORE - long_side, y - short_side / 2.0, long_side, short_side)
 		else:
 			var rim4 := c.x - half.x * t2
-			rect = Rect2(rim4 + JETTY_OVERLAP - long_side, y - short_side / 2.0, long_side, short_side)
+			rect = Rect2(rim4 - JETTY_SHORE, y - short_side / 2.0, long_side, short_side)
 	var toward := -1 if (vertical and delta.y >= 0.0) or (not vertical and delta.x >= 0.0) else 1
 	var clipped := _clip_to_paths(region, rect, vertical, toward)
 	if clipped.size.x > 0.0:
