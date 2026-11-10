@@ -188,3 +188,24 @@ func test_key_bar_is_wide_enough_for_its_hints() -> void:  # GFX-065
 	assert_true(bar.get_global_rect().size.x >= bar.get_minimum_size().x - 24.0 - 1.0, "key bar text fits its box")
 	assert_true(bar.get_global_rect().position.x >= 0.0, "key bar stays on screen")
 	_done(hud)
+
+
+## WU-507: every region name + its Qi chip, and the longest sect rank line, fit the fixed card width.
+func test_status_card_text_fits_width() -> void:
+	var hud := await _build()
+	var gs: Node = _tree().root.get_node("GameState")
+	var font := (hud.get("_region_name") as Label).get_theme_font("font")
+	var width := HudScript.STATUS_TEXT_WIDTH
+	for id: String in gs.data.regions:
+		var name_w := font.get_string_size(Exploration.region_name(gs.data, id), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		var chip_w := font.get_string_size(HudScript.region_chip_text(gs.data.regions[id].get("qi_density", 1.0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		assert_true(name_w + chip_w + 6.0 <= width, "%s name %.0f + chip %.0f > %.0f" % [id, name_w, chip_w, width])
+	var longest := 0.0
+	for sect: SectDef in gs.data.sects.values():
+		for r in sect.ranks.size():
+			var line := HudScript.alignment_line("Righteous Hero", "%s, %s" % [sect.name, sect.rank_name(r)])
+			longest = maxf(longest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x)
+	assert_true(longest <= width or (hud.get("_status") as Label).text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS, "longest sect line %.0f" % longest)
+	assert_eq(HudScript.region_chip_text(1.8), "Qi x1.8")
+	assert_true(HudScript.region_chip_color(1.8).g > HudScript.region_chip_color(1.0).g)
+	_done(hud)

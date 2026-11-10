@@ -5,6 +5,7 @@ extends CanvasLayer
 const MAIN_MENU := "res://src/ui/main_menu.tscn"
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const MAX_LOG_LINES := 60
+const STATUS_TEXT_WIDTH := 298.0  ## WU-507: fixed text width of the top-left card (316 px panel minus margins).
 const MAX_LAMPS := 5  ## GFX-031: soul lamps drawn before "x N".
 const QI_FILL := Color("6fd3c1")
 const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 108 in _build_log).
@@ -24,6 +25,9 @@ signal hints_changed
 var _age: Label
 var _breakthrough_details: String = ""
 var _status: Label
+var _region_name: Label
+var _region_chip: Label
+var _region_extra: Label
 var _lives: HBoxContainer  ## GFX-031: soul lamps plus a Label for "x N" / "Final life".
 var _lives_extra: Label
 var _stone_icon: TextureRect
@@ -529,8 +533,24 @@ func _build_status_panel() -> void:
 	_date_row.add_child(_weather_text)
 	_status = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
 	_status.add_theme_constant_override("line_spacing", -3)
+	_status.custom_minimum_size.x = STATUS_TEXT_WIDTH
+	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(_status)
-	box.add_theme_constant_override("separation", 1)
+	# WU-507: region name (ellipsis) + a Qi chip on one row, details and the estimate on their own lines.
+	var region_row := HBoxContainer.new()
+	region_row.add_theme_constant_override("separation", 6)
+	box.add_child(region_row)
+	_region_name = UIStyle.label("", 13, Color(0.75, 0.76, 0.8))
+	_region_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_region_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	region_row.add_child(_region_name)
+	_region_chip = UIStyle.label("", 12)
+	region_row.add_child(_region_chip)
+	_region_extra = UIStyle.label("", 12, Color(0.75, 0.76, 0.8))
+	_region_extra.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_region_extra.custom_minimum_size.x = STATUS_TEXT_WIDTH
+	box.add_child(_region_extra)
+	box.add_theme_constant_override("separation", 0)
 	_bottleneck = UIStyle.label("", 14, UIStyle.ACCENT)
 	_bottleneck.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_bottleneck)
@@ -729,11 +749,17 @@ func _refresh() -> void:
 	_refresh_date_row(data)
 	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
-	var region := "%s (Qi x%s%s)" % [Exploration.region_name(data, GameState.current_region), Exploration.format_density(density), ", " + qi_why if qi_why != "" else ""]
-	region += region_event_suffix(data, GameState.world_events, GameState.current_region, p)
+	_region_name.text = Exploration.region_name(data, GameState.current_region)
+	_region_chip.text = region_chip_text(density)
+	_region_chip.add_theme_color_override("font_color", region_chip_color(density))
+	var extra := region_event_suffix(data, GameState.world_events, GameState.current_region, p).strip_edges()
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):
-		region += "   (Secret realm open)"
-	_status.text += "\n" + region_line(region, next_stage_short(GameState.days_to_next_stage(density), p, data), _status.get_theme_font("font"), 13, 292.0)
+		extra += "   (Secret realm open)"
+	if qi_why != "":
+		extra = (qi_why + "   " + extra).strip_edges()
+	var estimate := next_stage_short(GameState.days_to_next_stage(density), p, data)
+	_region_extra.text = (estimate + "   " + extra).strip_edges()
+	_region_extra.visible = _region_extra.text != ""
 	_qi_bar.max_value = maxf(Cultivation.qi_required(p, data), 1.0)
 	_qi_bar.value = p.qi
 	_bottleneck.text = bottleneck_hint(p, data)
@@ -2218,6 +2244,20 @@ static func alignment_line(tier: String, affiliation: String) -> String:
 static func next_stage_short(days: int, c: CharacterData, data: GameData) -> String:
 	var text := next_layer_text(days, c, data)
 	return text.trim_suffix(" here")
+
+
+## "Qi x1.8" chip text for a region's qi density (WU-507).
+static func region_chip_text(density: float) -> String:
+	return "Qi x%s" % Exploration.format_density(density)
+
+
+## Green above x1.5, plain below x1 (WU-507).
+static func region_chip_color(density: float) -> Color:
+	if density > 1.5:
+		return Color(0.5, 0.9, 0.55)
+	if density < 1.0:
+		return Color(0.9, 0.65, 0.4)
+	return Color(0.82, 0.84, 0.9)
 
 
 ## `region` and the estimate on one line, or two when that line is wider than `max_width`.

@@ -95,7 +95,7 @@ func test_hud_next_layer_label() -> void:
 	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
 	tree.root.add_child(hud)
 	await tree.process_frame
-	var label: Label = hud.get("_status")
+	var label: Label = hud.get("_region_extra")
 	var days: int = gs.days_to_next_stage(gs.region_qi_density())
 	assert_true(days > 0 and days <= 3650)
 	assert_true(label.text.contains("~%d " % days), "shows %d days, got '%s'" % [days, label.text])
