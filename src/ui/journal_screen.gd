@@ -194,6 +194,8 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
 	if not main_empty:
 		_today.add_child(card)
+	else:
+		card.free()  # never added to the tree, so it would leak
 	_today_card("EarningCard", "Earning here", earning, "coin", main_empty)
 	_today_card("PeopleCard", "People today", people, "calendar", main_empty and earning.is_empty())
 

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ce5bcc1
+Last reviewed commit: 7818199
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1802,3 +1802,14 @@ Last reviewed commit: ce5bcc1
     again), SEASON-016 (news validated, deterministic), WU-508 (pure LabelFade tested), GFX-112/113 OK.
   - Notes, not filed: GUIDE-234 ignores mission item costs and a far mission row reads "Work at ..."; C-347's
     balance drift is already QA-208 (3); WU-508 parts 3 and 4 and several GFX shots (winter, grass) were not done.
+- 2026-11-10 (reviewer, 3rd run): reviewed ce5bcc1..7818199 (WU-509, C-346, C-348, GFX-115, WU-511, QA-208, FISH-009,
+  GUIDE-235, GFX-116, WU-510; [PLAN]/[REVIEW] skipped). Main green (3782 tests). No BACKLOG/CHANGELOG edits by workers;
+  no binary assets (water decor, frozen streams, ice ring are code-drawn); no SAVE_VERSION change.
+  - Fixed (WU-509): when every Today line was a People line the main TodayCard panel was built but never added to the
+    tree, so each rebuild leaked an orphan Control; it is now freed.
+  - GUIDE-235 (contribution_value median, mission pay net of consumed items, far-mission wording, tested), GFX-115
+    (seeded, refreshed on season change via _refresh_ambient), GFX-116 (jetty rects run shore->centre, capped in
+    shallow ponds, tested), WU-511 (pure LabelLayout.person_offset tested), WU-510, QA-208, FISH-009, C-346/348 OK.
+  - Notes, not filed: cancelling a cast posts "The fish slips away before you strike." and then beginner's luck's
+    "A fish ... slips free, but a small one stays" (two near-duplicate lines, FISH-009 follow-up); QA-208 parts 3/5
+    still open; WU-510/WU-509/WU-511 did not render their 1280x720 shots.
