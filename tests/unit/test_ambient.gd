@@ -170,3 +170,19 @@ func test_mist_band_wraps() -> void:
 	assert_eq(MistBands.band_x(b, 0.0, 1600.0), -800.0)
 	assert_eq(MistBands.band_x(b, 10.0, 1600.0), -700.0)
 	assert_eq(MistBands.band_x(b, 240.0, 1600.0), -800.0, "wraps after one period")
+
+
+func test_mist_denser_on_fog_days() -> void:  # GFX-118
+	assert_eq(MistBands.strength(0.6, false), 0.6)
+	assert_true(MistBands.strength(0.6, true) > 1.0)
+	var calm := MistBands.layout("misty_forest", MistBands.strength(0.6, false), Vector2(1600, 1000))
+	var fog := MistBands.layout("misty_forest", MistBands.strength(0.6, true), Vector2(1600, 1000))
+	assert_true(float(fog[0]["alpha"]) > float(calm[0]["alpha"]))
+
+
+func test_misty_forest_dead_trees_are_rare() -> void:  # GFX-118
+	var kinds: Dictionary = GameData.load_from_dir().regions["misty_forest"]["map"]["decor"]["tree_kinds"]
+	var total := 0.0
+	for k in kinds:
+		total += float(kinds[k])
+	assert_true(float(kinds["dead"]) / total <= 0.10)

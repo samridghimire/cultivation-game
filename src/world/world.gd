@@ -246,7 +246,7 @@ func _refresh_mist_bands() -> void:
 		move_child(_mist_bands, 0)
 	# Only regions that name map.mist are misty; the 1.0 default of _mist_strength() is for fog sheets.
 	var on: bool = bool(Settings.get_value("ambient_effects")) and _region.get("map", {}).has("mist")
-	_mist_bands.setup(GameState.current_region, _mist_strength() if on else 0.0, map_size, not MotionFx.reduced())
+	_mist_bands.setup(GameState.current_region, MistBands.strength(_mist_strength(), _weather_kind == "fog") if on else 0.0, map_size, not MotionFx.reduced())
 
 
 ## GFX-040: chimney smoke, pond ripples, jumping fish and birds, rebuilt on season/weather change.

@@ -22,6 +22,11 @@ static func enabled(mist: float) -> bool:
 	return mist >= MIN_MIST
 
 
+## GFX-118: fog days make the bands about 2x denser (alpha scales with the returned strength).
+static func strength(mist: float, fog_day: bool) -> float:
+	return mist * (2.0 if fog_day else 1.0)
+
+
 ## Band layout: [{y, h, w, x0, speed, alpha}], 3-5 bands. alpha is 0.08-0.15 x mist; speed 8-15 px/s.
 static func layout(region_id: String, mist: float, map_size: Vector2) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
