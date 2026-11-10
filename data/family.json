@@ -3,6 +3,7 @@
   "adult_age": 16,
   "birthday_home_lines": ["{name} has set out {dish} for you. \"Happy birthday. Sit, it is still warm.\"", "{name} smiles from the table. \"I made {dish} for your birthday. Eat before it cools.\"", "There is {dish} waiting when you come in, and {name} pretends it is nothing special.", "{name} presses {dish} into your hands. \"A year older, and still late for supper.\""],
   "player_birthday_gift": "herb_porridge",
+  "family_birthday_lines": ["Another year, {name}? You wear it well. Stay with us for a cup of tea today.", "{name} laughs and says, \"A birthday is only worth keeping when {player} is there to keep it.\"", "{name} smiles. \"Thank you for coming by today, {player}. It means more than any gift.\""],
   "folk_tastes": {"likes_pool": ["fish", "herb", "moon_cake", "spirit_herb", "village_mugwort", "peach_blossom_petal"], "dislikes_pool": ["demonic", "beast_material", "blood_art"], "likes": 2, "dislikes": 1},
   "festival_company": [
     "{name} walks the lantern-lit lanes beside you, pointing out every stall worth a look.",

@@ -462,6 +462,9 @@ static func validate_greetings(data: GameData) -> PackedStringArray:
 	var pgift: Variant = data.family.get("player_birthday_gift", "")
 	if not (pgift is String) or (String(pgift) != "" and not data.items.has(String(pgift))):
 		errors.append("family.json player_birthday_gift must be an items.json id")
+	var fam_lines: Variant = data.family.get("family_birthday_lines", [])
+	if not (fam_lines is Array) or not (fam_lines as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "" and String(x).length() <= 160):
+		errors.append("family.json family_birthday_lines must be an array of 1..160 character strings")
 	var home_lines: Variant = data.family.get("birthday_home_lines", [])
 	if not (home_lines is Array) or not (home_lines as Array).all(func(x: Variant) -> bool: return x is String and String(x) != "" and String(x).length() <= 160):
 		errors.append("family.json birthday_home_lines must be an array of 1..160 character strings")
@@ -1074,6 +1077,22 @@ static func birthdays_soon(npcs: Dictionary, data: GameData, region_id: String, 
 const BIRTHDAY_GIFT_PREFIX := "birthday_gift_"
 const PLAYER_BIRTHDAY_PREFIX := "player_birthday_"
 const PLAYER_BIRTHDAY_FAVOR := 2
+const FAMILY_BIRTHDAY_PREFIX := "family_birthday_"
+const FAMILY_BIRTHDAY_FAVOR := 3
+
+
+## CAL-009: chatting with a living spouse or child on their own birthday says a family.json family_birthday_lines line
+## (+FAMILY_BIRTHDAY_FAVOR, applied by the caller), once per year per person. `consume` marks it told. "" when nothing.
+static func family_birthday_line(npc: CharacterData, c: CharacterData, data: GameData, day: int, flags: Dictionary, consume: bool) -> String:
+	if npc == null or c == null or not npc.alive or not (c.spouses.has(npc.id) or c.children.has(npc.id)) or not birthday_today(npc, data, day):
+		return ""
+	var pool: Array = data.family.get("family_birthday_lines", [])
+	var year := Calendar.year_of(day)
+	if pool.is_empty() or int(flags.get(FAMILY_BIRTHDAY_PREFIX + npc.id, -1)) == year:
+		return ""
+	if consume:
+		flags[FAMILY_BIRTHDAY_PREFIX + npc.id] = year
+	return String(pool[absi(hash(npc.id + str(day))) % pool.size()]).replace("{name}", npc.name).replace("{player}", c.name)
 
 
 ## FOLK-027: the player's birthday as a day of the year; a missing one (old saves) hashes the name, never rng.

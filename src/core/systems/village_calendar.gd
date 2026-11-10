@@ -7,6 +7,27 @@ const MAX_REMINDERS := 3
 const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
 
 
+## CAL-009: "Your birthday" plus the birthdays of a living spouse and children in [start, start + span), region "" (anywhere).
+static func family_birthdays(c: CharacterData, npcs: Dictionary, data: GameData, start: int, span: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var own := Folk.player_birthday_day(c)
+	var own_in := posmod(own - start, Calendar.DAYS_PER_YEAR)
+	if own_in < span:
+		out.append({"day": start + own_in, "kind": "birthday", "text": "Your birthday", "region": ""})
+	var seen := {}
+	for id: String in c.spouses + c.children:
+		if seen.has(id):
+			continue
+		seen[id] = true
+		var npc: CharacterData = npcs.get(id)
+		if npc == null or not npc.alive:
+			continue
+		var d := Folk.days_to_birthday(npc, data, start)
+		if d >= 0 and d < span:
+			out.append({"day": start + d, "kind": "birthday", "text": "%s's birthday" % npc.name, "region": "", "npc_id": id, "family": true})
+	return out
+
+
 ## Every dated thing in [start, start + span) days, soonest first.
 ## Each entry: {day: int (total days), kind: String, text: String, region: String ("" = anywhere)}.
 ## CAL-002: with `c` given, also the player's own dates (crops, rent, requests, secret realms, events).
@@ -38,6 +59,9 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 	for b: Dictionary in Folk.birthdays_soon(npcs, data, region_id, start, favor, span - 1):
 		var npc: CharacterData = b["npc"]
 		out.append({"day": start + int(b["in_days"]), "kind": "birthday", "text": "%s's birthday" % npc.name, "region": region_id, "npc_id": npc.id})
+	# CAL-009: your own birthday and the living family's, wherever you are.
+	if c != null:
+		out.append_array(family_birthdays(c, npcs, data, start, span))
 	# Festivals under way.
 	for inst: Dictionary in active_events:
 		if not WorldEvents.is_festival(data, String(inst.get("id", ""))):

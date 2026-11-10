@@ -1672,7 +1672,7 @@ func _named_remembers(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npc.name, remembered], "info")
 		return
-	if _dish_noticed(npc_id) or _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
+	if _dish_noticed(npc_id) or _family_birthday_words(npc_id) or _player_birthday_words(npc_id) or _festival_memory(npc_id) or _festival_words(npc_id):  # FOLK-027, FOLK-026, FOLK-025
 		return
 	var news: Variant = world_flags.get("village_news")
 	if not (news is Dictionary):
@@ -1710,6 +1710,17 @@ func _dish_noticed(npc_id: String) -> bool:
 		return false
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.DISH_NOTICED_FAVOR, -100, 100)
 	EventBus.post("%s: \"%s\"" % [npc.name, String(found["line"])], "info")
+	return true
+
+
+## CAL-009: a spouse or child chatting on their own birthday: a family line, +3 favor, once a year.
+func _family_birthday_words(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	var line := Folk.family_birthday_line(npc, player, data, GameClock.total_days, world_flags, true)
+	if line == "":
+		return false
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + Folk.FAMILY_BIRTHDAY_FAVOR, -100, 100)
+	EventBus.post("%s: \"%s\"" % [npc.name, line], "people")
 	return true
 
 
@@ -2165,6 +2176,8 @@ func chat(npc_id: String) -> void:
 	if remembered != "":
 		EventBus.post("%s: \"%s\"" % [npcs[npc_id].name, remembered], "info")
 	elif _dish_noticed(npc_id):  # COOK-003
+		pass
+	elif _family_birthday_words(npc_id):  # CAL-009
 		pass
 	elif _player_birthday_words(npc_id):  # FOLK-027
 		pass

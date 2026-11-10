@@ -277,3 +277,68 @@ func test_villager_gift_in_game() -> void:
 	gs._player_birthday_words("elder_mo")
 	assert_eq(gs.player.item_count("venison"), mo, "stranger gives nothing")
 	gs.end_session()
+
+
+## CAL-009: the calendar lists your own and your living family's birthdays; family chat on their day gives favor once a year.
+func _family(kids: int = 1) -> Dictionary:
+	var npcs := {}
+	var p := _player(100)
+	var out := {"npcs": npcs, "player": p, "ids": []}
+	for i in kids:
+		var n := Npcs.spawn(npcs, data(), seeded_rng(30 + i), {"age_years": 8, "region": "qingshi_village", "realm": "mortal"})
+		p.children.append(n.id)
+		out["ids"].append(n.id)
+	return out
+
+
+func test_calendar_lists_player_and_family_birthdays() -> void:
+	var f := _family()
+	var p: CharacterData = f["player"]
+	var npcs: Dictionary = f["npcs"]
+	var kid: CharacterData = npcs[f["ids"][0]]
+	var e := VillageCalendar.upcoming(data(), npcs, {}, [], "misty_forest", 0, Calendar.DAYS_PER_YEAR, p, {})
+	var texts: Array = e.filter(func(x: Dictionary) -> bool: return x["kind"] == "birthday").map(func(x: Dictionary) -> String: return String(x["text"]))
+	assert_true(texts.has("Your birthday"))
+	assert_true(texts.has("%s's birthday" % kid.name), "child listed with no favor, in another region")
+	var own: Dictionary = e.filter(func(x: Dictionary) -> bool: return x["text"] == "Your birthday")[0]
+	assert_eq(int(own["day"]) % Calendar.DAYS_PER_YEAR, 100)
+
+
+func test_dead_family_never_listed() -> void:
+	var f := _family()
+	var npcs: Dictionary = f["npcs"]
+	var kid: CharacterData = npcs[f["ids"][0]]
+	kid.alive = false
+	var e := VillageCalendar.upcoming(data(), npcs, {}, [], "misty_forest", 0, Calendar.DAYS_PER_YEAR, f["player"], {})
+	assert_false(e.any(func(x: Dictionary) -> bool: return x.get("npc_id", "") == kid.id))
+
+
+func test_family_birthday_line_once_a_year() -> void:
+	var f := _family()
+	var p: CharacterData = f["player"]
+	var kid: CharacterData = f["npcs"][f["ids"][0]]
+	var day := Folk.birthday_day(kid, data()) + Calendar.DAYS_PER_YEAR
+	var flags := {}
+	assert_true(Folk.family_birthday_line(kid, p, data(), day, flags, true) != "")
+	assert_eq(Folk.family_birthday_line(kid, p, data(), day, flags, true), "", "once")
+	assert_true(Folk.family_birthday_line(kid, p, data(), day + Calendar.DAYS_PER_YEAR, flags, true) != "", "next year again")
+	assert_eq(Folk.family_birthday_line(kid, p, data(), day + 1 + 2 * Calendar.DAYS_PER_YEAR, {}, true), "", "not their day")
+
+
+func test_chat_with_child_on_their_birthday_gives_favor() -> void:
+	var gs: Node = _gs()
+	var c := CharacterFactory.create("Parent", gs.data, seeded_rng())
+	gs.start_session(c)
+	var clock: Node = Engine.get_main_loop().root.get_node("GameClock")
+	var kid := Npcs.spawn(gs.npcs, gs.data, seeded_rng(4), {"age_years": 8, "region": "qingshi_village", "realm": "mortal"})
+	c.children.append(kid.id)
+	gs.current_region = "qingshi_village"
+	var day: int = Folk.birthday_day(kid, gs.data) + 5 * Calendar.DAYS_PER_YEAR
+	c.birthday = (day + 7) % Calendar.DAYS_PER_YEAR
+	clock.total_days = day
+	gs.npc_favor[kid.id] = 22
+	gs.chat(kid.id)
+	assert_true(gs.world_flags.has(Folk.FAMILY_BIRTHDAY_PREFIX + kid.id))
+	assert_gt(int(gs.npc_favor[kid.id]), 22 + Folk.FAMILY_BIRTHDAY_FAVOR - 1)
+	gs.end_session()
+
