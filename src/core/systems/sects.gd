@@ -723,6 +723,23 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	return ""
 
 
+## GUIDE-235: spirit stones one contribution point is worth at `sect_id`'s treasury: the median over its shop entries
+## of item price / contribution. 0.0 for an unknown sect or an empty shop.
+static func contribution_value(data: GameData, sect_id: String) -> float:
+	if not data.sects.has(sect_id):
+		return 0.0
+	var vals: Array[float] = []
+	for entry: Dictionary in (data.sects[sect_id] as SectDef).shop:
+		var cost := int(entry.get("contribution", 0))
+		if cost > 0:
+			vals.append(float(int(data.items.get(String(entry.get("item_id", "")), {}).get("price", 0))) / float(cost))
+	if vals.is_empty():
+		return 0.0
+	vals.sort()
+	var mid := vals.size() / 2
+	return vals[mid] if vals.size() % 2 == 1 else (vals[mid - 1] + vals[mid]) / 2.0
+
+
 ## Records a lost mission fight: the mission cools down for
 ## sect_missions.json `loss_cooldown_days` (never shortening a longer cooldown).
 static func fail_mission(c: CharacterData, data: GameData, mission_id: String) -> void:

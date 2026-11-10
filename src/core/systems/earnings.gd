@@ -61,14 +61,24 @@ static func _best_mission(c: CharacterData, data: GameData, flags: Dictionary, r
 	if c.is_rogue() or Sects.hall_name(data, region_id, c) == "":
 		return {}
 	var best := {}
+	var best_rank := 0.0
+	var cv := Sects.contribution_value(data, String(c.sect["id"]))
 	for id: String in Sects.available_missions(c, data, flags):
 		if Sects.check_mission(c, data, id, flags, region_id) != "" or ["Dangerous", "Deadly"].has(Sects.mission_danger(c, data, id)):
 			continue
 		var mission: Dictionary = data.sect_missions[id]
-		var stones := int(mission.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
-		var per_day := float(stones) / float(maxi(1, int(mission.get("days", 1))))
-		if per_day > float(best.get("per_day", 0.0)):
-			best = {"kind": "mission", "place": Sects.hall_name(data, region_id, c), "per_day": per_day, "note": String(mission.get("name", id)), "contribution": int(mission.get("contribution", 0))}
+		var days := float(maxi(1, int(mission.get("days", 1))))
+		var cost := 0.0
+		var needed: Dictionary = mission.get("requires", {}).get("items", {})
+		for item_id: String in needed:
+			cost += float(int(data.items.get(item_id, {}).get("price", 0)) * int(needed[item_id]))
+		var stones := float(int(mission.get("rewards", {}).get("items", {}).get("spirit_stone", 0))) - cost
+		var contribution := int(mission.get("contribution", 0))
+		var per_day := stones / days
+		var rank := (stones + float(contribution) * cv) / days
+		if per_day > 0.0 and rank > best_rank:
+			best_rank = rank
+			best = {"kind": "mission", "place": Sects.hall_name(data, region_id, c), "per_day": per_day, "note": String(mission.get("name", id)), "contribution": contribution, "worth": roundi(float(contribution) * cv)}
 	return best
 
 
@@ -128,7 +138,7 @@ static func far_row(c: CharacterData, data: GameData, flags: Dictionary, region_
 			var value := float(row["per_day"]) * FAR_STAY_DAYS / (FAR_STAY_DAYS + 2.0 * days)
 			if value >= FAR_GAIN * local_best and value > best_value and value > 0.0:
 				best_value = value
-				best = {"kind": "far", "place": "%s, %s" % [row["place"], route["name"]], "note": String(row["kind"]), "per_day": float(row["per_day"]), "days": int(days), "region": String(route["to"])}
+				best = {"kind": "far", "place": "%s, %s" % [row["place"], route["name"]], "note": String(row["kind"]), "per_day": float(row["per_day"]), "days": int(days), "region": String(route["to"]), "contribution": int(row.get("contribution", 0)), "worth": int(row.get("worth", 0))}
 	return best
 
 
@@ -257,15 +267,24 @@ static func lines(rows: Array[Dictionary], data: GameData = null) -> PackedStrin
 			for id: String in r["items"]:
 				var nm := String(data.items.get(id, {}).get("name", id)) if data != null else id
 				parts.append(nm if int(r["items"][id]) == 1 else "%d %s" % [int(r["items"][id]), nm])
-			out.append("Once: %s (%s): %s, %d %s." % [r["note"], r["place"], " + ".join(parts), int(r["days"]), "day" if int(r["days"]) == 1 else "days"])
+			out.append("Once: %s%s: %s, %d %s." % [r["note"], _paren(String(r["note"]), String(r["place"])), " + ".join(parts), int(r["days"]), "day" if int(r["days"]) == 1 else "days"])
 			continue
 		var n := maxi(1, roundi(float(r["per_day"])))
+		var stones_word := "stone" if n == 1 else "stones"
 		if String(r["kind"]) == "mission":
-			out.append("Sect mission %s (%s): about %d %s a day, +%d contribution." % [r["note"], r["place"], n, "stone" if n == 1 else "stones", int(r["contribution"])])
+			out.append("Sect mission %s%s: about %d %s a day, +%d contribution (worth about %d stones at the treasury)." % [r["note"], _paren(String(r["note"]), String(r["place"])), n, stones_word, int(r["contribution"]), int(r["worth"])])
 			continue
 		if String(r["kind"]) == "far":
+			if String(r["note"]) == "mission":
+				out.append("Sect mission at %s (%d days away): about %d %s a day, +%d contribution (worth about %d stones at the treasury)." % [r["place"], int(r["days"]), n, stones_word, int(r.get("contribution", 0)), int(r.get("worth", 0))])
+				continue
 			var verb: String = {"gather": "Gathering", "fishing": "Fishing", "chore": "Errands"}.get(String(r["note"]), "Work")
 			out.append("%s at %s (%d days away): about %d a day." % [verb, r["place"], int(r["days"]), n])
 			continue
-		out.append("%s (%s): about %d %s a day." % [(String(r["note"]).substr(0, 1).to_upper() + String(r["note"]).substr(1)), r["place"], n, "stone" if n == 1 else "stones"])
+		out.append("%s%s: about %d %s a day." % [(String(r["note"]).substr(0, 1).to_upper() + String(r["note"]).substr(1)), _paren(String(r["note"]), String(r["place"])), n, stones_word])
 	return out
+
+
+## " (place)", or "" when the note already names the place ("... for Headman Zhou").
+static func _paren(note: String, place: String) -> String:
+	return "" if place == "" or note.contains(place) else " (%s)" % place

@@ -339,7 +339,7 @@ func test_disciple_gets_mission_row_at_hall() -> void:
 			mission = r
 	assert_false(mission.is_empty(), "mission row")
 	assert_eq(mission["note"], String(data().sect_missions["herb_hall_tithe"]["name"]))
-	assert_eq(int(roundf(float(mission["per_day"]))), 22)
+	assert_eq(int(roundf(float(mission["per_day"]))), 4)  # GUIDE-235: net of the herbs handed in
 	var text := " ".join(Earnings.lines(rows, data()))
 	assert_true(text.contains("Sect mission"), text)
 	assert_true(text.contains("contribution"), text)
@@ -361,3 +361,49 @@ func test_mission_on_cooldown_is_not_a_row() -> void:
 		c.mission_cooldowns[id] = c.age_days + 30
 	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
 		assert_true(r["kind"] != "mission", "no mission row")
+
+
+## GUIDE-235: honest mission pay.
+func test_contribution_value_is_median_shop_ratio() -> void:
+	var v := Sects.contribution_value(data(), "azure_cloud_sect")
+	assert_true(v > 0.0, "positive")
+	var ratios: Array[float] = []
+	for e: Dictionary in (data().sects["azure_cloud_sect"] as SectDef).shop:
+		ratios.append(float(int(data().items[e["item_id"]].get("price", 0))) / float(e["contribution"]))
+	ratios.sort()
+	assert_true(v >= ratios[0] and v <= ratios[ratios.size() - 1], "between min and max")
+	assert_eq(Sects.contribution_value(data(), "no_such_sect"), 0.0)
+
+
+func test_mission_row_subtracts_consumed_items_and_shows_worth() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(Sects.join(c, data(), "azure_cloud_sect")["ok"])
+	c.add_item("spirit_herb", 3)
+	var row := {}
+	for r in Earnings.earning_options(c, data(), {}, "qingshi_village", 0):
+		if r["kind"] == "mission":
+			row = r
+	assert_false(row.is_empty())
+	var m: Dictionary = {}
+	for id: String in data().sect_missions:
+		if data().sect_missions[id]["name"] == row["note"]:
+			m = data().sect_missions[id]
+	var cost := 0
+	for item_id: String in m.get("requires", {}).get("items", {}):
+		cost += int(data().items[item_id]["price"]) * int(m["requires"]["items"][item_id])
+	var pay := int(m.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
+	assert_eq(roundi(float(row["per_day"]) * maxi(1, int(m.get("days", 1)))), pay - cost)
+	var text := " ".join(Earnings.lines([row] as Array[Dictionary], data()))
+	assert_true(text.contains("worth about %d stones at the treasury" % int(row["worth"])), text)
+
+
+func test_far_mission_wording_and_no_duplicate_giver() -> void:
+	var far: Array[Dictionary] = [{"kind": "far", "place": "Azure Hall, Azure Peak", "note": "mission", "per_day": 10.0, "days": 3, "contribution": 5, "worth": 12}]
+	var t := Earnings.lines(far, data())[0]
+	assert_true(t.begins_with("Sect mission at Azure Hall, Azure Peak (3 days away): about 10 stones a day, +5 contribution"), t)
+	var once: Array[Dictionary] = [{"kind": "job", "place": "Headman Zhou", "note": "Run errands for Headman Zhou", "stones": 9, "items": {}, "days": 2}]
+	var u := Earnings.lines(once, data())[0]
+	assert_false(u.contains("(Headman Zhou)"), u)
+	var chore: Array[Dictionary] = [{"kind": "chore", "place": "Headman Zhou", "note": "Run errands for Headman Zhou", "per_day": 4.0}]
+	assert_false(Earnings.lines(chore, data())[0].contains("(Headman Zhou)"))
