@@ -2,6 +2,8 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [C-348] Villagers talk about the well, the jetty and the terraces in their own words.
+- 2026-11-10 [GFX-115] Water with life: glints, lily pads, reeds and stream banks.
 - 2026-11-10 [C-346] Each festival has its own line for the friends who come to cheer you.
 - 2026-11-10 [WU-509] The journal's Today tab no longer shows an empty card.
 - 2026-11-10 [GUIDE-234] A sect disciple's Earning card shows the best mission they can take at the hall.
