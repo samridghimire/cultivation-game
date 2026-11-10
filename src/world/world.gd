@@ -52,6 +52,7 @@ var _relief: Array[Dictionary] = []  # GFX-109
 var _edge: Array[Dictionary] = []  # GFX-110
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
+var _cloud_wisps: CloudWisps  # GFX-113: drifting wisps over a mountain region (map.high.wisps)
 var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _water_life: WaterLife
@@ -196,6 +197,7 @@ func _mist_strength() -> float:
 func _refresh_ambient() -> void:
 	_refresh_village_life()
 	_refresh_mist_bands()
+	_refresh_cloud_wisps()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -217,6 +219,16 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_emitter(kind, map_size, _mist_strength())
 	add_child(_ambient)
 	_start_lightning()
+
+
+## GFX-113: slow cloud wisps over the cliffs of a map.high region; off with Ambient effects, still under reduced motion.
+func _refresh_cloud_wisps() -> void:
+	if _cloud_wisps == null:
+		_cloud_wisps = CloudWisps.new()
+		_cloud_wisps.name = "CloudWisps"
+		add_child(_cloud_wisps)
+	var on: bool = bool(Settings.get_value("ambient_effects"))
+	_cloud_wisps.setup(_region if on else {}, map_size, not MotionFx.reduced())
 
 
 ## GFX-091: soft mist bands above the ground, under figures; off with Ambient effects.
@@ -1059,6 +1071,7 @@ func _draw() -> void:
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
 	_draw_terraces()
+	_draw_high_pines(map)
 	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
@@ -1244,7 +1257,11 @@ func _draw_sect_courts() -> void:
 	for place: Dictionary in _region.get("places", []):
 		if SectCourt.is_sect_hall(place):
 			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
-			SectCourt.draw_court(self, hall, SectCourt.court_rect(place, _region), snowy, SectCourt.court_style(_region))
+			var court := SectCourt.court_rect(place, _region)
+			SectCourt.draw_court(self, hall, court, snowy, SectCourt.court_style(_region))
+			var high: Variant = _region.get("map", {}).get("high", null)
+			if high is Dictionary and bool(high.get("rail", false)):
+				SectCourt.draw_rail(self, court, snowy)
 	var g := SectCourt.gate(_region)
 	if not g.is_empty():
 		SectCourt.draw_gate(self, g, ThemeDB.fallback_font)
@@ -1275,15 +1292,40 @@ func _draw_steps(r: Rect2) -> void:
 	while y < r.end.y:
 		var h := minf(14.0, r.end.y - y)
 		draw_rect(Rect2(r.position.x, y, r.size.x, h), Color("b4bcc0") if i % 2 == 0 else Color("a5aeb2"))
+		draw_rect(Rect2(r.position.x, y, r.size.x, 2.0), Color("d6dde0"))  # GFX-113: the lit tread edge
 		draw_rect(Rect2(r.position.x, y + h - 3.0, r.size.x, 3.0), Color("6f787e"))
 		y += 14.0
 		i += 1
 	draw_rect(Rect2(r.position.x - 4.0, r.position.y, 4.0, r.size.y), Color("5f686e"))
 	draw_rect(Rect2(r.end.x, r.position.y, 4.0, r.size.y), Color("5f686e"))
+	# GFX-113: stone lanterns on both sides, every other tread, in a high (map.high) region.
+	if _region.get("map", {}).get("high", null) is Dictionary:
+		var ly := r.position.y + 10.0
+		while ly < r.end.y - 6.0:
+			for lx in [r.position.x - 14.0, r.end.x + 14.0]:
+				draw_rect(Rect2(lx - 5.0, ly + 8.0, 10.0, 4.0), Color("5f686e"))
+				draw_rect(Rect2(lx - 3.0, ly - 1.0, 6.0, 9.0), Color("8d959b"))
+				draw_rect(Rect2(lx - 6.0, ly - 8.0, 12.0, 7.0), Color("b4bcc0"))
+				draw_rect(Rect2(lx - 3.0, ly - 6.0, 6.0, 3.0), Color("f2c75c"))
+			ly += 56.0
+
+
+## GFX-113: pines leaning out over the top cliffs of a map.high region (Scenery.high_pines).
+func _draw_high_pines(map: Dictionary) -> void:
+	var base := Color(str(map.get("decor", {}).get("tree_color", "2e5a2a")))
+	var snowy := Scenery.is_snowy(_season) and not bool(map.get("no_snow", false))
+	for p: Dictionary in Scenery.high_pines(_region):
+		draw_set_transform(p["pos"], float(p["lean"]) * 0.28, Vector2.ONE)
+		_draw_tree_pine(Vector2.ZERO, 1.15, base, snowy)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## GFX-079: a cloud-sea band: layered pale translucent bands with rounded puffs; static (it never moves).
 func _draw_clouds(r: Rect2) -> void:
+	if _region.get("map", {}).get("high", null) is Dictionary:
+		# GFX-113: a pale cloud sea behind the landmark, fading downward.
+		for k in 6:
+			draw_rect(Rect2(r.position.x, r.end.y + float(k) * 10.0, r.size.x, 10.0), Color(0.93, 0.97, 1.0, 0.30 - 0.05 * k))
 	for layer in 3:
 		var band := Rect2(r.position.x, r.position.y + r.size.y * layer / 3.0, r.size.x, r.size.y / 3.0 + 4.0)
 		draw_rect(band, Color(0.92, 0.96, 1.0, 0.16 + 0.07 * layer))

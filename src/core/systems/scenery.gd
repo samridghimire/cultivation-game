@@ -556,6 +556,53 @@ static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: fl
 	return Rect2(path_rect.position.x + across, path_rect.position.y + along, thick, length)
 
 
+## GFX-113: map.high (a sect on a mountain): rail (bool: a carved rail round the sect hall court), wisps (int 0-8 drifting cloud wisps)
+## and lean_pines (int 0-4 pines leaning out over the top cliffs).
+const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines"]
+const HIGH_PINE_MAX := 4
+const HIGH_WISP_MAX := 8
+
+
+## GFX-113: leaning pines for a `map.high` region: [{pos: Vector2 (the trunk's foot), lean: float (-1 left .. 1 right)}].
+## They stand on the lower lip of the top-half `cliff` landmarks, seeded by region id, clear of places, solid landmarks and paths.
+static func high_pines(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var high: Variant = region.get("map", {}).get("high", null)
+	if not high is Dictionary:
+		return out
+	var want := clampi(int(high.get("lean_pines", 0)), 0, HIGH_PINE_MAX)
+	if want == 0:
+		return out
+	var map_h := float(region["map"]["size"][1])
+	var cliffs: Array[Rect2] = []
+	for lm: Dictionary in region["map"].get("landmarks", []):
+		if String(lm.get("kind", "")) == "cliff" and float(lm["pos"][1]) < map_h / 2.0:
+			cliffs.append(Rect2(Vector2(float(lm["pos"][0]) - float(lm["size"][0]) / 2.0, float(lm["pos"][1]) - float(lm["size"][1]) / 2.0), Vector2(float(lm["size"][0]), float(lm["size"][1]))))
+	if cliffs.is_empty():
+		return out
+	var blocked := blocked_rects(region)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|high_pines")
+	for i in want * 12:
+		if out.size() >= want:
+			break
+		var c := cliffs[i % cliffs.size()]
+		var foot := Vector2(rng.randf_range(c.position.x + 40.0, c.end.x - 40.0), c.end.y + rng.randf_range(34.0, 52.0))
+		var box := Rect2(foot - Vector2(26.0, 8.0), Vector2(52.0, 16.0))
+		var ok := true
+		for b in blocked:
+			if b.intersects(box):
+				ok = false
+				break
+		for o in out:
+			if absf(o["pos"].x - foot.x) < 90.0:
+				ok = false
+		if ok:
+			# Lean away from the cliff-top's centre, toward the cliff edge (up on the map).
+			out.append({"pos": foot, "lean": -1.0 if foot.x < float(region["map"]["size"][0]) / 2.0 else 1.0})
+	return out
+
+
 ## GFX-109: map.relief keys and limits.
 const RELIEF_KEYS: PackedStringArray = ["ledges", "snow", "boulders"]
 const RELIEF_MAX := 12
@@ -657,6 +704,21 @@ static func validate(data: GameData) -> PackedStringArray:
 		var plaza: Variant = region.get("map", {}).get("plaza", null)
 		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
 			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
+		var high: Variant = region.get("map", {}).get("high", null)
+		if high != null:
+			if not high is Dictionary:
+				errors.append("Region '%s' map.high must be an object" % region["id"])
+			else:
+				for key in high:
+					if not key in HIGH_KEYS:
+						errors.append("Region '%s' map.high has unknown key '%s'" % [region["id"], key])
+					elif key == "rail":
+						if not high[key] is bool:
+							errors.append("Region '%s' map.high.rail must be a bool" % region["id"])
+					else:
+						var cap := HIGH_WISP_MAX if key == "wisps" else HIGH_PINE_MAX
+						if not (high[key] is float or high[key] is int) or int(high[key]) < 0 or int(high[key]) > cap:
+							errors.append("Region '%s' map.high.%s must be 0-%d" % [region["id"], key, cap])
 		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
 		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
 			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])

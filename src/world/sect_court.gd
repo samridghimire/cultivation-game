@@ -327,3 +327,42 @@ static func _draw_post(ci: CanvasItem, r: Rect2, wood: Color, dark: Color) -> vo
 	ci.draw_rect(Rect2(cx - 6.0, r.position.y + 4.0, 3.0, foot_y - r.position.y - 5.0), wood.lightened(0.2))
 	ci.draw_rect(Rect2(cx - 10.0, r.position.y, 20.0, 6.0), dark)
 	ci.draw_rect(Rect2(cx - 9.0, r.position.y + 1.0, 18.0, 4.0), wood.lightened(0.1))
+
+
+## GFX-113: a carved rail along the court's open sides (west, east and south), as posts every 24 px and a rail between them;
+## the south side leaves a 40 px gap at the court's centre for the walk. Returns {posts: Array[Rect2], rails: Array[Rect2]}.
+static func rail_parts(court: Rect2) -> Dictionary:
+	var posts: Array[Rect2] = []
+	var rails: Array[Rect2] = []
+	var inner := court.grow(-3.0)
+	var gap_l := court.get_center().x - 20.0
+	var gap_r := court.get_center().x + 20.0
+	var y := inner.position.y + 24.0
+	while y <= inner.end.y:
+		posts.append(Rect2(inner.position.x - 2.0, y - 8.0, 4.0, 10.0))
+		posts.append(Rect2(inner.end.x - 2.0, y - 8.0, 4.0, 10.0))
+		y += 24.0
+	rails.append(Rect2(inner.position.x - 1.0, inner.position.y + 14.0, 2.0, inner.size.y - 14.0))
+	rails.append(Rect2(inner.end.x - 1.0, inner.position.y + 14.0, 2.0, inner.size.y - 14.0))
+	var x := inner.position.x
+	while x <= inner.end.x:
+		if x < gap_l - 4.0 or x > gap_r + 4.0:
+			posts.append(Rect2(x - 2.0, inner.end.y - 8.0, 4.0, 10.0))
+		x += 24.0
+	rails.append(Rect2(inner.position.x, inner.end.y - 6.0, gap_l - inner.position.x, 2.0))
+	rails.append(Rect2(gap_r, inner.end.y - 6.0, inner.end.x - gap_r, 2.0))
+	return {"posts": posts, "rails": rails}
+
+
+static func draw_rail(ci: CanvasItem, court: Rect2, snowy: bool) -> void:
+	var parts := rail_parts(court)
+	var wood := Color("6b5a48")
+	var lit := Color("a58c6c")
+	for r: Rect2 in parts["rails"]:
+		ci.draw_rect(r, wood)
+		ci.draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 1.0), lit)
+	for p: Rect2 in parts["posts"]:
+		ci.draw_rect(p, wood)
+		ci.draw_rect(Rect2(p.position.x - 1.0, p.position.y - 2.0, p.size.x + 2.0, 3.0), lit)
+		if snowy:
+			ci.draw_rect(Rect2(p.position.x - 1.0, p.position.y - 3.0, p.size.x + 2.0, 2.0), Color("eef3f7"))
