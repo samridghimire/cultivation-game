@@ -3721,3 +3721,25 @@ func test_season_recap_without_a_finished_stage_or_snapshot() -> void:  # GUIDE-
 	assert_true(line != "" and line.length() <= 80)
 	var old := CharacterData.from_dict({})
 	assert_eq(old.season_start_sets, -1)
+
+
+## FISH-008: a first fishing trip that comes home empty lands the common fish.
+func test_fishing_beginners_luck_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "clear")
+	var table := [{"item": "", "weight": 1000}, {"item": "silver_carp", "weight": 3, "min": 1, "max": 1}]
+	c.catch_log = {}
+	var got := 0
+	for i in 30:
+		gs.fish(table, 1, "", 0.0)
+		got = c.item_count("silver_carp")
+		if got > 0:
+			break
+	assert_eq(got, 1, "the first trips always end with exactly one fish by luck or draw")
+	assert_true(c.catch_log.has("silver_carp"))
+	var before := c.item_count("silver_carp")
+	var empty := [{"item": "", "weight": 1}]
+	gs.fish(empty, 1, "", 0.5)
+	assert_eq(c.item_count("silver_carp"), before, "no beginner fish once one has been caught")
+	_restore_weather(gs)

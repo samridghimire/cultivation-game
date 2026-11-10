@@ -216,6 +216,24 @@ static func filter_trophy(table: Array, quality: float, xp: int) -> Array:
 	return out
 
 
+## FISH-008: the fish a first, empty trip lands: the highest-weight entry that is a fish and neither
+## rare nor trophy (ties by id). "" when the table has no plain fish. No rng.
+static func beginner_catch(table: Array, data: GameData) -> String:
+	var best := ""
+	var best_w := -1.0
+	for entry: Dictionary in table:
+		var id := String(entry.get("item", ""))
+		if id == "" or is_rare(entry) or is_trophy(entry):
+			continue
+		if not data.items.get(id, {}).get("tags", []).has("fish"):
+			continue
+		var w := float(entry.get("weight", 1))
+		if w > best_w or (is_equal_approx(w, best_w) and id < best):
+			best = id
+			best_w = w
+	return best
+
+
 ## The item id of the table's trophy entry that is in `found`, or "".
 static func trophy_in(table: Array, found: Dictionary) -> String:
 	for entry: Dictionary in table:

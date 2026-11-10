@@ -1419,6 +1419,13 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 			if quality >= 0.5:
 				EventBus.post("Something huge takes the bait and snaps the line.")
 	base = Fishing.filter_trophy(base, quality, player.fishing_xp)
+	var beginner := ""
+	if found.is_empty() and player.catch_log.is_empty():
+		var pick := Fishing.beginner_catch(base, data)
+		if pick != "":
+			found[pick] = 1
+			beginner = String(data.items[pick]["name"])
+			EventBus.post("Beginner's luck: +1 %s." % beginner, "progress")
 	var old_rank := Fishing.rank_name(player.fishing_xp)
 	player.fishing_xp += Fishing.xp_gain(base, found)
 	var notes: PackedStringArray = []

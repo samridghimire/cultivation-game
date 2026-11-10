@@ -298,3 +298,12 @@ func test_master_lands_extra_fish_and_rank_up_names_perk() -> void:
 	gs.end_session()
 	if not Fishing.too_wild(weather):
 		assert_true(String(seen[0]).contains("An Angler lands an extra fish"), "rank-up shows perk: %s" % seen[0])
+
+
+func test_beginner_catch_picks_the_common_plain_fish() -> void:
+	var data := GameData.new()
+	data.items = {"a_fish": {"tags": ["fish"]}, "b_fish": {"tags": ["fish"]}, "rare_fish": {"tags": ["fish"]}, "troph": {"tags": ["fish"]}, "herb": {"tags": ["herb"]}}
+	var table := [{"item": "", "weight": 9}, {"item": "herb", "weight": 8}, {"item": "troph", "weight": 7, "trophy": true},
+		{"item": "rare_fish", "weight": 1}, {"item": "b_fish", "weight": 4}, {"item": "a_fish", "weight": 4}]
+	assert_eq(Fishing.beginner_catch(table, data), "a_fish", "highest weight, ties by id")
+	assert_eq(Fishing.beginner_catch([{"item": "rare_fish", "weight": 1}, {"item": "troph", "weight": 5, "trophy": true}], data), "")
