@@ -211,11 +211,6 @@ static func _pond(w: int, h: int, reeds: bool = true, water: String = "clear") -
 		PixelPlace.ell(c, cx, cy, w / 2.0, h / 2.0, "T")
 		PixelPlace.ell(c, cx, cy, w / 2.0 - 2.0, h / 2.0 - 2.0, "R")
 		PixelPlace.ell(c, cx, cy, w / 2.0 - 4.0, h / 2.0 - 4.0, "r")
-		for k in 4:  # lily pads: 5x3 green ovals with a pale dot
-			var lx := roundi(cx + cos(float(k) * 1.9 + 0.5) * w * 0.22)
-			var ly := roundi(cy + sin(float(k) * 1.9 + 0.5) * h * 0.2)
-			PixelPlace.ell(c, lx, ly, 3.0, 1.8, "v")
-			PixelPlace.rect(c, lx, ly - 1, 1, 1, "n" if k % 2 == 0 else "v")
 	elif water == "icy":
 		PixelPlace.ell(c, cx, cy, w / 2.0, h / 2.0, "b")
 		PixelPlace.ell(c, cx, cy, w / 2.0 - 1.0, h / 2.0 - 1.0, "n")

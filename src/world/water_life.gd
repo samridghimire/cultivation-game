@@ -24,6 +24,7 @@ var _paths: Array[Rect2] = []
 var _rain := false
 var _reduce := false
 var _clock := 0.0
+var _decor: Array[Dictionary] = []  ## GFX-115: glints, lily pads, reeds, pebbles
 var _ripples: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
 
@@ -39,7 +40,8 @@ static func shimmer_alpha(t: float) -> float:
 
 
 ## Rebuilds from a region: `rain` for rain/storm days, `frozen` for snowy seasons.
-func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool) -> void:
+func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, season: String = "") -> void:
+	_decor = Scenery.water_decor(region, "Winter" if frozen else season)
 	_streams.clear()
 	_ponds.clear()
 	_jetties.clear()
@@ -108,6 +110,13 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var dash := Color(0.78, 0.92, 1.0, 0.45)
 	for s in _streams:
+		var bank := Color("6a5236")
+		if s.size.x >= s.size.y:
+			draw_rect(Rect2(s.position.x, s.position.y - 2.0, s.size.x, 2.0), bank)
+			draw_rect(Rect2(s.position.x, s.end.y, s.size.x, 2.0), bank)
+		else:
+			draw_rect(Rect2(s.position.x - 2.0, s.position.y, 2.0, s.size.y), bank)
+			draw_rect(Rect2(s.end.x, s.position.y, 2.0, s.size.y), bank)
 		_draw_flow(s, dash)
 	var a := shimmer_alpha(_clock)
 	for p in _ponds:
@@ -124,6 +133,7 @@ func _draw() -> void:
 				pts.append(pt)
 		if pts.size() >= 2:
 			draw_polyline(pts, Color(1, 1, 1, a), 2.0)
+	_draw_decor()
 	for r in _ripples:
 		var t := float(r["t"]) / RIPPLE_LIFE
 		var rad := 2.0 + t * 12.0
@@ -162,3 +172,25 @@ func _on_path(seg: Rect2) -> bool:
 		if p.grow(4.0).intersects(seg):
 			return true
 	return false
+
+
+## GFX-115: pond glints drift slowly east and wrap inside the pond (static under reduce_motion); pads, reeds, pebbles sit still.
+func _draw_decor() -> void:
+	for d in _decor:
+		var p: Vector2 = d["pos"]
+		var rect: Rect2 = d["rect"]
+		match String(d["kind"]):
+			"glint":
+				var drift := 0.0 if _reduce else fposmod(_clock * 2.5 + p.x, 16.0) - 8.0
+				var gp := Vector2(clampf(p.x + drift, rect.position.x + 8.0, rect.end.x - 8.0), p.y)
+				draw_rect(Rect2(gp, Vector2(3, 1)), Color(1, 1, 1, 0.5))
+			"pad":
+				draw_rect(Rect2(p + Vector2(-3, -1), Vector2(6, 3)), Color("3f7a3a"))
+				draw_rect(Rect2(p + Vector2(0, -1), Vector2(1, 1)), Color("e8a8c0"))
+			"reed":
+				for i in 3:
+					draw_rect(Rect2(p + Vector2(i * 2 - 2, -5 - (i % 2) * 2), Vector2(1, 7 + (i % 2) * 2)), Color("5a6a34"))
+				draw_rect(Rect2(p + Vector2(0, -8), Vector2(2, 3)), Color("6a4a2a"))
+			"pebble":
+				draw_rect(Rect2(p, Vector2(3, 2)), Color("8a8a84"))
+				draw_rect(Rect2(p, Vector2(3, 1)), Color("b0b0a8"))

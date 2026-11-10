@@ -261,7 +261,7 @@ func _refresh_village_life() -> void:
 		add_child(_water_life)
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
-	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced())
+	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced(), _season)
 	if _critters == null:
 		_critters = CritterLayer.new()
 		_critters.name = "Critters"

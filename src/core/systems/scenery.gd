@@ -909,3 +909,70 @@ static func add_footprint(prints: Array, pos: Vector2, cap: int = 12) -> Array:
 ## True when roofs, pines and ponds carry snow or ice.
 static func is_snowy(season: String) -> bool:
 	return season == "Winter"
+
+
+## GFX-115: seeded decoration for ponds and streams. Returns dictionaries {kind, pos: Vector2, rect: Rect2 (the water
+## it belongs to)}: kind "glint" (3-6 per pond, drift in WaterLife), "pad" (lily pads on clear ponds in Spring/Summer),
+## "reed" (tufts at the rim of murky ponds, any season) and "pebble" (beside a path bridge on streams). Every glint, pad
+## and reed lies inside its pond's rect and none under a jetty or bridge. Frozen water (Winter, unless no_snow) gets none.
+static func water_decor(region: Dictionary, season: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	if is_snowy(season) and not bool(map.get("no_snow", false)):
+		return out
+	var water: String = String(map.get("water", "clear"))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("water_decor:" + str(region.get("id", "")))
+	var blocked: Array[Rect2] = []
+	for lm: Dictionary in map.get("landmarks", []):
+		if String(lm.get("kind", "")) == "jetty":
+			blocked.append((jetty_layout(region, lm)["rect"] as Rect2).grow(3.0))
+	var paths: Array[Rect2] = []
+	for pr: Array in map.get("paths", []):
+		paths.append(Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3])))
+	for lm: Dictionary in map.get("landmarks", []):
+		var kind := String(lm.get("kind", ""))
+		if kind != "pond" and kind != "stream":
+			continue
+		var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
+		var rect := Rect2(Vector2(float(lm["pos"][0]), float(lm["pos"][1])) - size / 2.0, size)
+		if kind == "stream":
+			for p in paths:
+				if p.intersects(rect):
+					var cross := p.intersection(rect)
+					var horiz := p.size.x >= p.size.y
+					for k in 4:
+						var off := Vector2(-14.0 if k % 2 == 0 else 14.0, 0.0) if not horiz else Vector2(0.0, -14.0 if k % 2 == 0 else 14.0)
+						var spot := cross.get_center() + off + Vector2(rng.randf_range(-6.0, 6.0), rng.randf_range(-6.0, 6.0))
+						if rect.grow(4.0).has_point(spot) and not _under_any(spot, paths):
+							out.append({"kind": "pebble", "pos": spot, "rect": rect})
+			continue
+		var inner := rect.grow(-maxf(6.0, minf(rect.size.x, rect.size.y) * 0.12))
+		for k in rng.randi_range(3, 6):
+			_add_water_spot(out, "glint", inner, rect, blocked, rng)
+		if water == "clear" and (season == "Spring" or season == "Summer"):
+			for k in 2 + int(rect.size.x) / 90:
+				_add_water_spot(out, "pad", inner, rect, blocked, rng)
+		elif water == "murky":
+			for k in 3 + int(rect.size.x) / 80:
+				var a := rng.randf() * TAU
+				var spot := rect.get_center() + Vector2(cos(a) * rect.size.x * 0.4, sin(a) * rect.size.y * 0.4)
+				if rect.has_point(spot) and not _under_any(spot, blocked):
+					out.append({"kind": "reed", "pos": spot, "rect": rect})
+	return out
+
+
+static func _add_water_spot(out: Array[Dictionary], kind: String, inner: Rect2, rect: Rect2, blocked: Array[Rect2], rng: RandomNumberGenerator) -> void:
+	for attempt in 6:
+		var p := Vector2(rng.randf_range(inner.position.x, inner.end.x), rng.randf_range(inner.position.y, inner.end.y))
+		var d := (p - rect.get_center()) / (rect.size / 2.0)
+		if d.length() < 0.8 and not _under_any(p, blocked):
+			out.append({"kind": kind, "pos": p, "rect": rect})
+			return
+
+
+static func _under_any(p: Vector2, rects: Array[Rect2]) -> bool:
+	for r in rects:
+		if r.grow(2.0).has_point(p):
+			return true
+	return false

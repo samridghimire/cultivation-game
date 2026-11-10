@@ -79,3 +79,34 @@ func test_every_pond_landmark_is_drawable() -> void:
 				assert_true(px.x >= 3 and px.y >= 3, "%s pond too small" % id)
 				assert_true(PixelLandmark.texture("pond", size).get_width() > 0)
 	assert_true(n >= 4)
+
+
+func test_water_decor_inside_water_and_clear_of_jetty_and_bridge() -> void:
+	var region := {"id": "t", "map": {"water": "clear", "paths": [[0, 90, 800, 30]], "landmarks": [
+		{"kind": "stream", "pos": [300, 100], "size": [40, 400]},
+		{"kind": "pond", "pos": [100, 300], "size": [160, 100]},
+		{"kind": "jetty", "pos": [100, 340], "size": [60, 20]}]}}
+	var summer := Scenery.water_decor(region, "Summer")
+	assert_true(summer.size() > 0)
+	var kinds := {}
+	for d in summer:
+		kinds[d["kind"]] = true
+		var rect: Rect2 = d["rect"]
+		if d["kind"] != "pebble":
+			assert_true(rect.has_point(d["pos"]))
+		assert_false(Rect2(70, 330, 60, 20).has_point(d["pos"]))
+		assert_false(Rect2(0, 90, 800, 30).has_point(d["pos"]))
+	assert_true(kinds.has("glint") and kinds.has("pad") and kinds.has("pebble"))
+	assert_eq(summer, Scenery.water_decor(region, "Summer"))  # seeded
+	assert_false(_kinds(Scenery.water_decor(region, "Autumn")).has("pad"))
+	assert_eq(Scenery.water_decor(region, "Winter").size(), 0)
+	region["map"]["water"] = "murky"
+	var murky := _kinds(Scenery.water_decor(region, "Summer"))
+	assert_true(murky.has("reed") and not murky.has("pad"))
+
+
+func _kinds(decor: Array[Dictionary]) -> Dictionary:
+	var k := {}
+	for d in decor:
+		k[d["kind"]] = true
+	return k
