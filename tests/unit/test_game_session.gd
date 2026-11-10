@@ -3768,3 +3768,35 @@ func test_fishing_first_trip_slipped_has_one_line() -> void:
 		break
 	assert_true(checked)
 	_restore_weather(gs)
+
+
+## FISH-009: a fresh character's first trip at the Qingshi jetty always lands a fish and posts exactly one
+## beginner's-luck line, in every season, on clear and rain days, whatever the cast quality or rng.
+func test_fishing_first_trip_in_qingshi_never_empty() -> void:
+	var gs := _game_state()
+	var places := (gs.data.regions["qingshi_village"]["places"] as Array).filter(func(p: Dictionary) -> bool: return p.get("type", "") == "fishing")
+	assert_false(places.is_empty())
+	var table: Array = places[0]["catch_table"]
+	for season_i in 4:
+		for kind in ["clear", "rain"]:
+			for quality in [0.0, 0.5, 1.0]:
+				for seed_i in 25:
+					var c := _start(seed_i + 1)
+					_set_weather(gs, kind)
+					gs.rng.seed = seed_i * 7 + 3
+					_root().get_node("GameClock").total_days = season_i * 3 * Calendar.DAYS_PER_MONTH + 2
+					EventBus.history.clear()
+					gs.fish(table, 2, "Village Pond Jetty", quality)
+					var texts: Array = EventBus.history.map(func(e: Dictionary) -> String: return String(e["text"]))
+					var ctx := "season %d %s q=%s seed %d: %s" % [season_i, kind, quality, seed_i, str(texts)]
+					var fish_count := 0
+					for id: String in c.inventory:
+						if "fish" in gs.data.items.get(id, {}).get("tags", []):
+							fish_count += int(c.inventory[id])
+					assert_true(fish_count >= 1, ctx)
+					var luck := texts.filter(func(t: String) -> bool: return t.contains("Beginner's luck"))
+					var natural := texts.any(func(t: String) -> bool: return t.contains("You fish for") and t.contains("+"))
+					assert_true(luck.size() == 1 or natural, ctx)
+					assert_false(texts.any(func(t: String) -> bool: return t.contains("nothing bites")), ctx)
+					assert_false(luck.size() == 1 and texts.has(Fishing.GOT_AWAY), ctx)
+	_restore_weather(gs)
