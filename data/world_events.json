@@ -43,7 +43,7 @@
     {
       "id": "qingming_festival", "decor": {"look": "kite", "colors": ["#6f9f4a", "#e8e0c8", "#3f6f3a"]}, "name": "Qingming Ancestor Festival",
       "description": "In the clear, bright days of spring the mountain's disciples sweep the graves of the departed, burn paper offerings and share cold dumplings, remembering those who walked the Dao before them.",
-      "monthly_chance": 1.0, "min_days": 5, "max_days": 8, "months": [3], "festival": true,
+      "monthly_chance": 1.0, "min_days": 5, "max_days": 8, "months": [3], "festival": true, "guest_line": "At the {festival}: {names} cheer from the ridge while champion {champion} tests the kite wind.",
       "regions": ["azure_peak"],
       "start_text": "Incense smoke curls over the graves of {region}. The Qingming Ancestor Festival has begun.",
       "end_text": "The paper offerings have burned to ash at {region}; the Qingming Ancestor Festival is over.",
@@ -55,7 +55,7 @@
     {
       "id": "dragon_boat_festival", "decor": {"look": "boats", "colors": ["#3f6f3a", "#b83a2e", "#e0b84a"]}, "name": "Dragon Boat Festival",
       "description": "In the heat of midsummer the villagers carve a dragon-prowed boat, drum the river awake and toss rice dumplings to the water so the fish will leave the old poets alone.",
-      "monthly_chance": 1.0, "min_days": 5, "max_days": 8, "months": [5], "festival": true,
+      "monthly_chance": 1.0, "min_days": 5, "max_days": 8, "months": [5], "festival": true, "guest_line": "At the {festival}: {names} bang the drums for you; champion {champion} is back on the stroke bench.",
       "regions": ["qingshi_village"],
       "start_text": "Drums boom along the river at {region}, and a dragon-prowed boat noses out from the reeds. The Dragon Boat Festival has begun.",
       "end_text": "The drums fall quiet at {region}; the dragon boat is hauled ashore and the Dragon Boat Festival is over.",
@@ -67,7 +67,7 @@
     {
       "id": "mid_autumn_festival", "decor": {"look": "moon", "colors": ["#e0b84a", "#f4ecc8", "#b83a2e"]}, "name": "Mid-Autumn Moon Festival",
       "description": "When the harvest moon is fullest, the market's traders hang lanterns from every stall, cut moon cakes for strangers and haggle with a lighter heart.",
-      "monthly_chance": 1.0, "min_days": 6, "max_days": 9, "months": [8], "festival": true,
+      "monthly_chance": 1.0, "min_days": 6, "max_days": 9, "months": [8], "festival": true, "guest_line": "At the {festival}: {names} saved you a seat by the stalls; champion {champion} is sniffing fillings.",
       "regions": ["fallen_star_market"],
       "start_text": "Round lanterns glow above every stall at {region}. The Mid-Autumn Moon Festival has begun.",
       "end_text": "The moon wanes over {region}; the Mid-Autumn Moon Festival is over.",
@@ -79,7 +79,7 @@
     {
       "id": "lantern_festival", "decor": {"look": "lanterns", "colors": ["#b83a2e", "#e0b84a", "#f08a3a"]}, "name": "Lantern Festival",
       "description": "On the first nights of winter the village floats paper lanterns down the river and burns incense for the ancestors. Strangers are fed and old grudges are set aside.",
-      "monthly_chance": 1.0, "min_days": 7, "max_days": 10, "months": [10], "festival": true,
+      "monthly_chance": 1.0, "min_days": 7, "max_days": 10, "months": [10], "festival": true, "guest_line": "At the {festival}: {names} will cheer your guesses; champion {champion} has riddles ready.",
       "regions": ["qingshi_village"],
       "start_text": "Paper lanterns drift down the river at {region}, and villagers burn incense for the ancestors. The Lantern Festival has begun.",
       "end_text": "The last lanterns burn out on the river at {region}; the Lantern Festival is over.",
