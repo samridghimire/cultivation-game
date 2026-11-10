@@ -52,6 +52,40 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 	return rows.slice(0, MAX_ROWS)
 
 
+## GUIDE-233: up to 2 one-time paid jobs {kind: "job", place, note, stones, items, days} for the givers here:
+## good (alignment >= 0), not repeatable, no fight, doable now, paying stones or items with a sell value. Most stones first.
+static func one_time_rows(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var season := Calendar.season_of(today)
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+			continue
+		var hidden := String(place.get("hidden_by_flag", ""))
+		if hidden != "" and Effects.flag_active(flags, hidden, today):
+			continue
+		for deed in Deeds.available(data, String(place["deed_context"]), flags):
+			var eff: Dictionary = deed.get("effects", {})
+			if Deeds.is_repeatable(deed) or int(eff.get("alignment", 0)) < 0 or String(deed.get("enemy", "")) != "" \
+					or Deeds.check(c, data, deed, flags, today) != "":
+				continue
+			var items: Dictionary = {}
+			var stones := 0
+			var worth := 0
+			for id: String in eff.get("items", {}):
+				var n := int(eff["items"][id])
+				if id == "spirit_stone":
+					stones += n
+				if n > 0 and Items.sell_price(data, id, season) > 0:
+					worth += n
+					if id != "spirit_stone":
+						items[id] = n
+			if worth <= 0:
+				continue
+			rows.append({"kind": "job", "place": String(place.get("display_name", "")), "note": String(deed.get("name", "")), "stones": stones, "items": items, "days": maxi(1, int(deed.get("days", 1)))})
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["stones"]) > int(b["stones"]))
+	return rows.slice(0, 2)
+
+
 const FAR_GAIN := 1.5
 const FAR_STAY_DAYS := 10.0
 
@@ -193,13 +227,22 @@ static func _best_craft(c: CharacterData, data: GameData) -> Dictionary:
 
 
 ## "about N stones a day" lines for the journal, one per row.
-static func lines(rows: Array[Dictionary]) -> PackedStringArray:
+static func lines(rows: Array[Dictionary], data: GameData = null) -> PackedStringArray:
 	var out := PackedStringArray()
 	for r in rows:
+		if String(r["kind"]) == "job":
+			var parts := PackedStringArray()
+			if int(r["stones"]) > 0:
+				parts.append("%d %s" % [int(r["stones"]), "stone" if int(r["stones"]) == 1 else "stones"])
+			for id: String in r["items"]:
+				var nm := String(data.items.get(id, {}).get("name", id)) if data != null else id
+				parts.append(nm if int(r["items"][id]) == 1 else "%d %s" % [int(r["items"][id]), nm])
+			out.append("Once: %s (%s): %s, %d %s." % [r["note"], r["place"], " + ".join(parts), int(r["days"]), "day" if int(r["days"]) == 1 else "days"])
+			continue
 		var n := maxi(1, roundi(float(r["per_day"])))
 		if String(r["kind"]) == "far":
 			var verb: String = {"gather": "Gathering", "fishing": "Fishing", "chore": "Errands"}.get(String(r["note"]), "Work")
 			out.append("%s at %s (%d days away): about %d a day." % [verb, r["place"], int(r["days"]), n])
 			continue
-		out.append("%s (%s): about %d %s a day." % [String(r["note"]).capitalize() if String(r["note"]) == String(r["kind"]) else String(r["note"]), r["place"], n, "stone" if n == 1 else "stones"])
+		out.append("%s (%s): about %d %s a day." % [(String(r["note"]).substr(0, 1).to_upper() + String(r["note"]).substr(1)), r["place"], n, "stone" if n == 1 else "stones"])
 	return out

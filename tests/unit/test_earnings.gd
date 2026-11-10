@@ -282,3 +282,28 @@ func test_empty_purse_hint_names_far_row_only_when_nothing_pays_two() -> void:
 	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
 	if not rows.is_empty() and float(rows[0]["per_day"]) >= 2.0:
 		assert_false(hint.contains("days away"), hint)
+
+
+## GUIDE-233: the one-time headman jobs show on the card.
+func test_one_time_rows_list_good_headman_jobs() -> void:
+	var c := new_character()
+	var rows := Earnings.one_time_rows(c, data(), {}, "qingshi_village", 0)
+	assert_true(rows.size() >= 1 and rows.size() <= 2, "rows %d" % rows.size())
+	for i in rows.size() - 1:
+		assert_true(int(rows[i]["stones"]) >= int(rows[i + 1]["stones"]))
+	for id in ["poison_village_well", "sell_street_child", "rob_traveller"]:
+		for r in rows:
+			assert_false(String(r["note"]) == String(data().deeds[id]["name"]))
+	var first := String(rows[0]["note"])
+	var flag := String(data().deeds["chore_gather_herbs"].get("blocked_by_flag", ""))
+	var after := Earnings.one_time_rows(c, data(), {flag: true}, "qingshi_village", 0)
+	for r in after:
+		assert_false(String(r["note"]) == String(data().deeds["chore_gather_herbs"]["name"]))
+	var text := Earnings.lines(rows, data())
+	assert_true(text[0].begins_with("Once: "), text[0])
+	assert_true(first != "")
+
+
+func test_lines_capitalize_gathering() -> void:
+	var rows: Array[Dictionary] = [{"kind": "gather", "place": "Herb Slope", "note": "gathering", "per_day": 3.0}]
+	assert_true(Earnings.lines(rows)[0].begins_with("Gathering ("))

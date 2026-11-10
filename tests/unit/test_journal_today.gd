@@ -101,5 +101,5 @@ func test_people_today_lines_empty_for_new_game() -> void:
 	new_character()
 	var root: Node = Engine.get_main_loop().root
 	root.get_node("GameState").start_session(new_character())
-	assert_true(root.get_node("GameState").earning_lines_here().size() <= 3)
+	assert_true(root.get_node("GameState").earning_lines_here().size() <= 5)
 	assert_true(root.get_node("GameState").people_today_lines().size() >= 0)

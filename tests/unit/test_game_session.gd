@@ -3743,3 +3743,28 @@ func test_fishing_beginners_luck_once() -> void:
 	gs.fish(empty, 1, "", 0.5)
 	assert_eq(c.item_count("silver_carp"), before, "no beginner fish once one has been caught")
 	_restore_weather(gs)
+
+
+## GUIDE-233: a first trip that got away posts only the beginner's-luck line, never "got away".
+func test_fishing_first_trip_slipped_has_one_line() -> void:
+	var c := _start()
+	var gs := _game_state()
+	_set_weather(gs, "clear")
+	var table := [{"item": "", "weight": 1000}, {"item": "silver_carp", "weight": 3, "min": 1, "max": 1}]
+	var checked := false
+	for seed_i in 200:
+		var probe := RandomNumberGenerator.new()
+		probe.seed = seed_i
+		if not Fishing.got_away(0.0, probe):
+			continue
+		c.catch_log = {}
+		gs.rng.seed = seed_i
+		EventBus.history.clear()
+		gs.fish(table, 1, "", 0.0)
+		var texts: Array = EventBus.history.map(func(e: Dictionary) -> String: return String(e["text"]))
+		assert_false(texts.has(Fishing.GOT_AWAY), "no contradicting line")
+		assert_true(texts.any(func(t: String) -> bool: return t.begins_with("A fish takes the bait and slips free")), str(texts))
+		checked = true
+		break
+	assert_true(checked)
+	_restore_weather(gs)

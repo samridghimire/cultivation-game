@@ -721,7 +721,9 @@ func people_today_lines() -> PackedStringArray:
 func earning_lines_here() -> PackedStringArray:
 	if player == null:
 		return PackedStringArray()
-	return Earnings.lines(Earnings.rows_with_far(player, data, world_flags, current_region, GameClock.total_days, 2 if not Earnings.far_row(player, data, world_flags, current_region, GameClock.total_days).is_empty() else 3))
+	var out := Earnings.lines(Earnings.rows_with_far(player, data, world_flags, current_region, GameClock.total_days, 2 if not Earnings.far_row(player, data, world_flags, current_region, GameClock.total_days).is_empty() else 3))
+	out.append_array(Earnings.lines(Earnings.one_time_rows(player, data, world_flags, current_region, GameClock.total_days), data))
+	return out
 
 
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
@@ -1400,9 +1402,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_weather(table, weather_kind), world_flags), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
-	if Fishing.got_away(quality, rng):
-		EventBus.post("A fish takes the bait, then it got away.")
-	else:
+	var slipped := Fishing.got_away(quality, rng)
+	if not slipped:
 		found = Exploration.gather(player, usable, rng)
 		for i in Fishing.extra_draws(data, weather_kind):
 			var more := Exploration.gather(player, usable, rng)
@@ -1425,7 +1426,9 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 		if pick != "":
 			found[pick] = 1
 			beginner = String(data.items[pick]["name"])
-			EventBus.post("Beginner's luck: +1 %s." % beginner, "progress")
+			EventBus.post((Fishing.BEGINNER_SLIPPED if slipped else Fishing.BEGINNER_LUCK) % beginner, "progress")
+	if slipped and beginner == "":
+		EventBus.post(Fishing.GOT_AWAY)
 	var old_rank := Fishing.rank_name(player.fishing_xp)
 	player.fishing_xp += Fishing.xp_gain(base, found)
 	var notes: PackedStringArray = []

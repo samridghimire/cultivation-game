@@ -86,6 +86,11 @@ static func skill_table(table: Array, quality: float, xp: int) -> Array:
 
 
 ## True when a quality-0 cast loses the fish (30%); draws from `rng` only then.
+const GOT_AWAY := "A fish takes the bait, then it got away."
+const BEGINNER_LUCK := "Beginner's luck: +1 %s."
+const BEGINNER_SLIPPED := "A fish takes the bait and slips free, but a small one stays on the hook. Beginner's luck: +1 %s."
+
+
 static func got_away(quality: float, rng: RandomNumberGenerator) -> bool:
 	return quality <= 0.0 and rng.randf() < GOT_AWAY_CHANCE
 
