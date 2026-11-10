@@ -340,3 +340,15 @@ func test_crown_shades_only_its_own_pixels() -> void:
 	var tl: String = o[5][8]
 	PixelPlace.crown(o, 20, 10, 8, 7)
 	assert_eq(o[5][8], tl, "crown 1's shading survives an overlapping crown 2")
+
+
+## GFX-114: winter changes woods crowns (snow caps) and gather beds (dormant), other kinds are untouched.
+func test_winter_look() -> void:
+	var summer := PixelPlace.rows("explore_woods")
+	var winter := PixelPlace.rows("explore_woods", true, false, false, "thatch", true)
+	assert_true(summer != winter, "woods differ in winter")
+	assert_true("".join(winter).contains("n"), "snow cap pixels")
+	assert_true(PixelPlace.rows("gather") != PixelPlace.rows("gather", true, false, false, "thatch", true), "dormant herb bed")
+	assert_eq(PixelPlace.rows("explore_ruins"), PixelPlace.rows("explore_ruins", true, false, false, "thatch", true))
+	assert_false(PixelPlace.winter_kind("gather_frost"))
+	assert_true(PixelPlace.winter_crown(Color("2e7a2a")).get_luminance() < Color("2e7a2a").get_luminance())

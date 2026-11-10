@@ -21,6 +21,7 @@ extends Area2D
 var tags: Array = []
 ## PlaceArt look: the regions.json place type or "npc" ("" = plain box).
 var art_kind := ""
+var winter := false  ## GFX-114: the region's ground is snowy (woods get snow caps, herb beds go dormant)
 var building_style := "thatch"  ## GFX-100: regions.json map.building_style, set by the world builder
 ## The player's current interaction target pulses (set by Player).
 var highlighted := false:
@@ -542,7 +543,7 @@ func _draw() -> void:
 		var k := maxi(1, int(minf(size.x / tex_size.x, size.y / tex_size.y)))
 		draw_texture_rect(art, Rect2(-tex_size * k / 2.0, tex_size * k), false)
 	elif not draw_generated_art():
-		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name, building_style)
+		PlaceArt.draw(self, art_kind, size, color, art_active(), display_name, building_style, winter)
 	if art_kind == "family_home" or (art_kind == "abode" and has_method("is_owned") and call("is_owned")):
 		_draw_trophies()  # WU-494
 	if highlighted:

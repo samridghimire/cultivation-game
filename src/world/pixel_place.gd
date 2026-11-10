@@ -114,7 +114,7 @@ static func shop_look(place_name: String) -> String:
 	return "shop"
 
 
-static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> ImageTexture:
+static func texture(kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch", winter: bool = false) -> ImageTexture:
 	var compact := false
 	if kind == "merchant" and size.x >= SHOP_MIN_WIDTH:
 		kind = shop_look(place_name)
@@ -124,8 +124,11 @@ static func texture(kind: String, size: Vector2, color: Color, active: bool = fa
 	var key := "%s|%s|%s|%s" % [kind + ("_c" if compact else ""), color.to_html(), horizontal if kind == "travel" else true, active]
 	if style != "thatch":
 		key += "|" + style
+	winter = winter and winter_kind(kind)
+	if winter:
+		key += "|winter"
 	if not _cache.has(key):
-		_cache[key] = from_rows(rows(kind, horizontal, active, compact, style), color, active, style)
+		_cache[key] = from_rows(rows(kind, horizontal, active, compact, style, winter), color, active, style)
 	return _cache[key]
 
 
@@ -151,7 +154,7 @@ static func from_rows(r: Array[String], color: Color, active: bool = false, styl
 
 
 ## Template rows for `kind` (empty for unsupported kinds); each row has the same length.
-static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false, style: String = "thatch") -> Array[String]:
+static func rows(kind: String, horizontal: bool = true, active: bool = false, compact: bool = false, style: String = "thatch", winter: bool = false) -> Array[String]:
 	var c: Array
 	match kind:
 		"merchant":
@@ -233,11 +236,48 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 		_:
 			return []
 	apply_style_rows(c, effective_style(kind, style))
+	if winter and winter_kind(kind):
+		winterize(kind, c)
 	outline(c)
 	var out: Array[String] = []
 	for row: Array in c:
 		out.append("".join(row))
 	return out
+
+
+## GFX-114: kinds whose picture changes in a snowy winter: tree crowns and the living gather beds.
+static func winter_kind(kind: String) -> bool:
+	return kind in ["explore_woods", "explore_woods_herbs", "gather", "gather_terrace", "gather_bog"]
+
+
+## GFX-114: the crown colour of a woods site in winter: 25% darker and greyer.
+static func winter_crown(c: Color) -> Color:
+	var grey := Color(c.get_luminance(), c.get_luminance(), c.get_luminance())
+	return c.lerp(grey, 0.25).darkened(0.25)
+
+
+## GFX-114: winter edits on template rows. Woods: a 2 px snow cap on top of every crown column with a pale underside
+## pixel. Gather beds: living greens (v, r, h) become dormant brown stubs ("t", "e") with snow pixels ("n").
+static func winterize(kind: String, c: Array) -> void:
+	if kind.begins_with("explore_woods"):
+		for x in c[0].size():
+			for y in c.size():
+				var ch: String = c[y][x]
+				if ch == "r" or ch == "R" or ch == "h":
+					for dy in 3:
+						if y + dy < c.size() and ["r", "R", "h"].has(c[y + dy][x]):
+							c[y + dy][x] = "n" if dy < 2 else "b"
+					break
+		return
+	for y in c.size():
+		for x in c[y].size():
+			match c[y][x]:
+				"v":
+					c[y][x] = "t"
+				"r":
+					c[y][x] = "e"
+				"h":
+					c[y][x] = "n"
 
 
 ## GFX-100: small row edits per style, before the outline: stilt raises the base on posts (the bottom 3 rows keep a

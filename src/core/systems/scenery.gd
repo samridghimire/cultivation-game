@@ -347,6 +347,47 @@ static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 	return {"rect": rect, "vertical": vertical, "on_water": true, "toward_water": toward}
 
 
+## GFX-114: where the ice hole of a frozen pond goes: past the water end (clear of the place label) of the jetty `lm`, pulled toward the
+## pond centre until it lies inside the pond ellipse. Returns Vector2.INF when `lm` has no pond.
+static func ice_hole_point(region: Dictionary, lm: Dictionary) -> Vector2:
+	var lay := jetty_layout(region, lm)
+	if not bool(lay.get("on_water", false)):
+		return Vector2.INF
+	var r: Rect2 = lay["rect"]
+	var toward: int = int(lay["toward_water"])
+	var vertical := bool(lay["vertical"])
+	var tip: Vector2
+	if vertical:
+		tip = Vector2(r.get_center().x, r.position.y - 34.0 if toward < 0 else r.end.y + 34.0)
+	else:
+		tip = Vector2(r.position.x - 34.0 if toward < 0 else r.end.x + 34.0, r.get_center().y)
+	var pond := Rect2()
+	var best := INF
+	for other: Dictionary in region.get("map", {}).get("landmarks", []):
+		if other.get("kind", "") != "pond":
+			continue
+		var pc := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+		var d := tip.distance_to(pc)
+		if d < best:
+			best = d
+			pond = Rect2(pc - Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0, Vector2(float(other["size"][0]), float(other["size"][1])))
+	if best == INF:
+		return Vector2.INF
+	var c := pond.get_center()
+	var half := pond.size / 2.0
+	for i in 12:
+		var q := (tip - c) / (half * 0.8)
+		if q.length() <= 1.0:
+			return tip
+		tip = tip.lerp(c, 0.2)
+	return c
+
+
+## GFX-114: "foot" (a flat ellipse at the trunk) under every tree in winter and under bare trees; else "round".
+static func tree_shadow(season: String, bare: bool) -> String:
+	return "foot" if bare or season == "Winter" else "round"
+
+
 ## GFX-049: a jetty never crosses a path. Its land end (opposite the water end) stops JETTY_PATH_GAP px before a
 ## path it would enter, but stays at least JETTY_MIN_LEN long (overlapping the water more). Unchanged if no path is in the way.
 const JETTY_PATH_GAP := 6.0

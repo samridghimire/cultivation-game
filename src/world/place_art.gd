@@ -15,12 +15,12 @@ const WOOD := Color("6b4a2e")
 const STONE := Color("8d8a82")
 
 
-static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch") -> void:
+static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, active: bool = false, place_name: String = "", style: String = "thatch", winter: bool = false) -> void:
 	var h := size / 2.0
 	# GFX-021: PixelPlace kinds are drawn as pixel art, base on the place rect's lower edge (the vector
 	# functions below for those kinds are unused while PixelPlace supports them).
 	if PixelPlace.supports(kind):
-		var tex := PixelPlace.texture(kind, size, color, active, place_name, style)
+		var tex := PixelPlace.texture(kind, size, color, active, place_name, style, winter)
 		var px := Vector2(tex.get_size()) * float(Sprites.scale())
 		if PixelPlace.is_building(kind):
 			contact_shadow(ci, Vector2(0, h.y), px.x)

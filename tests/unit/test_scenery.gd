@@ -579,3 +579,32 @@ func test_herb_slope_has_terraces_tag() -> void:
 		if String(p.get("display_name", "")) == "Village Herb Slope":
 			found = (p.get("tags", []) as Array).has("terraces")
 	assert_true(found)
+
+
+## GFX-114: winter trees get a flat foot shadow, summer leafy trees keep the round one.
+func test_tree_shadow_by_season() -> void:
+	for bare in [true, false]:
+		assert_eq(Scenery.tree_shadow("Winter", bare), "foot")
+	assert_eq(Scenery.tree_shadow("Summer", false), "round")
+	assert_eq(Scenery.tree_shadow("Summer", true), "foot")
+
+
+## GFX-114: every jetty on a pond has its ice hole inside the pond rect.
+func test_ice_hole_inside_pond() -> void:
+	var checked := 0
+	for region: Dictionary in data().regions.values():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm.get("kind", "") != "jetty":
+				continue
+			var pt := Scenery.ice_hole_point(region, lm)
+			if pt == Vector2.INF:
+				continue
+			var inside := false
+			for other: Dictionary in region["map"]["landmarks"]:
+				if other.get("kind", "") == "pond":
+					var c := Vector2(float(other["pos"][0]), float(other["pos"][1]))
+					if Rect2(c - Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0, Vector2(float(other["size"][0]), float(other["size"][1]))).has_point(pt):
+						inside = true
+			assert_true(inside, "ice hole of %s jetty lies in a pond" % region["id"])
+			checked += 1
+	assert_true(checked >= 4, "several regions have a jetty on a pond")

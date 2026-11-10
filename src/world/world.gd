@@ -671,6 +671,7 @@ func _make_place(place: Dictionary) -> Interactable:
 	node.position = _vec(place.get("pos", [0, 0]))
 	node.art_kind = place["type"]
 	node.building_style = String(_region.get("map", {}).get("building_style", "thatch"))
+	node.winter = GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"  # GFX-114
 	for key in place:
 		if LAYOUT_KEYS.has(key):
 			continue
@@ -679,6 +680,8 @@ func _make_place(place: Dictionary) -> Interactable:
 		node.art_kind = PixelPlace.explore_kind(String(place.get("look", "cave")), place.get("explore_tags", []))
 		if place.get("look", "") == "woods":
 			node.color = PixelPlace.woods_color(_region.get("map", {}), node.color)  # GFX-104
+			if node.winter:
+				node.color = PixelPlace.winter_crown(node.color)  # GFX-114
 	if place["type"] == "gather":
 		node.art_kind = PixelPlace.gather_kind(String(place.get("look", "patch")))
 	if place["type"] == "secret_realm":
@@ -1070,6 +1073,10 @@ func _draw() -> void:
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	if Scenery.is_snowy(_season) and not bool(map.get("no_snow", false)):
+		for lm: Dictionary in map.get("landmarks", []):  # GFX-114: after the ponds, so the ice shows
+			if lm.get("kind", "") == "jetty":
+				_draw_ice_hole(Scenery.ice_hole_point(_region, lm))
 	_draw_terraces()
 	_draw_high_pines(map)
 	_draw_footprints()
@@ -1665,6 +1672,15 @@ func _jetty_stage() -> int:
 
 ## GFX-049: a north-south jetty: boards run across the walkway (3 px with 1 px gaps), dark side rails, and the
 ## posts at the water end. At least 18 px wide; `toward` < 0 means the water is at the north end.
+## GFX-114: a dark-blue hole in the ice with a white rim where you fish from a jetty on a frozen pond.
+func _draw_ice_hole(at: Vector2) -> void:
+	if at == Vector2.INF:
+		return
+	PlaceArt.ellipse(self, at, Vector2(7, 4.5), Color("f4f8ff"))
+	PlaceArt.ellipse(self, at, Vector2(5, 3), Color("1f3a5c"))
+	PlaceArt.ellipse(self, at + Vector2(-1, -1), Vector2(2, 1), Color("3c6a9a"))
+
+
 func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 	var w := maxf(18.0, r.size.x)
 	var box := Rect2(r.get_center().x - w / 2.0, r.position.y, w, r.size.y)
@@ -1752,8 +1768,9 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 	var blossoms_ok: bool = bool(_region.get("map", {}).get("decor", {}).get("blossoms", true))
 	var look := Scenery.tree_look(_season, seed_value, base, kind, blossoms_ok)
 	var c: Color = look["canopy"]
-	if look["bare"]:
-		_draw_foot_shadow(p, k)
+	var ground_season := GroundTiles.ground_season(_season, _region.get("map", {}))
+	if Scenery.tree_shadow(ground_season, bool(look["bare"])) == "foot":
+		_draw_foot_shadow(p, k, ground_season == "Winter")
 	else:
 		draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
 	if look["bare"]:
@@ -1775,14 +1792,16 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 
 
 ## GFX-049: bare trees get a flat ellipse at the trunk foot (ground shade darkened), not a round dark blot.
-func _draw_foot_shadow(p: Vector2, k: float) -> void:
+func _draw_foot_shadow(p: Vector2, k: float, snow: bool = false) -> void:
 	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
+	if snow:  # GFX-114: a snow-blue foot, not a dark coin on white
+		ground = Color("9fb0c2")
 	var w := 22.0 * k
 	var pts := PackedVector2Array()
 	for i in 20:
 		var a := TAU * float(i) / 20.0
 		pts.append(p + Vector2(0, 15) * k + Vector2(cos(a) * w / 2.0, sin(a) * w * 0.15))
-	draw_colored_polygon(pts, Color(ground.darkened(0.45), 0.22))
+	draw_colored_polygon(pts, Color(ground, 0.35) if snow else Color(ground.darkened(0.45), 0.22))
 
 
 func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_value: int) -> void:
