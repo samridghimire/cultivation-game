@@ -49,3 +49,15 @@ func test_hides_while_a_modal_is_open() -> void:
 	EventBus.ui_modal_changed.emit(false)
 	assert_true(arrow.visible)
 	arrow.free()
+
+
+func test_clamp_marker_moves_out_of_panel() -> void:
+	var panel: Array[Rect2] = [Rect2(10, 10, 300, 200)]
+	var p := BeastArrow.clamp_marker(Vector2(100, 100), VIEW, panel)
+	assert_true(p.x >= 316.0 or p.y >= 216.0)
+	assert_true(VIEW.has_point(p))
+
+
+func test_clamp_marker_free_point_unchanged() -> void:
+	var panel: Array[Rect2] = [Rect2(10, 10, 300, 200)]
+	assert_eq(BeastArrow.clamp_marker(Vector2(800, 500), VIEW, panel), Vector2(800, 500))

@@ -483,3 +483,50 @@ func _qingshi_label_hits() -> PackedStringArray:
 func test_qingshi_labels_clear_of_footprints() -> void:
 	var hits := _qingshi_label_hits()
 	assert_eq(hits.size(), 0, "label overlaps: " + "; ".join(hits))
+
+
+## WU-505: strict check for every region: no place label (world font) lies on another place's drawn body (1.3x its
+## rect) or on an NPC spot's name rect (longest named NPC of the region, else 18 chars). Roamers move: not tested.
+func _label_hits(region: Dictionary) -> PackedStringArray:
+	var hits := PackedStringArray()
+	var longest := ""
+	for n: Dictionary in (JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json")) as Dictionary)["npcs"]:
+		if String(n.get("region", "")) == String(region["id"]) and String(n["name"]).length() > longest.length():
+			longest = String(n["name"])
+	if longest == "":
+		longest = "n".repeat(18)
+	var items: Array = []  # [name, pos, size]
+	for place: Dictionary in region.get("places", []):
+		items.append([String(place.get("display_name", place["type"])), place["pos"], place.get("size", [30, 30])])
+	for abode: Dictionary in region.get("abodes", []):
+		items.append([String(abode.get("display_name", abode["id"])), abode["pos"], abode.get("size", [80, 60])])
+	var npc_rects: Array = []
+	for spot: Array in region.get("npc_spots", []):
+		var npc := Interactable.new()
+		npc.position = Vector2(float(spot[0]), float(spot[1]))
+		npc.size = Vector2(28, 28)
+		npc_rects.append(npc.label_rect(longest))
+		npc.free()
+	for e: Array in items:
+		var node := Interactable.new()
+		node.position = Vector2(float(e[1][0]), float(e[1][1]))
+		node.size = Vector2(float(e[2][0]), float(e[2][1]))
+		var lr := node.label_rect(String(e[0]))
+		node.free()
+		for o: Array in items:
+			if o == e:
+				continue
+			var osz := Vector2(float(o[2][0]), float(o[2][1]))
+			var body := Rect2(Vector2(float(o[1][0]), float(o[1][1])) - osz * 0.65, osz * 1.3)
+			if lr.intersects(body):
+				hits.append("%s on %s" % [e[0], o[0]])
+		for nr: Rect2 in npc_rects:
+			if lr.intersects(nr):
+				hits.append("%s on npc name at %s" % [e[0], nr.position])
+	return hits
+
+
+func test_all_regions_labels_clear_of_footprints_and_npcs() -> void:
+	for region: Dictionary in data().regions.values():
+		var hits := _label_hits(region)
+		assert_eq(hits.size(), 0, "%s: %s" % [region["id"], "; ".join(hits)])
