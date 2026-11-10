@@ -7,6 +7,12 @@
 		{"id": "good_gathering", "name": "Good for gathering", "text": "Herbs stand thick and bright on the hillsides.", "weight": 2, "boost": {"gather_bonus": 0.15}},
 		{"id": "good_gifts", "name": "Good for gifts", "text": "Hearts are open today; a gift is warmly received.", "weight": 2, "boost": {"gift_favor": 2}},
 		{"id": "good_trade", "name": "Good for trade", "text": "Buyers are generous when the wind sits in the east.", "weight": 2, "boost": {"sell_mult": 1.05}},
-		{"id": "good_practice", "name": "Good for practice", "text": "Hands and mind are quick; practice sinks in deeper.", "weight": 2, "boost": {"practice_mult": 1.15}}
+		{"id": "good_practice", "name": "Good for practice", "text": "Hands and mind are quick; practice sinks in deeper.", "weight": 2, "boost": {"practice_mult": 1.15}},
+		{"id": "good_fish_rise", "name": "Fish rise to the bait", "text": "Fish rise to the bait; the river god is in a good mood.", "weight": 2, "boost": {"fishing_mult": 1.15}},
+		{"id": "good_herb_dew", "name": "Heavy morning dew", "text": "Dew hangs on every leaf; the herb slope smells green and strong.", "weight": 2, "boost": {"gather_bonus": 0.1}},
+		{"id": "good_market_day", "name": "Market-day wind", "text": "Drovers sing out their prices and nobody haggles hard today.", "weight": 2, "boost": {"sell_mult": 1.04}},
+		{"id": "good_kind_words", "name": "A day for kind words", "text": "Even the headman smiles; small gifts are remembered all year.", "weight": 2, "boost": {"gift_favor": 1}},
+		{"id": "good_quiet_hands", "name": "Steady hands", "text": "The cicadas are quiet, the lamp burns straight; work goes smooth.", "weight": 2, "boost": {"practice_mult": 1.1}},
+		{"id": "good_full_net", "name": "Nets hang heavy", "text": "Old Gui says the nets will hang heavy by dusk; he is seldom wrong.", "weight": 1, "boost": {"fishing_mult": 1.25}}
 	]
 }
