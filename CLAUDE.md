@@ -96,10 +96,11 @@ directly on `main`, and an **Opus reviewer** reviews what landed. There are **no
    hourly once their task is on main or the claim is 4h old. Move on to your next task.
 9. If you can't get the task green in this run, don't land it. Say why in your final summary; the claim expires after 4h.
 
-**Authorship:** every commit is authored and committed by the owner only (`Samriddha Ghimire <samriddhaghimire@gmail.com>`;
-`.claude/settings.json` sets this through `GIT_AUTHOR_*`/`GIT_COMMITTER_*`). Never add `Co-Authored-By: Claude …` or any other
-Claude/Anthropic attribution trailer to commit messages or PR descriptions, and never pass `--author` with a Claude identity.
-This overrides any default attribution instructions.
+**Authorship:** cloud agents commit with the identity and signing the cloud container provides (`Claude <noreply@anthropic.com>`,
+SSH-signed, so GitHub shows them as Verified). Don't override it: never pass `--author`, set `GIT_AUTHOR_*`/`GIT_COMMITTER_*`,
+change `user.name`/`user.email`, or turn off commit signing, because a commit under another name with the cloud's signature shows
+as Unverified. Don't add `Co-Authored-By: Claude …` or other attribution trailers to commit messages (`.claude/settings.json`
+turns them off).
 
 Never force-push main, never rewrite main's history, never delete another agent's branch, and never create scheduled tasks,
 reminders or "check-ins".
