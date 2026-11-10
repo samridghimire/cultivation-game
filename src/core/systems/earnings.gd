@@ -52,6 +52,41 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 	return rows.slice(0, MAX_ROWS)
 
 
+const FAR_GAIN := 1.5
+const FAR_STAY_DAYS := 10.0
+
+
+## GUIDE-232: at most one row {kind: "far", place, note, per_day, days, region} for a neighbouring region whose best
+## non-craft row pays at least FAR_GAIN x this region's best after the round trip (per_day x stay / (stay + 2 x days),
+## stay = FAR_STAY_DAYS). per_day is the far region's own figure. {} when none. Pure.
+static func far_row(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int) -> Dictionary:
+	var local := earning_options(c, data, flags, region_id, today)
+	var local_best := float(local[0]["per_day"]) if not local.is_empty() else 0.0
+	var best := {}
+	var best_value := 0.0
+	for route: Dictionary in Exploration.routes(c, data, region_id):
+		if not bool(route["ok"]) or not Exploration.is_nearby(data, region_id, String(route["to"])):
+			continue
+		var days := float(route["days"])
+		for row: Dictionary in earning_options(c, data, flags, String(route["to"]), today):
+			if String(row["kind"]) == "craft":
+				continue
+			var value := float(row["per_day"]) * FAR_STAY_DAYS / (FAR_STAY_DAYS + 2.0 * days)
+			if value >= FAR_GAIN * local_best and value > best_value and value > 0.0:
+				best_value = value
+				best = {"kind": "far", "place": "%s, %s" % [row["place"], route["name"]], "note": String(row["kind"]), "per_day": float(row["per_day"]), "days": int(days), "region": String(route["to"])}
+	return best
+
+
+## Journal rows: the local rows, with the far row (if any) last.
+static func rows_with_far(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int, max_local: int = MAX_ROWS) -> Array[Dictionary]:
+	var rows := earning_options(c, data, flags, region_id, today).slice(0, max_local)
+	var far := far_row(c, data, flags, region_id, today)
+	if not far.is_empty():
+		rows.append(far)
+	return rows
+
+
 ## Expected sell value of one visit to a table: rolls x sum(weight share x average count x sell price).
 static func _table_value(c: CharacterData, data: GameData, table: Array, season: String, fortune: int) -> float:
 	var usable := Exploration.gather_table_for(c, data, table, season)
@@ -162,5 +197,9 @@ static func lines(rows: Array[Dictionary]) -> PackedStringArray:
 	var out := PackedStringArray()
 	for r in rows:
 		var n := maxi(1, roundi(float(r["per_day"])))
+		if String(r["kind"]) == "far":
+			var verb: String = {"gather": "Gathering", "fishing": "Fishing", "chore": "Errands"}.get(String(r["note"]), "Work")
+			out.append("%s at %s (%d days away): about %d a day." % [verb, r["place"], int(r["days"]), n])
+			continue
 		out.append("%s (%s): about %d %s a day." % [String(r["note"]).capitalize() if String(r["note"]) == String(r["kind"]) else String(r["note"]), r["place"], n, "stone" if n == 1 else "stones"])
 	return out

@@ -241,3 +241,44 @@ func test_festival_first_day_has_no_tomorrow_line_and_one_bullet() -> void:
 		if l.contains("Lantern Festival"):
 			festival_lines += 1
 	assert_eq(festival_lines, 1, str(lines))
+
+
+## GUIDE-232: one far row at most, only when the gain survives the round trip.
+func _first_route_region(from: String) -> String:
+	return String(data().regions[from]["routes"][0]["to"])
+
+
+func test_far_row_shape_and_gain() -> void:
+	var c := new_character()
+	c.realm_index = 2  # high enough to pass every route's realm gate
+	for from: String in data().regions:
+		var far := Earnings.far_row(c, data(), {}, from, 0)
+		if far.is_empty():
+			continue
+		var local := Earnings.earning_options(c, data(), {}, from, 0)
+		var local_best := float(local[0]["per_day"]) if not local.is_empty() else 0.0
+		var value := float(far["per_day"]) * Earnings.FAR_STAY_DAYS / (Earnings.FAR_STAY_DAYS + 2.0 * float(far["days"]))
+		assert_true(value >= Earnings.FAR_GAIN * local_best - 0.001, "%s: %s" % [from, str(far)])
+		assert_eq(String(far["kind"]), "far")
+		assert_true(Earnings.lines([far] as Array[Dictionary])[0].contains("days away"))
+		assert_true(Earnings.rows_with_far(c, data(), {}, from, 0).filter(func(r: Dictionary) -> bool: return r["kind"] == "far").size() == 1, "never two far rows")
+
+
+func test_far_row_never_when_trip_eats_gain() -> void:
+	var c := new_character()
+	var d: GameData = data()
+	var saved: Array = (d.regions["qingshi_village"]["routes"] as Array).duplicate(true)
+	for route: Dictionary in d.regions["qingshi_village"]["routes"]:
+		route["days"] = 400
+		route.erase("min_realm")
+	assert_true(Earnings.far_row(c, d, {}, "qingshi_village", 0).is_empty(), "a 400-day road never pays")
+	d.regions["qingshi_village"]["routes"] = saved
+
+
+func test_empty_purse_hint_names_far_row_only_when_nothing_pays_two() -> void:
+	var c := new_character()
+	c.inventory = {"spirit_stone": 5}
+	var hint := Guidance.empty_purse_hint(c, data(), "qingshi_village", 0)
+	var rows := Earnings.earning_options(c, data(), {}, "qingshi_village", 0)
+	if not rows.is_empty() and float(rows[0]["per_day"]) >= 2.0:
+		assert_false(hint.contains("days away"), hint)

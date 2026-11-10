@@ -1704,6 +1704,11 @@ static func empty_purse_hint(c: CharacterData, data: GameData, region_id: String
 	if c.item_count("spirit_stone") >= wanted:
 		return ""
 	var rows := Earnings.earning_options(c, data, flags, region_id, today)
+	# GUIDE-232: only when nothing here pays 2 a day, a better road away may be named.
+	if rows.is_empty() or float(rows[0]["per_day"]) < 2.0:
+		var far := Earnings.far_row(c, data, flags, region_id, today)
+		if not far.is_empty():
+			return "Short on stones: %s" % Earnings.lines([far] as Array[Dictionary])[0]
 	if rows.is_empty() or String(rows[0]["kind"]) == "chore":
 		return ""
 	var best: Dictionary = rows[0]
@@ -4582,7 +4587,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		for line in village:
 			_add(out, "Around the village", line, "normal")
 	# GUIDE-226: what a day is worth here.
-	for line in Earnings.lines(Earnings.earning_options(c, data, flags, region_id, today)):
+	for line in Earnings.lines(Earnings.rows_with_far(c, data, flags, region_id, today)):
 		_add(out, "Earning here", line, "normal")
 	return out
 

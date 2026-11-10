@@ -721,7 +721,7 @@ func people_today_lines() -> PackedStringArray:
 func earning_lines_here() -> PackedStringArray:
 	if player == null:
 		return PackedStringArray()
-	return Earnings.lines(Earnings.earning_options(player, data, world_flags, current_region, GameClock.total_days).slice(0, 3))
+	return Earnings.lines(Earnings.rows_with_far(player, data, world_flags, current_region, GameClock.total_days, 2 if not Earnings.far_row(player, data, world_flags, current_region, GameClock.total_days).is_empty() else 3))
 
 
 ## GUIDE-209: one log line for what is notable here today; the HUD shows it for that day.
