@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [C-346] Each festival has its own line for the friends who come to cheer you.
+- 2026-11-10 [WU-509] The journal's Today tab no longer shows an empty card.
+- 2026-11-10 [GUIDE-234] A sect disciple's Earning card shows the best mission they can take at the hall.
+- 2026-11-10 [WU-508] Names fade when they cross your character, and a place name hides under the [E] prompt.
+- 2026-11-10 [SEASON-016] Villagers talk about the village project you finished in their own words.
+- 2026-11-10 [C-347] Headman Zhou has repeatable paid errands, so Qingshi always has a wage.
+- 2026-11-10 [GUIDE-233] The Earning card lists the first one-time jobs in the village.
+- 2026-11-10 [GFX-114] Winter looks like winter: snowy woods, dormant herb beds, ice holes on frozen ponds.
+- 2026-11-10 [GFX-113] Azure Peak feels like a sect on a mountain: lanterned stairs, a railed court, drifting clouds.
 - 2026-11-10 [GFX-112] Roads look like roads: slabs on the ridge, planks across the bog, rutted tracks through the grass.
 - 2026-11-10 [QA-208] The fishing rank-up test always runs, whatever the weather (part 4 of 5).
 - 2026-11-10 [GUIDE-232] The Earning card names a better-paying job one road away when the trip is worth it.

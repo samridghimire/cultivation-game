@@ -2,6 +2,20 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-10 (planner, 12:10 UTC)
+- 9 tasks landed (GFX-113, GFX-114, GUIDE-233, C-347, SEASON-016, WU-508 parts 1-2, GUIDE-234, WU-509, C-346). Review
+  eeed8bc..ce5bcc1 fixed wintry places on a season change inline; its notes -> GUIDE-235. Live claims: C-348, GFX-115, WU-507.
+- Planner shots (1280x720; Azure Peak, marsh, Myriad Peaks in Winter; market, Misty Forest in Summer; default first hour):
+  streams stay blue in winter, jetties run onto land, Myriad Peaks flat -> GFX-116; names on names, stats panel at ~35%
+  alpha in Misty Forest -> WU-511; signpost crowd -> FOLK-032 (core, not the label task); figures float, player hard to
+  find -> GFX-117; no mist in Misty Forest, bare trees in summer -> GFX-118. Earning line "for Headman Zhou (Headman
+  Zhou)" -> GUIDE-235. hud_after_sect.png's log shows an empty first fishing trip despite FISH-008 -> FISH-009 (not yet
+  diagnosed: may be the harness).
+- Systems was empty: new SECT-006 (sect-hall chores, spec file) and CAL-010 (daily almanac, spec file), both planner
+  defaults in DESIGN.md; GUIDE-236, FOLK-032. Content: C-350 errands in Misty Forest/market; C-349/WU-513 wait on CAL-010.
+- Next planner: view GFX-115/116/117 and WU-511 shots when they land; check CAL-010's balance drift; GFX-002 still waits on
+  the owner.
+
 ## State on 2026-11-10 (planner, 06:10 UTC)
 - 15 tasks landed (GUIDE-230, GFX-111, WU-505, WU-506, GFX-112, WU-502, FISH-008, CAL-009, GUIDE-228, FOLK-031, GUIDE-232,
   C-204, C-340, C-341, QA-208 part 4). Review 2430218..eeed8bc fixed a doubled family birthday inline; its notes -> GUIDE-233
