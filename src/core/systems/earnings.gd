@@ -23,7 +23,9 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 				continue
 			for deed in Deeds.available(data, String(place["deed_context"]), flags):
 				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
-				if stones <= 0 or Deeds.check(c, data, deed, flags, today) != "":
+				# GUIDE-230: a wage is a good, repeatable errand, never a one-time crime or a fight.
+				if stones <= 0 or not Deeds.is_repeatable(deed) or int(deed.get("effects", {}).get("alignment", 0)) < 0 \
+						or String(deed.get("enemy", "")) != "" or Deeds.check(c, data, deed, flags, today) != "":
 					continue
 				var per_day := float(stones) / float(maxi(1, int(deed.get("days", 1))))
 				if per_day > float(best_chore.get("per_day", 0.0)):

@@ -88,11 +88,11 @@ func test_chore_row_matches_deed_pay_per_day() -> void:
 				continue
 			for deed in Deeds.available(data(), String(place["deed_context"]), {}):
 				var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
-				if stones > 0 and Deeds.check(c, data(), deed, {}, 0) == "":
+				if stones > 0 and Deeds.is_repeatable(deed) and Deeds.check(c, data(), deed, {}, 0) == "":
 					best = maxf(best, float(stones) / float(maxi(1, int(deed.get("days", 1)))))
 		assert_true(absf(float(r["per_day"]) - best) < 0.001, "chore %f vs %f" % [float(r["per_day"]), best])
 		return
-	assert_true(false, "Qingshi has a chore row")
+	# GUIDE-230: Qingshi's headman chores are one-time, so a newcomer sees no chore row.
 
 
 ## A crafter gets a craft row worth (sell price - ingredient cost) / days.
@@ -201,3 +201,43 @@ func test_empty_purse_hint_in_hints_list() -> void:
 		if line.begins_with("Short on stones: "):
 			seen = true
 	assert_true(seen, "hint listed")
+
+
+## GUIDE-230: wages come only from good, repeatable errands.
+func test_atrocities_and_one_time_deeds_are_not_wages() -> void:
+	var c := new_character()
+	var bad := ["poison_village_well", "sell_street_child", "rob_traveller"]
+	for region in ["qingshi_village", "withered_bone_marsh"]:
+		for r in Earnings.earning_options(c, data(), {}, region, 0):
+			if r["kind"] == "chore":
+				for id in bad:
+					assert_false(String(r["note"]) == String(data().deeds[id]["name"]), "%s in %s" % [id, region])
+	c.inventory = {"spirit_stone": 5}
+	for region in ["qingshi_village", "withered_bone_marsh"]:
+		var hint := Guidance.empty_purse_hint(c, data(), region, 0)
+		for id in bad:
+			assert_false(hint.contains(String(data().deeds[id]["name"])), hint)
+
+
+func test_is_repeatable_only_for_deeds_that_come_back() -> void:
+	assert_false(Deeds.is_repeatable(data().deeds["chore_gather_herbs"]), "headman chores are one-time")
+	assert_true(Deeds.is_repeatable(data().deeds["help_villager"]))
+	assert_false(Deeds.is_repeatable(data().deeds["poison_village_well"]))
+	assert_false(Deeds.is_repeatable(data().deeds["con_the_poisoner"]))
+	assert_false(Deeds.is_repeatable({"id": "x", "blocked_by_flag": "x_done", "effects": {"set_flag": "x_done"}}))
+	assert_true(Deeds.is_repeatable({"id": "y", "blocked_by_flag": "y", "effects": {"set_flag": "y", "flag_days": 5}}))
+
+
+func test_festival_first_day_has_no_tomorrow_line_and_one_bullet() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	var today: int = GameClock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": today, "end_day": today + 6, "done": false}]
+	var lines: PackedStringArray = gs.today_lines()
+	var festival_lines := 0
+	for l in lines:
+		assert_false(l.begins_with("Tomorrow: Lantern Festival"), l)
+		if l.contains("Lantern Festival"):
+			festival_lines += 1
+	assert_eq(festival_lines, 1, str(lines))

@@ -249,6 +249,8 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"]))
 				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
 			continue
+		if String(e["kind"]) == "festival_active" and _festival_running_today(active_events, String(e.get("festival_id", "")), today):
+			continue  # GUIDE-230: today's list already says the festival is on
 		if bool(e.get("ongoing", false)):
 			continue  # WILD-020: "in season now" is for the calendar, not a "Tomorrow" reminder
 		var line := reminder_line(data, npcs, flags, e)
@@ -280,6 +282,14 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 				out.append(line)
 				break
 	return out
+
+
+## GUIDE-230: whether an instance of festival `festival_id` has already started and has not ended on `today`.
+static func _festival_running_today(active_events: Array, festival_id: String, today: int) -> bool:
+	for inst: Dictionary in active_events:
+		if String(inst.get("id", "")) == festival_id and int(inst.get("start_day", 0)) <= today and int(inst.get("end_day", 0)) > today:
+			return true
+	return false
 
 
 ## CAL-006: the player's marks.

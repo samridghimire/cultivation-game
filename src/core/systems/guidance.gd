@@ -305,6 +305,9 @@ static func people_today_lines(c: CharacterData, data: GameData, active_events: 
 	return out
 
 
+const FESTIVAL_LINE_MAX := 160
+
+
 ## TODAY-001: up to TODAY_MAX short lines on what today holds here, in a fixed order, each only when true: a festival
 ## and its contest, a great beast (tracks, baited), market day now or within 3 days, a stall's wanted item, in-season
 ## beasts and forage/fishing, today's and tomorrow's calendar reminders, the season's ending. Pure.
@@ -337,10 +340,14 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		var ends := _festival_ends_note(data, active_events, region_id, day)
 		if ends != "":
 			line += "; " + ends
-		out.append(line + ".")
+		# GUIDE-230: the stall's wares join the festival's one line when it fits, else they get their own.
 		var wares := Places.festival_wares_line(data, active_events, region_id, day)  # GUIDE-221
-		if wares != "":
-			out.append(wares + ".")
+		if wares != "" and (line + "; " + wares + ".").length() <= FESTIVAL_LINE_MAX:
+			out.append(line + "; " + wares + ".")
+		else:
+			out.append(line + ".")
+			if wares != "":
+				out.append(wares + ".")
 	else:
 		var eve := Places.festival_eve_line(data, active_events, region_id, day)  # GUIDE-221
 		if eve != "":
