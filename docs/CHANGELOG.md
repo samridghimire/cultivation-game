@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [SECT-006] The steward at your own sect hall has chores for contribution.
 - 2026-11-10 [GFX-118] Misty Forest is misty again, and its summer trees are in leaf.
 - 2026-11-10 [CAL-010] The village almanac: each day's omen favours fishing, gathering, gifts, selling or practice.
 - 2026-11-10 [GFX-117] Every figure has a ground shadow, and your character stands out in the crowd.
