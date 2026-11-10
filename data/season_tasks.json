@@ -33,7 +33,7 @@
           {"flag": "well_stage_2", "text": "Masons re-lay the well's fallen stones and hang a new windlass."},
           {"flag": "well_stage_3", "text": "Clear water rises in the Founder's Old Well for the first time in a generation."}
         ],
-        "done_text": "The old well is whole: Qingshi's fields grow faster, and you may draw well water once a day.",
+        "done_text": "The old well is whole: Qingshi's fields grow faster, and you may draw well water once a day.", "news": ["Have you tasted the water from the Founder's Old Well? Sweet as my grandmother's, and cold enough to ache your teeth.", "The women queue at the well at dawn now, and nobody minds, because the gossip is as good as the water.", "Old Chen swears the well sang when the first bucket came up. The masons swear it was only the windlass.", "My melons never grew so fat as since the well was mended. Say what you like, I'll keep drawing water.", "The children drop pebbles down the old well just to hear the splash, until the masons chase them off."],
         "daily": {"item": "well_water", "flag": "well_drawn", "text": "You draw a bucket of cold, sweet water from the old well."}},
       {"id": "jetty", "name": "the Village Pond Jetty", "region": "qingshi_village", "done_line": "Our jetty stands whole again, friend, and something long-shadowed has come to lurk under its planks.", "fish_bonus": 0.05,
         "stages": [
@@ -42,14 +42,14 @@
           {"flag": "jetty_stage_3", "text": "Fresh planks are laid, and the old folk walk out to the end of the jetty just to feel it hold."}
         ],
         "done_text": "The pond jetty is whole: fish bite more readily at Qingshi's pond, and a pearl-backed rarity has been seen beneath the planks.",
-        "news": ["Have you walked out on the jetty yet? Old Wen says the boards sing under your feet.", "The children race to the end of the jetty every morning now. The fish have started to take notice."]}
+        "news": ["Have you walked out on the jetty yet? Old Wen says the boards sing under your feet.", "The children race to the end of the jetty every morning now. The fish have started to take notice.", "The Tian boys caught three bream off the new jetty planks before breakfast.", "Wen sits at the jetty's end with his pipe and tells every passer-by the planks were his idea.", "Somebody carved a name into the last jetty post. Nobody will own up, and everybody is smiling."]}
       ,      {"id": "terraces", "name": "the Herb Slope Terraces", "region": "qingshi_village", "done_line": "The slope climbs in green steps again, friend, and Lan says every basket comes down heavier.", "gather_bonus": 0.1,
         "stages": [
           {"flag": "terraces_stage_1", "text": "Herbalist Lan and the slope's old women hack the brambles off the terraces, grumbling that their mothers kept them tidier."},
           {"flag": "terraces_stage_2", "text": "Stone by stone the fallen walls go back up. The old women swear each one sits where their grandmothers laid it."},
           {"flag": "terraces_stage_3", "text": "Baskets of dark soil are carried up, and Herbalist Lan plants the first row herself, humming off-key."}
         ],
-        "done_text": "The Herb Slope terraces are whole: the old women say the slope gives freely again, and a day's gathering may turn up a little more."}
+        "done_text": "The Herb Slope terraces are whole: the old women say the slope gives freely again, and a day's gathering may turn up a little more.", "news": ["Herbalist Lan came down from the slope with her basket so heavy she had to rest twice. She was grinning like a girl.", "The terrace walls hold again; the old women say they laid every stone the way their grandmothers did.", "Have you climbed the Herb Slope lately? Green steps all the way up, and the smell of it carries to the square.", "Lan hums off-key among her new rows, and nobody has the heart to tell her."]}
     ]
   },
   "seasons": {
