@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-10 [GFX-118] Misty Forest is misty again, and its summer trees are in leaf.
+- 2026-11-10 [CAL-010] The village almanac: each day's omen favours fishing, gathering, gifts, selling or practice.
+- 2026-11-10 [GFX-117] Every figure has a ground shadow, and your character stands out in the crowd.
+- 2026-11-10 [WU-510] The arrival banner is slimmer and leaves the village visible.
+- 2026-11-10 [GFX-116] Winter streams freeze, jetties reach out over the water, and the ridge feels high.
+- 2026-11-10 [GUIDE-235] Sect mission pay on the Earning card is honest, net of the items a mission uses.
+- 2026-11-10 [FISH-009] A test makes sure a new character's first fishing trip always lands a fish.
+- 2026-11-10 [QA-208] The fishing sim counts gathering like the game and uses a Core cultivator on the ridge (parts 1-2 of 5).
+- 2026-11-10 [WU-511] Villagers' names never sit on top of a place name.
 - 2026-11-10 [C-348] Villagers talk about the well, the jetty and the terraces in their own words.
 - 2026-11-10 [GFX-115] Water with life: glints, lily pads, reeds and stream banks.
 - 2026-11-10 [C-346] Each festival has its own line for the friends who come to cheer you.
