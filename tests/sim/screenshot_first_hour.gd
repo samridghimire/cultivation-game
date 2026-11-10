@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-495: append `-- --season-end` for the season card (season_card.png).
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
+## WU-502: append `-- --terraces=N` (0..3) for the Herb Slope terrace stage.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
@@ -100,6 +101,15 @@ func _start() -> void:
 			for i in jidx:
 				jbefore += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
 			for i in jbefore + clampi(int(arg.substr(8)), 0, 3):
+				gs.player.seasons_completed.append("shot_%d" % i)
+	for arg in OS.get_cmdline_user_args():  # WU-502: --terraces=N sets the Herb Slope terrace stage (0..3); it follows the jetty
+		if arg.begins_with("--terraces="):
+			gs.player.seasons_completed.clear()
+			var tidx := SeasonTasks.project_index(gs.data, "terraces")
+			var tbefore := 0
+			for i in tidx:
+				tbefore += (SeasonTasks.project_list(gs.data)[i].get("stages", []) as Array).size()
+			for i in tbefore + clampi(int(arg.substr(11)), 0, 3):
 				gs.player.seasons_completed.append("shot_%d" % i)
 	for arg in OS.get_cmdline_user_args():  # WU-482: --birthday=<npc_id> moves the clock to that villager's birthday (favor 40)
 		if arg.begins_with("--birthday="):

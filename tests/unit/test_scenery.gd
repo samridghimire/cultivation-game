@@ -557,3 +557,25 @@ func test_jetty_posts_stand_in_the_water() -> void:
 					if pond.grow(6.0).intersects(post):
 						ok = true
 				assert_true(ok, "stage %d post %s stands on dry grass" % [stage, post])
+
+
+## WU-502: the Herb Slope's terrace look grows by stage: edging, then two rows, then three rows with herbs and a channel.
+func test_terrace_look_by_stage() -> void:
+	var rows: Array[int] = []
+	for st in range(-1, 5):
+		rows.append(int(Scenery.terrace_look(st)["rows"]))
+	assert_eq(rows, [0, 0, 0, 2, 3, 3])
+	assert_false(bool(Scenery.terrace_look(0)["edging"]))
+	assert_true(bool(Scenery.terrace_look(1)["edging"]))
+	assert_false(bool(Scenery.terrace_look(2)["channel"]))
+	assert_true(bool(Scenery.terrace_look(3)["channel"]) and bool(Scenery.terrace_look(3)["herbs"]))
+
+
+## WU-502: the Village Herb Slope place carries the "terraces" tag the world and its label key on.
+func test_herb_slope_has_terraces_tag() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var found := false
+	for p: Dictionary in gs.data.regions["qingshi_village"]["places"]:
+		if String(p.get("display_name", "")) == "Village Herb Slope":
+			found = (p.get("tags", []) as Array).has("terraces")
+	assert_true(found)

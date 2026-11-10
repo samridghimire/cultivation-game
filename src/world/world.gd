@@ -1057,6 +1057,7 @@ func _draw() -> void:
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	_draw_terraces()
 	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
@@ -1527,6 +1528,55 @@ func _draw_jetty(lm: Dictionary) -> void:
 		draw_rect(Rect2(shore + Vector2(-1, -22), Vector2(3, 22)), Color("5a4028"))
 		draw_rect(Rect2(shore + Vector2(-4, -30), Vector2(9, 9)), Color("d9503a"))
 		draw_rect(Rect2(shore + Vector2(-2, -28), Vector2(5, 5)), Color("f4d27a"))
+
+
+## WU-502: the terrace project's stage (0..3) in its own region; -1 anywhere else or with no session.
+func _terrace_stage() -> int:
+	if not GameState.has_session():
+		return -1
+	var idx := SeasonTasks.project_index(GameState.data, "terraces")
+	if idx < 0 or String(SeasonTasks.project_list(GameState.data)[idx].get("region", "")) != GameState.current_region:
+		return -1
+	return SeasonTasks.project_stage(GameState.player, GameState.data, idx)
+
+
+## WU-502: stone edging, stepped terrace rows (lit top edge, dark face), tidy herb lines and a water channel round the
+## Herb Slope place (the one tagged "terraces"), by Scenery.terrace_look. The herb bed itself is drawn over the middle.
+func _draw_terraces() -> void:
+	var stage := _terrace_stage()
+	if stage <= 0:
+		return
+	var look := Scenery.terrace_look(stage)
+	for place: Dictionary in _region.get("places", []):
+		if not (place.get("tags", []) as Array).has("terraces"):
+			continue
+		var size := Vector2(float(place["size"][0]), float(place["size"][1]))
+		var r := Rect2(_vec(place["pos"]) - size / 2.0, size).grow(8.0)
+		var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+		var soil := Color("6b5236") if not winter else Color("8c8f94")
+		var lit := Color("b8a37a") if not winter else Color("e8eef4")
+		var rows: int = look["rows"]
+		if rows > 0:
+			var rh := r.size.y / float(rows)
+			for i in rows:
+				var band := Rect2(r.position.x + float(i) * 6.0, r.position.y + float(i) * rh, r.size.x - float(i) * 12.0, rh)
+				draw_rect(band, soil.darkened(0.15 * float(rows - 1 - i)))
+				draw_rect(Rect2(band.position, Vector2(band.size.x, 3.0)), lit)  # lit stone lip
+				draw_rect(Rect2(band.position.x, band.position.y + 3.0, band.size.x, 3.0), soil.darkened(0.5))  # shadow face
+				if look["herbs"]:
+					var x := band.position.x + 8.0
+					while x < band.end.x - 8.0:
+						draw_rect(Rect2(x, band.position.y + rh * 0.55, 4.0, 5.0), Color("5fae4a") if not winter else Color("9fb0a0"))
+						x += 12.0
+		if look["edging"]:
+			var stone := Color("9a9a92")
+			var x2 := r.position.x
+			while x2 < r.end.x:
+				draw_rect(Rect2(x2, r.end.y - 3.0, 6.0, 4.0), stone)
+				draw_rect(Rect2(x2 + 3.0, r.position.y - 1.0, 6.0, 4.0), stone.lightened(0.15))
+				x2 += 9.0
+		if look["channel"]:
+			draw_rect(Rect2(r.end.x + 1.0, r.position.y + 2.0, 4.0, r.size.y - 4.0), Color("4f8fc0" if not winter else "b8d4e6"))
 
 
 ## WU-494: the Village Pond Jetty's project stage (0..3) in its own region; -1 (plain whole jetty) anywhere else or with no session.

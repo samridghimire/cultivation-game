@@ -239,6 +239,19 @@ static func jetty_stage_look(stage: int) -> Dictionary:
 	return {"frac": 1.0, "gaps": false, "lantern": true}
 
 
+## WU-502: how the Village Herb Slope looks at terrace project `stage` (0..3; -1 = no project): stone `edging` round the bed, stepped
+## `rows` of terrace (0, 0, 2, 3), tidy `herbs` lines on the rows and a small water `channel` down one side (finished only).
+static func terrace_look(stage: int) -> Dictionary:
+	match clampi(stage, 0, 3) if stage >= 0 else 0:
+		1:
+			return {"edging": true, "rows": 0, "herbs": false, "channel": false}
+		2:
+			return {"edging": true, "rows": 2, "herbs": false, "channel": false}
+		3:
+			return {"edging": true, "rows": 3, "herbs": true, "channel": true}
+	return {"edging": false, "rows": 0, "herbs": false, "channel": false}
+
+
 ## WU-500: the jetty's post rects (6x6) at project `stage`. An unbuilt stretch (stage 0..1) shows bare posts in pairs along the
 ## full length, but only those standing in the water or within 6 px of the pond's rim; a finished jetty keeps two posts at the water end.
 static func jetty_posts(region: Dictionary, lm: Dictionary, stage: int) -> Array[Rect2]:
