@@ -101,7 +101,7 @@ func open() -> void:
 	_text.clear()
 	_text.append_text(format_entries(list))
 	_build_cards(list)
-	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines())
+	_build_today(GameState.almanac_lines() + GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines())
 	set_page("today")
 	visible = true
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()

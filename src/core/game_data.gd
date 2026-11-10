@@ -126,6 +126,8 @@ var recipes: Dictionary = {}  # id -> Dictionary (data/recipes.json)
 var home_meals: Array = []
 ## data/season_tasks.json (SEASON-005), see SeasonTasks.
 var season_tasks: Dictionary = {}
+## data/almanac.json (CAL-010), see Almanac.
+var almanac: Dictionary = {}
 var material_value_cache: Dictionary = {}  # item id -> float, filled lazily by Items.material_value
 ## Alchemy tunables (see Alchemy).
 var alchemy: Dictionary = {}
@@ -319,6 +321,7 @@ func _load(dir: String) -> void:
 		bloodlines[bloodline["id"]] = bloodline
 	karma = _read(dir, "karma.json")
 	season_tasks = _read(dir, "season_tasks.json")
+	almanac = _read(dir, "almanac.json")
 	var karma_acts := {}
 	for act in karma.get("acts", []):
 		karma_acts[act["id"]] = act
@@ -460,6 +463,7 @@ func _validate() -> void:
 	_validate_artifact()
 	_validate_recipes()
 	load_errors.append_array(SeasonTasks.validate(self))
+	load_errors.append_array(Almanac.validate(self))
 	_validate_help()
 	_validate_milestones()
 	_validate_bounties()

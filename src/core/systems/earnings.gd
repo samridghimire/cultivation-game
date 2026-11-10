@@ -10,6 +10,7 @@ const MAX_ROWS := 4
 static func earning_options(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	var season := Calendar.season_of(today)
+	var omen := Almanac.omen_for(data, today, Almanac.salt_of(c))  # CAL-010
 	var region: Dictionary = data.regions.get(region_id, {})
 	var best_chore := {}
 	var best_gather := {}
@@ -31,12 +32,12 @@ static func earning_options(c: CharacterData, data: GameData, flags: Dictionary,
 				if per_day > float(best_chore.get("per_day", 0.0)):
 					best_chore = {"kind": "chore", "place": name, "per_day": per_day, "note": String(deed.get("name", ""))}
 		elif kind == "gather":
-			var v := _gather_trip_value(c, data, place.get("gather_table", []), region_id, today, season) / float(maxi(1, int(place.get("gather_days", 1))))
+			var v := _gather_trip_value(c, data, place.get("gather_table", []), region_id, today, season) * (1.0 + Almanac.gather_bonus(omen)) / float(maxi(1, int(place.get("gather_days", 1))))
 			if v > float(best_gather.get("per_day", 0.0)):
 				best_gather = {"kind": "gather", "place": name, "per_day": v, "note": "gathering"}
 		elif kind == "fishing":
 			var base := Fishing.filter_trophy(Fishing.skill_table(Exploration.gather_table_for(c, data, Fishing.filter_flags(place.get("catch_table", []), flags), season), 0.5, c.fishing_xp), 0.5, c.fishing_xp)
-			var v := _fishing_trip_value(c, data, base, region_id, today, season) * (1.0 + Fishing.bonus_chance(c.fishing_xp)) / float(maxi(1, int(place.get("gather_days", 1))))
+			var v := _fishing_trip_value(c, data, base, region_id, today, season) * Almanac.fishing_mult(omen) * (1.0 + Fishing.bonus_chance(c.fishing_xp)) / float(maxi(1, int(place.get("gather_days", 1))))
 			if v > float(best_fish.get("per_day", 0.0)):
 				best_fish = {"kind": "fishing", "place": name, "per_day": v, "note": "fishing"}
 	if not best_chore.is_empty():

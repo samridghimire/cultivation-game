@@ -3800,3 +3800,63 @@ func test_fishing_first_trip_in_qingshi_never_empty() -> void:
 					assert_false(texts.any(func(t: String) -> bool: return t.contains("nothing bites")), ctx)
 					assert_false(luck.size() == 1 and texts.has(Fishing.GOT_AWAY), ctx)
 	_restore_weather(gs)
+
+
+# --- CAL-010: the village almanac ---------------------------------------------
+
+func _force_omen(gs: Node, effects: Dictionary) -> void:
+	gs.data.almanac["omens"] = [{"id": "t", "name": "Test omen", "text": "t", "weight": 1, "boost": effects}]
+
+
+func test_almanac_lines_for_the_journal() -> void:
+	_start()
+	var gs := _game_state()
+	_force_omen(gs, {"fishing_mult": 1.2})
+	assert_eq(String(gs.today_omen()["id"]), "t")
+	var lines: PackedStringArray = gs.almanac_lines()
+	assert_eq(lines.size(), 2)
+	assert_true(lines[0].begins_with("Almanac: Test omen"))
+	assert_eq(lines[1], "Tomorrow is test omen.")
+	_restore_weather(gs)
+
+
+func test_almanac_plain_day_gather_keeps_rng_sequence() -> void:
+	var c := _start(77)
+	var gs := _game_state()
+	_force_omen(gs, {})
+	var table := [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	gs.rng.seed = 5
+	gs.gather(table, 1)
+	var plain := c.item_count("spirit_herb")
+	_force_omen(gs, {"gather_bonus": 0.25})
+	gs.rng.seed = 5
+	gs.gather(table, 1)
+	assert_true(c.item_count("spirit_herb") - plain >= plain, "a lucky day never yields less")
+	_restore_weather(gs)
+
+
+func test_almanac_gift_favor_and_sell_and_practice() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(5))
+	c.add_item("qi_gathering_pill", 2)
+	_force_omen(gs, {})
+	gs.npc_favor["elder_mo"] = 0
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	var plain := int(gs.npc_favor["elder_mo"])
+	_force_omen(gs, {"gift_favor": 2})
+	gs.npc_favor["elder_mo"] = 0
+	GameClock.total_days += 3
+	gs.give_gift("elder_mo", "qi_gathering_pill")
+	assert_true(int(gs.npc_favor["elder_mo"]) >= plain, "a gift omen never lowers favor")
+	# selling
+	c.add_item("spirit_herb", 20)
+	_force_omen(gs, {})
+	var before := c.item_count("spirit_stone")
+	gs.sell_item("spirit_herb", 10)
+	var base_gain := c.item_count("spirit_stone") - before
+	_force_omen(gs, {"sell_mult": 1.1})
+	before = c.item_count("spirit_stone")
+	gs.sell_item("spirit_herb", 10)
+	assert_true(c.item_count("spirit_stone") - before >= base_gain)
+	_restore_weather(gs)

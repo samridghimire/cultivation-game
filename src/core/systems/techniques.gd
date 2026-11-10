@@ -116,14 +116,14 @@ static func is_mastered(c: CharacterData, data: GameData, tech_id: String) -> bo
 
 
 ## Practice for `days`. Returns {ok, reason, xp, levels_gained}.
-static func practice(c: CharacterData, data: GameData, tech_id: String, days: int) -> Dictionary:
+static func practice(c: CharacterData, data: GameData, tech_id: String, days: int, mult: float = 1.0) -> Dictionary:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	if def == null or not knows(c, tech_id):
 		return {"ok": false, "reason": "You do not know that technique.", "xp": 0.0, "levels_gained": 0}
 	if is_mastered(c, data, tech_id):
 		return {"ok": false, "reason": "You have already mastered the %s." % def.name, "xp": 0.0, "levels_gained": 0}
 	var entry: Dictionary = c.techniques[tech_id]
-	var gained := xp_per_day(c) * days
+	var gained := xp_per_day(c) * days * mult
 	entry["xp"] = float(entry["xp"]) + gained
 	var levels := 0
 	while int(entry["level"]) < def.max_level and float(entry["xp"]) >= def.xp_to_next(int(entry["level"])):

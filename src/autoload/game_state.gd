@@ -703,6 +703,25 @@ func travel(region_id: String) -> void:
 	SaveManager.autosave()
 
 
+## CAL-010: the Today card's almanac line for the journal ("" without a player).
+func almanac_lines() -> PackedStringArray:
+	var out := PackedStringArray()
+	if player == null:
+		return out
+	out.append(Almanac.line(today_omen()))
+	var tomorrow := Almanac.tomorrow_line(today_omen(1))
+	if tomorrow != "":
+		out.append(tomorrow)
+	return out
+
+
+## CAL-010: today's almanac omen ({} without a player).
+func today_omen(day_offset: int = 0) -> Dictionary:
+	if player == null:
+		return {}
+	return Almanac.omen_for(data, GameClock.total_days + day_offset, Almanac.salt_of(player))
+
+
 ## TODAY-001: what today holds here (festival, great beast, market, forage, reminders, season's end).
 func today_lines() -> PackedStringArray:
 	if player == null:
@@ -1346,6 +1365,10 @@ func gather(table: Array, days: int) -> void:
 	if terrace > 0.0 and not found.is_empty() and rng.randf() < terrace:
 		var top := SeasonTasks.top_unit_item(found)
 		found[top] = int(found[top]) + 1
+	var almanac_bonus := Almanac.gather_bonus(today_omen())  # CAL-010: no rng draw on a plain day
+	if almanac_bonus > 0.0 and not found.is_empty() and rng.randf() < almanac_bonus:
+		var lucky := SeasonTasks.top_unit_item(found)
+		found[lucky] = int(found[lucky]) + 1
 	var notes: PackedStringArray = []
 	for item_id in found:
 		player.add_item(item_id, found[item_id])
@@ -1398,7 +1421,7 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if Fishing.too_wild(weather_kind):
 		EventBus.post(Fishing.STORM_REFUSAL, "warning")
 		return
-	var mult := Weather.fishing_multiplier(data, weather_kind) * (1.0 + SeasonTasks.fish_bonus(player, data, current_region))
+	var mult := Weather.fishing_multiplier(data, weather_kind) * (1.0 + SeasonTasks.fish_bonus(player, data, current_region)) * Almanac.fishing_mult(today_omen())
 	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_weather(table, weather_kind), world_flags), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
@@ -1520,7 +1543,7 @@ func sell_item(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := _sell_flooded(item_id, quantity - bonus_units) if quantity > bonus_units else {"ok": true, "reason": "", "stones": 0}
 	if result["ok"] and bonus_units > 0:
-		var bonus := Items.sell(player, data, item_id, bonus_units, price_season(), bonus_mult)
+		var bonus := Items.sell(player, data, item_id, bonus_units, price_season(), bonus_mult, Almanac.sell_mult(today_omen()))
 		result["ok"] = bonus["ok"]
 		result["reason"] = bonus["reason"]
 		result["stones"] = int(result["stones"]) + int(bonus["stones"])
@@ -1554,12 +1577,12 @@ func market_flood_mult(item_id: String) -> float:
 func _sell_flooded(item_id: String, quantity: int) -> Dictionary:
 	var total := {"ok": true, "reason": "", "stones": 0}
 	if shop_name == "":
-		return Items.sell(player, data, item_id, quantity, price_season())
+		return Items.sell(player, data, item_id, quantity, price_season(), 1.0, Almanac.sell_mult(today_omen()))
 	var tally: Dictionary = world_flags.get("market_sold", {})
 	var today := GameClock.total_days
 	var count := _flood_units(item_id)
 	for i in quantity:
-		var r := Items.sell(player, data, item_id, 1, price_season(), Items.flood_mult(data, count))
+		var r := Items.sell(player, data, item_id, 1, price_season(), Items.flood_mult(data, count), Almanac.sell_mult(today_omen()))
 		if not r["ok"]:
 			total["ok"] = i > 0
 			total["reason"] = r["reason"]
@@ -2319,6 +2342,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 				EventBus.post(String(thanks[absi(hash(npc_id + str(GameClock.total_days))) % thanks.size()]).replace("{name}", npcs[npc_id].name).replace("{item}", item_label), "progress")
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+		gain = mini(gain + Almanac.gift_favor(today_omen()), maxi(0, cap - favor))  # CAL-010
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
 	if taste >= 0:
@@ -2796,7 +2820,7 @@ func practice_technique(tech_id: String, days: int) -> void:
 	if not _can_act():
 		return
 	_start_time_skip()
-	var result := Techniques.practice(player, data, tech_id, days)
+	var result := Techniques.practice(player, data, tech_id, days, Almanac.practice_mult(today_omen()))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return

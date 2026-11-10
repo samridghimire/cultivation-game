@@ -517,8 +517,8 @@ static func compute_material_value(data: GameData, item_id: String) -> float:
 
 ## Returns {ok, reason, stones}.
 ## `mult` (MARKET-008, a stall's wanted item) scales the unit price.
-static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, season: String = "", mult: float = 1.0) -> Dictionary:
-	var price := roundi(sell_price(data, item_id, season) * mult) * quantity
+static func sell(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, season: String = "", mult: float = 1.0, omen_mult: float = 1.0) -> Dictionary:
+	var price := roundi(sell_price(data, item_id, season) * mult * omen_mult) * quantity
 	if price <= 0 or item_id == "spirit_stone":
 		return {"ok": false, "reason": "No one will buy that.", "stones": 0}
 	if c.item_count(item_id) < quantity:
