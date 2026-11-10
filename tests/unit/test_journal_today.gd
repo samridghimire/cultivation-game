@@ -97,6 +97,33 @@ func test_earning_and_people_cards() -> void:
 	s.queue_free()
 
 
+## WU-509: with only People lines there is no empty main card; the date heading sits on the People card.
+func test_no_empty_card_when_only_people_lines() -> void:
+	var s := _screen()
+	var mei := PackedStringArray(["Mei has something to show you."])
+	s._build_today(mei, [], "", PackedStringArray(), mei)
+	assert_true(s._today.find_child("TodayCard", true, false) == null)
+	var people := s._today.find_child("PeopleCard", true, false)
+	assert_true(people != null)
+	assert_true(people.find_child("TodayHeader", true, false) != null)
+	for card in s._today.get_children():
+		assert_true(_count_rows(card) > 0)
+	# With an earning card, the date heading moves there instead.
+	s._build_today(mei, [], "", PackedStringArray(["Gathering: 3 stones a day."]), mei)
+	assert_true(s._today.find_child("EarningCard", true, false).find_child("TodayHeader", true, false) != null)
+	assert_true(s._today.find_child("PeopleCard", true, false).find_child("TodayHeader", true, false) == null)
+	s.queue_free()
+
+
+func _count_rows(n: Node) -> int:
+	var c := 0
+	if n.has_meta("today_row"):
+		c += 1
+	for ch in n.get_children():
+		c += _count_rows(ch)
+	return c
+
+
 func test_people_today_lines_empty_for_new_game() -> void:
 	new_character()
 	var root: Node = Engine.get_main_loop().root

@@ -169,11 +169,14 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	card.add_child(inner)
-	var day: int = GameClock.total_days
-	var weather := Weather.of(GameState.data, GameState.current_region, day)
-	var head := UIStyle.label("%s · %s" % [Calendar.format_date_weekday(day), Weather.label(weather)], 18, UIStyle.ACCENT)
-	head.name = "TodayHeader"
-	inner.add_child(head)
+	var main_lines := PackedStringArray()
+	for line in lines:
+		if not people.has(line):  # People lines are shown in the People card below
+			main_lines.append(line)
+	# WU-509: no empty main card; the date heading moves to the first card that has lines.
+	var main_empty: bool = tasks.is_empty() and main_lines.is_empty() and not lines.is_empty()
+	if not main_empty:
+		inner.add_child(_today_head())
 	# WU-462: the season's village tasks sit at the top; a done task gets a check.
 	if not tasks.is_empty():
 		var sh := UIStyle.label(season_header(GameState.current_region), 15, UIStyle.ACCENT)
@@ -187,17 +190,25 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 		var quiet := UIStyle.label(QUIET_DAY, 15, DIM)
 		quiet.name = "TodayQuiet"
 		inner.add_child(quiet)
-	for line in lines:
-		if people.has(line):  # shown in the People card below
-			continue
+	for line in main_lines:
 		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
-	_today.add_child(card)
-	_today_card("EarningCard", "Earning here", earning, "coin")
-	_today_card("PeopleCard", "People today", people, "calendar")
+	if not main_empty:
+		_today.add_child(card)
+	_today_card("EarningCard", "Earning here", earning, "coin", main_empty)
+	_today_card("PeopleCard", "People today", people, "calendar", main_empty and earning.is_empty())
+
+
+## The Today page's date and weather heading.
+func _today_head() -> Label:
+	var day: int = GameClock.total_days
+	var weather := Weather.of(GameState.data, GameState.current_region, day)
+	var head := UIStyle.label("%s · %s" % [Calendar.format_date_weekday(day), Weather.label(weather)], 18, UIStyle.ACCENT)
+	head.name = "TodayHeader"
+	return head
 
 
 ## WU-504: a titled card of icon rows under the main Today card; hidden (not built) when there are no lines.
-func _today_card(card_name: String, title: String, lines: PackedStringArray, icon_kind: String) -> void:
+func _today_card(card_name: String, title: String, lines: PackedStringArray, icon_kind: String, with_date: bool = false) -> void:
 	if lines.is_empty():
 		return
 	var card := UIStyle.panel()
@@ -205,6 +216,8 @@ func _today_card(card_name: String, title: String, lines: PackedStringArray, ico
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	card.add_child(inner)
+	if with_date:
+		inner.add_child(_today_head())
 	inner.add_child(UIStyle.label(title, 15, UIStyle.ACCENT))
 	for line in lines:
 		inner.add_child(_today_row(line, HudIcons.today_glyph(icon_kind), "today_row"))
