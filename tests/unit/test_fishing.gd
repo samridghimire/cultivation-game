@@ -276,10 +276,8 @@ func test_master_lands_extra_fish_and_rank_up_names_perk() -> void:
 	var table := [{"item": "silver_carp", "weight": 1, "min": 1, "max": 1}]
 	var c := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
 	gs.start_session(c)
-	var weather: String = Weather.of(gs.data, gs.current_region, GameClock.total_days)
-	if Fishing.too_wild(weather) or weather == "rain":
-		gs.end_session()
-		return
+	gs.data.regions[gs.current_region]["weather"] = {"any": {"clear": 1}}
+	gs.data.weather_persist = 0.0
 	c.fishing_xp = 100
 	var before := c.item_count("silver_carp")
 	gs.fish(table, 1, "", 0.5)
@@ -287,6 +285,8 @@ func test_master_lands_extra_fish_and_rank_up_names_perk() -> void:
 	gs.end_session()
 	var c2 := CharacterFactory.create("Angler", gs.data, seeded_rng(1))
 	gs.start_session(c2)
+	gs.data.regions[gs.current_region]["weather"] = {"any": {"clear": 1}}
+	gs.data.weather_persist = 0.0
 	c2.fishing_xp = 9
 	var seen := [""]
 	var cb := func(text: String, _cat: String) -> void:
@@ -296,8 +296,8 @@ func test_master_lands_extra_fish_and_rank_up_names_perk() -> void:
 	gs.fish(table, 1, "", 0.5)
 	EventBus.message_posted.disconnect(cb)
 	gs.end_session()
-	if not Fishing.too_wild(weather):
-		assert_true(String(seen[0]).contains("An Angler lands an extra fish"), "rank-up shows perk: %s" % seen[0])
+	gs.data = GameData.load_from_dir()
+	assert_true(String(seen[0]).contains("An Angler lands an extra fish"), "rank-up shows perk: %s" % seen[0])
 
 
 func test_beginner_catch_picks_the_common_plain_fish() -> void:
