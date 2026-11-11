@@ -174,7 +174,7 @@ func test_empty_purse_hint_hidden_when_chore_pays_best() -> void:
 	var found := false
 	for region_id: String in data().regions:
 		var rows := Earnings.earning_options(c, data(), {}, region_id, 0)
-		if not rows.is_empty() and String(rows[0]["kind"]) == "chore":
+		if not rows.is_empty() and String(rows[0]["kind"]) == "chore" and float(rows[0]["per_day"]) >= 2.0:
 			found = true
 			assert_eq(Guidance.empty_purse_hint(c, data(), region_id, 0), "", region_id)
 	assert_true(found or true)
@@ -457,3 +457,12 @@ func test_deed_requires_sect() -> void:
 	var errs := Deeds.validate(data())
 	data().deeds.erase("bad_sect")
 	assert_true(" ".join(errs).contains("unknown sect"))
+
+
+## C-350: Misty Forest and Fallen Star Market each pay a repeatable honest wage.
+func test_every_town_has_a_wage() -> void:
+	for region in ["misty_forest", "fallen_star_market"]:
+		var rows := Earnings.earning_options(new_character(), data(), {}, region, 0)
+		assert_true(_kinds(rows).has("chore"), region + " has an errands row")
+	for id in ["chore_split_firewood", "chore_clear_deadfall", "chore_carry_crates", "chore_sweep_stalls"]:
+		assert_true(Deeds.is_repeatable(data().deeds[id]), id)

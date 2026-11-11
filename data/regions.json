@@ -98,6 +98,7 @@
         {"type": "deed_giver", "display_name": "Wounded Sect Disciple", "pos": [1400, 520], "size": [30, 30], "color": "a8c4e0", "look": {"robe": "3f6fb5"}, "deed_context": "sect_brother", "hidden_by_flag": "sect_brother_gone"},
         {"type": "deed_giver", "display_name": "Lost Traveller", "pos": [1300, 700], "size": [30, 30], "color": "c9a27a", "look": {"style": "hood", "robe": "7a6a52"}, "deed_context": "traveller", "hidden_by_flag": "traveller_gone"},
         {"type": "inheritance", "display_name": "Mossy Cairn", "pos": [1400, 140], "size": [100, 70], "color": "6f7d5c"},
+        {"type": "deed_giver", "display_name": "Woodcutter Bai", "tags": ["elder"], "pos": [330, 470], "size": [30, 30], "color": "8a6a3c", "look": {"hair": "grey"}, "deed_context": "woodcutter"},
         {"type": "travel", "display_name": "Forest Trail", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
@@ -141,6 +142,7 @@
         {"type": "bounty_board", "display_name": "Hunters' Bounty Board", "pos": [300, 480], "size": [70, 60], "color": "9c7a4a"},
         {"type": "inheritance", "display_name": "Sealed Vault Door", "pos": [690, 630], "size": [100, 60], "color": "6b2a2a"},
         {"type": "secret_realm", "look": "seal", "display_name": "Crater Vault Seal", "pos": [1180, 900], "size": [90, 70], "color": "c0a060"},
+        {"type": "deed_giver", "display_name": "Porters' Foreman", "pos": [680, 900], "size": [30, 30], "color": "7a6a52", "look": {"style": "hood", "robe": "7a6a52"}, "deed_context": "porter_foreman"},
         {"type": "travel", "display_name": "City Gate", "pos": [800, 970], "size": [120, 40], "color": "5c4630"}
       ]
     },
