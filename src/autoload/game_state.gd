@@ -4066,6 +4066,8 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 		return false
 	if result["victory"]:
 		_try_tame(String(enemy.get("id", "")))
+		if not enemy.get("spar", false) and not bool(enemy.get("friendly", false)):
+			_artifact_pending += ArtifactFunctions.drink_first_win(player, data, String(enemy.get("id", "")))
 	_pass_time(outcome["days"])
 	return bool(result["victory"]) and _can_act()
 
@@ -4500,6 +4502,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	var age_before := player.age_days if player != null else 0
 	last_digest = {}
 	GameClock.advance(days)
+	_artifact_wakes()
 	_post_season_digest()
 	_record_festival_seen()
 	_post_season_ending()
@@ -4513,6 +4516,28 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 		EventBus.time_skipped.emit(days, summary)
 	_skip_before = {}
 	EventBus.player_changed.emit()
+
+
+## ART-009: the artifact drinks the player's growth. At most one energy line per day (gains later that day
+## are folded into the next line), and one hum per newly unsealable function.
+func _artifact_wakes(extra: int = 0) -> void:
+	if player == null or not player.alive:
+		return
+	_artifact_pending += extra + ArtifactFunctions.drink_progress(player, data)
+	var today := GameClock.total_days
+	if _artifact_pending > 0 and _artifact_line_day != today:
+		_artifact_line_day = today
+		EventBus.post("The artifact drinks the change in you (+%d energy, %d in all)." % [_artifact_pending, player.artifact_energy], "progress")
+		_artifact_pending = 0
+	for function_id in ArtifactFunctions.ready_to_unseal(player, data, world_flags):
+		var flag := "artifact_hum_" + function_id
+		if not world_flags.get(flag, false):
+			world_flags[flag] = true
+			EventBus.post("The artifact hums: %s can be unsealed (O)." % ArtifactFunctions.function_name(data, function_id), "progress")
+
+
+var _artifact_pending := 0
+var _artifact_line_day := -1
 
 
 ## SEASON-001: on the first pass into a new season post its name and a short digest, once per season (world flag).

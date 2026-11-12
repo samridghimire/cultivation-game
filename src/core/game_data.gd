@@ -1065,6 +1065,15 @@ func _validate_artifact() -> void:
 	for realm_id in artifact.get("anchor_slots", {}):
 		if realm_index_of(realm_id) < 0:
 			load_errors.append("artifact.json anchor_slots has unknown realm '%s'" % realm_id)
+	var progress: Variant = artifact.get("energy", {}).get("progress", {})
+	if not progress is Dictionary:
+		load_errors.append("artifact.json energy.progress must be an object")
+		return
+	for kind in progress:
+		if not ["stage", "realm", "first_win", "discovery", "secret_realm_floor"].has(String(kind)):
+			load_errors.append("artifact.json energy.progress has unknown key '%s'" % kind)
+		elif not (progress[kind] is int or progress[kind] is float) or int(progress[kind]) < 0 or float(progress[kind]) != floorf(float(progress[kind])):
+			load_errors.append("artifact.json energy.progress '%s' must be a non-negative integer" % kind)
 
 
 func _validate_commissions() -> void:

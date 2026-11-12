@@ -3961,3 +3961,48 @@ func test_travel_warns_about_deadly_beasts_once_per_season() -> void:
 	EventBus.message_posted.disconnect(cb)
 	assert_eq(seen[0], 1)
 	assert_true(gs.world_flags.has("warned_" + region))
+
+
+func test_artifact_drinks_growth_and_hums() -> void:
+	var gs := _game_state()
+	var c := _start()
+	var bus := _root().get_node("EventBus")
+	var before := c.artifact_energy
+	c.stage = 0
+	ArtifactFunctions.sync_marks(c)
+	c.stage += 1
+	gs._pass_time(1)
+	assert_eq(c.artifact_energy, before + 15, "a stage up feeds the artifact")
+	c.stage += 1
+	gs._pass_time(0)
+	assert_eq(c.artifact_energy, before + 30)
+	# crossing the unseal threshold hums once
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	ArtifactFunctions.sync_marks(c)
+	c.artifact_energy = 99
+	c.stage += 1
+	var count: int = bus.posted_count
+	gs._pass_time(1)
+	assert_gt(bus.posted_count, count)
+	assert_true(gs.world_flags.get("artifact_hum_storage", false), "the hum is recorded")
+	assert_true(Guidance.hints(c, gs.data, 1.0, 12, {}, gs.world_flags).has("Unseal Storage Space in the artifact (O)"))
+	ArtifactFunctions.unlock(c, gs.data, "storage", gs.world_flags)
+	assert_false(Guidance.hints(c, gs.data, 1.0, 12, {}, gs.world_flags).has("Unseal Storage Space in the artifact (O)"), "hint gone once unsealed")
+
+
+func test_artifact_first_win_feeds_once() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.artifact_energy = 0
+	for i in 12:
+		if c.artifact_won.has("wild_boar"):
+			break
+		c.qi = 0.0
+		gs.fight("wild_boar")
+		if not c.alive:
+			break
+	assert_true(c.artifact_won.has("wild_boar"))
+	var after_first := c.artifact_energy
+	assert_true(after_first >= 5)
+	gs.fight("wild_boar")
+	assert_true(c.artifact_energy <= after_first, "no second first-win")

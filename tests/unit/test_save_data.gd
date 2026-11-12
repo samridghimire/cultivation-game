@@ -86,6 +86,8 @@ func test_every_character_field_survives_a_save() -> void:
 	c.training = {"assignment": "profession", "profession": "alchemist"}
 	c.npc_action_days = {"pointers:elder": 12}
 	c.artifact_storage = {"spirit_stone": 12}
+	c.artifact_won = {"wild_boar": true}
+	c.artifact_marks = {"realm": 1, "stage": 2, "discoveries": 3, "floors": 4}
 	c.reputation = {"azure_cloud_sect": 150}
 	c.abode_storage = {"iron_ore": 4}
 	c.secret_realms = {"verdant_remnant": {"opening": 2, "floor": 1}}

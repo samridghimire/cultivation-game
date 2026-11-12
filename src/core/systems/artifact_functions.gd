@@ -35,6 +35,68 @@ static func energy_value(data: GameData, item_id: String) -> int:
 	return floori(price * float(rules.get("item_energy_per_price", 0.0)))
 
 
+## ART-009: energy one `kind` of progress gives (data energy.progress; 0 if absent).
+static func progress_energy(data: GameData, kind: String, count: int = 1) -> int:
+	return int(data.artifact.get("energy", {}).get("progress", {}).get(kind, 0)) * count
+
+
+## ART-009: the artifact drinks `count` of `kind` progress, capped at max_energy.
+## Returns the energy actually gained.
+static func grant_progress(c: CharacterData, data: GameData, kind: String, count: int = 1) -> int:
+	var cap := int(data.artifact.get("energy", {}).get("max_energy", 0))
+	var gained := clampi(progress_energy(data, kind, count), 0, maxi(cap - c.artifact_energy, 0))
+	c.artifact_energy += gained
+	return gained
+
+
+## ART-009: records the character's current progress as already credited.
+static func sync_marks(c: CharacterData) -> void:
+	c.artifact_marks = {"realm": c.realm_index, "stage": c.stage,
+			"discoveries": LifeStats.get_stat(c, "discoveries"), "floors": LifeStats.get_stat(c, "realm_floors_cleared")}
+
+
+## ART-009: credits what grew since the last call (stages, realms, discoveries, secret realm floors).
+## The first call on a character only records the marks (older saves get no backlog). Returns energy gained.
+static func drink_progress(c: CharacterData, data: GameData) -> int:
+	if c.artifact_marks.is_empty():
+		sync_marks(c)
+		return 0
+	var gained := 0
+	var realms := c.realm_index - int(c.artifact_marks.get("realm", 0))
+	if realms > 0:
+		gained += grant_progress(c, data, "realm", realms)
+	else:
+		var stages := c.stage - int(c.artifact_marks.get("stage", 0))
+		if stages > 0:
+			gained += grant_progress(c, data, "stage", stages)
+	var found := LifeStats.get_stat(c, "discoveries") - int(c.artifact_marks.get("discoveries", 0))
+	if found > 0:
+		gained += grant_progress(c, data, "discovery", found)
+	var floors := LifeStats.get_stat(c, "realm_floors_cleared") - int(c.artifact_marks.get("floors", 0))
+	if floors > 0:
+		gained += grant_progress(c, data, "secret_realm_floor", floors)
+	sync_marks(c)
+	return gained
+
+
+## ART-009: the first defeat of `enemy_id` feeds the artifact once. Returns energy gained.
+static func drink_first_win(c: CharacterData, data: GameData, enemy_id: String) -> int:
+	if enemy_id == "" or c.artifact_won.has(enemy_id):
+		return 0
+	c.artifact_won[enemy_id] = true
+	return grant_progress(c, data, "first_win")
+
+
+## ART-009: ids of sealed functions that could be unsealed right now.
+static func ready_to_unseal(c: CharacterData, data: GameData, flags: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for def: Dictionary in data.artifact.get("functions", []):
+		var id := String(def.get("id", ""))
+		if not is_unlocked(c, id) and check_unlock(c, data, id, flags) == "":
+			out.append(id)
+	return out
+
+
 static func check_feed(c: CharacterData, data: GameData, item_id: String, quantity: int) -> String:
 	if quantity < 1 or c.item_count(item_id) < quantity:
 		return "You do not have enough."

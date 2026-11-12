@@ -148,3 +148,58 @@ func test_game_state_feed_unlock_store_and_keep_through_death() -> void:
 	gs.retrieve_from_artifact("qi_gathering_pill", 2)
 	assert_eq(gs.player.item_count("qi_gathering_pill"), 2)
 	gs.end_session()
+
+
+func test_progress_energy_reads_data_and_caps() -> void:
+	assert_eq(ArtifactFunctions.progress_energy(data(), "stage"), 15)
+	assert_eq(ArtifactFunctions.progress_energy(data(), "realm", 2), 120)
+	assert_eq(ArtifactFunctions.progress_energy(data(), "nope"), 0)
+	var c := new_character()
+	c.artifact_energy = int(data().artifact["energy"]["max_energy"]) - 4
+	assert_eq(ArtifactFunctions.grant_progress(c, data(), "realm"), 4, "capped at max_energy")
+
+
+func test_first_win_counts_once_per_enemy() -> void:
+	var c := new_character()
+	assert_eq(ArtifactFunctions.drink_first_win(c, data(), "wild_boar"), 5)
+	assert_eq(ArtifactFunctions.drink_first_win(c, data(), "wild_boar"), 0)
+	assert_eq(ArtifactFunctions.drink_first_win(c, data(), "wolf"), 5)
+	var loaded := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_true(loaded.artifact_won.has("wild_boar"))
+	assert_eq(ArtifactFunctions.drink_first_win(loaded, data(), "wild_boar"), 0)
+
+
+func test_drink_progress_reads_marks() -> void:
+	var c := new_character()
+	assert_eq(ArtifactFunctions.drink_progress(c, data()), 0, "first call only records")
+	c.stage += 2
+	assert_eq(ArtifactFunctions.drink_progress(c, data()), 30)
+	assert_eq(ArtifactFunctions.drink_progress(c, data()), 0)
+	c.realm_index += 1
+	c.stage = 0
+	LifeStats.add(c, "discoveries")
+	LifeStats.add(c, "realm_floors_cleared")
+	assert_eq(ArtifactFunctions.drink_progress(c, data()), 60 + 5 + 10)
+
+
+func test_ready_to_unseal_needs_energy_and_realm() -> void:
+	var c := _qi_refiner()
+	c.artifact_energy = _unlock_cost() - 1
+	assert_true(ArtifactFunctions.ready_to_unseal(c, data(), {}).is_empty())
+	c.artifact_energy = _unlock_cost()
+	assert_eq(ArtifactFunctions.ready_to_unseal(c, data(), {}), ["storage"] as Array[String])
+	var mortal := new_character()
+	mortal.artifact_energy = _unlock_cost()
+	assert_true(ArtifactFunctions.ready_to_unseal(mortal, data(), {}).is_empty())
+	var marks := CharacterData.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	assert_eq(marks.artifact_marks, c.artifact_marks)
+
+
+func test_progress_validation() -> void:
+	var d := GameData.new()
+	d.realms = data().realms
+	d.artifact = {"energy": {"progress": {"stage": -1, "bogus": 3}}}
+	d._validate_artifact()
+	var text := "\n".join(d.load_errors)
+	assert_true(text.contains("'stage' must be"), text)
+	assert_true(text.contains("unknown key 'bogus'"), text)

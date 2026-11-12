@@ -734,6 +734,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var home_hint := sect_home_hint(c, data, region_id)
 	if home_hint != "":
 		out.append(home_hint)
+	var unseal := ArtifactFunctions.ready_to_unseal(c, data, flags)
+	if not unseal.is_empty():
+		out.append("Unseal %s in the artifact (O)" % ArtifactFunctions.function_name(data, unseal[0]))
 	var due := ""
 	var due_urgent := false
 	if today >= 0:

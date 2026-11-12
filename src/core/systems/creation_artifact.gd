@@ -10,6 +10,8 @@ extends RefCounted
 ## Give a character starting lives (and the start anchor) if they have never
 ## held the artifact. Safe to call on every new game and loaded save.
 static func ensure(c: CharacterData, data: GameData) -> void:
+	if c.artifact_marks.is_empty():
+		ArtifactFunctions.sync_marks(c)  # ART-009: no backlog for older saves
 	if c.artifact_lives >= 0:
 		return
 	c.artifact_lives = int(data.artifact.get("starting_lives", 3))
