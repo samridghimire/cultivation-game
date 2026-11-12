@@ -3,7 +3,7 @@ extends TestCase
 
 const HudScript := preload("res://src/ui/hud.gd")
 ## Status card height at day 0 before GFX-031 was 4 px under this bound; the card must not grow past it.
-const MAX_CARD_HEIGHT := 170.0
+const MAX_CARD_HEIGHT := 180.0  # WU-518: 14 px label floor
 
 
 func _tree() -> SceneTree:

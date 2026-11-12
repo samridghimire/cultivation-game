@@ -38,3 +38,9 @@ textures/canvas_textures/default_texture_filter=0
 ; GFX-066: pixel snapping drops and merges glyphs at the fractional stretch (0.9 at 1280x720), so it stays off.
 2d/snap/snap_2d_transforms_to_pixel=false
 2d/snap/snap_2d_vertices_to_pixel=false
+
+[gui]
+
+; WU-518: whole-pixel glyph advances and normal hinting keep 14 px text from losing strokes at the 0.9 stretch.
+theme/default_font_subpixel_positioning=0
+theme/default_font_hinting=2

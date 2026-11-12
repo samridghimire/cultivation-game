@@ -105,7 +105,7 @@ func test_log_idle_alpha() -> void:
 func test_status_card_is_slim_and_merged() -> void:
 	var hud := await _build()
 	var panel := hud.get("_status_panel") as Control
-	assert_true(panel.size.y <= 170.0, "status card %.0f px tall: %s | %s | bottleneck %s" % [panel.size.y, (hud.get("_status") as Label).text, (hud.get("_status") as Label).size, (hud.get("_bottleneck") as Label).text])
+	assert_true(panel.size.y <= 180.0, "status card %.0f px tall: %s | %s | bottleneck %s" % [panel.size.y, (hud.get("_status") as Label).text, (hud.get("_status") as Label).size, (hud.get("_bottleneck") as Label).text])
 	var text: String = (hud.get("_status") as Label).text
 	assert_false(text.contains("Alignment:"), text)
 	assert_true(text.contains(" · Rogue Cultivator"), text)

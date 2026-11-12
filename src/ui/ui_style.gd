@@ -201,10 +201,14 @@ static func set_bar_fill(b: ProgressBar, fill: Color) -> void:
 	b.add_theme_stylebox_override("fill", f)
 
 
+const MIN_LABEL_SIZE: int = 14
+
+
 static func label(text: String = "", font_size: int = 16, color: Color = Color.WHITE) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", font_size)
+	# WU-518: 11-13 px glyphs lose strokes at the 0.9 stretch (1280x720), so no label goes below the floor.
+	l.add_theme_font_size_override("font_size", maxi(font_size, MIN_LABEL_SIZE))
 	l.add_theme_color_override("font_color", color)
 	return l
 
