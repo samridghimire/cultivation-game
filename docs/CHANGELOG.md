@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-12 [WU-519] Every fixed-width HUD line is tested to fit or end in a clean ellipsis.
+- 2026-11-12 [GFX-123] Myriad Peaks Ridge looks like a mountain: rock crags and wind-streaked snow drifts; Azure Peak gets crags.
+- 2026-11-12 [SEASON-017] A season hunt that is too dangerous for you says how to do it: join the village hunt, or come back stronger.
+- 2026-11-12 [LOG-001] Dawn's calendar marks, almanac omen and reminders fold into at most three log lines.
+- 2026-11-12 [FISH-011] Winter ponds are fished through the ice: no rain fish under ice, and Today says "ice-fishing".
+- 2026-11-12 [WU-520] Faraway villagers show just their name; the full title shows when you walk up to them.
+- 2026-11-12 [GFX-122] Paved roads no longer have black holes, and the marsh hall's boardwalk stays wooden under snow.
+- 2026-11-12 [GUIDE-237] The travel menu warns which deadly beasts roam a destination, and arriving warns once a season.
+- 2026-11-12 [WU-518] Small HUD and sheet text is crisp and whole at 1280x720.
 - 2026-11-12 [WU-517] The journal's Today tab reads in three short headed blocks instead of one long list.
 - 2026-11-12 [GFX-121] Sect halls stand on their own ground: a stilted boardwalk in the marsh, a stone terrace on Azure Peak.
 - 2026-11-12 [C-344] Eight new encounters on Myriad Peaks Ridge for Core Formation cultivators.
