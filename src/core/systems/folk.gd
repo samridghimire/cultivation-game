@@ -92,11 +92,11 @@ static func favor_changes(effects: Dictionary, cast: Dictionary) -> Dictionary:
 	return out
 
 
-## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## FOLK-033: chance a greeting uses the day's almanac `talk` line.
 const ALMANAC_TALK_CHANCE := 0.25
 
 
+## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
 ## WEATHER-006: with today's `weather` and a warm villager, `folk_greetings.weather[weather]` lines come first.
 static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "", region_id: String = "", rng: RandomNumberGenerator = null, salt: int = 0) -> String:

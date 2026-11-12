@@ -121,6 +121,7 @@ func start_session(character: CharacterData) -> void:
 	player = character
 	_announced_tier = Alignment.tier_name(player.alignment, data)
 	CreationArtifact.ensure(player, data)
+	_reset_artifact_line()
 	world_flags = {}
 	auctions = {}
 	devour_target = {}
@@ -2162,7 +2163,7 @@ func attend_celebration(npc_id: String) -> void:
 	_pass_time(int(result["days"]))
 
 ## FOLK-002: a friendly villager hands over a small gift when you are greeted (once per cooldown).
-## The world calls this once per greeting; `greeting_for` itself has no side effects.
+## The world calls this once per greeting; `greeting_for` itself only draws from `rng` (FOLK-033 omen talk).
 func receive_greeting_gift(npc_id: String) -> void:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
@@ -4404,6 +4405,7 @@ func load_save_dict(d: Dictionary) -> void:
 	if not d.get("player", {}).has("known_recipes"):
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
+	_reset_artifact_line()
 	world_flags = d.get("world_flags", {})
 	Effects.migrate_legacy_timed(world_flags, int(d.get("clock", {}).get("total_days", 0)))
 	auctions = d.get("auctions", {})
@@ -4555,6 +4557,12 @@ func _artifact_whisper(moment: String) -> void:
 
 var _artifact_pending := 0
 var _artifact_line_day := -1
+
+
+## ART-009: a new or loaded session starts with no folded energy gains from the previous one.
+func _reset_artifact_line() -> void:
+	_artifact_pending = 0
+	_artifact_line_day = -1
 
 
 ## SEASON-001: on the first pass into a new season post its name and a short digest, once per season (world flag).

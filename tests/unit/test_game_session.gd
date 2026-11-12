@@ -4006,6 +4006,20 @@ func test_artifact_drinks_growth_and_hums() -> void:
 	assert_false(Guidance.hints(c, gs.data, 1.0, 12, {}, gs.world_flags).has("Unseal Storage Space in the artifact (O)"), "hint gone once unsealed")
 
 
+## REVIEW: folded energy gains of one session never show up in the next one's first energy line.
+func test_new_session_drops_folded_artifact_gains() -> void:
+	var gs := _game_state()
+	_start()
+	gs._artifact_pending = 25
+	gs._artifact_line_day = GameClock.total_days
+	_start()
+	assert_eq(gs._artifact_pending, 0)
+	assert_eq(gs._artifact_line_day, -1)
+	gs._artifact_pending = 25
+	gs.load_save_dict(gs.to_save_dict())
+	assert_eq(gs._artifact_pending, 0)
+
+
 func test_artifact_first_win_feeds_once() -> void:
 	var gs := _game_state()
 	var c := _start()

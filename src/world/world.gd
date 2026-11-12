@@ -639,7 +639,6 @@ func _build_eggs() -> void:
 		move_child(egg, player.get_index())
 
 
-## An engaged beast fades away; the rest stay.
 ## WU-522: the "· Realm" tags on far NPC labels compare against the player's realm, so refresh them after a breakthrough.
 func _on_player_realm_changed(_success: bool = true, _realm_name: String = "") -> void:
 	for node in get_children():
@@ -647,6 +646,7 @@ func _on_player_realm_changed(_success: bool = true, _realm_name: String = "") -
 			node.refresh_short_name()
 
 
+## An engaged beast fades away; the rest stay.
 func _on_roamers_changed() -> void:
 	var alive := {}
 	for r: Dictionary in GameState.roamers_here():

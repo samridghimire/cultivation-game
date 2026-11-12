@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8ca7651
+Last reviewed commit: 86c4dc1
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1842,3 +1842,21 @@ Last reviewed commit: 8ca7651
     the region is built, so a breakthrough leaves stale "· Foundation" tags until you re-enter (same as the full title);
     `JournalScreen._block` has an unused Texture2D parameter; GameData validates against `SectCourt.GROUNDS` (src/world),
     like the older GroundTiles.STYLES, a core->world dependency; GFX-121/WU-517 did not render their screenshots.
+- 2026-11-12 (reviewer, 3rd run): reviewed 8ca7651..86c4dc1 (SEASON-017, GFX-123, WU-519, WU-521, CAL-012, FOLK-033,
+  WU-522, C-353, ART-009, ART-010, QA-035, ARCH-001, WU-524, C-342, C-351; [PLAN]/[REVIEW] skipped). Main green
+  (3870 tests -> 3871). No BACKLOG/CHANGELOG edits by workers; no binary assets (crags, drifts, lanterns are code-drawn);
+  no SAVE_VERSION change (ART-009/010's `artifact_won`, `artifact_marks`, `artifact_spoke` default to {} and are in the
+  every-field save test; older saves get no energy backlog).
+  - Fixed (ART-009): `_artifact_pending` / `_artifact_line_day` were never reset, so gains folded at the end of one
+    session showed up in the next new game's or loaded save's first "The artifact drinks..." line (and a same-day line
+    could be suppressed). `start_session` and `load_save_dict` now reset them; test added.
+  - Fixed: FOLK-033 split `Folk.greeting`'s doc comment around the new const; WU-522 left "An engaged beast fades away"
+    above the wrong function; `receive_greeting_gift`'s note that `greeting_for` has no side effects (it now draws from rng).
+  - ART-009 (marks-based, capped, one line a day, hum once, hint goes when unsealed), ART-010 (once per moment, validated),
+    ARCH-001 (isolation test; GUIDE-237 now uses the arrival season), WU-524 (focus skips sealed cards), CAL-012,
+    SEASON-017, GFX-123 (seeded, clear of places/relief), WU-521, WU-519, QA-035 (sim only), C-342/351/353 OK.
+  - Notes, not filed: ART-009 did not run tools/balance.sh --check; the message log has no "Artifact" filter for the new
+    `artifact` category (lines show under All only); FOLK-033's omen talk advances GameState.rng whenever a villager greets
+    you while walking (allowed by rule 4, but a hash like the rest of `greeting` would keep it side-effect free);
+    WU-522's realm tags refresh on breakthrough only, not on a devour that gains stages; WU-522 part (2) (Azure Peak
+    signboard over the banner) still open.
