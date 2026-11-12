@@ -144,6 +144,35 @@ static func check_unlock(c: CharacterData, data: GameData, function_id: String, 
 	return ""
 
 
+## WU-524: one power's card state: {id, name, state ("open" / "ready" / "sealed"), cost, need}.
+## `need` is what is missing while sealed, without the power's name ("100 energy (you have 0)").
+static func status(c: CharacterData, data: GameData, function_id: String, flags: Dictionary) -> Dictionary:
+	var def := get_def(data, function_id)
+	var unlock: Dictionary = def.get("unlock", {})
+	var out := {"id": function_id, "name": String(def.get("name", function_id)), "state": "sealed",
+			"cost": int(unlock.get("energy", 0)), "need": ""}
+	if is_unlocked(c, function_id):
+		out["state"] = "open"
+		return out
+	if check_unlock(c, data, function_id, flags) == "":
+		out["state"] = "ready"
+		return out
+	var realm_id := String(unlock.get("realm", ""))
+	var needed := String(unlock.get("function", ""))
+	var flag := String(unlock.get("flag", ""))
+	if def.is_empty():
+		out["need"] = "no such power"
+	elif realm_id != "" and c.realm_index < data.realm_index_of(realm_id):
+		out["need"] = "reach %s" % data.realms[data.realm_index_of(realm_id)].name
+	elif needed != "" and not is_unlocked(c, needed):
+		out["need"] = "unseal %s first" % function_name(data, needed)
+	elif flag != "" and not flags.get(flag, false):
+		out["need"] = "something is still missing"
+	else:
+		out["need"] = "%d energy (you have %d)" % [out["cost"], c.artifact_energy]
+	return out
+
+
 ## Spends the energy and unlocks `function_id`. Returns {ok, reason, energy (spent)}.
 static func unlock(c: CharacterData, data: GameData, function_id: String, flags: Dictionary) -> Dictionary:
 	var reason := check_unlock(c, data, function_id, flags)

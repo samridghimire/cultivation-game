@@ -23,6 +23,8 @@ const PAGE_GARDEN := "garden"
 var _title: Label
 var _info: Label
 var _rows: VBoxContainer
+var _energy_bar: ProgressBar
+var _energy_caption: Label
 var _close_button: Button
 var _page := PAGE_MAIN
 ## Node name of the button waiting for a second press (WU-032), "" = none.
@@ -44,6 +46,10 @@ func _init() -> void:
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.custom_minimum_size = Vector2(656, 0)
 	box.add_child(_info)
+	_energy_bar = UIStyle.bar(Vector2(656, 14), UIStyle.CATEGORY_COLORS["artifact"])
+	box.add_child(_energy_bar)
+	_energy_caption = UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["artifact"])
+	box.add_child(_energy_caption)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(656, 340)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -116,6 +122,8 @@ func _rebuild() -> void:
 	for child in _rows.get_children():
 		_rows.remove_child(child)
 		child.queue_free()
+	_energy_bar.visible = false
+	_energy_caption.visible = false
 	match _page:
 		PAGE_FEED:
 			_build_feed(p, data)
@@ -133,11 +141,18 @@ func _rebuild() -> void:
 
 func _build_main(p: CharacterData, data: GameData) -> void:
 	_title.text = "Creation Artifact"
-	var lines: Array[String] = [CreationArtifact.describe(p, data)[0]]
-	for line in ArtifactFunctions.describe(p, data, GameState.world_flags):
-		if not line.begins_with("  "):
-			lines.append(line)
-	_info.text = "\n".join(lines)
+	var max_lives := int(data.artifact.get("max_lives", 9))
+	_info.text = "Lives: %d / %d  %s   |   Next life: %d stones" % [p.artifact_lives, max_lives, pips(p.artifact_lives, max_lives), CreationArtifact.recharge_cost(p, data)]
+	_show_energy(p, data)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rows.add_child(grid)
+	for function_id: String in ArtifactFunctions.KNOWN:
+		if not ArtifactFunctions.get_def(data, function_id).is_empty():
+			_add_card(grid, p, data, function_id)
 	for amount in STONE_AMOUNTS:
 		var reason := ArtifactFunctions.check_feed(p, data, "spirit_stone", amount)
 		var feed_text := "Feed %d spirit stones (+%d energy)" % [amount, amount * ArtifactFunctions.energy_value(data, "spirit_stone")]
@@ -145,22 +160,71 @@ func _build_main(p: CharacterData, data: GameData) -> void:
 			_add_confirm_button("feed_stones_%d" % amount, feed_text, reason, GameState.feed_artifact.bind("spirit_stone", amount), "Confirm: feed %d stones?" % amount)
 		else:
 			_add_button("feed_stones_%d" % amount, feed_text, reason, GameState.feed_artifact.bind("spirit_stone", amount))
-	_add_button("anchors", "Lives & anchors...", "", _show_page.bind(PAGE_ANCHORS))
 	_add_button("feed_item", "Feed an item...", "", _show_page.bind(PAGE_FEED))
-	for def: Dictionary in data.artifact.get("functions", []):
-		var function_id := String(def.get("id", ""))
-		if ArtifactFunctions.is_unlocked(p, function_id):
-			continue
-		var cost := int(def.get("unlock", {}).get("energy", 0))
-		var reason := ArtifactFunctions.check_unlock(p, data, function_id, GameState.world_flags)
-		_add_button("unseal_" + function_id, "Unseal %s (%d energy)" % [def.get("name", function_id), cost], reason, GameState.unlock_artifact_function.bind(function_id))
+	_add_button("anchors", "Lives & anchors...", "", _show_page.bind(PAGE_ANCHORS))
 	if ArtifactFunctions.is_unlocked(p, InnerWorld.FUNCTION):
 		var days := InnerWorld.max_days(data)
 		_add_button("inner_world", "Enter the Inner World (%s outside, %s inside)" % [Calendar.format_duration(days), Calendar.format_duration(InnerWorld.inner_days(data, days))], InnerWorld.check_enter(p, data, days), GameState.enter_inner_world.bind(days))
-	if ArtifactFunctions.is_unlocked(p, SpiritGarden.FUNCTION):
-		_add_button("garden", "%s..." % ArtifactFunctions.function_name(data, SpiritGarden.FUNCTION), "", _show_page.bind(PAGE_GARDEN))
-	var storage_reason := "" if ArtifactFunctions.is_unlocked(p, "storage") else "sealed"
-	_add_button("storage", "%s..." % ArtifactFunctions.function_name(data, "storage"), storage_reason, _show_page.bind(PAGE_STORAGE))
+
+
+## WU-524: filled diamonds for the lives held, hollow ones up to the cap.
+static func pips(lives: int, max_lives: int) -> String:
+	return "◆".repeat(clampi(lives, 0, max_lives)) + "◇".repeat(maxi(max_lives - lives, 0))
+
+
+## WU-524: the energy bar toward the cheapest sealed power, with its caption.
+func _show_energy(p: CharacterData, data: GameData) -> void:
+	var target := ""
+	var cost := 0
+	for function_id: String in ArtifactFunctions.KNOWN:
+		var st := ArtifactFunctions.status(p, data, function_id, GameState.world_flags)
+		if st["state"] != "open" and not ArtifactFunctions.get_def(data, function_id).is_empty() and (target == "" or int(st["cost"]) < cost):
+			target = String(st["name"])
+			cost = int(st["cost"])
+	_energy_bar.visible = true
+	_energy_caption.visible = true
+	_energy_bar.max_value = maxi(cost, 1)
+	_energy_bar.value = mini(p.artifact_energy, maxi(cost, 1)) if target != "" else 1
+	_energy_caption.text = "Energy %d / %d (%s)" % [p.artifact_energy, cost, target] if target != "" else "Energy %d. All seals broken" % p.artifact_energy
+
+
+## One power card: name, state chip and a single line. Ready cards unseal, open ones open their page.
+func _add_card(grid: GridContainer, p: CharacterData, data: GameData, function_id: String) -> void:
+	var st := ArtifactFunctions.status(p, data, function_id, GameState.world_flags)
+	var state := String(st["state"])
+	var line := ""
+	var action := Callable()
+	match state:
+		"open":
+			var desc := String(ArtifactFunctions.get_def(data, function_id).get("description", ""))
+			line = desc.get_slice(". ", 0).trim_suffix(".") + "."
+			match function_id:
+				"storage":
+					action = _show_page.bind(PAGE_STORAGE)
+				"spirit_garden":
+					action = _show_page.bind(PAGE_GARDEN)
+		"ready":
+			line = "Ready: press to unseal (%d energy)" % int(st["cost"])
+			action = GameState.unlock_artifact_function.bind(function_id)
+		_:
+			line = String(st["need"]).capitalize() if String(st["need"]).length() < 2 else String(st["need"]).substr(0, 1).to_upper() + String(st["need"]).substr(1)
+	var chip := {"open": "OPEN", "ready": "READY", "sealed": "SEALED"}[state] as String
+	var b := UIStyle.button("%s   [%s]\n%s" % [st["name"], chip, line], action if action.is_valid() else Callable())
+	b.name = ("card_" + function_id).validate_node_name()
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b.custom_minimum_size = Vector2(320, 74)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.add_theme_font_size_override("font_size", 16)
+	b.set_meta("state", state)
+	if state == "sealed":
+		b.tooltip_text = "Needs " + String(st["need"])
+		UIStyle.tint_button_text(b, Color(0.62, 0.62, 0.68))
+	elif state == "ready":
+		UIStyle.tint_button_text(b, UIStyle.DANGER_COLORS["Weak"])
+	else:
+		UIStyle.tint_button_text(b, UIStyle.ACCENT)
+	grid.add_child(b)
 
 
 func _build_feed(p: CharacterData, data: GameData) -> void:
@@ -303,6 +367,15 @@ func _focus_now(node_name: String) -> void:
 		if String(b.name) == node_name:
 			b.grab_focus()
 			return
+	# WU-524: a fresh main page lands on the first Ready card, else Feed 10; never on a sealed card.
+	enabled = enabled.filter(func(b: Button) -> bool: return b.get_meta("state", "") != "sealed")
+	for b: Button in enabled:
+		if b.get_meta("state", "") == "ready":
+			b.grab_focus()
+			return
+	var plain := enabled.filter(func(b: Button) -> bool: return not b.has_meta("state"))
+	if not plain.is_empty():
+		enabled = plain
 	if not enabled.is_empty():
 		(enabled[0] as Button).grab_focus()
 	else:

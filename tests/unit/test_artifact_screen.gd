@@ -30,19 +30,19 @@ func test_feed_unseal_and_storage_round_trip() -> void:
 	var screen := ArtifactScreen.new()
 	screen.open()
 	assert_eq(screen.page(), ArtifactScreen.PAGE_MAIN)
-	assert_true(_button(screen, "unseal_storage").disabled, "mortals cannot unseal storage")
-	assert_true(_button(screen, "unseal_storage").text.contains("("), "disabled unseal shows why")
-	assert_true(_button(screen, "storage").disabled, "storage page is sealed")
+	assert_eq(_button(screen, "card_storage").get_meta("state"), "sealed", "mortals cannot unseal storage")
+	assert_true(_button(screen, "card_storage").text.contains("Reach"), "a sealed card says what it needs: " + _button(screen, "card_storage").text)
 	_press(screen, "feed_stones_100")  # arms (WU-032)
 	_press(screen, "feed_stones_100")
 	assert_eq(c.artifact_energy, 100, "fed 100 stones")
 	assert_eq(c.item_count("spirit_stone"), 50)
 	c.realm_index = gs.data.realm_index_of("qi_refining")
 	gs.get_node("/root/EventBus").player_changed.emit()
-	_press(screen, "unseal_storage")
+	assert_eq(_button(screen, "card_storage").get_meta("state"), "ready")
+	_press(screen, "card_storage")
 	assert_true(ArtifactFunctions.is_unlocked(c, "storage"), "storage unsealed")
-	assert_true(_button(screen, "unseal_storage") == null, "unsealed functions leave the list")
-	_press(screen, "storage")
+	assert_eq(_button(screen, "card_storage").get_meta("state"), "open", "the card turns open")
+	_press(screen, "card_storage")
 	assert_eq(screen.page(), ArtifactScreen.PAGE_STORAGE)
 	_press(screen, "storeall_golden_bell_talisman")
 	assert_eq(int(c.artifact_storage.get("golden_bell_talisman", 0)), 2, "stored both")
@@ -135,5 +135,34 @@ func test_low_lives_open_on_recharge() -> void:
 	screen.open()
 	await (Engine.get_main_loop() as SceneTree).process_frame
 	assert_eq(screen.page(), ArtifactScreen.PAGE_MAIN, "3 lives opens the main page")
+	screen.free()
+	gs.end_session()
+
+
+## WU-524: four power cards, no doubled "Unsealing" reason, focus on a ready card.
+func test_cards_and_focus() -> void:
+	var gs := _gs()
+	var c := new_character()
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.artifact_energy = 100
+	gs.start_session(c)
+	var screen := ArtifactScreen.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
+	screen.open()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var cards := screen.buttons().filter(func(b: Button) -> bool: return b.has_meta("state"))
+	assert_eq(cards.size(), 4)
+	assert_false(_button(screen, "card_storage").disabled, "a ready card is enabled")
+	assert_true(_button(screen, "card_storage").has_focus(), "focus lands on the ready card")
+	for b in screen.buttons():
+		assert_false(b.text.contains("Unsealing"), b.text)
+	assert_true(_button(screen, "card_inner_world").text.contains("Reach"), _button(screen, "card_inner_world").text)
+	assert_true(screen._energy_caption.text.begins_with("Energy 100 / 100"), screen._energy_caption.text)
+	assert_eq(ArtifactScreen.pips(2, 4), "◆◆◇◇")
+	c.artifact_energy = 0
+	screen.close()
+	screen.open()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(_button(screen, "feed_stones_10").has_focus() or _button(screen, "feed_item").has_focus(), "no ready card: focus a feed button")
 	screen.free()
 	gs.end_session()

@@ -203,3 +203,26 @@ func test_progress_validation() -> void:
 	var text := "\n".join(d.load_errors)
 	assert_true(text.contains("'stage' must be"), text)
 	assert_true(text.contains("unknown key 'bogus'"), text)
+
+
+## WU-524: status() gives each power's card state and the short "need" phrase.
+func test_status_states_and_needs() -> void:
+	var d := data()
+	var c := new_character()
+	c.artifact_energy = 0
+	var s := ArtifactFunctions.status(c, d, "storage", {})
+	assert_eq(s["state"], "sealed")
+	assert_eq(s["need"], "reach %s" % d.realms[d.realm_index_of("qi_refining")].name)
+	c.realm_index = d.realm_index_of("qi_refining")
+	s = ArtifactFunctions.status(c, d, "storage", {})
+	assert_eq(s["need"], "%d energy (you have 0)" % _unlock_cost())
+	assert_eq(s["cost"], _unlock_cost())
+	c.artifact_energy = _unlock_cost()
+	s = ArtifactFunctions.status(c, d, "storage", {})
+	assert_eq(s["state"], "ready")
+	assert_eq(s["need"], "")
+	ArtifactFunctions.unlock(c, d, "storage", {})
+	assert_eq(ArtifactFunctions.status(c, d, "storage", {})["state"], "open")
+	c.realm_index = d.realm_index_of("foundation_establishment")
+	s = ArtifactFunctions.status(c, d, "spirit_garden", {})
+	assert_eq(s["need"], "unseal Inner World first")
