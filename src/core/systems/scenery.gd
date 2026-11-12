@@ -581,15 +581,22 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 	var inset := 3.0
 	var pos := 0.0
 	if style == "scree" or style == "paved":
-		var rows := maxi(int(floor((width - inset * 2.0) / 14.0)), 1)
-		var row_w := (width - inset * 2.0) / float(rows)
+		var main_street := map.has("market")  # GFX-126: larger worn slabs between a dark gutter on each edge
+		var gutter := 3.0 if main_street else 0.0
+		var rows := maxi(int(floor((width - inset * 2.0 - gutter * 2.0) / (20.0 if main_street else 14.0))), 1)
+		var row_w := (width - inset * 2.0 - gutter * 2.0) / float(rows)
+		if main_street:
+			for side in 2:
+				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, 0.0, 0.0 if side == 0 else width - gutter, len_total, gutter), "shade": 0.0, "flag": "gutter"})
 		for row in rows:
 			pos = inset
 			while pos < len_total - inset - 6.0:
-				var l := minf(10.0 + rng.randf() * 16.0, len_total - inset - pos)
+				var l := minf((18.0 + rng.randf() * 22.0) if main_street else (10.0 + rng.randf() * 16.0), len_total - inset - pos)
 				var roll := rng.randf()
 				var flag := "crack" if roll < 0.12 else ("gap" if roll < 0.2 else "")
-				out.append({"kind": "slab", "rect": _road_rect(path_rect, along_x, pos, inset + row * row_w, l, row_w), "shade": rng.randf() * 2.0 - 1.0, "flag": flag})
+				if main_street and flag == "":
+					flag = "main"
+				out.append({"kind": "slab", "rect": _road_rect(path_rect, along_x, pos, inset + gutter + row * row_w, l, row_w), "shade": rng.randf() * 2.0 - 1.0, "flag": flag})
 				pos += l
 	elif style == "bog" and str(map.get("water", "clear")) == "murky":
 		pos = inset
@@ -1167,6 +1174,80 @@ static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
 	for a: Array in arrival:
 		out.append(Rect2(float(a[0]) - 90.0, float(a[1]) - 90.0, 180.0, 180.0))
 	return out
+
+
+## GFX-126: a market's street dressing. Returns {"props": [{kind: barrel|crate|sack, rect}], "patches": [Rect2] packed earth,
+## "cobbles": [Rect2] small dark block cobbles, "scorch": [{center, radius}] around gather places with look crater}.
+## Seeded; nothing lies inside a road, place (with its label band) or landmark rect, except scorch (ground tint only).
+static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|marketprops" % region.get("id", ""))
+	var map: Dictionary = region.get("map", {})
+	var roads: Array[Rect2] = []
+	for r in map.get("paths", []):
+		roads.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+	var solid: Array[Rect2] = []
+	for pl: Dictionary in region.get("places", []):
+		var k := Npcs.place_keepout(pl)
+		solid.append(Rect2(k.position - Vector2(0, 26), k.size + Vector2(0, 26)).grow(10.0))
+	var lms := landmark_rects(region)
+	var scorch: Array[Dictionary] = []
+	for pl: Dictionary in region.get("places", []):
+		if str(pl.get("look", "")) == "crater":
+			var pos: Array = pl["pos"]
+			var sz: Array = pl.get("size", [100, 100])
+			scorch.append({"center": Vector2(float(pos[0]), float(pos[1])), "radius": maxf(float(sz[0]), float(sz[1])) * 0.8})
+	var props: Array[Dictionary] = []
+	var kinds := ["barrel", "crate", "sack"]
+	for i in lms.size():
+		if str(map["landmarks"][i].get("kind", "")) != "stall":
+			continue
+		var lr: Rect2 = lms[i]
+		for n in 3:
+			var side := rng.randi() % 4
+			var at: Vector2
+			match side:
+				0: at = Vector2(lr.position.x - 14.0, rng.randf_range(lr.position.y, lr.end.y))
+				1: at = Vector2(lr.end.x + 4.0, rng.randf_range(lr.position.y, lr.end.y))
+				2: at = Vector2(rng.randf_range(lr.position.x, lr.end.x), lr.end.y + 4.0)
+				_: at = Vector2(rng.randf_range(lr.position.x, lr.end.x), lr.position.y - 14.0)
+			var rect := Rect2(at, Vector2(10, 10))
+			if _market_blocked(rect, roads, solid, lms, 1.0, size, lr):
+				continue
+			var clash := false
+			for q in props:
+				if (q["rect"] as Rect2).grow(2.0).intersects(rect):
+					clash = true
+			if not clash:
+				props.append({"kind": kinds[rng.randi() % 3], "rect": rect})
+	var patches: Array[Rect2] = []
+	for i in 40:
+		var pr := Rect2(rng.randf_range(20.0, size.x - 60.0), rng.randf_range(20.0, size.y - 40.0), rng.randf_range(24.0, 44.0), rng.randf_range(12.0, 22.0))
+		if patches.size() < 8 and not _market_blocked(pr, roads, solid, lms, 6.0, size, Rect2()):
+			patches.append(pr)
+	var cobbles: Array[Rect2] = []
+	for i in 600:
+		var cr := Rect2(rng.randf_range(10.0, size.x - 16.0), rng.randf_range(10.0, size.y - 14.0), 5.0, 4.0)
+		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()):
+			cobbles.append(cr)
+	return {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch}
+
+
+static func _market_blocked(rect: Rect2, roads: Array[Rect2], solid: Array[Rect2], lms: Array[Rect2], gap: float, size: Vector2, own: Rect2) -> bool:
+	if rect.position.x < 8.0 or rect.position.y < 8.0 or rect.end.x > size.x - 8.0 or rect.end.y > size.y - 8.0:
+		return true
+	for r in roads:
+		if r.grow(gap).intersects(rect):
+			return true
+	for r in solid:
+		if r.intersects(rect):
+			return true
+	for r in lms:
+		if r != own and r.grow(gap).intersects(rect):
+			return true
+		if r == own and r.intersects(rect):
+			return true
+	return false
 
 
 static func _marsh_hits(rect: Rect2, keepouts: Array[Rect2], taken: Array[Rect2], gap: float) -> bool:

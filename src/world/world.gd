@@ -45,6 +45,7 @@ var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+var _market_dress: Dictionary = {}  ## GFX-126: Scenery.market_props of a map.market region, else empty
 var _marsh: Dictionary = {}  ## GFX-125: Scenery.marsh_features of a bog region, else empty
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
@@ -489,6 +490,7 @@ func _build_decor() -> void:
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
 	_relief = Scenery.relief_layout(_region)
 	_marsh = {}
+	_market_dress = Scenery.market_props(_region, map_size) if _region.get("map", {}).has("market") else {}
 	if str(_region.get("map", {}).get("ground_style", "")) == "bog":
 		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region))
 	_edge = Scenery.edge_props(_region, map_size)
@@ -1150,6 +1152,7 @@ func _draw() -> void:
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
+	_draw_market_ground()
 	_draw_relief(map)
 	_draw_crags(map)
 	_draw_sect_courts()
@@ -1157,6 +1160,7 @@ func _draw() -> void:
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
 	_draw_marsh_life(map)
+	_draw_market_props()
 	if Scenery.is_snowy(_season) and not bool(map.get("no_snow", false)):
 		for lm: Dictionary in map.get("landmarks", []):  # GFX-114: after the ponds, so the ice shows
 			if lm.get("kind", "") == "jetty":
@@ -1177,6 +1181,45 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-126: block cobbles, packed-earth patches and the scorched ring around a crater (under roads' neighbours, over the ground).
+func _draw_market_ground() -> void:
+	if _market_dress.is_empty():
+		return
+	var snowy := Scenery.is_snowy(_season)
+	var base := Color(_region.get("map", {}).get("ground", "6b6250"))
+	for r: Rect2 in _market_dress["patches"]:
+		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.85, 0.87, 0.92, 0.6))
+	for r: Rect2 in _market_dress["cobbles"]:
+		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
+	for s: Dictionary in _market_dress["scorch"]:
+		for i in 5:
+			var f := 1.0 - float(i) / 5.0
+			draw_circle(s["center"], float(s["radius"]) * f, Color(0.08, 0.05, 0.04, 0.12))
+
+
+## GFX-126: barrels, crates and sacks beside the stalls.
+func _draw_market_props() -> void:
+	if _market_dress.is_empty():
+		return
+	for p: Dictionary in _market_dress["props"]:
+		var r: Rect2 = p["rect"]
+		draw_rect(Rect2(r.position + Vector2(1, r.size.y - 2), Vector2(r.size.x, 3)), Color(0, 0, 0, 0.25))
+		match str(p["kind"]):
+			"barrel":
+				draw_rect(r, Color("7a5230"))
+				draw_rect(Rect2(r.position + Vector2(0, 3), Vector2(r.size.x, 1)), Color("3a2a1a"))
+				draw_rect(Rect2(r.position + Vector2(0, 7), Vector2(r.size.x, 1)), Color("3a2a1a"))
+			"crate":
+				draw_rect(r, Color("a07a48"))
+				draw_rect(r, Color("5a4228"), false, 1.0)
+				draw_line(r.position, r.end, Color("5a4228"), 1.0)
+			_:
+				draw_rect(Rect2(r.position + Vector2(1, 2), r.size - Vector2(2, 2)), Color("c8b88a"))
+				draw_rect(Rect2(r.position + Vector2(3, 0), Vector2(4, 3)), Color("a89868"))
+		if Scenery.is_snowy(_season):
+			draw_rect(Rect2(r.position, Vector2(r.size.x, 2)), Color(0.93, 0.95, 1.0, 0.85))
 
 
 ## GFX-125: shallow pools of a bog (pale ice with a crack in winter, ripples in rain). Drawn under the landmarks.
@@ -1547,6 +1590,9 @@ func _draw_landmark(lm: Dictionary) -> void:
 		# GFX-111: landmark cliffs use the same rock template as the edge props, not the brown timber palette.
 		_draw_rock_mass(r, hash(str(lm["pos"])), 1, 1.0, _rock_color(), Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false)))
 		return
+	if lm["kind"] == "field" and _region.get("map", {}).has("market"):
+		_draw_planter(r)  # GFX-126: a herb planter box, not a farm field
+		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 		var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
@@ -1647,6 +1693,24 @@ func _draw_landmark(lm: Dictionary) -> void:
 				flip = not flip
 				sx += 10.0
 			draw_rect(Rect2(r.position.x + 8, r.position.y + r.size.y * 0.55, r.size.x - 16, 6), Color("c9a24a"))
+
+
+## GFX-126: a raised herb box with a wooden rim and a few sprigs (snow-capped in Winter).
+func _draw_planter(r: Rect2) -> void:
+	var snowy := Scenery.is_snowy(_season)
+	draw_rect(Rect2(r.position + Vector2(2, r.size.y - 4), Vector2(r.size.x, 6)), Color(0, 0, 0, 0.22))
+	draw_rect(r, Color("7a5a38"))
+	var inner := r.grow(-4.0)
+	draw_rect(inner, Color(0.9, 0.93, 1.0) if snowy else Color("3e2f1e"))
+	if not snowy:
+		var x := inner.position.x + 5.0
+		while x < inner.end.x - 3.0:
+			var y := inner.position.y + 5.0
+			while y < inner.end.y - 3.0:
+				draw_rect(Rect2(x, y, 3, 3), Color("6f9a4a") if int(x + y) % 3 else Color("8cb860"))
+				y += 9.0
+			x += 9.0
+	draw_rect(r, Color("4a3624"), false, 2.0)
 
 
 ## GFX-037: snow caps on roofs and pines, an ice rim on ponds, crop rows on the field, by `_season`.
@@ -1895,6 +1959,8 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(tr.position.x), int(tr.position.y)]))
 				if t["flag"] == "gap":  # GFX-122: a worn, lighter slab, never a dark hole
 					c = base.lightened(0.07)
+				if t["flag"] == "main":
+					c = c.lightened(0.1)  # GFX-126: worn pale street slabs
 				draw_rect(r, c)
 				draw_rect(r, base.darkened(0.2), false, 1.0)
 				if t["flag"] == "crack":
@@ -1904,7 +1970,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
 			"rut", "edge":
-				draw_rect(r, base.darkened(0.22 if t["kind"] == "rut" else 0.12))
+				draw_rect(r, base.darkened(0.45 if t["flag"] == "gutter" else (0.22 if t["kind"] == "rut" else 0.12)))
 			"puddle":
 				draw_rect(r, Color(0.5, 0.6, 0.7, 0.7) if t["flag"] == "sky" else Color(0.2, 0.26, 0.3, 0.8))
 			"pebble":

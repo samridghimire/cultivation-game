@@ -70,3 +70,22 @@ func test_nothing_under_a_place() -> void:
 	for t in Scenery.path_tiles(reg, rect, "rain"):
 		if t["kind"] in ["pebble", "print", "puddle", "tuft"]:
 			assert_false(k.intersects(t["rect"]), "decor under a place")
+
+
+func test_market_props_keep_clear_and_are_seeded() -> void:
+	var region: Dictionary = GameData.load_from_dir().regions["fallen_star_market"]
+	var size := Vector2(region["map"]["size"][0], region["map"]["size"][1])
+	var a := Scenery.market_props(region, size)
+	var b := Scenery.market_props(region, size)
+	assert_eq(a["props"].size(), b["props"].size(), "same seed same props")
+	assert_true(a["props"].size() > 0, "stalls get props")
+	assert_true(a["scorch"].size() > 0, "crater ring")
+	var roads: Array[Rect2] = []
+	for p in region["map"]["paths"]:
+		roads.append(Rect2(p[0], p[1], p[2], p[3]))
+	for list in [a["props"].map(func(q): return q["rect"]), a["patches"], a["cobbles"]]:
+		for rect: Rect2 in list:
+			for road in roads:
+				assert_false(road.intersects(rect), "nothing on a road")
+			for pl: Dictionary in region["places"]:
+				assert_false(Npcs.place_keepout(pl).intersects(rect), "nothing in a place keepout")
