@@ -135,6 +135,8 @@ var artifact_won: Dictionary = {}
 var artifact_marks: Dictionary = {}
 ## ART-010: artifact whisper moments already spoken this life (moment -> true).
 var artifact_spoke: Dictionary = {}
+## ART-011: the last few things that fed the artifact: [{day, source, amount}], newest last.
+var artifact_gains: Array = []
 ## Spirit garden plots in the inner world (SpiritGarden, ART-004): [{item, days_left}].
 var garden: Array = []
 ## Rented village field plots (FieldPlots, FARM-001): place key -> {paid_until, crops: [{item, days_left}]}.
@@ -304,6 +306,7 @@ func to_dict() -> Dictionary:
 		"artifact_won": artifact_won.duplicate(),
 		"artifact_marks": artifact_marks.duplicate(),
 		"artifact_spoke": artifact_spoke.duplicate(),
+		"artifact_gains": artifact_gains.duplicate(true),
 		"garden": garden.duplicate(true),
 		"field_plots": field_plots.duplicate(true),
 		"mission_cooldowns": mission_cooldowns.duplicate(),
@@ -452,6 +455,10 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.artifact_storage = _int_values(d.get("artifact_storage", {}))
 	c.artifact_won = (d.get("artifact_won", {}) as Dictionary).duplicate() if d.get("artifact_won", {}) is Dictionary else {}
 	c.artifact_marks = _int_values(d.get("artifact_marks", {}))
+	if d.get("artifact_gains", []) is Array:
+		for g: Variant in d.get("artifact_gains", []):
+			if g is Dictionary:
+				c.artifact_gains.append({"day": int(g.get("day", 0)), "source": String(g.get("source", "")), "amount": int(g.get("amount", 0))})
 	c.artifact_spoke = (d.get("artifact_spoke", {}) as Dictionary).duplicate() if d.get("artifact_spoke", {}) is Dictionary else {}
 	for plot in d.get("garden", []):
 		if plot is Dictionary:

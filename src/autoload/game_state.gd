@@ -748,7 +748,11 @@ func today_omen(day_offset: int = 0) -> Dictionary:
 func today_lines() -> PackedStringArray:
 	if player == null:
 		return PackedStringArray()
-	return Guidance.today_lines(player, data, world_flags, world_events, GameClock.total_days, current_region, npcs, npc_favor)
+	var lines := Guidance.today_lines(player, data, world_flags, world_events, GameClock.total_days, current_region, npcs, npc_favor)
+	var seal := ArtifactFunctions.next_seal_line(player, data, world_flags)
+	if seal != "" and player.artifact_energy >= 1:
+		lines.append(seal)
+	return lines
 
 
 ## WU-504: the friends' lines of today_lines (birthday today, lesson waiting) for the journal's People card.
@@ -4076,7 +4080,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	if result["victory"]:
 		_try_tame(String(enemy.get("id", "")))
 		if not enemy.get("spar", false) and not bool(enemy.get("friendly", false)):
-			_artifact_pending += ArtifactFunctions.drink_first_win(player, data, String(enemy.get("id", "")))
+			_artifact_pending += ArtifactFunctions.drink_first_win(player, data, String(enemy.get("id", "")), GameClock.total_days)
 	_pass_time(outcome["days"])
 	return bool(result["victory"]) and _can_act()
 
@@ -4329,7 +4333,7 @@ func feed_artifact(item_id: String, quantity: int = 1) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
-	var result := ArtifactFunctions.feed(player, data, item_id, quantity)
+	var result := ArtifactFunctions.feed(player, data, item_id, quantity, GameClock.total_days)
 	if result["ok"]:
 		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, Items.item_plural(data, item_id, quantity), result["energy"], player.artifact_energy], "progress")
 	else:
@@ -4534,7 +4538,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 func _artifact_wakes(extra: int = 0) -> void:
 	if player == null or not player.alive:
 		return
-	_artifact_pending += extra + ArtifactFunctions.drink_progress(player, data)
+	_artifact_pending += extra + ArtifactFunctions.drink_progress(player, data, GameClock.total_days)
 	var today := GameClock.total_days
 	if _artifact_pending > 0 and _artifact_line_day != today:
 		_artifact_line_day = today

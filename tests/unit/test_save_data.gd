@@ -89,6 +89,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.artifact_won = {"wild_boar": true}
 	c.artifact_marks = {"realm": 1, "stage": 2, "discoveries": 3, "floors": 4}
 	c.artifact_spoke = {"first_breakthrough": true}
+	c.artifact_gains = [{"day": 3, "source": "stage", "amount": 15}]
 	c.reputation = {"azure_cloud_sect": 150}
 	c.abode_storage = {"iron_ore": 4}
 	c.secret_realms = {"verdant_remnant": {"opening": 2, "floor": 1}}

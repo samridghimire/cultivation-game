@@ -9,6 +9,19 @@ extends RefCounted
 ## Function ids this code implements; data/artifact.json may only list these.
 const KNOWN := ["storage", "appraisal", "inner_world", "spirit_garden"]
 
+## ART-011: how many recent gains the artifact remembers.
+const GAINS_KEPT := 6
+const SOURCE_ORDER := ["stage", "realm", "first_win", "discovery", "secret_realm_floor"]
+const SOURCE_TEXT := {
+	"stage": ["a new stage", "new stages", "each new stage"],
+	"realm": ["a new realm", "new realms", "each new realm"],
+	"first_win": ["first win over a foe", "first wins over foes", "each first win over a foe"],
+	"discovery": ["a discovery", "discoveries", "each discovery"],
+	"secret_realm_floor": ["a secret realm floor", "secret realm floors", "each secret realm floor"],
+	"stones": ["spirit stones", "spirit stones", ""],
+	"offering": ["an offering", "offerings", ""],
+}
+
 
 ## The data/artifact.json function def for `function_id` ({} if none).
 static func get_def(data: GameData, function_id: String) -> Dictionary:
@@ -42,11 +55,69 @@ static func progress_energy(data: GameData, kind: String, count: int = 1) -> int
 
 ## ART-009: the artifact drinks `count` of `kind` progress, capped at max_energy.
 ## Returns the energy actually gained.
-static func grant_progress(c: CharacterData, data: GameData, kind: String, count: int = 1) -> int:
+static func grant_progress(c: CharacterData, data: GameData, kind: String, count: int = 1, day: int = -1) -> int:
 	var cap := int(data.artifact.get("energy", {}).get("max_energy", 0))
 	var gained := clampi(progress_energy(data, kind, count), 0, maxi(cap - c.artifact_energy, 0))
 	c.artifact_energy += gained
+	if day >= 0:
+		record_gain(c, kind, gained, day)
 	return gained
+
+
+## ART-011: remembers that `source` fed the artifact `amount` energy on `day` (merges same day and source).
+static func record_gain(c: CharacterData, source: String, amount: int, day: int) -> void:
+	if amount <= 0:
+		return
+	if not c.artifact_gains.is_empty():
+		var last: Dictionary = c.artifact_gains[c.artifact_gains.size() - 1]
+		if int(last.get("day", -1)) == day and String(last.get("source", "")) == source:
+			last["amount"] = int(last.get("amount", 0)) + amount
+			return
+	c.artifact_gains.append({"day": day, "source": source, "amount": amount})
+	while c.artifact_gains.size() > GAINS_KEPT:
+		c.artifact_gains.pop_front()
+
+
+## ART-011: "+15 a new stage".
+static func gain_text(data: GameData, gain: Dictionary) -> String:
+	var amount := int(gain.get("amount", 0))
+	var names: Array = SOURCE_TEXT.get(String(gain.get("source", "")), ["something", "things", ""])
+	var kind_id := String(gain.get("source", ""))
+	var count := 1
+	if SOURCE_ORDER.has(kind_id):
+		var each := int(data.artifact.get("energy", {}).get("progress", {}).get(kind_id, 0))
+		count = amount / each if each > 0 else 1
+	return "+%d %s" % [amount, names[0] if count <= 1 else names[1]]
+
+
+## ART-011: one short line per way to feed the artifact, from the data.
+static func energy_sources(data: GameData) -> Array[String]:
+	var out: Array[String] = []
+	for kind: String in SOURCE_ORDER:
+		var value := progress_energy(data, kind)
+		if value > 0:
+			out.append("+%d %s" % [value, SOURCE_TEXT[kind][2]])
+	var per_stone := int(data.artifact.get("energy", {}).get("stone_energy", 1))
+	out.append("%d per spirit stone fed" % per_stone)
+	return out
+
+
+## ART-011: "Artifact: 55 / 100 energy toward Storage Space" for the cheapest unopened seal that is within reach, else "".
+static func next_seal_line(c: CharacterData, data: GameData, flags: Dictionary) -> String:
+	var best := {}
+	for function_id: String in KNOWN:
+		if get_def(data, function_id).is_empty():
+			continue
+		var st := status(c, data, function_id, flags)
+		if st["state"] == "open":
+			continue
+		if st["state"] == "sealed" and not String(st["need"]).contains("energy"):
+			continue
+		if best.is_empty() or int(st["cost"]) < int(best["cost"]):
+			best = st
+	if best.is_empty():
+		return ""
+	return "Artifact: %d / %d energy toward %s" % [c.artifact_energy, int(best["cost"]), best["name"]]
 
 
 ## ART-009: records the character's current progress as already credited.
@@ -57,34 +128,34 @@ static func sync_marks(c: CharacterData) -> void:
 
 ## ART-009: credits what grew since the last call (stages, realms, discoveries, secret realm floors).
 ## The first call on a character only records the marks (older saves get no backlog). Returns energy gained.
-static func drink_progress(c: CharacterData, data: GameData) -> int:
+static func drink_progress(c: CharacterData, data: GameData, day: int = -1) -> int:
 	if c.artifact_marks.is_empty():
 		sync_marks(c)
 		return 0
 	var gained := 0
 	var realms := c.realm_index - int(c.artifact_marks.get("realm", 0))
 	if realms > 0:
-		gained += grant_progress(c, data, "realm", realms)
+		gained += grant_progress(c, data, "realm", realms, day)
 	else:
 		var stages := c.stage - int(c.artifact_marks.get("stage", 0))
 		if stages > 0:
-			gained += grant_progress(c, data, "stage", stages)
+			gained += grant_progress(c, data, "stage", stages, day)
 	var found := LifeStats.get_stat(c, "discoveries") - int(c.artifact_marks.get("discoveries", 0))
 	if found > 0:
-		gained += grant_progress(c, data, "discovery", found)
+		gained += grant_progress(c, data, "discovery", found, day)
 	var floors := LifeStats.get_stat(c, "realm_floors_cleared") - int(c.artifact_marks.get("floors", 0))
 	if floors > 0:
-		gained += grant_progress(c, data, "secret_realm_floor", floors)
+		gained += grant_progress(c, data, "secret_realm_floor", floors, day)
 	sync_marks(c)
 	return gained
 
 
 ## ART-009: the first defeat of `enemy_id` feeds the artifact once. Returns energy gained.
-static func drink_first_win(c: CharacterData, data: GameData, enemy_id: String) -> int:
+static func drink_first_win(c: CharacterData, data: GameData, enemy_id: String, day: int = -1) -> int:
 	if enemy_id == "" or c.artifact_won.has(enemy_id):
 		return 0
 	c.artifact_won[enemy_id] = true
-	return grant_progress(c, data, "first_win")
+	return grant_progress(c, data, "first_win", 1, day)
 
 
 ## ART-009: ids of sealed functions that could be unsealed right now.
@@ -109,7 +180,7 @@ static func check_feed(c: CharacterData, data: GameData, item_id: String, quanti
 
 ## Feeds `quantity` of `item_id` to the artifact (energy capped at max_energy).
 ## Returns {ok, reason, energy (gained)}.
-static func feed(c: CharacterData, data: GameData, item_id: String, quantity: int = 1) -> Dictionary:
+static func feed(c: CharacterData, data: GameData, item_id: String, quantity: int = 1, day: int = -1) -> Dictionary:
 	var reason := check_feed(c, data, item_id, quantity)
 	if reason != "":
 		return {"ok": false, "reason": reason, "energy": 0}
@@ -117,6 +188,8 @@ static func feed(c: CharacterData, data: GameData, item_id: String, quantity: in
 	var gained := mini(energy_value(data, item_id) * quantity, cap - c.artifact_energy)
 	c.add_item(item_id, -quantity)
 	c.artifact_energy += gained
+	if day >= 0:
+		record_gain(c, "stones" if item_id == "spirit_stone" else "offering", gained, day)
 	return {"ok": true, "reason": "", "energy": gained}
 
 
