@@ -357,9 +357,21 @@ static func dawn_lines(marks: PackedStringArray, omen_line: String, reminders: P
 	return out
 
 
+## The body of a reminder for the folded "Tomorrow: ..." line. [REVIEW] Not every reminder starts with "Tomorrow: ":
+## the festival invitation ends "... tomorrow." and the market regular's line reads "Tomorrow <stall> wants X; you have N.".
 static func _reminder_body(line: String) -> String:
-	var b := line.trim_prefix("Tomorrow: ")
-	return b.trim_suffix(".")
+	var b := line.trim_suffix(".")
+	if b.begins_with("Tomorrow: "):
+		b = b.trim_prefix("Tomorrow: ")
+	elif b.begins_with("Tomorrow "):
+		b = b.trim_prefix("Tomorrow ")
+	b = b.trim_suffix(" tomorrow")
+	var i := b.find("; ")
+	if i >= 0:
+		var head := b.substr(0, i)
+		var tail := b.substr(i + 2)
+		b = head.substr(0, head.length() - 1) + "; %s)" % tail if head.ends_with(")") else "%s (%s)" % [head, tail]
+	return b
 
 
 ## CAL-008: true when `rid` is not `here`, nor one short direct route (3 days or less) from it.

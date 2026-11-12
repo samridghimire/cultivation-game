@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 24a2821
+Last reviewed commit: 8ca7651
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1828,3 +1828,17 @@ Last reviewed commit: 24a2821
     the reminder says "Tomorrow: good for fishing." while Today says "Tomorrow: Good for fishing."; a multi-day practice
     or gather takes the whole trip at the first day's omen; `HUD.arrival_extra` is only used by its test since WU-514;
     WU-515/GFX-117/WU-516 did not render their screenshots.
+- 2026-11-12 (reviewer, 2nd run): reviewed 24a2821..8ca7651 (GFX-121, WU-517, WU-518, GUIDE-237, GFX-122, WU-520, FISH-011,
+  LOG-001; [PLAN]/[REVIEW] skipped). Main green (3838 tests -> 3839). No BACKLOG/CHANGELOG edits by workers; no binary
+  assets (hall grounds, paving, planks are code-drawn); no SAVE_VERSION change (GUIDE-237's `warned_<region>` is a world flag).
+  - Fixed (LOG-001): `dawn_lines` assumed every reminder starts with "Tomorrow: ". The festival invitation ("X asked you to
+    the Y tomorrow.") and the market regular's line ("Tomorrow <stall> wants Z; you have N.") folded into
+    "Tomorrow: X asked you to the Y tomorrow and Tomorrow <stall> wants ...". `_reminder_body` now strips both prefixes and
+    a trailing " tomorrow", and turns "; you have N" into a parenthesis; test added.
+  - GFX-121 (hall_ground validated), WU-517 (blocks capped, tested), WU-518 (font settings + 14 px floor pinned by a test;
+    project.godot change is intended), GUIDE-237 (season index matches Calendar.season_of), GFX-122, WU-520, FISH-011 OK.
+  - Notes, not filed: LOG-001 did not run tools/balance.sh --check (spec asked for lines/month <= 9.5; QA should);
+    GUIDE-237 warns using the departure day's season and roamers, not the arrival day's; WU-520's short label is set when
+    the region is built, so a breakthrough leaves stale "· Foundation" tags until you re-enter (same as the full title);
+    `JournalScreen._block` has an unused Texture2D parameter; GameData validates against `SectCourt.GROUNDS` (src/world),
+    like the older GroundTiles.STYLES, a core->world dependency; GFX-121/WU-517 did not render their screenshots.

@@ -429,3 +429,12 @@ func test_dawn_lines_fold() -> void:
 	assert_eq(marks.size(), 3)
 	assert_eq(String(marks[0]["text"]), "Today: Fair (you marked it).")
 	assert_eq(String(marks[2]["text"]), "Tomorrow: Feast and Market day.")
+
+
+## [REVIEW] LOG-001: reminders that do not start with "Tomorrow: " fold without a doubled "Tomorrow".
+func test_dawn_lines_fold_other_reminder_shapes() -> void:
+	var out := VillageCalendar.dawn_lines(PackedStringArray(), "", PackedStringArray([
+			"Mei asked you to the Lantern Festival tomorrow.", "Tomorrow Fish Stall wants Boar Hide (x1.5); you have 3."]))
+	assert_eq(out.size(), 1)
+	assert_eq(String(out[0]["text"]), "Tomorrow: Mei asked you to the Lantern Festival and Fish Stall wants Boar Hide (x1.5; you have 3).")
+	assert_eq(VillageCalendar._reminder_body("Tomorrow Fish Stall wants Boar Hide; you have 3."), "Fish Stall wants Boar Hide (you have 3)")
