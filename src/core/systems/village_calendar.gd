@@ -4,7 +4,7 @@ extends RefCounted
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
 const MAX_REMINDERS := 3
-const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season"]
+const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season", "almanac"]
 
 
 ## CAL-009: "Your birthday" plus the birthdays of a living spouse and children in [start, start + span), region "" (anywhere).
@@ -232,9 +232,10 @@ static func _own_dates(out: Array[Dictionary], data: GameData, npcs: Dictionary,
 
 
 ## CAL-003: tomorrow's entries as at most MAX_REMINDERS short "Tomorrow: ..." lines in KIND_ORDER.
+## `tomorrow_omen` (CAL-011) adds a last "Tomorrow: good for fishing." line on a non-plain day.
 ## `flags` (world flags) lets a birthday line name a like the player has learned.
 static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
-		region_id: String, today: int, c: CharacterData, flags: Dictionary = {}) -> PackedStringArray:
+		region_id: String, today: int, c: CharacterData, flags: Dictionary = {}, tomorrow_omen: Dictionary = {}) -> PackedStringArray:
 	var out := PackedStringArray()
 	var inv := FestivalContest.invitation(data, npcs, favor, today + 1)
 	var invite := ""
@@ -284,6 +285,9 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 			if line != "":
 				out.append(line)
 				break
+	# CAL-011: the almanac comes last, and only on a day that is not plain.
+	if out.size() < MAX_REMINDERS and not tomorrow_omen.is_empty() and not Almanac.is_plain(tomorrow_omen):
+		out.append("Tomorrow: %s." % String(tomorrow_omen.get("name", "")).to_lower())
 	return out
 
 

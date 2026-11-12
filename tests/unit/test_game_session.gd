@@ -1961,18 +1961,23 @@ func test_surpassing_the_rival_posts_once() -> void:
 	rival.realm_index = 1
 	gs.world_flags[Rivals.FIRST_MEETING_FLAG] = true
 	EventBus.clear_history()
+	# CAL-011: dawn almanac lines can push old lines out of the 200-line history, so count posts as they happen.
+	var seen: Array[int] = [0]
+	var counter := func(text: String, _cat: String) -> void:
+		if text.begins_with("You have surpassed "):
+			seen[0] += 1
+	EventBus.message_posted.connect(counter)
 	_break_through_once(gs, c)
 	assert_true(c.realm_index > 1)
 	assert_true(gs.world_flags.get(Rivals.SURPASSED_FLAG, false))
 	assert_eq(gs.last_surpassed_rival, rival.name, "the realm card can name the rival")
-	var lines := EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
-	assert_eq(lines.size(), 1)
+	assert_eq(seen[0], 1)
 	_break_through_once(gs, c)
-	lines = EventBus.history.filter(func(m): return String(m["text"]).begins_with("You have surpassed "))
-	assert_eq(lines.size(), 1)
+	assert_eq(seen[0], 1)
 	gs.last_surpassed_rival = rival.name  # as if the monthly check had surpassed them
 	_break_through_once(gs, c)
 	assert_eq(gs.last_surpassed_rival, "", "a later breakthrough's realm card does not name a rival it did not pass")
+	EventBus.message_posted.disconnect(counter)
 	gs.end_session()
 
 
@@ -3225,17 +3230,30 @@ func test_season_digest_posts_once_per_season() -> void:
 	gs.current_region = "qingshi_village"
 	GameClock.total_days = 85
 	gs.world_flags.erase("season_digest_idx")
+	# CAL-011: pin plain omens so no almanac dawn line or reminder depends on the day.
+	var saved_omens: Array = gs.data.almanac["omens"]
+	gs.data.almanac["omens"] = [{"id": "p", "name": "Plain", "text": "t", "weight": 1, "boost": {}}]
 	gs._pass_time(1)  # first pass seeds the flag silently
-	var before: int = EventBus.posted_count
+	var before: int = _non_almanac_posts()
 	gs._pass_time(1)  # still spring
-	assert_eq(EventBus.posted_count, before, "no post inside a season")
+	assert_eq(_non_almanac_posts(), before, "no post inside a season")
 	GameClock.total_days = 89
 	gs._pass_time(1)  # day 90: summer begins
-	assert_true(EventBus.posted_count > before)
+	assert_true(_non_almanac_posts() > before)
 	assert_true(String(EventBus.history[EventBus.history.size() - 1]["text"]).length() > 0)
-	var after: int = EventBus.posted_count
+	var after: int = _non_almanac_posts()
 	gs._pass_time(1)
-	assert_eq(EventBus.posted_count, after, "not again the same season")
+	assert_eq(_non_almanac_posts(), after, "not again the same season")
+	gs.data.almanac["omens"] = saved_omens
+
+
+## CAL-011: posts so far minus dawn almanac lines (those depend on the day's omen).
+func _non_almanac_posts() -> int:
+	var n: int = EventBus.posted_count
+	for m: Dictionary in EventBus.history:
+		if String(m["category"]) == "almanac":
+			n -= 1
+	return n
 
 
 ## WILD-015: baiting on a tracks day spends the item and a day, and the baited beast fights weakened once.
@@ -3898,3 +3916,29 @@ func test_sect_hall_steward_chore() -> void:
 	assert_eq(Sects.duty_progress(c), before + 5)
 	assert_eq(c.item_count("spirit_stone"), stones + 1)
 	assert_eq(_root().get_node("GameClock").total_days, day + 1)
+
+
+## CAL-011: dawn posts exactly one almanac line on a non-plain day and none on a plain day.
+func test_almanac_dawn_line() -> void:
+	var gs := _game_state()
+	_start()
+	gs.current_region = "qingshi_village"
+	var salt := Almanac.salt_of(gs.player)
+	var plain_day := -1
+	var lucky_day := -1
+	for day in range(5, 300):
+		var plain := Almanac.is_plain(Almanac.omen_for(gs.data, day, salt))
+		if plain and plain_day < 0:
+			plain_day = day
+		if not plain and lucky_day < 0:
+			lucky_day = day
+	for pair in [[plain_day, 0], [lucky_day, 1]]:
+		GameClock.total_days = int(pair[0]) - 1
+		gs._last_reminder_day = -1
+		var before := EventBus.history.size()
+		gs._pass_time(1)
+		var n := 0
+		for i in range(before, EventBus.history.size()):
+			if String(EventBus.history[i]["category"]) == "almanac":
+				n += 1
+		assert_eq(n, int(pair[1]), "almanac lines on day %d" % int(pair[0]))

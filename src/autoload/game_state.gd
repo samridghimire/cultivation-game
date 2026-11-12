@@ -4555,7 +4555,10 @@ func _post_reminders() -> void:
 	VillageCalendar.prune_marks(player, today)
 	for line in VillageCalendar.mark_lines(player, today):
 		EventBus.post(line, "world")
-	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags):
+	var omen := today_omen()
+	if not omen.is_empty() and not Almanac.is_plain(omen):
+		EventBus.post(Almanac.line(omen), "almanac")  # CAL-011
+	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, today_omen(1)):
 		EventBus.post(line, "world")
 
 

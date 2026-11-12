@@ -212,6 +212,8 @@ static func calendar_kind(kind: String, season_name: String = "") -> Texture2D:
 			return _glyph("cal_festival", CALENDAR, "festival")
 		"season":
 			return season(season_name)
+		"almanac":  # CAL-011: shares the event glyph
+			return _glyph("cal_event", CALENDAR_MORE, "event")
 		"field", "rent", "request", "secret_realm", "event", "forage":
 			return _glyph("cal_" + kind, CALENDAR_MORE, kind)
 		"great_beast", "hunt":  # GFX-078: the hunt has its own crossed-spears glyph

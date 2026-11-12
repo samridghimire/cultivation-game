@@ -14,6 +14,7 @@ const CATEGORY_COLORS := {
 	"danger": Color("e85a4a"),
 	"karma": Color("b58ae8"),
 	"people": Color("e8a0b4"),
+	"almanac": Color("9ad0c8"),
 }
 ## Colors for Combat.danger_label ratings.
 const DANGER_COLORS := {

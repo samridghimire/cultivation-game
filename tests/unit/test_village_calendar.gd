@@ -398,3 +398,15 @@ func test_near_and_local_festival_reminders_unchanged() -> void:
 func test_far_festival_without_character_is_dropped() -> void:
 	var r := VillageCalendar.reminders(data(), {}, {}, _far_fest("fallen_star_market", 100, 30), "qingshi_village", 100, null)
 	assert_eq(r.size(), 0, str(r))
+
+
+## CAL-011: a non-plain tomorrow adds a last almanac reminder; a plain one adds none; the cap holds.
+func test_reminders_almanac_last() -> void:
+	var fish := {"id": "f", "name": "Good for fishing", "text": "t", "weight": 1, "boost": {"fishing_mult": 1.2}}
+	var plain := {"id": "p", "name": "Plain", "text": "t", "weight": 1, "boost": {}}
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 10, null, {}, fish)
+	assert_eq(r[r.size() - 1], "Tomorrow: good for fishing.")
+	assert_eq(VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 10, null, {}, plain).size(), 0)
+	r = VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, null, {}, fish)
+	assert_true(r.size() <= VillageCalendar.MAX_REMINDERS)
+	assert_eq(r[r.size() - 1], "Tomorrow: good for fishing.")
