@@ -197,7 +197,7 @@ static func arrival_line(c: CharacterData, data: GameData, region_id: String, da
 	var forage := _forage_phrase(c, data, region_id, day, flags)
 	if forage != "":
 		items.append(forage)
-	var fish := _fish_phrase(data, region_id, weather)
+	var fish := _fish_phrase(data, region_id, weather, Calendar.season_of(day))
 	if fish != "":
 		items.append(fish)
 	if items.is_empty():
@@ -288,7 +288,12 @@ static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, 
 
 
 ## "rain-fish biting" when the weather helps the region's fishing place, else "".
-static func _fish_phrase(data: GameData, region_id: String, weather: String) -> String:
+static func _fish_phrase(data: GameData, region_id: String, weather: String, season: String = "") -> String:
+	if season != "" and Fishing.is_iced(data, region_id, season):
+		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+			if String(place.get("type", "")) == "fishing":
+				return "ice-fishing at %s" % String(place.get("name", "the pond"))
+		return ""
 	if weather != "" and Fishing.extra_draws(data, weather) > 0 and not Fishing.too_wild(weather):
 		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 			if String(place.get("type", "")) == "fishing":
@@ -451,7 +456,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var forage := _forage_phrase(c, data, region_id, day, flags)
 	if forage != "":
 		bits.append(forage)
-	var fish := _fish_phrase(data, region_id, Weather.of(data, region_id, day))
+	var fish := _fish_phrase(data, region_id, Weather.of(data, region_id, day), Calendar.season_of(day))
 	if fish != "":
 		bits.append(fish)
 	if not bits.is_empty():

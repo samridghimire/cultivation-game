@@ -294,6 +294,24 @@ static func filter_weather(table: Array, kind: String) -> Array:
 	return out
 
 
+## FISH-011: true when the region's water is iced over (the world draws it frozen in snowy seasons unless the map has no_snow).
+static func is_iced(data: GameData, region_id: String, season: String) -> bool:
+	var map: Dictionary = data.regions.get(region_id, {}).get("map", {})
+	return Scenery.is_snowy(season) and not bool(map.get("no_snow", false))
+
+
+## FISH-011: under ice, entries with a `weather` list (rain-fish etc.) leave the table; they bite in open water only.
+static func filter_ice(table: Array, iced: bool) -> Array:
+	if not iced:
+		return table
+	var out: Array = []
+	for entry: Dictionary in table:
+		if not (entry.get("weather", []) as Array).is_empty():
+			continue
+		out.append(entry)
+	return out
+
+
 ## SEASON-011: `table` without entries whose `requires_flag` world flag is not set.
 static func filter_flags(table: Array, flags: Dictionary) -> Array:
 	var out: Array = []

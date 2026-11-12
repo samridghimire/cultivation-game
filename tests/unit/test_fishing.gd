@@ -307,3 +307,35 @@ func test_beginner_catch_picks_the_common_plain_fish() -> void:
 		{"item": "rare_fish", "weight": 1}, {"item": "b_fish", "weight": 4}, {"item": "a_fish", "weight": 4}]
 	assert_eq(Fishing.beginner_catch(table, data), "a_fish", "highest weight, ties by id")
 	assert_eq(Fishing.beginner_catch([{"item": "rare_fish", "weight": 1}, {"item": "troph", "weight": 5, "trophy": true}], data), "")
+
+
+## FISH-011: fishing through the ice.
+func _ice_data() -> GameData:
+	var data := GameData.new()
+	data.fishing_rules = {"rain_extra_draws": 1}
+	data.regions = {
+		"cold": {"map": {}, "places": [{"type": "fishing", "name": "Bog Pond"}]},
+		"warm": {"map": {"no_snow": true}, "places": [{"type": "fishing", "name": "Lotus Pond"}]},
+	}
+	return data
+
+
+func test_is_iced_follows_snow_and_no_snow() -> void:
+	var data := _ice_data()
+	assert_true(Fishing.is_iced(data, "cold", "Winter"))
+	assert_false(Fishing.is_iced(data, "cold", "Summer"))
+	assert_false(Fishing.is_iced(data, "warm", "Winter"))
+
+
+func test_iced_table_drops_weather_fish_but_keeps_winter_fish() -> void:
+	var table := [{"item": "a", "weight": 1}, {"item": "rain_bream", "weight": 1, "weather": ["rain"]}, {"item": "ice_carp", "weight": 1, "seasons": ["Winter"]}]
+	var out := Fishing.filter_ice(Fishing.filter_weather(table, "rain"), true)
+	assert_eq(out.size(), 2)
+	assert_eq(Fishing.filter_ice(Fishing.filter_weather(table, "rain"), false).size(), 3)
+
+
+func test_today_phrase_ice_fishing() -> void:
+	var data := _ice_data()
+	assert_eq(Guidance._fish_phrase(data, "cold", "rain", "Winter"), "ice-fishing at Bog Pond")
+	assert_eq(Guidance._fish_phrase(data, "cold", "rain", "Summer"), "rain-fish biting")
+	assert_eq(Guidance._fish_phrase(data, "warm", "rain", "Winter"), "rain-fish biting")

@@ -273,7 +273,7 @@ func _refresh_village_life() -> void:
 		_water_life.name = "WaterLife"
 		add_child(_water_life)
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
-	var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
+	var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
 	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced(), _season)
 	if _critters == null:
 		_critters = CritterLayer.new()
@@ -1419,7 +1419,7 @@ func _draw_landmark(lm: Dictionary) -> void:
 		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
-		var frozen := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
+		var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
 		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")))
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		if lm["kind"] == "house":

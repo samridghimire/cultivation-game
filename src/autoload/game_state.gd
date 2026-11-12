@@ -1436,8 +1436,9 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 	if Fishing.too_wild(weather_kind):
 		EventBus.post(Fishing.STORM_REFUSAL, "warning")
 		return
+	var iced := Fishing.is_iced(data, current_region, season)
 	var mult := Weather.fishing_multiplier(data, weather_kind) * (1.0 + SeasonTasks.fish_bonus(player, data, current_region)) * Almanac.fishing_mult(today_omen())
-	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_weather(table, weather_kind), world_flags), season)
+	var base := Exploration.gather_table_for(player, data, Fishing.filter_flags(Fishing.filter_ice(Fishing.filter_weather(table, weather_kind), iced), world_flags), season)
 	var usable := Weather.scale_catch(Fishing.skill_table(base, quality, player.fishing_xp), mult)
 	var found: Dictionary = {}
 	var slipped := Fishing.got_away(quality, rng)
@@ -1482,6 +1483,8 @@ func fish(table: Array, days: int, place_name: String = "", quality: float = 0.5
 			if Fishing.trophy_in(base, {item_id: 1}) != "":
 				trophy_caught = String(data.items[item_id]["name"])
 	var where := " at the %s" % place_name if place_name != "" else ""
+	if iced:
+		EventBus.post("You chop a hole in the ice%s." % (" at the %s" % place_name if place_name != "" else ""))
 	if notes.is_empty():
 		EventBus.post("You fish for %s%s but nothing bites." % [Calendar.format_duration(days), where])
 	else:
