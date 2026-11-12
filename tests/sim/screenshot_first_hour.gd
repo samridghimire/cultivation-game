@@ -16,7 +16,7 @@ extends SceneTree
 ## WU-414: append `-- --book` for village_book.png.
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
 ## WU-450: `-- --great --tracks` starts the day before it, so the trail of prints shows.
-## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.
+## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.  GFX-120: `-- --fog` forces fog.
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
@@ -156,6 +156,8 @@ func _start() -> void:
 		world.call("force_weather", "storm")
 	if OS.get_cmdline_user_args().has("--rain"):  # GFX-051: force today's weather to rain
 		world.call("force_weather", "rain")
+	if OS.get_cmdline_user_args().has("--fog"):  # GFX-120: force today's weather to fog
+		world.call("force_weather", "fog")
 	if OS.get_cmdline_user_args().has("--crafter"):
 		_crafter_shots(gs, c)
 		return
@@ -580,7 +582,7 @@ func _rebuild_world(gs: Node, id: String) -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	hud.get("_banner").visible = false
-	for kind in ["storm", "rain"]:  # GFX-055: the rebuilt world keeps the forced weather (--rain/--storm)
+	for kind in ["storm", "rain", "fog"]:  # GFX-055: the rebuilt world keeps the forced weather (--rain/--storm)
 		if OS.get_cmdline_user_args().has("--" + kind):
 			world.call("force_weather", kind)
 

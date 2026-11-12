@@ -298,6 +298,17 @@ const JETTY_OVERLAP := 8.0
 const JETTY_SHORE := 4.0
 
 
+## GFX-120: where the planks meet dry land (the end a fisher stands at), from a jetty_layout result.
+static func jetty_land_end(lay: Dictionary) -> Vector2:
+	var r: Rect2 = lay["rect"]
+	if not bool(lay["on_water"]):
+		return r.get_center()
+	var toward: int = int(lay["toward_water"])
+	if bool(lay["vertical"]):
+		return Vector2(r.get_center().x, r.end.y if toward == -1 else r.position.y)
+	return Vector2(r.end.x if toward == -1 else r.position.x, r.get_center().y)
+
+
 static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 	var pos := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
 	var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))

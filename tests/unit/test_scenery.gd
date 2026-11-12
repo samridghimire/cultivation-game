@@ -662,3 +662,20 @@ func test_player_idle_bob() -> void:  # GFX-117
 	assert_eq(Player.idle_bob(0.1, false), 0.0)
 	assert_eq(Player.idle_bob(0.6, false), -1.0)
 	assert_eq(Player.idle_bob(0.6, true), 0.0)
+
+
+## GFX-120: every fishing place stands within 24 px of the land end of the jetty in its region.
+func test_fishing_place_touches_its_jetty() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var checked := 0
+	for region: Dictionary in gs.data.regions.values():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm["kind"] != "jetty":
+				continue
+			var end := Scenery.jetty_land_end(Scenery.jetty_layout(region, lm))
+			for p: Dictionary in region.get("places", []):
+				if str(p.get("type", "")) == "fishing":
+					checked += 1
+					var d := Vector2(float(p["pos"][0]), float(p["pos"][1])).distance_to(end)
+					assert_true(d <= 24.0, "%s: %s is %.0f px from the jetty's land end %s (place %s)" % [region["id"], p["display_name"], d, end, p["pos"]])
+	assert_true(checked >= 5)

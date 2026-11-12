@@ -186,3 +186,13 @@ func test_misty_forest_dead_trees_are_rare() -> void:  # GFX-118
 	for k in kinds:
 		total += float(kinds[k])
 	assert_true(float(kinds["dead"]) / total <= 0.10)
+
+
+## GFX-120: mist bands turn a cool blue-grey and stronger on snow; summer keeps its pale tint.
+func test_mist_band_color_on_snow() -> void:
+	var summer := MistBands.band_color(false, 0.1)
+	var snow := MistBands.band_color(true, 0.1)
+	assert_eq(summer, Color(0.85, 0.9, 0.9, 0.1))
+	assert_true(snow.b > snow.r, "blue-grey")
+	assert_true(snow.a > summer.a)
+	assert_true(snow.get_luminance() < summer.get_luminance(), "darker than the snow so it reads")

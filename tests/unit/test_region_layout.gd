@@ -356,6 +356,9 @@ func test_sect_courts_and_gates() -> void:
 				assert_true(gr.encloses(post), "%s gate rect holds both posts" % region["id"])
 			assert_true(roof.position.y <= (parts["posts"][0] as Rect2).position.y and roof.end.y >= (parts["posts"][1] as Rect2).position.y, "%s roof runs post to post" % region["id"])
 			assert_false((parts["stele"] as Rect2).intersects(parts["posts"][0]), "%s board clear of the north post" % region["id"])
+			for lm: Dictionary in region["map"].get("landmarks", []):  # GFX-120: the name board keeps 16 px from every landmark
+				if str(lm["kind"]) in ["pine", "house", "well", "wall", "lantern", "stall", "field", "fence", "cliff", "steps"]:
+					assert_false((parts["stele"] as Rect2).grow(16.0).intersects(_rect(lm, [40, 40])), "%s name board within 16 px of a %s" % [region["id"], lm["kind"]])
 			# GFX-076: both posts stay visible (neither is hidden inside the roof) and stand on the road verges.
 			for post: Rect2 in parts["posts"]:
 				assert_false(roof.encloses(post), "%s a post is hidden under the roof" % region["id"])

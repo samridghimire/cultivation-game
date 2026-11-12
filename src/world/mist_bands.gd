@@ -15,6 +15,7 @@ const ALPHA_MAX := 0.15
 var _bands: Array[Dictionary] = []
 var _map_size := Vector2(1600, 1000)
 var _clock := 0.0
+var _snowy := false
 
 
 ## Whether a region with this map.mist draws bands at all.
@@ -48,6 +49,13 @@ static func layout(region_id: String, mist: float, map_size: Vector2) -> Array[D
 	return out
 
 
+## GFX-120: on snow the pale bands vanish, so they turn a cool blue-grey and a little stronger.
+static func band_color(snowy: bool, alpha: float) -> Color:
+	if snowy:
+		return Color(0.52, 0.62, 0.74, minf(alpha * 1.5, 0.4))
+	return Color(0.85, 0.9, 0.9, alpha)
+
+
 ## Left edge of a band after `t` seconds: it drifts right and wraps from the map's right edge
 ## (band fully off-screen) back to just left of the map.
 static func band_x(band: Dictionary, t: float, map_width: float) -> float:
@@ -55,7 +63,8 @@ static func band_x(band: Dictionary, t: float, map_width: float) -> float:
 	return fposmod(float(band["x0"]) + float(band["speed"]) * t, period) - float(band["w"])
 
 
-func setup(region_id: String, mist: float, map_size: Vector2, animate: bool) -> void:
+func setup(region_id: String, mist: float, map_size: Vector2, animate: bool, snowy: bool = false) -> void:
+	_snowy = snowy
 	_map_size = map_size
 	_bands = layout(region_id, mist, map_size)
 	_clock = 0.0
@@ -73,4 +82,4 @@ func _draw() -> void:
 	var tex := Ambient.soft_texture()
 	for b in _bands:
 		var x := band_x(b, _clock, _map_size.x)
-		draw_texture_rect(tex, Rect2(x, float(b["y"]), float(b["w"]), float(b["h"])), false, Color(0.85, 0.9, 0.9, float(b["alpha"])))
+		draw_texture_rect(tex, Rect2(x, float(b["y"]), float(b["w"]), float(b["h"])), false, band_color(_snowy, float(b["alpha"])))
