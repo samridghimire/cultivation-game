@@ -107,13 +107,22 @@ static func shows_market_mark(days: Array, rotating: Dictionary, today: int) -> 
 	return Places.is_market_day_stall({"open_days": days, "rotating_stock": rotating}, today)
 
 
-## Bunting flag on a pole at the stall's top-right corner plus a gold "new wares" sparkle (static, so reduce_motion-safe).
+## WU-526: the market mark's bounds in local space. It stays inside the stall's own body (never above its top edge),
+## so it can never sit across the name label, which starts 8 px above the top.
+static func market_mark_rect(stall_size: Vector2) -> Rect2:
+	var h := minf(stall_size.y - 4.0, 22.0)
+	var w := minf(stall_size.x - 4.0, 34.0)
+	return Rect2(Vector2(stall_size.x / 2.0 - 2.0 - w, -stall_size.y / 2.0 + 2.0), Vector2(w, h))
+
+
+## Bunting flag on a short pole on the stall's roof plus a gold "new wares" sparkle (static, so reduce_motion-safe).
 func _draw_market_mark() -> void:
-	var pole := Vector2(size.x / 2.0 - 4.0, -size.y / 2.0)
+	var r := market_mark_rect(size)
 	var gold := Color(1.0, 0.85, 0.3, _twinkle_a)
-	draw_line(pole, pole + Vector2(0, -26), Color(0.4, 0.28, 0.16), 2.0)
-	draw_colored_polygon(PackedVector2Array([pole + Vector2(0, -26), pole + Vector2(16, -21), pole + Vector2(0, -16)]), Color(0.8, 0.2, 0.2))
-	var s := pole + Vector2(-14, -22)
+	var pole := r.position + Vector2(r.size.x - 3.0, r.size.y)
+	draw_line(pole, pole + Vector2(0, -r.size.y), Color(0.4, 0.28, 0.16), 2.0)
+	draw_colored_polygon(PackedVector2Array([pole + Vector2(0, -r.size.y), pole + Vector2(10, -r.size.y + 4), pole + Vector2(0, -r.size.y + 8)]), Color(0.8, 0.2, 0.2))
+	var s := r.position + Vector2(6, 6)
 	draw_line(s + Vector2(-5, 0), s + Vector2(5, 0), gold, 2.0)
 	draw_line(s + Vector2(0, -5), s + Vector2(0, 5), gold, 2.0)
 	draw_circle(s, 2.0, Color(1, 1, 0.8, _twinkle_a))

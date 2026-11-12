@@ -129,6 +129,7 @@ func _ready() -> void:
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.roamers_changed.connect(_on_roamers_changed)
 	EventBus.breakthrough_attempted.connect(_on_player_realm_changed)  # WU-522
+	EventBus.player_changed.connect(_on_player_changed_tags)  # WU-526: devour, pills, respawn
 	EventBus.forage_changed.connect(_build_forage)
 	EventBus.pickup_noted.connect(_on_pickup_noted)
 	EventBus.forage_changed.connect(_build_eggs)
@@ -644,6 +645,20 @@ func _on_player_realm_changed(_success: bool = true, _realm_name: String = "") -
 	for node in get_children():
 		if node is Interactable and node.has_method("refresh_short_name"):
 			node.refresh_short_name()
+
+
+## WU-526: refresh the far NPC realm tags whenever the player's realm or stage changed, for any reason.
+var _tag_key := Vector2i(-1, -1)
+
+
+func _on_player_changed_tags() -> void:
+	if GameState.player == null:
+		return
+	var key := Vector2i(GameState.player.realm_index, GameState.player.stage)
+	if key == _tag_key:
+		return
+	_tag_key = key
+	_on_player_realm_changed()
 
 
 ## An engaged beast fades away; the rest stay.

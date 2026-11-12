@@ -8,6 +8,8 @@ const STONE := 16.0
 const TOP_MARGIN := 22.0  ## grass between the court's north edge and the hall roof
 const GATE_X := 250.0  ## how far in from the map edge the gate stands (GFX-074: its pillars stand >= 120 px clear of the exit post)
 const EXIT_CLEAR := 120.0
+const GATE_STEP := 40.0  ## WU-526: how far the gate slides along the road per try
+const GATE_STEPS := 12
 
 
 static func _rect(entry: Dictionary) -> Rect2:
@@ -96,7 +98,30 @@ static func gate(region: Dictionary) -> Dictionary:
 		if String(place.get("type", "")) == "travel":
 			from_left = float(place["pos"][0]) < map_w / 2.0
 			break
-	return {"path": path, "x": GATE_X if from_left else map_w - GATE_X, "name": String(region.get("name", "")), "color": post, "map_w": map_w}
+	var g := {"path": path, "x": GATE_X if from_left else map_w - GATE_X, "name": String(region.get("name", "")), "color": post, "map_w": map_w}
+	# WU-526: step along the road, away from the map edge, until the gate covers no landmark or place.
+	var keeps: Array[Rect2] = Scenery.landmark_rects(region)
+	for place: Dictionary in region.get("places", []):
+		keeps.append(place_footprint(place))
+	for spot: Array in region.get("npc_spots", []):  # people stand clear of the gate's keep-out too
+		keeps.append(Rect2(Vector2(float(spot[0]), float(spot[1])) - Vector2.ONE * GATE_KEEP, Vector2.ONE * GATE_KEEP * 2.0))
+	var dir := 1.0 if from_left else -1.0
+	var default_x: float = g["x"]
+	for i in GATE_STEPS:
+		if gate_is_clear(g, keeps):
+			return g
+		g["x"] = default_x + dir * GATE_STEP * float(i + 1)
+	g["x"] = default_x  # nothing clear: keep the default spot
+	return g
+
+
+## WU-526: true when the gate's roof, posts and name board touch none of `keeps`.
+static func gate_is_clear(g: Dictionary, keeps: Array[Rect2]) -> bool:
+	var r := gate_rect(g)
+	for k: Rect2 in keeps:
+		if r.intersects(k):
+			return false
+	return true
 
 
 ## Flagstones, three steps to the door and two stone lanterns. `hall` is the hall's rect, `court` from court_rect().
