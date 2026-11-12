@@ -226,3 +226,42 @@ func test_status_states_and_needs() -> void:
 	c.realm_index = d.realm_index_of("foundation_establishment")
 	s = ArtifactFunctions.status(c, d, "spirit_garden", {})
 	assert_eq(s["need"], "unseal Inner World first")
+
+
+func test_artifact_taste_tag_multipliers() -> void:  # ART-013
+	var d := data()
+	var per_price := float(d.artifact["energy"]["item_energy_per_price"])
+	assert_eq(ArtifactFunctions.energy_value(d, "eagle_talon"), floori(60 * per_price * 2.0), "beast material 2x")
+	assert_eq(ArtifactFunctions.energy_value(d, "paper_moon_crown"), 0, "keepsake")
+	var c := new_character()
+	c.add_item("paper_moon_crown", 1)
+	assert_eq(ArtifactFunctions.check_feed(c, d, "paper_moon_crown", 1), "The artifact will not take this.")
+	assert_false(ArtifactFunctions.feed(c, d, "paper_moon_crown", 1)["ok"])
+	assert_eq(c.item_count("paper_moon_crown"), 1)
+
+
+func test_feed_choices_sorted_and_filtered() -> void:  # ART-013
+	var d := data()
+	var c := new_character()
+	c.inventory = {"boar_hide": 3, "eagle_talon": 1, "paper_moon_crown": 1, "qi_gathering_pill": 2, "spirit_stone": 9}
+	var picks := ArtifactFunctions.feed_choices(c, d)
+	var ids: Array = picks.map(func(p: Dictionary) -> String: return String(p["id"]))
+	assert_false(ids.has("paper_moon_crown"))
+	assert_false(ids.has("spirit_stone"))
+	assert_eq(ids[0], "eagle_talon")
+	for i in range(1, picks.size()):
+		assert_true(int(picks[i - 1]["energy_each"]) >= int(picks[i]["energy_each"]))
+	var boar: Dictionary = picks[ids.find("boar_hide")]
+	assert_eq(int(boar["count"]), 3)
+	assert_eq(int(boar["sell_each"]), 4)
+
+
+func test_tag_mult_validation() -> void:  # ART-013
+	var d := data()
+	var saved: Dictionary = d.artifact["energy"]["tag_mult"]
+	d.artifact["energy"]["tag_mult"] = {"beast_material": -1.0}
+	assert_true(ArtifactFunctions.validate(d).size() > 0, "negative")
+	d.artifact["energy"]["tag_mult"] = {"no_such_tag": 1.0}
+	assert_true(ArtifactFunctions.validate(d).size() > 0, "unused tag")
+	d.artifact["energy"]["tag_mult"] = saved
+	assert_eq(ArtifactFunctions.validate(d).size(), 0)

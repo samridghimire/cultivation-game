@@ -45,7 +45,35 @@ static func energy_value(data: GameData, item_id: String) -> int:
 	if item_id == "spirit_stone":
 		return int(rules.get("stone_energy", 1))
 	var price := int(data.items.get(item_id, {}).get("price", 0))
-	return floori(price * float(rules.get("item_energy_per_price", 0.0)))
+	return floori(price * float(rules.get("item_energy_per_price", 0.0)) * tag_mult(data, item_id))
+
+
+## ART-013: the artifact's taste. The highest `energy.tag_mult` among the item's tags (1.0 when none match; 0 = refused).
+static func tag_mult(data: GameData, item_id: String) -> float:
+	var mults: Dictionary = data.artifact.get("energy", {}).get("tag_mult", {})
+	var best := -1.0
+	for tag: Variant in data.items.get(item_id, {}).get("tags", []):
+		if mults.has(String(tag)):
+			best = maxf(best, float(mults[String(tag)]))
+	return 1.0 if best < 0.0 else best
+
+
+## ART-013: what `c` can feed, best energy first: [{id, name, count, energy_each, sell_each}]. Skips 0-energy and equipped items.
+static func feed_choices(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for item_id: String in c.inventory:
+		if item_id == "spirit_stone" or c.item_count(item_id) < 1 or c.equipment.values().has(item_id):
+			continue
+		var each := energy_value(data, item_id)
+		if each <= 0:
+			continue
+		var def: Dictionary = data.items.get(item_id, {})
+		out.append({"id": item_id, "name": String(def.get("name", item_id)), "count": c.item_count(item_id), "energy_each": each, "sell_each": int(def.get("price", 0))})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["energy_each"] != b["energy_each"]:
+			return int(a["energy_each"]) > int(b["energy_each"])
+		return String(a["id"]) < String(b["id"]))
+	return out
 
 
 ## ART-009: energy one `kind` of progress gives (data energy.progress; 0 if absent).
@@ -171,6 +199,8 @@ static func ready_to_unseal(c: CharacterData, data: GameData, flags: Dictionary)
 static func check_feed(c: CharacterData, data: GameData, item_id: String, quantity: int) -> String:
 	if quantity < 1 or c.item_count(item_id) < quantity:
 		return "You do not have enough."
+	if tag_mult(data, item_id) <= 0.0:
+		return "The artifact will not take this."
 	if energy_value(data, item_id) <= 0:
 		return "The artifact finds nothing worth devouring in that."
 	if c.artifact_energy >= int(data.artifact.get("energy", {}).get("max_energy", 0)):
@@ -322,6 +352,19 @@ static func validate(data: GameData) -> PackedStringArray:
 	var energy: Dictionary = data.artifact.get("energy", {})
 	if int(energy.get("stone_energy", 0)) < 1 or int(energy.get("max_energy", 0)) < 1 or float(energy.get("item_energy_per_price", -1.0)) < 0.0:
 		errors.append("artifact.json energy needs stone_energy >= 1, max_energy >= 1, item_energy_per_price >= 0")
+	var used_tags := {}
+	for item: Dictionary in data.items.values():
+		for tag: Variant in item.get("tags", []):
+			used_tags[String(tag)] = true
+	var tag_mults: Variant = energy.get("tag_mult", {})
+	if not (tag_mults is Dictionary):
+		errors.append("artifact.json energy.tag_mult must be an object")
+	else:
+		for tag: String in tag_mults:
+			if not (tag_mults[tag] is int or tag_mults[tag] is float) or float(tag_mults[tag]) < 0.0:
+				errors.append("artifact.json energy.tag_mult.%s must be a number >= 0" % tag)
+			elif not used_tags.has(tag):
+				errors.append("artifact.json energy.tag_mult.%s: no item has that tag" % tag)
 	var seen := {}
 	for def: Dictionary in data.artifact.get("functions", []):
 		var function_id := String(def.get("id", ""))

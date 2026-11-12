@@ -231,12 +231,10 @@ func _build_feed(p: CharacterData, data: GameData) -> void:
 	_title.text = "Feed the Artifact"
 	_info.text = "Artifact energy: %d. Fed items are consumed." % p.artifact_energy
 	_add_button("back", "Back", "", _show_page.bind(PAGE_MAIN))
-	for item_id in _sorted_ids(p.inventory, data):
-		var value := ArtifactFunctions.energy_value(data, item_id)
-		if value <= 0:
-			continue
-		var count := p.item_count(item_id)
-		var row := _add_row("%s x%d (+%d energy each)" % [_item_name(data, item_id), count, value])
+	for choice: Dictionary in ArtifactFunctions.feed_choices(p, data):
+		var item_id := String(choice["id"])
+		var count := int(choice["count"])
+		var row := _add_row("%s x%d (+%d energy each, sells for %d)" % [choice["name"], count, int(choice["energy_each"]), int(choice["sell_each"])])
 		_add_button("feed1_" + item_id, "Feed 1", ArtifactFunctions.check_feed(p, data, item_id, 1), GameState.feed_artifact.bind(item_id, 1), row)
 		if count > 1:
 			_add_confirm_button("feedall_" + item_id, "Feed all", ArtifactFunctions.check_feed(p, data, item_id, count), GameState.feed_artifact.bind(item_id, count), "Confirm: feed %d items?" % count, row)
