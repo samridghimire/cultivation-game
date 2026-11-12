@@ -1093,3 +1093,107 @@ static func _under_any(p: Vector2, rects: Array[Rect2]) -> bool:
 		if r.grow(2.0).has_point(p):
 			return true
 	return false
+
+
+## GFX-125: shallow pools, reed clumps and lily pads of a bog region's ground. Pure and seeded: the same seed and size
+## give the same output, and no pool or clump touches a keepout rect (roads, places, landmarks, arrival ring).
+## Returns {"pools": [{"pts": PackedVector2Array, "center": Vector2, "rect": Rect2, "lilies": Array[Dictionary]}],
+## "reeds": [{"pos": Vector2, "stalks": [{"dx": float, "h": float}]}]}.
+static func marsh_features(region_seed: int, size: Vector2, keepouts: Array[Rect2]) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = region_seed
+	var pools: Array[Dictionary] = []
+	var taken: Array[Rect2] = []
+	var tries := 0
+	var want := rng.randi_range(6, 10)
+	while pools.size() < want and tries < 400:
+		tries += 1
+		var rx := rng.randf_range(26.0, 62.0)
+		var ry := rx * rng.randf_range(0.4, 0.65)
+		var c := Vector2(rng.randf_range(rx + 40.0, size.x - rx - 40.0), rng.randf_range(ry + 40.0, size.y - ry - 40.0))
+		var rect := Rect2(c - Vector2(rx, ry) * 1.2, Vector2(rx, ry) * 2.4)
+		if _marsh_hits(rect, keepouts, taken, 14.0):
+			continue
+		var pts := PackedVector2Array()
+		var n := 14
+		for i in n:
+			var a := TAU * float(i) / float(n)
+			var j := rng.randf_range(0.78, 1.18)
+			pts.append(c + Vector2(cos(a) * rx * j, sin(a) * ry * j))
+		var lilies: Array[Dictionary] = []
+		if pools.size() < 3:
+			lilies = pond_lilies(Rect2(c - Vector2(rx, ry) * 0.8, Vector2(rx, ry) * 1.6), rng.randi(), 3)
+		pools.append({"pts": pts, "center": c, "rect": rect, "lilies": lilies})
+		taken.append(rect)
+	var reeds: Array[Dictionary] = []
+	var clump_rects: Array[Rect2] = []
+	for pool: Dictionary in pools:
+		for k in 2:
+			var a := rng.randf() * TAU
+			var r: Rect2 = pool["rect"]
+			var at: Vector2 = pool["center"] + Vector2(cos(a) * r.size.x * 0.46, sin(a) * r.size.y * 0.46)
+			_marsh_add_reeds(reeds, clump_rects, at, rng, keepouts, taken, size)
+	for i in 14:
+		var at := Vector2(rng.randf_range(40.0, size.x - 40.0), rng.randf_range(40.0, size.y - 40.0))
+		_marsh_add_reeds(reeds, clump_rects, at, rng, keepouts, taken, size)
+	return {"pools": pools, "reeds": reeds}
+
+
+## GFX-125: `count` lily pads (centre and radius) scattered inside `rect`'s ellipse; seeded.
+static func pond_lilies(rect: Rect2, seed_value: int, count: int) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var out: Array[Dictionary] = []
+	for i in count:
+		var a := rng.randf() * TAU
+		var d := sqrt(rng.randf()) * 0.75
+		out.append({"pos": rect.get_center() + Vector2(cos(a) * rect.size.x * 0.5 * d, sin(a) * rect.size.y * 0.5 * d), "r": rng.randf_range(3.0, 5.0)})
+	return out
+
+
+## GFX-125: the keepouts of a bog's ground features: roads, places, landmarks, NPC spots and the arrival ring.
+static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
+	var out := blocked_rects(region)
+	for lm in landmark_rects(region):
+		out.append(lm.grow(14.0))
+	for spot: Array in region.get("npc_spots", []):
+		out.append(Rect2(float(spot[0]) - 40.0, float(spot[1]) - 40.0, 80.0, 80.0))
+	var arrival: Array = []
+	if region.has("spawn"):
+		arrival.append(region["spawn"])
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) == "travel":
+			arrival.append(place.get("pos", [0, 0]))
+	for a: Array in arrival:
+		out.append(Rect2(float(a[0]) - 90.0, float(a[1]) - 90.0, 180.0, 180.0))
+	return out
+
+
+static func _marsh_hits(rect: Rect2, keepouts: Array[Rect2], taken: Array[Rect2], gap: float) -> bool:
+	for k in keepouts:
+		if k.intersects(rect):
+			return true
+	for t in taken:
+		if t.grow(gap).intersects(rect):
+			return true
+	return false
+
+
+static func _marsh_add_reeds(out: Array[Dictionary], clump_rects: Array[Rect2], at: Vector2, rng: RandomNumberGenerator, keepouts: Array[Rect2], pools: Array[Rect2], size: Vector2) -> void:
+	var rect := Rect2(at - Vector2(14, 22), Vector2(28, 30))
+	if rect.position.x < 8.0 or rect.position.y < 8.0 or rect.end.x > size.x - 8.0 or rect.end.y > size.y - 8.0:
+		return
+	for k in keepouts:
+		if k.intersects(rect):
+			return
+	for cr in clump_rects:
+		if cr.intersects(rect):
+			return
+	for pr in pools:
+		if pr.grow(-10.0).intersects(Rect2(at - Vector2(2, 2), Vector2(4, 4))):
+			return
+	var stalks: Array[Dictionary] = []
+	for i in rng.randi_range(3, 7):
+		stalks.append({"dx": rng.randf_range(-10.0, 10.0), "h": rng.randf_range(12.0, 22.0)})
+	clump_rects.append(rect)
+	out.append({"pos": at, "stalks": stalks})

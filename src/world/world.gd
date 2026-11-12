@@ -45,6 +45,7 @@ var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+var _marsh: Dictionary = {}  ## GFX-125: Scenery.marsh_features of a bog region, else empty
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
 var _season := ""
@@ -487,6 +488,9 @@ func _build_decor() -> void:
 	_decor = Scenery.place(_region, rng)
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
 	_relief = Scenery.relief_layout(_region)
+	_marsh = {}
+	if str(_region.get("map", {}).get("ground_style", "")) == "bog":
+		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region))
 	_edge = Scenery.edge_props(_region, map_size)
 	_crags = Scenery.high_crags(_region)
 	if not _crags.is_empty():  # GFX-123: nothing grows on a crag
@@ -1149,8 +1153,10 @@ func _draw() -> void:
 	_draw_relief(map)
 	_draw_crags(map)
 	_draw_sect_courts()
+	_draw_marsh_pools()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	_draw_marsh_life(map)
 	if Scenery.is_snowy(_season) and not bool(map.get("no_snow", false)):
 		for lm: Dictionary in map.get("landmarks", []):  # GFX-114: after the ponds, so the ice shows
 			if lm.get("kind", "") == "jetty":
@@ -1171,6 +1177,63 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-125: shallow pools of a bog (pale ice with a crack in winter, ripples in rain). Drawn under the landmarks.
+func _draw_marsh_pools() -> void:
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for pool: Dictionary in _marsh.get("pools", []):
+		var pts: PackedVector2Array = pool["pts"]
+		var c: Vector2 = pool["center"]
+		var r: Rect2 = pool["rect"]
+		var rim := PackedVector2Array()
+		for q in pts:
+			rim.append(c + (q - c) * 1.12)
+		if winter:
+			draw_colored_polygon(rim, Color("b9c9d6"))
+			draw_colored_polygon(pts, Color("dfe9f1"))
+			draw_line(c + Vector2(-r.size.x * 0.25, -2), c + Vector2(r.size.x * 0.1, 3), Color("8fa3b5"), 1.0)
+			draw_line(c + Vector2(r.size.x * 0.1, 3), c + Vector2(r.size.x * 0.22, -4), Color("8fa3b5"), 1.0)
+			continue
+		draw_colored_polygon(rim, Color("5d7a6a"))
+		draw_colored_polygon(pts, Color("1f3d3f"))
+		var hi := PackedVector2Array()
+		for q in pts:
+			hi.append(c + (q - c) * 0.55 + Vector2(-3, -2))
+		draw_colored_polygon(hi, Color("2d5654"))
+		draw_line(c + Vector2(-r.size.x * 0.2, -r.size.y * 0.12), c + Vector2(-r.size.x * 0.02, -r.size.y * 0.16), Color(0.7, 0.85, 0.9, 0.35), 1.0)
+		if _weather_kind in ["rain", "storm"]:
+			for off in [Vector2(-10, 2), Vector2(8, -4)]:
+				draw_arc(c + off, 4.0, 0.0, TAU, 12, Color(0.8, 0.9, 0.95, 0.4), 1.0)
+
+
+## GFX-125: lily pads on the pools and the bog's ponds, then reed clumps (snow caps in winter).
+func _draw_marsh_life(map: Dictionary) -> void:
+	if _marsh.is_empty():
+		return
+	var winter := GroundTiles.ground_season(_season, map) == "Winter"
+	var pads: Array[Dictionary] = []
+	for pool: Dictionary in _marsh["pools"]:
+		pads.append_array(pool["lilies"])
+	for lm: Dictionary in map.get("landmarks", []):
+		if lm.get("kind", "") == "pond":
+			var sz := _vec(lm["size"])
+			pads.append_array(Scenery.pond_lilies(Rect2(_vec(lm["pos"]) - sz / 2.0, sz), hash(str(lm["pos"])), 4))
+	if not winter:
+		for pad: Dictionary in pads:
+			var pr: float = pad["r"]
+			draw_circle(pad["pos"], pr, Color("4f8a45"))
+			draw_circle(pad["pos"] + Vector2(1, -1), pr * 0.45, Color("6fae5a"))
+	for clump: Dictionary in _marsh["reeds"]:
+		var at: Vector2 = clump["pos"]
+		draw_circle(at + Vector2(0, 2), 9.0, Color(0, 0, 0, 0.18))
+		for st: Dictionary in clump["stalks"]:
+			var base := at + Vector2(float(st["dx"]), 0.0)
+			var top := base + Vector2(float(st["dx"]) * 0.15, -float(st["h"]))
+			draw_line(base, top, Color("6f7f3e") if not winter else Color("8a8a5a"), 1.0)
+			draw_rect(Rect2(top + Vector2(-1, -4), Vector2(2, 5)), Color("6b4a2a"))
+			if winter:
+				draw_rect(Rect2(top + Vector2(-2, -5), Vector2(4, 2)), Color("f4f8ff"))
 
 
 ## GFX-110: the strips past the map edge show the region's own ground, darkening toward the outer edge (WU-485: no engine grey).
@@ -1938,6 +2001,11 @@ func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_val
 
 
 func _draw_tree_bare(p: Vector2, k: float, c: Color, snowy: bool, broken_stub: bool) -> void:
+	if not _marsh.is_empty() and not snowy:  # GFX-125: a root shadow and a little standing water at the foot
+		draw_set_transform(p + Vector2(0, 16) * k, 0.0, Vector2(1.0, 0.3))
+		draw_circle(Vector2.ZERO, 14.0 * k, Color(0.05, 0.1, 0.1, 0.4))
+		draw_circle(Vector2(5, 0) * k, 8.0 * k, Color(0.12, 0.26, 0.28, 0.8))
+		draw_set_transform(Vector2.ZERO)
 	# Dead trees (broken_stub): a darker trunk with a 1 px pale bark highlight so they read on dark bog.
 	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("2a1f16") if broken_stub else Color("4a3524"))
 	if broken_stub:

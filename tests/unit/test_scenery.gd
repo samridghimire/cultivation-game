@@ -679,3 +679,31 @@ func test_fishing_place_touches_its_jetty() -> void:
 					var d := Vector2(float(p["pos"][0]), float(p["pos"][1])).distance_to(end)
 					assert_true(d <= 24.0, "%s: %s is %.0f px from the jetty's land end %s (place %s)" % [region["id"], p["display_name"], d, end, p["pos"]])
 	assert_true(checked >= 5)
+
+
+func test_marsh_features_keep_out_and_are_seeded() -> void:
+	var keep: Array[Rect2] = [Rect2(0, 440, 800, 120), Rect2(300, 100, 150, 120)]
+	var a := Scenery.marsh_features(42, Vector2(800, 600), keep)
+	var b := Scenery.marsh_features(42, Vector2(800, 600), keep)
+	assert_eq(a["pools"].size(), b["pools"].size(), "same seed, same pools")
+	assert_eq(a["reeds"].size(), b["reeds"].size(), "same seed, same reeds")
+	assert_true(a["pools"].size() >= 1, "some pools fit")
+	assert_true(a["reeds"].size() >= 1, "some reeds")
+	for pool: Dictionary in a["pools"]:
+		for q: Vector2 in pool["pts"]:
+			for k in keep:
+				assert_false(k.has_point(q), "pool point inside a keepout")
+	for clump: Dictionary in a["reeds"]:
+		for k in keep:
+			assert_false(k.has_point(clump["pos"]), "reed inside a keepout")
+		var n: int = clump["stalks"].size()
+		assert_true(n >= 3 and n <= 7, "3-7 stalks")
+
+
+func test_marsh_keepouts_cover_roads_places_and_arrival() -> void:
+	var region := _region()
+	var keep := Scenery.marsh_keepouts(region)
+	var f := Scenery.marsh_features(7, Vector2(800, 600), keep)
+	for pool: Dictionary in f["pools"]:
+		assert_false(Rect2(310, 460, 180, 160).intersects(pool["rect"]), "pool clear of the arrival ring")
+		assert_false(Rect2(0, 280, 800, 40).intersects(pool["rect"]), "pool clear of the road")
