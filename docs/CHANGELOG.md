@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-12 [WU-517] The journal's Today tab reads in three short headed blocks instead of one long list.
+- 2026-11-12 [GFX-121] Sect halls stand on their own ground: a stilted boardwalk in the marsh, a stone terrace on Azure Peak.
+- 2026-11-12 [C-344] Eight new encounters on Myriad Peaks Ridge for Core Formation cultivators.
+- 2026-11-12 [WU-516] The stats panel shows "Withered Bone Marsh" whole.
+- 2026-11-12 [GFX-120] Mist shows on snow, and every fishing place stands at the end of its jetty.
+- 2026-11-12 [FORAGE-006] A region can have its own signature find by the path, listed first in Today.
+- 2026-11-12 [QA-208] The balance baseline is refreshed, with every drift explained.
+- 2026-11-12 [FOLK-032] Villagers no longer crowd round the signpost where you arrive.
+- 2026-11-12 [GFX-119] Fallen Star Market bustles: stalls, handcarts, lantern strings and shoppers.
+- 2026-11-12 [TODAY-004] Today says the market once and reads the almanac in good grammar.
+- 2026-11-12 [CAL-011] The almanac's omen is posted at dawn, and tomorrow's omen ends the reminders.
+- 2026-11-11 [WU-515] Beasts no longer roam right next to the road you arrive by.
 - 2026-11-11 [C-350] Misty Forest and Fallen Star Market have repeatable paid work too: a woodcutter and a porters' foreman.
 - 2026-11-10 [FISH-010] A fishing trip tells one story in the log, no doubled "slips away" lines.
 - 2026-11-10 [C-349] Six more almanac omens in the village almanac's voice.
