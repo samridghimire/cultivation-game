@@ -570,6 +570,14 @@ func _build_status_panel() -> void:
 	_build_guide_panel()
 
 
+## WU-516: gives the region name the width its text needs (capped to the row), so it never shows a cut word without "…".
+func _fit_region_name() -> void:
+	var font: Font = _region_name.get_theme_font("font")
+	var text_w := ceilf(font.get_string_size(_region_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x) + 2.0
+	var chip_w := ceilf(_region_chip.get_theme_font("font").get_string_size(_region_chip.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x) + 2.0
+	_region_name.custom_minimum_size.x = minf(text_w, STATUS_TEXT_WIDTH - chip_w - 6.0)
+
+
 func _small_icon() -> TextureRect:
 	var t := TextureRect.new()
 	t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -749,8 +757,9 @@ func _refresh() -> void:
 	_refresh_date_row(data)
 	_refresh_companion_chip(p)
 	_status.text = alignment_line(Alignment.tier_name(p.alignment, data), Sects.describe(p, data))
-	_region_name.text = Exploration.region_name(data, GameState.current_region)
 	_region_chip.text = region_chip_text(density)
+	_region_name.text = Exploration.region_name(data, GameState.current_region)
+	_fit_region_name()
 	_region_chip.add_theme_color_override("font_color", region_chip_color(density))
 	var extra := region_event_suffix(data, GameState.world_events, GameState.current_region, p).strip_edges()
 	if SecretRealms.open_in_region(data, GameState.current_region, GameClock.total_days):

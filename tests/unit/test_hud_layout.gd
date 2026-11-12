@@ -209,3 +209,23 @@ func test_status_card_text_fits_width() -> void:
 	assert_eq(HudScript.region_chip_text(1.8), "Qi x1.8")
 	assert_true(HudScript.region_chip_color(1.8).g > HudScript.region_chip_color(1.0).g)
 	_done(hud)
+
+
+## WU-516: every region name either fits its label whole or ends with an ellipsis, never a cut word.
+func test_region_name_fits_or_ellipsis() -> void:
+	var hud := await _build()
+	var gs: Node = _tree().root.get_node("GameState")
+	var label: Label = hud.get("_region_name")
+	var font: Font = label.get_theme_font("font")
+	for id: String in gs.data.regions.keys():
+		gs.current_region = id
+		hud.call("_refresh")
+		await _tree().process_frame
+		await _tree().process_frame
+		var full: String = label.text
+		var need := font.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		if need <= label.size.x:
+			assert_true(label.get_combined_minimum_size().x >= need - 1.0, id + " name keeps its width")
+		else:
+			assert_true(label.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS, id + " trims with an ellipsis")
+	_done(hud)
