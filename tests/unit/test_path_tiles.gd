@@ -32,3 +32,41 @@ func test_nothing_on_bridge() -> void:
 	for style in ["grass", "scree", "bog"]:
 		for t in Scenery.path_tiles(_region(style), rect):
 			assert_false(bridge.intersects(t["rect"]), style + " tile on bridge")
+
+
+## GFX-124: walked earth: pebbles/footprints, rain puddles, winter-covered ruts, nothing under a place.
+func test_walked_earth() -> void:
+	var rect := Rect2(0, 470, 1600, 60)
+	var kinds := {}
+	for t in Scenery.path_tiles(_region("grass"), rect):
+		kinds[t["kind"]] = true
+	assert_true(kinds.has("pebble") and kinds.has("print"), "pebbles and footprints")
+	assert_false(kinds.has("puddle"), "dry day has no puddles")
+	var wet := Scenery.path_tiles(_region("grass"), rect, "rain")
+	var sky := 0
+	for t in wet:
+		if t["flag"] == "sky":
+			sky += 1
+			assert_true(rect.grow(0.01).encloses(t["rect"]), "puddle inside road")
+	assert_true(sky > 0, "rain puddles")
+	for t in Scenery.path_tiles(_region("grass"), rect, "rain", true):
+		assert_false(t["kind"] == "puddle", "no puddles in snow")
+	var ruts_w := 0
+	for t in Scenery.path_tiles(_region("grass"), rect, "clear", true):
+		if t["kind"] == "rut":
+			ruts_w += 1
+	var ruts_s := 0
+	for t in Scenery.path_tiles(_region("grass"), rect):
+		if t["kind"] == "rut":
+			ruts_s += 1
+	assert_true(ruts_w < ruts_s, "snow covers most ruts")
+
+
+func test_nothing_under_a_place() -> void:
+	var rect := Rect2(0, 470, 1600, 60)
+	var reg := _region("grass")
+	reg["places"] = [{"type": "merchant", "pos": [800, 500], "size": [200, 100]}]
+	var k := Npcs.place_keepout(reg["places"][0])
+	for t in Scenery.path_tiles(reg, rect, "rain"):
+		if t["kind"] in ["pebble", "print", "puddle", "tuft"]:
+			assert_false(k.intersects(t["rect"]), "decor under a place")

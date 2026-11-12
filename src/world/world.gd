@@ -1807,7 +1807,7 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
 ## GFX-112: the road surface (ruts, slabs, planks, puddles, tufts) over one path rect.
 func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
-	for t: Dictionary in Scenery.path_tiles(_region, rect):
+	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
 		var c := base
@@ -1828,7 +1828,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 			"rut", "edge":
 				draw_rect(r, base.darkened(0.22 if t["kind"] == "rut" else 0.12))
 			"puddle":
-				draw_rect(r, Color(0.2, 0.26, 0.3, 0.8))
+				draw_rect(r, Color(0.5, 0.6, 0.7, 0.7) if t["flag"] == "sky" else Color(0.2, 0.26, 0.3, 0.8))
+			"pebble":
+				draw_rect(r, base.lightened(0.18) if shade > 0.0 else base.darkened(0.3))
+			"print":
+				draw_rect(r, base.darkened(0.15))
 			"tuft":
 				var g := Color(map_grass_color())
 				draw_rect(r, g.lightened(0.1) if shade > 0.0 else g)

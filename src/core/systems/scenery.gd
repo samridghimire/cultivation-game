@@ -563,7 +563,7 @@ static func paving_shade(base: Color, seed: int) -> Color:
 ## {kind: slab|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
 ## slabs; bog with map.water murky = planks across the path; other bog = a muddy track with puddles; grass/litter = two
 ## worn ruts, a dark edge strip on each side and tufts creeping in. Every rect lies inside `path_rect`; none overlaps a stream crossing (a bridge).
-static func path_tiles(region: Dictionary, path_rect: Rect2) -> Array[Dictionary]:
+static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "clear", winter: bool = false) -> Array[Dictionary]:
 	var map: Dictionary = region.get("map", {})
 	var style := str(map.get("ground_style", "grass"))
 	var rng := RandomNumberGenerator.new()
@@ -617,6 +617,15 @@ static func path_tiles(region: Dictionary, path_rect: Rect2) -> Array[Dictionary
 			if k == "tuft" and rng.randf() < 0.4:
 				continue
 			out.append({"kind": k, "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - sz.x, 0.0), across, sz.x, sz.y), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+		# GFX-124: walked earth: pebbles and footprints, and sky-coloured puddles on wet days (never in snow).
+		var wet := weather in ["rain", "storm"] and not winter
+		for i in int(len_total / 30.0):
+			var k2 := "pebble" if rng.randf() < 0.6 else "print"
+			var sz2 := Vector2(2.0, 2.0) if k2 == "pebble" else Vector2(3.0, 2.0)
+			out.append({"kind": k2, "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - sz2.x, 0.0), rng.randf_range(inset + strip, maxf(width - inset - strip - sz2.y, inset + strip)), sz2.x, sz2.y), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+		if wet and style != "bog":
+			for i in int(len_total / 120.0) + 1:
+				out.append({"kind": "puddle", "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - 12.0, 0.0), rng.randf_range(inset + strip, maxf(width - inset - strip - 5.0, inset + strip)), 12.0, 5.0), "shade": 0.0, "flag": "sky"})
 	var kept: Array[Dictionary] = []
 	for t in out:
 		var hit := false
@@ -624,6 +633,16 @@ static func path_tiles(region: Dictionary, path_rect: Rect2) -> Array[Dictionary
 			if b.intersects(t["rect"]):
 				hit = true
 				break
+		if not hit and str(t["kind"]) in ["pebble", "print", "puddle", "tuft"]:
+			for pl: Dictionary in region.get("places", []):
+				if Npcs.place_keepout(pl).intersects(t["rect"]):
+					hit = true
+					break
+		if not hit and winter and t["kind"] == "rut":  # GFX-124: snow covers the ruts except a trodden centre
+			var tr: Rect2 = t["rect"]
+			var mid := path_rect.get_center()
+			var centre := absf((tr.get_center().y - mid.y) if along_x else (tr.get_center().x - mid.x)) < width * 0.2
+			hit = not centre
 		if not hit:
 			kept.append(t)
 	return kept
