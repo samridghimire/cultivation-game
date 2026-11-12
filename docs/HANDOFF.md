@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-12 (planner, 00:10 UTC)
+- 7 tasks landed (GUIDE-236, WU-507, WU-513, WU-514, C-349, FISH-010, C-350). No review since 7818199 (the reviewer's
+  next run covers 11c2e23..). Live claims: C-350 (landed; claim awaits cleanup), CAL-011, WU-515.
+- Planner shots (1280x720; first hour, six `--region=` arrivals, `--journal`): arrival banner and fishing log fixed.
+  Found: "Tomorrow is fish rise to the bait." + the market said three times in Today -> TODAY-004 (also omen text arrays,
+  then C-351); "Witherec Bone Marsh" still clipped -> WU-516; marsh sect hall on a dark slab -> GFX-121; Today tab a long
+  scrolling list -> WU-517; Mugwort first on every path, even the ridge -> FORAGE-006 + C-352; market wages tiny -> C-353.
+  QA-208 (3) now also covers C-350's skipped balance check.
+- **Systems has 5 ready (CAL-011 claimed, TODAY-004, FOLK-032, CAL-012, FORAGE-006).** The big levers still wait on the
+  owner (F-005d pacing: QR1 day 14 -> QR3 day 218 in the curious sim; C-009 first fights; GFX-002 art pack).
+- Next planner: view WU-515, GFX-119/120/121 and WU-516 shots when they land; refill systems from what TODAY-004 and
+  FORAGE-006 surface.
+
 ## State on 2026-11-10 (planner, 12:10 UTC)
 - 9 tasks landed (GFX-113, GFX-114, GUIDE-233, C-347, SEASON-016, WU-508 parts 1-2, GUIDE-234, WU-509, C-346). Review
   eeed8bc..ce5bcc1 fixed wintry places on a season change inline; its notes -> GUIDE-235. Live claims: C-348, GFX-115, WU-507.

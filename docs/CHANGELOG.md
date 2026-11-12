@@ -2,6 +2,13 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-11 [C-350] Misty Forest and Fallen Star Market have repeatable paid work too: a woodcutter and a porters' foreman.
+- 2026-11-10 [FISH-010] A fishing trip tells one story in the log, no doubled "slips away" lines.
+- 2026-11-10 [C-349] Six more almanac omens in the village almanac's voice.
+- 2026-11-10 [WU-514] Arriving somewhere says today's news once, not three times.
+- 2026-11-10 [WU-513] The almanac sits under the date in Today, and the calendar shows each day's omen.
+- 2026-11-10 [WU-507] The HUD's stats panel fits: region name with a Qi chip, long sect ranks trimmed.
+- 2026-11-10 [GUIDE-236] A new sect disciple is told where their sect's home hall is and what waits there.
 - 2026-11-10 [SECT-006] The steward at your own sect hall has chores for contribution.
 - 2026-11-10 [GFX-118] Misty Forest is misty again, and its summer trees are in leaf.
 - 2026-11-10 [CAL-010] The village almanac: each day's omen favours fishing, gathering, gifts, selling or practice.
