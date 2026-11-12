@@ -80,3 +80,35 @@ func _fish_per_day(rows: Array[Dictionary]) -> float:
 		if String(r.get("kind", "")) == "fishing":
 			return float(r["per_day"])
 	return 0.0
+
+
+## FOLK-033: omen `talk` validation and the 25% greeting path.
+func test_talk_validation() -> void:
+	var d := data()
+	assert_eq(Almanac.validate(d).size(), 0)
+	d.almanac["omens"].append({"id": "t1", "name": "T", "text": "t", "weight": 1, "boost": {}, "talk": []})
+	assert_gt(Almanac.validate(d).size(), 0)
+	d.almanac["omens"].pop_back()
+	d.almanac["omens"].append({"id": "t2", "name": "T", "text": "t", "weight": 1, "boost": {}, "talk": ["x".repeat(91)]})
+	assert_gt(Almanac.validate(d).size(), 0)
+	d.almanac["omens"].pop_back()
+
+
+func test_villager_greeting_uses_omen_talk_a_quarter_of_the_time() -> void:
+	var d := data()
+	var saved: Array = d.almanac["omens"]
+	var talk: Array = ["Calm water today.", "Fish are hungry."]
+	d.almanac["omens"] = [{"id": "f", "name": "F", "text": "t", "weight": 1, "boost": {"fishing_mult": 1.2}, "talk": talk}]
+	var day := 10
+	var npc := new_character()
+	npc.id = "villager_x"
+	var rng := seeded_rng(7)
+	var hits := 0
+	for i in 400:
+		if talk.has(Folk.greeting(npc, 0, day, d, {}, "", "", rng, 5)):
+			hits += 1
+	assert_true(hits > 60 and hits < 140, "hits %d" % hits)
+	assert_eq(Folk.greeting(npc, 0, day, d), "")
+	d.almanac["omens"] = [{"id": "p", "name": "P", "text": "t", "weight": 1, "boost": {}}]
+	assert_eq(Folk.greeting(npc, 0, day, d, {}, "", "", seeded_rng(7), 5), "")
+	d.almanac["omens"] = saved
