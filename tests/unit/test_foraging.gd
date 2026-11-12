@@ -243,3 +243,30 @@ func test_picking_counts_and_posts_tier_line() -> void:
 	assert_eq(gs.player.forage_picks, 25)
 	assert_eq(CharacterData.from_dict(gs.player.to_dict()).forage_picks, 25)
 	gs.end_session()
+
+
+## FORAGE-006: a region's signature item takes slot 0 on days it is available; other slots stay put.
+func test_signature_item() -> void:
+	var d := _gdata()
+	var old: Variant = d.regions["misty_forest"]["forage"]
+	var items: Array = [
+		{"item": "dew_grass", "weight": 5},
+		{"item": "village_mugwort", "weight": 5},
+		{"item": "peach_blossom_petal", "weight": 1, "seasons": ["spring"]}]
+	d.regions["misty_forest"]["forage"] = {"count": [3, 3], "items": items}
+	var plain: Array = []
+	for day in [0, 1, 2]:
+		plain.append(Foraging.nodes(d, "misty_forest", day, 0, {}))
+	d.regions["misty_forest"]["forage"] = {"count": [3, 3], "items": items, "signature": "peach_blossom_petal"}
+	for day in [0, 1, 2]:  # spring
+		var n := Foraging.nodes(d, "misty_forest", day, 0, {})
+		assert_eq(String(n[0]["item"]), "peach_blossom_petal")
+		assert_eq(n.size(), 3)
+		assert_eq(n[1], plain[day][1])
+		assert_eq(n[2], plain[day][2])
+	for n in Foraging.nodes(d, "misty_forest", 150, 0, {}):  # summer: out of season, slot 0 rolls normally
+		assert_true(String(n["item"]) != "peach_blossom_petal")
+	d.regions["misty_forest"]["forage"] = {"count": [3, 3], "items": items, "signature": "spirit_herb"}
+	assert_false(Foraging.validate(d).is_empty())
+	d.regions["misty_forest"]["forage"] = old
+	assert_true(Foraging.validate(d).is_empty())

@@ -41,6 +41,8 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 	var season := Calendar.season_of(day)
 	var pool: Array[Dictionary] = []
 	var total := 0.0
+	var sig_id := String(def.get("signature", ""))
+	var signature: Dictionary = {}
 	for entry: Dictionary in def.get("items", []):
 		if not Exploration.in_season(entry, season):
 			continue
@@ -50,6 +52,8 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 			continue
 		pool.append(entry)
 		total += float(entry["weight"])
+		if String(entry["item"]) == sig_id and signature.is_empty():
+			signature = entry
 	if pool.is_empty():
 		return out
 	var count_range: Array = def.get("count", [0, 0])
@@ -68,6 +72,8 @@ static func nodes(data: GameData, region_id: String, day: int, realm_index: int,
 			if roll < 0.0:
 				pick = entry
 				break
+		if slot == 0 and not signature.is_empty():
+			pick = signature  # FORAGE-006: the path's own find; the roll above is still drawn so later slots stay put
 		var lo := int(pick.get("min", 1))
 		var amount := rng.randi_range(lo, int(pick.get("max", lo)))
 		if tier >= 3 and eye.randf() < BONUS_COPY_CHANCE:
@@ -130,6 +136,13 @@ static func validate(data: GameData) -> PackedStringArray:
 		if not (entries is Array and not entries.is_empty()):
 			errors.append("%s needs a non-empty items list" % where)
 			continue
+		if def.has("signature"):
+			var listed := false
+			for se: Variant in entries:
+				if se is Dictionary and String(se.get("item", "")) == String(def["signature"]):
+					listed = true
+			if not listed:
+				errors.append("%s signature '%s' must be an item listed in its items" % [where, def["signature"]])
 		for e: Variant in entries:
 			if not e is Dictionary or not data.items.has(String(e.get("item", ""))):
 				errors.append("%s has an unknown item" % where)

@@ -267,6 +267,9 @@ static func _forage_phrase(c: CharacterData, data: GameData, region_id: String, 
 	for n: Dictionary in nodes:
 		var nm2 := String(data.items.get(String(n["item"]), {}).get("name", n["item"]))
 		rank[nm2] = float(weights.get(String(n["item"]), 1e9))
+	var sig_id := String(data.regions.get(region_id, {}).get("forage", {}).get("signature", ""))
+	if sig_id != "":
+		rank[String(data.items.get(sig_id, {}).get("name", sig_id))] = -1.0  # FORAGE-006: the path's own find first
 	names.sort_custom(func(a: String, b: String) -> bool:
 		if rank[a] != rank[b]:
 			return rank[a] < rank[b]
