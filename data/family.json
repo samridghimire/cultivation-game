@@ -154,6 +154,22 @@
     "Good day, {player}. Hunters tell it that {subject} fell to you. I'd not have dared.",
     "Careful, {player}. Slaying {subject} makes you a name, and names get hunted."
    ],
+   "bounty": [
+    "{player}, they say you collected the bounty on {subject}. Coin well earned.",
+    "{player}, {subject} is struck off the board at last. Your doing?",
+    "{subject}, finished, {player}? The notice-board will want a new name now.",
+    "{player}, word is you claimed the reward for {subject}. Spend it wisely.",
+    "They say {subject} is no more, {player}. The roads feel a little safer.",
+    "Careful, {player}. A bounty paid today is a grudge earned somewhere."
+   ],
+   "village_hunt": [
+    "{player}, they say you rode out with the hunters and the {subject} fell. Good work.",
+    "Good day, {player}. The {subject} hunt went well, they tell me. The meat was welcome.",
+    "{player}, you hunted the {subject} with our people. We will not forget it.",
+    "The {subject}, brought down, and you there beside the hunters. Well done, {player}.",
+    "Hunters speak well of you, {player}. The {subject} would have taken a field this winter.",
+    "Good day, {player}. Our larders thank you for that {subject}."
+   ],
    "great_trail": [
     "{player}, they say the last of the {subject} trail is ended. The whole village breathes easier.",
     "Good day, {player}. You walked the hunters' trail to its end and felled {subject}. We will tell it for years.",

@@ -1055,7 +1055,10 @@ func _fight_bounty(enemy_id: String, spoils: Dictionary = {}) -> bool:
 ## Pay the active bounty `bounty_id` for a beaten quarry (shared by the bounty fight and WILD-008's great beast).
 ## `lead` starts the single message ("The Great Wild Boar was your quarry."); empty gives the plain line.
 func _pay_bounty(bounty_id: String, enemy_name: String, lead: String = "") -> void:
+	var bounty_region := String(Bounties.def_of(data, bounty_id).get("region", current_region))
 	var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
+	if int(paid["stones"]) > 0:
+		Folk.record_news(world_flags, "bounty", enemy_name, bounty_region, GameClock.total_days)
 	var stones := int(paid["stones"])
 	var bonus_line := " Your name earned you %d more." % int(paid["bonus"]) if int(paid["bonus"]) > 0 else ""
 	EventBus.post("%sBounty claimed: %d spirit stones.%s" % [(lead + " ") if lead != "" else "", stones, bonus_line], "progress")
@@ -3934,6 +3937,7 @@ func join_village_hunt() -> bool:
 		_pass_time(extra)
 	if won:
 		Wildlife.record_hunt(player, enemy_id)
+		Folk.record_news(world_flags, "village_hunt", String(data.enemies[enemy_id]["name"]).to_lower(), region, GameClock.total_days)
 		_season_note("hunt", enemy_id, 1)
 		var spoils := Wildlife.inventory_gain(before, player.inventory)
 		for item_id: String in spoils:

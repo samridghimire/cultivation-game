@@ -1129,3 +1129,36 @@ func test_project_news_validation_rejects_unknown_placeholder() -> void:  # SEAS
 	assert_true(SeasonTasks.validate(d).size() > 0)
 	proj["news"] = saved
 	assert_eq(SeasonTasks.validate(d).size(), 0)
+
+
+func test_bounty_and_hunt_news_reach_nearby_villagers_only() -> void:
+	var npcs := {}
+	_village(npcs, 1)
+	var npc: CharacterData = npcs.values()[0]
+	for kind: String in ["bounty", "village_hunt"]:
+		var lines: Array = data().family["folk_greetings"]["news"][kind]
+		assert_eq(lines.size(), 6, kind)
+		var flags := {}
+		Folk.record_news(flags, kind, "Red Boar", "qingshi_village", 10)
+		var line := Folk.news_line(npc, flags, data(), "qingshi_village", 11)
+		assert_true(line != "" and not line.contains("{subject}"), kind)
+		assert_true(lines.any(func(l: Variant) -> bool: return String(l).replace("{subject}", "Red Boar") == line), kind)
+		assert_eq(Folk.news_line(npc, flags, data(), "qingshi_village", 30), "", "stale")
+		for rid: String in data().regions:
+			if rid != "qingshi_village" and not Exploration.is_nearby(data(), "qingshi_village", rid):
+				assert_eq(Folk.news_line(npc, flags, data(), rid, 11), "", "far region " + rid)
+
+
+func test_greeting_is_side_effect_free() -> void:
+	var d := data()
+	var saved: Array = d.almanac["omens"]
+	d.almanac["omens"] = [{"id": "f", "name": "F", "text": "t", "weight": 1, "boost": {}, "talk": ["Calm water."]}]
+	var npc := new_character()
+	npc.id = "villager_y"
+	var rng := seeded_rng(3)
+	var before := rng.state
+	var a := Folk.greeting(npc, 0, 12, d, {}, "", "", rng, 5)
+	var b := Folk.greeting(npc, 0, 12, d, {}, "", "", rng, 5)
+	assert_eq(a, b)
+	assert_eq(rng.state, before, "no rng draw")
+	d.almanac["omens"] = saved

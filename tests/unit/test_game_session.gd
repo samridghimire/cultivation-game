@@ -3427,6 +3427,8 @@ func test_village_hunt_days_and_hunter() -> void:
 	assert_eq(int(gs.world_flags[VillageHunt.FLAG]), 180, "spent win or lose")
 	if won and gs.npcs[hunter_id].alive:
 		assert_eq(int(gs.npc_favor[hunter_id]), 3, "+1 village, +2 hunter")
+	if won:
+		assert_eq(String(gs.world_flags["village_news"]["kind"]), "village_hunt", "FOLK-034")
 	gs.end_session()
 
 

@@ -152,6 +152,7 @@ func test_gamestate_win_claims_the_bounty() -> void:
 	assert_true(c.bounty.is_empty(), "claimed")
 	assert_eq(c.item_count("spirit_stone"), stones + 25)
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
+	assert_eq(String(gs.world_flags["village_news"]["kind"]), "bounty", "FOLK-034: the village hears of it")
 	_finish(gs)
 
 

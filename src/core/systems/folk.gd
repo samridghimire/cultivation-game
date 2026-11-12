@@ -99,7 +99,7 @@ const ALMANAC_TALK_CHANCE := 0.25
 ## What `npc` says in passing (WORLD-003) given the player's `favor` with them: a warm or cool line from
 ## data/family.json folk_greetings picked by hash(npc id + day), with {player} left for the caller. "" in between.
 ## WEATHER-006: with today's `weather` and a warm villager, `folk_greetings.weather[weather]` lines come first.
-static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "", region_id: String = "", rng: RandomNumberGenerator = null, salt: int = 0) -> String:
+static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, flags: Dictionary = {}, weather: String = "", region_id: String = "", _rng: RandomNumberGenerator = null, salt: int = 0) -> String:
 	var bands: Dictionary = data.family.get("folk_greetings", {})
 	var party: Array = bands.get("celebration", {}).get(celebration_kind(flags, npc.id), [])
 	if celebration_open(flags, npc.id, day) and not party.is_empty():
@@ -117,10 +117,10 @@ static func greeting(npc: CharacterData, favor: int, day: int, data: GameData, f
 		if news != "":
 			return news
 	# FOLK-033: on a day whose omen has `talk`, a villager repeats it a quarter of the time.
-	if rng != null:
-		var talk: Array = Almanac.omen_for(data, day, salt).get("talk", [])
-		if not talk.is_empty() and rng.randf() < ALMANAC_TALK_CHANCE:
-			return String(talk[rng.randi_range(0, talk.size() - 1)])
+	# FOLK-034: picked by hash like the rest of `greeting`, so asking never draws from an rng. `rng` is unused.
+	var talk: Array = Almanac.omen_for(data, day, salt).get("talk", [])
+	if not talk.is_empty() and absi(hash(npc.id + str(day) + "omen")) % 100 < int(ALMANAC_TALK_CHANCE * 100.0):
+		return String(talk[absi(hash(npc.id + str(day) + "talk")) % talk.size()])
 	var band: Dictionary = {}
 	var rainy: Array = bands.get("weather", {}).get(weather, [])
 	if weather != "" and not rainy.is_empty() and favor >= int(bands.get("warm", {}).get("min_favor", 1000)):
@@ -401,7 +401,7 @@ static func validate_gift_memory(data: GameData) -> PackedStringArray:
 	return errors
 
 
-const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "great_trail", "shrine_stage", "project_stage", "season_done", "breakthrough"]
+const NEWS_KINDS: Array[String] = ["contest_win", "great_beast", "great_trail", "shrine_stage", "project_stage", "season_done", "breakthrough", "bounty", "village_hunt"]
 
 
 ## FOLK-015: remember the newest notable deed (a newer one replaces it).

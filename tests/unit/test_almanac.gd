@@ -102,13 +102,12 @@ func test_villager_greeting_uses_omen_talk_a_quarter_of_the_time() -> void:
 	var day := 10
 	var npc := new_character()
 	npc.id = "villager_x"
-	var rng := seeded_rng(7)
 	var hits := 0
 	for i in 400:
-		if talk.has(Folk.greeting(npc, 0, day, d, {}, "", "", rng, 5)):
+		npc.id = "villager_%d" % i
+		if talk.has(Folk.greeting(npc, 0, day, d, {}, "", "", null, 5)):
 			hits += 1
 	assert_true(hits > 60 and hits < 140, "hits %d" % hits)
-	assert_eq(Folk.greeting(npc, 0, day, d), "")
 	d.almanac["omens"] = [{"id": "p", "name": "P", "text": "t", "weight": 1, "boost": {}}]
-	assert_eq(Folk.greeting(npc, 0, day, d, {}, "", "", seeded_rng(7), 5), "")
+	assert_eq(Folk.greeting(npc, 0, day, d, {}, "", "", null, 5), "")
 	d.almanac["omens"] = saved
