@@ -636,9 +636,11 @@ static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: fl
 
 
 ## GFX-113: map.high (a sect on a mountain): rail (bool: a carved rail round the sect hall court), wisps (int 0-8 drifting cloud wisps)
-## and lean_pines (int 0-4 pines leaning out over the top cliffs).
-const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines"]
-const HIGH_PINE_MAX := 4
+## lean_pines (int 0-8 pines leaning out over the top cliffs), crags (GFX-123, int 0-8 rock outcrops) and drifts (int 0-12 snow drift patches).
+const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines", "crags", "drifts"]
+const HIGH_CRAG_MAX := 8
+const HIGH_DRIFT_MAX := 12
+const HIGH_PINE_MAX := 8
 const HIGH_WISP_MAX := 8
 
 
@@ -679,6 +681,56 @@ static func high_pines(region: Dictionary) -> Array[Dictionary]:
 		if ok:
 			# Lean away from the cliff-top's centre, toward the cliff edge (up on the map).
 			out.append({"pos": foot, "lean": -1.0 if foot.x < float(region["map"]["size"][0]) / 2.0 else 1.0})
+	return out
+
+
+## GFX-123: crags (rock outcrops with a lit top face and a dark cliff face, 60-140 px wide) and drifts (wind-streaked snow patches)
+## of a `map.high` region: [{kind: "crag"|"drift", rect: Rect2, seed: int}]. Seeded from the region id; clear of places, paths,
+## solid landmarks, the spawn, travel points, npc spots, the map border and map.relief items; never overlapping.
+static func high_crags(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	var high: Variant = map.get("high", null)
+	if not high is Dictionary:
+		return out
+	var crags := clampi(int(high.get("crags", 0)), 0, HIGH_CRAG_MAX)
+	var drifts := clampi(int(high.get("drifts", 0)), 0, HIGH_DRIFT_MAX)
+	if crags + drifts == 0:
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var bounds := Rect2(Vector2.ZERO, Vector2(float(size_arr[0]), float(size_arr[1]))).grow(-RELIEF_BORDER)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|high_crags")
+	var forbid: Array[Rect2] = []
+	for r in map.get("paths", []):
+		forbid.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])).grow(RELIEF_PATH_GAP))
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		var pos: Array = p.get("pos", [0, 0])
+		var sz: Array = p.get("size", [64, 64])
+		var psize := Vector2(float(sz[0]), float(sz[1]))
+		forbid.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(RELIEF_PLACE_GAP))
+	forbid.append_array(landmark_rects(region))
+	var points: Array[Vector3] = []
+	if region.has("spawn"):
+		points.append(Vector3(float(region["spawn"][0]), float(region["spawn"][1]), RELIEF_POINT_RADIUS))
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) == "travel":
+			points.append(Vector3(float(p["pos"][0]), float(p["pos"][1]), RELIEF_POINT_RADIUS))
+	for s in region.get("npc_spots", []):
+		points.append(Vector3(float(s[0]), float(s[1]), RELIEF_SPOT_RADIUS))
+	var taken: Array[Rect2] = []
+	for it: Dictionary in relief_layout(region):
+		taken.append((it["rect"] as Rect2).grow(8.0))
+	for i in crags:
+		var r := Rect2(0, 0, rng.randf_range(60.0, 140.0), rng.randf_range(38.0, 64.0))
+		var it := _relief_try(r, "crag", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			out.append(it)
+	for i in drifts:
+		var r := Rect2(0, 0, rng.randf_range(50.0, 120.0), rng.randf_range(14.0, 26.0))
+		var it := _relief_try(r, "drift", rng, bounds, forbid, points, taken)
+		if not it.is_empty():
+			out.append(it)
 	return out
 
 
@@ -795,7 +847,14 @@ static func validate(data: GameData) -> PackedStringArray:
 						if not high[key] is bool:
 							errors.append("Region '%s' map.high.rail must be a bool" % region["id"])
 					else:
-						var cap := HIGH_WISP_MAX if key == "wisps" else HIGH_PINE_MAX
+						var cap := HIGH_PINE_MAX
+						match key:
+							"wisps":
+								cap = HIGH_WISP_MAX
+							"crags":
+								cap = HIGH_CRAG_MAX
+							"drifts":
+								cap = HIGH_DRIFT_MAX
 						if not (high[key] is float or high[key] is int) or int(high[key]) < 0 or int(high[key]) > cap:
 							errors.append("Region '%s' map.high.%s must be 0-%d" % [region["id"], key, cap])
 		errors.append_array(MarketLayout.validate(region))

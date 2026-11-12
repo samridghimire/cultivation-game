@@ -49,6 +49,7 @@ var _decor: Array[Dictionary] = []
 var _season_tint: CanvasModulate
 var _season := ""
 var _relief: Array[Dictionary] = []  # GFX-109
+var _crags: Array[Dictionary] = []  # GFX-123
 var _edge: Array[Dictionary] = []  # GFX-110
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
@@ -485,6 +486,13 @@ func _build_decor() -> void:
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
 	_relief = Scenery.relief_layout(_region)
 	_edge = Scenery.edge_props(_region, map_size)
+	_crags = Scenery.high_crags(_region)
+	if not _crags.is_empty():  # GFX-123: nothing grows on a crag
+		_decor = _decor.filter(func(d: Dictionary) -> bool:
+			for it: Dictionary in _crags:
+				if (it["rect"] as Rect2).grow(10.0).has_point(d["pos"]):
+					return false
+			return true)
 	if not _relief.is_empty():  # GFX-109: nothing grows on a rock ledge or boulder
 		_decor = _decor.filter(func(d: Dictionary) -> bool:
 			for it: Dictionary in _relief:
@@ -1116,6 +1124,7 @@ func _draw() -> void:
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_relief(map)
+	_draw_crags(map)
 	_draw_sect_courts()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
@@ -1361,6 +1370,41 @@ func _draw_steps(r: Rect2) -> void:
 				draw_rect(Rect2(lx - 6.0, ly - 8.0, 12.0, 7.0), Color("b4bcc0"))
 				draw_rect(Rect2(lx - 3.0, ly - 6.0, 6.0, 3.0), Color("f2c75c"))
 			ly += 56.0
+
+
+## GFX-123: crags (lit top face over a dark cliff face) and wind-streaked snow drifts of a map.high region.
+func _draw_crags(map: Dictionary) -> void:
+	if _crags.is_empty():
+		return
+	var px := float(Sprites.scale())
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	var winter := GroundTiles.ground_season(_season, map) == "Winter"
+	for it: Dictionary in _crags:
+		var r: Rect2 = it["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(it["seed"])
+		if it["kind"] == "crag":
+			var top_h := r.size.y * 0.45
+			draw_rect(Rect2(r.position.x + px, r.end.y, r.size.x - px * 2.0, px * 3.0), Color(0, 0, 0, 0.25))
+			var body := Scenery.jagged_outline(r, int(it["seed"]), maxi(5, int(r.size.x / 12.0)), minf(px * 4.0, r.size.y * 0.3))
+			draw_colored_polygon(body, rock.darkened(0.45))
+			for c in rng.randi_range(3, 5):
+				var cx := r.position.x + rng.randf_range(0.08, 0.92) * r.size.x
+				draw_line(Vector2(cx, r.position.y + top_h), Vector2(cx + px * 2.0, r.end.y - px * 2.0), rock.darkened(0.65), px)
+			var top := Rect2(r.position.x + px * 2.0, r.position.y, r.size.x - px * 4.0, top_h)
+			draw_rect(top, rock.lightened(0.05))
+			draw_rect(Rect2(top.position, Vector2(top.size.x, px * 2.0)), rock.lightened(0.3))
+			draw_rect(Rect2(top.position.x, top.end.y - px, top.size.x, px), rock.darkened(0.2))
+			draw_polyline(body.slice(1, body.size() - 1), rock.darkened(0.7), px)
+			if winter:
+				draw_rect(Rect2(top.position.x, top.position.y - px, top.size.x * 0.8, px * 3.0), Color("e8eef4"))
+		else:
+			var a := 0.95 if winter else 0.55
+			draw_rect(Rect2(r.position.x + px * 3.0, r.position.y, r.size.x - px * 6.0, r.size.y), Color(0.91, 0.94, 0.97, a))
+			draw_rect(Rect2(r.position.x, r.position.y + px * 2.0, r.size.x, r.size.y - px * 4.0), Color(0.91, 0.94, 0.97, a))
+			for k in 3:  # wind streaks
+				var sy := r.position.y + r.size.y * (0.25 + 0.25 * k)
+				draw_line(Vector2(r.position.x + px * 4.0, sy), Vector2(r.position.x + r.size.x * rng.randf_range(0.5, 0.9), sy), Color(0.62, 0.7, 0.8, a * 0.7), px)
 
 
 ## GFX-113: pines leaning out over the top cliffs of a map.high region (Scenery.high_pines).
