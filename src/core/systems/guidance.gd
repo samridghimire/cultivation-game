@@ -1539,6 +1539,15 @@ static func _place_price(c: CharacterData, data: GameData, region_id: String, it
 
 ## WU-253: plain-words description of what a merchant place sells, from its `stock_tags`.
 static func merchant_goods(place: Dictionary) -> String:
+	var words := merchant_goods_list(place)
+	var text := ", ".join(words) if not words.is_empty() else "pills and sundries"
+	if int(place.get("max_price", 0)) > 0:
+		text += " (cheap goods)"
+	return text
+
+
+## WU-528: the goods words of a merchant as a list (merchant_goods joins them).
+static func merchant_goods_list(place: Dictionary) -> PackedStringArray:
 	var words: PackedStringArray = []
 	for tag: Variant in place.get("stock_tags", []):
 		var word := ""
@@ -1554,10 +1563,7 @@ static func merchant_goods(place: Dictionary) -> String:
 			_: word = String(tag).replace("_", " ")
 		if not words.has(word):
 			words.append(word)
-	var text := ", ".join(words) if not words.is_empty() else "pills and sundries"
-	if int(place.get("max_price", 0)) > 0:
-		text += " (cheap goods)"
-	return text
+	return words
 
 
 ## WU-260: "No weapons or armor here. The <Merchant> in <Region> (<duration>) sells them." when no merchant in

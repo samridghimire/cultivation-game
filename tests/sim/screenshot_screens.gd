@@ -1577,15 +1577,15 @@ func _start_map_shot(gs: Node) -> void:
 		gs.current_region = "fallen_star_market"
 		map.open()
 		map._select("fallen_star_market")
-		var details: String = (map.get("_places") as Label).text
+		var details: String = (map.get("_shops") as Label).text
 		print("map-shot market details: ", details)
-		assert(details.contains("Sells:"), "no Sells line: " + details), "close": map.close})
+		assert(details.contains(" · "), "no Sells line: " + details), "close": map.close})
 	# WU-346: Misty Forest (visited) shows its unclaimed Waterfall Cave under the Sells line.
 	shots.append({"name": "map_abode", "open": func() -> void:
 		gs.current_region = "misty_forest"
 		map.open()
 		map._select("misty_forest")
-		var shown: String = (map.get("_places") as Label).text
+		var shown: String = (map.get("_you") as Label).text
 		assert(shown.contains("Cave abode: Waterfall Cave, 300 stones"), "no abode line: " + shown), "close": map.close})
 	# WU-316: the far-armor hint (Qingshi, 200 stones, no armor) puts a gold "!" on Fallen Star Market and a note in its details.
 	shots.append({"name": "map_hint", "open": func() -> void:

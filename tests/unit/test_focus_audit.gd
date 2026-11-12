@@ -1120,7 +1120,7 @@ func test_wu264_world_map_navigation_keeps_focus_and_details() -> void:
 			unexplored = String(b.name)
 			break
 	assert_true(unexplored != "", "the map has an unexplored region")
-	var places: Label = map.get("_places")
+	var places: Label = map.get("_shops")
 	# Arrow keys: focus never lands on nothing, and the details always describe the focused region.
 	for action in ["ui_down", "ui_right", "ui_down", "ui_left", "ui_up", "ui_right"]:
 		_press(action)
@@ -1129,16 +1129,16 @@ func test_wu264_world_map_navigation_keeps_focus_and_details() -> void:
 		assert_true(owner != null and map.is_ancestor_of(owner), "%s: focus stays inside the map" % action)
 		if owner != null and owner.get_parent() == canvas:  # a region button (not Close): details follow it
 			var id := String(owner.name)
-			var has_sells := places.text.contains("Sells:")
+			var has_sells := places.text.contains(" · ")
 			if WorldMapScreen.is_unexplored(c, id, gs.current_region):
 				assert_false(has_sells, "%s: an unexplored region shows no Sells line" % id)
 	# Jump to the two interesting regions.
 	canvas.get_node("fallen_star_market").grab_focus()
 	await _frames()
-	assert_true(places.text.contains("Sells:"), "visited Fallen Star Market lists what it sells")
+	assert_true(places.text.contains(" · "), "visited Fallen Star Market lists what it sells")
 	canvas.get_node(unexplored).grab_focus()
 	await _frames()
-	assert_false(places.text.contains("Sells:"), "an unexplored region lists no Sells line")
+	assert_false(places.text.contains(" · "), "an unexplored region lists no Sells line")
 	_press("ui_cancel")
 	await _frames()
 	assert_false(map.visible, "ui_cancel closes the map")

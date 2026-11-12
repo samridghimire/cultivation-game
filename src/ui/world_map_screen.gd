@@ -45,6 +45,11 @@ var _hint_note: Label
 var _goal_region := ""  # WU-439: the region the first unfinished road goal points to
 var _hint_region := ""  # WU-316: the region the HUD's first hint points to
 var _places: Label
+var _you: Label  # WU-528
+var _shops: Label
+var _heads: Dictionary = {}  ## WU-528: block name -> its heading label
+const SHOP_CAP := 5
+const PLACE_CAP := 8
 var _marks: Label
 var _foes: RichTextLabel
 var _routes: Label
@@ -92,12 +97,12 @@ func _init() -> void:
 	details.add_child(_info)
 	_hint_note = _wrapped(UIStyle.label("", 16, UIStyle.ACCENT))
 	details.add_child(_hint_note)
-	_today = _wrapped(UIStyle.label("", 15, Color(0.8, 0.9, 0.8)))
-	details.add_child(_today)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
-	_places = _wrapped(UIStyle.label("", 15))
-	details.add_child(_places)
+	_today = _block(details, "Today", Color(0.8, 0.9, 0.8))
+	_you = _block(details, "You here", Color(0.85, 0.85, 0.85))
+	_shops = _block(details, "Shops", Color(0.85, 0.85, 0.85))
+	_places = _block(details, "Places", Color(0.85, 0.85, 0.85))
 	_foes = RichTextLabel.new()
 	_foes.bbcode_enabled = true
 	_foes.fit_content = true
@@ -115,6 +120,51 @@ func _init() -> void:
 	box.add_child(_close_button)
 	EventBus.region_changed.connect(_on_region_changed_rebuild)
 	EventBus.player_changed.connect(_on_player_changed_details)
+
+
+## WU-528: a headed block (accent heading + wrapped body); returns the body label.
+func _block(parent: VBoxContainer, title: String, color: Color) -> Label:
+	var h := UIStyle.label(title, 15, UIStyle.ACCENT)
+	h.name = title.replace(" ", "") + "Head"
+	parent.add_child(h)
+	_heads[title] = h
+	var body := _wrapped(UIStyle.label("", 15, color))
+	body.name = title.replace(" ", "") + "Body"
+	parent.add_child(body)
+	return body
+
+
+func _set_block(title: String, body: Label, text: String) -> void:
+	body.text = text
+	body.visible = text != ""
+	(_heads[title] as Label).visible = text != ""
+
+
+## WU-528: "Shop name · good, good +N" per merchant, at most SHOP_CAP then "+N more shops".
+static func shop_rows(data: GameData, region_id: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var total := 0
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) != "merchant":
+			continue
+		total += 1
+		if out.size() >= SHOP_CAP:
+			continue
+		var goods := Guidance.merchant_goods_list(p)
+		var text := ", ".join(goods.slice(0, 2)) if not goods.is_empty() else "pills and sundries"
+		if goods.size() > 2:
+			text += " +%d" % (goods.size() - 2)
+		out.append("%s · %s" % [p.get("display_name", "Merchant"), text])
+	if total > SHOP_CAP:
+		out.append("+%d more shops" % (total - SHOP_CAP))
+	return out
+
+
+## WU-528: names joined by commas, at most `cap` then "+N more".
+static func capped_list(names: PackedStringArray, cap: int = PLACE_CAP) -> String:
+	if names.size() <= cap:
+		return ", ".join(names)
+	return "%s +%d more" % [", ".join(names.slice(0, cap)), names.size() - cap]
 
 
 func _wrapped(l: Label) -> Label:
@@ -762,37 +812,35 @@ func _show_details() -> void:
 	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
 		_hint_note.text = "Your road goal points here."
 	_hint_note.visible = _hint_note.text != ""
-	_today.text = today_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
-	var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
-	if by_path != "":
-		_today.text += ("\n" if _today.text != "" else "") + by_path
-	var market_day := Places.market_day_line(region, GameClock.total_days)
-	if market_day != "" and not is_unexplored(GameState.player, _selected, GameState.current_region):
-		_today.text += ("\n" if _today.text != "" else "") + market_day
-	_today.visible = _today.text != ""
+	var unexplored := is_unexplored(GameState.player, _selected, GameState.current_region)
 	_description.text = String(region.get("description", ""))
-	var name_here := renown_note(GameState.player, data, _selected)
-	if name_here != "":
-		_description.text += "\n" + name_here
-	var deal := ShopScreen.deal_note(GameState.player, _selected, GameClock.total_days).strip_edges()
-	if deal != "":
-		_description.text += "\n" + deal
-	if is_unexplored(GameState.player, _selected, GameState.current_region):
-		_today.text += ("\n" if _today.text != "" else "") + "Unexplored. " + lure_line(data, _selected)
-		_today.visible = true
-	var places := place_names(data, _selected)
-	_places.text = ""
-	if not is_unexplored(GameState.player, _selected, GameState.current_region):
-		var sells := Guidance.market_lines(data, _selected)
-		if not sells.is_empty():
-			_places.text = "Sells: " + "; ".join(sells) + "\n"
-		var abode := abode_line(GameState.player, data, _selected)
-		if abode != "":
-			_places.text += abode + "\n"
-	_places.text += "Places: " + (", ".join(places) if not places.is_empty() else "none known")
-	var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
-	if not familiar.is_empty():
-		_places.text += "\n" + "   |   ".join(familiar)
+	if unexplored:
+		_description.text += "\n" + "Unexplored. " + lure_line(data, _selected)
+		for t: String in ["Today", "You here", "Shops", "Places"]:
+			(_heads[t] as Label).visible = false
+		for pair: Array in [["Today", _today], ["You here", _you], ["Shops", _shops], ["Places", _places]]:
+			_set_block(pair[0], pair[1], "")
+	else:
+		var today := today_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
+		var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
+		if by_path != "":
+			today += ("\n" if today != "" else "") + by_path
+		var market_day := Places.market_day_line(region, GameClock.total_days)
+		if market_day != "":
+			today += ("\n" if today != "" else "") + market_day
+		_set_block("Today", _today, today)
+		var you := PackedStringArray()
+		for line: String in [renown_note(GameState.player, data, _selected), ShopScreen.deal_note(GameState.player, _selected, GameClock.total_days).strip_edges(), abode_line(GameState.player, data, _selected)]:
+			if line != "":
+				you.append(line)
+		_set_block("You here", _you, "\n".join(you))
+		_set_block("Shops", _shops, "\n".join(shop_rows(data, _selected)))
+		var places := place_names(data, _selected)
+		var place_text := capped_list(places) if not places.is_empty() else "none known"
+		var familiar := familiarity_lines(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
+		if not familiar.is_empty():
+			place_text += "\n" + "   |   ".join(familiar)
+		_set_block("Places", _places, place_text)
 	var foes_text := ""
 	if _selected == GameState.current_region:  # always explored
 		var tags: Array = region.get("encounter_tags", []) + WorldEvents.encounter_tags(data, GameState.world_events, _selected)

@@ -343,10 +343,11 @@ func test_details_list_what_merchants_sell() -> void:
 	root.add_child(screen)
 	screen.open()
 	screen._select("fallen_star_market")
-	assert_false(screen._places.text.contains("Sells:"), "unexplored regions stay hidden")
+	assert_eq(screen._shops.text, "", "unexplored regions stay hidden")
 	gs.current_region = "fallen_star_market"
 	screen._select("fallen_star_market")
-	assert_true(screen._places.text.contains("Heavenforge Smithy: weapons and armor"), screen._places.text)
+	assert_true(screen._shops.text.contains("Heavenforge Smithy · weapons and armor"), screen._shops.text)
+	assert_true(screen._places.text.contains("more"), "places are capped: " + screen._places.text)
 	screen.close()
 	screen.free()
 	gs.end_session()
@@ -484,3 +485,24 @@ func test_hint_marker_is_outside_the_node() -> void:
 	var m := WorldMapScreen.hint_marker_rect(node)
 	assert_false(m.intersects(node), "clear of the node box")
 	assert_true(m.end.y <= node.position.y)
+
+
+## WU-528: shop rows are "Name · up to 2 goods +N", capped at 5 shops then "+N more shops".
+func test_shop_rows_are_capped_and_short() -> void:
+	var rows := WorldMapScreen.shop_rows(data(), "fallen_star_market")
+	assert_true(rows.size() >= 1 and rows.size() <= WorldMapScreen.SHOP_CAP + 1, str(rows))
+	for r in rows:
+		assert_true(r.contains(" · ") or r.ends_with("more shops"), r)
+	assert_true(WorldMapScreen.shop_rows(data(), "no_such_region").is_empty())
+
+
+func test_capped_list_adds_more() -> void:
+	var names := PackedStringArray(["a", "b", "c"])
+	assert_eq(WorldMapScreen.capped_list(names, 3), "a, b, c")
+	assert_eq(WorldMapScreen.capped_list(names, 2), "a, b +1 more")
+
+
+func test_merchant_goods_list_matches_text() -> void:
+	var p := {"stock_tags": ["herb", "ore", "herb"]}
+	assert_eq(Guidance.merchant_goods_list(p), PackedStringArray(["herbs", "ore"]))
+	assert_eq(Guidance.merchant_goods(p), "herbs, ore")
