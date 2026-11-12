@@ -410,3 +410,22 @@ func test_reminders_almanac_last() -> void:
 	r = VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", 8, null, {}, fish)
 	assert_true(r.size() <= VillageCalendar.MAX_REMINDERS)
 	assert_eq(r[r.size() - 1], "Tomorrow: good for fishing.")
+
+
+## LOG-001: a dawn folds into at most 3 entries.
+func test_dawn_lines_fold() -> void:
+	var none := VillageCalendar.dawn_lines(PackedStringArray(), "", PackedStringArray())
+	assert_eq(none.size(), 0)
+	var omen := VillageCalendar.dawn_lines(PackedStringArray(), "A fine day.", PackedStringArray())
+	assert_eq(omen.size(), 1)
+	assert_eq(String(omen[0]["category"]), "almanac")
+	var three := VillageCalendar.dawn_lines(PackedStringArray(), "A fine day.",
+			PackedStringArray(["Tomorrow: Market day.", "Tomorrow: Mo's birthday.", "Tomorrow: good for fishing."]))
+	assert_eq(three.size(), 2)
+	assert_eq(String(three[1]["text"]), "Tomorrow: Market day, Mo's birthday and good for fishing.")
+	assert_eq(String(three[1]["category"]), "world")
+	var marks := VillageCalendar.dawn_lines(PackedStringArray(["Today: Fair (you marked it).", "Tomorrow: Feast."]),
+			"A fine day.", PackedStringArray(["Tomorrow: Market day."]))
+	assert_eq(marks.size(), 3)
+	assert_eq(String(marks[0]["text"]), "Today: Fair (you marked it).")
+	assert_eq(String(marks[2]["text"]), "Tomorrow: Feast and Market day.")

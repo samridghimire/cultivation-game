@@ -4571,13 +4571,13 @@ func _post_reminders() -> void:
 		return
 	_last_reminder_day = today
 	VillageCalendar.prune_marks(player, today)
-	for line in VillageCalendar.mark_lines(player, today):
-		EventBus.post(line, "world")
 	var omen := today_omen()
+	var omen_line := ""
 	if not omen.is_empty() and not Almanac.is_plain(omen):
-		EventBus.post(Almanac.line(omen, Almanac.salt_of(player), today), "almanac")  # CAL-011
-	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, today_omen(1)):
-		EventBus.post(line, "world")
+		omen_line = Almanac.line(omen, Almanac.salt_of(player), today)  # CAL-011
+	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, today_omen(1))
+	for e in VillageCalendar.dawn_lines(VillageCalendar.mark_lines(player, today), omen_line, reminders):  # LOG-001
+		EventBus.post(String(e["text"]), String(e["category"]))
 
 
 ## Folds the posts made during a 5+ day action into last_digest (DAY-001).

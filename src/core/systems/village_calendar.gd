@@ -334,6 +334,34 @@ static func mark_lines(c: CharacterData, today: int) -> PackedStringArray:
 	return out
 
 
+## LOG-001: folds a dawn's marks, omen and reminders into at most 3 log entries `{text, category}`:
+## today's marks (own line), the omen (almanac), then one "Tomorrow: a, b and c." line (world)
+## built from the bodies of tomorrow's marks and reminders.
+static func dawn_lines(marks: PackedStringArray, omen_line: String, reminders: PackedStringArray) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var bodies: Array[String] = []
+	for m in marks:
+		if m.begins_with("Tomorrow: "):
+			bodies.append(_reminder_body(m))
+		else:
+			out.append({"text": m, "category": "world"})
+	if omen_line != "":
+		out.append({"text": omen_line, "category": "almanac"})
+	for r in reminders:
+		bodies.append(_reminder_body(r))
+	if not bodies.is_empty():
+		var text := bodies[0]
+		if bodies.size() > 1:
+			text = ", ".join(bodies.slice(0, bodies.size() - 1)) + " and " + bodies[bodies.size() - 1]
+		out.append({"text": "Tomorrow: %s." % text, "category": "world"})
+	return out
+
+
+static func _reminder_body(line: String) -> String:
+	var b := line.trim_prefix("Tomorrow: ")
+	return b.trim_suffix(".")
+
+
 ## CAL-008: true when `rid` is not `here`, nor one short direct route (3 days or less) from it.
 static func _is_far(data: GameData, here: String, rid: String) -> bool:
 	if rid == here:
