@@ -283,3 +283,25 @@ func test_generated_villagers_stay_off_the_signpost_and_arrival() -> void:
 				if all[i].distance_to(all[j]) < Npcs.HAUNT_SPACING - 0.01:
 					bad.append("%s #%d/#%d crowd" % [rid, i, j])
 	assert_eq(bad.size(), 0, "; ".join(bad.slice(0, 6)))
+
+
+func test_world_title_short() -> void:
+	var player := new_character()
+	player.realm_index = 1
+	var npcs := {}
+	var v := Npcs.spawn(npcs, data(), seeded_rng(), {"gender": "female"})
+	v.age_days = 30 * Calendar.DAYS_PER_YEAR
+	v.realm_index = 0
+	assert_eq(Npcs.world_title_short(v, player, data()), v.name, "mortal: name only")
+	v.realm_index = 2
+	v.stage = 0
+	var s := Npcs.world_title_short(v, player, data())
+	assert_true(s.contains("Foundation") and not s.contains("("), s)
+	assert_true(s.length() <= Npcs.LABEL_MAX, "short")
+	v.name = "Shangguan Zhuoyuan Heng Longname"
+	assert_true(Npcs.world_title_short(v, player, data()).length() <= Npcs.LABEL_MAX, "long name trimmed")
+	var npc: Interactable = load("res://src/world/interactables/npc.gd").new()
+	npc.display_name = "Cheng Ping (Foundation Establishment, Early)"
+	npc.short_name = "Cheng Ping · Foundation"
+	assert_false(npc.label_text().contains("("), "far label has no '('")
+	npc.free()

@@ -742,6 +742,26 @@ static func world_title(c: CharacterData, player: CharacterData, data: GameData)
 	return Cultivation.realm_label(c, data)
 
 
+## WU-520: the label seen from afar: the name, plus a short realm tag ("Cheng Ping · Foundation") only for a
+## cultivator at or above the player's realm, or a family title. At most LABEL_MAX characters; the tag is trimmed first.
+const LABEL_MAX := 26
+
+
+static func world_title_short(c: CharacterData, player: CharacterData, data: GameData) -> String:
+	var tag := ""
+	if player != null and (player.spouses.has(c.id) or player.children.has(c.id)):
+		tag = world_title(c, player, data)
+	elif c.age_years() >= int(data.family.get("adult_age", 16)) and c.realm_index > 0 \
+			and (player == null or c.realm_index >= player.realm_index):
+		tag = String(data.realms[c.realm_index].name).get_slice(" ", 0)
+	if tag == "":
+		return c.name
+	var text := "%s · %s" % [c.name, tag]
+	if text.length() > LABEL_MAX:
+		text = c.name
+	return text.substr(0, LABEL_MAX)
+
+
 ## One sentence describing a generated NPC as the player sees them.
 static func describe(c: CharacterData, data: GameData) -> String:
 	var adult := c.age_years() >= int(data.family.get("adult_age", 16))

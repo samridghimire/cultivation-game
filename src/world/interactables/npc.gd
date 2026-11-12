@@ -240,8 +240,10 @@ func draw_generated_art() -> bool:
 
 
 ## Within this distance of the player the label shows the full "(realm)" suffix (WU-087).
-const FULL_LABEL_RANGE := 120.0
+const FULL_LABEL_RANGE := 96.0
 var _near := false
+## WU-520: what a far label shows (Npcs.world_title_short); "" = just the name.
+var short_name := ""
 ## True while this villager is today's visitor (WORLD-007): a small tea tray stands beside them (WU-411).
 var _visiting := false
 ## True while this villager has an open folk request (WU-402): a "!" badge and a name that stays visible.
@@ -294,6 +296,8 @@ func label_text() -> String:
 	if not _near:
 		var i := display_name.find(" (")
 		text = display_name.substr(0, i) if i > 0 else display_name
+		if short_name != "":  # WU-520: names, not résumés, until the player stands close
+			text = short_name
 	elif display_name.ends_with(" (Mortal)"):
 		text = display_name.trim_suffix(" (Mortal)")  # GFX-085: a mortal has no realm to show
 	if _is_my_rival():
@@ -370,6 +374,8 @@ func _update_near() -> void:
 	refresh_request()
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	var near := player != null and player.global_position.distance_to(global_position) <= FULL_LABEL_RANGE
+	if player != null and player.has_method("current_target") and player.current_target() == self:
+		near = true  # the interact target shows its full title
 	if near != _near:
 		_near = near
 		queue_redraw()

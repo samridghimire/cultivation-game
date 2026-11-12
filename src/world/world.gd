@@ -865,6 +865,7 @@ func _build_generated_npcs() -> void:
 		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
+		node.short_name = Npcs.world_title_short(c, GameState.player, data)
 		var adult := c.age_years() >= int(data.family.get("adult_age", 16))
 		# Neighbours keep a daily round (WORLD-001); the player's family keeps its spots.
 		node.position = spots[i] if family.has(c) else stands[c.id]
