@@ -395,8 +395,28 @@ static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary
 	var progress: Dictionary = _state(c, day)["progress"]
 	for t: Dictionary in tasks_for(data, day):
 		var n := int(progress.get(String(t["id"]), 0))
-		out.append({"text": String(t["text"]), "where": where(t, c, data, day), "n": n, "count": int(t["count"]), "done": n >= int(t["count"])})
+		out.append({"text": String(t["text"]), "where": where(t, c, data, day), "note": hunt_note(c, data, t, day), "n": n, "count": int(t["count"]), "done": n >= int(t["count"])})
 	return out
+
+
+## SEASON-017: a how-to suffix for a hunt task whose beast is Dangerous or Deadly for `c` ("" for any other task or
+## label): "(Deadly for you: join the village hunt on Day 12)" when the village hunt targets it this season on a day
+## that is today or later, else "(Deadly for you: come back stronger)".
+static func hunt_note(c: CharacterData, data: GameData, task: Dictionary, day: int) -> String:
+	if c == null or String(task.get("kind", "")) != "hunt":
+		return ""
+	var target := String(task.get("target", ""))
+	if not data.enemies.has(target):
+		return ""
+	var label := Wildlife.threat(c, data, target)
+	if label != "Dangerous" and label != "Deadly":
+		return ""
+	if VillageHunt.quarry(data, REGION, day) == target:
+		var ws := VillageHunt.window_start(data, REGION, day)
+		var days := int(VillageHunt.def(data, REGION).get("days", 1))
+		if ws >= 0 and ws + days - 1 >= day:
+			return "(%s for you: join the village hunt on Day %d)" % [label, Calendar.day_of(maxi(ws, day))]
+	return "(%s for you: come back stronger)" % label
 
 
 ## GUIDE-214: where to do a task ("at Village Pond Jetty", "Misty Forest Pond in Misty Forest", "" when nothing fits).

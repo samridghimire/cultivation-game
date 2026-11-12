@@ -293,6 +293,9 @@ static func season_task_text(t: Dictionary) -> String:
 	var where := String(t.get("where", ""))
 	if where != "" and not bool(t.get("done", false)):
 		text = "%s %s." % [text.trim_suffix("."), where]
+	var note := String(t.get("note", ""))
+	if note != "" and not bool(t.get("done", false)):
+		text = "%s %s" % [text, note]
 	if int(t.get("count", 1)) > 1:
 		return "%s (%d/%d)" % [text, t["n"], t["count"]]
 	return text

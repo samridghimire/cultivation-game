@@ -558,3 +558,36 @@ func test_terraces_gather_yields_more_over_200_days() -> void:
 			gs.gather(table, 1)
 		totals[mode] = c.item_count("spirit_herb") - before
 	assert_true(totals[1] > totals[0], "stage 3 yields more (%d vs %d)" % [totals[1], totals[0]])
+
+
+## SEASON-017: hunt tasks the player would rate Dangerous or Deadly say how to meet the beast.
+func test_hunt_note_branches() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	c.realm_index = 0
+	var autumn := 185
+	var quarry := VillageHunt.quarry(gd, SeasonTasks.REGION, autumn)
+	assert_eq(quarry, "mist_fox", "autumn hunt targets the fox")
+	assert_eq(SeasonTasks.hunt_note(c, gd, {"kind": "catch", "target": "mist_fox"}, autumn), "", "only hunts")
+	assert_eq(SeasonTasks.hunt_note(c, gd, {"kind": "hunt", "target": "no_such"}, autumn), "", "unknown beast")
+	var strong := CharacterData.new()
+	strong.realm_index = gd.realm_index_of("nascent_soul")
+	assert_eq(SeasonTasks.hunt_note(strong, gd, {"kind": "hunt", "target": "wild_boar"}, autumn), "", "weak beast for a strong player")
+	# A beast that is deadly to a mortal and is not the season's hunt quarry: come back stronger.
+	var deadly := ""
+	for id: String in gd.enemies:
+		if id != quarry and Wildlife.threat(c, gd, id) == "Deadly":
+			deadly = id
+			break
+	assert_true(deadly != "", "some beast is deadly for a mortal")
+	assert_eq(SeasonTasks.hunt_note(c, gd, {"kind": "hunt", "target": deadly}, autumn), "(Deadly for you: come back stronger)")
+	# The quarry itself while the window is open: join the village hunt.
+	var label := Wildlife.threat(c, gd, quarry)
+	if label == "Dangerous" or label == "Deadly":
+		var ws := VillageHunt.window_start(gd, SeasonTasks.REGION, autumn)
+		var note := SeasonTasks.hunt_note(c, gd, {"kind": "hunt", "target": quarry}, ws)
+		assert_eq(note, "(%s for you: join the village hunt on Day %d)" % [label, Calendar.day_of(ws)])
+		var late := SeasonTasks.hunt_note(c, gd, {"kind": "hunt", "target": quarry}, ws + 30)
+		assert_eq(late, "(%s for you: come back stronger)" % label, "window passed")
+	var row := JournalScreen.season_task_text({"text": "Hunt a fox.", "where": "", "note": "(Deadly for you: come back stronger)", "n": 0, "count": 1, "done": false})
+	assert_true(row.ends_with("(Deadly for you: come back stronger)"), row)
