@@ -196,15 +196,16 @@ func _note_peak_savings(c: CharacterData, data: GameData, stats: Dictionary) -> 
 ## One income month, rotating profession -> gathering -> sect missions (the
 ## last only for a disciple). Returns the kind done.
 func _earn(c: CharacterData, data: GameData, prof_id: String, income_months: int, rng: RandomNumberGenerator) -> String:
-	var turn := income_months % (2 if c.is_rogue() else 3)
+	# QA-035: a disciple takes sect missions every income month they can (cooldowns bind), and
+	# only falls back to work/gathering when none is ready.
+	if sources == "all" and not c.is_rogue() and _sect_missions(c, data) > 0:
+		return "sect"
+	var turn := income_months % 2
 	if sources == "all" and turn == 1:
 		var gather := _best_gather(c, data)
 		if not gather.is_empty():
 			_gather_month(c, data, gather["table"], int(gather["days"]), rng)
 			return "gather"
-	if sources == "all" and turn == 2:
-		_sect_missions(c, data)
-		return "sect"
 	var work_value := float(data.professions[prof_id].work_income * (Professions.rank_of(c, prof_id) + 1))
 	var craft := _best_recipe(c, data, prof_id) if sources == "all" else {}
 	if float(craft.get("per_day", 0.0)) * STEP_DAYS > work_value:
@@ -328,7 +329,8 @@ func _gather_month(c: CharacterData, data: GameData, table: Array, days: int, rn
 
 ## A month of fight-free sect missions (items bought at shop price when the
 ## cultivator lacks them), as many as the days and cooldowns allow.
-func _sect_missions(c: CharacterData, data: GameData) -> void:
+func _sect_missions(c: CharacterData, data: GameData) -> int:
+	var done := 0
 	var days_left := STEP_DAYS
 	for mission_id in Sects.available_missions(c, data):
 		var mission: Dictionary = data.sect_missions[mission_id]
@@ -350,10 +352,12 @@ func _sect_missions(c: CharacterData, data: GameData) -> void:
 		var result := Sects.complete_mission(c, data, mission_id, {})
 		if result["ok"]:
 			days_left -= int(result["days"])
+			done += 1
 			mission_stones[mission_id] = int(mission_stones.get(mission_id, 0)) + c.item_count("spirit_stone") - stones_before
 			for item_id in c.inventory.keys():
 				if item_id != "spirit_stone" and c.item_count(item_id) > 0 and not data.items[item_id].has("effects"):
 					Items.sell(c, data, item_id, c.item_count(item_id))
+	return done
 
 
 ## Once per major realm: the priciest gear per slot that the stones beyond the
@@ -420,5 +424,8 @@ func _report(data: GameData, prof_id: String, totals: Dictionary, lives: int) ->
 	for kind in INCOME_KINDS:
 		parts.append("%s %d mo / %d stones" % [kind, totals["months_" + kind], totals["stones_" + kind]])
 	print("    income (all lives): %s (stipends %d)" % [", ".join(parts), totals["stones_stipend"]])
+	var work_rate := float(totals["stones_work"]) / maxi(totals["months_work"], 1)
+	var sect_rate := float(totals["stones_sect"] - totals["stones_stipend"]) / maxi(totals["months_sect"], 1)
+	print("    sect missions / work stones per income month: %.1f / %.1f = %.2fx" % [sect_rate, work_rate, sect_rate / maxf(work_rate, 0.01)])
 	print("    spent: gear %d, clinic %d; savings alone covered the Core Forming Pill at the Foundation peak for %d/%d; pills bought with contribution %d; avg sect rank %.1f, contribution %d" % [
 		totals["gear"], totals["clinic"], totals["pill_stones_at_peak"], totals["faced_core_formation"], totals["contribution_pills"], avg.call("sect_rank"), roundi(avg.call("contribution"))])
