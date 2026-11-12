@@ -291,6 +291,42 @@ static func threat(c: CharacterData, data: GameData, enemy_id: String) -> String
 	return Combat.danger_label(c, data, data.enemies[enemy_id])
 
 
+const THREAT_ORDER: Array[String] = ["Weak", "Even", "Risky", "Dangerous", "Deadly"]
+
+
+## GUIDE-237: the worst danger label among a region's ordinary roamers that can spawn on `day` for the player's realm
+## (season, min_realm, max_realm as `roamers` applies them; the great beast is left out): {label, names} with up to
+## 2 names of beasts at that label. {label: "", names: []} when the region has none.
+static func region_threat(c: CharacterData, data: GameData, region_id: String, day: int) -> Dictionary:
+	var def: Dictionary = data.regions.get(region_id, {}).get("roamers", {})
+	var season := Calendar.season_of(day)
+	var worst := -1
+	var names: Array[String] = []
+	for entry: Dictionary in def.get("enemies", []):
+		if not Exploration.in_season(entry, season):
+			continue
+		if entry.has("min_realm") and c.realm_index < data.realm_index_of(String(entry["min_realm"])):
+			continue
+		if entry.has("max_realm") and c.realm_index > data.realm_index_of(String(entry["max_realm"])):
+			continue
+		var enemy_id := String(entry["enemy"])
+		if not data.enemies.has(enemy_id):
+			continue
+		var rank := THREAT_ORDER.find(threat(c, data, enemy_id))
+		var shown := GameData.plain_name(String(data.enemies[enemy_id].get("name", enemy_id)))
+		if rank > worst:
+			worst = rank
+			names = [shown]
+		elif rank == worst and names.size() < 2 and not names.has(shown):
+			names.append(shown)
+	return {"label": THREAT_ORDER[worst] if worst >= 0 else "", "names": names}
+
+
+## GUIDE-237: true when the label of `region_threat` deserves a warning (Dangerous or Deadly).
+static func is_grave(label: String) -> bool:
+	return label == "Dangerous" or label == "Deadly"
+
+
 ## WILD-002: how a beast reacts to the player: the override if set, else by threat
 ## (Weak flees, Even is wary, Risky and worse is bold).
 static func temper(c: CharacterData, data: GameData, enemy_id: String, override: String = "") -> String:

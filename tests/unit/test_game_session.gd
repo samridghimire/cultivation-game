@@ -3942,3 +3942,22 @@ func test_almanac_dawn_line() -> void:
 			if String(EventBus.history[i]["category"]) == "almanac":
 				n += 1
 		assert_eq(n, int(pair[1]), "almanac lines on day %d" % int(pair[0]))
+
+
+## GUIDE-237: arriving somewhere the ordinary beasts would kill you warns once per season.
+func test_travel_warns_about_deadly_beasts_once_per_season() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var region := "myriad_peaks_ridge"
+	assert_true(Wildlife.is_grave(String(Wildlife.region_threat(c, gs.data, region, GameClock.total_days)["label"])))
+	var seen := [0]
+	var cb := func(text: String, category: String) -> void:
+		if category == "danger" and text.begins_with("The beasts of"):
+			seen[0] += 1
+	EventBus.message_posted.connect(cb)
+	gs._warn_beasts(region)
+	gs._warn_beasts(region)
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(seen[0], 1)
+	assert_true(gs.world_flags.has("warned_" + region))

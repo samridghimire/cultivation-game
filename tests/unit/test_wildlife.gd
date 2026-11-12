@@ -790,3 +790,18 @@ func test_trail_data_valid() -> void:
 			assert_true(ids.has("great_trail_" + rid), "milestone for " + rid)
 	data.regions["misty_forest"]["roamers"]["great"]["trail_done_text"] = ""
 	assert_true(Wildlife.validate(data).size() > 0)
+
+
+## GUIDE-237: the worst ordinary roamer's label for the player.
+func test_region_threat_mortal_ridge_is_deadly_core_is_weak_at_home() -> void:
+	var d := _gdata()
+	var c := CharacterData.new()
+	c.realm_index = 0
+	var t := Wildlife.region_threat(c, d, "myriad_peaks_ridge", 100)
+	assert_true(Wildlife.is_grave(String(t["label"])), str(t))
+	assert_true((t["names"] as Array).size() >= 1 and (t["names"] as Array).size() <= 2)
+	var core := CharacterData.new()
+	core.realm_index = d.realm_index_of("core_formation")
+	var home := Wildlife.region_threat(core, d, "qingshi_village", 100)
+	assert_true(not Wildlife.is_grave(String(home["label"])), str(home))
+	assert_eq(String(Wildlife.region_threat(core, d, "no_such_region", 1)["label"]), "")

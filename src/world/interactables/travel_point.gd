@@ -25,6 +25,9 @@ func get_options() -> Array[Dictionary]:
 		else:
 			option["description"] = note
 		option["description"] = String(option["description"]) + "\n" + destination_note(GameState.player, GameState.data, route["to"], GameState.world_flags, GameState.world_events)
+		var beasts := Wildlife.region_threat(GameState.player, GameState.data, route["to"], GameClock.total_days)
+		if Wildlife.is_grave(String(beasts["label"])):
+			option["description"] = String(option["description"]) + "\nBeasts: %s for you (%s)." % [beasts["label"], ", ".join(beasts["names"])]
 		if hop != "" and route["to"] == hop:
 			option["description"] = "The hint points this way. " + String(option["description"])
 		options.append(option)

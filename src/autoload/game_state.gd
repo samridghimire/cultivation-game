@@ -689,6 +689,7 @@ func travel(region_id: String) -> void:
 	var first_sight: String = String(data.regions.get(region_id, {}).get("first_visit", ""))
 	if last_arrival_first_visit and first_sight != "":
 		EventBus.post(first_sight, "info")
+	_warn_beasts(region_id)
 	_pass_time(check["days"], "Travelling to %s" % Exploration.region_name(data, region_id))
 	if not _road_ambush() and _can_act():
 		var road := Exploration.road_encounter(player, data, int(check["days"]), world_flags, rng, Calendar.season_of(GameClock.total_days), GameClock.total_days, last_travel_from, region_id)
@@ -701,6 +702,20 @@ func travel(region_id: String) -> void:
 	_post_arrival_line()
 	EventBus.region_changed.emit(region_id)
 	SaveManager.autosave()
+
+
+## GUIDE-237: once a season per region, say so when its ordinary beasts would kill or maim the player.
+func _warn_beasts(region_id: String) -> void:
+	var beasts := Wildlife.region_threat(player, data, region_id, GameClock.total_days)
+	if not Wildlife.is_grave(String(beasts["label"])):
+		return
+	var key := "warned_" + region_id
+	var season_no := GameClock.total_days / Calendar.DAYS_PER_YEAR * 4 + (GameClock.total_days % Calendar.DAYS_PER_YEAR) * 4 / Calendar.DAYS_PER_YEAR
+	if int(world_flags.get(key, -1)) == season_no:
+		return
+	world_flags[key] = season_no
+	var verb := "would kill you" if beasts["label"] == "Deadly" else "could kill you"
+	EventBus.post("The beasts of %s %s. Keep to the roads and the places." % [Exploration.region_name(data, region_id), verb], "danger")
 
 
 ## CAL-010: the Today card's almanac line for the journal ("" without a player).
