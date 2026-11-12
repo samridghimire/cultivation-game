@@ -41,9 +41,13 @@ static func court_rect(hall: Dictionary, region: Dictionary) -> Rect2:
 	return hr
 
 
-## GFX-074: "marsh" for the Withered Bone Marsh's dark court, "stone" elsewhere.
-static func court_style(region: Dictionary) -> String:
-	return "marsh" if "marsh" in String(region.get("id", "")) else "stone"
+## GFX-121: the ground a sect hall stands on: `hall_ground` on the place (planks | terrace | stone, default stone).
+const GROUNDS: Array[String] = ["stone", "planks", "terrace"]
+
+
+static func court_style(place: Dictionary) -> String:
+	var g := String(place.get("hall_ground", "stone"))
+	return g if GROUNDS.has(g) else "stone"
 
 
 ## GFX-071: what a place really covers: the drawn landmark (about 1.3x its size), the 22 px label band above
@@ -97,8 +101,11 @@ static func gate(region: Dictionary) -> Dictionary:
 
 ## Flagstones, three steps to the door and two stone lanterns. `hall` is the hall's rect, `court` from court_rect().
 static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool, style: String = "stone") -> void:
-	if style == "marsh":
-		_draw_marsh_court(ci, hall, court, snowy)
+	if style == "planks":
+		_draw_planks_court(ci, hall, court, snowy)
+		return
+	if style == "terrace":
+		_draw_terrace_court(ci, hall, court, snowy)
 		return
 	var base := Color("8d939b") if not snowy else Color("c3cad2")
 	var mortar := base.darkened(0.3)
@@ -138,47 +145,99 @@ static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool, s
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
 
 
-## GFX-074: dark flagstones, steps up into the hall, two red lanterns and reeds along the court's edge.
-static func _draw_marsh_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
-	var base := Color("3b4140") if not snowy else Color("8d969a")
-	var mortar := base.darkened(0.45)
-	ci.draw_rect(court, base)
+## GFX-121: a raised boardwalk platform on short stilts with a rail along its front and reeds at its edge.
+static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
+	var wood := Color("6b5238") if not snowy else Color("a9a597")
+	var seam := wood.darkened(0.4)
+	ci.draw_rect(Rect2(court.position.x + 2.0, court.end.y + 2.0, court.size.x, 6.0), Color(0.05, 0.08, 0.06, 0.35))
+	ci.draw_rect(court, wood)
+	var y := court.position.y + 8.0
 	var row := 0
-	var y := court.position.y
 	while y < court.end.y:
-		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), mortar, 1.0)
-		var x := court.position.x + (STONE / 2.0 if row % 2 == 1 else 0.0)
+		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), seam, 1.0)
+		var x := court.position.x + (12.0 if row % 2 == 1 else 0.0) + 24.0
 		while x < court.end.x:
-			if x > court.position.x:
-				ci.draw_line(Vector2(x, y), Vector2(x, minf(y + STONE, court.end.y)), mortar, 1.0)
-			x += STONE * 2.0
-		y += STONE
+			ci.draw_line(Vector2(x, y), Vector2(x, minf(y + 8.0, court.end.y)), seam, 1.0)
+			x += 36.0
+		y += 8.0
 		row += 1
-	ci.draw_rect(court, mortar.darkened(0.3), false, 2.0)
-	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 4.0), Color(0, 0, 0, 0.25))
-	# Steps rise into the hall's lower edge (the court is shallow here).
+	ci.draw_rect(court, seam.darkened(0.2), false, 2.0)
+	# Stilts under the front edge.
+	var px := court.position.x + 8.0
+	while px < court.end.x - 4.0:
+		ci.draw_rect(Rect2(px, court.end.y, 4.0, 7.0), Color("2b2118"))
+		px += 36.0
+	# A low rail along the front with a gap in front of the door.
+	var cx := hall.get_center().x
+	var rail := Color("3a2a1c")
+	for seg: Vector2 in [Vector2(court.position.x + 2.0, cx - 24.0), Vector2(cx + 24.0, court.end.x - 2.0)]:
+		ci.draw_line(Vector2(seg.x, court.end.y - 4.0), Vector2(seg.y, court.end.y - 4.0), rail, 2.0)
+		var rx := seg.x
+		while rx <= seg.y:
+			ci.draw_line(Vector2(rx, court.end.y - 4.0), Vector2(rx, court.end.y - 10.0), rail, 2.0)
+			rx += 32.0
+	# Steps up into the hall.
 	for i in 3:
 		var w := 40.0 + 12.0 * i
-		var step := Rect2(hall.get_center().x - w / 2.0, hall.end.y - 14.0 + 5.0 * i, w, 5.0)
-		ci.draw_rect(step, base.lightened(0.2 - 0.05 * i))
-		ci.draw_rect(Rect2(step.position.x, step.end.y - 1.0, w, 1.0), mortar)
-	# Two red lanterns flank the hall on the court's flagstones.
+		var step := Rect2(cx - w / 2.0, hall.end.y - 14.0 + 5.0 * i, w, 5.0)
+		ci.draw_rect(step, wood.lightened(0.2 - 0.05 * i))
+		ci.draw_rect(Rect2(step.position.x, step.end.y - 1.0, w, 1.0), seam)
+	# Two red lanterns flank the hall.
 	for lx in [court.position.x + 14.0, court.end.x - 14.0]:
 		var c := Vector2(lx, hall.get_center().y + 18.0)
 		ci.draw_rect(Rect2(c.x - 1.0, c.y - 6.0, 2.0, 20.0), Color("2b2118"))
 		ci.draw_rect(Rect2(c.x - 5.0, c.y - 14.0, 10.0, 12.0), Color("8e1f1f"))
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 12.0, 6.0, 8.0), Color("e04b3a"))
 		ci.draw_rect(Rect2(c.x - 6.0, c.y - 15.0, 12.0, 2.0), Color("2b2118"))
-	# Reeds along the west and north edges.
-	var reed := Color("6b7a3a") if not snowy else Color("a9b49a")
-	var n := int(court.size.y / 9.0)
-	for i in n:
+	# Reeds along the west and north edges (iced in winter).
+	var reed := Color("6b7a3a") if not snowy else Color("b9d2dc")
+	for i in int(court.size.y / 9.0):
 		var ry := court.position.y + 6.0 + i * 9.0
 		ci.draw_line(Vector2(court.position.x - 2.0, ry + 8.0), Vector2(court.position.x - 4.0, ry - 4.0), reed, 1.0)
 		ci.draw_line(Vector2(court.position.x - 5.0, ry + 8.0), Vector2(court.position.x - 6.0, ry), reed.darkened(0.2), 1.0)
 	for i in int(court.size.x / 11.0):
 		var rx := court.position.x + 6.0 + i * 11.0
 		ci.draw_line(Vector2(rx, court.position.y - 1.0), Vector2(rx - 1.0, court.position.y - 9.0), reed, 1.0)
+
+
+## GFX-121: pale stone flags on a raised terrace, a step along the front and snow on the edge in winter.
+static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
+	var base := Color("c9ccd0") if not snowy else Color("e6eaee")
+	var mortar := base.darkened(0.22)
+	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 7.0), Color(0, 0, 0, 0.25))
+	ci.draw_rect(court, base)
+	var row := 0
+	var y := court.position.y
+	while y < court.end.y:
+		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), mortar, 1.0)
+		var x := court.position.x + (STONE if row % 2 == 1 else 0.0)
+		while x < court.end.x:
+			if x > court.position.x:
+				ci.draw_line(Vector2(x, y), Vector2(x, minf(y + STONE, court.end.y)), mortar, 1.0)
+			x += STONE * 2.0
+		y += STONE
+		row += 1
+	ci.draw_rect(court, mortar.darkened(0.2), false, 2.0)
+	# The front step: a lighter lip over a shaded riser.
+	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 6.0), base.darkened(0.12))
+	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 2.0), base.lightened(0.2))
+	var cx := hall.get_center().x
+	for i in 3:
+		var w := 44.0 + 14.0 * i
+		var step := Rect2(cx - w / 2.0, hall.end.y + 6.0 * i, w, 6.0)
+		ci.draw_rect(step, base.lightened(0.15 - 0.04 * i))
+		ci.draw_rect(Rect2(step.position.x, step.end.y - 1.0, w, 1.0), mortar)
+	for side in [-1.0, 1.0]:
+		var c := Vector2(court.get_center().x + side * (court.size.x / 2.0 - 16.0), court.end.y - 22.0)
+		ci.draw_rect(Rect2(c.x - 5.0, c.y + 8.0, 10.0, 4.0), mortar)
+		ci.draw_rect(Rect2(c.x - 3.0, c.y - 2.0, 6.0, 10.0), base.darkened(0.15))
+		ci.draw_rect(Rect2(c.x - 6.0, c.y - 9.0, 12.0, 7.0), base.lightened(0.1))
+		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
+	if snowy:
+		ci.draw_rect(Rect2(court.position.x - 2.0, court.position.y - 3.0, court.size.x + 4.0, 4.0), Color("f4f8fb"))
+		ci.draw_rect(Rect2(court.position.x - 2.0, court.end.y - 2.0, court.size.x + 4.0, 5.0), Color("f4f8fb"))
+		for i in int(court.size.x / 28.0):
+			ci.draw_rect(Rect2(court.position.x + 8.0 + i * 28.0, court.end.y + 3.0, 6.0, 4.0), Color("d6e6ef"))
 
 
 const STELE_W := 136.0  ## the hanging name board (its minimum width)

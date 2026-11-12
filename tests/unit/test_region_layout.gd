@@ -384,7 +384,7 @@ func test_sect_courts_and_gates() -> void:
 						assert_false(court.intersects(Rect2(ar.get_center() - ar.size * 0.65, ar.size * 1.3)), "%s: abode sprite inside the court" % region["id"])
 					if region["id"] == "withered_bone_marsh":
 						assert_true(court.size.x > _rect(place, [64, 64]).size.x + 30.0, "marsh hall has a real court")
-						assert_eq(SectCourt.court_style(region), "marsh")
+						assert_eq(SectCourt.court_style(place), "planks")
 		assert_eq(not g.is_empty(), has_sect_hall, "%s gate only with a sect hall" % region["id"])
 	assert_true(seen >= 2, "azure peak and the marsh both have sect halls")
 
@@ -553,3 +553,20 @@ func test_person_labels_clear_of_place_labels_after_layout() -> void:
 			var moved := Rect2(label.position + d, label.size)
 			for p in places:
 				assert_false(moved.intersects(p), "%s: person label at %s still on a place label" % [region["id"], pos])
+
+
+## GFX-121: every hall ground draws; an unknown one falls back to stone.
+func test_hall_grounds_draw() -> void:
+	var canvas := Node2D.new()
+	var hall := Rect2(100, 100, 160, 110)
+	var court := Rect2(80, 78, 200, 180)
+	canvas.draw.connect(func() -> void:
+		for ground in SectCourt.GROUNDS:
+			for snowy in [false, true]:
+				SectCourt.draw_court(canvas, hall, court, snowy, ground))
+	Engine.get_main_loop().root.add_child(canvas)
+	await Engine.get_main_loop().process_frame
+	await Engine.get_main_loop().process_frame
+	canvas.queue_free()
+	assert_eq(SectCourt.court_style({"hall_ground": "bogus"}), "stone")
+	assert_eq(SectCourt.court_style({}), "stone")

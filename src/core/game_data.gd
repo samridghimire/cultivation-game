@@ -709,6 +709,8 @@ func _validate_world() -> void:
 					load_errors.append(problem)
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
+			if place.has("hall_ground") and not (place.get("type", "") == "sect_hall" and SectCourt.GROUNDS.has(String(place["hall_ground"]))):
+				load_errors.append("Region '%s' place '%s': hall_ground is only for a sect_hall and must be one of %s" % [region["id"], place.get("display_name", ""), SectCourt.GROUNDS])
 			if place.get("type", "") == "auction" and not auction_houses.has(String(place.get("house_id", ""))):
 				load_errors.append("Region '%s' auction place has unknown house_id '%s'" % [region["id"], place.get("house_id", "")])
 			if place.has("sect") and not sects.has(String(place["sect"])):

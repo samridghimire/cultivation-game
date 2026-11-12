@@ -1310,7 +1310,7 @@ func _draw_sect_courts() -> void:
 		if SectCourt.is_sect_hall(place):
 			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
 			var court := SectCourt.court_rect(place, _region)
-			SectCourt.draw_court(self, hall, court, snowy, SectCourt.court_style(_region))
+			SectCourt.draw_court(self, hall, court, snowy, SectCourt.court_style(place))
 			var high: Variant = _region.get("map", {}).get("high", null)
 			if high is Dictionary and bool(high.get("rail", false)):
 				SectCourt.draw_rail(self, court, snowy)
