@@ -157,3 +157,24 @@ func test_almanac_in_header_block() -> void:
 	assert_eq(tomorrow.get_index(), head_i + 2)
 	assert_true(alm.get_index() < tasks.get_index(), "before the season's tasks")
 	s.queue_free()
+
+
+## WU-517: three headed blocks, each capped with a "+N more" line.
+func test_blocks_split_and_cap() -> void:
+	var s := _screen()
+	var lines := PackedStringArray(["Market day today at X.", "The old shrine: 1 of 4 stages repaired.", "Fresh tracks in Y."])
+	s._build_today(lines, _tasks([false]), "")
+	assert_true(s._today.find_child("HereBlock", true, false) != null)
+	assert_true(s._today.find_child("VillageBlock", true, false) != null)
+	assert_true(s._today.find_child("SeasonHeader", true, false) != null)
+	assert_true(s._today.find_child("MoreLine", true, false) == null)
+	var many := PackedStringArray()
+	for i in 8:
+		many.append("Market day today at Stall %d." % i)
+	s._build_today(many)
+	assert_eq(_rows(s), JournalScreen.BLOCK_CAP)
+	var more := s._today.find_child("MoreLine", true, false) as Label
+	assert_true(more != null and more.text == "+3 more")
+	s._build_today(PackedStringArray(), _tasks([false, false, false, false, false, false, false]))
+	assert_eq(s._today.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool: return n.has_meta("season_row")).size(), JournalScreen.BLOCK_CAP)
+	s.queue_free()

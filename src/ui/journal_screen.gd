@@ -15,6 +15,7 @@ const DIM := Color(0.6, 0.6, 0.6)
 var _scroll: ScrollContainer
 var _cards: VBoxContainer
 ## WU-458: the Today page (first) and which page shows.
+const BLOCK_CAP := 5  ## WU-517: rows per Today block
 const PAGES: Array[String] = ["today", "journal"]
 var _page := "today"
 var _today: VBoxContainer
@@ -171,35 +172,73 @@ func _build_today(lines: PackedStringArray, tasks: Array = [], reward_line: Stri
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	card.add_child(inner)
-	var main_lines := PackedStringArray()
+	var here := PackedStringArray()
+	var village := PackedStringArray()
 	for line in lines:
-		if not people.has(line):  # People lines are shown in the People card below
-			main_lines.append(line)
+		if people.has(line):  # People lines are shown in the People card below
+			continue
+		if is_village_line(line):
+			village.append(line)
+		else:
+			here.append(line)
 	# WU-509: no empty main card; the date heading moves to the first card that has lines.
-	var main_empty: bool = tasks.is_empty() and main_lines.is_empty() and not lines.is_empty()
+	var main_empty: bool = tasks.is_empty() and here.is_empty() and village.is_empty() and not lines.is_empty()
 	if not main_empty:
 		_add_head(inner)
-	# WU-462: the season's village tasks sit at the top; a done task gets a check.
-	if not tasks.is_empty():
-		var sh := UIStyle.label(season_header(GameState.current_region), 15, UIStyle.ACCENT)
-		sh.name = "SeasonHeader"
-		inner.add_child(sh)
-		for t: Dictionary in tasks:
-			inner.add_child(_today_row(season_task_text(t), HudIcons.today_glyph("check" if bool(t["done"]) else "dot"), "season_row"))
-		if reward_line != "":
-			inner.add_child(_today_row(reward_line, HudIcons.today_glyph("leaf"), "season_reward"))
 	if lines.is_empty():
 		var quiet := UIStyle.label(QUIET_DAY, 15, DIM)
 		quiet.name = "TodayQuiet"
 		inner.add_child(quiet)
-	for line in main_lines:
-		inner.add_child(_today_row(line, HudIcons.today_glyph(HudIcons.today_icon(line)), "today_row"))
+	# WU-517: three small headed blocks, each capped (WU-462: a done season task gets a check).
+	_block(inner, "HereBlock", "Here today", here, null, "today_row")
+	if not tasks.is_empty():
+		var sh := UIStyle.label(season_header(GameState.current_region), 15, UIStyle.ACCENT)
+		sh.name = "SeasonHeader"
+		inner.add_child(sh)
+		var shown := 0
+		for t: Dictionary in tasks:
+			if shown >= BLOCK_CAP:
+				break
+			inner.add_child(_today_row(season_task_text(t), HudIcons.today_glyph("check" if bool(t["done"]) else "dot"), "season_row"))
+			shown += 1
+		if tasks.size() > BLOCK_CAP:
+			inner.add_child(_more_label(tasks.size() - BLOCK_CAP))
+		if reward_line != "":
+			inner.add_child(_today_row(reward_line, HudIcons.today_glyph("leaf"), "season_reward"))
+	_block(inner, "VillageBlock", "Around the village", village, null, "today_row")
 	if not main_empty:
 		_today.add_child(card)
 	else:
 		card.free()  # never added to the tree, so it would leak
 	_today_card("EarningCard", "Earning here", earning, "coin", main_empty)
 	_today_card("PeopleCard", "People today", people, "calendar", main_empty and earning.is_empty())
+
+
+## WU-517: lines about the village's own upkeep (shrine, incense, project stages, coop) rather than today's happenings.
+static func is_village_line(line: String) -> bool:
+	for k in ["shrine", "incense", "stages repaired", "is whole", "coop", "hens"]:
+		if line.to_lower().contains(k):
+			return true
+	return false
+
+
+## WU-517: a headed block of at most BLOCK_CAP icon rows plus a dim "+N more" line; nothing when empty.
+func _block(inner: VBoxContainer, block_name: String, title: String, lines: PackedStringArray, _unused: Texture2D, meta: String) -> void:
+	if lines.is_empty():
+		return
+	var h := UIStyle.label(title, 15, UIStyle.ACCENT)
+	h.name = block_name
+	inner.add_child(h)
+	for i in mini(lines.size(), BLOCK_CAP):
+		inner.add_child(_today_row(lines[i], HudIcons.today_glyph(HudIcons.today_icon(lines[i])), meta))
+	if lines.size() > BLOCK_CAP:
+		inner.add_child(_more_label(lines.size() - BLOCK_CAP))
+
+
+func _more_label(n: int) -> Label:
+	var l := UIStyle.label("+%d more" % n, 14, DIM)
+	l.name = "MoreLine"
+	return l
 
 
 ## WU-513: the date heading, then the almanac lines straight under it (today's with its omen glyph, tomorrow's dim).
