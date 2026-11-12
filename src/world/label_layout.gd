@@ -79,20 +79,19 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 	return out
 
 
-## WU-511: where a person's name label goes so it never sits on a place label. `label` is the rect drawn above
-## their head, `feet_y` the y of their feet. Clear of `place_rects` -> Vector2.ZERO; else the label drops below the
-## feet (4 px gap), and if that also hits, it shifts sideways in 4 px steps up to 40 px (below first, then above).
+## WU-511/WU-522: where a person's name label goes so it never sits on a place label. `label` is the rect drawn
+## above their head, `feet_y` the y of their feet. Clear of `place_rects` -> Vector2.ZERO; else it slides sideways in
+## 4 px steps up to 40 px, then tries again 4..80 px higher. It never moves down (that put it on the figure).
 ## Returns the offset to add to the label; Vector2.ZERO when nothing fits.
-static func person_offset(label: Rect2, feet_y: float, place_rects: Array[Rect2]) -> Vector2:
+static func person_offset(label: Rect2, _feet_y: float, place_rects: Array[Rect2]) -> Vector2:
 	if not _hits(label, place_rects):
 		return Vector2.ZERO
-	var below_dy := feet_y + 4.0 - label.position.y
-	for dy in [below_dy, 0.0]:
+	for up in range(0, 21):
 		for k in range(0, 11):
 			for dir in [1.0, -1.0]:
 				if k == 0 and dir < 0.0:
 					continue
-				var d := Vector2(dir * 4.0 * k, dy)
+				var d := Vector2(dir * 4.0 * k, -4.0 * up)
 				if not _hits(Rect2(label.position + d, label.size), place_rects):
 					return d
 	return Vector2.ZERO

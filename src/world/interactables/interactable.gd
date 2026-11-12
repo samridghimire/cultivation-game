@@ -248,7 +248,10 @@ static func spread_labels(nodes: Array) -> void:
 		anchors.append(node.position)
 	var shifts := LabelLayout.offsets(rects, anchors)
 	for i in nodes.size():
-		(nodes[i] as Interactable).label_offset += shifts[i]
+		var node := nodes[i] as Interactable
+		node.label_offset += shifts[i]
+		if node.is_person():  # WU-522: a person's label may rise but never drops onto their own head
+			node.label_offset.y = minf(node.label_offset.y, 0.0)
 
 
 ## WU-511: a person's name label (NPC or roamer) never sits on a place's label: it drops below their feet or slides.

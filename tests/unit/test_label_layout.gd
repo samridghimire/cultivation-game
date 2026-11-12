@@ -126,18 +126,17 @@ func test_person_offset_clear_label_stays() -> void:
 	assert_eq(LabelLayout.person_offset(Rect2(0, 0, 80, 20), 100.0, places), Vector2.ZERO)
 
 
-func test_person_offset_drops_below_feet() -> void:
+func test_person_offset_never_moves_down() -> void:
 	var places: Array[Rect2] = [Rect2(90, 60, 100, 20)]
 	var label := Rect2(100, 70, 80, 20)
 	var d := LabelLayout.person_offset(label, 120.0, places)
-	assert_eq(d, Vector2(0, 54))  # label top 70 -> feet 120 + 4 gap
+	assert_true(d.y <= 0.0, "label moved down: %s" % d)
 	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
 
 
-func test_person_offset_slides_when_below_is_taken() -> void:
-	var places: Array[Rect2] = [Rect2(90, 60, 100, 20), Rect2(90, 124, 40, 20)]
+func test_person_offset_rises_when_sides_are_taken() -> void:
+	var places: Array[Rect2] = [Rect2(20, 60, 260, 20)]
 	var label := Rect2(100, 70, 80, 20)
 	var d := LabelLayout.person_offset(label, 120.0, places)
-	assert_true(absf(d.x) > 0.0 and absf(d.x) <= 40.0)
+	assert_true(d.y < 0.0 and d.y <= -12.0)
 	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
-	assert_false(Rect2(label.position + d, label.size).intersects(places[1]))

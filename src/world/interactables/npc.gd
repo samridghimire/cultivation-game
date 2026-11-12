@@ -244,6 +244,18 @@ const FULL_LABEL_RANGE := 96.0
 var _near := false
 ## WU-520: what a far label shows (Npcs.world_title_short); "" = just the name.
 var short_name := ""
+## WU-522: recomputes the far label's realm tag (after the player's realm changed); true when it changed.
+func refresh_short_name() -> bool:
+	if not GameState.npcs.has(npc_id) or GameState.data.npcs.has(npc_id):
+		return false
+	var fresh := Npcs.world_title_short(GameState.npcs[npc_id], GameState.player, GameState.data)
+	if fresh == short_name:
+		return false
+	short_name = fresh
+	_redraw_label()
+	return true
+
+
 ## True while this villager is today's visitor (WORLD-007): a small tea tray stands beside them (WU-411).
 var _visiting := false
 ## True while this villager has an open folk request (WU-402): a "!" badge and a name that stays visible.
