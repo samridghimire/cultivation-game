@@ -55,6 +55,7 @@ var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
 var _cloud_wisps: CloudWisps  # GFX-113: drifting wisps over a mountain region (map.high.wisps)
 var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
+var _market_life: MarketLife  # GFX-119
 var _water_life: WaterLife
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
@@ -204,6 +205,7 @@ func _refresh_ambient() -> void:
 	_refresh_village_life()
 	_refresh_mist_bands()
 	_refresh_cloud_wisps()
+	_refresh_market_life()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -225,6 +227,16 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_emitter(kind, map_size, _mist_strength())
 	add_child(_ambient)
 	_start_lightning()
+
+
+## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.
+func _refresh_market_life() -> void:
+	if _market_life == null:
+		_market_life = MarketLife.new()
+		_market_life.name = "MarketLife"
+		add_child(_market_life)
+		move_child(_market_life, 0)
+	_market_life.setup(_region, _season, _weather_kind, GameClock.total_days, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
 
 
 ## GFX-113: slow cloud wisps over the cliffs of a map.high region; off with Ambient effects, still under reduced motion.

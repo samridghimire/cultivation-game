@@ -776,6 +776,7 @@ static func validate(data: GameData) -> PackedStringArray:
 						var cap := HIGH_WISP_MAX if key == "wisps" else HIGH_PINE_MAX
 						if not (high[key] is float or high[key] is int) or int(high[key]) < 0 or int(high[key]) > cap:
 							errors.append("Region '%s' map.high.%s must be 0-%d" % [region["id"], key, cap])
+		errors.append_array(MarketLayout.validate(region))
 		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
 		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
 			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
