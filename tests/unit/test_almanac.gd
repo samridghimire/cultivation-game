@@ -56,7 +56,7 @@ func test_accessors_and_line() -> void:
 	var omen := Almanac.omen_for(d, day, 5)
 	assert_eq(Almanac.fishing_mult(omen), 1.2)
 	assert_true(Almanac.line(omen).begins_with("Almanac: Good for fishing."))
-	assert_eq(Almanac.tomorrow_line(omen), "Tomorrow is good for fishing.")
+	assert_eq(Almanac.tomorrow_line(omen), "Tomorrow: Good for fishing.")
 	var plain := Almanac.omen_for(d, _find_day(d, 5, "plain_ordinary"), 5)
 	assert_true(Almanac.line(plain) != "")
 	assert_eq(Almanac.tomorrow_line(plain), "")

@@ -6641,3 +6641,46 @@ func test_sect_home_hint_until_visited() -> void:
 	assert_eq(Guidance.sect_home_hint(c, data(), "qingshi_village"), "")
 	var rogue := _fresh()
 	assert_eq(Guidance.sect_home_hint(rogue, data(), "qingshi_village"), "")
+
+
+## TODAY-004: a marked market day, the market line and the wanted line fold into one line for the same stall.
+func test_today_market_lines_merge_with_mark_and_wanted() -> void:
+	var d := data()
+	var c := new_character()
+	var region := "qingshi_village"
+	var day := -1
+	for dd in range(10, 400):
+		for place: Dictionary in d.regions[region]["places"]:
+			if place.has("open_days") and Places.is_open(place, dd) and Places.wanted_phrase(place, dd, d) != "":
+				day = dd
+				break
+		if day >= 0:
+			break
+	assert_gt(day, 0)
+	c.marked_days[day] = "Market: Travelling Market Stall (new wares each time)"
+	var lines := Guidance.today_lines(c, d, {}, [], day, region)
+	var market_lines := 0
+	for l in lines:
+		if l.contains("Travelling Market Stall"):
+			market_lines += 1
+	assert_eq(market_lines, 1, str(lines))
+	assert_true(lines[0].begins_with("Market day today at Travelling Market Stall: wants "), lines[0])
+	assert_true(lines[0].ends_with("; you marked it."), lines[0])
+
+
+## TODAY-004: omen text may be an array, picked deterministically per day; every tomorrow line reads "Tomorrow: Name."
+func test_almanac_text_array_and_tomorrow_names() -> void:
+	var d := data()
+	for o: Dictionary in d.almanac["omens"]:
+		if not Almanac.is_plain(o):
+			var t := Almanac.tomorrow_line(o)
+			assert_true(t.begins_with("Tomorrow: ") and t.contains(String(o["name"])), t)
+	var omen := {"id": "x", "name": "X", "weight": 1, "boost": {}, "text": ["one", "two", "three"]}
+	var seen := {}
+	for day in 30:
+		var a := Almanac.text_of(omen, 5, day)
+		assert_eq(a, Almanac.text_of(omen, 5, day))
+		seen[a] = true
+	assert_gt(seen.size(), 1)
+	d.almanac["omens"].append({"id": "arr", "name": "Arr", "text": ["ok", ""], "weight": 1, "boost": {}})
+	assert_gt(Almanac.validate(d).size(), 0)

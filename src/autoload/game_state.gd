@@ -708,7 +708,7 @@ func almanac_lines() -> PackedStringArray:
 	var out := PackedStringArray()
 	if player == null:
 		return out
-	out.append(Almanac.line(today_omen()))
+	out.append(Almanac.line(today_omen(), Almanac.salt_of(player), GameClock.total_days))
 	var tomorrow := Almanac.tomorrow_line(today_omen(1))
 	if tomorrow != "":
 		out.append(tomorrow)
@@ -4557,7 +4557,7 @@ func _post_reminders() -> void:
 		EventBus.post(line, "world")
 	var omen := today_omen()
 	if not omen.is_empty() and not Almanac.is_plain(omen):
-		EventBus.post(Almanac.line(omen), "almanac")  # CAL-011
+		EventBus.post(Almanac.line(omen, Almanac.salt_of(player), today), "almanac")  # CAL-011
 	for line in VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, today_omen(1)):
 		EventBus.post(line, "world")
 

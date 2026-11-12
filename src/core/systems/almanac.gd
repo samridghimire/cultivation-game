@@ -73,17 +73,29 @@ static func is_plain(omen: Dictionary) -> bool:
 
 
 ## "Almanac: Good for fishing. The water is calm..." ("" only when there is no omen at all).
-static func line(omen: Dictionary) -> String:
+static func line(omen: Dictionary, salt: int = 0, day: int = 0) -> String:
 	if omen.is_empty():
 		return ""
-	return "Almanac: %s. %s" % [String(omen.get("name", "")), String(omen.get("text", ""))]
+	return "Almanac: %s. %s" % [String(omen.get("name", "")), text_of(omen, salt, day)]
 
 
-## "Tomorrow is good for fishing." for a non-plain omen, else "".
+## TODAY-004: an omen's `text` is a string or an array of strings; an array is picked by hash(salt:day), so a day
+## always shows the same variant.
+static func text_of(omen: Dictionary, salt: int = 0, day: int = 0) -> String:
+	var t: Variant = omen.get("text", "")
+	if t is Array:
+		var arr: Array = t
+		if arr.is_empty():
+			return ""
+		return String(arr[absi(hash("%d:%d" % [salt, day])) % arr.size()])
+	return String(t)
+
+
+## "Tomorrow: Good for fishing." for a non-plain omen, else "".
 static func tomorrow_line(omen: Dictionary) -> String:
 	if omen.is_empty() or is_plain(omen):
 		return ""
-	return "Tomorrow is %s." % String(omen.get("name", "")).to_lower()
+	return "Tomorrow: %s." % String(omen.get("name", ""))
 
 
 static func validate(data: GameData) -> Array[String]:
@@ -96,8 +108,12 @@ static func validate(data: GameData) -> Array[String]:
 		seen[id] = true
 		if String(o.get("name", "")).is_empty() or String(o.get("name", "")).length() > 30:
 			errs.append("almanac.json omen '%s' needs a name of 1..30 chars" % id)
-		if String(o.get("text", "")).is_empty() or String(o.get("text", "")).length() > 120:
+		var texts: Array = o.get("text", []) if o.get("text", "") is Array else [o.get("text", "")]
+		if texts.is_empty():
 			errs.append("almanac.json omen '%s' needs text of 1..120 chars" % id)
+		for t: Variant in texts:
+			if not (t is String) or String(t).is_empty() or String(t).length() > 120:
+				errs.append("almanac.json omen '%s' needs text of 1..120 chars" % id)
 		if int(o.get("weight", 0)) < 1:
 			errs.append("almanac.json omen '%s' weight must be >= 1" % id)
 		var eff: Dictionary = o.get("boost", {})

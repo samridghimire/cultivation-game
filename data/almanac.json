@@ -1,5 +1,5 @@
 {
-	"_doc": "CAL-010 village almanac: one omen per day (Almanac.omen_for), picked by weight from `omens`. Fields: id, name (<= 30 chars), text (<= 120 chars), weight (>= 1), boost {} with optional keys fishing_mult 1.0..1.3, gather_bonus 0..0.25 (chance of one extra herb unit), gift_favor 0..3 (extra favor on a liked/neutral gift), sell_mult 1.0..1.1, practice_mult 1.0..1.25. Empty boost = a plain day. Never touches qi, breakthroughs or combat.",
+	"_doc": "CAL-010 village almanac: one omen per day (Almanac.omen_for), picked by weight from `omens`. Fields: id, name (<= 30 chars), text (a string, or an array of strings picked by day; each <= 120 chars), weight (>= 1), boost {} with optional keys fishing_mult 1.0..1.3, gather_bonus 0..0.25 (chance of one extra herb unit), gift_favor 0..3 (extra favor on a liked/neutral gift), sell_mult 1.0..1.1, practice_mult 1.0..1.25. Empty boost = a plain day. Never touches qi, breakthroughs or combat.",
 	"omens": [
 		{"id": "plain_ordinary", "name": "An ordinary day", "text": "Nothing in the stars favors or spoils today's work.", "weight": 4, "boost": {}},
 		{"id": "plain_neither", "name": "Neither good nor ill", "text": "The almanac is silent: a day like any other.", "weight": 4, "boost": {}},

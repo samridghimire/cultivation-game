@@ -3856,7 +3856,7 @@ func test_almanac_lines_for_the_journal() -> void:
 	var lines: PackedStringArray = gs.almanac_lines()
 	assert_eq(lines.size(), 2)
 	assert_true(lines[0].begins_with("Almanac: Test omen"))
-	assert_eq(lines[1], "Tomorrow is test omen.")
+	assert_eq(lines[1], "Tomorrow: Test omen.")
 	_restore_weather(gs)
 
 

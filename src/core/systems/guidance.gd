@@ -353,7 +353,22 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var rname := Exploration.region_name(data, region_id)
 	var year := Calendar.year_of(day)
 	# 0. The days the player marked on the calendar (CAL-006): today's and tomorrow's.
-	out.append_array(VillageCalendar.mark_lines(c, day))
+	# TODAY-004: a marked market day folds into the market line when they name the same stall.
+	var market_stall := _market_stall(data, region_id, day)
+	var mark_today := String(c.marked_days.get(day, ""))
+	var mark_tomorrow := String(c.marked_days.get(day + 1, ""))
+	var stall_name := String(market_stall.get("name", ""))
+	var merged_marks := {}
+	if stall_name != "":
+		var off := int(market_stall["offset"])
+		if off == 0 and mark_today.contains(stall_name):
+			merged_marks[0] = true
+		elif off == 1 and mark_tomorrow.contains(stall_name):
+			merged_marks[1] = true
+	if not merged_marks.has(0) and c.marked_days.has(day):
+		out.append("Today: %s (you marked it)." % mark_today)
+	if not merged_marks.has(1) and c.marked_days.has(day + 1):
+		out.append("Tomorrow: %s." % mark_tomorrow)
 	# 1. Festival and its contest.
 	var fest := _festival_today(data, active_events, region_id, day)
 	if fest != "":
@@ -405,14 +420,26 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		out.append("Fresh tracks in %s: a great beast walks tomorrow%s." % [rname, " (you baited the trail)" if int(flags.get(Wildlife.bait_flag(region_id), -1)) == day + 1 else ""])
 	# 3. Market day here, or the next within 3 days.
 	var market := _market_today_line(data, region_id, day)
-	if market != "":
-		out.append(market)
-	# 4. A stall's wanted item.
+	var market_merged := false
+	# 4. A stall's wanted item (folded into the market line when it is the same stall, TODAY-004).
+	var wanted_line := ""
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		var wanted := Places.wanted_phrase(place, day, data)
 		if wanted != "":
-			out.append("%s wants %s today." % [String(place.get("display_name", "A stall")), wanted])
+			if market != "" and stall_name == String(place.get("display_name", "")) and int(market_stall["offset"]) == 0:
+				market = "Market day today at %s: wants %s" % [stall_name, wanted]
+				market_merged = true
+			else:
+				wanted_line = "%s wants %s today." % [String(place.get("display_name", "A stall")), wanted]
 			break
+	if market != "":
+		if merged_marks.size() > 0:
+			market = (market.trim_suffix(".") + "; you marked it.") if not market_merged else market + "; you marked it."
+		elif market_merged:
+			market += "."
+		out.append(market)
+	if wanted_line != "":
+		out.append(wanted_line)
 	# 5. In-season beasts, seasonal or weather forage, fishing.
 	var season := Wildlife.season_clause(data, region_id, day)
 	if season != "":
@@ -473,14 +500,23 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 
 ## "Market day today at X." or "Market day at X in 2 days."; "" when none within 3 days.
 static func _market_today_line(data: GameData, region_id: String, day: int) -> String:
+	var m := _market_stall(data, region_id, day)
+	if m.is_empty():
+		return ""
+	var nm := String(m["name"])
+	var off := int(m["offset"])
+	if off == 0:
+		return "Market day today at %s." % nm
+	return "Market day at %s %s." % [nm, "tomorrow" if off == 1 else "in %d days" % off]
+
+
+## TODAY-004: {name, offset} of the first market stall open within 3 days of `day`; {} when none.
+static func _market_stall(data: GameData, region_id: String, day: int) -> Dictionary:
 	for d in range(day, day + 4):
 		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 			if place.has("open_days") and Places.is_open(place, d):
-				var nm := String(place.get("display_name", "the market"))
-				if d == day:
-					return "Market day today at %s." % nm
-				return "Market day at %s %s." % [nm, "tomorrow" if d == day + 1 else "in %d days" % (d - day)]
-	return ""
+				return {"name": String(place.get("display_name", "the market")), "offset": d - day}
+	return {}
 
 
 const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" fits 46 characters.
