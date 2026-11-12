@@ -254,3 +254,32 @@ func test_nudge_stop_moves_out_of_a_travel_radius_and_leaves_clear_stops() -> vo
 	var inside := Npcs.nudge_stop(Vector2(110, 100), region)
 	assert_true(Npcs.stop_is_clear(inside, region), "moved out: %s" % inside)
 	assert_eq(Npcs.nudge_stop(Vector2(500, 500), region), Vector2(500, 500))
+
+
+## FOLK-032: generated villagers keep 64 px from every signpost and the arrival point, and from each other.
+func test_generated_villagers_stay_off_the_signpost_and_arrival() -> void:
+	var bad: Array[String] = []
+	for rid: String in data().regions:
+		var region: Dictionary = data().regions[rid]
+		var arrivals := Npcs.arrival_points(region)
+		var spawn: Array = region.get("spawn", [0, 0])
+		var centre := Vector2(float(spawn[0]), float(spawn[1]))
+		var raw := Npcs.spot_positions(14, region.get("npc_spots", []), centre, [])
+		for i in raw.size():
+			raw[i] = Npcs.settle_stand(raw[i], region, false)
+		var people: Array[CharacterData] = []
+		for i in 10:
+			people.append(_villager("npc_%d" % i))
+		var stands := Npcs.haunt_positions(people, region, 3, 16)
+		var all: Array[Vector2] = raw.duplicate()
+		for id: String in stands:
+			all.append(Npcs.settle_stand(stands[id], region, false))
+		all = Npcs.spread_stands(all, region)
+		for i in all.size():
+			for a in arrivals:
+				if all[i].distance_to(a) < Npcs.ARRIVAL_CLEAR - 0.01:
+					bad.append("%s #%d near %s" % [rid, i, a])
+			for j in i:
+				if all[i].distance_to(all[j]) < Npcs.HAUNT_SPACING - 0.01:
+					bad.append("%s #%d/#%d crowd" % [rid, i, j])
+	assert_eq(bad.size(), 0, "; ".join(bad.slice(0, 6)))

@@ -452,7 +452,65 @@ static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vecto
 				var door := door_of(p)
 				return door if stop_is_clear_except(door, region, p) else nudge_stop(door, region)
 		return pos  # named people may stand at a meditation spot or a board on purpose
-	return nudge_stop(pos, region)
+	return nudge_arrival(nudge_stop(pos, region), region)
+
+
+## FOLK-032: generated villagers keep this far from every travel place (signpost) and the region's arrival point.
+const ARRIVAL_CLEAR := 64.0
+
+
+## FOLK-032: the points a newcomer arrives at: every travel place centre plus the region spawn.
+static func arrival_points(region: Dictionary) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) == "travel":
+			out.append(_rect_of(p).get_center())
+	if region.has("spawn"):
+		var s: Array = region["spawn"]
+		out.append(Vector2(float(s[0]), float(s[1])))
+	return out
+
+
+## FOLK-032: `pos` moved outward (away from the nearest arrival point, 8 px steps, then the usual
+## nudge_stop) until it is ARRIVAL_CLEAR from every arrival point; unchanged when already clear.
+static func nudge_arrival(pos: Vector2, region: Dictionary) -> Vector2:
+	var points := arrival_points(region)
+	var cur := pos
+	for step in 24:
+		var near := Vector2.ZERO
+		var best := INF
+		for a in points:
+			var d := cur.distance_to(a)
+			if d < best:
+				best = d
+				near = a
+		if best >= ARRIVAL_CLEAR:
+			return cur
+		var dir := (cur - near).normalized() if best > 0.01 else Vector2.RIGHT
+		cur = nudge_stop(near + dir * (best + 8.0), region)
+	return cur
+
+
+## FOLK-032: after settling, a generated villager standing within HAUNT_SPACING of an earlier one in `stands`
+## is moved outward from the nearest arrival point (or away from that neighbour) until clear.
+static func spread_stands(stands: Array[Vector2], region: Dictionary) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for pos in stands:
+		var cur := pos
+		for step in 12:
+			var crowd := Vector2.ZERO
+			var found := false
+			for q in out:
+				if cur.distance_to(q) < HAUNT_SPACING:
+					crowd = q
+					found = true
+					break
+			if not found:
+				break
+			var dir := (cur - crowd).normalized() if cur.distance_to(crowd) > 0.01 else Vector2.DOWN
+			cur = nudge_arrival(nudge_stop(crowd + dir * (HAUNT_SPACING + 4.0), region), region)
+		out.append(cur)
+	return out
 
 
 ## True when `pos` is outside every place keepout except `own`'s.
