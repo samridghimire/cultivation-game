@@ -616,8 +616,8 @@ func _validate_world() -> void:
 			load_errors.append("Region '%s' map.no_snow must be true or false" % region["id"])
 		if region.get("map", {}).has("building_style") and not PlaceLooks.BUILDING_STYLES.has(region["map"]["building_style"]):
 			load_errors.append("Region '%s' map.building_style must be one of %s" % [region["id"], PlaceLooks.BUILDING_STYLES])
-		if region.get("map", {}).has("ground_style") and not GroundTiles.STYLES.has(region["map"]["ground_style"]):
-			load_errors.append("Region '%s' map.ground_style must be one of %s" % [region["id"], GroundTiles.STYLES])
+		if region.get("map", {}).has("ground_style") and not PlaceLooks.GROUND_STYLES.has(region["map"]["ground_style"]):
+			load_errors.append("Region '%s' map.ground_style must be one of %s" % [region["id"], PlaceLooks.GROUND_STYLES])
 		if region.get("map", {}).has("mist"):
 			var mist: Variant = region["map"]["mist"]
 			if not ((mist is float or mist is int) and float(mist) >= 0.0 and float(mist) <= 1.0):
@@ -710,8 +710,8 @@ func _validate_world() -> void:
 					load_errors.append(problem)
 			if not place_types.has(place.get("type", "")):
 				load_errors.append("Region '%s' has a place of unknown type '%s'" % [region["id"], place.get("type", "")])
-			if place.has("hall_ground") and not (place.get("type", "") == "sect_hall" and SectCourt.GROUNDS.has(String(place["hall_ground"]))):
-				load_errors.append("Region '%s' place '%s': hall_ground is only for a sect_hall and must be one of %s" % [region["id"], place.get("display_name", ""), SectCourt.GROUNDS])
+			if place.has("hall_ground") and not (place.get("type", "") == "sect_hall" and PlaceLooks.HALL_GROUNDS.has(String(place["hall_ground"]))):
+				load_errors.append("Region '%s' place '%s': hall_ground is only for a sect_hall and must be one of %s" % [region["id"], place.get("display_name", ""), PlaceLooks.HALL_GROUNDS])
 			if place.get("type", "") == "auction" and not auction_houses.has(String(place.get("house_id", ""))):
 				load_errors.append("Region '%s' auction place has unknown house_id '%s'" % [region["id"], place.get("house_id", "")])
 			if place.has("sect") and not sects.has(String(place["sect"])):

@@ -154,7 +154,7 @@ static func _earth_pixel(base: Color, rid: String, x: int, y: int) -> Color:
 	return earth.darkened(float((x / 4 + y / 4) % 3) * 0.02)
 
 
-const STYLES := ["grass", "paved", "scree", "bog", "litter"]
+const STYLES := PlaceLooks.GROUND_STYLES
 
 
 ## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes

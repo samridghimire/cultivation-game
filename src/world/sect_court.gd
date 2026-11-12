@@ -42,7 +42,7 @@ static func court_rect(hall: Dictionary, region: Dictionary) -> Rect2:
 
 
 ## GFX-121: the ground a sect hall stands on: `hall_ground` on the place (planks | terrace | stone, default stone).
-const GROUNDS: Array[String] = ["stone", "planks", "terrace"]
+const GROUNDS: Array[String] = PlaceLooks.HALL_GROUNDS
 
 
 static func court_style(place: Dictionary) -> String:

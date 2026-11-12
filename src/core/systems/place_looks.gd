@@ -32,6 +32,9 @@ const WATER_TINTS := {"clear": "3f7fa8", "murky": "3a4a2c", "icy": "bcd8ea"}
 const REALM_LOOKS := ["rift", "cleft", "seal", "gate", "tomb", "pavilion"]
 ## Region building styles (regions.json `map.building_style`, GFX-100); PixelPlace.STYLE_COLORS colours each.
 const BUILDING_STYLES := ["thatch", "tile", "stone", "stilt", "log"]
+## ARCH-001: ground styles a region map may name (src/world/ground_tiles.gd draws them) and sect hall court grounds (sect_court.gd).
+const GROUND_STYLES := ["grass", "paved", "scree", "bog", "litter"]
+const HALL_GROUNDS: Array[String] = ["stone", "planks", "terrace"]
 
 
 ## Error strings for `look` (empty when valid); `who` names the place in messages.

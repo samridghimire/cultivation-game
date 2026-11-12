@@ -3956,11 +3956,27 @@ func test_travel_warns_about_deadly_beasts_once_per_season() -> void:
 		if category == "danger" and text.begins_with("The beasts of"):
 			seen[0] += 1
 	EventBus.message_posted.connect(cb)
-	gs._warn_beasts(region)
-	gs._warn_beasts(region)
+	gs._warn_beasts(region, GameClock.total_days)
+	gs._warn_beasts(region, GameClock.total_days)
 	EventBus.message_posted.disconnect(cb)
 	assert_eq(seen[0], 1)
 	assert_true(gs.world_flags.has("warned_" + region))
+
+
+## GUIDE-237: the warning belongs to the season you arrive in, so a trip that crosses a season boundary warns again.
+func test_beast_warning_uses_the_arrival_season() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = 1
+	var region := "myriad_peaks_ridge"
+	var season_len := Calendar.DAYS_PER_MONTH * 3
+	var last_autumn_day := season_len * 3 - 1
+	var departure := last_autumn_day - 1
+	assert_true(Calendar.season_of(departure) != Calendar.season_of(departure + 3), "the trip crosses a season")
+	gs._warn_beasts(region, departure)
+	var departure_season := int(gs.world_flags["warned_" + region])
+	gs._warn_beasts(region, departure + 3)
+	assert_true(int(gs.world_flags["warned_" + region]) != departure_season, "arrival in the next season warns again")
 
 
 func test_artifact_drinks_growth_and_hums() -> void:
