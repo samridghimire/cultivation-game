@@ -9,8 +9,9 @@ const MIN_BANDS := 3
 const MAX_BANDS := 5
 const MIN_SPEED := 8.0
 const MAX_SPEED := 15.0
-const ALPHA_MIN := 0.08
-const ALPHA_MAX := 0.15
+const ALPHA_MIN := 0.13
+const ALPHA_MAX := 0.24
+const MAX_DRAWN_ALPHA := 0.4  # WU-521: a fog day reads as mist but never hides labels or the player
 
 var _bands: Array[Dictionary] = []
 var _map_size := Vector2(1600, 1000)
@@ -28,7 +29,7 @@ static func strength(mist: float, fog_day: bool) -> float:
 	return mist * (2.0 if fog_day else 1.0)
 
 
-## Band layout: [{y, h, w, x0, speed, alpha}], 3-5 bands. alpha is 0.08-0.15 x mist; speed 8-15 px/s.
+## Band layout: [{y, h, w, x0, speed, alpha}], 3-5 bands. alpha is 0.13-0.24 x mist; speed 8-15 px/s.
 static func layout(region_id: String, mist: float, map_size: Vector2) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not enabled(mist):
@@ -40,7 +41,7 @@ static func layout(region_id: String, mist: float, map_size: Vector2) -> Array[D
 		var w := rng.randf_range(0.5, 0.8) * map_size.x
 		out.append({
 			"y": (float(i) + rng.randf_range(0.2, 0.8)) / count * map_size.y,
-			"h": rng.randf_range(60.0, 110.0),
+			"h": rng.randf_range(80.0, 140.0),
 			"w": w,
 			"x0": rng.randf_range(0.0, map_size.x + w),
 			"speed": rng.randf_range(MIN_SPEED, MAX_SPEED),
@@ -52,8 +53,8 @@ static func layout(region_id: String, mist: float, map_size: Vector2) -> Array[D
 ## GFX-120: on snow the pale bands vanish, so they turn a cool blue-grey and a little stronger.
 static func band_color(snowy: bool, alpha: float) -> Color:
 	if snowy:
-		return Color(0.52, 0.62, 0.74, minf(alpha * 1.5, 0.4))
-	return Color(0.85, 0.9, 0.9, alpha)
+		return Color(0.52, 0.62, 0.74, minf(alpha * 1.5, MAX_DRAWN_ALPHA))
+	return Color(0.85, 0.9, 0.9, minf(alpha, MAX_DRAWN_ALPHA))
 
 
 ## Left edge of a band after `t` seconds: it drifts right and wraps from the map's right edge

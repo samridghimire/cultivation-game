@@ -159,7 +159,7 @@ func test_mist_bands_layout() -> void:
 	assert_true(a.size() >= 3 and a.size() <= 5)
 	assert_eq(a, MistBands.layout("misty_forest", 0.6, Vector2(1600, 1000)), "stable per region")
 	for b in a:
-		assert_true(float(b["alpha"]) >= 0.08 * 0.6 - 0.0001 and float(b["alpha"]) <= 0.15 * 0.6 + 0.0001)
+		assert_true(float(b["alpha"]) >= 0.13 * 0.6 - 0.0001 and float(b["alpha"]) <= 0.24 * 0.6 + 0.0001)
 		assert_true(float(b["speed"]) >= 8.0 and float(b["speed"]) <= 15.0)
 	assert_true(MistBands.layout("qingshi_village", 0.4, Vector2(1600, 1000)).is_empty())
 	assert_true(MistBands.layout("qingshi_village", 1.0, Vector2(1600, 1000)).size() >= 3)
@@ -196,3 +196,10 @@ func test_mist_band_color_on_snow() -> void:
 	assert_true(snow.b > snow.r, "blue-grey")
 	assert_true(snow.a > summer.a)
 	assert_true(snow.get_luminance() < summer.get_luminance(), "darker than the snow so it reads")
+
+
+## WU-521: the drawn band alpha is capped so a fog day never hides labels or the player.
+func test_mist_band_alpha_capped() -> void:
+	assert_true(MistBands.band_color(false, 0.9).a <= MistBands.MAX_DRAWN_ALPHA + 0.001)
+	assert_true(MistBands.band_color(true, 0.9).a <= MistBands.MAX_DRAWN_ALPHA + 0.001)
+	assert_true(MistBands.band_color(false, 0.3).a > 0.25, "dense mist still reads")

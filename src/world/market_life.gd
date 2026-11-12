@@ -5,6 +5,9 @@ extends Node2D
 ## MarketLayout (seeded by region id); shoppers are seeded per day and stand still under reduce_motion.
 
 const OUTLINE := Color("2b2118")
+const STRING_COLOR := Color("1a120c")
+const LANTERN_RED := Color("f0553a")
+const LANTERN_CORE := Color("fff0b0")
 const WOOD := Color("6e4a2a")
 const ROBES: Array[String] = ["8a5a2b", "5f7f9f", "9f4f4f", "6f8f5a", "a08a4a", "7a5f8f"]
 
@@ -135,11 +138,12 @@ func _draw_string(a: Vector2, b: Vector2) -> void:
 	for s in range(1, steps + 1):
 		var t := float(s) / float(steps)
 		var q: Vector2 = (1.0 - t) * (1.0 - t) * a + 2.0 * (1.0 - t) * t * mid + t * t * b
-		draw_line(prev, q, OUTLINE, 1.0)
+		draw_line(prev, q, STRING_COLOR, 2.0)  # WU-521: a darker, thicker string reads at 1x
 		if s % 3 == 0 and s < steps:
 			var c := q + Vector2(0, 6)
-			draw_circle(c, 11.0 if _dim else 7.0, Color(1.0, 0.8, 0.4, 0.28 if _dim else 0.10))  # the glow reads on grey days
-			draw_circle(c, 4.0, Color("d9573a"))
-			draw_circle(c, 4.0, Color("e8c14a"), false, 1.0)
+			draw_circle(c, 12.0 if _dim else 9.0, Color(1.0, 0.8, 0.4, 0.34 if _dim else 0.22))  # the glow reads on grey days
+			draw_circle(c, 5.0, LANTERN_RED)
+			draw_circle(c, 5.0, Color("ffd45a"), false, 1.5)
+			draw_circle(c, 2.0, LANTERN_CORE)
 			count += 1
 		prev = q

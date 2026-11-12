@@ -70,3 +70,9 @@ func test_market_life_draws_in_both_seasons() -> void:
 		node.setup(_market(), season, "rain", 4, false)
 		assert_eq(node.get_child_count(), 0)
 	node.free()
+
+
+## WU-521: the lantern string is much darker than the lantern dot so both read at 1x.
+func test_lantern_string_contrast() -> void:
+	assert_true(MarketLife.LANTERN_RED.get_luminance() - MarketLife.STRING_COLOR.get_luminance() > 0.2)
+	assert_true(MarketLife.LANTERN_CORE.get_luminance() > MarketLife.LANTERN_RED.get_luminance())
