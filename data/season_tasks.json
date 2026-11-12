@@ -58,7 +58,7 @@
         [
           {"id": "spring_bream", "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
           {"id": "spring_petals", "text": "Gather 3 Peach Blossom Petals for the shrine.", "kind": "gather", "target": "peach_blossom_petal", "count": 3},
-          {"id": "spring_stag", "text": "Drive off a Fog-Antler Stag that is trampling the fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1}
+          {"id": "spring_stag", "text": "Drive off a Wild Boar that is rooting up the fields.", "kind": "hunt", "target": "wild_boar", "count": 1}
         ],
         [
           {"id": "spring_carp", "text": "Land 2 Silver Carp for the Qingming offering table.", "kind": "catch", "target": "silver_carp", "count": 2},
@@ -87,7 +87,7 @@
       "sets": [
         [
           {"id": "autumn_roach", "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
-          {"id": "autumn_fox", "text": "Hunt a Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
+          {"id": "autumn_fox", "text": "Hunt a Wild Boar that raids the granaries.", "kind": "hunt", "target": "wild_boar", "count": 1},
           {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
         ],
         [
@@ -102,7 +102,7 @@
       "sets": [
         [
           {"id": "winter_perch", "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
-          {"id": "winter_wolf", "text": "Hunt a Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},
+          {"id": "winter_wolf", "text": "Hunt a Wild Boar that prowls near the village.", "kind": "hunt", "target": "wild_boar", "count": 1},
           {"id": "winter_lanterns", "text": "Join the Lantern Festival contest.", "kind": "contest", "target": "lantern_festival", "count": 1}
         ],
         [

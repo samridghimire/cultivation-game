@@ -21,10 +21,10 @@ func test_progress_per_kind_and_reward_once() -> void:
 	assert_eq(SeasonTasks.note(c, gd, "gather", "peach_blossom_petal", 2, 5).size(), 0, "3 needed")
 	var lines := SeasonTasks.note(c, gd, "gather", "peach_blossom_petal", 1, 5)
 	assert_eq(lines.size(), 1)
-	lines = SeasonTasks.note(c, gd, "hunt", "fog_antler_stag", 1, 5)
+	lines = SeasonTasks.note(c, gd, "hunt", "wild_boar", 1, 5)
 	assert_eq(lines.size(), 3, "task + thanks + shrine stage")
 	assert_true(lines[1].begins_with("The village thanks you for the spring"))
-	assert_true(SeasonTasks.note(c, gd, "hunt", "fog_antler_stag", 1, 5).is_empty(), "paid once")
+	assert_true(SeasonTasks.note(c, gd, "hunt", "wild_boar", 1, 5).is_empty(), "paid once")
 	var list := SeasonTasks.list(c, gd, 5)
 	assert_eq(list.size(), 3)
 	assert_true(list[1]["done"] and int(list[1]["n"]) == 3)
@@ -69,10 +69,10 @@ func test_game_state_hooks_pay_reward() -> void:
 	gs._season_note("catch", "peach_blossom_bream", 1)
 	gs._season_note("gather", "peach_blossom_petal", 3)
 	assert_eq(gs.season_tasks().size(), 3)
-	gs._season_note("hunt", "fog_antler_stag", 1)
+	gs._season_note("hunt", "wild_boar", 1)
 	assert_eq(c.item_count("spirit_stone"), stones + 60)
 	assert_true(c.renown.get("qingshi_village", 0) >= 2)
-	gs._season_note("hunt", "fog_antler_stag", 1)
+	gs._season_note("hunt", "wild_boar", 1)
 	assert_eq(c.item_count("spirit_stone"), stones + 60, "once")
 	gs.end_session()
 
@@ -142,6 +142,9 @@ func test_hunt_targets_roam_for_both_realms() -> void:
 			if String(task["kind"]) != "hunt":
 				continue
 			for realm_index in realms:
+				# SEASON-018: the year-1 newcomer hunt is the Weak wild boar, which Foundation roamers leave out.
+				if String(task["target"]) == "wild_boar" and realm_index != realms[0]:
+					continue
 				var found := false
 				for region_id: String in gd.regions:
 					for d in range(first_day, first_day + 60):
