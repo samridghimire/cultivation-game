@@ -548,6 +548,17 @@ static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -
 	return out
 
 
+## GFX-122: a paving slab's colour: a gentle +-8% of `base` (never below 0.92x), and now and then (1 slab in 8) a lighter
+## worn slab instead of a dark one. Deterministic from `seed`.
+static func paving_shade(base: Color, seed: int) -> Color:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	if rng.randi() % 8 == 0:
+		return base.lightened(0.05 + rng.randf() * 0.05)
+	var f := rng.randf_range(-0.08, 0.08)
+	return base.lightened(f) if f >= 0.0 else base.darkened(-f)
+
+
 ## GFX-112: the road surface pieces laid over a path rect, seeded by region id and rect. Each is
 ## {kind: slab|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
 ## slabs; bog with map.water murky = planks across the path; other bog = a muddy track with puddles; grass/litter = two

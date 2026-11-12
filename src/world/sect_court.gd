@@ -145,9 +145,14 @@ static func draw_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool, s
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
 
 
+## GFX-122: the boardwalk's wood keeps its brown in winter (a touch lighter); snow is drawn as lines, not a recolour.
+static func plank_color(snowy: bool) -> Color:
+	return Color("7d6244") if snowy else Color("6b5238")
+
+
 ## GFX-121: a raised boardwalk platform on short stilts with a rail along its front and reeds at its edge.
 static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
-	var wood := Color("6b5238") if not snowy else Color("a9a597")
+	var wood := plank_color(snowy)
 	var seam := wood.darkened(0.4)
 	ci.draw_rect(Rect2(court.position.x + 2.0, court.end.y + 2.0, court.size.x, 6.0), Color(0.05, 0.08, 0.06, 0.35))
 	ci.draw_rect(court, wood)
@@ -155,6 +160,8 @@ static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy:
 	var row := 0
 	while y < court.end.y:
 		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), seam, 1.0)
+		if snowy and row % 2 == 0:  # GFX-122: thin snow along every 2nd plank edge
+			ci.draw_line(Vector2(court.position.x, y - 1.0), Vector2(court.end.x, y - 1.0), Color(0.94, 0.97, 1.0, 0.85), 1.0)
 		var x := court.position.x + (12.0 if row % 2 == 1 else 0.0) + 24.0
 		while x < court.end.x:
 			ci.draw_line(Vector2(x, y), Vector2(x, minf(y + 8.0, court.end.y)), seam, 1.0)
@@ -162,6 +169,8 @@ static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy:
 		y += 8.0
 		row += 1
 	ci.draw_rect(court, seam.darkened(0.2), false, 2.0)
+	if snowy:  # the outer rim only
+		ci.draw_rect(court.grow(-1.0), Color(0.94, 0.97, 1.0, 0.85), false, 1.0)
 	# Stilts under the front edge.
 	var px := court.position.x + 8.0
 	while px < court.end.x - 4.0:

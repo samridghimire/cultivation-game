@@ -1760,12 +1760,12 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 		var c := base
 		match str(t["kind"]):
 			"slab":
-				c = base.lightened(0.05 * shade) if shade >= 0.0 else base.darkened(-0.07 * shade)
-				if t["flag"] == "gap":
-					draw_rect(r, base.darkened(0.45))
-					continue
+				var tr: Rect2 = t["rect"]
+				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(tr.position.x), int(tr.position.y)]))
+				if t["flag"] == "gap":  # GFX-122: a worn, lighter slab, never a dark hole
+					c = base.lightened(0.07)
 				draw_rect(r, c)
-				draw_rect(r, base.darkened(0.3), false, 1.0)
+				draw_rect(r, base.darkened(0.2), false, 1.0)
 				if t["flag"] == "crack":
 					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
 			"plank":
