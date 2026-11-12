@@ -1057,7 +1057,8 @@ func _fight_bounty(enemy_id: String, spoils: Dictionary = {}) -> bool:
 func _pay_bounty(bounty_id: String, enemy_name: String, lead: String = "") -> void:
 	var bounty_region := String(Bounties.def_of(data, bounty_id).get("region", current_region))
 	var paid := Bounties.complete(player, data, GameClock.total_days, bounty_id)
-	if int(paid["stones"]) > 0:
+	# FOLK-034; a great beast (lead != "") already left the greater great_beast / great_trail news.
+	if int(paid["stones"]) > 0 and lead == "":
 		Folk.record_news(world_flags, "bounty", enemy_name, bounty_region, GameClock.total_days)
 	var stones := int(paid["stones"])
 	var bonus_line := " Your name earned you %d more." % int(paid["bonus"]) if int(paid["bonus"]) > 0 else ""

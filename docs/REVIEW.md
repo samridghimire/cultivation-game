@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 86c4dc1
+Last reviewed commit: 4d1f846
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1860,3 +1860,15 @@ Last reviewed commit: 86c4dc1
     you while walking (allowed by rule 4, but a hash like the rest of `greeting` would keep it side-effect free);
     WU-522's realm tags refresh on breakthrough only, not on a devour that gains stages; WU-522 part (2) (Azure Peak
     signboard over the banner) still open.
+- 2026-11-12 (reviewer): reviewed 86c4dc1..4d1f846 (WU-523, WU-525, GFX-124, WU-526, ART-011, FOLK-034, GFX-125, ART-013,
+  WU-528, QA-210; [PLAN] skipped). Main green before and after (3897 tests). No BACKLOG/CHANGELOG edits by workers; no
+  SAVE_VERSION change (ART-011's `artifact_gains` defaults to [] and is in the every-field save test). No new binary assets.
+  - Fixed (FOLK-034): a great beast that was also the bounty quarry called `_pay_bounty`, whose new "bounty" news replaced
+    the great_beast / great_trail news recorded a moment earlier, so villagers talked of a bounty instead of the great hunt.
+    Bounty news is now recorded only on the plain bounty path (`lead == ""`); assertion added to the WILD-008 test.
+  - ART-011 (gains log, energy_sources, Today seal line), ART-013 (tag_mult validated, keepsakes/quest items refused,
+    Feed list sorted), FOLK-034 (omen talk now hash-picked; the only caller passes rng, so no context change), WU-525
+    (relation grid in core), WU-526, WU-528, GFX-124/125 (cosmetic, locally seeded) OK.
+  - Notes, not filed: ART-013 changes item energy values but did not run tools/balance.sh --check (no sim feeds the
+    artifact, so likely no diff). QA-210 reports year 1's Spring stag task is Deadly for a fresh mortal even with the
+    village hunt ally (its Follow-ups propose swapping it for a Weak beast; planner's call). WU-525 has no screenshot check.

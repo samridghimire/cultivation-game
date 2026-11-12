@@ -408,6 +408,7 @@ func test_great_beast_completes_matching_bounty() -> void:
 	assert_true(c.bounty.is_empty(), "bounty done by the great beast")
 	assert_eq(LifeStats.get_stat(c, "bounties_done"), 1)
 	assert_true(c.item_count("spirit_stone") >= stones + 25)
+	assert_true(["great_beast", "great_trail"].has(String(gs.world_flags["village_news"]["kind"])), "the bounty news does not replace the great beast's")
 	for x in gs.roamers_here():
 		assert_true(int(x["slot"]) != 100 and int(x["slot"]) != Wildlife.GREAT_SLOT, "no roamer reappears today")
 	def["enemy"] = old_enemy
