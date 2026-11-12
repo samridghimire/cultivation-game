@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7818199
+Last reviewed commit: 24a2821
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1813,3 +1813,18 @@ Last reviewed commit: 7818199
   - Notes, not filed: cancelling a cast posts "The fish slips away before you strike." and then beginner's luck's
     "A fish ... slips free, but a small one stays" (two near-duplicate lines, FISH-009 follow-up); QA-208 parts 3/5
     still open; WU-510/WU-509/WU-511 did not render their 1280x720 shots.
+- 2026-11-12 (reviewer): reviewed 7818199..24a2821 (GFX-117, CAL-010, GFX-118, SECT-006, GUIDE-236, WU-507, WU-513, WU-514,
+  C-349, FISH-010, C-350, WU-515, CAL-011, TODAY-004, GFX-119, FOLK-032, QA-208, FORAGE-006, GFX-120, WU-516, C-344;
+  [PLAN]/[REVIEW] skipped). Main green (3823 tests -> 3824). No BACKLOG/CHANGELOG edits by workers; no binary assets
+  (market stalls, shadows, mist colours are code-drawn); no SAVE_VERSION change (the almanac is a pure function of
+  name+birthday and day; SECT-006 adds only a deed requirement).
+  - Fixed (WU-515): `Roamer.wander_target` was never called and `Roamer.arrival_points` was never set, so beasts wandered
+    from their spot without the arrival ring (only the spawn spot respected it; the unit test only tested the static
+    helper). `_wander` now uses it and the world passes the zone's arrival points; a test drives a live roamer's wander loop.
+  - CAL-010/011, C-349 (omens bounded and validated; gift bonus capped; no qi/combat effects), SECT-006 (sect check before
+    rogue access, steward chores in Earnings/duty hint), TODAY-004 (mark/market/wanted fold), GUIDE-236, FOLK-032,
+    FORAGE-006 (roll still drawn so later slots stay put), GFX-119 (seeded, validated MarketLayout), C-344, C-350, OK.
+  - Notes, not filed: CAL-010 did not run tools/balance.sh --check (omens move fishing/gather/sell a few percent);
+    the reminder says "Tomorrow: good for fishing." while Today says "Tomorrow: Good for fishing."; a multi-day practice
+    or gather takes the whole trip at the first day's omen; `HUD.arrival_extra` is only used by its test since WU-514;
+    WU-515/GFX-117/WU-516 did not render their screenshots.

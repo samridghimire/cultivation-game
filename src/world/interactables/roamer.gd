@@ -156,8 +156,7 @@ func _wander(delta: float) -> void:
 		if _wait <= 0.0:
 			_wait = _rng.randf_range(1.5, 4.0)
 			var offset := Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(10.0, WANDER_RADIUS)
-			_target = home + offset
-			_target = Vector2(maxf(24.0, _target.x), maxf(24.0, _target.y))
+			_target = wander_target(home, offset, arrival_points)  # WU-515 (REVIEW: was never called)
 		return
 	var step := (_target - position).normalized() * minf(WALK_SPEED * delta, position.distance_to(_target))
 	position += step

@@ -240,3 +240,23 @@ func test_wander_target_stays_out_of_arrival_ring() -> void:
 		var t := Roamer.wander_target(home, off, arrival)
 		for a in arrival:
 			assert_true(t.distance_to(a) >= Roamer.ARRIVAL_CLEAR - 0.5, "target %s inside ring of %s" % [t, a])
+
+
+## REVIEW (WU-515): the beast's own wander loop uses wander_target, so a live roamer's targets stay out of the ring.
+func test_roamer_wander_respects_arrival_points() -> void:
+	var r := Roamer.new()
+	r.setup(1, "wild_boar", Vector2(600, 600), 7)
+	var a := Vector2(600 + Roamer.ARRIVAL_CLEAR + 20.0, 600)
+	r.arrival_points = [a]
+	var picked := 0
+	var last := r.home
+	for i in 4000:
+		r._wander(0.1)
+		if r._target != last:
+			picked += 1
+			last = r._target
+		if r._target.distance_to(a) < Roamer.ARRIVAL_CLEAR - 0.5:
+			assert_true(false, "target %s inside the ring" % r._target)
+			break
+	assert_true(picked > 5, "the beast picked new targets")
+	r.free()

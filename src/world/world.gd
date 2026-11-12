@@ -555,6 +555,7 @@ func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) 
 	node.player_ref = player
 	node.map_bounds = map_size
 	node.blocked_rects = blocked
+	node.arrival_points = _clear_zones["arrival"]  # WU-515
 	add_child(node)
 	move_child(node, player.get_index())
 
