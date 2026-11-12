@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-12 [WU-525] The clan screen shows how every clan stands with every other in one coloured grid.
+- 2026-11-12 [WU-523] Milestone and new-friend banners wait until you close the screen you are reading.
+- 2026-11-12 [C-351] The village almanac speaks each omen in three different old sayings.
+- 2026-11-12 [C-342] Almost 300 more encounters show a picture of where they happen.
+- 2026-11-12 [WU-524] The Creation Artifact screen shows its lives, an energy bar and four power cards instead of a text list.
+- 2026-11-12 [ARCH-001] Core game rules no longer depend on world drawing code; arrival warnings use the season you arrive in.
+- 2026-11-12 [QA-035] The economy sim has sect disciples take a mission every month and compares missions with work.
+- 2026-11-12 [ART-010] The Creation Artifact speaks at a few great moments of your life.
+- 2026-11-12 [ART-009] The Creation Artifact grows from your progress: breakthroughs, first wins, discoveries and secret realm floors.
+- 2026-11-12 [C-353] Fallen Star Market has two new jobs: copying auction ledgers and hanging lanterns.
+- 2026-11-12 [WU-522] Villagers' name labels never sit across their own heads, and realm tags update after a breakthrough.
+- 2026-11-12 [FOLK-033] Villagers sometimes talk about the day's omen.
+- 2026-11-12 [CAL-012] On an omen day, Next steps says what the day is good for and where to do it.
+- 2026-11-12 [WU-521] Fog and mist are easier to see, and the market's lanterns glow brighter.
 - 2026-11-12 [WU-519] Every fixed-width HUD line is tested to fit or end in a clean ellipsis.
 - 2026-11-12 [GFX-123] Myriad Peaks Ridge looks like a mountain: rock crags and wind-streaked snow drifts; Azure Peak gets crags.
 - 2026-11-12 [SEASON-017] A season hunt that is too dangerous for you says how to do it: join the village hunt, or come back stronger.
