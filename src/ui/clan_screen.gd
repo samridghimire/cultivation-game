@@ -28,6 +28,8 @@ var _info: Label
 var _status: Label
 var _actions: VBoxContainer
 var _close_button: Button
+var _found_grid: GridContainer
+var _clan_grid: GridContainer
 ## "m:<id>" for a member, "r:<id>" for a recruit candidate, "b:<id>" for an
 ## estate building, or "".
 var _selected := ""
@@ -52,6 +54,8 @@ func _init() -> void:
 	_found_box.add_child(_found_info)
 	_found_status = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
 	_found_box.add_child(_found_status)
+	_found_grid = _make_grid()
+	_found_box.add_child(_found_grid)
 	_found_button = UIStyle.button("", _found)
 	_found_button.name = "Found"
 	_found_box.add_child(_found_button)
@@ -87,10 +91,63 @@ func _init() -> void:
 	_actions = VBoxContainer.new()
 	_actions.add_theme_constant_override("separation", 6)
 	details.add_child(_actions)
+	_clan_grid = _make_grid()
+	details.add_child(_clan_grid)
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
 	EventBus.player_changed.connect(_on_player_changed_rebuild)
+
+
+func _make_grid() -> GridContainer:
+	var g := GridContainer.new()
+	g.name = "RelationGrid"
+	g.add_theme_constant_override("h_separation", 6)
+	g.add_theme_constant_override("v_separation", 2)
+	return g
+
+
+## Fills `grid` with the clan relation grid (NpcClans.relation_grid): a header
+## row of short names, then one row per clan with a coloured standing word.
+func _fill_grid(grid: GridContainer, clan: ClanData) -> void:
+	for child in grid.get_children():
+		grid.remove_child(child)
+		child.queue_free()
+	var g := NpcClans.relation_grid(GameState.npc_clans, GameState.data, clan)
+	var labels: Array = g["labels"]
+	grid.columns = labels.size() + 1
+	grid.add_child(UIStyle.label("", 13))
+	for i in labels.size():
+		grid.add_child(_grid_cell(labels[i], Color(0.75, 0.75, 0.75), i == 0 and clan != null))
+	for r in labels.size():
+		grid.add_child(_grid_cell(labels[r], Color(0.75, 0.75, 0.75), r == 0 and clan != null))
+		for cell: Dictionary in g["cells"][r]:
+			if cell.is_empty():
+				grid.add_child(UIStyle.label("", 13))
+			else:
+				grid.add_child(_grid_cell(String(cell["text"]), standing_color(int(cell["value"]), String(cell["text"]) == "Allied"), false))
+
+
+func _grid_cell(text: String, color: Color, highlight: bool) -> Label:
+	var l := UIStyle.label(text, 13, UIStyle.ACCENT if highlight else color)
+	l.custom_minimum_size = Vector2(58, 0)
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return l
+
+
+## Colour of a standing word: allied/honored teal, friendly gold, neutral
+## grey-white, wary orange, hostile red.
+static func standing_color(value: int, allied: bool) -> Color:
+	if allied or value >= 50:
+		return UIStyle.CATEGORY_COLORS["almanac"]
+	if value >= 15:
+		return UIStyle.CATEGORY_COLORS["progress"]
+	if value >= -9:
+		return UIStyle.CATEGORY_COLORS["info"]
+	if value >= -59:
+		return UIStyle.CATEGORY_COLORS["warning"]
+	return UIStyle.CATEGORY_COLORS["danger"]
 
 
 func _wrapped(l: Label) -> Label:
@@ -210,7 +267,7 @@ func _rebuild() -> void:
 		_summary.text = ""
 		_summary.visible = false
 		var realm_lines := NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data)
-		realm_lines.append_array(NpcClans.rivalry_lines(GameState.npc_clans, data))
+		_fill_grid(_found_grid, null)
 		_found_info.text = founding_text(data) + "\n\nClans of the realm:\n  " + "\n  ".join(realm_lines)
 		var reason := Clans.check_found(p, clan, data)
 		_found_status.text = reason
@@ -253,7 +310,7 @@ func _rebuild() -> void:
 		_list.add_child(_entry(c.name, "r:" + c.id, reason != ""))
 	_list.add_child(UIStyle.label("Clans of the realm", 16, Color(0.75, 0.75, 0.75)))
 	var realm_lines := NpcClans.summary_lines(GameState.npc_clans, GameState.npcs, data)
-	realm_lines.append_array(NpcClans.rivalry_lines(GameState.npc_clans, data))
+	_fill_grid(_clan_grid, clan)
 	for line in realm_lines:
 		var l := _wrapped(UIStyle.label(line, 14, Color(0.7, 0.7, 0.7)))
 		l.custom_minimum_size = Vector2(300, 0)

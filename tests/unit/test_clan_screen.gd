@@ -246,3 +246,36 @@ func test_estate_section_builds() -> void:
 	assert_true((screen._list.get_node("b_" + building_id) as Button).text.contains("[building]"))
 	screen.free()
 	gs.end_session()
+
+
+func test_relation_grid_is_n_by_n_with_blank_diagonal() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(_founder())
+	var n: int = gs.npc_clans.size()
+	var g := NpcClans.relation_grid(gs.npc_clans, gs.data, null)
+	assert_eq((g["ids"] as Array).size(), n)
+	for r in n:
+		assert_eq((g["cells"][r] as Array).size(), n)
+		assert_true((g["cells"][r][r] as Dictionary).is_empty(), "diagonal blank")
+	gs.found_clan()
+	g = NpcClans.relation_grid(gs.npc_clans, gs.data, gs.clan)
+	assert_eq((g["ids"] as Array).size(), n + 1, "player's clan joins the grid")
+	assert_eq(g["ids"][0], NpcClans.PLAYER, "player's clan is the first row")
+	assert_eq(g["labels"][0], "Lin")
+
+
+func test_clan_screen_grid_replaces_pair_sentences() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(_founder())
+	gs.npc_clans["mo_clan"].relations["yin_clan"] = -80
+	var screen := ClanScreen.new()
+	screen._rebuild()
+	var n: int = gs.npc_clans.size()
+	assert_eq(screen._found_grid.get_child_count(), (n + 1) * (n + 1))
+	for l: Label in screen.find_children("*", "Label", true, false):
+		assert_false(l.text.contains(" are Hostile."), l.text)
+		assert_false(l.text.contains(" and the "), l.text)
+	gs.found_clan()
+	screen._rebuild()
+	assert_eq(screen._clan_grid.get_child_count(), (n + 2) * (n + 2))
+	screen.free()

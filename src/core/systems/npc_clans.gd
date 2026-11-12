@@ -320,6 +320,46 @@ static func rivalry_lines(clans: Dictionary, data: GameData) -> PackedStringArra
 	return lines
 
 
+## WU-525: the relation grid. Rows and columns are the living clans, the
+## player's clan (`player_clan`, may be null) first. Returns {ids, labels,
+## cells}: cells[row][col] is {text, value} or {} on the diagonal. A cell is
+## the row clan's standing toward the column clan ("Allied" when bound by
+## marriage); the player's row shows how each clan regards the player.
+static func relation_grid(clans: Dictionary, data: GameData, player_clan: ClanData) -> Dictionary:
+	var ids: Array[String] = []
+	var labels: Array[String] = []
+	if player_clan != null:
+		ids.append(PLAYER)
+		labels.append(short_name(player_clan.name))
+	var keys: Array = clans.keys()
+	keys.sort()
+	for id: String in keys:
+		if not is_extinct(clans[id]):
+			ids.append(id)
+			labels.append(short_name((clans[id] as ClanData).name))
+	var cells: Array = []
+	for a in ids:
+		var row: Array = []
+		for b in ids:
+			if a == b:
+				row.append({})
+				continue
+			var value := relation(clans, data, b if a == PLAYER else a, PLAYER if a == PLAYER else b)
+			var allied := false
+			if a == PLAYER:
+				allied = (clans[b] as ClanData).allies.has(PLAYER)
+			elif clans.has(a):
+				allied = (clans[a] as ClanData).allies.has(b)
+			row.append({"text": "Allied" if allied else standing_name(data, value), "value": value})
+		cells.append(row)
+	return {"ids": ids, "labels": labels, "cells": cells}
+
+
+## "Zhao Clan" -> "Zhao".
+static func short_name(clan_name: String) -> String:
+	return clan_name.trim_suffix(" Clan")
+
+
 static func to_dict(clans: Dictionary) -> Dictionary:
 	var out := {}
 	for id in clans:
