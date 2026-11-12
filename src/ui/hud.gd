@@ -2224,9 +2224,9 @@ func _update_modal() -> void:
 	_hold_banners()
 
 
-## Banners wait while a report that must be read (fight, respawn, tribulation, death) is up.
+## WU-523: banners wait while any modal (screen, shop, dialogue, report, menu) is up, then play in order.
 func _hold_banners() -> void:
-	_banner.set_held(_combat_report.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _respawn.visible or _tribulation.visible or _death_screen.visible)
+	_banner.set_held(_is_blocking())
 
 
 func _return_to_menu() -> void:

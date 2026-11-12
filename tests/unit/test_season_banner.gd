@@ -51,7 +51,8 @@ func test_long_seclusion_shows_one_banner() -> void:
 	var banner: Banner = hud.get("_banner")
 	clock.advance(300)
 	await _frame()
-	assert_true(banner.visible)
+	# WU-523: the season card (a modal) now holds banners, so the recap may be waiting rather than showing.
+	assert_true(banner.visible or banner.held)
 	assert_true(banner.queued_count() <= 1, "at most the recap and one kickoff")
 	hud.free()
 	_root().get_node("GameState").end_session()

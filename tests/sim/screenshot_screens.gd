@@ -4300,6 +4300,16 @@ func _scroll_to_text(journal: Control, needle: String) -> void:
 	await root.get_tree().process_frame
 
 
+## WU-523: drops showing and queued banners so no ribbon or tint from an earlier shot leaks in.
+func _clear_banners() -> void:
+	var banner: Control = hud.get("_banner")
+	if banner == null:
+		return
+	(banner.get("_queue") as Array).clear()
+	banner.call("finish_current")
+	banner.visible = false
+
+
 func _process(_d: float) -> bool:
 	if not started:
 		_start()
@@ -4308,9 +4318,12 @@ func _process(_d: float) -> bool:
 		return true
 	var shot: Dictionary = shots[index]
 	if not opened:
+		if hud != null:
+			_clear_banners()  # WU-523: a shot shows only its own screen
 		(shot["open"] as Callable).call()
 		if hud != null:
-			hud.call("_update_modal")  # WU-496: as the game does, so the backdrop and name-card dismissal happen
+			hud.call("_update_modal")
+			_clear_banners()  # WU-496: as the game does, so the backdrop and name-card dismissal happen
 		opened = true
 		frames = 0
 		return false
