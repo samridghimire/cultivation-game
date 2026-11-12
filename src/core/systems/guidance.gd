@@ -767,6 +767,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(buy)
 	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
+	var omen_hint := almanac_hint(c, data, flags, region_id, today, people, favor)
+	if omen_hint != "":
+		out.append(omen_hint)
 	var sell := _sell_hint(c, data, region_id, flags)
 	if sell != "":
 		out.append(sell)
@@ -847,6 +850,81 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## CAL-012: what today's almanac omen is good for and where, "" on a plain day or when nothing here fits.
+static func almanac_hint(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int, people: Dictionary = {}, favor: Dictionary = {}) -> String:
+	if today < 0 or region_id == "" or not data.regions.has(region_id):
+		return ""
+	var omen := Almanac.omen_for(data, today, Almanac.salt_of(c))
+	if omen.is_empty() or Almanac.is_plain(omen):
+		return ""
+	var what := ""
+	match Almanac.boost_key(omen):
+		"fishing_mult":
+			what = _omen_place_line(c, data, region_id, "fishing", "fishing")
+		"gather_bonus":
+			what = _omen_place_line(c, data, region_id, "gather", "gathering")
+		"gift_favor":
+			var friend := _gift_friend(c, data, people, favor, region_id)
+			if friend != "":
+				what = "Good for gifts: give %s something today." % friend
+		"sell_mult":
+			what = _omen_sell_line(c, data, flags, region_id)
+		"practice_mult":
+			var tech := _lowest_mastery_technique(c, data)
+			if tech != "":
+				what = "Good for practice: work on %s." % tech
+	return what
+
+
+static func _omen_place_line(c: CharacterData, data: GameData, region_id: String, place_type: String, label: String) -> String:
+	var found := nearest_selling(c, data, region_id, func(r: String) -> String:
+		for place: Dictionary in data.regions.get(r, {}).get("places", []):
+			if String(place.get("type", "")) == place_type and not place.has("festival_only"):
+				return String(place.get("display_name", place.get("name", "")))
+		return "")
+	if found.is_empty() or String(found["result"]) == "":
+		return ""
+	var where := "here" if int(found["days"]) == 0 else "%d %s" % [int(found["days"]), "road" if int(found["days"]) == 1 else "roads"]
+	return "Good for %s: %s, %s." % [label, found["result"], where]
+
+
+static func _omen_sell_line(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> String:
+	var found := nearest_selling(c, data, region_id, func(r: String) -> String:
+		return String(sell_offer(c, data, r, flags).get("merchant", "")))
+	if found.is_empty():
+		return ""
+	var where := "here" if int(found["days"]) == 0 else "%d %s" % [int(found["days"]), "road" if int(found["days"]) == 1 else "roads"]
+	return "Good for trade: sell to the %s, %s." % [found["result"], where]
+
+
+## The name of the friend here with the highest favor who would take a gift from your pack, else "".
+static func _gift_friend(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String) -> String:
+	if people.is_empty():
+		return ""
+	var best_name := ""
+	var best_favor := -1
+	for npc in Npcs.in_region(people, data, region_id):
+		var f := int(favor.get(npc.id, 0))
+		if f <= best_favor or f <= 0:
+			continue
+		for item_id: String in c.inventory:
+			if Family.check_gift(c, npc, f, item_id, data) == "":
+				best_name = npc.name
+				best_favor = f
+				break
+	return best_name
+
+
+static func _lowest_mastery_technique(c: CharacterData, data: GameData) -> String:
+	var best := ""
+	for tech_id: String in c.techniques:
+		if not data.techniques.has(tech_id) or Techniques.is_mastered(c, data, tech_id):
+			continue
+		if best == "" or Techniques.level(c, tech_id) < Techniques.level(c, best) or (Techniques.level(c, tech_id) == Techniques.level(c, best) and tech_id < best):
+			best = tech_id
+	return String(data.techniques[best].name) if best != "" else ""
 
 
 ## GUIDE-065: a Foundation cultivator with no body technique or no armor equipped hears that their defence is

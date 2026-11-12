@@ -6684,3 +6684,44 @@ func test_almanac_text_array_and_tomorrow_names() -> void:
 	assert_gt(seen.size(), 1)
 	d.almanac["omens"].append({"id": "arr", "name": "Arr", "text": ["ok", ""], "weight": 1, "boost": {}})
 	assert_gt(Almanac.validate(d).size(), 0)
+
+
+## CAL-012: the day's omen says what it is good for and where.
+func _omen_day(c: CharacterData, key: String) -> int:
+	var salt := Almanac.salt_of(c)
+	for day in range(1, 400):
+		if Almanac.boost_key(Almanac.omen_for(data(), day, salt)) == key:
+			return day
+	return -1
+
+
+func _plain_day(c: CharacterData) -> int:
+	for day in range(1, 400):
+		if Almanac.is_plain(Almanac.omen_for(data(), day, Almanac.salt_of(c))):
+			return day
+	return -1
+
+
+func test_almanac_hint_names_place_for_each_omen_kind() -> void:
+	var c := _fresh()
+	c.techniques = {"basic_breathing": {"level": 1, "xp": 0.0}}
+	c.inventory = {"spirit_grass": 2}
+	var fish := Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "fishing_mult"))
+	assert_true(fish.begins_with("Good for fishing: "), fish)
+	assert_true(fish.ends_with(", here."), fish)
+	var gather := Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "gather_bonus"))
+	assert_true(gather.begins_with("Good for gathering: "), gather)
+	var sell := Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "sell_mult"))
+	assert_true(sell == "" or sell.begins_with("Good for trade: "), sell)
+	var practice := Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "practice_mult"))
+	assert_true(practice.begins_with("Good for practice: work on "), practice)
+	var gifts := Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "gift_favor"))
+	assert_eq(gifts, "")  # no people given: no friend to name
+
+
+func test_almanac_hint_plain_day_and_no_techniques() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	assert_eq(Guidance.almanac_hint(c, data(), {}, "qingshi_village", _plain_day(c)), "")
+	assert_eq(Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "practice_mult")), "")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, {}, {}, "qingshi_village", _omen_day(c, "fishing_mult")), "Good for fishing"))
