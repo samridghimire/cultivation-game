@@ -206,3 +206,37 @@ func test_great_roamer_is_gold_and_labelled() -> void:
 	great.free()
 	world.free()
 	gs.end_session()
+
+
+## WU-515: no roamer slot spawns within ARRIVAL_CLEAR of a travel place or the spawn point.
+func test_roamer_spots_clear_of_arrival() -> void:
+	for region: Dictionary in data().regions.values():
+		var map_size := Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))
+		var zones := Roamer.keep_clear_zones(region)
+		var arrival: Array[Vector2] = zones["arrival"]
+		assert_true(arrival.size() >= 2, "%s has no arrival points" % region["id"])
+		var blocked: Array[Rect2] = Scenery.landmark_rects(region)
+		for place: Dictionary in region.get("places", []):
+			var sz := Vector2(float(place.get("size", [64, 64])[0]), float(place.get("size", [64, 64])[1]))
+			blocked.append(Rect2(Vector2(float(place["pos"][0]), float(place["pos"][1])) - sz / 2.0, sz))
+		for day in 30:
+			var avoid: Array[Vector2] = []
+			for slot in 4:
+				var spot := Roamer.pick_spot(String(region["id"]), day, slot, map_size, blocked, avoid, zones["rects"], zones["points"], arrival)
+				avoid.append(spot)
+				for a in arrival:
+					assert_true(spot.distance_to(a) >= Roamer.ARRIVAL_CLEAR, "%s day %d slot %d is %d px from arrival %s" % [region["id"], day, slot, int(spot.distance_to(a)), a])
+
+
+## WU-515: a wander target never lands inside the arrival ring, wherever the beast's home is.
+func test_wander_target_stays_out_of_arrival_ring() -> void:
+	var arrival: Array[Vector2] = [Vector2(40, 500), Vector2(120, 500)]
+	var rng := seeded_rng()
+	for i in 300:
+		var home := Vector2(rng.randf_range(24.0, 700.0), rng.randf_range(300.0, 700.0))
+		if home.distance_to(arrival[0]) < Roamer.ARRIVAL_CLEAR or home.distance_to(arrival[1]) < Roamer.ARRIVAL_CLEAR:
+			continue
+		var off := Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(10.0, Roamer.WANDER_RADIUS)
+		var t := Roamer.wander_target(home, off, arrival)
+		for a in arrival:
+			assert_true(t.distance_to(a) >= Roamer.ARRIVAL_CLEAR - 0.5, "target %s inside ring of %s" % [t, a])

@@ -32,6 +32,7 @@ var _alpha := 1.0
 var temper := ""
 var player_ref: Node2D
 var map_bounds := Vector2(100000, 100000)
+var arrival_points: Array[Vector2] = []  # WU-515: travel places and the spawn; wandering never enters their ring
 var blocked_rects: Array[Rect2] = []  # WU-429: houses, ponds and paths a fleeing beast will not enter
 var noticed := false
 var great := false  # WU-430: the WILD-006 great beast: 1.6x, aura ring, gold "(great)" name
@@ -165,6 +166,21 @@ func _wander(delta: float) -> void:
 	queue_redraw()
 
 
+## WU-515: `home + offset` kept inside the map's top-left margin and out of ARRIVAL_CLEAR of every arrival point
+## (pushed radially out of a ring; stays at `home` when even that would be inside).
+static func wander_target(home_pos: Vector2, offset: Vector2, arrivals: Array[Vector2]) -> Vector2:
+	var t := home_pos + offset
+	t = Vector2(maxf(24.0, t.x), maxf(24.0, t.y))
+	for a in arrivals:
+		if t.distance_to(a) < ARRIVAL_CLEAR:
+			var dir := (t - a).normalized() if t.distance_to(a) > 0.01 else Vector2.RIGHT
+			t = a + dir * ARRIVAL_CLEAR
+	for a in arrivals:
+		if t.distance_to(a) < ARRIVAL_CLEAR - 0.5:
+			return home_pos
+	return t
+
+
 ## WU-424: temper-driven movement. Returns true when it moved the beast this frame.
 func _react(delta: float) -> bool:
 	if player_ref == null or not is_instance_valid(player_ref):
@@ -264,6 +280,7 @@ func draw_generated_art() -> bool:
 
 const KEEP_CLEAR := 90.0
 const PICK_TRIES := 60
+const ARRIVAL_CLEAR := 260.0  # WU-515: no beast within this of a travel place or the spawn
 
 
 ## GFX-062: rects (grown by KEEP_CLEAR) and points a roamer must not spawn near: every place and NPC home point.
@@ -276,14 +293,20 @@ static func keep_clear_zones(region: Dictionary) -> Dictionary:
 	var points: Array[Vector2] = []
 	for spot: Array in region.get("npc_spots", []):
 		points.append(Vector2(float(spot[0]), float(spot[1])))
-	return {"rects": rects, "points": points}
+	var arrival: Array[Vector2] = []
+	for place: Dictionary in region.get("places", []):
+		if String(place.get("type", "")) == "travel":
+			arrival.append(Vector2(float(place.get("pos", [0, 0])[0]), float(place.get("pos", [0, 0])[1])))
+	if region.has("spawn"):
+		arrival.append(Vector2(float(region["spawn"][0]), float(region["spawn"][1])))
+	return {"rects": rects, "points": points, "arrival": arrival}
 
 
 ## Spot for `slot`: >= MIN_GAP from every blocked rect, kept inside the map. Same inputs, same spot.
 ## GFX-062: also outside `clear_rects` and KEEP_CLEAR from `clear_points` (soft: when no try clears them, the try
 ## farthest from them wins, but only among tries that respect `blocked` and `avoid`).
 ## REVIEW: the fallback used to ignore `blocked`, so a beast could stand inside a house or wall.
-static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2], clear_rects: Array[Rect2] = [], clear_points: Array[Vector2] = []) -> Vector2:
+static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2, blocked: Array[Rect2], avoid: Array[Vector2], clear_rects: Array[Rect2] = [], clear_points: Array[Vector2] = [], arrival: Array[Vector2] = []) -> Vector2:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%s:%d:%d" % [region_id, day, slot])
 	var best := Vector2(map_size.x / 2.0, map_size.y / 2.0)
@@ -297,6 +320,9 @@ static func pick_spot(region_id: String, day: int, slot: int, map_size: Vector2,
 				hard = false
 		for p in avoid:
 			if spot.distance_to(p) < MIN_GAP + 60.0:
+				hard = false
+		for a in arrival:  # WU-515: hard reject; the fallback prefers the try farthest from the arrival points
+			if spot.distance_to(a) < ARRIVAL_CLEAR:
 				hard = false
 		var score := 1e9
 		for r in clear_rects:

@@ -60,7 +60,7 @@ var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a 
 var _roamer_spread_pos := {}
 var _tracks: Array[Dictionary] = []  ## WU-450: a great beast's trail of prints
 var _tracks_shape := "paw"
-var _clear_zones := {"rects": [] as Array[Rect2], "points": [] as Array[Vector2]}  ## GFX-062
+var _clear_zones := {"rects": [] as Array[Rect2], "points": [] as Array[Vector2], "arrival": [] as Array[Vector2]}  ## GFX-062
 var _weather_kind := "clear"
 ## The pinned weather, readable by UI that draws its own sky (the duel stage, GFX-038); "" = none.
 static var pinned_weather := ""
@@ -525,7 +525,7 @@ func _build_tracks(blocked: Array[Rect2], great_spot: Vector2) -> void:
 				enemy = ""  # beast day, but it is down or gone: no prints
 			else:
 				var avoid: Array[Vector2] = [_vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))]
-				spot = Roamer.pick_spot(GameState.current_region, day + 1, Wildlife.GREAT_SLOT, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"])
+				spot = Roamer.pick_spot(GameState.current_region, day + 1, Wildlife.GREAT_SLOT, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"], _clear_zones["arrival"])
 		if enemy != "":
 			_tracks_shape = BeastTracks.shape_for(enemy)
 			_tracks = BeastTracks.trail(GameState.current_region, day, map_size, spot, blocked, _clear_zones["rects"])
@@ -536,7 +536,7 @@ func _build_tracks(blocked: Array[Rect2], great_spot: Vector2) -> void:
 func _spawn_roamer(r: Dictionary, blocked: Array[Rect2], avoid: Array[Vector2]) -> void:
 	var day := GameClock.total_days
 	var slot := int(r["slot"])
-	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"])
+	var spot := Roamer.pick_spot(GameState.current_region, day, slot, map_size, blocked, avoid, _clear_zones["rects"], _clear_zones["points"], _clear_zones["arrival"])
 	avoid.append(spot)
 	var node: Roamer = ROAMER_SCRIPT.new()
 	node.setup(slot, String(r["enemy"]), spot, hash("%s:%d:%d:w" % [GameState.current_region, day, slot]), bool(r.get("great", false)))
