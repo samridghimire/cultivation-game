@@ -473,6 +473,7 @@ func _validate() -> void:
 	load_errors.append_array(Family.validate(self))
 	load_errors.append_array(Abodes.validate(self))
 	load_errors.append_array(ArtifactFunctions.validate(self))
+	load_errors.append_array(ArtifactWhispers.validate(self))
 	load_errors.append_array(Karma.validate(self))
 	load_errors.append_array(SecretRealms.validate(self))
 	load_errors.append_array(Inheritances.validate(self))

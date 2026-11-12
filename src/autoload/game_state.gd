@@ -389,6 +389,7 @@ func attempt_breakthrough() -> void:
 	LifeStats.add(player, "breakthroughs" if result["success"] else "breakthroughs_failed")
 	if result["success"]:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
+		_artifact_whisper("first_breakthrough")
 		Folk.record_news(world_flags, "breakthrough", String(result["realm_name"]), current_region, GameClock.total_days)
 		var lifespan_gain := Cultivation.lifespan_years(player, data) - lifespan_before
 		if lifespan_gain > 0:
@@ -589,6 +590,11 @@ func perform_deed(deed_id: String) -> void:
 	if float((deed.get("effects", {}) as Dictionary).get("alignment", 0)) > 0.0:
 		_gain_renown("righteous_deed")
 	EventBus.post("%s. (%s)" % [deed["name"], ", ".join(result["notes"])], "karma")
+	var deed_alignment := float((deed.get("effects", {}) as Dictionary).get("alignment", 0))
+	if deed_alignment > 0.0:
+		_artifact_whisper("first_righteous_deed")
+	elif deed_alignment < 0.0:
+		_artifact_whisper("first_demonic_act")
 	_pass_time(result["days"])
 
 
@@ -1131,6 +1137,7 @@ func enter_secret_realm(realm_id: String) -> void:
 		EventBus.post("You pour %d spirit stones into the barrier of the %s and slip inside." % [cost, def["name"]], "info")
 	var floor_def := SecretRealms.next_floor(player, def, today)
 	EventBus.post("%s: %s" % [floor_def.get("name", ""), floor_def.get("text", "")], "info")
+	_artifact_whisper("first_secret_realm")
 	if SecretRealms.closes_mid_floor(player, def, today):
 		var expelled := SecretRealms.expel(player, data, def, today)
 		var hurt := " (%s)" % Injuries.injury_name(data, expelled["injury"]) if expelled["injury"] != "" else ""
@@ -3784,6 +3791,7 @@ func engage_roamer(slot: int, charged: bool = false) -> bool:
 					player.add_item(item_id, int(spoils[item_id]))
 					spoils[item_id] = int(spoils[item_id]) * 2
 				LifeStats.add(player, "great_beasts")
+				_artifact_whisper("first_great_beast")
 				Folk.record_news(world_flags, "great_beast", Wildlife.display_name(data, String(r["enemy"]), true), region, GameClock.total_days)
 				_gain_renown("great_beast")  # WILD-010: the hunter is known (the beast walks and falls once a day)
 				var first_win := not player.great_beasts.has(String(r["enemy"]))
@@ -4086,6 +4094,7 @@ func devour() -> void:
 		EventBus.player_changed.emit()
 		return
 	EventBus.post("You press your palm to the fallen %s's dantian and drink their cultivation dry: +%d qi. (Alignment %+d, now %s)" % [enemy.get("name", "cultivator"), result["qi"], result["alignment"], Alignment.tier_name(player.alignment, data)], "karma")
+	_artifact_whisper("first_demonic_act")
 	if result["stages"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["injury"] != "":
@@ -4534,6 +4543,14 @@ func _artifact_wakes(extra: int = 0) -> void:
 		if not world_flags.get(flag, false):
 			world_flags[flag] = true
 			EventBus.post("The artifact hums: %s can be unsealed (O)." % ArtifactFunctions.function_name(data, function_id), "progress")
+			_artifact_whisper("ready_to_unseal")
+
+
+## ART-010: the artifact speaks once per moment per life, in its own log category.
+func _artifact_whisper(moment: String) -> void:
+	var line := ArtifactWhispers.speak(player, data, moment, rng)
+	if line != "":
+		EventBus.post(line, "artifact")
 
 
 var _artifact_pending := 0
@@ -5124,6 +5141,9 @@ func _die_violently(cause: String, fight: Dictionary = {}) -> void:
 	if moved:
 		spawn_anchor = result["anchor_id"]
 	LifeStats.add(player, "respawns")
+	_artifact_whisper("first_respawn")
+	if player.artifact_lives == 1:
+		_artifact_whisper("low_lives")
 	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
 	_pass_time(result["days"])
 	if moved:
