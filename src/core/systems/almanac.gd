@@ -114,6 +114,8 @@ static func validate(data: GameData) -> Array[String]:
 		for t: Variant in texts:
 			if not (t is String) or String(t).is_empty() or String(t).length() > 120:
 				errs.append("almanac.json omen '%s' needs text of 1..120 chars" % id)
+			elif String(t).to_lower().begins_with(String(o.get("name", "")).to_lower().rstrip(".")):
+				errs.append("almanac.json omen '%s' text must not start with the omen's own name (the line already says it)" % id)
 		if o.has("talk"):
 			var talk: Variant = o["talk"]
 			if not (talk is Array) or (talk as Array).is_empty() or (talk as Array).size() > 4:

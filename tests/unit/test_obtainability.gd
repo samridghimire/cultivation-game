@@ -115,6 +115,9 @@ func _collect_grants(granted: Dictionary) -> void:
 	for house: Dictionary in gd.auction_houses.values():
 		for lot: Dictionary in house.get("lot_table", []):
 			granted[String(lot["item"])] = "auctions.json lot"
+	for npc: Dictionary in gd.npcs.values():
+		if npc.has("player_birthday_gift"):
+			granted[String(npc["player_birthday_gift"]["item"])] = "npcs.json player_birthday_gift"
 	for proj: Dictionary in SeasonTasks.project_list(gd):
 		if proj.has("daily"):
 			granted[String(proj["daily"]["item"])] = "season_tasks.json project daily"

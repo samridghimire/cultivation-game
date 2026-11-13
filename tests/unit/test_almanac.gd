@@ -111,3 +111,14 @@ func test_villager_greeting_uses_omen_talk_a_quarter_of_the_time() -> void:
 	d.almanac["omens"] = [{"id": "p", "name": "P", "text": "t", "weight": 1, "boost": {}}]
 	assert_eq(Folk.greeting(npc, 0, day, d, {}, "", "", null, 5), "")
 	d.almanac["omens"] = saved
+
+
+## C-358: an omen text may not open with the omen's own name.
+func test_text_must_not_start_with_the_omen_name() -> void:
+	var d := data()
+	assert_eq(Almanac.validate(d).size(), 0)
+	d.almanac["omens"].append({"id": "echo", "name": "Steady hands", "text": "Steady hands, says the carpenter.", "weight": 1, "boost": {}})
+	assert_gt(Almanac.validate(d).size(), 0)
+	d.almanac["omens"].pop_back()
+	d.almanac["omens"].append({"id": "echo", "name": "Steady hands", "text": "Says the carpenter: steady hands.", "weight": 1, "boost": {}})
+	assert_eq(Almanac.validate(d).size(), 0)
