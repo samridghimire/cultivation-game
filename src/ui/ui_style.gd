@@ -205,6 +205,19 @@ static func set_bar_fill(b: ProgressBar, fill: Color) -> void:
 const MIN_LABEL_SIZE: int = 14
 
 
+## WU-530: a headed block shared by the journal and the world map: an accent heading, then (when
+## `lines` is not empty) one wrapped body label of the lines. Children: [heading, body].
+static func block(title: String, lines: PackedStringArray, color: Color = Color(0.85, 0.85, 0.85)) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	box.add_child(label(title, 15, ACCENT))
+	var body := label("\n".join(lines), 15, color)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(body)
+	return box
+
+
 static func label(text: String = "", font_size: int = 16, color: Color = Color.WHITE) -> Label:
 	var l := Label.new()
 	l.text = text

@@ -379,7 +379,7 @@ func test_today_line_names_open_market_and_beasts() -> void:
 			break
 	assert_true(day >= 0, "Qingshi has a market day")
 	var line := WorldMapScreen.today_line(c, data(), "qingshi_village", "qingshi_village", day, {})
-	assert_true(line.begins_with("Today: "), line)
+	assert_false(line.begins_with("Today: "), line)
 	assert_true(line.contains("market at Travelling Market Stall"), line)
 
 

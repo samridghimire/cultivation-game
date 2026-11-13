@@ -87,3 +87,22 @@ func test_terrain_kind_from_encounter_tags() -> void:
 	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["city"]}), "market")
 	assert_eq(WorldMapScreen.terrain_kind({"encounter_tags": ["forest", "wild"]}), "forest")
 	assert_eq(WorldMapScreen.terrain_kind({}), "hills")
+
+
+func test_day_label_pos_midpoint_then_slides() -> void:
+	var none: Array[Rect2] = []
+	assert_eq(WorldMapScreen.day_label_pos(Vector2(0, 100), Vector2(200, 100), none, none), Vector2(100, 100))
+	var box: Array[Rect2] = [Rect2(80, 80, 40, 40)]
+	var c := WorldMapScreen.day_label_pos(Vector2(0, 100), Vector2(200, 100), box, none)
+	assert_true(c != Vector2(100, 100))
+	assert_false(box[0].intersects(Rect2(c - Vector2(18, 11), Vector2(36, 22))))
+	var taken: Array[Rect2] = [Rect2(82, 89, 36, 22)]
+	var d := WorldMapScreen.day_label_pos(Vector2(0, 100), Vector2(200, 100), none, taken)
+	assert_false(taken[0].intersects(Rect2(d - Vector2(18, 11), Vector2(36, 22))))
+
+
+func test_ui_block_has_heading_and_body() -> void:
+	var b := UIStyle.block("Shops", PackedStringArray(["a", "b"]))
+	assert_eq((b.get_child(0) as Label).text, "Shops")
+	assert_eq((b.get_child(1) as Label).text, "a\nb")
+	b.free()

@@ -226,13 +226,15 @@ static func is_village_line(line: String) -> bool:
 func _block(inner: VBoxContainer, block_name: String, title: String, lines: PackedStringArray, _unused: Texture2D, meta: String) -> void:
 	if lines.is_empty():
 		return
-	var h := UIStyle.label(title, 15, UIStyle.ACCENT)
-	h.name = block_name
-	inner.add_child(h)
+	var blk := UIStyle.block(title, PackedStringArray())  # WU-530: shared heading; rows carry icons
+	blk.name = block_name
+	blk.get_child(1).queue_free()
+	blk.remove_child(blk.get_child(1))
+	inner.add_child(blk)
 	for i in mini(lines.size(), BLOCK_CAP):
-		inner.add_child(_today_row(lines[i], HudIcons.today_glyph(HudIcons.today_icon(lines[i])), meta))
+		blk.add_child(_today_row(lines[i], HudIcons.today_glyph(HudIcons.today_icon(lines[i])), meta))
 	if lines.size() > BLOCK_CAP:
-		inner.add_child(_more_label(lines.size() - BLOCK_CAP))
+		blk.add_child(_more_label(lines.size() - BLOCK_CAP))
 
 
 func _more_label(n: int) -> Label:

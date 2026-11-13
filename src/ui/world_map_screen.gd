@@ -124,13 +124,12 @@ func _init() -> void:
 
 ## WU-528: a headed block (accent heading + wrapped body); returns the body label.
 func _block(parent: VBoxContainer, title: String, color: Color) -> Label:
-	var h := UIStyle.label(title, 15, UIStyle.ACCENT)
-	h.name = title.replace(" ", "") + "Head"
-	parent.add_child(h)
-	_heads[title] = h
-	var body := _wrapped(UIStyle.label("", 15, color))
+	var blk := UIStyle.block(title, PackedStringArray(), color)
+	blk.name = title.replace(" ", "") + "Block"
+	parent.add_child(blk)
+	_heads[title] = blk.get_child(0)
+	var body := blk.get_child(1) as Label
 	body.name = title.replace(" ", "") + "Body"
-	parent.add_child(body)
 	return body
 
 
@@ -334,6 +333,17 @@ static func route_label_pos(a: Vector2, b: Vector2, label_size: Vector2, node_re
 	return best
 
 
+## WU-530: centre of a route's day label: the route's midpoint, slid along the route (0.35 / 0.65,
+## then further) until the label rect (size) overlaps no region box and no label already placed.
+static func day_label_pos(a: Vector2, b: Vector2, boxes: Array[Rect2], taken: Array[Rect2], size: Vector2 = Vector2(36, 22)) -> Vector2:
+	for t: float in [0.5, 0.35, 0.65, 0.25, 0.75, 0.42, 0.58]:
+		var c := a.lerp(b, t)
+		var rect := Rect2(c - size / 2.0, size).grow(2.0)
+		if not boxes.any(func(n: Rect2) -> bool: return n.intersects(rect)) and not taken.any(func(n: Rect2) -> bool: return n.intersects(rect)):
+			return c
+	return a.lerp(b, 0.5)
+
+
 ## Text lines for the focused region: route from the current region (or
 ## "You are here"), then every road out of it with days and realm gates.
 static func route_lines(c: CharacterData, data: GameData, from_id: String, region_id: String) -> PackedStringArray:
@@ -501,7 +511,8 @@ static func today_line(c: CharacterData, data: GameData, region_id: String, curr
 		parts.append("the %s walks here" % great)
 	if beasts > 0:
 		parts.append("%d beast%s roam%s" % [beasts, "" if beasts == 1 else "s", "s" if beasts == 1 else ""])
-	return "Today: " + ", ".join(parts) + "."
+	var text := ", ".join(parts)
+	return text.substr(0, 1).to_upper() + text.substr(1) + "."
 
 
 ## WU-433: unpicked forage today in a region ([] for a region never visited).
@@ -715,6 +726,7 @@ func _draw_map() -> void:
 	for r: Rect2 in _rects.values():
 		node_rects.append(node_footprint(r))
 	var drawn := {}
+	var taken: Array[Rect2] = []
 	for region_id in _positions:
 		for route: Dictionary in data.regions[region_id].get("routes", []):
 			var to: String = route.get("to", "")
@@ -730,13 +742,21 @@ func _draw_map() -> void:
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
 			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)
-			var pos := route_label_pos(a, b, size, node_rects)
-			node_rects.append(Rect2(pos, size))  # later labels keep clear of this one
+			var centre := day_label_pos(a, b, node_rects, taken, size)
+			var pos := centre - size / 2.0
+			taken.append(Rect2(pos, size))
 			_canvas.draw_rect(Rect2(pos, size), Color(0.96, 0.92, 0.8))
 			_canvas.draw_rect(Rect2(pos, size), INK_COLOR, false, 1.0)
 			_canvas.draw_string(font, pos + Vector2(5, size.y - 5), days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, INK_COLOR)
 	for region_id in _positions:
 		var rect: Rect2 = _rects[region_id]
+		if is_unexplored(GameState.player, region_id, GameState.current_region):  # WU-530: dotted border
+			var rc := rect.grow(2.0)
+			var edge := Color(0.45, 0.36, 0.24, 0.8)
+			_draw_dotted(rc.position, Vector2(rc.end.x, rc.position.y), edge)
+			_draw_dotted(Vector2(rc.end.x, rc.position.y), rc.end, edge)
+			_draw_dotted(rc.end, Vector2(rc.position.x, rc.end.y), edge)
+			_draw_dotted(Vector2(rc.position.x, rc.end.y), rc.position, edge)
 		var x := rect.position.x
 		var y := rect.end.y + 3.0
 		if not is_unexplored(GameState.player, region_id, GameState.current_region):
