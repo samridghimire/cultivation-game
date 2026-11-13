@@ -539,7 +539,7 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 			if not seen.has(enemy_id) and data.enemies.has(enemy_id):
 				seen[enemy_id] = true
 				var enemy: Dictionary = data.enemies[enemy_id]
-				foes.append({"name": String(enemy.get("name", enemy_id)), "danger": Combat.danger_label(c, data, enemy), "lethal": bool(enemy.get("lethal", false))})
+				foes.append({"id": enemy_id, "name": String(enemy.get("name", enemy_id)), "danger": Combat.danger_label(c, data, enemy), "lethal": bool(enemy.get("lethal", false))})
 		elif e.has("choices"):
 			bucket = "choice"
 		elif e.get("kind", "neutral") in ["fortune", "misfortune"]:

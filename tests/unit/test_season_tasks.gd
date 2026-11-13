@@ -594,3 +594,14 @@ func test_hunt_note_branches() -> void:
 		assert_eq(late, "(%s for you: come back stronger)" % label, "window passed")
 	var row := JournalScreen.season_task_text({"text": "Hunt a fox.", "where": "", "note": "(Deadly for you: come back stronger)", "n": 0, "count": 1, "done": false})
 	assert_true(row.ends_with("(Deadly for you: come back stronger)"), row)
+
+
+## SEASON-021: year 1's boar can be met exploring the Village Outskirts, so `where` says so.
+func test_where_names_the_outskirts_for_the_year1_boar() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	var task := {"id": "t", "kind": "hunt", "target": "wild_boar", "count": 1}
+	var w := SeasonTasks.where(task, c, gd, 5)
+	assert_eq(w, "exploring the Village Outskirts")
+	var roam := {"id": "t2", "kind": "hunt", "target": "nonexistent_beast", "count": 1}
+	assert_eq(SeasonTasks.where(roam, c, gd, 5), "")

@@ -509,10 +509,22 @@ static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int)
 							return "by the paths of %s" % region["name"] if rid != REGION else "by the village paths"
 		"hunt":
 			var realm := c.realm_index if c != null else 0
+			var foe_c: CharacterData = c if c != null else CharacterData.new()
 			for rid in _regions_nearest(data):
 				for r in _roamer_days(data, rid, day, realm):
 					if String(r) == target:
 						return "in %s" % data.regions[rid]["name"]
+				# SEASON-021: else a foe this region's explore encounters can bring up.
+				var region: Dictionary = data.regions[rid]
+				var foes: Array = Exploration.outlook(foe_c, data, region.get("encounter_tags", []), {}, season, rid, day)["foes"]
+				for f: Dictionary in foes:
+					if String(f.get("id", "")) == target:
+						if rid != REGION:
+							return "exploring in %s" % region["name"]
+						for pl: Dictionary in region.get("places", []):
+							if String(pl.get("type", "")) == "explore":
+								return "exploring the %s" % pl.get("display_name", "village paths")
+						return "exploring the village paths"
 			if VillageHunt.quarry(data, REGION, day) == target:
 				return "at the village hunt"
 		"contest":

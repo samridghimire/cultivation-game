@@ -1107,7 +1107,15 @@ func _resolve_explore_enemy(enemy_id: String) -> void:
 		EventBus.post("You sense a %s nearby, %s (%s, %d%% to win)." % [enemy["name"], intent, Combat.danger_label(player, data, enemy), roundi(Combat.win_chance(player, data, enemy) * 100.0)], "danger")
 		EventBus.threat_sensed.emit(enemy_id)
 		return
-	fight(enemy_id)
+	_explore_fight(enemy_id)
+
+
+## SEASON-021: a fight met while exploring; a win counts for a season hunt task.
+func _explore_fight(enemy_id: String) -> bool:
+	var won := fight(enemy_id)
+	if won:
+		_season_note("hunt", enemy_id, 1)
+	return won
 
 
 ## Answer a sensed threat: fight it, or slip away (one day).
@@ -1118,7 +1126,7 @@ func face_threat(fight_it: bool) -> void:
 	var enemy_id := pending_threat
 	pending_threat = ""
 	if fight_it:
-		fight(enemy_id)
+		_explore_fight(enemy_id)
 		return
 	LifeStats.add(player, "threats_fled")
 	EventBus.post("You slip away before it finds you.")
@@ -1272,7 +1280,7 @@ func choose_encounter(index: int) -> void:
 	if _can_act():
 		_rival_consequences(choice)
 	if result["enemy"] != "" and _can_act():
-		if fight(result["enemy"]):
+		if _explore_fight(result["enemy"]):
 			_grateful_npc(choice)
 			_add_renown(int(choice.get("renown", 0)))
 	elif _can_act():
@@ -3078,7 +3086,9 @@ func take_mission(mission_id: String) -> void:
 	var mission: Dictionary = data.sect_missions[mission_id]
 	var enemy_id := String(mission.get("enemy", ""))
 	if enemy_id != "":
-		if not fight_enemy(data.enemies[enemy_id], -1, "Sect mission: %s. " % mission["name"]):
+		if fight_enemy(data.enemies[enemy_id], -1, "Sect mission: %s. " % mission["name"]):
+			_season_note("hunt", enemy_id, 1)
+		else:
 			Sects.fail_mission(player, data, mission_id)
 			var days := data.sect_mission_loss_cooldown_days
 			var tail := " The sect will not send you again for %d days." % days if days > 0 else ""

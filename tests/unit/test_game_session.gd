@@ -4038,3 +4038,23 @@ func test_artifact_first_win_feeds_once() -> void:
 	assert_true(after_first >= 5)
 	gs.fight("wild_boar")
 	assert_true(c.artifact_energy <= after_first, "no second first-win")
+
+
+## SEASON-021: a won explore fight advances the season hunt.
+func test_explore_win_counts_for_the_season_hunt() -> void:
+	_start()
+	var gs := _game_state()
+	GameClock.total_days = 5
+	gs.player.season_tasks = {}
+	var hunt_n := func() -> int:
+		for t: Dictionary in SeasonTasks.list(gs.player, gs.data, GameClock.total_days):
+			if String(t["text"]).contains("Boar"):
+				return int(t["n"])
+		return -1
+	assert_eq(hunt_n.call(), 0)
+	gs.start_session(CharacterFactory.create("Boar", gs.data, seeded_rng(5)))
+	GameClock.total_days = 5
+	gs.player.realm_index = 2
+	assert_true(gs._explore_fight("wild_boar"), "strong player wins")
+	assert_eq(hunt_n.call(), 1, "the won explore fight counts")
+	gs.end_session()
