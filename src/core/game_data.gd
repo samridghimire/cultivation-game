@@ -509,6 +509,9 @@ func _validate() -> void:
 	for item: Dictionary in items.values():
 		if (item.get("tags", []) as Array).has("untagged"):
 			load_errors.append("Item '%s': 'untagged' is a reserved stock tag" % item["id"])
+		var festival_problem := Items.festival_problem(self, item)
+		if festival_problem != "":
+			load_errors.append(festival_problem)
 		if item.has("icon") and not (item["icon"] is String and ITEM_ICON_KINDS.has(item["icon"])):
 			load_errors.append("Item '%s': icon must be one of %s" % [item["id"], ", ".join(ITEM_ICON_KINDS)])
 		if item.has("forage_tint") and not (item["forage_tint"] is String and Color.html_is_valid(item["forage_tint"])):

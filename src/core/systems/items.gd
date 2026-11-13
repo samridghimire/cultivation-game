@@ -91,9 +91,12 @@ static func buy(c: CharacterData, data: GameData, item_id: String, quantity: int
 ## `max_price` (0 = no limit) sells `item`. Items with a restricted tag
 ## (items.json "restricted_tags", e.g. demonic artifacts) are only sold by
 ## merchants that list that tag in their stock_tags.
-static func merchant_sells(data: GameData, item: Dictionary, stock_tags: Array, max_price: int = 0) -> bool:
+static func merchant_sells(data: GameData, item: Dictionary, stock_tags: Array, max_price: int = 0, today: int = -1) -> bool:
 	var price := int(item.get("price", 0))
 	if price <= 0 or (max_price > 0 and price > max_price):
+		return false
+	# SHOP-003: festival goods reach an untagged merchant only in their season (`today` < 0 = no check).
+	if today >= 0 and (stock_tags.is_empty() or stock_tags.has("untagged")) and not festival_in_season(data, item, today):
 		return false
 	var tags: Array = item.get("tags", [])
 	for tag in tags:
@@ -267,12 +270,38 @@ static func _gives(node: Variant, item_id: String) -> bool:
 	return false
 
 
+## SHOP-003: "" or what is wrong with an item's `festival` (must name a world event with `festival: true`).
+static func festival_problem(data: GameData, item: Dictionary) -> String:
+	if not item.has("festival"):
+		return ""
+	var id := String(item["festival"])
+	if not data.world_events.has(id) or not bool(data.world_events[id].get("festival", false)):
+		return "Item '%s': festival '%s' is not a festival in world_events.json" % [item.get("id", "?"), id]
+	return ""
+
+
+## SHOP-003: true when `item` has no `festival`, or `today` lies from 30 days before that festival's start (day 1 of
+## each of its `months`) through its last day (start + max_days), in this, the previous or the next year.
+static func festival_in_season(data: GameData, item: Dictionary, today: int) -> bool:
+	var festival := String(item.get("festival", ""))
+	if festival == "" or not data.world_events.has(festival):
+		return true
+	var def: Dictionary = data.world_events[festival]
+	var year_start := today - (today % Calendar.DAYS_PER_YEAR)
+	for month: Variant in def.get("months", []):
+		for offset in [-1, 0, 1]:
+			var start: int = year_start + offset * Calendar.DAYS_PER_YEAR + (int(month) - 1) * Calendar.DAYS_PER_MONTH
+			if today >= start - Calendar.DAYS_PER_MONTH and today <= start + int(def.get("max_days", 1)):
+				return true
+	return false
+
+
 ## Item ids a merchant stocking `stock_tags` up to `max_price` sells
-## (merchant_sells), cheapest first.
-static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Array:
+## (merchant_sells), cheapest first. `today` (total days, -1 = ignore) hides out-of-season festival goods.
+static func shop_stock(data: GameData, max_price: int, stock_tags: Array, today: int = -1) -> Array:
 	var ids: Array = []
 	for item: Dictionary in data.items.values():
-		if merchant_sells(data, item, stock_tags, max_price):
+		if merchant_sells(data, item, stock_tags, max_price, today):
 			ids.append(item["id"])
 	ids.sort_custom(func(a, b): return _price_then_name(data, a, b))
 	return ids

@@ -306,3 +306,23 @@ func test_material_value_cache_matches_uncached() -> void:
 		var cached := Items.material_value(d, item_id)
 		assert_almost_eq(cached, Items.compute_material_value(d, item_id))
 		assert_almost_eq(Items.material_value(d, item_id), cached)
+
+
+## SHOP-003: festival goods only reach an untagged merchant in their season.
+func test_festival_goods_in_season_only() -> void:
+	var d := data()
+	var zongzi: Dictionary = d.items["zongzi"]
+	var month1 := 0
+	var month5 := 4 * Calendar.DAYS_PER_MONTH + 5
+	var month4_end := 4 * Calendar.DAYS_PER_MONTH - 1
+	assert_false(Items.merchant_sells(d, zongzi, [], 0, month1), "no zongzi in month 1")
+	assert_true(Items.merchant_sells(d, zongzi, [], 0, month5), "zongzi in month 5")
+	assert_true(Items.merchant_sells(d, zongzi, [], 0, 3 * Calendar.DAYS_PER_MONTH + 2), "30 days ahead")
+	assert_true(Items.merchant_sells(d, zongzi, [], 0, month4_end))
+	assert_false(Items.merchant_sells(d, zongzi, [], 0, 5 * Calendar.DAYS_PER_MONTH + 20), "festival is over")
+	assert_true(Items.merchant_sells(d, zongzi, [], 0), "no day = no check")
+	assert_false(Items.shop_stock(d, 0, [], month1).has("zongzi"))
+	assert_true(Items.shop_stock(d, 0, [], month5).has("zongzi"))
+	assert_true(Items.merchant_sells(d, d.items["qi_gathering_pill"], [], 0, month1), "ordinary goods unchanged")
+	assert_eq(Items.festival_problem(d, {"id": "x", "festival": "nope"}) == "", false, "unknown festival id is an error")
+	assert_eq(Items.festival_problem(d, zongzi), "")

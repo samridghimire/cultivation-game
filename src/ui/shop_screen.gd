@@ -282,7 +282,7 @@ func item_ids() -> Array:
 
 ## Today's Buy-tab stock in price order, before WU-532's "for you first" ordering.
 func _stock_ids() -> Array:
-	var ids := Items.shop_stock(GameState.data, _max_price, _stock_tags)
+	var ids := Items.shop_stock(GameState.data, _max_price, _stock_tags, GameClock.total_days)
 	for item_id: Variant in GameState.festival_stock(_stock_tags):
 		if not ids.has(item_id):
 			ids.append(item_id)
