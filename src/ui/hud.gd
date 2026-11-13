@@ -54,7 +54,7 @@ var _log: RichTextLabel
 var _last_text: String = ""
 var _last_category: String = ""
 var _repeat: int = 0
-var _log_truncated := false  ## WU-531: the label shows a cut-down newest message
+var _log_truncated := false  ## WU-531: the label shows only the newest messages that fit (or a cut-down newest one)
 var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsing repeats.
 var _status_panel: Control
 var _companion_chip: HBoxContainer  ## WU-413: the friend who fights beside you today.
@@ -653,7 +653,7 @@ func _build_log() -> void:
 	_log_panel = panel
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
-	_log.scroll_following = false  # WU-531: _fit_log_card scrolls to a whole message
+	_log.scroll_following = false  # WU-531: _fit_log_card keeps only whole messages in the label
 	_log.custom_minimum_size = Vector2(376, 76)
 	_log.add_theme_font_size_override("normal_font_size", 14)
 	panel.add_child(_log)
@@ -1316,7 +1316,7 @@ static func fit_messages(heights: Array[float], room: float) -> int:
 	return n
 
 
-## Resizes the log card to its visible lines and scrolls so the top line starts a whole message.
+## Resizes the log card to its visible lines; the label holds only the newest whole messages that fit.
 func _fit_log_card() -> void:
 	if _log == null or _log_panel == null:
 		return
@@ -1355,15 +1355,18 @@ func _fit_log_card() -> void:
 		_log_panel.offset_top = -16.0 - _log.custom_minimum_size.y - LOG_CARD_PADDING
 		_log_panel.size.y = 0.0
 		return
-	var shown_h := 0.0
-	for i in range(count - fit, count):
-		shown_h += heights[i]
-	var h := log_card_height(int(ceil(shown_h)))
+	if fit < count:
+		# REVIEW (WU-531): show only the messages that fit whole. Scrolling to their offset did not stick in the
+		# game (the scroll value is clamped against the card's old height), so the card still opened mid-message.
+		_log_truncated = true
+		_log.clear()
+		for i in range(count - fit, count):
+			_log.append_text(_log_lines[i])
+	var h := log_card_height(_log.get_content_height())
 	_log.custom_minimum_size.y = h
 	_log_panel.offset_top = -16.0 - h - LOG_CARD_PADDING
 	_log_panel.size.y = 0.0
-	if count > 0 and fit > 0:
-		_log.get_v_scroll_bar().value = offsets[count - fit]
+	_log.scroll_to_line(0)
 
 
 ## The message text of a log line without its BBCode tags.

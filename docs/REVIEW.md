@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ef49021
+Last reviewed commit: 0a581b4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1886,3 +1886,21 @@ Last reviewed commit: ef49021
     tools/balance.sh --check; the planner should schedule a balance run. SEASON-019 changes which set year 3+ uses, so a
     year-3 save mid-season sees new tasks (progress is per task id; only in-progress seasons are affected). WU-529 can hide
     the targeted interactable's label when another owner is nearer the player (the [E] chip still names it).
+- 2026-11-13 (reviewer): reviewed ef49021..0a581b4 (ART-014, WU-530, GFX-129, QA-211, GFX-131, C-358, SEASON-021, GFX-130,
+  LOG-002, WU-531; [PLAN]/[REVIEW] skipped). Main green before and after (3943 tests). No BACKLOG/CHANGELOG edits by
+  workers; no SAVE_VERSION change (ART-014's `_artifact_spoils_day` is session-only and reset in `_reset_artifact_line`);
+  no binary assets (villager accessories, village square, ground patches are code-drawn and seeded).
+  - Fixed (WU-531): the rendered hud_after_sect.png still opened the log card with "in all)." (the worker didn't render
+    it). Setting the scroll bar to the top message's offset didn't stick in the game (it was clamped against the card's
+    old height). The label now holds only the newest whole messages that fit, then scrolls to 0. The shot has been
+    re-rendered and starts on a whole message. The test now posts wrapping filler lines and checks the card's text begins with one.
+  - SEASON-021 (explore/encounter/threat/mission wins note the hunt; fight() itself never notes it, so there's no double
+    count), ART-014 (same reward table as the spoils notes, once a day, closed seals only), LOG-002, C-358 (name echo
+    validated; an empty name already fails validation), GFX-129/130/131 (map.square validated and documented),
+    WU-530, QA-211 (sim only) OK.
+  - Notes, not filed: SEASON-021's spec wording reads oddly in the journal ("Drive off a Wild Boar that is rooting up the
+    fields exploring the Village Outskirts"), so the planner may want "(explore the Village Outskirts)". Its lost-fight/spar
+    tests from the spec are missing, and `where` now runs Exploration.outlook per region for hunt tasks. LOG-002 landed after
+    QA-211's re-baseline, so the log-noise/first-hour baseline is stale again. WU-530 left `route_label_pos` unused
+    (only its old test still calls it). GFX-130 builds the ground per pixel in GDScript (cached per region/season, but
+    the first entry's build time is unmeasured).

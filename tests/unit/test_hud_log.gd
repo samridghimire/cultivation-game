@@ -95,4 +95,12 @@ func test_card_starts_on_a_whole_message() -> void:
 	for i in log.get_paragraph_count():
 		starts.append(int(log.get_paragraph_offset(i)))
 	assert_true(starts.has(top_px), "scroll %d should be a message start in %s" % [top_px, starts])
+	# REVIEW (WU-531): the card's text itself starts on a whole message (the shot showed "in all)." on top).
+	for i in 6:
+		hud.call("_on_message", "Filler %d with enough words to wrap onto a second line of the narrow log card here." % i, "info")
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var text := log.get_parsed_text().strip_edges()
+	assert_true(text.begins_with("Filler "), "card starts on a message: %s" % text)
+	assert_true(log.get_content_height() <= HUD.LOG_CARD_MAX_LINES * HUD.LOG_CARD_MIN_LINE_PX + 1, "whole messages fit the card")
 	_finish(hud)
