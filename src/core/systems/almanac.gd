@@ -98,6 +98,19 @@ static func tomorrow_line(omen: Dictionary) -> String:
 	return "Tomorrow: %s." % String(omen.get("name", ""))
 
 
+## LOG-003: whether `omen` (on `day`) is worth a log forecast: a fishing omen while a catch task is open, a gathering
+## omen while a gather task is open. Plain flavour omens stay on the Today card and the journal.
+static func matters_for_tasks(omen: Dictionary, c: CharacterData, data: GameData, day: int) -> bool:
+	if omen.is_empty() or is_plain(omen):
+		return false
+	match boost_key(omen):
+		"fishing_mult":
+			return SeasonTasks.has_open(c, data, day, "catch")
+		"gather_bonus":
+			return SeasonTasks.has_open(c, data, day, "gather")
+	return false
+
+
 static func validate(data: GameData) -> Array[String]:
 	var errs: Array[String] = []
 	var seen := {}

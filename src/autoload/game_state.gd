@@ -25,6 +25,9 @@ var auctions: Dictionary = {}
 var devour_target: Dictionary = {}
 ## Why the last fight was lost (Combat.loss_advice), "" after a win; shown in the combat report.
 var last_loss_advice: String = ""
+## LOG-003: set by a UI that opens the combat report after every fight; the log then skips the mission fight intro
+## ("Sect mission: X. You face the Y.") the report repeats. Headless sims leave it false and keep the intro.
+var combat_report_shown: bool = false
 ## True when the last fight was a friendly spar (SPAR-001): the report reads like one.
 var last_fight_friendly: bool = false
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
@@ -4034,7 +4037,8 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]
-	EventBus.post(prefix + lines[0], "danger")
+	if not (combat_report_shown and prefix != ""):
+		EventBus.post(prefix + lines[0], "danger")
 	var outcome := Combat.apply_outcome(player, data, enemy, result, world_flags, rng)
 	if companion_id != "":
 		var delta := Folk.finish_companion(player, npcs, npc_favor, data, rng, companion_id, bool(result["victory"]))
@@ -4653,7 +4657,11 @@ func _post_reminders() -> void:
 	var omen_line := ""
 	if not omen.is_empty() and not Almanac.is_plain(omen):
 		omen_line = Almanac.line(omen, Almanac.salt_of(player), today)  # CAL-011
-	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, today_omen(1))
+	# LOG-003: tomorrow's omen only reaches the log when an open season task depends on it (Today and the journal show it anyway).
+	var tomorrow := today_omen(1)
+	if not Almanac.matters_for_tasks(tomorrow, player, data, today + 1):
+		tomorrow = {}
+	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, tomorrow)
 	for e in VillageCalendar.dawn_lines(VillageCalendar.mark_lines(player, today), omen_line, reminders):  # LOG-001
 		EventBus.post(String(e["text"]), String(e["category"]))
 

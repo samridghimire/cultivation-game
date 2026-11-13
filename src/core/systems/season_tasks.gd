@@ -436,6 +436,18 @@ static func all_done(c: CharacterData, data: GameData, day: int) -> bool:
 	return true
 
 
+## LOG-003: whether `day`'s season has a task of `kind` ("catch", "gather", ...) that is not done yet.
+static func has_open(c: CharacterData, data: GameData, day: int, kind: String) -> bool:
+	if c == null or def(data, day).is_empty():
+		return false
+	# Read-only: asking about tomorrow must not reset today's season record at a season change.
+	var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == season_key(day) else {}
+	for t: Dictionary in tasks_for(data, day):
+		if String(t["kind"]) == kind and int(progress.get(String(t["id"]), 0)) < int(t["count"]):
+			return true
+	return false
+
+
 ## [{text, n, count, done}] for today's season.
 static func list(c: CharacterData, data: GameData, day: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

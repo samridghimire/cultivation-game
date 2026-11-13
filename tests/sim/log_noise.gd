@@ -20,10 +20,8 @@ func _initialize() -> void:
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
 
 
-func _on_message(text: String, _category: String) -> void:
-	var topic := "(none)"
-	if _bus.history.size() > 0 and String(_bus.history.back()["topic"]) != "":
-		topic = String(_bus.history.back()["topic"])
+func _on_message(text: String, category: String) -> void:
+	var topic := category if category != "" else "(none)"  # LOG-003: the category the line was posted with
 	_topic_counts[topic] = int(_topic_counts.get(topic, 0)) + 1
 	var month: int = _clock.total_days / Calendar.DAYS_PER_MONTH
 	var key := "%s#%d" % [topic, month]
@@ -58,6 +56,7 @@ func _run() -> void:
 	var seeds := int(nums[0]) if nums.size() > 0 else 5
 	var months := int(nums[1]) if nums.size() > 1 else 12
 	_gs = root.get_node("GameState")
+	_gs.combat_report_shown = true  # the real game opens the combat report after each fight (LOG-003)
 	_clock = root.get_node("GameClock")
 	_bus = root.get_node("EventBus")
 	_bus.message_posted.connect(_on_message)

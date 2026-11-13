@@ -278,6 +278,7 @@ func test_fight_mission_posts_one_opening_line() -> void:
 	var heard: Array[String] = []
 	var cb := func(text: String, _cat: String) -> void: heard.append(text)
 	EventBus.message_posted.connect(cb)
+	gs.combat_report_shown = false  # LOG-003: with a report the intro is skipped
 	gs.take_mission("cull_mist_wolves")
 	EventBus.message_posted.disconnect(cb)
 	var opening := heard.filter(func(t: String) -> bool: return t.contains("Sect mission:"))
