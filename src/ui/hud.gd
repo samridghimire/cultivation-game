@@ -155,6 +155,11 @@ var _breakthrough: BreakthroughScreen
 var _death_screen: Control
 
 
+## [REVIEW] LOG-003: once this HUD is gone no combat report opens, so the log keeps the mission fight intro again.
+func _exit_tree() -> void:
+	GameState.combat_report_shown = false
+
+
 func _ready() -> void:
 	_build_status_panel()
 	_build_log()

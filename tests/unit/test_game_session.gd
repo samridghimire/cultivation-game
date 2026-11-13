@@ -4092,3 +4092,19 @@ func test_buy_hint_is_remembered_for_the_hinted_region() -> void:
 	gs.note_buy_hint("Nothing to buy here.")
 	assert_eq(String(gs.buy_hints.get(other, "")), "qi_gathering_pill")
 	gs.buy_hints.clear()
+
+
+## [REVIEW] SHOP-002: a remembered buy hint is cleared by buying the item there and never outlives the session.
+func test_buy_hint_clears_on_buy_and_new_session() -> void:
+	var gs := _game_state()
+	var c := _start()
+	gs.buy_hints[gs.current_region] = "qi_gathering_pill"
+	c.add_item("spirit_stone", 10000)
+	gs.buy_item("qi_gathering_pill")
+	assert_false(gs.buy_hints.has(gs.current_region), "bought: the errand is done")
+	gs.buy_hints["somewhere"] = "qi_gathering_pill"
+	_start()
+	assert_true(gs.buy_hints.is_empty(), "a new character starts with no remembered errands")
+	gs.buy_hints["somewhere"] = "qi_gathering_pill"
+	gs.load_save_dict(gs.to_save_dict())
+	assert_true(gs.buy_hints.is_empty(), "a loaded save starts with none")

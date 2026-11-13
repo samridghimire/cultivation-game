@@ -692,3 +692,19 @@ func test_a_festival_is_named_once_in_the_kickoff() -> void:
 				for l in lines:
 					n += String(l).count(String(ev.get("name", "")))
 				assert_true(n <= 1, "%s named once (day %d)" % [ev.get("name", ""), day])
+
+
+## [REVIEW] SEASON-022: a hunt target met only outside Qingshi names the region too, not just the site.
+func test_where_names_the_region_for_a_foe_outside_qingshi() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	c.realm_index = 4  # deeper sites only bring their foes up for a stronger cultivator
+	var checked := 0
+	for en: String in gd.enemies:
+		var w := SeasonTasks.where({"id": "t_" + en, "kind": "hunt", "target": en, "count": 1}, c, gd, 5)
+		if not w.begins_with("(explore the "):
+			continue
+		if Exploration.sites_with_foe(c, gd, SeasonTasks.REGION, en, "spring", 5).is_empty():
+			checked += 1
+			assert_true(w.ends_with(")") and w.contains(" in "), w)
+	assert_true(checked > 0, "some foe is met only outside Qingshi")

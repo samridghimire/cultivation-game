@@ -15,8 +15,8 @@ var data: GameData
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
-## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
 var buy_hints: Dictionary = {}  # SHOP-002: region id -> item id its last shown buy-hint named (session only)
+## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
 var shop_name := ""  # the seller of the open shop screen; "" when none is open (close_shop)
 ## Open auctions (Auctions): house_id -> {opening, lots}.
 var auctions: Dictionary = {}
@@ -127,6 +127,7 @@ func start_session(character: CharacterData) -> void:
 	CreationArtifact.ensure(player, data)
 	_reset_artifact_line()
 	world_flags = {}
+	buy_hints = {}  # SHOP-002: a new character inherits no remembered errands
 	auctions = {}
 	devour_target = {}
 	world_events = []
@@ -613,6 +614,8 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
 		EventBus.post("You buy %s for %d spirit stones." % [what, result["stones"]])
+		if String(buy_hints.get(current_region, "")) == item_id:
+			buy_hints.erase(current_region)  # SHOP-002: you got what you came for
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -3277,7 +3280,6 @@ func market_multiplier() -> float:
 	return WorldEvents.price_multiplier(data, world_events, current_region)
 
 
-## MARKET-003: the shop screen closed; a later buy must not use the seller's stale discount.
 ## SHOP-002: remembers the item a hint sends you to buy in another region.
 func note_buy_hint(hint: String) -> void:
 	var region := Guidance.hinted_region(data, hint, current_region)
@@ -3288,6 +3290,7 @@ func note_buy_hint(hint: String) -> void:
 		buy_hints[region] = item
 
 
+## MARKET-003: the shop screen closed; a later buy must not use the seller's stale discount.
 func close_shop() -> void:
 	shop_name = ""
 
@@ -4446,6 +4449,7 @@ func load_save_dict(d: Dictionary) -> void:
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	_reset_artifact_line()
+	buy_hints = {}  # SHOP-002: session-only, so a loaded save starts without them
 	world_flags = d.get("world_flags", {})
 	Effects.migrate_legacy_timed(world_flags, int(d.get("clock", {}).get("total_days", 0)))
 	auctions = d.get("auctions", {})

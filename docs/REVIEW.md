@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 0a581b4
+Last reviewed commit: 3cc0507
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1904,3 +1904,24 @@ Last reviewed commit: 0a581b4
     QA-211's re-baseline, so the log-noise/first-hour baseline is stale again. WU-530 left `route_label_pos` unused
     (only its old test still calls it). GFX-130 builds the ground per pixel in GDScript (cached per region/season, but
     the first entry's build time is unmeasured).
+- 2026-11-13 (reviewer): reviewed 0a581b4..3cc0507 (WU-532, C-359, GFX-132, WU-533, SEASON-022, LOG-003 (+ baseline),
+  GFX-133, WU-534, SHOP-002; [PLAN]/[REVIEW] skipped). Main green before (3967 tests) and after. No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change, no new persistent state (SHOP-002's `buy_hints` is session-only); no binary
+  assets (yard paths, ragged ground and flagstones are code-drawn and locally seeded).
+  - Fixed (SHOP-002): `GameState.buy_hints` was never cleared, so a new character or a loaded save in the same session
+    inherited the last game's remembered errands, and the item stayed "hinted" after you bought it. Now reset in
+    `start_session`/`load_save_dict` and erased when you buy that item in that region. Also put back the MARKET-003 and
+    shop_name doc comments the change had split from their code. Test added.
+  - Fixed (SEASON-022): hunt `where` dropped the region for sites outside Qingshi ("(explore the Beast Ridge)", where
+    SEASON-021 said "exploring in Azure Peak"); it now reads "(explore the Beast Ridge in Azure Peak)". Test added.
+  - Fixed (LOG-003): `combat_report_shown` was set by the HUD's `_ready` and never cleared, so later headless code (tests,
+    sims after a HUD test) silently lost the mission fight intro (test_sect_missions had to reset it by hand). The HUD's
+    `_exit_tree` now resets it.
+  - WU-532/533 (pill "for you" rule, max 4 tags, manual-by-technique hint, footer hidden when gear is stocked), WU-534
+    (a_or_an, festival named once, season card queued behind screens, route_label_pos removed), GFX-132/133, C-359 OK.
+  - Notes, not filed: C-359 changes a mission reward without a balance check (its Follow-ups say so; LOG-003's baseline
+    refresh then moved the economy section, and sect-mission income 20.6 -> 7.7/month is unexplained; QA should look).
+    LOG-003 reaches 11.4 lines/month, still short of the 9.5 target. GFX-133 says a settings leak (hud_hints=0 left in
+    user://settings.cfg) can fail test_hud_layout on the next run; I didn't reproduce it. SHOP-002 remembers any hint
+    naming an item and another region, not only buy hints (the "in stock here" check limits the harm). Several UI tasks
+    (WU-532/533/534) landed without re-rendered shop/Winter screenshots.

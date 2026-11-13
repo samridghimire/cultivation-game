@@ -539,7 +539,9 @@ static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int)
 				# SEASON-021/022: else an explore site whose encounters can bring the foe up.
 				var sites := Exploration.sites_with_foe(foe_c, data, rid, target, season, day)
 				if not sites.is_empty():
-					return "(explore the %s)" % sites[0].get("display_name", "wilds")
+					var site := String(sites[0].get("display_name", "wilds"))
+					# [REVIEW] outside Qingshi the site alone ("the Beast Ridge") does not say where to travel
+					return "(explore the %s)" % site if rid == REGION else "(explore the %s in %s)" % [site, data.regions[rid]["name"]]
 			if VillageHunt.quarry(data, REGION, day) == target:
 				return "at the village hunt"
 		"contest":
