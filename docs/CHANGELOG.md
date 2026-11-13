@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-13 [C-359] The Azure Peak crystal errand pays like honest work instead of more than the crystal costs.
+- 2026-11-13 [WU-532] The shop lists what you need first (the hinted item, manuals you can learn, pills for your realm, better gear), marked "(for you)".
+- 2026-11-13 [WU-531] The HUD message card shows only whole messages, never the tail of one.
+- 2026-11-13 [LOG-002] The "artifact drinks the change in you" line comes at most once a week.
+- 2026-11-13 [GFX-130] The ground has soft light and dark patches, clover and moss, worn earth round busy places and patchy snow in winter.
+- 2026-11-13 [SEASON-021] Beating the hunted beast while exploring or on a mission counts for the elder's season hunt, and the task names where to explore.
+- 2026-11-13 [C-358] The Wandering Merchant no longer sells a found feather; almanac sayings no longer repeat the omen's name.
+- 2026-11-13 [GFX-131] Qingshi has a village square with a big old tree, benches and a lantern, walked dirt roads and groves of trees.
+- 2026-11-13 [QA-211] The log-noise sim lists the loudest message templates; the first-hour log baseline is refreshed.
+- 2026-11-13 [GFX-129] Villagers look different: straw hats, fur caps, headscarves, aprons, white hair and canes, robes coloured by role.
 - 2026-11-13 [WU-530] The World Map's day labels stay clear of region names, and unexplored regions have a dotted border.
 - 2026-11-13 [ART-014] After a fight, the Creation Artifact notices spoils it would like to be fed.
 - 2026-11-13 [C-352] Each wild region has its own herb by the path: dew grass, fogbloom moss, pine needles, frostbell.
