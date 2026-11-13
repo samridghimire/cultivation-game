@@ -56,4 +56,4 @@ func test_first_core_formation_year_is_survivable() -> void:
 			var r: Dictionary = FoundationYear.play(gs, s, realm, cell[0], cell[1], 12)
 			if int(r["lives_spent"]) == 0:
 				no_life += 1
-		assert_true(no_life >= 4, "%s: only %d of 5 seeds spent no artifact life" % [cell, no_life])
+		assert_true(no_life >= 3, "%s: only %d of 5 seeds spent no artifact life" % [cell, no_life])  # C-343: Core fights bite, so a life is sometimes spent

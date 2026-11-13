@@ -137,6 +137,7 @@ func test_game_state_take_missions() -> void:
 	assert_eq(days, int(gs.data.sect_missions["gather_spirit_herbs"]["days"]))
 	var contribution := int(c.sect["contribution"])
 	var alignment := c.alignment
+	c.realm_index = 2  # C-343: the stag mission is capped at Foundation Establishment
 	gs.take_mission("drive_off_fog_antler_stag")
 	assert_gt(int(c.sect["contribution"]), contribution, "won the fight, mission done")
 	assert_gt(c.alignment, alignment, "righteous mission")
