@@ -1066,13 +1066,35 @@ func _spread_on_screen() -> void:
 ## WU-508: labels over the player fade to 35%; a place label under the [E] chip hides while the chip shows.
 func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 	var body := LabelFade.player_rect(player.position) if player != null else Rect2()
+	var alphas: Dictionary = {}
+	var over_nodes: Array = []
+	var over_rects: Array[Rect2] = []
+	var over_pos: Array[Vector2] = []
+	var places: Array[Rect2] = []
 	for node: Interactable in nodes:
 		var a := 1.0
 		if node.label_drawn() and player != null:
 			var r := node.drawn_label_rect(view)
-			a = LabelFade.alpha_for(r, body)
-			if node.get("npc_id") == null and not node is Roamer and not node.highlighted and LabelFade.hidden_by_chip(r, chip):
+			var is_npc: bool = node.get("npc_id") != null or node is Roamer
+			if r.intersects(body):
+				over_nodes.append(node)
+				over_rects.append(r)
+				over_pos.append(node.position)
+			if not is_npc and not node.highlighted and LabelFade.hidden_by_chip(r, chip):
 				a = 0.0
+			if not is_npc:
+				places.append(r)
+		alphas[node] = a
+	if player != null and not over_nodes.is_empty():  # WU-529: one name at a time over the player
+		var kept := LabelFade.keep_nearest(over_rects, over_pos, player.position)
+		for i in over_nodes.size():
+			alphas[over_nodes[i]] = minf(alphas[over_nodes[i]], kept[i])
+	for node: Interactable in nodes:
+		var a: float = alphas[node]
+		if a > 0.5 and player != null and node.label_drawn() and (node.get("npc_id") != null or node is Roamer):
+			var r2 := node.drawn_label_rect(view)
+			if not r2.intersects(body):
+				a = minf(a, LabelFade.npc_alpha(r2, places))
 		node.set_label_player_alpha(a)
 
 
