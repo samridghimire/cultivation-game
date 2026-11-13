@@ -18,6 +18,7 @@ const MIN_RIPPLES := 3
 
 var flow_offset := 0.0
 var _streams: Array[Rect2] = []
+var _stream_shapes: Array[Dictionary] = []  ## GFX-135: {seed, spans} per stream (meander of its banks)
 var _ponds: Array[Rect2] = []
 var _jetties: Array[Rect2] = []  ## WU-431: planks lie over the water; highlights and ripples skip them
 var _paths: Array[Rect2] = []
@@ -43,6 +44,7 @@ static func shimmer_alpha(t: float) -> float:
 func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, season: String = "") -> void:
 	_decor = Scenery.water_decor(region, "Winter" if frozen else season)
 	_streams.clear()
+	_stream_shapes.clear()
 	_ponds.clear()
 	_jetties.clear()
 	_paths.clear()
@@ -62,6 +64,7 @@ func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, se
 			"stream":
 				if not frozen:
 					_streams.append(rect)
+					_stream_shapes.append({"seed": hash(str(lm["pos"])), "spans": Scenery.stream_spans(region, lm)})
 			"pond":
 				if not frozen:
 					_ponds.append(rect)
@@ -109,14 +112,9 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var dash := Color(0.78, 0.92, 1.0, 0.45)
-	for s in _streams:
-		var bank := Color("6a5236")
-		if s.size.x >= s.size.y:
-			draw_rect(Rect2(s.position.x, s.position.y - 2.0, s.size.x, 2.0), bank)
-			draw_rect(Rect2(s.position.x, s.end.y, s.size.x, 2.0), bank)
-		else:
-			draw_rect(Rect2(s.position.x - 2.0, s.position.y, 2.0, s.size.y), bank)
-			draw_rect(Rect2(s.end.x, s.position.y, 2.0, s.size.y), bank)
+	for si in _streams.size():
+		var s := _streams[si]
+		_draw_stream_banks(s, _stream_shapes[si])
 		_draw_flow(s, dash)
 	var a := shimmer_alpha(_clock)
 	for p in _ponds:
@@ -143,6 +141,32 @@ func _draw() -> void:
 			var ang := TAU * float(i) / 16.0
 			pts.append(pos + Vector2(cos(ang) * rad, sin(ang) * rad * 0.55))
 		draw_polyline(pts, Color(1, 1, 1, 0.55 * (1.0 - t)), 1.0)
+
+
+## GFX-135: the two banks follow the same meander as the stream texture (Scenery.stream_offset), straight at bridges.
+func _draw_stream_banks(s: Rect2, shape: Dictionary) -> void:
+	var bank := Color("6a5236")
+	var horizontal := s.size.x >= s.size.y
+	var length := s.size.x if horizontal else s.size.y
+	var width := s.size.y if horizontal else s.size.x
+	var spans: Array[Vector2] = []
+	for sp in shape["spans"]:
+		spans.append(sp)
+	var inset := Scenery.STREAM_AMP
+	var lo := PackedVector2Array()
+	var hi := PackedVector2Array()
+	var a := 0.0
+	while a <= length + 0.01:
+		var world_a := (s.position.x if horizontal else s.position.y) + a
+		var off := Scenery.stream_offset(world_a, int(shape["seed"]), spans)
+		var p_lo := Vector2(world_a, s.position.y + inset + off - 1.0) if horizontal else Vector2(s.position.x + inset + off - 1.0, world_a)
+		var p_hi := Vector2(world_a, s.position.y + width - inset + off + 1.0) if horizontal else Vector2(s.position.x + width - inset + off + 1.0, world_a)
+		lo.append(p_lo)
+		hi.append(p_hi)
+		a += 4.0
+	if lo.size() >= 2:
+		draw_polyline(lo, bank, 2.0)
+		draw_polyline(hi, bank, 2.0)
 
 
 func _draw_flow(s: Rect2, col: Color) -> void:

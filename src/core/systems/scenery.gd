@@ -1241,6 +1241,75 @@ static func marsh_features(region_seed: int, size: Vector2, keepouts: Array[Rect
 		_marsh_add_reeds(reeds, clump_rects, at, rng, keepouts, taken, size)
 	return {"pools": pools, "reeds": reeds}
 
+## GFX-135: smoothed seeded radius factor (1.0 +/- amp) of a ragged shoreline at `angle` (radians): 12 control points round the
+## circle, cosine-interpolated. Same seed, same shape; different seeds differ.
+static func pond_mask_radius(angle: float, seed: int, amp: float) -> float:
+	var n := 12
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var pts: Array[float] = []
+	for i in n:
+		pts.append(rng.randf_range(-1.0, 1.0))
+	var t := fposmod(angle, TAU) / TAU * float(n)
+	var i0 := int(t) % n
+	var f := t - floorf(t)
+	var k := (1.0 - cos(f * PI)) * 0.5
+	return 1.0 + amp * lerpf(pts[i0], pts[(i0 + 1) % n], k)
+
+
+## GFX-135: how far out the pond's outer (bank) edge reaches along `angle`, as a fraction of the landmark ellipse: 0.88 .. 1.0.
+static func pond_edge(angle: float, seed: int) -> float:
+	var amp := 0.12
+	return 0.88 + 0.12 * (pond_mask_radius(angle, seed, amp) - (1.0 - amp)) / (2.0 * amp)
+
+
+## GFX-135: width of the bank band (px) between the water and the outer edge of a pond.
+const POND_BANK := 3.0
+
+
+## GFX-135: true if world point `p` is on open water of the pond landmark `lm` (inside the ragged mask minus the bank band).
+static func pond_water_contains(lm: Dictionary, p: Vector2) -> bool:
+	var c := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
+	var half := Vector2(float(lm["size"][0]), float(lm["size"][1])) / 2.0
+	var d := p - c
+	var nrm := Vector2(d.x / half.x, d.y / half.y)
+	var edge := pond_edge(atan2(nrm.y, nrm.x), hash(str(lm["pos"]))) - POND_BANK / minf(half.x, half.y)
+	return nrm.length() < edge
+
+
+## GFX-135: amplitude (px) of a stream's meander.
+const STREAM_AMP := 4.0
+
+
+## GFX-135: sideways offset (px, |x| <= STREAM_AMP) of a stream at world coordinate `along` its length: a seeded sine
+## (wavelength 120-200 px) that is exactly 0 within 24 px of any `spans` entry (x = start, y = end along the same axis;
+## the path crossings, where a bridge must meet the water).
+static func stream_offset(along: float, seed: int, spans: Array[Vector2]) -> float:
+	var near := INF
+	for sp in spans:
+		near = minf(near, maxf(0.0, maxf(sp.x - along, along - sp.y)))
+	if near <= 24.0:
+		return 0.0
+	var ease_in := clampf((near - 24.0) / 24.0, 0.0, 1.0)
+	var wave := 120.0 + float(absi(seed) % 81)
+	var phase := float(absi(seed / 7) % 628) / 100.0
+	return sin(TAU * along / wave + phase) * STREAM_AMP * ease_in
+
+
+## GFX-135: the stretches along a stream landmark's axis where a path crosses it (for stream_offset).
+static func stream_spans(region: Dictionary, lm: Dictionary) -> Array[Vector2]:
+	var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
+	var r := Rect2(Vector2(float(lm["pos"][0]), float(lm["pos"][1])) - size / 2.0, size)
+	var horizontal := size.x >= size.y
+	var out: Array[Vector2] = []
+	for pr: Array in region.get("map", {}).get("paths", []):
+		var pth := Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3]))
+		if pth.intersects(r):
+			var ix := pth.intersection(r)
+			out.append(Vector2(ix.position.x, ix.end.x) if horizontal else Vector2(ix.position.y, ix.end.y))
+	return out
+
+
 
 ## GFX-125: `count` lily pads (centre and radius) scattered inside `rect`'s ellipse; seeded.
 static func pond_lilies(rect: Rect2, seed_value: int, count: int) -> Array[Dictionary]:
@@ -1249,7 +1318,7 @@ static func pond_lilies(rect: Rect2, seed_value: int, count: int) -> Array[Dicti
 	var out: Array[Dictionary] = []
 	for i in count:
 		var a := rng.randf() * TAU
-		var d := sqrt(rng.randf()) * 0.75
+		var d := sqrt(rng.randf()) * 0.6
 		out.append({"pos": rect.get_center() + Vector2(cos(a) * rect.size.x * 0.5 * d, sin(a) * rect.size.y * 0.5 * d), "r": rng.randf_range(3.0, 5.0)})
 	return out
 

@@ -1822,7 +1822,14 @@ func _draw_landmark(lm: Dictionary) -> void:
 			var li: int = (_region.get("map", {}).get("landmarks", []) as Array).find(lm)
 			if _yards.get("roof", {}).has(li):
 				water = _yards["roof"][li]  # GFX-127: a house takes its roof colour through the tint
-		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")))
+		var shape: Dictionary = {}
+		if lm["kind"] == "pond":
+			shape = {"seed": hash(str(lm["pos"]))}  # GFX-135: a ragged, per-pond shoreline
+		elif lm["kind"] == "stream":
+			var sz2 := Vector2(PixelLandmark.pixel_size("stream", size)) * float(Sprites.scale())
+			var horizontal := size.x >= size.y
+			shape = {"seed": hash(str(lm["pos"])), "spans": Scenery.stream_spans(_region, lm), "origin": (r.get_center().x - sz2.x / 2.0) if horizontal else (r.end.y - sz2.y)}
+		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")), shape)
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		if lm["kind"] == "house":
 			PlaceArt.contact_shadow(self, Vector2(r.get_center().x, r.end.y), px.x)
@@ -1980,12 +1987,7 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 						var half := (j + 2 + i) / 2 + 1
 						draw_rect(Rect2(origin + Vector2(10 - half, i * 6 + j) * sc, Vector2(half * 2, 1) * sc), snow)
 		"pond":
-			if winter:
-				var pts := PackedVector2Array()
-				for k in 33:
-					var a := TAU * k / 32.0
-					pts.append(r.get_center() + Vector2(cos(a) * r.size.x / 2.0, sin(a) * r.size.y / 2.0))
-				draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.9), 3.0)
+			pass  # GFX-135: the frozen texture carries its own snow drifts
 		"field":
 			_draw_field_overlay(origin, r, pix)
 
