@@ -56,3 +56,32 @@ func test_rest_keeps_stable_order_and_is_deterministic() -> void:
 
 func test_empty_ids() -> void:
 	assert_eq(Items.shop_order(new_character(), data(), [], "x"), [])
+
+
+func test_snacks_not_for_you_but_gathering_pill_is() -> void:
+	var c := new_character()
+	for id in ["candied_haws", "zongzi", "moon_cake", "willow_branch"]:
+		if data().items.has(id):
+			assert_false(Items.useful_now(c, data(), id), id)
+	assert_true(Items.useful_now(c, data(), "qi_gathering_pill"))
+
+
+func test_for_you_tags_capped_at_four() -> void:
+	var c := new_character()
+	var ids: Array = []
+	for id in data().items:
+		if Items.manual_technique(data(), String(id)) != "" and Items.useful_now(c, data(), String(id)):
+			ids.append(id)
+	ids.append("qi_gathering_pill")
+	assert_true(ids.size() > 4, "enough useful rows")
+	assert_eq(Items.for_you_ids(c, data(), ids, "").size(), 4)
+
+
+func test_hint_naming_technique_picks_its_manual() -> void:
+	var got := ShopScreen.hinted_item(data(), "No fighting style: Iron Fist at the merchant", ["candied_haws", "manual_iron_fist"])
+	assert_eq(got, "manual_iron_fist")
+	assert_eq(Items.shop_order(new_character(), data(), ["candied_haws", "manual_iron_fist"], got)[0], "manual_iron_fist")
+
+
+func test_no_weapons_footer_only_without_gear_in_stock() -> void:
+	assert_eq(Guidance.gear_elsewhere_line(new_character(), data(), "qingshi_village", -1, ["iron_sword"]), "")

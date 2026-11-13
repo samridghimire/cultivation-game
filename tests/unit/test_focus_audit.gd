@@ -1013,7 +1013,7 @@ func test_wu247_shop_upgrade_row_buys_and_empty_crafting_focus() -> void:
 	var row := shop.find_child("wolfhide_brigandine", true, false) as Button
 	assert_true(row != null, "the upgrade armor has a row")
 	if row != null:
-		assert_true(row.text.contains("(upgrade)") or row.tooltip_text.contains("(upgrade)"), "the row carries the upgrade tag")
+		assert_true(row.text.contains("(upgrade") or row.tooltip_text.contains("(upgrade"), "the row carries the upgrade tag")
 		row.grab_focus()
 		await _frames()
 		assert_true(root.gui_get_focus_owner() == row, "the upgrade row takes focus")

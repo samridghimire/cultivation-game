@@ -301,8 +301,22 @@ static func useful_now(c: CharacterData, data: GameData, item_id: String) -> boo
 				higher = true
 		return higher
 	if category(item) == "Pills":
-		return realm_block(c, data, item_id) == "" and Effects.check(c, data, item.get("effects", {})) == ""
+		return pill_useful_now(c, data, item)
 	return false
+
+
+## WU-533: a usable pill is "for you" only when it is a breakthrough aid this realm accepts, treats an injury the
+## player has, or brings at least a tenth of the qi still needed for the current stage. Snacks and buffs never are.
+static func pill_useful_now(c: CharacterData, data: GameData, item: Dictionary) -> bool:
+	var effects: Dictionary = item.get("effects", {})
+	if realm_block(c, data, String(item.get("id", ""))) != "" or Effects.check(c, data, effects) != "":
+		return false
+	if float(effects.get("breakthrough_bonus", 0.0)) > 0.0:
+		return true
+	if effects.has("heal_injury") or effects.has("shorten_injury"):
+		return true  # Effects.check already refused these without a matching injury
+	var need := maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
+	return float(effects.get("qi", 0.0)) >= 0.1 * need and float(effects.get("qi", 0.0)) > 0.0
 
 
 ## WU-532: the Buy tab's order: the `hinted` item first, then items useful now (see useful_now), then the rest in
@@ -319,6 +333,18 @@ static func shop_order(c: CharacterData, data: GameData, ids: Array, hinted: Str
 		else:
 			rest.append(id)
 	return first + useful + rest
+
+
+## WU-533: at most `MAX_FOR_YOU` rows carry the "(for you)" tag: the first ones after the hinted item.
+const MAX_FOR_YOU := 4
+static func for_you_ids(c: CharacterData, data: GameData, ordered: Array, hinted: String) -> Array:
+	var out: Array = []
+	for id: Variant in ordered:
+		if out.size() >= MAX_FOR_YOU:
+			break
+		if String(id) != hinted and useful_now(c, data, String(id)):
+			out.append(id)
+	return out
 
 
 ## True when a merchant with these tags would buy `item_id` back (tagged

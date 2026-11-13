@@ -1572,7 +1572,10 @@ static func merchant_goods_list(place: Dictionary) -> PackedStringArray:
 
 ## WU-260: "No weapons or armor here. The <Merchant> in <Region> (<duration>) sells them." when no merchant in
 ## `region_id` sells equipment and one within reach does; "" otherwise.
-static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String, today: int = -1) -> String:
+static func gear_elsewhere_line(c: CharacterData, data: GameData, region_id: String, today: int = -1, stock_ids: Array = []) -> String:
+	for sid: Variant in stock_ids:  # WU-533: this stock already has gear
+		if data.items.get(String(sid), {}).has("equip"):
+			return ""
 	var sells_gear := func(p: Dictionary) -> bool:
 		for item_id: String in data.items:
 			if Equipment.slot_of(data, item_id) != "" and Items.merchant_sells(data, data.items[item_id], p.get("stock_tags", []), int(p.get("max_price", 0))):

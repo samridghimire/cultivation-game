@@ -216,6 +216,11 @@ static func hinted_item(data: GameData, hint: String, item_ids: Array) -> String
 		if item_name.length() > best_len and hint.contains(item_name):
 			best = String(id)
 			best_len = item_name.length()
+	if best == "":  # WU-533: "No fighting style: Iron Fist" names the technique; the hinted row is its manual
+		for id in item_ids:
+			var tech_id := Items.manual_technique(data, String(id))
+			if tech_id != "" and hint.contains(String(data.techniques[tech_id].name)):
+				return String(id)
 	return best
 
 
@@ -548,6 +553,7 @@ func _rebuild() -> void:
 			empty = "You have nothing this merchant wants." if _selling else "Nothing for sale."
 		_list.add_child(UIStyle.label(empty, 16, Color(0.7, 0.7, 0.7)))
 	var wanted := GameState.market_wanted() if _selling else {}
+	var for_you := [] if _selling else Items.for_you_ids(p, data, ids, _hinted)
 	for item_id in ids:
 		var price := unit_price(p, data, item_id, _selling, _faction, GameState.buy_multiplier(item_id), GameState.price_season(), float(wanted["mult"]) if not wanted.is_empty() and String(wanted["item"]) == item_id and int(wanted["left"]) > 0 else (GameState.market_flood_mult(item_id) if _selling else 1.0))
 		var label: String = data.items[item_id]["name"]
@@ -560,13 +566,16 @@ func _rebuild() -> void:
 			var note := manual_note(p, data, item_id)
 			if row_fits(label + note, ROW_BADGE_PADDING):
 				label += note
-			var tag_text := tag_note(upgrade_tag(p, data, item_id, _faction))
+			var up_tag := upgrade_tag(p, data, item_id, _faction)
+			var tag_text := tag_note(up_tag)
+			if tag_text == " (upgrade)" and for_you.has(item_id):
+				tag_text = " (upgrade, for you)"
 			if tag_text != "" and row_fits(label + tag_text, ROW_BADGE_PADDING):
 				label += tag_text
 			var realm_text := realm_tag(p, data, item_id)
 			if realm_text != "" and row_fits(label + realm_text, ROW_BADGE_PADDING):
 				label += realm_text
-			if item_id != _hinted and Items.useful_now(p, data, item_id) and row_fits(label + FOR_YOU_TAG, ROW_BADGE_PADDING):
+			if for_you.has(item_id) and not label.contains("for you") and row_fits(label + FOR_YOU_TAG, ROW_BADGE_PADDING):
 				label += FOR_YOU_TAG
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
@@ -593,7 +602,7 @@ func _rebuild() -> void:
 		b.focus_entered.connect(_select.bind(item_id))
 		b.gui_input.connect(_on_item_input)
 		_list.add_child(b)
-	var gear_line := "" if _selling else Guidance.gear_elsewhere_line(p, data, GameState.current_region, GameClock.total_days)
+	var gear_line := "" if _selling else Guidance.gear_elsewhere_line(p, data, GameState.current_region, GameClock.total_days, _stock_ids())
 	_gear_note.text = gear_line
 	_gear_note.visible = gear_line != ""
 	_show_details()
