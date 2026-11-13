@@ -2,59 +2,59 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   37  161    -    37         0    1     0     0  12.4
+     1   37  161    -    37         0    1     0     0  11.4
         first win day 14 (wild_boar), style bought day -
-     2   14   79    -    14         0    4     0     0  14.0
+     2   14   79    -    14         0    4     0     0  13.3
         first win day 14 (wild_boar), style bought day -
-     3   14  138    -    14         0    1     1     0  11.6
+     3   14  138    -    14         0    1     1     0  10.8
         first win day 14 (wild_boar), style bought day -
-     4   14  172    -    14         0    1     0     0  12.1
+     4   14  172    -    14         0    1     0     0  11.1
         first win day 14 (wild_boar), style bought day -
-     5   14   45  291    14         0    1     0     0  12.1
+     5   14   45  291    14         0    1     0     0  11.5
         first win day 14 (wild_boar), style bought day -
-     6   14  170    -    14         0    2     0     0  10.5
+     6   14  170    -    14         0    2     0     0  9.8
         first win day 14 (wild_boar), style bought day -
-     7   14  107    -    14         0    2     0     0  13.2
+     7   14  107    -    14         0    2     0     0  12.8
         first win day 14 (wild_boar), style bought day -
-     8   14   82    -    14         0    1     1     0  13.9
+     8   14   82    -    14         0    1     1     0  12.9
         first win day 16 (wild_boar), style bought day -
-     9   14  200    -    14         0    2     0     0  11.8
+     9   14  200    -    14         0    2     0     0  10.6
         first win day 14 (wild_boar), style bought day -
-    10   14  107    -    14         0    2     0     0  11.1
+    10   14  107    -    14         0    2     0     0  10.5
         first win day 14 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 12.1 log lines/month
+Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 11.4 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
 Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR5": 2, "QR7": 2, "QR4": 3, "Foundation Establishment, Early": 1, "QR6": 2 }
 Stones at the QR9 bottleneck (QA-146): median 33 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 19, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 11, "withered_bone_marsh": 1 }; taken (times): {  }
-Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "world": 291, "artifact": 99, "progress": 325, "karma": 1 }
+Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "artifact": 95, "world": 193, "progress": 331, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   44  261    -    44         1   38     3     0  84.5
+     1   44  261    -    44         1   38     3     0  78.3
         first win day 14 (wild_boar), style bought day 27
-     2   14  143  868    14         1   40     6     0  84.1
+     2   14  143  868    14         1   40     6     0  76.6
         first win day 14 (wild_boar), style bought day 49
-     3   14  217    -    14         0   40     1     0  79.2
+     3   14  217    -    14         0   40     1     0  72.9
         first win day 14 (wild_boar), style bought day 44
-     4   14  267    -    14         0   39     0     0  75.3
+     4   14  267    -    14         0   39     0     0  68.8
         first win day 14 (wild_boar), style bought day 44
-     5   14   76  576    14         0   34     1     0  80.6
+     5   14   76  576    14         0   34     1     0  75.2
         first win day 14 (wild_boar), style bought day 45
-     6   14  202    -    14         0   39     2     0  85.3
+     6   14  202    -    14         0   39     2     0  79.1
         first win day 14 (wild_boar), style bought day 44
-     7   14  226    -    14         0   39     3     0  80.6
+     7   14  226    -    14         0   39     3     0  72.7
         first win day 14 (wild_boar), style bought day 43
-     8   14  147  907    14         0   46     4     0  86.1
+     8   14  147  907    14         0   46     4     0  78.0
         first win day 48 (mountain_bandit), style bought day 48
-     9   14  316    -    14         0   41     2     0  82.2
+     9   14  316    -    14         0   41     2     0  74.1
         first win day 14 (wild_boar), style bought day 48
-    10   14  147  887    14         1   42     2     0  84.8
+    10   14  147  887    14         1   42     2     0  77.3
         first win day 14 (wild_boar), style bought day 46
-Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 84.1 log lines/month
+Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 76.6 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 45 (10 seeds)
 Sect trials: Inner Disciple median day 699 (6/10 seeds); trials won 7, lost 4; stones at the last month: median 341
 Distinct action kinds per month: 7.2; months after the first with no log lines: 0
@@ -66,31 +66,33 @@ Road encounters (QA-118): 8/10 seeds met one; { "road_milestone_carver": 3, "roa
 Sect contribution (QA-146): m06 median 578, m12 median 1804; stage at m12: { "QR6": 2, "QR9": 3, "QR7": 4, "Foundation Establishment, Middle": 1 }
 Stones at the QR9 bottleneck (QA-146): median 188 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "withered_bone_marsh": 1, "azure_peak": 3 }; taken (times): { "qingshi_village": 62, "misty_forest": 7 }
-Lines by category: { "warning": 240, "danger": 792, "info": 2021, "almanac": 1668, "world": 2171, "artifact": 219, "progress": 2419, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
+Lines by category: { "warning": 240, "danger": 792, "info": 2021, "almanac": 1668, "artifact": 211, "world": 1318, "progress": 2443, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  world          29.6/month (busiest month in any seed: 166)
-  combat         24.3/month (busiest month in any seed: 93)
-  cultivation    11.4/month (busiest month in any seed: 58)
-  trade           4.5/month (busiest month in any seed: 18)
-  family          4.5/month (busiest month in any seed: 19)
-  sect            4.0/month (busiest month in any seed: 18)
-  life            0.8/month (busiest month in any seed: 25)
-  (none)          0.2/month (busiest month in any seed: 10)
+  progress       19.2/month (busiest month in any seed: 97)
+  info           16.1/month (busiest month in any seed: 50)
+  almanac        13.4/month (busiest month in any seed: 47)
+  world          10.9/month (busiest month in any seed: 44)
+  danger          3.9/month (busiest month in any seed: 20)
+  karma           2.4/month (busiest month in any seed: 23)
+  artifact        1.9/month (busiest month in any seed: 21)
+  warning         1.9/month (busiest month in any seed: 9)
+  travel          0.6/month (busiest month in any seed: 9)
+  social          0.0/month (busiest month in any seed: 1)
 Most repeated line templates (per month, averaged):
-   1.50  The artifact drinks the change in you (+N energy, N in all).
-   1.25  Tomorrow: steady hands.
-   1.18  Tomorrow: good for gathering.
-   1.08  Tomorrow: good for trade.
-   1.03  Tomorrow: good for gifts.
-   1.03  Tomorrow: good for practice.
-   1.02  Tomorrow: good for fishing.
+   1.42  The artifact drinks the change in you (+N energy, N in all).
+   1.12  Tomorrow: The Great Old Tusker walks Misty Forest.
    1.00  You practice the Iron Fist for N days.
-   0.98  Tomorrow: market-day wind.
-   0.90  Tomorrow: a day for kind words.
+   0.98  Tomorrow: good for fishing.
+   0.87  Tomorrow: good for gathering.
+   0.82  Tomorrow: fish rise to the bait.
+   0.77  Expect mostly clear weather in Qingshi Village.
+   0.75  <name> is delighted.
+   0.73  Tomorrow: heavy morning dew.
+   0.67  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -193,7 +195,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m18  respawn mist_wolf (80%) lives=3 stones=195 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Tomorrow: a day for kind words.
+      | Almanac: Good for practice. The farm saying goes: a sharp morning, a sharp blade. Go and p
       | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 221 hp, 74 atk. Foe: 2
       | You fall. (5 rounds, 0/221 hp left)
       | You were slain by a Mist Wolf at age 17.
@@ -209,7 +211,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  4 m44  respawn mist_wolf (92%) lives=4 stones=235 qingshi_village
       cause: You were slain by a Mist Wolf at age 19.
-      | Tomorrow: a day for kind words.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 94 atk. Foe: 228
       | You fall. (5 rounds, 0/224 hp left)
       | You were slain by a Mist Wolf at age 19.
@@ -217,7 +219,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m15  respawn mist_wolf (95%) lives=2 stones=196 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Tomorrow: good for practice.
+      | Almanac: Good for fishing. Still water, low mist: the river god has left the larder open.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 71 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 17.
@@ -233,7 +235,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m29  respawn mist_wolf (95%) lives=3 stones=169 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | Tomorrow: market-day wind.
+      | Almanac: Steady hands. Says the carpenter: a patient heart and a level hand. Begin now.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 73 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 18.
@@ -243,9 +245,9 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   mist_wolf                  164 fights 158 wins  real  96%  rated  96%  deaths  6  162/0/0/2
   Elder Mo                    51 fights   1 wins  real   1%  rated   7%  deaths  1  0/0/0/51
   fog_antler_stag            294 fights 288 wins  real  97%  rated  99%  deaths  0  291/0/3/0
-  wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/1/89
+  wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/4/86
   mountain_bandit             86 fights  86 wins  real 100%  rated 100%  deaths  0  85/0/0/1
-  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/45/35
+  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/46/34
   den_wolf                    79 fights  74 wins  real  93%  rated  96%  deaths  0  79/0/0/0
   salt_road_captain           50 fights  47 wins  real  94%  rated  92%  deaths  0  0/0/50/0
   blood_lotus_raider          36 fights  33 wins  real  91%  rated  95%  deaths  0  36/0/0/0
@@ -262,7 +264,7 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   Zhuge Xuanji                 4 fights   1 wins  real  25%  rated   2%  deaths  0  0/0/0/4
   bandit_chieftain             3 fights   1 wins  real  33%  rated  56%  deaths  0  3/0/0/0
   Zhao Mochou                  3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
-  mist_fox                     2 fights   2 wins  real 100%  rated  97%  deaths  0  0/0/0/2
+  mist_fox                     2 fights   2 wins  real 100%  rated  97%  deaths  0  0/0/1/1
   Zhao Chen                    2 fights   1 wins  real  50%  rated  15%  deaths  0  0/0/0/2
   mist_python                  2 fights   0 wins  real   0%  rated  39%  deaths  0  0/0/0/2
   Ning Yifeng                  1 fights   0 wins  real   0%  rated   6%  deaths  0  0/0/0/1
@@ -454,7 +456,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m18  respawn mist_wolf (80%) lives=3 stones=195 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Tomorrow: a day for kind words.
+      | Almanac: Good for practice. The farm saying goes: a sharp morning, a sharp blade. Go and p
       | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 221 hp, 74 atk. Foe: 2
       | You fall. (5 rounds, 0/221 hp left)
       | You were slain by a Mist Wolf at age 17.
@@ -470,7 +472,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  4 m44  respawn mist_wolf (92%) lives=4 stones=235 qingshi_village
       cause: You were slain by a Mist Wolf at age 19.
-      | Tomorrow: a day for kind words.
+      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 94 atk. Foe: 228
       | You fall. (5 rounds, 0/224 hp left)
       | You were slain by a Mist Wolf at age 19.
@@ -478,7 +480,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m15  respawn mist_wolf (95%) lives=2 stones=196 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Tomorrow: good for practice.
+      | Almanac: Good for fishing. Still water, low mist: the river god has left the larder open.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 71 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 17.
@@ -494,7 +496,7 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m29  respawn mist_wolf (95%) lives=3 stones=169 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | Tomorrow: market-day wind.
+      | Almanac: Steady hands. Says the carpenter: a patient heart and a level hand. Begin now.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 73 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 18.
@@ -504,9 +506,9 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   mist_wolf                  164 fights 158 wins  real  96%  rated  96%  deaths  6  162/0/0/2
   Elder Mo                    51 fights   1 wins  real   1%  rated   7%  deaths  1  0/0/0/51
   fog_antler_stag            294 fights 288 wins  real  97%  rated  99%  deaths  0  291/0/3/0
-  wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/1/89
+  wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/4/86
   mountain_bandit             86 fights  86 wins  real 100%  rated 100%  deaths  0  85/0/0/1
-  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/45/35
+  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/46/34
   den_wolf                    79 fights  74 wins  real  93%  rated  96%  deaths  0  79/0/0/0
   salt_road_captain           50 fights  47 wins  real  94%  rated  92%  deaths  0  0/0/50/0
   blood_lotus_raider          36 fights  33 wins  real  91%  rated  95%  deaths  0  36/0/0/0
@@ -523,7 +525,7 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   Zhuge Xuanji                 4 fights   1 wins  real  25%  rated   2%  deaths  0  0/0/0/4
   bandit_chieftain             3 fights   1 wins  real  33%  rated  56%  deaths  0  3/0/0/0
   Zhao Mochou                  3 fights   0 wins  real   0%  rated   0%  deaths  0  0/0/0/3
-  mist_fox                     2 fights   2 wins  real 100%  rated  97%  deaths  0  0/0/0/2
+  mist_fox                     2 fights   2 wins  real 100%  rated  97%  deaths  0  0/0/1/1
   Zhao Chen                    2 fights   1 wins  real  50%  rated  15%  deaths  0  0/0/0/2
   mist_python                  2 fights   0 wins  real   0%  rated  39%  deaths  0  0/0/0/2
   Ning Yifeng                  1 fights   0 wins  real   0%  rated   6%  deaths  0  0/0/0/1
@@ -1204,85 +1206,85 @@ Economy sim: 50 lives per profession, income 1 month in 4, 3.0 violent deaths pe
   Body-Void Union Pill costs 8000000 spirit stones
   Great Vehicle Pill costs 20000000 spirit stones
   Heavenly Tribulation Pill costs 50000000 spirit stones
-Alchemist (rank 0.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 10957, left 2117 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
+Alchemist (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 4061, left 1756 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 50 could afford the pill on the first attempt
     Core Formation: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1635, attempts without a pill 2768; lives bought 163 (dearest 3200); ended for good 7 (avg age 165), old age 43
+    income (all lives): work 50 mo / 900 stones, craft 0 mo / 0 stones, gather 18 mo / 1332 stones, sect 25319 mo / 838311 stones (stipends 644176)
+    sect missions / work stones per income month: 7.7 / 18.0 = 0.43x
+    spent: gear 0, clinic 21350; savings alone covered the Core Forming Pill at the Foundation peak for 6/50; pills bought with contribution 1416; avg sect rank 2.0, contribution 90877
+Blacksmith (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 4061, left 1756 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 50 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1635, attempts without a pill 2768; lives bought 163 (dearest 3200); ended for good 7 (avg age 165), old age 43
+    income (all lives): work 50 mo / 900 stones, craft 0 mo / 0 stones, gather 18 mo / 1332 stones, sect 25319 mo / 838311 stones (stipends 644176)
+    sect missions / work stones per income month: 7.7 / 18.0 = 0.43x
+    spent: gear 0, clinic 21350; savings alone covered the Core Forming Pill at the Foundation peak for 6/50; pills bought with contribution 1416; avg sect rank 2.0, contribution 90877
+Talisman Master (rank 0.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 4085, left 1757 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
     Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1737, attempts without a pill 2320; lives bought 195 (dearest 6400); ended for good 4 (avg age 219), old age 46
-    income (all lives): work 52 mo / 936 stones, craft 0 mo / 0 stones, gather 14 mo / 890 stones, sect 26242 mo / 1181736 stones (stipends 642620)
-    sect missions / work stones per income month: 20.5 / 18.0 = 1.14x
-    spent: gear 0, clinic 33390; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 1429; avg sect rank 2.0, contribution 93420
-Blacksmith (rank 0.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 10957, left 2117 stones
+    pills 1629, attempts without a pill 2892; lives bought 178 (dearest 3200); ended for good 10 (avg age 180), old age 40
+    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 14 mo / 936 stones, sect 25454 mo / 837019 stones (stipends 640336)
+    sect missions / work stones per income month: 7.7 / 15.0 = 0.52x
+    spent: gear 0, clinic 17290; savings alone covered the Core Forming Pill at the Foundation peak for 7/50; pills bought with contribution 1411; avg sect rank 2.0, contribution 91875
+Array Master (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 4017, left 1598 stones
+    Foundation Establishment: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 47 could afford the pill on the first attempt
+    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    pills 1620, attempts without a pill 3068; lives bought 166 (dearest 6400); ended for good 7 (avg age 165), old age 43
+    income (all lives): work 51 mo / 1071 stones, craft 0 mo / 0 stones, gather 13 mo / 855 stones, sect 25093 mo / 832840 stones (stipends 639604)
+    sect missions / work stones per income month: 7.7 / 21.0 = 0.37x
+    spent: gear 0, clinic 20170; savings alone covered the Core Forming Pill at the Foundation peak for 5/50; pills bought with contribution 1402; avg sect rank 2.0, contribution 90140
+Doctor (rank 0.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 4085, left 1757 stones
     Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
+    Core Formation: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
     Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1737, attempts without a pill 2320; lives bought 195 (dearest 6400); ended for good 4 (avg age 219), old age 46
-    income (all lives): work 52 mo / 936 stones, craft 0 mo / 0 stones, gather 14 mo / 890 stones, sect 26242 mo / 1181736 stones (stipends 642620)
-    sect missions / work stones per income month: 20.5 / 18.0 = 1.14x
-    spent: gear 0, clinic 33390; savings alone covered the Core Forming Pill at the Foundation peak for 18/50; pills bought with contribution 1429; avg sect rank 2.0, contribution 93420
-Talisman Master (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 10685, left 2116 stones
+    pills 1629, attempts without a pill 2892; lives bought 178 (dearest 3200); ended for good 10 (avg age 180), old age 40
+    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 14 mo / 936 stones, sect 25454 mo / 837019 stones (stipends 640336)
+    sect missions / work stones per income month: 7.7 / 15.0 = 0.52x
+    spent: gear 0, clinic 17290; savings alone covered the Core Forming Pill at the Foundation peak for 7/50; pills bought with contribution 1411; avg sect rank 2.0, contribution 91875
+Beast Tamer (rank 0.0 at the end): avg final realm 2.02 (~Foundation Establishment); earned 4085, left 1757 stones
     Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
     Core Formation: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
+    Nascent Soul: 1/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
     Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1727, attempts without a pill 2605; lives bought 180 (dearest 6400); ended for good 5 (avg age 174), old age 45
-    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 15 mo / 1040 stones, sect 25586 mo / 1171527 stones (stipends 645592)
-    sect missions / work stones per income month: 20.6 / 15.0 = 1.37x
-    spent: gear 0, clinic 34840; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 1415; avg sect rank 2.0, contribution 91189
-Array Master (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 10569, left 1744 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1721, attempts without a pill 2294; lives bought 185 (dearest 3200); ended for good 5 (avg age 151), old age 45
-    income (all lives): work 52 mo / 1092 stones, craft 0 mo / 0 stones, gather 18 mo / 1362 stones, sect 25339 mo / 1154657 stones (stipends 635788)
-    sect missions / work stones per income month: 20.5 / 21.0 = 0.98x
-    spent: gear 0, clinic 34000; savings alone covered the Core Forming Pill at the Foundation peak for 21/50; pills bought with contribution 1410; avg sect rank 2.0, contribution 90001
-Doctor (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 10685, left 2116 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1727, attempts without a pill 2605; lives bought 180 (dearest 6400); ended for good 5 (avg age 174), old age 45
-    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 15 mo / 1040 stones, sect 25586 mo / 1171527 stones (stipends 645592)
-    sect missions / work stones per income month: 20.6 / 15.0 = 1.37x
-    spent: gear 0, clinic 34840; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 1415; avg sect rank 2.0, contribution 91189
-Beast Tamer (rank 0.0 at the end): avg final realm 2.00 (~Foundation Establishment); earned 10685, left 2116 stones
-    Foundation Establishment: 50/50 lives reached the bottleneck, 49 could afford the pill on the first attempt
-    Core Formation: 50/50 lives reached the bottleneck, 48 could afford the pill on the first attempt
-    Nascent Soul: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Soul Formation: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Void Refinement: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Body Integration: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Mahayana: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    Tribulation Transcendence: 0/50 lives reached the bottleneck, 0 could afford the pill on the first attempt
-    pills 1727, attempts without a pill 2605; lives bought 180 (dearest 6400); ended for good 5 (avg age 174), old age 45
-    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 15 mo / 1040 stones, sect 25586 mo / 1171527 stones (stipends 645592)
-    sect missions / work stones per income month: 20.6 / 15.0 = 1.37x
-    spent: gear 0, clinic 34840; savings alone covered the Core Forming Pill at the Foundation peak for 17/50; pills bought with contribution 1415; avg sect rank 2.0, contribution 91189
-Net stones per sect mission over all lives (top 12): procure_azure_crystal 2016574, gather_spirit_herbs 881130, carry_goods_to_market 309162, fill_herb_order 10245, alchemist_rare_order 2880
+    pills 1629, attempts without a pill 2892; lives bought 178 (dearest 3200); ended for good 10 (avg age 180), old age 40
+    income (all lives): work 51 mo / 765 stones, craft 0 mo / 0 stones, gather 14 mo / 936 stones, sect 25454 mo / 837019 stones (stipends 640336)
+    sect missions / work stones per income month: 7.7 / 15.0 = 0.52x
+    spent: gear 0, clinic 17290; savings alone covered the Core Forming Pill at the Foundation peak for 7/50; pills bought with contribution 1411; avg sect rank 2.0, contribution 91875
+Net stones per sect mission over all lives (top 12): gather_spirit_herbs 875424, carry_goods_to_market 304186, procure_azure_crystal 20580, fill_herb_order 9450, alchemist_rare_order 3000
 
 ## economy, bounty hunter (seeds 1-10, 12 months)
 
