@@ -89,3 +89,43 @@ func test_market_props_keep_clear_and_are_seeded() -> void:
 				assert_false(road.intersects(rect), "nothing on a road")
 			for pl: Dictionary in region["places"]:
 				assert_false(Npcs.place_keepout(pl).intersects(rect), "nothing in a place keepout")
+
+
+func test_market_avenue_crater_plaza_and_clusters() -> void:
+	var region: Dictionary = GameData.load_from_dir().regions["fallen_star_market"]
+	var size := Vector2(region["map"]["size"][0], region["map"]["size"][1])
+	var d := Scenery.market_props(region, size)
+	var av: Rect2 = d["avenue"]
+	assert_true(av.size.x >= 64.0 and av.size.x <= 80.0, "avenue 64-80 px wide")
+	var gate := Rect2()
+	for pl: Dictionary in region["places"]:
+		if pl["type"] == "travel":
+			gate = Npcs.place_keepout(pl)
+	assert_true(av.grow(1.0).intersects(gate), "avenue touches the gate")
+	var main := Rect2(0, 470, 1600, 60)
+	assert_true(av.grow(1.0).intersects(main), "avenue touches the main street")
+	assert_true(d["avenue_slabs"].size() > 20, "paved")
+	assert_true(d["ring"].size() >= 8, "ragged ring")
+	assert_true(d["shards"].size() >= 4 and d["shards"].size() <= 6, "4-6 star shards")
+	assert_true(d["fence"].size() >= 1, "rope fence")
+	var near := 0
+	for q: Dictionary in d["props"]:
+		if (q["rect"] as Rect2).grow(30.0).intersects(av):
+			near += 1
+	assert_true(near >= 4, "prop clusters along the avenue")
+	var keep: Array[Rect2] = []
+	for pl: Dictionary in region["places"]:
+		if pl["type"] == "travel":
+			continue
+		if str(pl.get("look", "")) == "crater":  # shards ring it; only its rect + label band stay clear
+			var cp := Vector2(pl["pos"][0], pl["pos"][1])
+			var cs := Vector2(pl["size"][0], pl["size"][1])
+			keep.append(Rect2(cp - cs / 2.0 - Vector2(0, 26), cs + Vector2(0, 26)))
+		else:
+			keep.append(Npcs.place_keepout(pl))
+	var items: Array = d["shards"].duplicate()
+	for f: Dictionary in d["fence"]:
+		items.append_array(f["posts"])
+	for r: Rect2 in items:
+		for k in keep:
+			assert_false(k.intersects(r), "shards and posts clear of places and labels")

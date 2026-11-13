@@ -1295,6 +1295,20 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 			scorch.append({"center": Vector2(float(pos[0]), float(pos[1])), "radius": maxf(float(sz[0]), float(sz[1])) * 0.8})
 	var props: Array[Dictionary] = []
 	var kinds := ["barrel", "crate", "sack"]
+	# GFX-134: the paved avenue (76 px) from the travel place (gate) to the nearest cross street, when a vertical road meets it
+	var avenue := Rect2()
+	for pl: Dictionary in region.get("places", []):
+		if str(pl.get("type", "")) != "travel":
+			continue
+		var gx := float(pl["pos"][0])
+		for r in roads:
+			if r.size.y > r.size.x and gx >= r.position.x and gx <= r.end.x:
+				var gy := float(pl["pos"][1])
+				var top := 0.0
+				for r2 in roads:
+					if r2.size.x > r2.size.y and r2.end.y < gy and gx >= r2.position.x and gx <= r2.end.x:
+						top = maxf(top, r2.position.y + r2.size.y * 0.5)
+				avenue = Rect2(r.get_center().x - 38.0, top, 76.0, gy - top)
 	for i in lms.size():
 		if str(map["landmarks"][i].get("kind", "")) != "stall":
 			continue
@@ -1319,14 +1333,98 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 	var patches: Array[Rect2] = []
 	for i in 40:
 		var pr := Rect2(rng.randf_range(20.0, size.x - 60.0), rng.randf_range(20.0, size.y - 40.0), rng.randf_range(24.0, 44.0), rng.randf_range(12.0, 22.0))
-		if patches.size() < 8 and not _market_blocked(pr, roads, solid, lms, 6.0, size, Rect2()):
+		if patches.size() < 8 and not _market_blocked(pr, roads, solid, lms, 6.0, size, Rect2()) and not avenue.intersects(pr):
 			patches.append(pr)
 	var cobbles: Array[Rect2] = []
 	for i in 600:
 		var cr := Rect2(rng.randf_range(10.0, size.x - 16.0), rng.randf_range(10.0, size.y - 14.0), 5.0, 4.0)
-		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()):
+		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()) and not avenue.intersects(cr):
 			cobbles.append(cr)
-	return {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch}
+	var out := {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch, "avenue": avenue, "avenue_slabs": _avenue_slabs(avenue), "ring": PackedVector2Array(), "shards": [] as Array[Rect2], "fence": [] as Array[Dictionary]}
+	var arng := RandomNumberGenerator.new()
+	arng.seed = hash("%s|avenue" % region.get("id", ""))
+	# GFX-134: clusters of crates, barrels and sacks along the avenue (appended to props so they draw and test alike)
+	var clusters := 0
+	for attempt in 200:
+		if clusters >= 3:
+			break
+		var side := -1.0 if arng.randf() < 0.5 else 1.0
+		var cy := arng.randf_range(avenue.position.y + 30.0, avenue.end.y - 60.0)
+		var cx := avenue.position.x - 22.0 if side < 0.0 else avenue.end.x + 8.0
+		var placed: Array[Dictionary] = []
+		for n in 3:
+			var rect := Rect2(Vector2(cx + (float(n % 2) * 12.0 * -side), cy + float(n) * 11.0).round(), Vector2(10, 10))
+			if _market_blocked(rect, roads, solid, lms, 1.0, size, Rect2()):
+				continue
+			var clash := false
+			for q in props + placed:
+				if (q["rect"] as Rect2).grow(2.0).intersects(rect):
+					clash = true
+			if not clash:
+				placed.append({"kind": kinds[arng.randi() % 3], "rect": rect})
+		if placed.size() >= 2:
+			props.append_array(placed)
+			clusters += 1
+	# the crater plaza: a round scorched ring, faint star-shard stones and a low rope fence on two sides
+	for pl: Dictionary in region.get("places", []):
+		if str(pl.get("look", "")) != "crater":
+			continue
+		var cpos := Vector2(float(pl["pos"][0]), float(pl["pos"][1]))
+		var csz: Array = pl.get("size", [100, 100])
+		var crect := Rect2(cpos - Vector2(float(csz[0]), float(csz[1])) * 0.5, Vector2(float(csz[0]), float(csz[1])))
+		var ring_rect := crect.grow(46.0)
+		out["ring"] = ragged_outline(ring_rect, hash("%s|ring" % region.get("id", "")), minf(ring_rect.size.x, ring_rect.size.y) * 0.5, 5.0)
+		var inner_solid: Array[Rect2] = []  # every other place; the crater's own rect + label band is the only part kept clear
+		for pl2: Dictionary in region.get("places", []):
+			if pl2 != pl:
+				var k2 := Npcs.place_keepout(pl2)
+				inner_solid.append(Rect2(k2.position - Vector2(0, 26), k2.size + Vector2(0, 26)).grow(10.0))
+		var crater_clear := Rect2(crect.position - Vector2(6, 32), crect.size + Vector2(12, 38))
+		inner_solid.append(crater_clear)
+		var shards: Array[Rect2] = []
+		for i in 12:
+			if shards.size() >= 5:
+				break
+			var a := TAU * (float(i) / 12.0) + arng.randf_range(-0.15, 0.15)
+			var at := cpos + Vector2(cos(a) * (ring_rect.size.x * 0.5 - 8.0), sin(a) * (ring_rect.size.y * 0.5 - 6.0))
+			var sr := Rect2((at - Vector2(3, 3)).round(), Vector2(6, 6))
+			if _market_blocked(sr, roads, inner_solid, lms, 2.0, size, Rect2()):
+				continue
+			shards.append(sr)
+		out["shards"] = shards
+		var fence: Array[Dictionary] = []
+		for sx: float in [-1.0, 1.0]:
+			var fx: float = cpos.x + sx * (ring_rect.size.x * 0.5 + 6.0)
+			var posts: Array[Rect2] = []
+			for k in 4:
+				var pr := Rect2(Vector2(fx - 2.0, cpos.y - 33.0 + float(k) * 22.0).round(), Vector2(4, 8))
+				if not _market_blocked(pr, roads, inner_solid, lms, 2.0, size, Rect2()):
+					posts.append(pr)
+			if posts.size() >= 2:
+				fence.append({"posts": posts})
+		out["fence"] = fence
+	return out
+
+
+## GFX-134: staggered pale slab rows over the avenue rect, one slab per row cell (seeded by position only).
+static func _avenue_slabs(avenue: Rect2) -> Array[Rect2]:
+	var slabs: Array[Rect2] = []
+	if avenue.size.x <= 0.0:
+		return slabs
+	var row := 0
+	var y := avenue.position.y
+	while y < avenue.end.y:
+		var h := minf(14.0, avenue.end.y - y)
+		var off := 0.0 if row % 2 == 0 else 12.0
+		var x := avenue.position.x - off
+		while x < avenue.end.x:
+			var r := Rect2(x, y, 24.0, h).intersection(avenue)
+			if r.size.x > 4.0:
+				slabs.append(r)
+			x += 24.0
+		y += 14.0
+		row += 1
+	return slabs
 
 
 ## GFX-131: the village square (map.square [x, y, w, h]): a soft-edged patch of packed earth with worn patches, one big old

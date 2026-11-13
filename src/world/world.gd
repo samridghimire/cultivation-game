@@ -1389,16 +1389,42 @@ func _draw_market_ground() -> void:
 		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.85, 0.87, 0.92, 0.6))
 	for r: Rect2 in _market_dress["cobbles"]:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
+	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
+	if avenue.size.x > 0.0:
+		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))
+		draw_rect(avenue, road.darkened(0.12))
+		var n := 0
+		for sl: Rect2 in _market_dress["avenue_slabs"]:
+			n += 1
+			var c := Scenery.paving_shade(road, hash("%s|av|%d" % [_region.get("id", ""), n])).lightened(0.06)
+			draw_rect(sl.grow(-0.5), c if not snowy else c.lerp(Color(0.9, 0.92, 0.97), 0.6))
+			draw_rect(sl, road.darkened(0.22), false, 1.0)
+	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
+	if ring.size() >= 3:
+		draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26) if not snowy else Color(0.6, 0.57, 0.6, 0.6))
 	for s: Dictionary in _market_dress["scorch"]:
 		for i in 5:
 			var f := 1.0 - float(i) / 5.0
 			draw_circle(s["center"], float(s["radius"]) * f, Color(0.08, 0.05, 0.04, 0.12))
+	for sh: Rect2 in _market_dress.get("shards", []):
+		draw_rect(sh.grow(2.0), Color(0.6, 0.85, 1.0, 0.18))
+		draw_rect(sh, Color("7d8aa8"))
+		draw_rect(Rect2(sh.position + Vector2(1, 1), Vector2(2, 2)), Color("d6ecff"))
 
 
 ## GFX-126: barrels, crates and sacks beside the stalls.
 func _draw_market_props() -> void:
 	if _market_dress.is_empty():
 		return
+	for f: Dictionary in _market_dress.get("fence", []):  # GFX-134: low rope fence round the crater plaza
+		var posts: Array = f["posts"]
+		for i in posts.size():
+			var pr: Rect2 = posts[i]
+			if i > 0:
+				var prev: Rect2 = posts[i - 1]
+				draw_line(prev.position + Vector2(2, 2), pr.position + Vector2(2, 2), Color("b89a68"), 1.0)
+			draw_rect(pr, Color("5a4228"))
+			draw_rect(Rect2(pr.position, Vector2(pr.size.x, 2)), Color("a07a48"))
 	for p: Dictionary in _market_dress["props"]:
 		var r: Rect2 = p["rect"]
 		draw_rect(Rect2(r.position + Vector2(1, r.size.y - 2), Vector2(r.size.x, 3)), Color(0, 0, 0, 0.25))
