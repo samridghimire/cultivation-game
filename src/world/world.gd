@@ -1244,14 +1244,53 @@ func _draw_square_ground() -> void:
 		return
 	var snowy := Scenery.is_snowy(_season)
 	var base := Color(_region.get("map", {}).get("path_color", "8a7350"))
-	var fill := base.lightened(0.04) if not snowy else Color(0.86, 0.88, 0.93)
-	var edge := base.darkened(0.14) if not snowy else Color(0.72, 0.75, 0.82)
-	var r: Rect2 = _square["rect"]
-	draw_rect(r.grow(3.0), edge)
-	draw_rect(r, fill)
+	var fill := _ground_fill(base.lightened(0.04), snowy)
+	var edge := fill.darkened(0.06) if snowy else base.darkened(0.14)
+	var blob: PackedVector2Array = _square["blob"]
+	_fill_poly(_grow_poly(blob, 3.0), edge)
+	_fill_poly(blob, fill)
 	for p: Dictionary in _square["patches"]:
 		var sh: float = p["shade"]
-		draw_rect(p["rect"], fill.lightened(0.05 * sh) if sh > 0.0 else fill.darkened(-0.1 * sh))
+		var pc := fill.lightened(0.05 * sh) if sh > 0.0 else fill.darkened(-0.1 * sh)
+		_fill_poly(Scenery.ragged_outline(p["rect"], hash(str(p["rect"])), 6.0, 2.0), pc)
+	for t: Rect2 in _square["tracks"]:
+		_fill_poly(Scenery.ragged_outline(t, hash(str(t)), 10.0, 3.0), fill.darkened(0.06))
+	var stone_tones := [Color("a8a49a"), Color("8a867c"), Color("b4b0a6")]
+	for st: Dictionary in _square["stones"]:
+		var sr: Rect2 = st["rect"]
+		var sc: Color = stone_tones[int(st["tone"])]
+		draw_rect(Rect2(sr.position + Vector2(1, 1), sr.size), sc.darkened(0.3))
+		draw_rect(sr, sc)
+		if snowy:
+			draw_rect(Rect2(sr.position, Vector2(sr.size.x, 2)), Color(0.9, 0.93, 0.98, 0.7))
+	var tuft := Color("3f5a2e") if snowy else Color("5d8a3e")
+	for tf: Rect2 in _square["tufts"]:
+		draw_rect(tf, tuft if not snowy else Color("6a5a40"))
+
+
+## GFX-133: winter ground fills match the snow round them (<= 12% lightness apart), else the packed-earth colour.
+func _ground_fill(earth: Color, snowy: bool) -> Color:
+	if not snowy:
+		return earth
+	var ground := Color(_region.get("map", {}).get("ground", "4d6b3c"))
+	return ground.lerp(GroundTiles.SNOW, GroundTiles.WINTER_SNOW).darkened(0.05)
+
+
+func _fill_poly(poly: PackedVector2Array, color: Color) -> void:
+	if poly.size() >= 3 and not Geometry2D.triangulate_polygon(poly).is_empty():
+		draw_colored_polygon(poly, color)
+
+
+## A polygon pushed `by` px away from its centroid (cheap outline halo).
+func _grow_poly(poly: PackedVector2Array, by: float) -> PackedVector2Array:
+	var c := Vector2.ZERO
+	for v in poly:
+		c += v
+	c /= float(maxi(poly.size(), 1))
+	var out := PackedVector2Array()
+	for v in poly:
+		out.append(v + (v - c).normalized() * by)
+	return out
 
 
 ## GFX-131: the old tree with its stone ring, benches and the lantern post.
@@ -1287,11 +1326,11 @@ func _draw_yard_ground() -> void:
 		return
 	var snowy := Scenery.is_snowy(_season)
 	var base := Color(_region.get("map", {}).get("path_color", "8a7350"))
-	var fill := base.lightened(0.06) if not snowy else Color(0.86, 0.88, 0.93)
-	var edge := base.darkened(0.12) if not snowy else Color(0.72, 0.75, 0.82)
+	var fill := _ground_fill(base.lightened(0.06), snowy)
+	var edge := fill.darkened(0.05) if snowy else base.darkened(0.12)
 	for y: Dictionary in _yards["yards"]:
-		draw_rect((y["rect"] as Rect2).grow(2.0), edge)
-		draw_rect(y["rect"], fill)
+		_fill_poly(_grow_poly(y["outline"], 2.0), edge)
+		_fill_poly(y["outline"], fill)
 	for f: Dictionary in _yards["footpaths"]:
 		draw_rect((f["rect"] as Rect2).grow(1.0), edge)
 	for f: Dictionary in _yards["footpaths"]:

@@ -42,8 +42,10 @@ func test_no_square_is_empty() -> void:
 
 func test_validate_rejects_bad_square() -> void:
 	var d := data()
+	var saved: Variant = d.regions["qingshi_village"]["map"]["square"]
 	d.regions["qingshi_village"]["map"]["square"] = [1, 2]
 	var errs := Scenery.validate(d)
+	d.regions["qingshi_village"]["map"]["square"] = saved
 	assert_true(errs.size() > 0, "square [1, 2] rejected")
 
 
@@ -91,3 +93,38 @@ func test_market_street_is_staggered() -> void:
 		if starts[1].has(y):
 			shared += 1
 	assert_true(shared < starts[0].size() / 2, "joints do not line up")
+
+
+## GFX-133: ragged outlines instead of straight-edged rectangles.
+func _off_box(poly: PackedVector2Array, box: Rect2) -> bool:
+	for v in poly:
+		var d := minf(minf(absf(v.x - box.position.x), absf(v.x - box.end.x)), minf(absf(v.y - box.position.y), absf(v.y - box.end.y)))
+		if d >= 4.0:
+			return true
+	return false
+
+
+func test_square_outline_is_ragged_and_stable() -> void:
+	var a := Scenery.village_square(_qingshi())
+	var b := Scenery.village_square(_qingshi())
+	assert_eq(a["blob"], b["blob"])
+	assert_true(_off_box(a["blob"], a["rect"]), "square outline has a vertex >= 4 px off its box")
+	assert_true((a["stones"] as Array).size() >= 3, "flagstones ring the tree")
+	var keep: Array[Rect2] = []
+	for pl: Dictionary in _qingshi()["places"]:
+		keep.append(Npcs.place_keepout(pl))
+	for st: Dictionary in a["stones"]:
+		for k in keep:
+			assert_false(k.intersects(st["rect"]), "flagstone over a place")
+
+
+func test_yard_outline_is_ragged() -> void:
+	var r := _qingshi()
+	var s: Array = r["map"]["size"]
+	var y := Scenery.village_yards(r, Vector2(float(s[0]), float(s[1])))
+	assert_true((y["yards"] as Array).size() > 0)
+	var ragged := 0
+	for yd: Dictionary in y["yards"]:
+		if _off_box(yd["outline"], yd["rect"]):
+			ragged += 1
+	assert_eq(ragged, (y["yards"] as Array).size())

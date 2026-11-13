@@ -551,6 +551,46 @@ static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -
 	return out
 
 
+## GFX-133: a closed, ragged outline for a ground fill: a rounded rect (corner `radius`) whose edge is pushed in or out
+## along its normal by smoothed seeded noise of up to `amp` px, sampled every 8 px. Never an axis-aligned rectangle; same seed, same shape.
+static func ragged_outline(rect: Rect2, seed: int, radius: float, amp: float) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var rad := minf(radius, minf(rect.size.x, rect.size.y) * 0.5)
+	var pts: Array[Vector2] = []
+	var nrm: Array[Vector2] = []
+	var inner := rect.grow(-rad)
+	var corners := [[Vector2(inner.end.x, inner.position.y), -PI / 2.0], [Vector2(inner.end.x, inner.end.y), 0.0], [Vector2(inner.position.x, inner.end.y), PI / 2.0], [Vector2(inner.position.x, inner.position.y), PI]]
+	for ci in 4:
+		var c: Vector2 = corners[ci][0]
+		var a0: float = corners[ci][1]
+		for k in 5:
+			var a := a0 + (PI / 2.0) * float(k) / 4.0
+			var d := Vector2(cos(a), sin(a))
+			pts.append(c + d * rad)
+			nrm.append(d)
+		# straight edge to the next corner
+		var nc: Vector2 = corners[(ci + 1) % 4][0]
+		var dir := Vector2(cos(a0 + PI / 2.0), sin(a0 + PI / 2.0))
+		var edge_from := c + dir * rad
+		var edge_to := nc + Vector2(cos(a0 + PI / 2.0), sin(a0 + PI / 2.0)) * 0.0
+		edge_to = nc + Vector2(cos(corners[(ci + 1) % 4][1]), sin(corners[(ci + 1) % 4][1])) * rad
+		var len := edge_from.distance_to(edge_to)
+		var steps := int(len / 8.0)
+		for k in range(1, steps):
+			pts.append(edge_from.lerp(edge_to, float(k) / float(steps)))
+			nrm.append(dir)
+	var n := pts.size()
+	var raw: Array[float] = []
+	for i in n:
+		raw.append(rng.randf_range(-1.0, 1.0))
+	var out := PackedVector2Array()
+	for i in n:
+		var off := (raw[(i + n - 1) % n] + raw[i] * 2.0 + raw[(i + 1) % n]) / 4.0 * amp * 1.6
+		out.append(pts[i] + nrm[i] * clampf(off, -amp, amp))
+	return out
+
+
 ## GFX-122: a paving slab's colour: a gentle +-8% of `base` (never below 0.92x), and now and then (1 slab in 8) a lighter
 ## worn slab instead of a dark one. Deterministic from `seed`.
 static func paving_shade(base: Color, seed: int) -> Color:
@@ -1347,7 +1387,47 @@ static func village_square(region: Dictionary) -> Dictionary:
 			taken.append(pr.grow(2.0))
 			props.append({"kind": kind, "rect": pr})
 			break
-	return {"rect": rect, "outline": jagged_outline(rect, seed_value, 18, 10.0), "patches": patches, "tree": tree, "props": props}
+	var blob := ragged_outline(rect, seed_value, 20.0, 9.0)
+	var stones: Array[Dictionary] = []
+	var tracks: Array[Rect2] = []
+	var tufts: Array[Rect2] = []
+	if not tree.is_empty():
+		var tp: Vector2 = tree["pos"]
+		var stone_keep: Array[Rect2] = []  # roads are drawn over stones, so only places and landmarks block them
+		for pl: Dictionary in region.get("places", []):
+			stone_keep.append(Npcs.place_keepout(pl).grow(12.0))
+		stone_keep.append_array(landmark_rects(region))
+		for i in rng.randi_range(10, 16):
+			var a := TAU * float(i) / 13.0 + rng.randf_range(-0.2, 0.2)
+			var sz := rng.randf_range(10.0, 18.0)
+			var c := tp + Vector2(cos(a) * rng.randf_range(32.0, 40.0), sin(a) * rng.randf_range(18.0, 24.0) + 14.0)
+			var sr := Rect2(c - Vector2(sz, sz * 0.7) / 2.0, Vector2(sz, sz * 0.7)).abs()
+			if not rect.encloses(sr) or _square_hits(sr, stone_keep, [] as Array[Vector2]):
+				continue
+			var clash := false
+			for q: Dictionary in stones:
+				if (q["rect"] as Rect2).grow(1.0).intersects(sr):
+					clash = true
+			for pr: Dictionary in props:
+				if (pr["rect"] as Rect2).grow(2.0).intersects(sr):
+					clash = true
+			if not clash:
+				stones.append({"rect": sr, "tone": rng.randi() % 3})
+	for r2 in region.get("map", {}).get("paths", []):
+		var pr2 := Rect2(float(r2[0]), float(r2[1]), float(r2[2]), float(r2[3]))
+		var hit := pr2.intersection(rect)
+		if hit.size.x > 0.0 and hit.size.y > 0.0 and tracks.size() < 3:
+			tracks.append(hit.grow(3.0).intersection(rect))
+	var perim := 0.0
+	for i in blob.size():
+		perim += blob[i].distance_to(blob[(i + 1) % blob.size()])
+	for i in int(perim / 64.0 * 3.0):
+		var idx := rng.randi() % blob.size()
+		var tp2 := blob[idx] + Vector2(rng.randf_range(-3.0, 3.0), rng.randf_range(-3.0, 3.0))
+		var tr := Rect2(tp2, Vector2(2, rng.randf_range(3.0, 5.0)))
+		if not _square_hits(tr, keep, arrival):
+			tufts.append(tr)
+	return {"rect": rect, "outline": jagged_outline(rect, seed_value, 18, 10.0), "blob": blob, "patches": patches, "tree": tree, "props": props, "stones": stones, "tracks": tracks, "tufts": tufts}
 
 
 static func _square_hits(r: Rect2, keep: Array[Rect2], arrival: Array[Vector2]) -> bool:
@@ -1477,7 +1557,8 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 		var i: int = houses[n]
 		var hr: Rect2 = lms[i]
 		roof_out[i] = Color(YARD_ROOFS[(start + n) % YARD_ROOFS.size()])
-		yards_out.append({"rect": Rect2(hr.get_center().x - hr.size.x * 0.7, hr.end.y - 4.0, hr.size.x * 1.4, 24.0)})
+		var yr := Rect2(hr.get_center().x - hr.size.x * 0.7, hr.end.y - 4.0, hr.size.x * 1.4, 24.0)
+		yards_out.append({"rect": yr, "outline": ragged_outline(yr, hash("%s|yard|%d" % [region.get("id", ""), i]), 10.0, 5.0)})
 		var kinds := YARD_PROP_SIZES.keys()
 		var left := rng.randi() % 2 == 0
 		var placed := 0
