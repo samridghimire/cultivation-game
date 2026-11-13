@@ -495,6 +495,10 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var ending := season_ending(c, data, day, flags)
 	if ending != "":
 		out.append(ending)
+	if region_id == SeasonTasks.REGION or not c.seasons_completed.is_empty():  # SEASON-020
+		var preview := SeasonTasks.preview_line(c, data, day)
+		if preview != "":
+			out.append(preview)
 	# 8. Eggs by the coop: lowest priority, cut first when the list is full.
 	var egg := _egg_line(data, region_id, day, flags)
 	if egg != "":

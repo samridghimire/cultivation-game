@@ -6,6 +6,8 @@ extends RefCounted
 const KINDS: Array[String] = ["catch", "gather", "hunt", "contest", "sell_wanted"]
 const SEASONS: Array[String] = ["spring", "summer", "autumn", "winter"]
 const REGION := "qingshi_village"
+## SEASON-020: how many days before the season's end the elder's next asks are previewed.
+const PREVIEW_DAYS := 7
 
 
 ## "<year>-<season>" for a day, the key progress is stored under.
@@ -49,6 +51,32 @@ static func tasks_for(data: GameData, day: int) -> Array:
 		if i != first:
 			others.append(sets[i])
 	return others[(year - 2) % others.size()]
+
+
+## SEASON-020: "Next season the elder asks: a Lotus Bass, 2 Qi Condensing Grass, the Dragon Boat race." within
+## PREVIEW_DAYS of the season's end, else "".
+static func preview_line(c: CharacterData, data: GameData, day: int) -> String:
+	var left := Calendar.days_left_in_season(day)
+	if left > PREVIEW_DAYS:
+		return ""
+	var tasks := tasks_for(data, day + left + 1)
+	if tasks.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	for t: Dictionary in tasks:
+		var count := int(t["count"])
+		var target := String(t["target"])
+		match String(t["kind"]):
+			"catch", "gather":
+				var nm := String(data.items.get(target, {}).get("name", target))
+				parts.append(("a " + nm) if count == 1 else "%d %s" % [count, Text.plural(nm, count)])
+			"hunt":
+				parts.append("a " + String(data.enemies.get(target, {}).get("name", target)))
+			"contest":
+				parts.append("the " + String(data.world_events.get(target, {}).get("name", target)))
+			"sell_wanted":
+				parts.append("%d wanted goods sold" % count)
+	return "Next season the elder asks: %s." % ", ".join(parts)
 
 
 ## SEASON-019: a set is marked `first_year` when any of its tasks carries `"first_year": true`.

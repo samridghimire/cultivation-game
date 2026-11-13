@@ -44,3 +44,43 @@ func test_first_year_must_be_bool() -> void:
 	assert_true(SeasonTasks.validate(gd).size() > 0)
 	gd.season_tasks = saved
 	assert_eq(SeasonTasks.validate(gd).size(), 0)
+
+
+## SEASON-020: the elder's next asks, previewed in the last week of a season.
+func test_preview_line_window_and_content() -> void:
+	var gd := _gd()
+	var c := new_character()
+	assert_eq(SeasonTasks.preview_line(c, gd, 10), "", "mid-season")
+	# spring year 1, day 85 is within 7 days of the end; summer year 1 asks for the year-1 set
+	var day := 90 - 3
+	assert_eq(Calendar.season_of(day), "Spring")
+	var line := SeasonTasks.preview_line(c, gd, day)
+	assert_true(line.begins_with("Next season the elder asks:"), line)
+	assert_true(line.contains("a Lotus Bass"), line)
+	assert_true(line.contains("2 Qi Condensing Grass"), line)
+	assert_true(line.contains("the Dragon Boat Festival"), line)
+	assert_eq(SeasonTasks.preview_line(c, gd, 90 - 9), "", "just outside the window")
+
+
+func test_preview_winter_uses_next_years_spring_set() -> void:
+	var gd := _gd()
+	var c := new_character()
+	var day := 360 - 2
+	assert_eq(Calendar.season_of(day), "Winter")
+	var line := SeasonTasks.preview_line(c, gd, day)
+	assert_true(line.contains("Fog-Antler Stag") or line.contains("Silver Carp"), line)
+	assert_false(line.contains("Peach-Blossom Bream"), "year 2 never asks the year-1 set: " + line)
+
+
+func test_preview_in_today_lines() -> void:
+	var gd := _gd()
+	var c := new_character()
+	var lines := Guidance.today_lines(c, gd, {}, [], 87, "qingshi_village")
+	var found := false
+	for l in lines:
+		if String(l).begins_with("Next season the elder asks"):
+			found = true
+	assert_true(found, str(lines))
+	var far := Guidance.today_lines(c, gd, {}, [], 87, "misty_forest")
+	for l in far:
+		assert_false(String(l).begins_with("Next season the elder asks"), "not nagged far away")
