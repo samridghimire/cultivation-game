@@ -122,6 +122,8 @@ func build(tasks: Array, season_name: String, reward_done: String, shrine: Strin
 static func where_line(text: String, where: String) -> String:
 	if where == "" or text.to_lower().contains(where.to_lower()):
 		return ""
+	if where.begins_with("("):
+		return where
 	return "at " + where
 
 

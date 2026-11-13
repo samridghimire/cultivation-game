@@ -294,7 +294,7 @@ static func season_task_text(t: Dictionary) -> String:
 	var text := String(t["text"])
 	var where := String(t.get("where", ""))
 	if where != "" and not bool(t.get("done", false)):
-		text = "%s %s." % [text.trim_suffix("."), where]
+		text = SeasonTasks.with_where(text, where)
 	var note := String(t.get("note", ""))
 	if note != "" and not bool(t.get("done", false)):
 		text = "%s %s" % [text, note]

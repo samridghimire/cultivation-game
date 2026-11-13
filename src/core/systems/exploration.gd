@@ -555,6 +555,23 @@ static func outlook(c: CharacterData, data: GameData, tags: Array, flags: Dictio
 	return out
 
 
+## SEASON-022: the region's explore sites (place dicts, data order) whose encounter pool holds a fight against
+## `enemy_id` for `c`. Looks at every eligible encounter, not the 4-foe `outlook` summary. Pure.
+static func sites_with_foe(c: CharacterData, data: GameData, region_id: String, enemy_id: String, season: String = "", day: int = -1) -> Array:
+	var out: Array = []
+	var region: Dictionary = data.regions.get(region_id, {})
+	for pl: Dictionary in region.get("places", []):
+		if String(pl.get("type", "")) != "explore":
+			continue
+		var tags: Array = (region.get("encounter_tags", []) as Array).duplicate()
+		tags.append_array(pl.get("explore_tags", []))
+		for entry in eligible_encounters(c, data, tags, {}, null, 1.0, season, region_id, 0, Callable(), day):
+			if String(entry["encounter"].get("enemy", "")) == enemy_id:
+				out.append(pl)
+				break
+	return out
+
+
 ## Picks a weighted random encounter, or {} if none are eligible.
 static func roll_encounter(c: CharacterData, data: GameData, tags: Array, flags: Dictionary, rng: RandomNumberGenerator, rival: CharacterData = null, misfortune_scale: float = 1.0, season: String = "", region_id: String = "", rival_favor: int = 0, folk_ok: Callable = Callable(), day: int = -1) -> Dictionary:
 	var pool := eligible_encounters(c, data, tags, flags, rival, misfortune_scale, season, region_id, rival_favor, folk_ok, day)

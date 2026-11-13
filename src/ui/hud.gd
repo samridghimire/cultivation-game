@@ -1563,8 +1563,7 @@ static func season_one_left_line(tasks: Array, season_name: String) -> String:
 		return ""
 	var where := String(left[0].get("where", ""))
 	var text := String(left[0]["text"])
-	if where != "":
-		text = "%s %s." % [text.trim_suffix("."), where]
+	text = SeasonTasks.with_where(text, where)
 	return "One more for %s: %s" % [season_name, text]
 
 

@@ -602,6 +602,68 @@ func test_where_names_the_outskirts_for_the_year1_boar() -> void:
 	var c := CharacterData.new()
 	var task := {"id": "t", "kind": "hunt", "target": "wild_boar", "count": 1}
 	var w := SeasonTasks.where(task, c, gd, 5)
-	assert_eq(w, "exploring the Village Outskirts")
+	assert_eq(w, "(explore the Village Outskirts)")
 	var roam := {"id": "t2", "kind": "hunt", "target": "nonexistent_beast", "count": 1}
 	assert_eq(SeasonTasks.where(roam, c, gd, 5), "")
+
+
+func test_with_where_wraps_phrases() -> void:
+	assert_eq(SeasonTasks.with_where("Hunt a boar.", "(explore the Outskirts)"), "Hunt a boar. (explore the Outskirts)")
+	assert_eq(SeasonTasks.with_where("Catch a fish.", "at the Jetty"), "Catch a fish at the Jetty.")
+	assert_eq(SeasonTasks.with_where("Catch a fish.", ""), "Catch a fish.")
+	var row := JournalScreen.season_task_text({"text": "Drive off a Wild Boar.", "where": "(explore the Village Outskirts)", "note": "", "n": 0, "count": 1, "done": false})
+	assert_eq(row, "Drive off a Wild Boar. (explore the Village Outskirts)")
+
+
+func test_sites_with_foe_scans_every_foe() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	for rid: String in gd.regions:
+		for pl: Dictionary in gd.regions[rid].get("places", []):
+			if String(pl.get("type", "")) != "explore":
+				continue
+			var tags: Array = (gd.regions[rid].get("encounter_tags", []) as Array).duplicate()
+			tags.append_array(pl.get("explore_tags", []))
+			var seen := {}
+			for entry in Exploration.eligible_encounters(c, gd, tags, {}, null, 1.0, "", rid, 0, Callable(), -1):
+				var en := String(entry["encounter"].get("enemy", ""))
+				if en != "" and not seen.has(en):
+					seen[en] = true
+					var names: Array = Exploration.sites_with_foe(c, gd, rid, en).map(func(p: Dictionary) -> String: return String(p["display_name"]))
+					assert_true(names.has(pl["display_name"]), "%s lists %s" % [pl["display_name"], en])
+	assert_true(Exploration.sites_with_foe(c, gd, "qingshi_village", "no_such_beast").is_empty())
+
+
+## SEASON-022: only a WON explore fight counts for the hunt; a spar-style fight_enemy never does.
+func test_lost_fight_and_spar_do_not_count_for_the_hunt() -> void:
+	var gs := _gs()
+	var c := _start()
+	GameClock.total_days = 5
+	gs.current_region = "qingshi_village"
+	var boar: Dictionary = gs.data.enemies["wild_boar"]
+	var saved := boar.duplicate(true)
+	boar["attack"] = 5000
+	boar["hp"] = 50000
+	boar["defense"] = 5000
+	var won: bool = gs._explore_fight("wild_boar")
+	assert_false(won)
+	for k: String in saved:
+		boar[k] = saved[k]
+	if c.alive:
+		assert_eq(gs.season_tasks().filter(func(t: Dictionary) -> bool: return int(t["n"]) > 0 and String(t["text"]).contains("Boar")).size(), 0, "a loss does not count")
+		gs.fight_enemy(boar.duplicate(true))
+		assert_eq(gs.season_tasks().filter(func(t: Dictionary) -> bool: return int(t["n"]) > 0 and String(t["text"]).contains("Boar")).size(), 0, "a spar-style fight does not count")
+	gs.end_session()
+
+
+func test_roamer_only_target_is_still_found() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	var found := 0
+	for day in [5, 95, 185, 275]:
+		for rid: String in gd.regions:
+			for r in SeasonTasks._roamer_days(gd, rid, day, 0):
+				if Exploration.sites_with_foe(c, gd, rid, String(r)).is_empty():
+					found += 1
+					assert_true(SeasonTasks.where({"kind": "hunt", "target": String(r)}, c, gd, day) != "", "roamer-only %s found" % r)
+	assert_true(found >= 0)

@@ -469,6 +469,16 @@ static func hunt_note(c: CharacterData, data: GameData, task: Dictionary, day: i
 	return "(%s for you: come back stronger)" % label
 
 
+## SEASON-022: a task sentence followed by its place: "Catch a fish at the Jetty." for a plain phrase, "Hunt a boar. (explore
+## the Outskirts)" for a parenthesised one. `where` "" leaves the text alone.
+static func with_where(text: String, where: String) -> String:
+	if where == "":
+		return text
+	if where.begins_with("("):
+		return "%s %s" % [text, where]
+	return "%s %s." % [text.trim_suffix("."), where]
+
+
 ## GUIDE-214: where to do a task ("at Village Pond Jetty", "Misty Forest Pond in Misty Forest", "" when nothing fits).
 ## Pure. Qingshi's places come first, then regions by travel days from Qingshi.
 static func where(task: Dictionary, c: CharacterData, data: GameData, day: int) -> String:
@@ -514,17 +524,10 @@ static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int)
 				for r in _roamer_days(data, rid, day, realm):
 					if String(r) == target:
 						return "in %s" % data.regions[rid]["name"]
-				# SEASON-021: else a foe this region's explore encounters can bring up.
-				var region: Dictionary = data.regions[rid]
-				var foes: Array = Exploration.outlook(foe_c, data, region.get("encounter_tags", []), {}, season, rid, day)["foes"]
-				for f: Dictionary in foes:
-					if String(f.get("id", "")) == target:
-						if rid != REGION:
-							return "exploring in %s" % region["name"]
-						for pl: Dictionary in region.get("places", []):
-							if String(pl.get("type", "")) == "explore":
-								return "exploring the %s" % pl.get("display_name", "village paths")
-						return "exploring the village paths"
+				# SEASON-021/022: else an explore site whose encounters can bring the foe up.
+				var sites := Exploration.sites_with_foe(foe_c, data, rid, target, season, day)
+				if not sites.is_empty():
+					return "(explore the %s)" % sites[0].get("display_name", "wilds")
 			if VillageHunt.quarry(data, REGION, day) == target:
 				return "at the village hunt"
 		"contest":
