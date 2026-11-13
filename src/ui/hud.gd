@@ -54,6 +54,7 @@ var _log: RichTextLabel
 var _last_text: String = ""
 var _last_category: String = ""
 var _repeat: int = 0
+var _log_truncated := false  ## WU-531: the label shows a cut-down newest message
 var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsing repeats.
 var _status_panel: Control
 var _companion_chip: HBoxContainer  ## WU-413: the friend who fights beside you today.
@@ -652,7 +653,7 @@ func _build_log() -> void:
 	_log_panel = panel
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
-	_log.scroll_following = true
+	_log.scroll_following = false  # WU-531: _fit_log_card scrolls to a whole message
 	_log.custom_minimum_size = Vector2(376, 76)
 	_log.add_theme_font_size_override("normal_font_size", 14)
 	panel.add_child(_log)
@@ -1284,7 +1285,13 @@ func _on_message(text: String, category: String) -> void:
 	_last_category = category
 	var line := _log_line(color, text)
 	_log_lines.append(line)
-	_log.append_text(line)
+	if _log_truncated:
+		_log_truncated = false
+		_log.clear()
+		for l: String in _log_lines:
+			_log.append_text(l)
+	else:
+		_log.append_text(line)
 	if _log_lines.size() > MAX_LOG_LINES:
 		_log_lines.pop_front()
 		_log.remove_paragraph(0)
@@ -1296,14 +1303,74 @@ static func log_card_height(content_px: int) -> float:
 	return float(clampi(content_px, LOG_CARD_MIN_LINE_PX, LOG_CARD_MAX_LINES * LOG_CARD_MIN_LINE_PX))
 
 
-## Resizes the log card to its visible lines.
+## WU-531: how many of the newest messages (heights in px, oldest first) fit whole in `room` px.
+## 0 when even the newest alone is taller than the room.
+static func fit_messages(heights: Array[float], room: float) -> int:
+	var used := 0.0
+	var n := 0
+	for i in range(heights.size() - 1, -1, -1):
+		used += heights[i]
+		if used > room + 0.5:
+			break
+		n += 1
+	return n
+
+
+## Resizes the log card to its visible lines and scrolls so the top line starts a whole message.
 func _fit_log_card() -> void:
 	if _log == null or _log_panel == null:
 		return
-	var h := log_card_height(_log.get_content_height())
+	if _log_truncated:  # back to the full text before measuring
+		_log_truncated = false
+		_log.clear()
+		for line: String in _log_lines:
+			_log.append_text(line)
+	var room := float(LOG_CARD_MAX_LINES * LOG_CARD_MIN_LINE_PX)
+	var count := _log_lines.size()
+	var total := float(_log.get_content_height())
+	var offsets: Array[float] = []
+	for i in count:
+		offsets.append(float(_log.get_paragraph_offset(i)) if i < _log.get_paragraph_count() else total)
+	var heights: Array[float] = []
+	for i in count:
+		var next_y := offsets[i + 1] if i + 1 < count else total
+		heights.append(maxf(next_y - offsets[i], 1.0))
+	var fit := fit_messages(heights, room)
+	if fit == 0 and count > 0:
+		# The newest message alone is taller than the card: cut it to the lines that fit, ending in "...".
+		_log_truncated = true
+		var plain := _log_plain(_log_lines[-1])
+		var color: Color = UIStyle.CATEGORY_COLORS.get(_last_category, Color.WHITE)
+		var cut := plain.length()
+		var shown := plain
+		while cut > 8:
+			cut -= 6
+			shown = plain.substr(0, cut).strip_edges() + "..."
+			_log.clear()
+			_log.append_text(_log_line(color, shown))
+			if float(_log.get_content_height()) <= room + 0.5:
+				break
+		_log.custom_minimum_size.y = log_card_height(_log.get_content_height())
+		_log.scroll_to_line(0)
+		_log_panel.offset_top = -16.0 - _log.custom_minimum_size.y - LOG_CARD_PADDING
+		_log_panel.size.y = 0.0
+		return
+	var shown_h := 0.0
+	for i in range(count - fit, count):
+		shown_h += heights[i]
+	var h := log_card_height(int(ceil(shown_h)))
 	_log.custom_minimum_size.y = h
 	_log_panel.offset_top = -16.0 - h - LOG_CARD_PADDING
 	_log_panel.size.y = 0.0
+	if count > 0 and fit > 0:
+		_log.get_v_scroll_bar().value = offsets[count - fit]
+
+
+## The message text of a log line without its BBCode tags.
+static func _log_plain(line: String) -> String:
+	var re := RegEx.new()
+	re.compile("\\[/?[a-z]+(=[^\\]]*)?\\]")
+	return re.sub(line, "", true).strip_edges()
 
 
 func _log_line(color: Color, text: String) -> String:

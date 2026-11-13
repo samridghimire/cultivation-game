@@ -66,3 +66,33 @@ func test_log_still_capped() -> void:
 		hud.call("_on_message", "line %d" % i, "info")
 	assert_true(_lines(hud).size() <= HUD.MAX_LOG_LINES + 1)
 	_finish(hud)
+
+
+func test_fit_messages() -> void:
+	var none: Array[float] = []
+	assert_eq(HUD.fit_messages(none, 80.0), 0)
+	var all: Array[float] = [20.0, 20.0, 20.0]
+	assert_eq(HUD.fit_messages(all, 80.0), 3)
+	var mixed: Array[float] = [60.0, 40.0, 20.0]
+	assert_eq(HUD.fit_messages(mixed, 80.0), 2)
+	var exact: Array[float] = [40.0, 40.0]
+	assert_eq(HUD.fit_messages(exact, 80.0), 2)
+	var tall: Array[float] = [20.0, 100.0]
+	assert_eq(HUD.fit_messages(tall, 80.0), 0)
+
+
+func test_card_starts_on_a_whole_message() -> void:
+	var hud := _hud()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	hud.call("_on_message", "Zebra one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three twenty-four twenty-five twenty-six", "info")
+	hud.call("_on_message", "Alpha short.", "info")
+	hud.call("_on_message", "Beta short.", "info")
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var log: RichTextLabel = hud.get("_log")
+	var top_px: int = int(log.get_v_scroll_bar().value)
+	var starts: Array = []
+	for i in log.get_paragraph_count():
+		starts.append(int(log.get_paragraph_offset(i)))
+	assert_true(starts.has(top_px), "scroll %d should be a message start in %s" % [top_px, starts])
+	_finish(hud)
