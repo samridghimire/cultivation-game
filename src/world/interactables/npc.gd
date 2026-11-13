@@ -252,6 +252,8 @@ const FULL_LABEL_RANGE := 96.0
 var _near := false
 ## WU-520: what a far label shows (Npcs.world_title_short); "" = just the name.
 var short_name := ""
+## SPOT-001: the place world.gd stood this villager at today (null = unknown, use the usual haunt; {} = npc spots).
+var round_place: Variant = null
 ## WU-522: recomputes the far label's realm tag (after the player's realm changed); true when it changed.
 func refresh_short_name() -> bool:
 	if not GameState.npcs.has(npc_id) or GameState.data.npcs.has(npc_id):
@@ -808,7 +810,8 @@ func _activity_text(npc: CharacterData) -> String:
 	var visit := GameState.visit_place_for(npc.id)
 	if not visit.is_empty():
 		return "here to see how you are"
-	var place: Dictionary = GameState.together_places().get(npc.id, Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather))
+	var usual: Dictionary = round_place if round_place is Dictionary else Npcs.haunt_place(npc, region, GameClock.total_days, adult, weather)
+	var place: Dictionary = GameState.together_places().get(npc.id, usual)
 	var shelter := weather if Npcs.is_sheltering(npc, region, GameClock.total_days, adult, weather) else ""
 	return Npcs.activity_line(npc, place, shelter)
 

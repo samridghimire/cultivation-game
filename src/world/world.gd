@@ -874,7 +874,10 @@ func _build_generated_npcs() -> void:
 		if not family.has(c):
 			neighbours.append(c)
 	var visitor := GameState.visitor_today()
-	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), Weather.of(data, GameState.current_region, GameClock.total_days), visitor, GameState.visit_place_for(visitor), GameState.together_places())
+	var weather_today := Weather.of(data, GameState.current_region, GameClock.total_days)
+	var stands := Npcs.haunt_positions(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), weather_today, visitor, GameState.visit_place_for(visitor), GameState.together_places())
+	# SPOT-001: the capped place each neighbour really stands at, so their "browsing the stalls at X" line matches.
+	var round_places := Npcs.haunt_places(neighbours, _region, GameClock.total_days, int(data.family.get("adult_age", 16)), weather_today, visitor, GameState.visit_place_for(visitor), GameState.together_places())
 	for id: String in stands:  # WU-484: nobody on a roof or in the gate
 		stands[id] = SectCourt.settle_stand(stands[id], _region, false)
 	var stand_ids: Array = stands.keys()
@@ -905,6 +908,8 @@ func _build_generated_npcs() -> void:
 		var node: Interactable = NPC_SCRIPT.new()
 		node.art_kind = "npc"
 		node.npc_id = c.id
+		if round_places.has(c.id):
+			node.set("round_place", round_places[c.id])
 		node.display_name = "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, data)]
 		node.short_name = Npcs.world_title_short(c, GameState.player, data)
 		var adult := c.age_years() >= int(data.family.get("adult_age", 16))

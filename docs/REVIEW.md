@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3cc0507
+Last reviewed commit: cede3c0
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1925,3 +1925,17 @@ Last reviewed commit: 3cc0507
     user://settings.cfg) can fail test_hud_layout on the next run; I didn't reproduce it. SHOP-002 remembers any hint
     naming an item and another region, not only buy hints (the "in stock here" check limits the harm). Several UI tasks
     (WU-532/533/534) landed without re-rendered shop/Winter screenshots.
+- 2026-11-13 (reviewer, 2nd run): reviewed 3cc0507..cede3c0 (C-343, SHOP-003, GFX-134 (landed before the last review
+  commit but after its range), GFX-135, C-362, SPOT-001, GFX-140, GFX-136, LOG-004; [PLAN]/[REVIEW] skipped). Main green
+  (3988 -> 3992 tests). No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (LOG-004's `forecast_<region>` lives in
+  world_flags and defaults to ""; `_fold_prev` is session-only); no binary assets (all new art is code-drawn).
+  - Fixed (SPOT-001): the per-place cap moved overflow villagers to another place, but the NPC "Look" line still read the
+    uncapped `haunt_place`, so a villager standing at the well could be "browsing the stalls at the market".
+    `Npcs.haunt_places` now takes the same visitor/shared arguments as `haunt_positions` (both share `_round_places`),
+    world.gd hands each villager node its `round_place`, and `_activity_text` uses it. Test added.
+  - LOG-004, SHOP-003, C-343, C-362, GFX-134/135/136/140 OK.
+  - Notes, not filed: LOG-004's fold never triggers in play (dawn lines post between days; its Follow-ups say so) and
+    tools/balance.sh was not run, so the log-noise baselines are stale. SHOP-003's season check only applies to
+    `shop_stock` with a day; guidance buy hints and merchant lookups still name festival goods out of season. C-362's
+    "Show me how you fight." stays listed (disabled, "You already know it.") forever once Iron Fist is known, also for
+    players who learned it elsewhere. SPOT-001 had no screenshot check.

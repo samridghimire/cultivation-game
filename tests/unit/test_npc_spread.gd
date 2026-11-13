@@ -64,3 +64,21 @@ func test_spot_positions_keep_56px() -> void:
 		for j in i:
 			assert_true(out[i].distance_to(out[j]) >= Npcs.SPOT_MIN_GAP - 0.01, "%s %s" % [out[i], out[j]])
 		assert_true(out[i].distance_to(Vector2(400, 410)) >= Npcs.SPOT_MIN_GAP - 0.01)
+
+
+## [REVIEW] SPOT-001: an overflow villager's place (what their "browsing the stalls at X" line reads) is the capped one,
+## and a shared (mediated) place is kept as given.
+func test_haunt_places_report_the_overflow_place_and_keep_shared() -> void:
+	var region: Dictionary = data().regions["qingshi_village"]
+	var people := _people(12)
+	var moved := 0
+	for day in [1, 10, 40]:
+		var places := Npcs.haunt_places(people, region, day, 16)
+		for c in people:
+			var usual := Npcs.haunt_place(c, region, day, true)
+			if not usual.is_empty() and places[c.id] != usual:
+				moved += 1
+	assert_true(moved > 0, "12 villagers in Qingshi should overflow at least one place")
+	var shared_place: Dictionary = Npcs.haunt_place(people[0], region, 1, true)
+	var got := Npcs.haunt_places(people, region, 1, 16, "", "", {}, {people[5].id: shared_place})
+	assert_eq(got[people[5].id], shared_place)

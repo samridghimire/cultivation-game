@@ -398,33 +398,43 @@ static func haunt(npc: CharacterData, region: Dictionary, day: int, adult: bool 
 ## `haunt`, but villagers sharing a place stand at least HAUNT_SPACING apart
 ## (placed in id order, so the result is stable). Returns id -> Vector2 (WORLD-004).
 static func haunt_positions(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "", visitor_id: String = "", visit_place: Dictionary = {}, shared: Dictionary = {}) -> Dictionary:
-	var sorted := people.duplicate()
-	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
+	var sorted := _by_id(people)
+	var places := _round_places(sorted, region, day, adult_age, weather, visitor_id, visit_place, shared)
 	var placed: Array[Vector2] = []
-	var counts := {}
 	var out := {}
 	for c: CharacterData in sorted:
-		var adult := c.age_years() >= adult_age
-		var fixed: Dictionary = visit_place if c.id == visitor_id else shared.get(c.id, {})
-		var place := fixed
-		if place.is_empty():
-			place = _capped_place(c, region, day, adult, weather, counts)
-		var pos := _haunt_at(c, region, day, adult, weather, placed, place)
+		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed, places[c.id])
 		placed.append(pos)
 		out[c.id] = pos
 	return out
 
 
 ## SPOT-001: the place each of `people` stands at on `day` (id -> place dict, {} for an npc_spots fallback),
-## with at most HAUNT_MAX_PER_PLACE adults per place. Same order and rules as `haunt_positions`.
-static func haunt_places(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "") -> Dictionary:
+## with at most HAUNT_MAX_PER_PLACE adults per place. Same arguments and rules as `haunt_positions`, so the
+## "browsing the stalls at X" line names the place the villager really stands at.
+static func haunt_places(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "", visitor_id: String = "", visit_place: Dictionary = {}, shared: Dictionary = {}) -> Dictionary:
+	var raw := _round_places(_by_id(people), region, day, adult_age, weather, visitor_id, visit_place, shared)
+	var out := {}
+	for id: String in raw:
+		out[id] = {} if (raw[id] as Dictionary).has("none") else raw[id]
+	return out
+
+
+static func _by_id(people: Array[CharacterData]) -> Array[CharacterData]:
 	var sorted := people.duplicate()
 	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
+	return sorted
+
+
+## id -> place (a visit or shared place as given, else the capped haunt; {"none": true} = npc_spots fallback).
+static func _round_places(sorted: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String, visitor_id: String, visit_place: Dictionary, shared: Dictionary) -> Dictionary:
 	var counts := {}
 	var out := {}
 	for c: CharacterData in sorted:
-		var pl := _capped_place(c, region, day, c.age_years() >= adult_age, weather, counts)
-		out[c.id] = {} if pl.has("none") else pl
+		var place: Dictionary = visit_place if c.id == visitor_id else shared.get(c.id, {})
+		if place.is_empty():
+			place = _capped_place(c, region, day, c.age_years() >= adult_age, weather, counts)
+		out[c.id] = place
 	return out
 
 
