@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-13 [WU-530] The World Map's day labels stay clear of region names, and unexplored regions have a dotted border.
+- 2026-11-13 [ART-014] After a fight, the Creation Artifact notices spoils it would like to be fed.
+- 2026-11-13 [C-352] Each wild region has its own herb by the path: dew grass, fogbloom moss, pine needles, frostbell.
+- 2026-11-13 [GFX-128] Winter fits: frost glints on the snow, wooden planters with dead stalks, snow on the market street.
+- 2026-11-13 [WU-529] Only one name shows over your character at a time.
+- 2026-11-13 [SEASON-020] In the last week of a season, Today says what the elder will ask for next.
+- 2026-11-13 [SEASON-019] The elder's season tasks change after the first year, with a new set for every season.
+- 2026-11-13 [QA-214] A season report in the yearly sim shows which of the elder's tasks get finished.
+- 2026-11-13 [GFX-127] Qingshi's cottages have paths to their doors, yards, woodpiles, washing lines and different roofs.
+- 2026-11-13 [C-356] Sect missions pay closer to ordinary work.
+- 2026-11-13 [WU-527] The Creation Artifact screen shows what makes it grow and what fed it lately; the log has an Artifact filter.
 - 2026-11-13 [SEASON-018] Year 1's season hunts ask for a wild boar a newcomer can beat, not a deadly stag.
 - 2026-11-13 [GFX-126] Fallen Star Market has paved streets, cobbled lanes, herb planters, barrels and crates by the stalls.
 - 2026-11-13 [QA-210] A test checks that a newcomer can finish year 1's Spring tasks in Qingshi.

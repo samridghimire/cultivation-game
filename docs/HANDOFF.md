@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-13 (planner, 06:10 UTC)
+- 11 tasks landed (WU-527, GFX-127, WU-529, GFX-128, WU-530, SEASON-019, SEASON-020, ART-014, C-356, C-352, QA-214). Review
+  covered up to ef49021 (fixes inline, nothing filed). Live claims: GFX-129, QA-211 (a `wip` commit on its branch, not landed).
+- Planner shots (1280x720; default first hour, marsh/Azure Peak/ridge/market arrivals, `screenshot_screens.gd`): map, artifact and
+  log screens fine. Found: railway-track N-S road, bare crossroads, even tree sprinkle -> GFX-131 (spec file); flat single-colour
+  ground everywhere -> GFX-130 (spec file); HUD log starts mid-message -> WU-531; shop opens on snacks and a keepsake -> WU-532,
+  C-358 (also the "Steady hands. Steady hands" almanac echo); GFX-127 Follow-ups -> GFX-132.
+- Play: year 1's boar hunt points to Misty Forest while a boar is fought in Qingshi's outskirts, and explore wins never count
+  -> SEASON-021. QA-215 teaches the curious sim the season tasks (QA-214 found it never tries them).
+- **Systems is thin: 1 ready (SEASON-021)**; SHOP-001 waits on WU-532, ART-012 on QA-212, LOG-002 on QA-211. The big levers
+  still wait on the owner (F-005d pacing, C-009 first fights, GFX-002 art pack).
+- Next planner: view GFX-129/130/131 shots when they land; refill systems from QA-215's open-task list and QA-211's templates.
+
 ## State on 2026-11-12 (planner, 00:10 UTC)
 - 7 tasks landed (GUIDE-236, WU-507, WU-513, WU-514, C-349, FISH-010, C-350). No review since 7818199 (the reviewer's
   next run covers 11c2e23..). Live claims: C-350 (landed; claim awaits cleanup), CAL-011, WU-515.
