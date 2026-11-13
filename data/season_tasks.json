@@ -1,5 +1,5 @@
 {
-  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {sets (SEASON-009): [one or more sets of exactly 3 {id (unique across all sets), text (non-empty), kind, target, count (int 1..5)}]; the year's set is sets[(year - 1) % sets.size()] via SeasonTasks.tasks_for; a season may use `tasks` (exactly 3) instead, meaning one set], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). restoration (optional, SEASON-006): {region (regions.json id), name (e.g. \"the old shrine\"), stages: [1..8 {flag (unique world flag), text}], qi_flag: {flag (unique), bonus (0 < b <= 0.1), text}, incense (optional, SEASON-007): {item (items.json id), flag (unique world flag), days (int 1..3), bonus (0 < b <= 0.1), text (non-empty)}}: each season whose three tasks are finished (CharacterData.seasons_completed, unique season keys) repairs one stage and sets its world flag; when all are reached qi_flag.flag is set too, and the region must list that flag with the same bonus in its qi_flags. Once restored, the shrine takes one `incense` item (SeasonTasks.offer_incense) and sets the timed world flag {until: day + days}; the region must list that flag with the same bonus too. projects (optional, SEASON-008): after the shrine, further village projects in order: [{id, name, region (regions.json id), stages: [1..8 {flag (unique), text}], done_text, fish_bonus (optional, SEASON-011, 0 < b <= 0.1: per stage reached, the fraction of extra catch weight at fishing places of that region, SeasonTasks.fish_bonus), crop_bonus (optional, 0 < b <= 0.1: per stage reached, the fraction of an extra growing day per day for crops in field plots of that region), daily (optional): {item (items.json id), flag (unique timed world flag), text}, gather_bonus (optional, SEASON-015, 0 < b <= 0.2: per stage reached, the chance of one extra unit of the most plentiful item on a gather in that region, SeasonTasks.gather_bonus)}]; finished seasons beyond the shrine fill the next project (SeasonTasks.project_stage); news (optional, SEASON-016): 1+ non-empty village-talk templates ({project}, {subject}, {beast}) a villager may say instead of the generic project_stage pool (70% of the time) while this project's stage is fresh news. SeasonTasks.draw_daily gives one daily item once whole. Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done. recap (SEASON-014): {key: [1..3 template strings, each non-empty and <= 100 chars]} for every line LifeStats.season_summary builds; keys tasks ({done},{n}), fights_won/fights_lost ({n},{s}), fights_mixed ({won},{lost},{s}), great_beast_one, great_beast_many ({n}), harvests/foraged/crafted/missions ({n},{s}), festival_one, festival_many ({n}), breakthrough_one, breakthrough_many ({n}), quiet; {s} is the plural s; one template is picked with the game rng; the first is the default.",
+  "_doc": "SEASON-005: the village elder's seasonal tasks. seasons: {spring|summer|autumn|winter: {sets (SEASON-009): [one or more sets of exactly 3 {id (unique across all sets), text (non-empty), kind, target, count (int 1..5), first_year (optional bool, SEASON-019: true on any task marks its whole set as the year-1 set)}]; year 1 uses the first_year set (else sets[0]), year >= 2 cycles the other sets: others[(year - 2) % n], via SeasonTasks.tasks_for; a season may use `tasks` (exactly 3) instead, meaning one set], payout: {stones (int >= 0), renown (int >= 0, in Qingshi Village), favor_all (int >= 0, favor with every villager of Qingshi Village), item (optional items.json id, one given)}}}. kind: catch (target = an items.json fish id; counts fish caught), gather (target = an items.json id; counts units gathered or foraged), hunt (target = an enemies.json id; counts wins), contest (target = a world_events.json id with a contest; counts entries), sell_wanted (target ''; counts units sold to a market's wanted-item bonus). restoration (optional, SEASON-006): {region (regions.json id), name (e.g. \"the old shrine\"), stages: [1..8 {flag (unique world flag), text}], qi_flag: {flag (unique), bonus (0 < b <= 0.1), text}, incense (optional, SEASON-007): {item (items.json id), flag (unique world flag), days (int 1..3), bonus (0 < b <= 0.1), text (non-empty)}}: each season whose three tasks are finished (CharacterData.seasons_completed, unique season keys) repairs one stage and sets its world flag; when all are reached qi_flag.flag is set too, and the region must list that flag with the same bonus in its qi_flags. Once restored, the shrine takes one `incense` item (SeasonTasks.offer_incense) and sets the timed world flag {until: day + days}; the region must list that flag with the same bonus too. projects (optional, SEASON-008): after the shrine, further village projects in order: [{id, name, region (regions.json id), stages: [1..8 {flag (unique), text}], done_text, fish_bonus (optional, SEASON-011, 0 < b <= 0.1: per stage reached, the fraction of extra catch weight at fishing places of that region, SeasonTasks.fish_bonus), crop_bonus (optional, 0 < b <= 0.1: per stage reached, the fraction of an extra growing day per day for crops in field plots of that region), daily (optional): {item (items.json id), flag (unique timed world flag), text}, gather_bonus (optional, SEASON-015, 0 < b <= 0.2: per stage reached, the chance of one extra unit of the most plentiful item on a gather in that region, SeasonTasks.gather_bonus)}]; finished seasons beyond the shrine fill the next project (SeasonTasks.project_stage); news (optional, SEASON-016): 1+ non-empty village-talk templates ({project}, {subject}, {beast}) a villager may say instead of the generic project_stage pool (70% of the time) while this project's stage is fresh news. SeasonTasks.draw_daily gives one daily item once whole. Progress lives in CharacterData.season_tasks and resets when the season changes; SeasonTasks.note adds to it and pays the reward once when all three are done. recap (SEASON-014): {key: [1..3 template strings, each non-empty and <= 100 chars]} for every line LifeStats.season_summary builds; keys tasks ({done},{n}), fights_won/fights_lost ({n},{s}), fights_mixed ({won},{lost},{s}), great_beast_one, great_beast_many ({n}), harvests/foraged/crafted/missions ({n},{s}), festival_one, festival_many ({n}), breakthrough_one, breakthrough_many ({n}), quiet; {s} is the plural s; one template is picked with the game rng; the first is the default.",
   "recap": {
     "tasks": ["Village tasks: {done} of {n} done.", "The elder's list: {done} of {n} tasks done.", "The chronicle notes {done} of {n} village tasks."],
     "fights_won": ["You won {n} fight{s}.", "The village heard of {n} fight{s} you won.", "{n} fight{s} won; the village sleeps easier."],
@@ -56,7 +56,7 @@
     "spring": {
       "sets": [
         [
-          {"id": "spring_bream", "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
+          {"id": "spring_bream", "first_year": true, "text": "Land a Peach-Blossom Bream from the village pond.", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
           {"id": "spring_petals", "text": "Gather 3 Peach Blossom Petals for the shrine.", "kind": "gather", "target": "peach_blossom_petal", "count": 3},
           {"id": "spring_stag", "text": "Drive off a Wild Boar that is rooting up the fields.", "kind": "hunt", "target": "wild_boar", "count": 1}
         ],
@@ -64,6 +64,11 @@
           {"id": "spring_carp", "text": "Land 2 Silver Carp for the Qingming offering table.", "kind": "catch", "target": "silver_carp", "count": 2},
           {"id": "spring_mugwort", "text": "Gather 4 Village Mugwort for the Qingming rice cakes.", "kind": "gather", "target": "village_mugwort", "count": 4},
           {"id": "spring_qingming", "text": "Join the Qingming Festival contest.", "kind": "contest", "target": "qingming_festival", "count": 1}
+        ],
+        [
+          {"id": "spring_stag_y2", "text": "Drive off the Fog-Antler Stag that is trampling the fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1},
+          {"id": "spring_mugwort_y2", "text": "Gather 3 Village Mugwort for the planting-day rice cakes.", "kind": "gather", "target": "village_mugwort", "count": 3},
+          {"id": "spring_carp_y2", "text": "Land a Silver Carp for the planting-day feast.", "kind": "catch", "target": "silver_carp", "count": 1}
         ]
       ],
       "payout": {"stones": 60, "renown": 2, "favor_all": 1, "item": "paper_lantern"}
@@ -71,7 +76,7 @@
     "summer": {
       "sets": [
         [
-          {"id": "summer_bass", "text": "Land a Lotus Bass from the forest pond.", "kind": "catch", "target": "lotus_bass", "count": 1},
+          {"id": "summer_bass", "first_year": true, "text": "Land a Lotus Bass from the forest pond.", "kind": "catch", "target": "lotus_bass", "count": 1},
           {"id": "summer_grass", "text": "Gather 2 Qi Condensing Grass for the elder's tonic.", "kind": "gather", "target": "qi_condensing_grass", "count": 2},
           {"id": "summer_boats", "text": "Race in the Dragon Boat Festival.", "kind": "contest", "target": "dragon_boat_festival", "count": 1}
         ],
@@ -79,6 +84,11 @@
           {"id": "summer_koi", "text": "Land a Mist Koi from the forest pond.", "kind": "catch", "target": "mist_koi", "count": 1},
           {"id": "summer_herb", "text": "Gather 3 Spirit Herbs for the summer fever tea.", "kind": "gather", "target": "spirit_herb", "count": 3},
           {"id": "summer_boar", "text": "Drive a Wild Boar out of the forest edge.", "kind": "hunt", "target": "wild_boar", "count": 1}
+        ],
+        [
+          {"id": "summer_bass_y3", "text": "Land 2 Lotus Bass for the midsummer table.", "kind": "catch", "target": "lotus_bass", "count": 2},
+          {"id": "summer_grass_y3", "text": "Gather 3 Qi Condensing Grass for the summer tonic.", "kind": "gather", "target": "qi_condensing_grass", "count": 3},
+          {"id": "summer_boats_y3", "text": "Race in the Dragon Boat Festival again.", "kind": "contest", "target": "dragon_boat_festival", "count": 1}
         ]
       ],
       "payout": {"stones": 80, "renown": 2, "favor_all": 1, "item": "realgar_wine"}
@@ -86,7 +96,7 @@
     "autumn": {
       "sets": [
         [
-          {"id": "autumn_roach", "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
+          {"id": "autumn_roach", "first_year": true, "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
           {"id": "autumn_fox", "text": "Hunt a Wild Boar that raids the granaries.", "kind": "hunt", "target": "wild_boar", "count": 1},
           {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
         ],
@@ -94,6 +104,11 @@
           {"id": "autumn_eel", "text": "Land 2 Marsh Eels for the harvest soup.", "kind": "catch", "target": "marsh_eel", "count": 2},
           {"id": "autumn_dew", "text": "Gather 3 Dew Grass before the first frost.", "kind": "gather", "target": "dew_grass", "count": 3},
           {"id": "autumn_moon", "text": "Join the Mid-Autumn Festival contest.", "kind": "contest", "target": "mid_autumn_festival", "count": 1}
+        ],
+        [
+          {"id": "autumn_fox_y2", "text": "Hunt the Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
+          {"id": "autumn_dew_y2", "text": "Gather 2 Dew Grass for the harvest wine.", "kind": "gather", "target": "dew_grass", "count": 2},
+          {"id": "autumn_market_y2", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
         ]
       ],
       "payout": {"stones": 100, "renown": 2, "favor_all": 1, "item": "moon_cake"}
@@ -101,7 +116,7 @@
     "winter": {
       "sets": [
         [
-          {"id": "winter_perch", "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
+          {"id": "winter_perch", "first_year": true, "text": "Land an Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 1},
           {"id": "winter_wolf", "text": "Hunt a Wild Boar that prowls near the village.", "kind": "hunt", "target": "wild_boar", "count": 1},
           {"id": "winter_lanterns", "text": "Join the Lantern Festival contest.", "kind": "contest", "target": "lantern_festival", "count": 1}
         ],
@@ -109,6 +124,11 @@
           {"id": "winter_carp", "text": "Land 2 Silver Carp for the winter larder.", "kind": "catch", "target": "silver_carp", "count": 2},
           {"id": "winter_iron", "text": "Gather 2 Iron Essence for the village smith.", "kind": "gather", "target": "iron_essence", "count": 2},
           {"id": "winter_market", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
+        ],
+        [
+          {"id": "winter_wolf_y2", "text": "Hunt the Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},
+          {"id": "winter_perch_y2", "text": "Land 2 Ice Perch for the winter feast.", "kind": "catch", "target": "ice_perch", "count": 2},
+          {"id": "winter_lanterns_y2", "text": "Join the Lantern Festival contest again.", "kind": "contest", "target": "lantern_festival", "count": 1}
         ]
       ],
       "payout": {"stones": 120, "renown": 2, "favor_all": 1, "item": "osmanthus_wine"}

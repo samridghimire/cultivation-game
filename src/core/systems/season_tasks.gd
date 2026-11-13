@@ -30,12 +30,33 @@ static func sets_of(d: Dictionary) -> Array:
 	return []
 
 
-## SEASON-009: the three tasks of `day`'s season for its year: sets[(year - 1) % sets.size()].
+## SEASON-009/019: the three tasks of `day`'s season for its year. Year 1 uses the first set marked `first_year`
+## (else sets[0]); year 2 on cycles the other sets: others[(year - 2) % others.size()].
 static func tasks_for(data: GameData, day: int) -> Array:
 	var sets := sets_of(def(data, day))
 	if sets.is_empty():
 		return []
-	return sets[(Calendar.year_of(day) - 1) % sets.size()]
+	var first := 0
+	for i in sets.size():
+		if _is_first_year(sets[i]):
+			first = i
+			break
+	var year := Calendar.year_of(day)
+	if year <= 1 or sets.size() == 1:
+		return sets[first]
+	var others: Array = []
+	for i in sets.size():
+		if i != first:
+			others.append(sets[i])
+	return others[(year - 2) % others.size()]
+
+
+## SEASON-019: a set is marked `first_year` when any of its tasks carries `"first_year": true`.
+static func _is_first_year(set_tasks: Array) -> bool:
+	for t: Dictionary in set_tasks:
+		if t.get("first_year", false) == true:
+			return true
+	return false
 
 
 ## The character's progress record for `day`'s season, reset when the season changed.
@@ -540,6 +561,9 @@ static func validate(data: GameData) -> Array[String]:
 			if set_tasks.size() != 3:
 				errs.append("season_tasks.json %s needs exactly 3 tasks per set" % s)
 			all_tasks.append_array(set_tasks)
+		for t: Dictionary in all_tasks:
+			if t.has("first_year") and not (t["first_year"] is bool):
+				errs.append("season task '%s' first_year must be a bool" % String(t.get("id", "")))
 		for t: Dictionary in all_tasks:
 			var id := String(t.get("id", ""))
 			if id == "" or ids.has(id) or String(t.get("text", "")) == "":
