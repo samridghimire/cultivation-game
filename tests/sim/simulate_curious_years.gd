@@ -90,6 +90,8 @@ var _wait_for_pill := 0
 var _trace_seed := 0
 var _arm_report := false
 var _repeat_report := false
+var _season_report := false  # QA-214
+var _season_log: Array = []  # per seed: {key: unfinished task ids ("" = finished)}
 ## QA-175: per seed, encounter id -> times met.
 var _repeat_counts: Array[Dictionary] = []
 
@@ -130,6 +132,8 @@ func _run() -> void:
 			FirstHour.core_report = true  # QA-173
 		elif a == "--repeat-report":
 			_repeat_report = true  # QA-175
+		elif a == "--season-report":
+			_season_report = true  # QA-214
 		elif a == "--arm-report":
 			_arm_report = true  # QA-161
 		elif a == "--defence":
@@ -169,7 +173,11 @@ func _run() -> void:
 	print("  seed  block  kinds  new  stones  realm")
 	for s in range(1, seeds + 1):
 		_seed = s
+		var season_rec := {}
+		_season_log.append(season_rec)
 		var snap_hook := func(m: int) -> void:
+			if _season_report:
+				_note_season(gs, clock, season_rec)
 			if gs.player.realm_index >= 2 and not _fe_snaps.has(s):
 				_fe_snaps[s] = CharacterData.from_dict(gs.player.to_dict())
 				_fe_month[s] = m
@@ -263,6 +271,8 @@ func _run() -> void:
 		print("Village (QA-181), %d seeds: %s" % [seeds, str(FirstHour.village_log)])
 	if _repeat_report:
 		_print_repeat_report(gs)
+	if _season_report:
+		_print_season_report(seeds)
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:
@@ -688,3 +698,47 @@ func _print_defence_log(seeds: int) -> void:
 		armed += 1 if int(l["manual"]) > 0 else 0
 		print("  seed %2d: trips %d, armor %d, manual %d, healed %d" % [s, l["trips"], l["armor"], l["manual"], l["healed"]])
 	print("  %d of %d seeds heard the hint; %d bought armor, %d learned a body art, %d trips away from the home region" % [hint_seeds, seeds, armored, armed, trips])
+
+
+## QA-214: remembers the season-task state of the current season (the last note before the key changes is its end state).
+func _note_season(gs: Node, clock: Node, rec: Dictionary) -> void:
+	var st: Dictionary = gs.player.season_tasks
+	_note_key(gs, rec, String(st.get("season_key", "")), st.get("progress", {}), bool(st.get("done", false)))
+	var today := SeasonTasks.season_key(int(clock.total_days))
+	if today != String(st.get("season_key", "")):
+		_note_key(gs, rec, today, {}, false)  # no task of this season was touched yet
+
+
+func _note_key(gs: Node, rec: Dictionary, key: String, progress: Dictionary, done: bool) -> void:
+	if key == "":
+		return
+	var sets := SeasonTasks.sets_of((gs.data.season_tasks.get("seasons", {}) as Dictionary).get(key.get_slice("-", 1), {}))
+	if sets.is_empty():
+		return
+	var left: Array[String] = []
+	for t: Dictionary in sets[(int(key.get_slice("-", 0)) - 1) % sets.size()]:
+		if int(progress.get(String(t["id"]), 0)) < int(t["count"]):
+			left.append(String(t["id"]))
+	rec[key] = "" if done else ",".join(left)
+
+
+func _print_season_report(seeds: int) -> void:
+	var keys := {}
+	for rec: Dictionary in _season_log:
+		for k: String in rec:
+			keys[k] = true
+	var ordered: Array = keys.keys()
+	ordered.sort()
+	print("Season sets finished per season (QA-214), %d seeds:" % seeds)
+	for k: String in ordered:
+		var done := 0
+		var blockers := {}
+		for rec: Dictionary in _season_log:
+			if not rec.has(k):
+				continue
+			if String(rec[k]) == "":
+				done += 1
+			else:
+				for id: String in String(rec[k]).split(","):
+					blockers[id] = int(blockers.get(id, 0)) + 1
+		print("  %-14s %d of %d finished; unfinished tasks: %s" % [k, done, seeds, str(blockers) if not blockers.is_empty() else "-"])
