@@ -59,8 +59,11 @@ func draw_generated_art() -> bool:
 	var today := GameClock.total_days
 	var rented := not place.is_empty() and GameState.player != null and FieldPlots.rented(GameState.player, plot_key, today)
 	var soil := color if rented else color.lightened(0.12)
-	draw_rect(rect, soil)
-	draw_rect(rect, Color(0.16, 0.11, 0.07), false, 2.0)
+	var edge := Scenery.ragged_outline(rect, hash("%s|%s" % [plot_key, size]), 14.0, 3.0)  # GFX-140: ragged tilled earth
+	draw_colored_polygon(edge, soil)
+	var closed := edge.duplicate()
+	closed.append(edge[0])
+	draw_polyline(closed, Color(0.16, 0.11, 0.07), 2.0)
 	for i in 4:
 		var y := rect.position.y + 8.0 + i * (size.y - 14.0) / 3.0
 		draw_line(Vector2(rect.position.x + 4.0, y), Vector2(rect.end.x - 4.0, y), soil.darkened(0.3), 2.0)

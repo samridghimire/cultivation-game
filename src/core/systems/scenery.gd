@@ -1099,6 +1099,35 @@ static func field_look(season: String, seed_value: int, no_snow: bool = false) -
 		"snow": style == "bare" and not no_snow}
 
 
+## GFX-140: the layout of a tilled field inside `rect`: a ragged `outline`, alternating furrow `rows` ({rect, dark}) along
+## the long side, and `crops` (Vector2 positions on the dark rows; none in winter) plus the `look` of GFX-096.
+## Everything except the outline lies inside `rect.grow(-6)`; deterministic from `seed_value`.
+static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: bool = false) -> Dictionary:
+	var look := field_look(season, seed_value, no_snow)
+	var vertical := rect.size.y > rect.size.x
+	var inner := rect.grow(-6.0)
+	var rows: Array[Dictionary] = []
+	var crops: Array[Vector2] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var cross := inner.size.x if vertical else inner.size.y
+	var along := inner.size.y if vertical else inner.size.x
+	var i := 0
+	while float(i + 1) * 4.0 <= cross:
+		var band := Rect2(inner.position + (Vector2(i * 4.0, 0) if vertical else Vector2(0, i * 4.0)), Vector2(4.0, along) if vertical else Vector2(along, 4.0))
+		var dark := i % 2 == 0
+		rows.append({"rect": band, "dark": dark})
+		if dark and look["style"] != "bare":
+			var k := 3.0 + rng.randf_range(0.0, 3.0)
+			while k < along - 3.0:
+				var c := band.get_center()
+				crops.append(Vector2(c.x, inner.position.y + k) if vertical else Vector2(inner.position.x + k, c.y))
+				k += 8.0
+		i += 1
+	return {"outline": ragged_outline(rect, hash("%s|field" % seed_value), 16.0, 4.0), "rows": rows, "crops": crops,
+		"look": look, "vertical": vertical}
+
+
 ## GFX-043: the newest footprint list: `prints` plus `pos`, oldest dropped beyond `cap` (default 12).
 static func add_footprint(prints: Array, pos: Vector2, cap: int = 12) -> Array:
 	var out := prints.duplicate()

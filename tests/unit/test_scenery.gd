@@ -537,6 +537,23 @@ func test_field_look_follows_the_season() -> void:
 	assert_true(Scenery.field_look("Summer", 1)["vertical"] and not Scenery.field_look("Summer", 0)["vertical"])
 
 
+func test_field_layout_stays_inside_and_is_deterministic() -> void:
+	var r := Rect2(100, 200, 200, 120)
+	var a := Scenery.field_layout(r, 77, "Summer")
+	var b := Scenery.field_layout(r, 77, "Summer")
+	assert_eq(a["crops"], b["crops"])
+	assert_eq(a["outline"], b["outline"])
+	assert_gt((a["rows"] as Array).size(), 4)
+	assert_gt((a["crops"] as Array).size(), 10)
+	for row: Dictionary in a["rows"]:
+		assert_true(r.grow(-5.0).encloses(row["rect"]), "row inside the field")
+	for p: Vector2 in a["crops"]:
+		assert_true(r.grow(-5.0).has_point(p), "crop inside the field")
+	assert_eq((Scenery.field_layout(r, 77, "Winter")["crops"] as Array).size(), 0)
+	assert_false(a["vertical"])
+	assert_true(Scenery.field_layout(Rect2(0, 0, 80, 150), 1, "Spring")["vertical"])
+
+
 ## WU-500: at every project stage every jetty post stands in the water or within 6 px of the pond's rim.
 func test_jetty_posts_stand_in_the_water() -> void:
 	var region: Dictionary = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data.regions["qingshi_village"]

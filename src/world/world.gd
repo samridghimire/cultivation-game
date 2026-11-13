@@ -1212,6 +1212,7 @@ func _draw() -> void:
 	_draw_marsh_pools()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
+	_draw_field_scarecrow(map)
 	_draw_marsh_life(map)
 	_draw_market_props()
 	_draw_yard_props()
@@ -1815,6 +1816,9 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if lm["kind"] == "field" and _region.get("map", {}).has("market"):
 		_draw_planter(r)  # GFX-126: a herb planter box, not a farm field
 		return
+	if lm["kind"] == "field":
+		_draw_field(r)  # GFX-140: tilled earth with furrows and seasonal crops
+		return
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 		var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
@@ -1988,50 +1992,72 @@ func _draw_season_overlay(kind: String, origin: Vector2, r: Rect2, pix: Vector2)
 						draw_rect(Rect2(origin + Vector2(10 - half, i * 6 + j) * sc, Vector2(half * 2, 1) * sc), snow)
 		"pond":
 			pass  # GFX-135: the frozen texture carries its own snow drifts
-		"field":
-			_draw_field_overlay(origin, r, pix)
 
 
-## GFX-096: the field's rows by season (sprouts, tall crop, golden rows with sheaves, bare furrows with snow),
-## varied per field position; no snow where map.no_snow.
-func _draw_field_overlay(origin: Vector2, r: Rect2, pix: Vector2) -> void:
-	var sc := float(Sprites.scale())
+## GFX-140: a tilled field: ragged earth, furrow rows along the long side, and the season's crop on the dark rows
+## (sprouts, tall green with a few flowers, golden with sheaves, bare furrows with snow in the troughs).
+func _draw_field(r: Rect2) -> void:
 	var no_snow := bool(_region.get("map", {}).get("no_snow", false))
-	var look := Scenery.field_look(_season, int(r.position.x) * 31 + int(r.position.y) * 17, no_snow)
-	var color: Color = look["color"]
-	var vertical: bool = look["vertical"]
-	var style: String = look["style"]
-	var cross := int(pix.x) if vertical else int(pix.y)
-	var along := int(pix.y) if vertical else int(pix.x)
-	var i := 2
-	while i < cross - 2:
-		var row := i + 1
-		if style == "bare":
+	var lay := Scenery.field_layout(r, int(r.position.x) * 31 + int(r.position.y) * 17, _season, no_snow)
+	var look: Dictionary = lay["look"]
+	var vertical: bool = lay["vertical"]
+	var outline: PackedVector2Array = lay["outline"]
+	var closed := outline.duplicate()
+	closed.append(outline[0])
+	draw_colored_polygon(outline, Color("6e5636"))
+	for row: Dictionary in lay["rows"]:
+		var band: Rect2 = row["rect"]
+		if bool(row["dark"]):
+			draw_rect(band, Color("4f3c24"))
 			if look["snow"]:
-				var a := Vector2(row if vertical else 2, 2 if vertical else row)
-				var b := Vector2(1, along - 4) if vertical else Vector2(along - 4, 1)
-				draw_rect(Rect2(origin + a * sc, b * sc), Color(0.92, 0.96, 1.0, 0.6))
-		elif style == "sprout":
-			var k := 3
-			while k < along - 3:  # small sprouts on dark tilled earth
-				var p := Vector2(row, k) if vertical else Vector2(k, row)
-				draw_rect(Rect2(origin + p * sc, Vector2(1, 1) * sc), color)
-				draw_rect(Rect2(origin + (p + Vector2(0, -1)) * sc, Vector2(1, 1) * sc), color.lightened(0.2))
-				k += 4
+				draw_rect(band.grow_individual(0, -1, 0, -1) if not vertical else band.grow_individual(-1, 0, -1, 0), Color(0.92, 0.96, 1.0, 0.8))
 		else:
-			var tall := 2 if style == "golden" else 3
-			var a2 := Vector2(row, 3) if vertical else Vector2(3, row - 1)
-			var b2 := Vector2(1, along - 6) if vertical else Vector2(along - 6, tall)
-			draw_rect(Rect2(origin + a2 * sc, b2 * sc), color)
-			draw_rect(Rect2(origin + a2 * sc, (Vector2(1, along - 6) if vertical else Vector2(along - 6, 1)) * sc), color.lightened(0.18))
-		i += 4
+			draw_rect(band, Color("85693f"))
+	draw_polyline(closed, Color("3a2b18"), 2.0)
+	var style: String = look["style"]
+	var color: Color = look["color"]
+	var n := 0
+	for p: Vector2 in lay["crops"]:
+		n += 1
+		if style == "sprout":
+			draw_rect(Rect2(p + Vector2(-1, -3), Vector2(2, 4)), color)
+			draw_rect(Rect2(p + Vector2(-1, -3), Vector2(2, 1)), color.lightened(0.2))
+		else:
+			var h := 5.0 if style == "golden" else 7.0
+			draw_rect(Rect2(p + Vector2(-1.5, -h), Vector2(3, h)), color)
+			draw_rect(Rect2(p + Vector2(-1.5, -h), Vector2(3, 1.5)), color.lightened(0.2))
+			if style == "tall" and n % 6 == 0:
+				draw_rect(Rect2(p + Vector2(-1, -h - 2), Vector2(2, 2)), Color("f2e07a") if n % 12 == 0 else Color("f4f4ee"))
 	if look["sheaves"]:
-		for n in 3:
-			var sp := Vector2(8 + n * maxi(8, along / 4), 3 + n % 2 * 6)
-			if vertical:
-				sp = Vector2(sp.y, sp.x)
-			draw_rect(Rect2(origin + sp * sc, Vector2(2, 3) * sc), Color("e8c86a"))
-			draw_rect(Rect2(origin + (sp + Vector2(0, 2)) * sc, Vector2(2, 1) * sc), Color("8a5a2a"))
+		for k in 3:
+			var sp := r.position + Vector2(r.size.x * (0.25 + 0.25 * k), r.size.y * (0.35 + 0.3 * (k % 2)))
+			draw_rect(Rect2(sp, Vector2(6, 9)), Color("e8c86a"))
+			draw_rect(Rect2(sp + Vector2(0, 6), Vector2(6, 3)), Color("8a5a2a"))
+
+
+## GFX-140: a scarecrow beside the biggest field of a village (map.yards), on its free right-hand side.
+func _draw_field_scarecrow(map: Dictionary) -> void:
+	if not bool(map.get("yards", false)):
+		return
+	var best := Rect2()
+	for lm: Dictionary in map.get("landmarks", []):
+		if str(lm.get("kind", "")) == "field":
+			var sz := _vec(lm["size"])
+			if sz.x * sz.y > best.size.x * best.size.y:
+				best = Rect2(_vec(lm["pos"]) - sz / 2.0, sz)
+	if best.size != Vector2.ZERO:
+		_draw_scarecrow(Vector2(best.end.x + 12.0, best.get_center().y))
+
+
+## GFX-140: a scarecrow (post, crossbar, straw head and hat) standing at `base`.
+func _draw_scarecrow(base: Vector2) -> void:
+	draw_rect(Rect2(base + Vector2(-1, -26), Vector2(3, 26)), Color("6a4a2a"))
+	draw_rect(Rect2(base + Vector2(-11, -20), Vector2(23, 3)), Color("6a4a2a"))
+	draw_rect(Rect2(base + Vector2(-9, -17), Vector2(5, 6)), Color("c9a24a"))
+	draw_rect(Rect2(base + Vector2(6, -17), Vector2(5, 6)), Color("c9a24a"))
+	draw_circle(base + Vector2(0, -30), 5.0, Color("e0c27a"))
+	draw_rect(Rect2(base + Vector2(-8, -36), Vector2(17, 3)), Color("8a6a3a"))
+	draw_rect(Rect2(base + Vector2(-4, -41), Vector2(9, 5)), Color("8a6a3a"))
 
 
 ## GFX-046: the jetty runs out from the shore into its pond (Scenery.jetty_layout); darker posts stand in the water.
