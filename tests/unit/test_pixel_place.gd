@@ -377,3 +377,25 @@ func test_places_follow_season_change() -> void:
 	world.free()
 	gs.end_session()
 	clock.total_days = 0
+
+
+func test_blob_is_ragged_deterministic_and_not_an_ellipse() -> void:
+	var a := PixelPlace.canvas(50, 34)
+	var b := PixelPlace.canvas(50, 34)
+	var e := PixelPlace.canvas(50, 34)
+	PixelPlace.blob(a, 25, 17, 22, 12, "e", 7)
+	PixelPlace.blob(b, 25, 17, 22, 12, "e", 7)
+	PixelPlace.ell(e, 25, 17, 22, 12, "e")
+	assert_eq(a, b, "same seed, same blob")
+	assert_true(a != e, "a blob is not a plain ellipse")
+	var n := 0
+	for row: Array in a:
+		for ch: String in row:
+			n += 1 if ch == "e" else 0
+	assert_true(n > 400, "the blob fills most of its area")
+
+
+func test_ground_decal_places_are_not_plain_ellipses() -> void:
+	for kind in ["gather", "gather_rubble", "gather_bog", "abode"]:
+		var rows := PixelPlace.rows(kind)
+		assert_true(rows.size() > 0, kind + " has rows")

@@ -346,6 +346,31 @@ static func ell(c: Array, cx: float, cy: float, rx: float, ry: float, ch: String
 				c[y][x] = ch
 
 
+## GFX-137: a ragged filled blob: an ellipse whose radius wobbles +-`amp` (0..1 of the radius) with smoothed seeded noise,
+## so ground patches never read as a perfect stamped ellipse. Same seed, same shape.
+static func blob(c: Array, cx: float, cy: float, rx: float, ry: float, ch: String, seed_value: int, amp: float = 0.14) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var n := 16
+	var raw: Array[float] = []
+	for i in n:
+		raw.append(rng.randf_range(-1.0, 1.0))
+	for y in c.size():
+		for x in c[y].size():
+			var dx: float = (x + 0.5 - cx) / rx
+			var dy: float = (y + 0.5 - cy) / ry
+			var d2 := dx * dx + dy * dy
+			if d2 > (1.0 + amp) * (1.0 + amp):
+				continue
+			var t := fposmod(atan2(dy, dx), TAU) / TAU * n
+			var i0 := int(t) % n
+			var f := t - floorf(t)
+			var wob: float = lerpf(raw[i0], raw[(i0 + 1) % n], f) * amp
+			var lim := 1.0 + wob
+			if d2 <= lim * lim:
+				c[y][x] = ch
+
+
 static func outline(c: Array) -> void:
 	var edge: Array[Vector2i] = []
 	var h := c.size()
@@ -595,8 +620,11 @@ static func _meditation() -> Array:
 ## A mound of turned earth with sprouting herbs (tinted by the place colour).
 static func _gather() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 21, 24, 12, "e")
-	ell(c, 25, 19, 22, 10, "e")
+	blob(c, 25, 21, 24, 12, "e", 1371)
+	for fy in range(12, 30, 4):  # GFX-137: furrow rows, so it reads as a tilled bed and not a brown plate
+		for fx in range(4, 47):
+			if c[fy][fx] == "e":
+				c[fy][fx] = "t"
 	for p: Array in [[8, 14], [18, 9], [30, 11], [40, 16], [13, 22], [25, 19], [35, 24]]:
 		rect(c, p[0], p[1] + 2, 1, 5, "v")
 		rect(c, p[0] - 2, p[1] + 1, 5, 2, "r")
@@ -608,8 +636,10 @@ static func _gather() -> Array:
 ## GFX-102: grey stone chips and two broken blocks with one rusty ore glint.
 static func _gather_rubble() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 21, 24, 12, "S")
-	ell(c, 25, 19, 22, 10, "s")
+	blob(c, 25, 22, 21, 9, "S", 2203, 0.22)  # GFX-137: a heap of broken stone with chips round it, not a grey plate
+	blob(c, 25, 19, 17, 7, "s", 2204, 0.25)
+	for p: Array in [[2, 24], [47, 20], [20, 30], [36, 6], [4, 14]]:
+		rect(c, p[0], p[1], 2, 1, "w")
 	for p: Array in [[6, 18], [14, 25], [22, 13], [31, 26], [40, 19], [44, 24], [28, 18], [10, 12]]:
 		rect(c, p[0], p[1], 3, 2, "S")
 		rect(c, p[0], p[1], 2, 1, "w")
@@ -689,10 +719,10 @@ static func _gather_terrace() -> Array:
 ## GFX-102: a dark murky pool, reeds at the rim and two pale lilies.
 static func _gather_bog() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 21, 24, 12, "T")
-	ell(c, 25, 21, 22, 10, "m")
-	ell(c, 25, 21, 15, 6, "t")
-	ell(c, 25, 21, 14, 5, "m")
+	blob(c, 25, 21, 24, 12, "T", 3011, 0.18)  # GFX-137: a ragged murky pool with pale lilies
+	blob(c, 25, 21, 22, 10, "m", 3011, 0.2)
+	blob(c, 25, 21, 15, 6, "t", 3012, 0.2)
+	blob(c, 25, 21, 14, 5, "m", 3012, 0.2)
 	for p: Array in [[5, 14], [9, 26], [41, 13], [45, 22], [37, 29], [18, 10]]:
 		rect(c, p[0], p[1], 1, 7, "v")
 		rect(c, p[0] + 1, p[1] + 2, 1, 5, "v")
@@ -874,7 +904,7 @@ static func _stele() -> Array:
 ## A hermit's cave dwelling: a rock mound with a plank door and a paper window.
 static func _dwelling() -> Array:
 	var c := canvas(48, 36)
-	ell(c, 24, 24, 23, 13, "s")
+	blob(c, 24, 24, 23, 13, "e", 4401, 0.16)  # GFX-137: worn earth, not a pale plate
 	ell(c, 24, 18, 20, 16, "s")
 	ell(c, 28, 20, 15, 12, "S")
 	ell(c, 24, 17, 19, 15, "s")

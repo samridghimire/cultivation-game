@@ -562,9 +562,14 @@ func art_active() -> bool:
 
 func _draw() -> void:
 	if anchor_id != "":
-		# Artifact anchor places sit on a faint golden ring (VIS-004).
-		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.18))
-		PlaceArt.ellipse(self, Vector2(0, size.y * 0.35), Vector2(size.x * 0.65, size.y * 0.3), Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.5), 1.5)
+		# Artifact anchor places sit on worn earth (GFX-137: a ragged fill; the thin gold ring shows only while highlighted).
+		var worn := Rect2(Vector2(-size.x * 0.6, size.y * 0.05), Vector2(size.x * 1.2, size.y * 0.6))
+		var outline := Scenery.ragged_outline(worn, hash(anchor_id), minf(worn.size.x, worn.size.y) * 0.45, 5.0)
+		draw_colored_polygon(outline, Color(0.42, 0.34, 0.22, 0.32))
+		if highlighted:
+			var ring := outline.duplicate()
+			ring.append(ring[0])
+			draw_polyline(ring, Color(UIStyle.ACCENT.r, UIStyle.ACCENT.g, UIStyle.ACCENT.b, 0.7), 1.0)
 	var art := Sprites.first(sprite_keys())
 	if art != null:
 		var tex_size := art.get_size()
