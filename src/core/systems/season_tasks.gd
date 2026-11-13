@@ -71,7 +71,8 @@ static func preview_line(c: CharacterData, data: GameData, day: int) -> String:
 				var nm := String(data.items.get(target, {}).get("name", target))
 				parts.append(("a " + nm) if count == 1 else "%d %s" % [count, Text.plural(nm, count)])
 			"hunt":
-				parts.append("a " + String(data.enemies.get(target, {}).get("name", target)))
+				var beast := String(data.enemies.get(target, {}).get("name", target))
+				parts.append(("a " + beast) if count == 1 else "%d %s" % [count, Text.plural(beast, count)])
 			"contest":
 				parts.append("the " + String(data.world_events.get(target, {}).get("name", target)))
 			"sell_wanted":

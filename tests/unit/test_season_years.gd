@@ -84,3 +84,15 @@ func test_preview_in_today_lines() -> void:
 	var far := Guidance.today_lines(c, gd, {}, [], 87, "misty_forest")
 	for l in far:
 		assert_false(String(l).begins_with("Next season the elder asks"), "not nagged far away")
+
+
+func test_preview_counts_hunts() -> void:  # REVIEW: a hunt of 2 is not "a Wild Boar"
+	var gd := _gd()
+	var c := new_character()
+	var saved: Dictionary = gd.season_tasks.duplicate(true)
+	var set0: Array = SeasonTasks.tasks_for(gd, 90 + 5)
+	set0[0] = {"id": "review_hunt", "first_year": true, "text": "Hunt two boars.", "kind": "hunt", "target": "wild_boar", "count": 2}
+	var line := SeasonTasks.preview_line(c, gd, 90 - 3)
+	gd.season_tasks = saved
+	assert_true(line.contains("2 Wild Boars"), line)
+	assert_false(line.contains("a Wild Boar"), line)

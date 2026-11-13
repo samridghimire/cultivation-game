@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 4d1f846
+Last reviewed commit: ef49021
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1872,3 +1872,17 @@ Last reviewed commit: 4d1f846
   - Notes, not filed: ART-013 changes item energy values but did not run tools/balance.sh --check (no sim feeds the
     artifact, so likely no diff). QA-210 reports year 1's Spring stag task is Deadly for a fresh mortal even with the
     village hunt ally (its Follow-ups propose swapping it for a Weak beast; planner's call). WU-525 has no screenshot check.
+- 2026-11-13 (reviewer): reviewed 4d1f846..ef49021 (GFX-126, SEASON-018, C-356, GFX-127, QA-214, WU-527, SEASON-019,
+  SEASON-020, WU-529, GFX-128, C-352; [PLAN]/[REVIEW] skipped). Main green before (3917 tests) and after (3918). No BACKLOG/CHANGELOG
+  edits by workers; no SAVE_VERSION change, no new persistent state; no binary assets (yards, market props, winter
+  scenery are code-drawn and locally seeded).
+  - Fixed (SEASON-020): `preview_line` said "a <beast>" for every hunt; a hunt with count > 1 (validation allows 1..5)
+    now reads "2 Wild Boars". Test added.
+  - Fixed (WU-529): a walking NPC's name yielded (35%) to place labels that were themselves hidden (under the [E] chip or
+    culled by one-name-over-the-player); only place labels that still show count now.
+  - SEASON-018/019 (first_year set, others cycle from year 2; validated bool), WU-527 (artifact log category + filter,
+    Grows from / Lately lines), C-356, GFX-126/127/128, QA-214 (sim only) OK.
+  - Notes, not filed: C-352 cut wild forage counts and weights (mugwort 14 -> 3, [1,3] -> [1,2]) without
+    tools/balance.sh --check; the planner should schedule a balance run. SEASON-019 changes which set year 3+ uses, so a
+    year-3 save mid-season sees new tasks (progress is per task id; only in-progress seasons are affected). WU-529 can hide
+    the targeted interactable's label when another owner is nearer the player (the [E] chip still names it).

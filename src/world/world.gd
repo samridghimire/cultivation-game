@@ -1070,7 +1070,7 @@ func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 	var over_nodes: Array = []
 	var over_rects: Array[Rect2] = []
 	var over_pos: Array[Vector2] = []
-	var places: Array[Rect2] = []
+	var place_nodes: Array = []
 	for node: Interactable in nodes:
 		var a := 1.0
 		if node.label_drawn() and player != null:
@@ -1083,12 +1083,16 @@ func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 			if not is_npc and not node.highlighted and LabelFade.hidden_by_chip(r, chip):
 				a = 0.0
 			if not is_npc:
-				places.append(r)
+				place_nodes.append(node)
 		alphas[node] = a
 	if player != null and not over_nodes.is_empty():  # WU-529: one name at a time over the player
 		var kept := LabelFade.keep_nearest(over_rects, over_pos, player.position)
 		for i in over_nodes.size():
 			alphas[over_nodes[i]] = minf(alphas[over_nodes[i]], kept[i])
+	var places: Array[Rect2] = []  # only place labels that still show make a walking name yield
+	for node: Interactable in place_nodes:
+		if float(alphas[node]) > 0.0:
+			places.append(node.drawn_label_rect(view))
 	for node: Interactable in nodes:
 		var a: float = alphas[node]
 		if a > 0.5 and player != null and node.label_drawn() and (node.get("npc_id") != null or node is Roamer):
