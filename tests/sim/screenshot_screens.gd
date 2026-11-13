@@ -3976,6 +3976,10 @@ func _start_artifact_shot(gs: Node) -> void:
 	c.realm_index = 0
 	c.stage = 2
 	c.inventory = {"spirit_stone": 120}
+	# WU-527: a few recent gains for the "Lately" line.
+	ArtifactFunctions.record_gain(c, "stage", 15, 3)
+	ArtifactFunctions.record_gain(c, "stage", 15, 9)
+	ArtifactFunctions.record_gain(c, "stage", 15, 12)
 	world = load("res://src/world/world.tscn").instantiate()
 	root.add_child(world)
 	hud = world.get_node("HUD")

@@ -113,3 +113,22 @@ func test_same_day_repeats_collapse_with_count() -> void:  # WU-464
 	assert_true(text.contains("Fat Stags run here. (x2)"))
 	assert_eq(text.count("Fat Stags run here."), 2, "next day adds its own row")
 	assert_false(history[0].has("count"), "input is not mutated")
+
+
+func test_artifact_filter_button_and_category() -> void:  # WU-527
+	var found := false
+	for f: Array in MessageLogScreen.FILTERS:
+		if f[1] == "artifact":
+			found = true
+	assert_true(found, "Artifact filter exists")
+	var bus := _root().get_node("EventBus")
+	var gs := _root().get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 20}
+	gs.start_session(c)
+	bus.clear_history()
+	gs.feed_artifact("spirit_stone", 10)
+	var cats: Array = bus.history.map(func(h: Dictionary) -> String: return h["category"])
+	assert_true(cats.has("artifact"), "feeding posts under artifact: " + str(cats))
+	assert_false(cats.has("progress"))
+	bus.clear_history()

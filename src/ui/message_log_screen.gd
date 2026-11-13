@@ -11,6 +11,7 @@ signal closed
 const FILTERS := [
 	["All", ""],
 	["Progress", "progress"],
+	["Artifact", "artifact"],
 	["Info", "info"],
 	["Warnings", "warning"],
 	["Danger", "danger"],

@@ -166,3 +166,24 @@ func test_cards_and_focus() -> void:
 	assert_true(_button(screen, "feed_stones_10").has_focus() or _button(screen, "feed_item").has_focus(), "no ready card: focus a feed button")
 	screen.free()
 	gs.end_session()
+
+
+func test_sources_and_lately_lines() -> void:  # WU-527
+	var gs := _gs()
+	var c := new_character()
+	gs.start_session(c)
+	var screen := ArtifactScreen.new()
+	screen.open()
+	var sources: Label = screen.find_child("Sources", true, false)
+	var lately: Label = screen.find_child("Lately", true, false)
+	assert_true(sources.visible and sources.text.begins_with("Grows from: "), "sources line: " + sources.text)
+	assert_true(sources.text.contains("per spirit stone fed"))
+	assert_false(lately.visible, "no gains, no Lately block")
+	for day in [1, 2, 3, 4]:
+		ArtifactFunctions.record_gain(c, "stage", 15, day)
+	screen._rebuild()
+	assert_true(lately.visible)
+	assert_true(lately.text.begins_with("Lately: ") and lately.text.contains("(Day 4)") and lately.text.contains("(Day 2)"), lately.text)
+	assert_false(lately.text.contains("(Day 1)"), "only the last three: " + lately.text)
+	assert_true(lately.text.find("Day 4") < lately.text.find("Day 3"), "newest first")
+	screen.free()

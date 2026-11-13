@@ -25,6 +25,8 @@ var _info: Label
 var _rows: VBoxContainer
 var _energy_bar: ProgressBar
 var _energy_caption: Label
+var _sources: Label
+var _lately: Label
 var _close_button: Button
 var _page := PAGE_MAIN
 ## Node name of the button waiting for a second press (WU-032), "" = none.
@@ -50,8 +52,19 @@ func _init() -> void:
 	box.add_child(_energy_bar)
 	_energy_caption = UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["artifact"])
 	box.add_child(_energy_caption)
+	_sources = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
+	_sources.name = "Sources"
+	_sources.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sources.max_lines_visible = 2
+	_sources.custom_minimum_size = Vector2(656, 0)
+	box.add_child(_sources)
+	_lately = UIStyle.label("", 14, Color(0.7, 0.7, 0.75))
+	_lately.name = "Lately"
+	_lately.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_lately.custom_minimum_size = Vector2(656, 0)
+	box.add_child(_lately)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(656, 340)
+	scroll.custom_minimum_size = Vector2(656, 270)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(scroll)
 	_rows = VBoxContainer.new()
@@ -124,6 +137,8 @@ func _rebuild() -> void:
 		child.queue_free()
 	_energy_bar.visible = false
 	_energy_caption.visible = false
+	_sources.visible = false
+	_lately.visible = false
 	match _page:
 		PAGE_FEED:
 			_build_feed(p, data)
@@ -172,8 +187,28 @@ static func pips(lives: int, max_lives: int) -> String:
 	return "◆".repeat(clampi(lives, 0, max_lives)) + "◇".repeat(maxi(max_lives - lives, 0))
 
 
+## WU-527: "Grows from: ..." line.
+static func sources_text(data: GameData) -> String:
+	return "Grows from: " + " · ".join(ArtifactFunctions.energy_sources(data))
+
+
+## WU-527: the last 3 gains, newest first, with their day; "" when there are none.
+static func lately_text(p: CharacterData, data: GameData) -> String:
+	if p.artifact_gains.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for i in range(p.artifact_gains.size() - 1, maxi(p.artifact_gains.size() - 4, -1), -1):
+		var g: Dictionary = p.artifact_gains[i]
+		parts.append("%s (Day %d)" % [ArtifactFunctions.gain_text(data, g), int(g.get("day", 0))])
+	return "Lately: " + " · ".join(parts)
+
+
 ## WU-524: the energy bar toward the cheapest sealed power, with its caption.
 func _show_energy(p: CharacterData, data: GameData) -> void:
+	_sources.text = sources_text(data)
+	_sources.visible = true
+	_lately.text = lately_text(p, data)
+	_lately.visible = _lately.text != ""
 	var target := ""
 	var cost := 0
 	for function_id: String in ArtifactFunctions.KNOWN:

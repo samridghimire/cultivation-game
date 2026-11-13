@@ -4185,7 +4185,7 @@ func recharge_artifact() -> void:
 		return
 	var result := CreationArtifact.recharge(player, data)
 	if result["ok"]:
-		EventBus.post("The artifact drinks %d spirit stones. Lives: %d." % [result["cost"], player.artifact_lives], "progress")
+		EventBus.post("The artifact drinks %d spirit stones. Lives: %d." % [result["cost"], player.artifact_lives], "artifact")
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -4340,7 +4340,7 @@ func feed_artifact(item_id: String, quantity: int = 1) -> void:
 		return
 	var result := ArtifactFunctions.feed(player, data, item_id, quantity, GameClock.total_days)
 	if result["ok"]:
-		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, Items.item_plural(data, item_id, quantity), result["energy"], player.artifact_energy], "progress")
+		EventBus.post("The artifact devours %d %s. (+%d energy, %d total)" % [quantity, Items.item_plural(data, item_id, quantity), result["energy"], player.artifact_energy], "artifact")
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -4547,13 +4547,13 @@ func _artifact_wakes(extra: int = 0) -> void:
 	var today := GameClock.total_days
 	if _artifact_pending > 0 and _artifact_line_day != today:
 		_artifact_line_day = today
-		EventBus.post("The artifact drinks the change in you (+%d energy, %d in all)." % [_artifact_pending, player.artifact_energy], "progress")
+		EventBus.post("The artifact drinks the change in you (+%d energy, %d in all)." % [_artifact_pending, player.artifact_energy], "artifact")
 		_artifact_pending = 0
 	for function_id in ArtifactFunctions.ready_to_unseal(player, data, world_flags):
 		var flag := "artifact_hum_" + function_id
 		if not world_flags.get(flag, false):
 			world_flags[flag] = true
-			EventBus.post("The artifact hums: %s can be unsealed (O)." % ArtifactFunctions.function_name(data, function_id), "progress")
+			EventBus.post("The artifact hums: %s can be unsealed (O)." % ArtifactFunctions.function_name(data, function_id), "artifact")
 			_artifact_whisper("ready_to_unseal")
 
 
