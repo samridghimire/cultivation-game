@@ -255,9 +255,10 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_category = "All"
 	_hinted = hinted_item(GameState.data, _hud_hint(), _stock_ids())
 	if _hinted == "":  # SHOP-002: the item an earlier hint sent you here for
-		var remembered := String(GameState.buy_hints.get(GameState.current_region, ""))
-		if remembered != "" and _stock_ids().has(remembered):
-			_hinted = remembered
+		for remembered: Variant in Array(GameState.buy_hints.get(GameState.current_region, [])):
+			if _stock_ids().has(remembered):
+				_hinted = String(remembered)
+				break
 	_selected = _hinted
 	_quantity = 1
 	_rebuild()
@@ -277,7 +278,7 @@ func close() -> void:
 func item_ids() -> Array:
 	if _selling:
 		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
-	return Items.shop_order(GameState.player, GameState.data, _stock_ids(), _hinted)
+	return Items.shop_order(GameState.player, GameState.data, _stock_ids(), _hinted, Array(GameState.buy_hints.get(GameState.current_region, [])))
 
 
 ## Today's Buy-tab stock in price order, before WU-532's "for you first" ordering.

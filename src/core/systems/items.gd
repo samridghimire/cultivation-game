@@ -350,18 +350,25 @@ static func pill_useful_now(c: CharacterData, data: GameData, item: Dictionary) 
 
 ## WU-532: the Buy tab's order: the `hinted` item first, then items useful now (see useful_now), then the rest in
 ## the given (today's) order. Stable within each group.
-static func shop_order(c: CharacterData, data: GameData, ids: Array, hinted: String) -> Array:
+## SHOP-004: `remembered` (item ids, newest first) float to the top ahead of the rest, in that order.
+static func shop_order(c: CharacterData, data: GameData, ids: Array, hinted: String, remembered: Array = []) -> Array:
 	var first: Array = []
 	var useful: Array = []
 	var rest: Array = []
+	var pinned: Array = []
+	for r: Variant in remembered:
+		if ids.has(r) and String(r) != hinted and not pinned.has(r):
+			pinned.append(r)
 	for id: Variant in ids:
+		if pinned.has(id):
+			continue
 		if hinted != "" and String(id) == hinted:
 			first.append(id)
 		elif useful_now(c, data, String(id)):
 			useful.append(id)
 		else:
 			rest.append(id)
-	return first + useful + rest
+	return first + pinned + useful + rest
 
 
 ## WU-533: at most `MAX_FOR_YOU` rows carry the "(for you)" tag: the first ones after the hinted item.

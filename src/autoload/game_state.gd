@@ -15,7 +15,8 @@ var data: GameData
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
-var buy_hints: Dictionary = {}  # SHOP-002: region id -> item id its last shown buy-hint named (session only)
+var buy_hints: Dictionary = {}  # SHOP-004: region id -> Array of item ids its hints named, newest first (max BUY_HINTS_PER_REGION; saved)
+const BUY_HINTS_PER_REGION := 4
 ## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
 var shop_name := ""  # the seller of the open shop screen; "" when none is open (close_shop)
 ## Open auctions (Auctions): house_id -> {opening, lots}.
@@ -614,8 +615,13 @@ func buy_item(item_id: String, faction: String = "", quantity: int = 1) -> void:
 		var item_name: String = data.items[item_id]["name"]
 		var what := Text.a(item_name) if quantity == 1 else "%d %s" % [quantity, item_name]
 		EventBus.post("You buy %s for %d spirit stones." % [what, result["stones"]])
-		if String(buy_hints.get(current_region, "")) == item_id:
-			buy_hints.erase(current_region)  # SHOP-002: you got what you came for
+		var errands: Array = Array(buy_hints.get(current_region, []))
+		if errands.has(item_id):  # SHOP-002: you got what you came for (only that one)
+			errands.erase(item_id)
+			if errands.is_empty():
+				buy_hints.erase(current_region)
+			else:
+				buy_hints[current_region] = errands
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -3305,9 +3311,15 @@ func note_buy_hint(hint: String) -> void:
 	var region := Guidance.hinted_region(data, hint, current_region)
 	if region == "":
 		return
-	var item := Guidance.hinted_item_id(data, hint)
-	if item != "":
-		buy_hints[region] = item
+	var named := Guidance.hinted_item_ids(data, hint)
+	if named.is_empty():
+		return
+	var list: Array = Array(buy_hints.get(region, []))
+	# Keep the hint's own order (longest name first) at the front, ahead of older errands.
+	for i in range(named.size() - 1, -1, -1):
+		list.erase(named[i])
+		list.push_front(named[i])
+	buy_hints[region] = list.slice(0, BUY_HINTS_PER_REGION)
 
 
 ## MARKET-003: the shop screen closed; a later buy must not use the seller's stale discount.
@@ -4456,10 +4468,28 @@ func to_save_dict() -> Dictionary:
 		"clan": clan.to_dict() if clan != null else {},
 		"npc_clans": NpcClans.to_dict(npc_clans),
 		"clock": GameClock.to_dict(),
+		"buy_hints": buy_hints.duplicate(true),  # SHOP-004
 		# 64-bit ints do not survive JSON floats, so store them as strings.
 		"rng_seed": str(rng.seed),
 		"rng_state": str(rng.state),
 	}
+
+
+## SHOP-004: sanitised `buy_hints` from a save (region id -> up to BUY_HINTS_PER_REGION known item ids).
+func _load_buy_hints(raw: Variant) -> Dictionary:
+	var out := {}
+	if not raw is Dictionary:
+		return out
+	for region: Variant in raw:
+		if not data.regions.has(String(region)) or not raw[region] is Array:
+			continue
+		var list: Array = []
+		for item: Variant in raw[region]:
+			if data.items.has(String(item)) and not list.has(String(item)) and list.size() < BUY_HINTS_PER_REGION:
+				list.append(String(item))
+		if not list.is_empty():
+			out[String(region)] = list
+	return out
 
 
 func load_save_dict(d: Dictionary) -> void:
@@ -4469,7 +4499,7 @@ func load_save_dict(d: Dictionary) -> void:
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)
 	_reset_artifact_line()
-	buy_hints = {}  # SHOP-002: session-only, so a loaded save starts without them
+	buy_hints = _load_buy_hints(d.get("buy_hints", {}))  # SHOP-004: optional key, old saves load with {}
 	world_flags = d.get("world_flags", {})
 	Effects.migrate_legacy_timed(world_flags, int(d.get("clock", {}).get("total_days", 0)))
 	auctions = d.get("auctions", {})

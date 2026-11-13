@@ -4088,9 +4088,9 @@ func test_buy_hint_is_remembered_for_the_hinted_region() -> void:
 	assert_true(other != "")
 	var item_name := String(gs.data.items["qi_gathering_pill"]["name"])
 	gs.note_buy_hint("Buy a %s in %s." % [item_name, Exploration.region_name(gs.data, other)])
-	assert_eq(String(gs.buy_hints.get(other, "")), "qi_gathering_pill")
+	assert_eq(gs.buy_hints.get(other, []), ["qi_gathering_pill"])
 	gs.note_buy_hint("Nothing to buy here.")
-	assert_eq(String(gs.buy_hints.get(other, "")), "qi_gathering_pill")
+	assert_eq(gs.buy_hints.get(other, []), ["qi_gathering_pill"])
 	gs.buy_hints.clear()
 
 
@@ -4098,16 +4098,42 @@ func test_buy_hint_is_remembered_for_the_hinted_region() -> void:
 func test_buy_hint_clears_on_buy_and_new_session() -> void:
 	var gs := _game_state()
 	var c := _start()
-	gs.buy_hints[gs.current_region] = "qi_gathering_pill"
+	gs.buy_hints[gs.current_region] = ["qi_gathering_pill"]
 	c.add_item("spirit_stone", 10000)
 	gs.buy_item("qi_gathering_pill")
 	assert_false(gs.buy_hints.has(gs.current_region), "bought: the errand is done")
-	gs.buy_hints["somewhere"] = "qi_gathering_pill"
+	gs.buy_hints["somewhere"] = ["qi_gathering_pill"]
 	_start()
 	assert_true(gs.buy_hints.is_empty(), "a new character starts with no remembered errands")
-	gs.buy_hints["somewhere"] = "qi_gathering_pill"
-	gs.load_save_dict(gs.to_save_dict())
-	assert_true(gs.buy_hints.is_empty(), "a loaded save starts with none")
+
+
+## SHOP-004: every item a hint names is remembered (max 4, newest first), buying clears only that one, and saves keep them.
+func test_buy_hints_remember_several_and_save() -> void:
+	var gs := _game_state()
+	_start()
+	var other := ""
+	for id: String in gs.data.regions:
+		if id != gs.current_region and Exploration.region_name(gs.data, id) != "":
+			other = id
+			break
+	var a := String(gs.data.items["qi_gathering_pill"]["name"])
+	var b := String(gs.data.items["spirit_stone"]["name"])
+	gs.note_buy_hint("Buy a %s in %s." % [a, Exploration.region_name(gs.data, other)])
+	gs.note_buy_hint("Buy %s in %s." % [b, Exploration.region_name(gs.data, other)])
+	assert_eq(gs.buy_hints[other], ["spirit_stone", "qi_gathering_pill"], "newest first, both kept")
+	var d: Dictionary = gs.to_save_dict()
+	assert_eq(d["buy_hints"][other], ["spirit_stone", "qi_gathering_pill"])
+	gs.buy_hints = {}
+	gs.load_save_dict(d)
+	assert_eq(gs.buy_hints[other], ["spirit_stone", "qi_gathering_pill"], "round-trips")
+	d.erase("buy_hints")
+	gs.load_save_dict(d)
+	assert_true(gs.buy_hints.is_empty(), "an old save without the key loads with {}")
+	gs.buy_hints[gs.current_region] = ["qi_gathering_pill", "spirit_stone"]
+	gs.buy_hints[gs.current_region] = ["qi_gathering_pill", "spirit_stone"]
+	gs.player.add_item("spirit_stone", 10000)
+	gs.buy_item("qi_gathering_pill")
+	assert_eq(gs.buy_hints[gs.current_region], ["spirit_stone"], "buying one clears only that one")
 
 
 func test_hunter_ma_teaches_iron_fist() -> void:

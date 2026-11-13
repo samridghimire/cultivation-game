@@ -85,3 +85,12 @@ func test_hint_naming_technique_picks_its_manual() -> void:
 
 func test_no_weapons_footer_only_without_gear_in_stock() -> void:
 	assert_eq(Guidance.gear_elsewhere_line(new_character(), data(), "qingshi_village", -1, ["iron_sword"]), "")
+
+
+## SHOP-004: every remembered item floats to the top, newest first, ahead of the hinted-free rest.
+func test_remembered_items_float_to_the_top() -> void:
+	var c := new_character()
+	var ids := ["candied_haws", "zongzi", "moon_cake", "qi_gathering_pill"]
+	var out := Items.shop_order(c, data(), ids, "", ["moon_cake", "zongzi", "not_in_stock"])
+	assert_eq(out.slice(0, 2), ["moon_cake", "zongzi"])
+	assert_eq(out.size(), ids.size())

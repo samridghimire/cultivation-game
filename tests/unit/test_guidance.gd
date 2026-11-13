@@ -4568,6 +4568,31 @@ func test_qi_pill_offer_spends_spare_stones() -> void:
 	assert_true(_has(_buy_hints(_qr(2, 200)), "with spare stones"))
 
 
+## SHOP-004: a festival pill is never named outside its window, and is named inside it.
+func test_qi_pill_offer_skips_closed_festival_goods() -> void:
+	var d := data()
+	var pill: Dictionary = d.items["qi_gathering_pill"].duplicate(true)
+	pill["id"] = "festival_test_pill"
+	pill["name"] = "Festival Test Pill"
+	pill["price"] = 1
+	pill["festival"] = "mid_autumn_festival"
+	d.items["festival_test_pill"] = pill
+	var start := (8 - 1) * Calendar.DAYS_PER_MONTH
+	var closed := Guidance.qi_pill_offer(_qr(2, 200), d, "qingshi_village", {"_today": 1})
+	var open := Guidance.qi_pill_offer(_qr(2, 200), d, "qingshi_village", {"_today": start})
+	d.items.erase("festival_test_pill")
+	assert_true(closed.is_empty() or closed["item_id"] != "festival_test_pill", "closed window: not named")
+	assert_eq(String(open.get("item_id", "")), "festival_test_pill", "inside the window: named")
+
+
+## SHOP-004: Guidance.hinted_item_ids names every item in a hint, longest first.
+func test_hinted_item_ids_names_every_item() -> void:
+	var d := data()
+	var a := String(d.items["qi_gathering_pill"]["name"])
+	var ids := Guidance.hinted_item_ids(d, "Buy %s and %s." % [a, String(d.items["spirit_stone"]["name"])])
+	assert_true(ids.has("qi_gathering_pill") and ids.has("spirit_stone"))
+
+
 ## GUIDE-150: the qi-pill hint keeps the price of the armor the armor line names.
 func test_qi_pill_offer_keeps_the_armor_price() -> void:
 	var d := data()

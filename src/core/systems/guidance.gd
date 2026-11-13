@@ -1339,14 +1339,32 @@ static func first_hop(c: CharacterData, data: GameData, from_id: String, to_id: 
 
 ## SHOP-002: the id of the item whose name appears in `hint` (longest name wins); "" when none.
 static func hinted_item_id(data: GameData, hint: String) -> String:
-	var best := ""
-	var best_len := 0
+	var all := hinted_item_ids(data, hint)
+	return all[0] if not all.is_empty() else ""
+
+
+## SHOP-004: every item whose name appears in `hint`, longest name first (a name inside a longer hinted name is dropped).
+static func hinted_item_ids(data: GameData, hint: String) -> Array:
+	var found: Array = []
 	for id: String in data.items:
 		var n := String(data.items[id].get("name", ""))
-		if n.length() > best_len and hint.contains(n):
-			best = id
-			best_len = n.length()
-	return best
+		if n != "" and hint.contains(n):
+			found.append(id)
+	found.sort_custom(func(a: String, b: String) -> bool:
+		var la := String(data.items[a].get("name", "")).length()
+		var lb := String(data.items[b].get("name", "")).length()
+		return la > lb or (la == lb and a < b))
+	var out: Array = []
+	for id: String in found:
+		var n := String(data.items[id].get("name", ""))
+		var inside := false
+		for kept: String in out:
+			if String(data.items[kept].get("name", "")).contains(n):
+				inside = true
+				break
+		if not inside:
+			out.append(id)
+	return out
 
 
 ## GUIDE-098: the id of the region whose name appears in `hint` (longest name first), skipping `current_id`; "" when none.
@@ -2547,6 +2565,10 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 	var stall_best := {}
 	var stall_ratio := 0.0
 	var today := int(flags.get("_today", -1))
+	# SHOP-004: festival goods must still be in season on the day the player would arrive.
+	var arrival := today
+	if today >= 0 and rate_region != "" and rate_region != region_id:
+		arrival = today + maxi(0, route_days(c, data, rate_region, region_id))
 	for place: Dictionary in data.regions[region_id].get("places", []):
 		if String(place.get("type", "")) != "merchant":
 			continue
@@ -2556,7 +2578,7 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 		for item_id: String in data.items:
 			var item: Dictionary = data.items[item_id]
 			var qi := float(item.get("effects", {}).get("qi", 0.0))
-			if qi <= 0.0 or qi > room or not item_id.ends_with("_pill") or not Items.feeds_cultivation(data, item_id) or Items.realm_block(c, data, item_id) != "" or not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0))):
+			if qi <= 0.0 or qi > room or not item_id.ends_with("_pill") or not Items.feeds_cultivation(data, item_id) or Items.realm_block(c, data, item_id) != "" or not Items.merchant_sells(data, item, place.get("stock_tags", []), int(place.get("max_price", 0)), arrival):
 				continue
 			var price := _place_price(c, data, region_id, item_id, place, _season_in(flags))
 			if price > spare:
