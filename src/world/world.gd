@@ -1158,6 +1158,27 @@ func _vec(a: Array) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 
 
+## GFX-130: path rects clover keeps off and the worn ellipses round places, in ground-texture px.
+func _ground_life(map: Dictionary, sc: float) -> Dictionary:
+	var avoid: Array = []
+	for r in map.get("paths", []):
+		avoid.append(Rect2(float(r[0]) / sc, float(r[1]) / sc, float(r[2]) / sc, float(r[3]) / sc))
+	var zones := Scenery.paved_zones(map, sc)
+	var worn: Array = []
+	for pl in _region.get("places", []):
+		var k := Npcs.place_keepout(pl)
+		var e := Rect2(k.get_center() - k.size * 0.65, k.size * 1.3)
+		var ok := true
+		for z: Rect2 in zones:
+			if z.intersects(Rect2(e.position / sc, e.size / sc)):
+				ok = false
+		if ok:
+			worn.append(Rect2(e.position / sc, e.size / sc))
+	for r in worn:
+		avoid.append(r)
+	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350"))}
+
+
 func _draw() -> void:
 	var map: Dictionary = _region.get("map", {})
 	var rid := GameState.current_region
@@ -1169,7 +1190,7 @@ func _draw() -> void:
 		var sc := float(Sprites.scale())
 		var gseason := GroundTiles.ground_season(_season, map)
 		var flowers := ["Spring", "Summer"].has(_season)
-		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc), float(map.get("scree_density", 1.0)))
+		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc), float(map.get("scree_density", 1.0)), _ground_life(map, sc))
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
 	_draw_square_ground()
 	var path_tile := Sprites.first(["path_" + rid, "path"])

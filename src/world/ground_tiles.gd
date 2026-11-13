@@ -89,8 +89,8 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
-static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = [], scree_density: float = 1.0) -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density]
+static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = [], scree_density: float = 1.0, life: Dictionary = {}) -> ImageTexture:
+	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density, life]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
@@ -103,11 +103,164 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
+	var lively := LIVELY_STYLES.has(style)
+	var shade_grid: PackedFloat32Array = PackedFloat32Array()
+	if lively:
+		shade_grid = shade_grid_for(rid, size_px)
+		_apply_patches(img, base, shade_grid)
+		_apply_clover(img, base, rid, style, life.get("avoid", []))
+		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
 	_apply_style(img, base, rid, style, zones, scree_density)
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
+	if lively and season == "Winter":
+		_vary_snow(img, shade_grid)
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
+
+
+const LIVELY_STYLES := ["grass", "litter", "bog"]  ## GFX-130: the styles that get patches, clover and worn ground
+const PATCH_CELLS := [96, 40]
+
+
+static func _lattice(rid: String, octave: int, cx: int, cy: int) -> float:
+	return float(absi(hash("%s|patch%d|%d|%d" % [rid, octave, cx, cy])) % 2001) / 1000.0 - 1.0
+
+
+## GFX-130: low-frequency value noise in -1..1 (two octaves, ~96 px and ~40 px cells, smoothstep between lattice values).
+static func patch_shade(rid: String, x: int, y: int) -> float:
+	var total := 0.0
+	for o in PATCH_CELLS.size():
+		var cell := float(PATCH_CELLS[o])
+		var fx := float(x) / cell
+		var fy := float(y) / cell
+		var cx := floori(fx)
+		var cy := floori(fy)
+		var tx := smoothstep(0.0, 1.0, fx - cx)
+		var ty := smoothstep(0.0, 1.0, fy - cy)
+		var top := lerpf(_lattice(rid, o, cx, cy), _lattice(rid, o, cx + 1, cy), tx)
+		var bot := lerpf(_lattice(rid, o, cx, cy + 1), _lattice(rid, o, cx + 1, cy + 1), tx)
+		total += lerpf(top, bot, ty) * (0.7 if o == 0 else 0.3)
+	return clampf(total * 1.35, -1.0, 1.0)
+
+
+## `patch_shade` for every pixel of a region image, with the lattice computed once per cell (fast).
+static func shade_grid_for(rid: String, size_px: Vector2i) -> PackedFloat32Array:
+	var grid := PackedFloat32Array()
+	grid.resize(size_px.x * size_px.y)
+	var lat: Array = []
+	for o in PATCH_CELLS.size():
+		var cell: int = PATCH_CELLS[o]
+		var gw := size_px.x / cell + 2
+		var gh := size_px.y / cell + 2
+		var l := PackedFloat32Array()
+		l.resize(gw * gh)
+		for cy in gh:
+			for cx in gw:
+				l[cy * gw + cx] = _lattice(rid, o, cx, cy)
+		lat.append(l)
+	for y in size_px.y:
+		for x in size_px.x:
+			var total := 0.0
+			for o in PATCH_CELLS.size():
+				var cell: int = PATCH_CELLS[o]
+				var gw := size_px.x / cell + 2
+				var l: PackedFloat32Array = lat[o]
+				var fx := float(x) / cell
+				var fy := float(y) / cell
+				var cx := int(fx)
+				var cy := int(fy)
+				var tx := smoothstep(0.0, 1.0, fx - cx)
+				var ty := smoothstep(0.0, 1.0, fy - cy)
+				var top := lerpf(l[cy * gw + cx], l[cy * gw + cx + 1], tx)
+				var bot := lerpf(l[(cy + 1) * gw + cx], l[(cy + 1) * gw + cx + 1], tx)
+				total += lerpf(top, bot, ty) * (0.7 if o == 0 else 0.3)
+			grid[y * size_px.x + x] = clampf(total * 1.35, -1.0, 1.0)
+	return grid
+
+
+static func _apply_patches(img: Image, base: Color, grid: PackedFloat32Array) -> void:
+	var w := img.get_width()
+	var light := base.lightened(0.10)
+	var dark := base.darkened(0.12)
+	for y in img.get_height():
+		for x in w:
+			var s := grid[y * w + x]
+			if s > 0.35:
+				img.set_pixel(x, y, img.get_pixel(x, y).lerp(light, smoothstep(0.35, 0.8, s)))
+			elif s < -0.35:
+				img.set_pixel(x, y, img.get_pixel(x, y).lerp(dark, smoothstep(0.35, 0.8, -s)))
+
+
+## GFX-130: 6-12 clover/moss blobs (sprite px, 20-48 wide) per region, none touching a rect in `avoid`.
+static func clover_rects(rid: String, size_px: Vector2i, avoid: Array) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var n := 6 + absi(hash(rid + "|clover")) % 7
+	for i in n * 3:
+		if out.size() >= n:
+			break
+		var r := absi(hash("%s|clover|%d" % [rid, i]))
+		var w := 20 + r % 29
+		var h := 20 + (r / 64) % 29
+		if size_px.x <= w or size_px.y <= h:
+			continue
+		var rect := Rect2(float((r / 4096) % (size_px.x - w)), float((r / 1048576) % (size_px.y - h)), w, h)
+		var ok := true
+		for a: Rect2 in avoid:
+			if a.intersects(rect.grow(2.0)):
+				ok = false
+				break
+		if ok:
+			out.append(rect)
+	return out
+
+
+static func _apply_clover(img: Image, base: Color, rid: String, style: String, avoid: Array) -> void:
+	var moss := style != "grass"
+	var tint := base.darkened(0.2).lerp(Color("3f6a52"), 0.3) if moss else base.lerp(Color("5f9a4c"), 0.35).lightened(0.03)
+	var rects := clover_rects(rid, Vector2i(img.get_width(), img.get_height()), avoid)
+	for i in rects.size():
+		var rc := rects[i]
+		var c := rc.get_center()
+		for y in range(int(rc.position.y), int(rc.end.y)):
+			for x in range(int(rc.position.x), int(rc.end.x)):
+				var d := Vector2((x - c.x) / (rc.size.x * 0.5), (y - c.y) / (rc.size.y * 0.5)).length()
+				var edge := float(absi(hash("%s|cl%d|%d|%d" % [rid, i, x / 3, y / 3])) % 30) / 100.0
+				if d + edge * 0.5 < 1.0:
+					var a := clampf(1.0 - d, 0.0, 1.0) * 0.9 + 0.1
+					img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, minf(a, 0.7)))
+					var dot := absi(hash("%s|dot%d|%d|%d" % [rid, i, x, y])) % 23
+					if dot == 0:
+						img.set_pixel(x, y, base.lightened(0.2 if moss else 0.16).lerp(tint, 0.3))
+
+
+## GFX-130: grass thins to the path colour (35%) in a ragged ellipse under each `worn` Rect2 (sprite px).
+static func _apply_worn(img: Image, rid: String, worn: Array, path_color: Color, grid: PackedFloat32Array) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	for rc: Rect2 in worn:
+		var c := rc.get_center()
+		var x0 := maxi(0, int(rc.position.x))
+		var x1 := mini(w, int(rc.end.x))
+		var y0 := maxi(0, int(rc.position.y))
+		var y1 := mini(h, int(rc.end.y))
+		for y in range(y0, y1):
+			for x in range(x0, x1):
+				var d := Vector2((x - c.x) / (rc.size.x * 0.5), (y - c.y) / (rc.size.y * 0.5)).length()
+				d += grid[y * w + x] * 0.18
+				if d < 1.0:
+					img.set_pixel(x, y, img.get_pixel(x, y).lerp(path_color, 0.35 * smoothstep(1.0, 0.5, d)))
+
+
+## GFX-130: winter snow 0.75..1.0 by patch shade, so it is not one flat sheet (the base pass already put 0.7 on).
+static func _vary_snow(img: Image, grid: PackedFloat32Array) -> void:
+	var w := img.get_width()
+	for y in img.get_height():
+		for x in w:
+			var t := (grid[y * w + x] + 1.0) * 0.5
+			var amount := 0.75 + 0.25 * t
+			var extra := (amount - WINTER_SNOW) / (1.0 - WINTER_SNOW) * 0.5
+			img.set_pixel(x, y, img.get_pixel(x, y).lerp(SNOW, extra * 0.5))
 
 
 ## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
