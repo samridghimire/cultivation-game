@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-13 [SEASON-018] Year 1's season hunts ask for a wild boar a newcomer can beat, not a deadly stag.
+- 2026-11-13 [GFX-126] Fallen Star Market has paved streets, cobbled lanes, herb planters, barrels and crates by the stalls.
+- 2026-11-13 [QA-210] A test checks that a newcomer can finish year 1's Spring tasks in Qingshi.
+- 2026-11-13 [WU-528] The World Map's side panel reads in short headed blocks: Today, You here, Shops and Places.
+- 2026-11-13 [ART-013] The Creation Artifact has a taste: beast materials and trophies feed it more, keepsakes it refuses.
+- 2026-11-13 [GFX-125] The Withered Bone Marsh is wet: pools, reeds, lily pads, and ice in winter.
+- 2026-11-13 [FOLK-034] Villagers talk about the bounties you collect and the hunts the village wins.
+- 2026-11-13 [ART-011] The Creation Artifact remembers what fed it, and Today shows its energy toward the next seal.
+- 2026-11-13 [WU-526] Market flags and the sect gate's signboard no longer cover names.
+- 2026-11-12 [GFX-124] Dirt roads look walked: wheel ruts, loose stones and worn edges.
 - 2026-11-12 [WU-525] The clan screen shows how every clan stands with every other in one coloured grid.
 - 2026-11-12 [WU-523] Milestone and new-friend banners wait until you close the screen you are reading.
 - 2026-11-12 [C-351] The village almanac speaks each omen in three different old sayings.
