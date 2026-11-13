@@ -59,3 +59,36 @@ func test_player_look_style_by_gender() -> void:
 	assert_eq(PlayerLook.of(c, data())["style"], "long")
 	c.gender = "male"
 	assert_eq(PlayerLook.of(c, data())["style"], "bun")
+
+
+func test_accessories_by_role() -> void:
+	assert_eq(PixelFigure.accessories_for({"id": "a", "name": "Farmer Tian", "age_years": 40}), PackedStringArray(["straw_hat"]))
+	assert_eq(PixelFigure.accessories_for({"id": "b", "title": "Village Hunter", "age_years": 44}), PackedStringArray(["fur_cap"]))
+	assert_eq(PixelFigure.accessories_for({"id": "c", "name": "Village Herb Seller", "age_years": 40}), PackedStringArray(["apron"]))
+	assert_eq(PixelFigure.accessories_for({"id": "d", "name": "Elder Mo", "age_years": 70}), PackedStringArray(["white_hair", "cane"]))
+	assert_eq(PixelFigure.accessories_for({"id": "e", "age_years": 8}).size(), 0, "children wear none")
+
+
+func test_headscarf_is_seeded_one_in_three() -> void:
+	var scarves := 0
+	for i in 60:
+		var npc := {"id": "villager_%d" % i, "age_years": 30}
+		var a := PixelFigure.accessories_for(npc)
+		assert_eq(a, PixelFigure.accessories_for(npc), "deterministic")
+		if a.has("headscarf"):
+			scarves += 1
+	assert_true(scarves > 8 and scarves < 35, "about a third wear a scarf: %d" % scarves)
+
+
+func test_overlays_keep_row_width_and_change_pixels() -> void:
+	for dir in ["down", "right"]:
+		var base := PixelFigure.rows(dir, 0, "bun", false)
+		for acc in PixelFigure.ACCESSORIES:
+			var out := PixelFigure.overlay(base, PackedStringArray([acc]), dir == "right")
+			for r in out:
+				assert_eq(r.length(), PixelFigure.SIZE.x, "%s %s width" % [dir, acc])
+			if acc != "white_hair":
+				assert_true(out != base, "%s %s changes the figure" % [dir, acc])
+	var plain := PixelFigure.frame(LOOK, "down", 0)
+	var hat := PixelFigure.frame({"robe": Color("336699"), "sash": Color("ff0000"), "accessories": PackedStringArray(["straw_hat"])}, "down", 0)
+	assert_true(plain != hat)

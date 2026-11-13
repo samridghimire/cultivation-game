@@ -13,17 +13,28 @@ func sprite_keys() -> PackedStringArray:
 	return PackedStringArray(["npc_" + deed_context, "place_" + art_kind])
 
 
+## GFX-129: the place look plus the accessories its display name implies ("Farmer Tian" wears a straw hat).
+func _figure_look() -> Dictionary:
+	var out := PlaceLooks.figure_look(look, color)
+	var role := {"id": display_name, "name": display_name, "age_years": 14 if look.get("child", false) == true else (70 if look.get("hair", "") == "grey" else 30)}
+	var acc := PixelFigure.accessories_for(role)
+	out["accessories"] = acc
+	if not look.has("robe") and PixelFigure.ROLE_ROBES.has(PixelFigure.role_of(role)):
+		out["robe"] = PixelFigure.ROLE_ROBES[PixelFigure.role_of(role)]
+	return out
+
+
 func portrait_texture() -> Texture2D:
 	if PlaceLooks.is_camp(look):
 		return null
-	return PixelFigure.frame(PlaceLooks.figure_look(look, color), "down", 0)
+	return PixelFigure.frame(_figure_look(), "down", 0)
 
 
 func draw_generated_art() -> bool:
 	if PlaceLooks.is_camp(look):
 		PlaceArt.draw(self, "camp", size, color)
 		return true
-	var tex := PixelFigure.frame(PlaceLooks.figure_look(look, color), "down", 0)
+	var tex := PixelFigure.frame(_figure_look(), "down", 0)
 	var s := float(Sprites.scale())
 	var tex_size := Vector2(tex.get_size()) * s
 	var sh := Scenery.figure_shadow(tex_size, winter)

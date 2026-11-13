@@ -89,7 +89,82 @@ const FEET := {
 	],
 }
 
+## GFX-129: role accessories drawn over the template (S straw, U fur, K scarf, A apron, C cane).
+const ACCESSORIES := ["straw_hat", "fur_cap", "headscarf", "apron", "white_hair", "cane"]
+const STRAW := Color("d8b860")
+const FUR := Color("6b4a2b")
+const SCARF := Color("b0483a")
+const APRON := Color("e8e0cc")
+const CANE := Color("7a5a36")
+const WHITE_HAIR := Color("f0f0f0")
+## Robe colour per role (roles from `role_of`).
+const ROLE_ROBES := {"farmer": Color("3f5a8a"), "hunter": Color("5a6b45"), "merchant": Color("b08a2e")}
+
 static var _cache: Dictionary = {}
+
+
+## The role of a villager `npc` ({id, title, name, age_years}): "farmer", "hunter", "merchant", "elder" (over 60) or "adult" / "child".
+static func role_of(npc: Dictionary) -> String:
+	var text := ("%s %s" % [npc.get("title", ""), npc.get("name", "")]).to_lower()
+	if text.contains("farmer"):
+		return "farmer"
+	if text.contains("hunter"):
+		return "hunter"
+	for word in ["merchant", "seller", "peddler", "trader", "shopkeeper", "vendor"]:
+		if text.contains(word):
+			return "merchant"
+	var age := int(npc.get("age_years", 30))
+	if age < 12:
+		return "child"
+	return "elder" if age > 60 else "adult"
+
+
+## Accessory names (from ACCESSORIES) for a villager: farmers a straw hat, hunters a fur cap, merchants an apron,
+## elders white hair and a cane, other adults a headscarf one time in three (seeded by id). Deterministic.
+static func accessories_for(npc: Dictionary) -> PackedStringArray:
+	match role_of(npc):
+		"farmer":
+			return PackedStringArray(["straw_hat"])
+		"hunter":
+			return PackedStringArray(["fur_cap"])
+		"merchant":
+			return PackedStringArray(["apron"])
+		"elder":
+			return PackedStringArray(["white_hair", "cane"])
+		"adult":
+			if absi(String(npc.get("id", npc.get("name", ""))).hash()) % 3 == 0:
+				return PackedStringArray(["headscarf"])
+	return PackedStringArray()
+
+
+## Draws `acc` (accessory names) onto the template `rows`; returns new rows.
+static func overlay(rows: PackedStringArray, acc: PackedStringArray, side: bool) -> PackedStringArray:
+	var out := rows.duplicate()
+	if acc.has("straw_hat"):
+		out[1] = ".....oSSSSo....."
+		out[2] = "...oSSSSSSSSo..."
+		out[3] = "..oSSSSSSSSSSo.."
+	if acc.has("fur_cap"):
+		for y in [1, 2, 3]:
+			out[y] = out[y].replace("h", "U")
+	if acc.has("headscarf"):
+		for y in [2, 3]:
+			out[y] = out[y].replace("h", "K")
+	if acc.has("apron"):
+		var from := 5 if side else 6
+		var to := 8 if side else 9
+		for y in range(12, 18):
+			var row: String = out[y]
+			for x in range(from, to + 1):
+				if row[x] == "r" or row[x] == "R":
+					row = row.substr(0, x) + "A" + row.substr(x + 1)
+			out[y] = row
+	if acc.has("cane"):
+		var cx := 13 if side else 14
+		for y in range(11, 19):
+			if out[y][cx] == ".":
+				out[y] = out[y].substr(0, cx) + ("o" if y == 11 else "C") + out[y].substr(cx + 1)
+	return out
 
 
 ## The 20 text rows of a figure facing `dir` ("down", "up", "right"; "left" is mirrored later).
@@ -113,14 +188,19 @@ static func rows(dir: String, index: int, style: String, child: bool) -> PackedS
 			out[y] = out[y].replace("h", "r")
 		out[1] = out[1].replace("r", "R")
 	if child:
-		var short := PackedStringArray()
-		for _i in 4:
-			short.append("................")
-		for y in out.size():
-			if not CHILD_CUT_ROWS.has(y):
-				short.append(out[y])
-		return short
+		return _shorten(out)
 	return out
+
+
+## A child's figure: four rows cut from the body, padded on top.
+static func _shorten(out: PackedStringArray) -> PackedStringArray:
+	var short := PackedStringArray()
+	for _i in 4:
+		short.append("................")
+	for y in out.size():
+		if not CHILD_CUT_ROWS.has(y):
+			short.append(out[y])
+	return short
 
 
 ## Turns the outer outline pixels of a row into hair (both sides, or the back side only when seen from the side).
@@ -147,11 +227,19 @@ static func frame(look: Dictionary, dir: String, index: int) -> ImageTexture:
 	var hair: Color = look.get("hair", DEFAULT_HAIR)
 	var style := String(look.get("style", "bun"))
 	var child := bool(look.get("child", false))
+	var acc: PackedStringArray = look.get("accessories", PackedStringArray())
+	if acc.has("white_hair"):
+		hair = WHITE_HAIR
 	var i := posmod(index, 3)
-	var key := "%s|%s|%s|%s|%s|%s|%s|%d" % [robe.to_html(), sash.to_html(), skin.to_html(), hair.to_html(), style, child, dir, i]
+	var key := "%s|%s|%s|%s|%s|%s|%s|%d|%s" % [robe.to_html(), sash.to_html(), skin.to_html(), hair.to_html(), style, child, dir, i, ",".join(acc)]
 	if not _cache.has(key):
-		var colors := {"o": OUTLINE, "s": skin, "h": hair, "r": robe, "R": robe.darkened(0.25), "b": sash, "e": OUTLINE, "f": SHOES}
-		_cache[key] = _build(rows("right" if dir == "left" else dir, i, style, child), colors, dir == "left")
+		var colors := {"o": OUTLINE, "s": skin, "h": hair, "r": robe, "R": robe.darkened(0.25), "b": sash, "e": OUTLINE, "f": SHOES,
+			"S": STRAW, "U": FUR, "K": SCARF, "A": APRON, "C": CANE}
+		var tpl := rows("right" if dir == "left" else dir, i, style, false)
+		tpl = overlay(tpl, acc, dir == "left" or dir == "right")
+		if child:
+			tpl = _shorten(tpl)
+		_cache[key] = _build(tpl, colors, dir == "left")
 	return _cache[key]
 
 

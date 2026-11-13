@@ -212,6 +212,14 @@ static func look_of(id: String, fallback: Color) -> Dictionary:
 	look["hair"] = Color("b8b8b8") if c.age_years() >= 60 else PlayerLook.HAIR
 	look["style"] = "long" if c.gender == "female" else "bun"
 	look["child"] = c.age_years() < 12
+	var def: Dictionary = GameState.data.npcs.get(id, {})
+	var role := {"id": id, "name": c.name, "title": String(def.get("title", "")), "age_years": c.age_years()}
+	look["accessories"] = PixelFigure.accessories_for(role)
+	var role_robe: Color = PixelFigure.ROLE_ROBES.get(PixelFigure.role_of(role), Color(0, 0, 0, 0))
+	if role_robe.a > 0.0 and c.is_rogue():
+		look["robe"] = role_robe
+	if look["accessories"].has("white_hair"):
+		look["hair"] = PixelFigure.WHITE_HAIR
 	return look
 
 
