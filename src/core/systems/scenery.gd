@@ -1037,6 +1037,24 @@ static func is_snowy(season: String) -> bool:
 	return season == "Winter"
 
 
+## GFX-128: how a decorative ground flower looks by season: {kind: "flower" | "glint", color: Color}. Spring and Summer keep the
+## region's flower colour; Autumn turns the blooms to orange and brown seed heads; Winter has no blooms, only a pale blue frost glint.
+static func flower_look(season: String, base: Color, seed_value: int) -> Dictionary:
+	match season:
+		"Winter":
+			return {"kind": "glint", "color": Color("bcd8f2")}
+		"Autumn":
+			return {"kind": "flower", "color": Color("c8742e") if seed_value % 2 == 0 else Color("8a5a32")}
+	return {"kind": "flower", "color": base}
+
+
+## GFX-128: a herb planter box by season: {rim: Color, fill: Color, stalks: bool (dark dead stalks poke through the snow)}.
+static func planter_look(season: String) -> Dictionary:
+	if is_snowy(season):
+		return {"rim": Color("8a6a40"), "fill": Color(0.9, 0.93, 1.0), "stalks": true}
+	return {"rim": Color("7a5a38"), "fill": Color("3e2f1e"), "stalks": false}
+
+
 ## GFX-115: seeded decoration for ponds and streams. Returns dictionaries {kind, pos: Vector2, rect: Rect2 (the water
 ## it belongs to)}: kind "glint" (3-6 per pond, drift in WaterLife), "pad" (lily pads on clear ponds in Spring/Summer),
 ## "reed" (tufts at the rim of murky ponds, any season) and "pebble" (beside a path bridge on streams). Every glint, pad

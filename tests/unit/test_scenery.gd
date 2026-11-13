@@ -707,3 +707,21 @@ func test_marsh_keepouts_cover_roads_places_and_arrival() -> void:
 	for pool: Dictionary in f["pools"]:
 		assert_false(Rect2(310, 460, 180, 160).intersects(pool["rect"]), "pool clear of the arrival ring")
 		assert_false(Rect2(0, 280, 800, 40).intersects(pool["rect"]), "pool clear of the road")
+
+
+func test_flower_look_by_season() -> void:
+	var base := Color("e8c9e0")
+	assert_eq(Scenery.flower_look("Spring", base, 1)["color"], base)
+	assert_eq(Scenery.flower_look("Summer", base, 1)["kind"], "flower")
+	var winter := Scenery.flower_look("Winter", base, 1)
+	assert_eq(winter["kind"], "glint")
+	assert_true(winter["color"].b > winter["color"].r, "frost glint is blue, not pink")
+	var a := Scenery.flower_look("Autumn", base, 2)["color"] as Color
+	assert_true(a.r > a.b, "autumn blooms are orange/brown")
+	assert_eq(Scenery.flower_look("Autumn", base, 2), Scenery.flower_look("Autumn", base, 2))
+
+
+func test_planter_look_by_season() -> void:
+	assert_true(Scenery.planter_look("Winter")["stalks"])
+	assert_false(Scenery.planter_look("Spring")["stalks"])
+	assert_true(Scenery.planter_look("Winter")["rim"] != Scenery.planter_look("Winter")["fill"])

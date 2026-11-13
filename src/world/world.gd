@@ -1787,10 +1787,21 @@ func _draw_landmark(lm: Dictionary) -> void:
 ## GFX-126: a raised herb box with a wooden rim and a few sprigs (snow-capped in Winter).
 func _draw_planter(r: Rect2) -> void:
 	var snowy := Scenery.is_snowy(_season)
+	var look := Scenery.planter_look(_season)
 	draw_rect(Rect2(r.position + Vector2(2, r.size.y - 4), Vector2(r.size.x, 6)), Color(0, 0, 0, 0.22))
-	draw_rect(r, Color("7a5a38"))
-	var inner := r.grow(-4.0)
-	draw_rect(inner, Color(0.9, 0.93, 1.0) if snowy else Color("3e2f1e"))
+	draw_rect(r, look["rim"])
+	var inner := r.grow(-5.0 if snowy else -4.0)
+	draw_rect(inner, look["fill"])
+	if snowy:  # GFX-128: dark dead stalks poke through the snow
+		var sx := inner.position.x + 6.0
+		var n := 0
+		while sx < inner.end.x - 4.0:
+			var top := inner.position.y + 5.0 + float((n * 7) % 9)
+			draw_rect(Rect2(sx, top, 2, inner.end.y - top - 3.0), Color("3a2e22"))
+			draw_rect(Rect2(sx - 2, top + 3.0, 2, 1), Color("3a2e22"))
+			draw_rect(Rect2(sx + 2, top + 1.0, 2, 1), Color("3a2e22"))
+			sx += 11.0
+			n += 1
 	if not snowy:
 		var x := inner.position.x + 5.0
 		while x < inner.end.x - 3.0:
@@ -2070,7 +2081,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				var g := Color(map_grass_color())
 				draw_rect(r, g.lightened(0.1) if shade > 0.0 else g)
 		if snowy and str(t["kind"]) in ["edge", "tuft", "slab"]:
-			draw_rect(Rect2(r.position, Vector2(r.size.x, minf(2.0, r.size.y))), Color(0.93, 0.95, 1.0, 0.8))
+			var cap := Color(0.93, 0.95, 1.0, 0.8)
+			if t["flag"] == "main" and rect.size.x < rect.size.y:  # GFX-128: no rungs across a north-south street
+				draw_rect(Rect2(r.position, Vector2(minf(2.0, r.size.x), r.size.y)), Color(cap, 0.45))
+			else:
+				draw_rect(Rect2(r.position, Vector2(r.size.x, minf(2.0, r.size.y))), cap)
 
 
 func map_grass_color() -> String:
@@ -2222,7 +2237,12 @@ func _draw_decor(d: Dictionary) -> void:
 			for x in [-4.0, 0.0, 4.0]:
 				draw_line(p + Vector2(x, 4) * k, p + Vector2(x * 1.6, -5 + absf(x) * 0.5) * k, c, 1.5)
 		"flower":
-			draw_line(p, p + Vector2(0, 6) * k, Color("4f7a3a"), 1.5)
+			var fl := Scenery.flower_look(_season, c, hash(p))
+			if fl["kind"] == "glint":  # GFX-128: no pink blooms on the snow, just a frost glint
+				draw_rect(Rect2(p + Vector2(-1, -1), Vector2(2, 2)), fl["color"])
+				draw_rect(Rect2(p + Vector2(-2, 0), Vector2(4, 1)), Color(fl["color"], 0.45))
+				return
+			draw_line(p, p + Vector2(0, 6) * k, Color("4f7a3a") if _season != "Autumn" else Color("7a6a3a"), 1.5)
 			for i in 5:
-				draw_circle(p + Vector2.from_angle(TAU * i / 5.0) * 3.0 * k, 2.2 * k, c)
+				draw_circle(p + Vector2.from_angle(TAU * i / 5.0) * 3.0 * k, 2.2 * k, fl["color"])
 			draw_circle(p, 1.6 * k, Color("f2d24b"))
