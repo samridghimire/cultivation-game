@@ -1322,6 +1322,18 @@ static func first_hop(c: CharacterData, data: GameData, from_id: String, to_id: 
 	return cur
 
 
+## SHOP-002: the id of the item whose name appears in `hint` (longest name wins); "" when none.
+static func hinted_item_id(data: GameData, hint: String) -> String:
+	var best := ""
+	var best_len := 0
+	for id: String in data.items:
+		var n := String(data.items[id].get("name", ""))
+		if n.length() > best_len and hint.contains(n):
+			best = id
+			best_len = n.length()
+	return best
+
+
 ## GUIDE-098: the id of the region whose name appears in `hint` (longest name first), skipping `current_id`; "" when none.
 static func hinted_region(data: GameData, hint: String, current_id: String) -> String:
 	var ids: Array = data.regions.keys()

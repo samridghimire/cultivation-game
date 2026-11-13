@@ -16,6 +16,7 @@ var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
 ## The merchant whose shop is open (set by ShopScreen.open), for its own discounts.
+var buy_hints: Dictionary = {}  # SHOP-002: region id -> item id its last shown buy-hint named (session only)
 var shop_name := ""  # the seller of the open shop screen; "" when none is open (close_shop)
 ## Open auctions (Auctions): house_id -> {opening, lots}.
 var auctions: Dictionary = {}
@@ -3277,6 +3278,16 @@ func market_multiplier() -> float:
 
 
 ## MARKET-003: the shop screen closed; a later buy must not use the seller's stale discount.
+## SHOP-002: remembers the item a hint sends you to buy in another region.
+func note_buy_hint(hint: String) -> void:
+	var region := Guidance.hinted_region(data, hint, current_region)
+	if region == "":
+		return
+	var item := Guidance.hinted_item_id(data, hint)
+	if item != "":
+		buy_hints[region] = item
+
+
 func close_shop() -> void:
 	shop_name = ""
 

@@ -1098,6 +1098,8 @@ func first_hint() -> String:
 
 
 func _set_hint_text(lines: PackedStringArray) -> void:
+	if not lines.is_empty():
+		GameState.note_buy_hint(lines[0])
 	_hint.visible = not lines.is_empty()
 	var marked := not lines.is_empty() and first_hint_names_place(lines[0], _region_place_names())
 	_hint_badge.visible = marked

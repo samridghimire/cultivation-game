@@ -4075,3 +4075,20 @@ func test_explore_win_counts_for_the_season_hunt() -> void:
 	assert_true(gs._explore_fight("wild_boar"), "strong player wins")
 	assert_eq(hunt_n.call(), 1, "the won explore fight counts")
 	gs.end_session()
+
+
+func test_buy_hint_is_remembered_for_the_hinted_region() -> void:
+	var gs := _game_state()
+	_start()
+	var other := ""
+	for id: String in gs.data.regions:
+		if id != gs.current_region and Exploration.region_name(gs.data, id) != "":
+			other = id
+			break
+	assert_true(other != "")
+	var item_name := String(gs.data.items["qi_gathering_pill"]["name"])
+	gs.note_buy_hint("Buy a %s in %s." % [item_name, Exploration.region_name(gs.data, other)])
+	assert_eq(String(gs.buy_hints.get(other, "")), "qi_gathering_pill")
+	gs.note_buy_hint("Nothing to buy here.")
+	assert_eq(String(gs.buy_hints.get(other, "")), "qi_gathering_pill")
+	gs.buy_hints.clear()

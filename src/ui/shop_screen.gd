@@ -254,6 +254,10 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_selling = false
 	_category = "All"
 	_hinted = hinted_item(GameState.data, _hud_hint(), _stock_ids())
+	if _hinted == "":  # SHOP-002: the item an earlier hint sent you here for
+		var remembered := String(GameState.buy_hints.get(GameState.current_region, ""))
+		if remembered != "" and _stock_ids().has(remembered):
+			_hinted = remembered
 	_selected = _hinted
 	_quantity = 1
 	_rebuild()
