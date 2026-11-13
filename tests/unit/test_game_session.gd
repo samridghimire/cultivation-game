@@ -4108,3 +4108,39 @@ func test_buy_hint_clears_on_buy_and_new_session() -> void:
 	gs.buy_hints["somewhere"] = "qi_gathering_pill"
 	gs.load_save_dict(gs.to_save_dict())
 	assert_true(gs.buy_hints.is_empty(), "a loaded save starts with none")
+
+
+func test_hunter_ma_teaches_iron_fist() -> void:
+	var gs := _game_state()
+	var c := _start()
+	gs.npc_favor["hunter_ma"] = 0
+	gs.start_dialogue("hunter_ma")
+	var locked := false
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Show me how you fight"):
+			locked = bool(ch["disabled"])
+	assert_true(locked, "at favor 0 the lesson is shown locked")
+	gs.end_dialogue()
+	gs.npc_favor["hunter_ma"] = 15
+	gs.start_dialogue("hunter_ma")
+	var idx := -1
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Show me how you fight"):
+			assert_false(bool(ch["disabled"]))
+			idx = int(ch["index"])
+	assert_true(idx >= 0)
+	gs.choose_dialogue(idx)
+	var day := GameClock.total_days
+	var train := -1
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Train with him"):
+			train = int(ch["index"])
+	assert_true(train >= 0)
+	gs.choose_dialogue(train)
+	assert_true(c.techniques.has("iron_fist"), "he taught the punch")
+	assert_eq(GameClock.total_days - day, 5, "five days of training")
+	gs.start_dialogue("hunter_ma")
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Show me how you fight"):
+			assert_true(bool(ch["disabled"]), "locked once learned")
+	gs.end_dialogue()
