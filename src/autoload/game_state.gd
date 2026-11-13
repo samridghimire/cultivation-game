@@ -4554,14 +4554,14 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	EventBus.player_changed.emit()
 
 
-## ART-009: the artifact drinks the player's growth. At most one energy line per day (gains later that day
-## are folded into the next line), and one hum per newly unsealable function.
+## ART-009: the artifact drinks the player's growth. LOG-002: at most one energy line per ARTIFACT_LINE_DAYS
+## days (gains in between are folded into the next line), and one hum per newly unsealable function.
 func _artifact_wakes(extra: int = 0) -> void:
 	if player == null or not player.alive:
 		return
 	_artifact_pending += extra + ArtifactFunctions.drink_progress(player, data, GameClock.total_days)
 	var today := GameClock.total_days
-	if _artifact_pending > 0 and _artifact_line_day != today:
+	if _artifact_pending > 0 and (_artifact_line_day < 0 or today - _artifact_line_day >= ARTIFACT_LINE_DAYS):
 		_artifact_line_day = today
 		EventBus.post("The artifact drinks the change in you (+%d energy, %d in all)." % [_artifact_pending, player.artifact_energy], "artifact")
 		_artifact_pending = 0
@@ -4580,6 +4580,7 @@ func _artifact_whisper(moment: String) -> void:
 		EventBus.post(line, "artifact")
 
 
+const ARTIFACT_LINE_DAYS := 7
 var _artifact_pending := 0
 var _artifact_line_day := -1
 var _artifact_spoils_day := -1

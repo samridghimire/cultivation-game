@@ -4022,6 +4022,23 @@ func test_new_session_drops_folded_artifact_gains() -> void:
 	assert_eq(gs._artifact_pending, 0)
 
 
+## LOG-002: the "artifact drinks the change" line posts once a week; gains in between fold into the next line.
+func test_artifact_energy_line_posts_once_a_week() -> void:
+	var gs := _game_state()
+	_start()
+	var bus := _root().get_node("EventBus")
+	gs._artifact_wakes(10)
+	assert_eq(gs._artifact_pending, 0, "the first gain posts")
+	var count: int = bus.posted_count
+	gs._artifact_wakes(10)
+	assert_eq(bus.posted_count, count, "no second line inside the window")
+	assert_eq(gs._artifact_pending, 10, "the gain is folded, not lost")
+	gs._artifact_line_day -= GameState.ARTIFACT_LINE_DAYS
+	gs._artifact_wakes(5)
+	assert_eq(gs._artifact_pending, 0, "the next week's line carries the folded gains")
+	assert_gt(bus.posted_count, count)
+
+
 func test_artifact_first_win_feeds_once() -> void:
 	var gs := _game_state()
 	var c := _start()
