@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-13 [GFX-134] Fallen Star Market has a paved avenue from the City Gate, and the Meteor Crater a scorched ring, star shards and a rope fence.
+- 2026-11-13 [SHOP-003] The Wandering Merchant sells festival foods and charms only in the month before their festival.
+- 2026-11-13 [C-343] Core Formation cultivators no longer meet only weak Qi Refining beasts, so their fights are closer.
+- 2026-11-13 [SHOP-002] A shop in the region a hint sent you to lists the item you came for first.
+- 2026-11-13 [WU-534] The season card says "an Ice Perch", names each coming festival once, and waits until other screens close.
+- 2026-11-13 [GFX-133] Qingshi's square and yards have ragged natural edges, a ring of flagstones round the big tree, and no pale boxes in winter.
+- 2026-11-13 [LOG-003] The log is quieter: tomorrow's omen only when a season task needs it, and no doubled sect-mission fight intro.
+- 2026-11-13 [SEASON-022] The season hunt says plainly where to explore for its beast, and every place that beast lives counts.
+- 2026-11-13 [WU-533] The shop's "(for you)" tag marks only what you really need, and the Everything Stall no longer claims it has no weapons.
+- 2026-11-13 [GFX-132] Every Qingshi cottage has something in its yard and a path to its door where one fits.
 - 2026-11-13 [C-359] The Azure Peak crystal errand pays like honest work instead of more than the crystal costs.
 - 2026-11-13 [WU-532] The shop lists what you need first (the hinted item, manuals you can learn, pills for your realm, better gear), marked "(for you)".
 - 2026-11-13 [WU-531] The HUD message card shows only whole messages, never the tail of one.

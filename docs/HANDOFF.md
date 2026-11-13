@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-13 (planner, 18:10 UTC)
+- 10 tasks landed (GFX-132, WU-533, SEASON-022, LOG-003, GFX-133, WU-534, SHOP-002, C-343, SHOP-003, GFX-134). Review covered
+  up to 3cc0507 (fixes inline, nothing filed). Live claim: QA-199.
+- Planner shots (1280x720; default first hour, `--season=Winter --region=misty_forest,withered_bone_marsh`): shop tags fixed,
+  Qingshi ground natural. Found: ellipse ponds and a straight stream -> GFX-135 (spec file); marsh reads as a field -> GFX-136;
+  villagers clump at the marsh entrance -> SPOT-001; flat grid fields -> GFX-140; ellipse "plates" under places -> GFX-137;
+  even tree sprinkle, no winter mist -> GFX-139; GFX-132/133/134 Follow-ups -> GFX-138.
+- No first fighting style in 12 months in the first-hour sim -> C-362 (planner default: Hunter Ma teaches Iron Fist at favor 15)
+  then GUIDE-238. LOG-004 (spec file) for the 9.5 lines/month target, SHOP-004 for SHOP-002/003 Follow-ups, QA-216 for the
+  settings leak, QA-217 for the unexplained sect-mission income drop, C-361 for thin Core wilds.
+- **Systems is thin: 3 ready (SPOT-001, LOG-004, SHOP-004)**; GUIDE-238 waits on C-362, ART-012 on QA-212.
+- Next planner: view GFX-135/136 and SPOT-001 shots when they land; refill systems from QA-215/QA-217 results.
+
 ## State on 2026-11-13 (planner, 06:10 UTC)
 - 11 tasks landed (WU-527, GFX-127, WU-529, GFX-128, WU-530, SEASON-019, SEASON-020, ART-014, C-356, C-352, QA-214). Review
   covered up to ef49021 (fixes inline, nothing filed). Live claims: GFX-129, QA-211 (a `wip` commit on its branch, not landed).
