@@ -223,7 +223,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	player.last_meditated_day = GameClock.total_days + days
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
-	EventBus.post("You cultivate for %s and gather %d qi (%s)." % [Calendar.format_duration(days), int(result["qi_gained"]), Cultivation.progress_text(player, data)])
+	_post_foldable(days, "You cultivate for %s and gather %d qi (%s)." % [Calendar.format_duration(days), int(result["qi_gained"]), Cultivation.progress_text(player, data)])
 	if result["stages_gained"] > 0:
 		EventBus.post("Your cultivation rises to %s!" % Cultivation.realm_label(player, data), "progress")
 	if result["at_bottleneck"]:
@@ -2398,10 +2398,14 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		Karma.on_kindness(player, data, npc_id, "gift")
 	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018
 	var item_name: String = data.items[item_id].get("name", item_id)
-	EventBus.post("%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else ""))
+	var accept_line := "%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else "")
+	if taste > 0:  # LOG-004: one line, not two
+		accept_line += " %s is delighted." % npcs[npc_id].name
+	EventBus.post(accept_line, "progress" if taste > 0 else "info")
 	if taste != 0:
 		world_flags["taste_%s_%s" % [npc_id, item_id]] = taste
-		EventBus.post("%s is delighted." % npcs[npc_id].name if taste > 0 else "%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "progress" if taste > 0 else "warning")
+		if taste < 0:
+			EventBus.post("%s frowns at the %s." % [npcs[npc_id].name, item_name.to_lower()], "warning")
 	_post_attitude_change(before)
 	EventBus.npc_reaction.emit(npc_id, Folk.gift_reaction(taste, birthday_gift))  # WU-486
 	if taste >= 0:
@@ -2864,6 +2868,22 @@ func learn_technique(tech_id: String) -> void:
 	EventBus.post("You have no manual for that technique.", "warning")
 
 
+## LOG-004: the last foldable summary line (text, day, posted_count after it); not saved.
+var _fold_prev: Dictionary = {}
+
+
+## Posts a practice/cultivate summary, or folds it into the previous one when nothing else was posted since (LogFold).
+func _post_foldable(days: int, text: String) -> void:
+	var today := GameClock.total_days
+	if not _fold_prev.is_empty() and int(_fold_prev["count"]) == EventBus.posted_count:
+		var merged := LogFold.fold(String(_fold_prev["text"]), int(_fold_prev["day"]), text, today)
+		if merged != "" and EventBus.replace_last(merged):
+			_fold_prev = {"text": merged, "day": today + days, "count": EventBus.posted_count}
+			return
+	EventBus.post(text)
+	_fold_prev = {"text": text, "day": today + days, "count": EventBus.posted_count}  # the day this action ends
+
+
 func practice_technique(tech_id: String, days: int) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
@@ -2874,7 +2894,7 @@ func practice_technique(tech_id: String, days: int) -> void:
 		EventBus.post(result["reason"], "warning")
 		return
 	var def: TechniqueDef = data.techniques[tech_id]
-	EventBus.post("You practice the %s for %s." % [def.name, Calendar.format_duration(days)])
+	_post_foldable(days, "You practice the %s for %s." % [def.name, Calendar.format_duration(days)])
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
@@ -4627,7 +4647,21 @@ func _post_season_digest() -> void:
 	world_flags["season_digest_idx"] = idx
 	EventBus.post("%s begins." % Calendar.season_of(today), "world")
 	for line in Guidance.season_digest(player, data, world_flags, today, current_region):
+		if not _forecast_worth_posting(line):
+			continue
 		EventBus.post(line, "world")
+
+
+## LOG-004: a "Expect mostly <w> weather in <Region>." line reaches the log only when it differs from the last forecast
+## posted for that region or is rain/snow/storm; any other line passes. Records the forecast it lets through.
+func _forecast_worth_posting(line: String) -> bool:
+	if not line.begins_with(Guidance.FORECAST_PREFIX):
+		return true
+	var key := "forecast_%s" % current_region
+	var kind := Guidance.forecast_kind(line)
+	var changed := String(world_flags.get(key, "")) != kind
+	world_flags[key] = kind
+	return changed or Guidance.is_bad_weather(kind)
 
 
 ## SEASON-004: ending a day in the region of an active festival counts as having seen it this year.

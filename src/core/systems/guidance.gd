@@ -42,6 +42,21 @@ const ARMOR_HINT_MIN_STAGE := 3  # GUIDE-069: Qi Refining stage from which an un
 const IDLE_CULTIVATION_DAYS := 30  # GUIDE-057: days without cultivating before a Qi Refining crafter is nudged
 
 
+const FORECAST_PREFIX := "Expect mostly "  # LOG-004
+
+
+## LOG-004: the weather kind of a forecast line ("Expect mostly rain weather in X." -> "rain").
+static func forecast_kind(line: String) -> String:
+	var rest := line.trim_prefix(FORECAST_PREFIX)
+	var i := rest.find(" weather")
+	return rest.substr(0, i) if i >= 0 else ""
+
+
+## LOG-004: forecasts of these always reach the log.
+static func is_bad_weather(kind: String) -> bool:
+	return kind in ["rain", "snow", "storm", "thunderstorm", "blizzard"]
+
+
 ## SEASON-001: up to SEASON_DIGEST_MAX short lines for the season `day` falls in, from what the player could know:
 ## seasonal forage and season-bound roamers in explored regions, festivals this season, the region's usual weather.
 ## The current region's lines come first, then festivals, then other explored regions. Pure.
@@ -175,7 +190,7 @@ static func _season_region_lines(data: GameData, rid: String, key: String, with_
 				best_w = float(weights[kind])
 				best = kind
 		if best != "":
-			out.append("Expect mostly %s weather in %s." % [best, rname])
+			out.append("%s%s weather in %s." % [FORECAST_PREFIX, best, rname])
 	return out
 
 

@@ -4,6 +4,8 @@ extends Node
 
 ## A line for the in-game message log. category: info, progress, warning, danger, karma, people.
 signal message_posted(text: String, category: String)
+## LOG-004: the newest log line was rewritten in place (a folded repeat); UIs refresh that row.
+signal message_replaced(text: String, category: String)
 ## Any player state changed; UI should refresh.
 signal player_changed
 signal session_started
@@ -140,6 +142,17 @@ func post(text: String, category: String = "info", topic_override: String = "") 
 	if history.size() > HISTORY_LIMIT:
 		history = history.slice(history.size() - HISTORY_LIMIT)
 	message_posted.emit(text, category)
+
+
+## LOG-004: rewrite the newest history entry instead of appending (false when there is none).
+func replace_last(text: String, category: String = "info") -> bool:
+	if history.is_empty():
+		return false
+	history[-1]["text"] = text
+	history[-1]["category"] = category
+	history[-1]["day"] = GameClock.total_days
+	message_replaced.emit(text, category)
+	return true
 
 
 ## Forget past messages (a new or loaded session starts with an empty log).

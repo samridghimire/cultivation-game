@@ -250,7 +250,7 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 		if out.size() >= MAX_REMINDERS:
 			break
 		# WILD-011: only a beast that is close and that the player has not beaten yet is worth a reminder.
-		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"]))
+		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"])) or _is_far(data, region_id, String(e["region"]))  # LOG-004: within 3 travel days
 				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
 			continue
 		if String(e["kind"]) == "festival_active" and _festival_running_today(active_events, String(e.get("festival_id", "")), today):

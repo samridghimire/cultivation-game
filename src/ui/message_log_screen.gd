@@ -96,6 +96,7 @@ func _init() -> void:
 	footer.add_child(_count)
 	footer.add_child(UIStyle.label("[PgUp/PgDn] or right stick: scroll", 14, DATE_COLOR))
 	EventBus.message_posted.connect(_on_message_posted_rebuild)
+	EventBus.message_replaced.connect(_on_message_posted_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:

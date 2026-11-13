@@ -1,0 +1,103 @@
+extends TestCase
+## LOG-004: folding repeated practice/cultivate lines, one-line gifts, and fewer forecast lines.
+
+
+func _gs() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+
+
+func _start() -> CharacterData:
+	var c := CharacterFactory.create("Fold", _gs().data, seeded_rng(11))
+	c.spiritual_roots = {"fire": 80}
+	_gs().start_session(c)
+	return c
+
+
+func test_fold_same_technique() -> void:
+	var got := LogFold.fold("You practice the Iron Fist for 5 days.", 10, "You practice the Iron Fist for 5 days.", 11)
+	assert_eq(got, "You practice the Iron Fist for 10 days.")
+
+
+func test_fold_does_not_merge_different_technique_or_template_or_gap() -> void:
+	var a := "You practice the Iron Fist for 5 days."
+	assert_eq(LogFold.fold(a, 10, "You practice the Basic Breathing for 5 days.", 10), "")
+	assert_eq(LogFold.fold(a, 10, "You cultivate for 5 days and gather 3 qi (1/2 qi to the 2nd Layer).", 10), "")
+	assert_eq(LogFold.fold(a, 10, a, 12), "")
+	assert_eq(LogFold.fold(a, 10, "Something else.", 10), "")
+	assert_eq(LogFold.fold("Something else.", 10, a, 10), "")
+
+
+func test_fold_cultivate_sums_qi_and_days() -> void:
+	var got := LogFold.fold("You cultivate for 5 days and gather 12 qi (3/40 qi to the 2nd Layer).", 4,
+			"You cultivate for 1 month and gather 30 qi (33/40 qi to the 2nd Layer).", 5)
+	assert_eq(got, "You cultivate for 1 month and 5 days and gather 42 qi (33/40 qi to the 2nd Layer).")
+
+
+func test_parse_duration_roundtrip() -> void:
+	for d: int in [1, 5, 30, 35, 360, 400, 800]:
+		assert_eq(LogFold.parse_duration(Calendar.format_duration(d)), d)
+
+
+func test_back_to_back_summaries_fold_in_the_log() -> void:
+	_start()
+	var gs := _gs()
+	var before := EventBus.history.size()
+	var day: int = GameClock.total_days
+	gs._post_foldable(3, "You practice the Iron Fist for 3 days.")
+	gs._post_foldable(2, "You practice the Iron Fist for 2 days.")
+	assert_eq(EventBus.history.size() - before, 1)
+	assert_eq(String(EventBus.history[-1]["text"]), "You practice the Iron Fist for 5 days.")
+	EventBus.post("Something else.")  # another line in between: no fold
+	gs._post_foldable(2, "You practice the Iron Fist for 2 days.")
+	assert_eq(EventBus.history.size() - before, 3)
+	assert_eq(GameClock.total_days, day)
+	gs.end_session()
+
+
+func test_practice_action_posts_through_the_fold() -> void:
+	var c := _start()
+	var gs := _gs()
+	Techniques.learn(c, gs.data, "basic_breathing")
+	gs.practice_technique("basic_breathing", 1)
+	assert_false(gs._fold_prev.is_empty())
+	assert_true(String(gs._fold_prev["text"]).begins_with("You practice the"))
+	gs.end_session()
+
+
+func test_loved_gift_posts_one_line() -> void:
+	var c := _start()
+	var gs := _gs()
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(8), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, npc.id, item_id) > 0 and Family.gift_value(gs.data, item_id) > 0:
+			liked = item_id
+			break
+	assert_true(liked != "")
+	c.add_item(liked, 1)
+	gs.npc_favor[npc.id] = 0
+	var before := EventBus.history.size()
+	gs.give_gift(npc.id, liked)
+	var delighted := 0
+	for i in range(before, EventBus.history.size()):
+		var t := String(EventBus.history[i]["text"])
+		if t.contains("is delighted"):
+			delighted += 1
+			assert_true(t.contains("accepts your"), t)
+	assert_eq(delighted, 1)
+	gs.end_session()
+
+
+func test_forecast_only_when_changed_or_bad() -> void:
+	_start()
+	var gs := _gs()
+	gs.current_region = "qingshi_village"
+	var clear := "Expect mostly clear weather in Qingshi Village."
+	assert_true(gs._forecast_worth_posting(clear))
+	assert_false(gs._forecast_worth_posting(clear))
+	assert_true(gs._forecast_worth_posting("Expect mostly cloudy weather in Qingshi Village."))
+	assert_true(gs._forecast_worth_posting("Expect mostly rain weather in Qingshi Village."))
+	assert_true(gs._forecast_worth_posting("Expect mostly rain weather in Qingshi Village."))
+	assert_true(gs._forecast_worth_posting("In season in Qingshi Village: mugwort."))
+	assert_eq(Guidance.forecast_kind(clear), "clear")
+	gs.end_session()

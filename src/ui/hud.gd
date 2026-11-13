@@ -316,6 +316,7 @@ func _ready() -> void:
 	EventBus.region_changed.connect(_on_region_changed_refresh)
 	EventBus.region_changed.connect(_on_arrival)
 	EventBus.message_posted.connect(_on_message)
+	EventBus.message_replaced.connect(_on_message_replaced)
 	Settings.changed.connect(_on_setting_changed)
 	EventBus.interaction_target_changed.connect(_on_target_changed)
 	InputConfig.controls_changed.connect(_refresh_key_hints)
@@ -1274,6 +1275,20 @@ static func bottleneck_hint(c: CharacterData, data: GameData) -> String:
 ## The log line for a message seen `repeat` times in a row ("text", "text (x2)", ...).
 static func collapsed_line(text: String, repeat: int) -> String:
 	return text if repeat <= 1 else "%s (x%d)" % [text, repeat]
+
+
+## LOG-004: the last row was rewritten (a folded repeat): swap it and rebuild the log.
+func _on_message_replaced(text: String, category: String) -> void:
+	if _log_lines.is_empty():
+		return
+	_repeat = 1
+	_last_text = text
+	_last_category = category
+	_log_lines[-1] = _log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text)
+	_log.clear()
+	for line: String in _log_lines:
+		_log.append_text(line)
+	_fit_log_card.call_deferred()
 
 
 func _on_message(text: String, category: String) -> void:
