@@ -26,11 +26,11 @@ func test_generated_in_region_is_sorted_and_skips_named_and_dead() -> void:
 
 
 func test_spot_positions_use_spots_then_ring() -> void:
-	var spots := [[10, 20], [30, 40]]
+	var spots := [[10, 20], [90, 40]]
 	var pos := Npcs.spot_positions(4, spots, Vector2(500, 500))
 	assert_eq(pos.size(), 4)
 	assert_eq(pos[0], Vector2(10, 20))
-	assert_eq(pos[1], Vector2(30, 40))
+	assert_eq(pos[1], Vector2(90, 40))
 	assert_true(pos[2].distance_to(Vector2(500, 500)) > 100.0)
 	assert_true(pos[2] != pos[3], "overflow NPCs do not stack")
 

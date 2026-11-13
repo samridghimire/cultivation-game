@@ -346,8 +346,17 @@ static func spot_positions(count: int, spots: Array, center: Vector2, avoid: Arr
 	var candidate := 0
 	for i in count:
 		if i < spots.size():
-			out.append(Vector2(float(spots[i][0]), float(spots[i][1])))
-			continue
+			var sp := Vector2(float(spots[i][0]), float(spots[i][1]))
+			var gap_ok := true
+			for q in out:
+				if sp.distance_to(q) < SPOT_MIN_GAP:
+					gap_ok = false
+			for q in avoid:
+				if sp.distance_to(q) < SPOT_MIN_GAP:
+					gap_ok = false
+			if gap_ok:
+				out.append(sp)
+				continue
 		var pos := center
 		for tries in SPOT_SEARCH_CAP:
 			var radius := 140.0 + 50.0 * float(candidate / 8)
@@ -370,7 +379,11 @@ const HAUNT_STORMY: PackedStringArray = ["rain", "snow"]
 const HAUNT_OUTDOOR: PackedStringArray = ["gather", "field", "well", "pond", "stall", "landmark", "meditation", "explore", "travel", "bounty_board"]
 const HAUNT_SHELTER_PLACES: PackedStringArray = ["merchant", "workshop", "clinic", "sect_hall", "orphanage", "auction"]
 ## Villagers at one place stand at least this far apart.
-const HAUNT_SPACING := 28.0
+const HAUNT_SPACING := 40.0
+## SPOT-001: at most this many adults stand at one place on a day.
+const HAUNT_MAX_PER_PLACE := 2
+## SPOT-001: spot_positions keeps this far between any two returned spots.
+const SPOT_MIN_GAP := 56.0
 
 
 ## Where `npc` stands on `day` (WORLD-001, pure): each villager keeps a daily round
@@ -388,12 +401,63 @@ static func haunt_positions(people: Array[CharacterData], region: Dictionary, da
 	var sorted := people.duplicate()
 	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
 	var placed: Array[Vector2] = []
+	var counts := {}
 	var out := {}
 	for c: CharacterData in sorted:
-		var pos := _haunt_at(c, region, day, c.age_years() >= adult_age, weather, placed, visit_place if c.id == visitor_id else shared.get(c.id, {}))
+		var adult := c.age_years() >= adult_age
+		var fixed: Dictionary = visit_place if c.id == visitor_id else shared.get(c.id, {})
+		var place := fixed
+		if place.is_empty():
+			place = _capped_place(c, region, day, adult, weather, counts)
+		var pos := _haunt_at(c, region, day, adult, weather, placed, place)
 		placed.append(pos)
 		out[c.id] = pos
 	return out
+
+
+## SPOT-001: the place each of `people` stands at on `day` (id -> place dict, {} for an npc_spots fallback),
+## with at most HAUNT_MAX_PER_PLACE adults per place. Same order and rules as `haunt_positions`.
+static func haunt_places(people: Array[CharacterData], region: Dictionary, day: int, adult_age: int, weather: String = "") -> Dictionary:
+	var sorted := people.duplicate()
+	sorted.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id.naturalnocasecmp_to(b.id) < 0)
+	var counts := {}
+	var out := {}
+	for c: CharacterData in sorted:
+		var pl := _capped_place(c, region, day, c.age_years() >= adult_age, weather, counts)
+		out[c.id] = {} if pl.has("none") else pl
+	return out
+
+
+static func _place_key(place: Dictionary) -> String:
+	return "%s@%s" % [String(place.get("type", "")), str(place.get("pos", []))]
+
+
+## The villager's usual haunt place, or the nearest other allowed place with room when it is full; {} (the
+## npc_spots fallback) when every place is full. Children are not capped.
+static func _capped_place(c: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, counts: Dictionary) -> Dictionary:
+	var place := haunt_place(c, region, day, adult, weather)
+	if place.is_empty() or not adult:
+		return place if not place.is_empty() else {"none": true}
+	var key := _place_key(place)
+	if int(counts.get(key, 0)) < HAUNT_MAX_PER_PLACE:
+		counts[key] = int(counts.get(key, 0)) + 1
+		return place
+	var from := _rect_of(place).get_center()
+	var pool: Array[Dictionary] = _shelters(region) if HAUNT_STORMY.has(weather) and HAUNT_OUTDOOR.has(String(place.get("type", ""))) else _haunt_anchors(region, true)
+	var best: Dictionary = {}
+	var best_d := INF
+	for cand: Dictionary in pool:
+		var ck := _place_key(cand)
+		if int(counts.get(ck, 0)) >= HAUNT_MAX_PER_PLACE:
+			continue
+		var d := _rect_of(cand).get_center().distance_to(from)
+		if d < best_d:
+			best_d = d
+			best = cand
+	if best.is_empty():
+		return {"none": true}
+	counts[_place_key(best)] = int(counts.get(_place_key(best), 0)) + 1
+	return best
 
 
 const STOP_TRAVEL_CLEAR := 40.0
@@ -456,7 +520,7 @@ static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vecto
 
 
 ## FOLK-032: generated villagers keep this far from every travel place (signpost) and the region's arrival point.
-const ARRIVAL_CLEAR := 64.0
+const ARRIVAL_CLEAR := 120.0
 
 
 ## FOLK-032: the points a newcomer arrives at: every travel place centre plus the region spawn.
@@ -488,7 +552,21 @@ static func nudge_arrival(pos: Vector2, region: Dictionary) -> Vector2:
 			return cur
 		var dir := (cur - near).normalized() if best > 0.01 else Vector2.RIGHT
 		cur = nudge_stop(near + dir * (best + 8.0), region)
+	# SPOT-001: a building blocks the way out; take the nearest clear point of a ring search instead.
+	var origin := pos
+	for step in range(0, 30):
+		for k in 16:
+			var cand := origin + Vector2.from_angle(TAU * float(k) / 16.0) * (8.0 * float(step))
+			if stop_is_clear(cand, region) and _arrival_ok(cand, points):
+				return cand
 	return cur
+
+
+static func _arrival_ok(pos: Vector2, points: Array[Vector2]) -> bool:
+	for a in points:
+		if pos.distance_to(a) < ARRIVAL_CLEAR:
+			return false
+	return true
 
 
 ## FOLK-032: after settling, a generated villager standing within HAUNT_SPACING of an earlier one in `stands`
@@ -509,7 +587,7 @@ static func spread_stands(stands: Array[Vector2], region: Dictionary) -> Array[V
 				break
 			var dir := (cur - crowd).normalized() if cur.distance_to(crowd) > 0.01 else Vector2.DOWN
 			cur = nudge_arrival(nudge_stop(crowd + dir * (HAUNT_SPACING + 4.0), region), region)
-		out.append(cur)
+		out.append(nudge_arrival(cur, region))  # SPOT-001: never end inside the entrance clearance
 	return out
 
 
@@ -541,7 +619,7 @@ static func _haunt_at(npc: CharacterData, region: Dictionary, day: int, adult: b
 
 static func _haunt_raw(npc: CharacterData, region: Dictionary, day: int, adult: bool, weather: String, placed: Array[Vector2], visit_place: Dictionary = {}) -> Vector2:
 	var h := absi(hash(npc.id))
-	var place := haunt_place(npc, region, day, adult, weather, visit_place)
+	var place := {} if visit_place.has("none") else haunt_place(npc, region, day, adult, weather, visit_place)
 	if place.is_empty():
 		var spots: Array = region.get("npc_spots", [])
 		if spots.is_empty():
@@ -722,7 +800,7 @@ static func _haunt_clear(pos: Vector2, blocked: Array[Rect2]) -> bool:
 
 static func _spot_clear(pos: Vector2, avoid: Array[Vector2], chosen: Array[Vector2]) -> bool:
 	for p in avoid:
-		if pos.distance_to(p) < SPOT_CLEARANCE:
+		if pos.distance_to(p) < SPOT_MIN_GAP:
 			return false
 	for p in chosen:
 		if pos.distance_to(p) < SPOT_CLEARANCE:
