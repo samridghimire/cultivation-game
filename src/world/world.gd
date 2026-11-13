@@ -45,6 +45,7 @@ var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+var _yards: Dictionary = {}  ## GFX-127: Scenery.village_yards of a map.yards region, else empty
 var _market_dress: Dictionary = {}  ## GFX-126: Scenery.market_props of a map.market region, else empty
 var _marsh: Dictionary = {}  ## GFX-125: Scenery.marsh_features of a bog region, else empty
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
@@ -490,6 +491,7 @@ func _build_decor() -> void:
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
 	_relief = Scenery.relief_layout(_region)
 	_marsh = {}
+	_yards = Scenery.village_yards(_region, map_size)
 	_market_dress = Scenery.market_props(_region, map_size) if _region.get("map", {}).has("market") else {}
 	if str(_region.get("map", {}).get("ground_style", "")) == "bog":
 		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region))
@@ -1152,6 +1154,7 @@ func _draw() -> void:
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
 			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
+	_draw_yard_ground()
 	_draw_market_ground()
 	_draw_relief(map)
 	_draw_crags(map)
@@ -1161,6 +1164,7 @@ func _draw() -> void:
 		_draw_landmark(lm)
 	_draw_marsh_life(map)
 	_draw_market_props()
+	_draw_yard_props()
 	if Scenery.is_snowy(_season) and not bool(map.get("no_snow", false)):
 		for lm: Dictionary in map.get("landmarks", []):  # GFX-114: after the ponds, so the ice shows
 			if lm.get("kind", "") == "jetty":
@@ -1181,6 +1185,65 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-127: footpaths to the doors and packed-earth yards (walked-earth colours, snowy tint in Winter).
+func _draw_yard_ground() -> void:
+	if _yards.is_empty():
+		return
+	var snowy := Scenery.is_snowy(_season)
+	var base := Color(_region.get("map", {}).get("path_color", "8a7350"))
+	var fill := base.lightened(0.06) if not snowy else Color(0.86, 0.88, 0.93)
+	var edge := base.darkened(0.12) if not snowy else Color(0.72, 0.75, 0.82)
+	for y: Dictionary in _yards["yards"]:
+		draw_rect((y["rect"] as Rect2).grow(2.0), edge)
+		draw_rect(y["rect"], fill)
+	for f: Dictionary in _yards["footpaths"]:
+		draw_rect((f["rect"] as Rect2).grow(1.0), edge)
+	for f: Dictionary in _yards["footpaths"]:
+		draw_rect(f["rect"], fill)
+
+
+## GFX-127: woodpiles, water jars, vegetable rows, washing lines and benches beside the houses.
+func _draw_yard_props() -> void:
+	if _yards.is_empty():
+		return
+	var snowy := Scenery.is_snowy(_season)
+	for p: Dictionary in _yards["props"]:
+		var r: Rect2 = p["rect"]
+		draw_rect(Rect2(r.position + Vector2(1, r.size.y - 2), Vector2(r.size.x, 3)), Color(0, 0, 0, 0.25))
+		match str(p["kind"]):
+			"woodpile":
+				for i in 3:
+					draw_rect(Rect2(r.position + Vector2(0, i * 4), Vector2(r.size.x, 4)), Color("8a6238") if i % 2 else Color("a07a48"))
+					draw_rect(Rect2(r.position + Vector2(0, i * 4), Vector2(r.size.x, 4)), Color("4a3220"), false, 1.0)
+			"water_jar":
+				draw_rect(Rect2(r.position + Vector2(1, 2), Vector2(8, 10)), Color("8a5a3a"))
+				draw_rect(Rect2(r.position + Vector2(2, 0), Vector2(6, 3)), Color("5a3a24"))
+			"veg_row":
+				draw_rect(r, Color("4a3624"))
+				for row in 3:
+					var yy := r.position.y + 3.0 + row * 6.0
+					for k in 6:
+						var xx := r.position.x + 3.0 + k * 6.0
+						if snowy:
+							draw_rect(Rect2(xx, yy, 4, 3), Color(0.93, 0.95, 1.0))
+						else:
+							var autumn := _season == "Autumn"
+							draw_rect(Rect2(xx, yy, 4, 4), Color("c8742a") if autumn and k % 2 else (Color("8a6a3a") if autumn else (Color("6f9a4a") if k % 2 else Color("8cb860"))))
+			"washing_line":
+				draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(2, r.size.y - 2)), Color("5a3a24"))
+				draw_rect(Rect2(r.end - Vector2(2, r.size.y - 2), Vector2(2, r.size.y - 2)), Color("5a3a24"))
+				draw_line(r.position + Vector2(1, 3), Vector2(r.end.x - 1.0, r.position.y + 3.0), Color("3a2a1a"), 1.0)
+				if not snowy:
+					for k in 3:
+						draw_rect(Rect2(r.position.x + 6.0 + k * 11.0, r.position.y + 4.0, 7, 9), Color("e8e4d8") if k != 1 else Color("9ab0c8"))
+			_:
+				draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 4)), Color("a07a48"))
+				draw_rect(Rect2(r.position + Vector2(2, 6), Vector2(2, 4)), Color("5a4228"))
+				draw_rect(Rect2(r.end - Vector2(4, 4), Vector2(2, 4)), Color("5a4228"))
+		if snowy and str(p["kind"]) != "washing_line":
+			draw_rect(Rect2(r.position, Vector2(r.size.x, 2)), Color(0.93, 0.95, 1.0, 0.85))
 
 
 ## GFX-126: block cobbles, packed-earth patches and the scorched ring around a crater (under roads' neighbours, over the ground).
@@ -1596,6 +1659,10 @@ func _draw_landmark(lm: Dictionary) -> void:
 	if PixelLandmark.supports(str(lm["kind"])):
 		var water := Color(str(lm["color"])) if lm.has("color") else Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 		var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
+		if lm["kind"] == "house":
+			var li: int = (_region.get("map", {}).get("landmarks", []) as Array).find(lm)
+			if _yards.get("roof", {}).has(li):
+				water = _yards["roof"][li]  # GFX-127: a house takes its roof colour through the tint
 		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")))
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		if lm["kind"] == "house":

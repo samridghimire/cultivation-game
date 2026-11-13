@@ -858,6 +858,8 @@ static func _relief_fits(r: Rect2, bounds: Rect2, forbid: Array[Rect2], points: 
 static func validate(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	for region: Dictionary in data.regions.values():
+		if region.get("map", {}).has("yards") and not region["map"]["yards"] is bool:
+			errors.append("Region '%s' map.yards must be a bool" % region["id"])
 		var plaza: Variant = region.get("map", {}).get("plaza", null)
 		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
 			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
@@ -1231,6 +1233,147 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()):
 			cobbles.append(cr)
 	return {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch}
+
+
+## GFX-127: roof colours a village house can take (slate blue, thatch, red tile, grey tile).
+const YARD_ROOFS: Array[String] = ["4a6fa5", "c9a35a", "a8443a", "6b6f78"]
+const YARD_BUILDINGS: Array[String] = ["workshop", "clinic", "orphanage", "sect_hall", "family_home", "auction"]
+const YARD_PATH_W := 11.0
+const YARD_PATH_MAX := 260.0
+const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10)}
+
+
+## GFX-127: the lived-in dressing of a village (regions with `map.yards`): {"footpaths": [{rect, door}] (door = index of the
+## building; each building gets an L of at most two rects from its door to the nearest road), "yards": [{rect}] packed earth under
+## each house, "props": [{kind, rect}] beside each house, "roof": {landmark index: Color}}. Seeded by region id; empty otherwise.
+static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
+	var out := {"footpaths": [] as Array[Dictionary], "yards": [] as Array[Dictionary], "props": [] as Array[Dictionary], "roof": {}}
+	var map: Dictionary = region.get("map", {})
+	if not bool(map.get("yards", false)):
+		return out
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|yards" % region.get("id", ""))
+	var roads: Array[Rect2] = []
+	for r in map.get("paths", []):
+		roads.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+	var keep: Array[Rect2] = []  # place keepouts with the label band, grown by 10
+	for pl: Dictionary in region.get("places", []):
+		var k := Npcs.place_keepout(pl)
+		keep.append(Rect2(k.position - Vector2(0, 26), k.size + Vector2(0, 26)).grow(10.0))
+	for a in _arrival_points(region):
+		keep.append(Rect2(a - Vector2(90, 90), Vector2(180, 180)))
+	var lms := landmark_rects(region)
+	var houses: Array[int] = []
+	var buildings: Array[Rect2] = []  # footprints whose door gets a path (houses first, then places)
+	var own_lm: Array[int] = []  # landmark index of each building, -1 for a place
+	var own_pl: Array[int] = []
+	var lm_list: Array = map.get("landmarks", [])
+	for i in lm_list.size():
+		if str(lm_list[i].get("kind", "")) == "house":
+			houses.append(i)
+			buildings.append(lms[i])
+			own_lm.append(i)
+			own_pl.append(-1)
+	var places: Array = region.get("places", [])
+	for j in places.size():
+		var pl: Dictionary = places[j]
+		if str(pl.get("type", "")) in YARD_BUILDINGS:
+			var pos: Array = pl["pos"]
+			var sz: Array = pl["size"]
+			buildings.append(Rect2(float(pos[0]) - float(sz[0]) / 2.0, float(pos[1]) - float(sz[1]) / 2.0, float(sz[0]), float(sz[1])))
+			own_lm.append(-1)
+			own_pl.append(j)
+	var paths_out: Array[Dictionary] = out["footpaths"]
+	for b in buildings.size():
+		var br: Rect2 = buildings[b]
+		var door := Vector2(br.get_center().x, br.end.y)
+		var best: Array[Rect2] = []
+		var best_len := INF
+		var touching := false
+		for road in roads:
+			if road.grow(1.0).has_point(door):
+				touching = true
+			var cand: Array[Rect2] = []
+			var length := 0.0
+			var w := YARD_PATH_W
+			if road.size.x >= road.size.y:  # a horizontal road
+				if road.position.y >= door.y:  # below: straight down
+					cand = [Rect2(door.x - w / 2.0, door.y, w, road.position.y + 1.0 - door.y)]
+					length = road.position.y - door.y
+				else:  # above: along the bottom edge to the nearer side, then up
+					var side_x := br.end.x + 8.0
+					if door.x - (br.position.x - 8.0) < side_x - door.x:
+						side_x = br.position.x - 8.0
+					var x0 := minf(door.x, side_x) - w / 2.0
+					cand = [Rect2(x0, door.y, absf(side_x - door.x) + w, w), Rect2(side_x - w / 2.0, road.end.y - 1.0, w, door.y + w - road.end.y + 1.0)]
+					length = absf(side_x - door.x) + door.y - road.end.y
+			else:  # a vertical road: down a step, then sideways
+				var gap := road.position.x - door.x if road.position.x > door.x else door.x - road.end.x
+				if gap < 0.0:
+					touching = true
+					continue
+				var x1 := door.x if road.position.x > door.x else road.end.x - 1.0
+				var x2 := road.position.x + 1.0 if road.position.x > door.x else door.x
+				cand = [Rect2(door.x - w / 2.0, door.y, w, w), Rect2(x1, door.y, x2 - x1, w)]
+				length = gap
+			if length < best_len:
+				best_len = length
+				best = cand
+		if touching or best.is_empty() or best_len > YARD_PATH_MAX:
+			continue
+		var blocked := false
+		for r in best:
+			if r.position.x < 8.0 or r.position.y < 8.0 or r.end.x > size.x - 8.0 or r.end.y > size.y - 8.0:
+				blocked = true
+			for q in lms.size():
+				if q != own_lm[b] and lms[q].intersects(r) and q < lm_list.size() and str(lm_list[q].get("kind", "")) != "stream":
+					blocked = true
+			for j in places.size():
+				if j != own_pl[b] and keep[j].intersects(r):
+					blocked = true
+		if blocked:
+			continue
+		for r in best:
+			paths_out.append({"rect": r, "door": b})
+	# yards, roofs and props, per house
+	var yards_out: Array[Dictionary] = out["yards"]
+	var props_out: Array[Dictionary] = out["props"]
+	var roof_out: Dictionary = out["roof"]
+	var start := rng.randi() % YARD_ROOFS.size()
+	var solid: Array[Rect2] = []
+	solid.append_array(roads)
+	solid.append_array(keep)
+	for p: Dictionary in paths_out:
+		solid.append(p["rect"])
+	for n in houses.size():
+		var i: int = houses[n]
+		var hr: Rect2 = lms[i]
+		roof_out[i] = Color(YARD_ROOFS[(start + n) % YARD_ROOFS.size()])
+		yards_out.append({"rect": Rect2(hr.get_center().x - hr.size.x * 0.7, hr.end.y - 4.0, hr.size.x * 1.4, 24.0)})
+		var kinds := YARD_PROP_SIZES.keys()
+		var left := rng.randi() % 2 == 0
+		for m in rng.randi_range(1, 2):
+			var kind: String = kinds[rng.randi() % kinds.size()]
+			var psz: Vector2 = YARD_PROP_SIZES[kind]
+			var px := hr.position.x - psz.x - 22.0 if left else hr.end.x + 22.0
+			var rect := Rect2(px, hr.end.y - psz.y - 2.0 - 26.0 * m + 26.0, psz.x, psz.y)
+			if _market_blocked(rect, solid, [] as Array[Rect2], lms, 6.0, size, Rect2()):
+				continue
+			var clash := false
+			for q: Dictionary in props_out:
+				if (q["rect"] as Rect2).grow(4.0).intersects(rect):
+					clash = true
+			if not clash:
+				props_out.append({"kind": kind, "rect": rect})
+			left = not left if m == 0 else left
+	return out
+
+
+static func _arrival_points(region: Dictionary) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if region.has("spawn"):
+		out.append(Vector2(float(region["spawn"][0]), float(region["spawn"][1])))
+	return out
 
 
 static func _market_blocked(rect: Rect2, roads: Array[Rect2], solid: Array[Rect2], lms: Array[Rect2], gap: float, size: Vector2, own: Rect2) -> bool:
