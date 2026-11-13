@@ -205,6 +205,9 @@ static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 		out.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size).grow(CLEARANCE))
 	for r in landmark_rects(region):
 		out.append(r.grow(CLEARANCE / 2.0))
+	var sq: Variant = region.get("map", {}).get("square", null)
+	if sq is Array and sq.size() == 4:  # GFX-131: nothing grows in the village square
+		out.append(Rect2(float(sq[0]), float(sq[1]), float(sq[2]), float(sq[3])))
 	return out
 
 
@@ -590,8 +593,12 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, 0.0, 0.0 if side == 0 else width - gutter, len_total, gutter), "shade": 0.0, "flag": "gutter"})
 		for row in rows:
 			pos = inset
+			var first := true
 			while pos < len_total - inset - 6.0:
 				var l := minf((18.0 + rng.randf() * 22.0) if main_street else (10.0 + rng.randf() * 16.0), len_total - inset - pos)
+				if main_street and first and row % 2 == 1:
+					l = minf(l * 0.5, len_total - inset - pos)  # GFX-131: odd rows start half a slab later, so slab joints never line up
+				first = false
 				var roll := rng.randf()
 				var flag := "crack" if roll < 0.12 else ("gap" if roll < 0.2 else "")
 				if main_street and flag == "":
@@ -606,16 +613,42 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 			pos += l
 	else:
 		var strip := 3.0
-		var seg := 40.0
-		pos = 0.0
-		while pos < len_total:
-			var l := minf(seg, len_total - pos)
-			for side in 2:
-				var off := inset if side == 0 else width - inset - strip
-				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, pos, off, l, strip), "shade": -0.5, "flag": ""})
-			for off_f: float in [0.3, 0.62]:
-				out.append({"kind": "rut", "rect": _road_rect(path_rect, along_x, pos, width * off_f - 2.0, l, 4.0), "shade": -0.3, "flag": ""})
-			pos += seg
+		# GFX-131: roads that wander: broken edge strips, wobbling ruts, no ruts near a crossing.
+		var crossings: Array[Rect2] = []
+		for pr: Variant in map.get("paths", []):
+			var pa: Array = pr
+			var other := Rect2(float(pa[0]), float(pa[1]), float(pa[2]), float(pa[3]))
+			if other != path_rect and other.grow(40.0).intersects(path_rect):
+				crossings.append(other.grow(40.0))
+		for side in 2:
+			pos = rng.randf() * 8.0
+			while pos < len_total:
+				var l := minf(rng.randf_range(10.0, 28.0), len_total - pos)
+				var th := rng.randf_range(2.0, 4.0)
+				var base_off := inset if side == 0 else width - inset - th
+				var shift := float(rng.randi_range(0, 2)) * (1.0 if side == 0 else -1.0)
+				out.append({"kind": "edge", "rect": _road_rect(path_rect, along_x, pos, base_off + shift, l, th), "shade": -0.5, "flag": ""})
+				var gap := rng.randf_range(0.0, 8.0)
+				if gap > 4.0 and rng.randf() < 0.5:
+					var gx := pos + l + gap * 0.5
+					if gx < len_total - 3.0:
+						out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, gx, base_off + shift + (1.0 if side == 0 else -1.0), 3.0, 4.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+				pos += l + gap
+		for off_f: float in [0.3, 0.62]:
+			pos = rng.randf() * 10.0
+			var wob := 0.0
+			while pos < len_total:
+				var l := minf(rng.randf_range(14.0, 36.0), len_total - pos)
+				wob = clampf(wob + float(rng.randi_range(-2, 2)), -3.0, 3.0)
+				var rr := _road_rect(path_rect, along_x, pos, width * off_f - 2.0 + wob, l, 4.0)
+				var near := false
+				for c in crossings:
+					if c.intersects(rr):
+						near = true
+						break
+				if not near:
+					out.append({"kind": "rut", "rect": rr, "shade": -0.3, "flag": ""})
+				pos += l + rng.randf_range(4.0, 12.0)
 		var n := int(len_total / 22.0)
 		for i in n:
 			var k := "puddle" if style == "bog" else "tuft"
@@ -863,6 +896,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		var plaza: Variant = region.get("map", {}).get("plaza", null)
 		if plaza != null and not (plaza is Array and plaza.size() == 4 and plaza.all(func(v: Variant) -> bool: return v is float or v is int) and float(plaza[2]) > 0.0 and float(plaza[3]) > 0.0):
 			errors.append("Region '%s' map.plaza must be [x, y, w, h] with w, h > 0" % region["id"])
+		var square: Variant = region.get("map", {}).get("square", null)
+		if square != null and not (square is Array and square.size() == 4 and square.all(func(v: Variant) -> bool: return v is float or v is int) and float(square[2]) > 0.0 and float(square[3]) > 0.0):
+			errors.append("Region '%s' map.square must be [x, y, w, h] with w, h > 0" % region["id"])
 		var high: Variant = region.get("map", {}).get("high", null)
 		if high != null:
 			if not high is Dictionary:
@@ -1251,6 +1287,77 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()):
 			cobbles.append(cr)
 	return {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch}
+
+
+## GFX-131: the village square (map.square [x, y, w, h]): a soft-edged patch of packed earth with worn patches, one big old
+## tree ringed with stones, benches and a lantern post. Pure and seeded by the region id. Empty without map.square.
+## {outline: PackedVector2Array, rect: Rect2, patches: [{rect, shade}], tree: {pos, r} or {}, props: [{kind, rect}]}.
+static func village_square(region: Dictionary) -> Dictionary:
+	var sq: Variant = region.get("map", {}).get("square", null)
+	if not (sq is Array and sq.size() == 4):
+		return {}
+	var rect := Rect2(float(sq[0]), float(sq[1]), float(sq[2]), float(sq[3]))
+	var seed_value := hash("%s|square" % region.get("id", ""))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var keep: Array[Rect2] = []
+	for r: Variant in region.get("map", {}).get("paths", []):
+		keep.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+	for pl: Dictionary in region.get("places", []):
+		keep.append(Npcs.place_keepout(pl).grow(12.0))
+	keep.append_array(landmark_rects(region))
+	var arrival := _arrival_points(region)
+	var patches: Array[Dictionary] = []
+	for i in rng.randi_range(10, 16):
+		var pr := Rect2(rect.position.x + rng.randf_range(10.0, rect.size.x - 50.0), rect.position.y + rng.randf_range(8.0, rect.size.y - 30.0), rng.randf_range(20.0, 44.0), rng.randf_range(10.0, 22.0))
+		patches.append({"rect": pr.intersection(rect), "shade": rng.randf() * 2.0 - 1.0})
+	var tree := {}
+	var taken: Array[Rect2] = []
+	var fits: Array[Vector2] = []
+	var gy := rect.position.y
+	while gy <= rect.end.y:
+		var gx := rect.position.x
+		while gx <= rect.end.x:
+			var c := Vector2(gx, gy)
+			var foot := Rect2(c - Vector2(20, 20), Vector2(40, 40))
+			var label_band := Rect2(foot.position - Vector2(0, 26), Vector2(foot.size.x, 26))
+			if rect.encloses(foot) and not _square_hits(foot, keep, arrival) and not _square_hits(label_band, keep, arrival):
+				fits.append(c)
+			gx += 10.0
+		gy += 10.0
+	if not fits.is_empty():
+		var tc: Vector2 = fits[rng.randi() % fits.size()]
+		tree = {"pos": tc.round(), "r": 44.0}
+		taken.append(Rect2(tc - Vector2(26, 26), Vector2(52, 52)))
+	var props: Array[Dictionary] = []
+	var wanted := ["bench", "lantern_post"] + (["bench"] if rng.randf() < 0.5 else [])
+	for kind: String in wanted:
+		var sz := Vector2(22, 10) if kind == "bench" else Vector2(8, 22)
+		for attempt in 60:
+			var pr := Rect2((rect.position + Vector2(rng.randf_range(10.0, rect.size.x - 40.0), rng.randf_range(10.0, rect.size.y - 34.0))).round(), sz)
+			if not rect.encloses(pr) or _square_hits(pr, keep, arrival):
+				continue
+			var clash := false
+			for t in taken:
+				if t.intersects(pr.grow(2.0)):
+					clash = true
+					break
+			if clash:
+				continue
+			taken.append(pr.grow(2.0))
+			props.append({"kind": kind, "rect": pr})
+			break
+	return {"rect": rect, "outline": jagged_outline(rect, seed_value, 18, 10.0), "patches": patches, "tree": tree, "props": props}
+
+
+static func _square_hits(r: Rect2, keep: Array[Rect2], arrival: Array[Vector2]) -> bool:
+	for k in keep:
+		if k.intersects(r):
+			return true
+	for a in arrival:
+		if r.grow(SPOT_RADIUS).has_point(a):
+			return true
+	return false
 
 
 ## GFX-127: roof colours a village house can take (slate blue, thatch, red tile, grey tile).

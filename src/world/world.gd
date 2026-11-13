@@ -45,6 +45,7 @@ var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+var _square: Dictionary = {}  ## GFX-131: Scenery.village_square of a map.square region, else empty
 var _yards: Dictionary = {}  ## GFX-127: Scenery.village_yards of a map.yards region, else empty
 var _market_dress: Dictionary = {}  ## GFX-126: Scenery.market_props of a map.market region, else empty
 var _marsh: Dictionary = {}  ## GFX-125: Scenery.marsh_features of a bog region, else empty
@@ -492,6 +493,7 @@ func _build_decor() -> void:
 	_relief = Scenery.relief_layout(_region)
 	_marsh = {}
 	_yards = Scenery.village_yards(_region, map_size)
+	_square = Scenery.village_square(_region)
 	_market_dress = Scenery.market_props(_region, map_size) if _region.get("map", {}).has("market") else {}
 	if str(_region.get("map", {}).get("ground_style", "")) == "bog":
 		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region))
@@ -1169,6 +1171,7 @@ func _draw() -> void:
 		var flowers := ["Spring", "Summer"].has(_season)
 		var gtex := GroundTiles.ground_texture(ground_color, rid, Vector2i(ceili(map_size.x / sc), ceili(map_size.y / sc)), flowers, gseason, str(map.get("ground_style", "grass")), Scenery.paved_zones(map, sc), float(map.get("scree_density", 1.0)))
 		draw_texture_rect(gtex, Rect2(Vector2.ZERO, Vector2(gtex.get_size()) * sc), false)
+	_draw_square_ground()
 	var path_tile := Sprites.first(["path_" + rid, "path"])
 	var path_color := Color(map.get("path_color", "8a7350"))
 	for r in map.get("paths", []):
@@ -1191,6 +1194,7 @@ func _draw() -> void:
 	_draw_marsh_life(map)
 	_draw_market_props()
 	_draw_yard_props()
+	_draw_square_props()
 	if Scenery.is_snowy(_season) and not bool(map.get("no_snow", false)):
 		for lm: Dictionary in map.get("landmarks", []):  # GFX-114: after the ponds, so the ice shows
 			if lm.get("kind", "") == "jetty":
@@ -1211,6 +1215,49 @@ func _draw() -> void:
 			_draw_tiled(border_tile, strip)
 	else:
 		draw_rect(Rect2(Vector2.ZERO, map_size), Color(map.get("border", "2a3a20")), false, 6.0)
+
+
+## GFX-131: the village square's packed earth (under the roads).
+func _draw_square_ground() -> void:
+	if _square.is_empty():
+		return
+	var snowy := Scenery.is_snowy(_season)
+	var base := Color(_region.get("map", {}).get("path_color", "8a7350"))
+	var fill := base.lightened(0.04) if not snowy else Color(0.86, 0.88, 0.93)
+	var edge := base.darkened(0.14) if not snowy else Color(0.72, 0.75, 0.82)
+	var r: Rect2 = _square["rect"]
+	draw_rect(r.grow(3.0), edge)
+	draw_rect(r, fill)
+	for p: Dictionary in _square["patches"]:
+		var sh: float = p["shade"]
+		draw_rect(p["rect"], fill.lightened(0.05 * sh) if sh > 0.0 else fill.darkened(-0.1 * sh))
+
+
+## GFX-131: the old tree with its stone ring, benches and the lantern post.
+func _draw_square_props() -> void:
+	if _square.is_empty():
+		return
+	var snowy := Scenery.is_snowy(_season)
+	for pr: Dictionary in _square["props"]:
+		var r: Rect2 = pr["rect"]
+		if str(pr["kind"]) == "bench":
+			draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 4)), Color("a07a48"))
+			draw_rect(Rect2(r.position + Vector2(2, 6), Vector2(2, 4)), Color("5a4228"))
+			draw_rect(Rect2(r.end - Vector2(4, 4), Vector2(2, 4)), Color("5a4228"))
+			if snowy:
+				draw_rect(Rect2(r.position + Vector2(0, 1), Vector2(r.size.x, 2)), Color(0.93, 0.95, 1.0, 0.85))
+		else:
+			draw_rect(Rect2(r.position + Vector2(3, 6), Vector2(2, r.size.y - 6)), Color("4a3524"))
+			draw_rect(Rect2(r.position + Vector2(0, 0), Vector2(8, 7)), Color("c8442a"))
+			draw_rect(Rect2(r.position + Vector2(2, 2), Vector2(4, 3)), Color("f2d24b"))
+	var t: Dictionary = _square["tree"]
+	if t.is_empty():
+		return
+	var tp: Vector2 = t["pos"]
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		draw_rect(Rect2(tp + Vector2(cos(a) * 18.0, sin(a) * 9.0 + 14.0) - Vector2(3, 2), Vector2(6, 4)), Color("a8a49a") if i % 2 else Color("8a867c"))
+	_draw_tree(tp, 1.9, Color(_region.get("map", {}).get("decor", {}).get("tree_color", "2e5a2a")), "round")
 
 
 ## GFX-127: footpaths to the doors and packed-earth yards (walked-earth colours, snowy tint in Winter).
