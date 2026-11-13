@@ -197,8 +197,13 @@ func test_item_missions_pay_at_least_the_items_cost() -> void:
 			cost += int(data().items[item_id].get("price", 0)) * int(m["requires"]["items"][item_id])
 		if cost == 0:
 			continue
+		# C-359: a member buys at the best reputation tier's price, so floor against that.
+		var best_mult := 1.0
+		for t: Dictionary in data().sect_reputation.get("tiers", []):
+			best_mult = minf(best_mult, float(t.get("price_mult", 1.0)))
+		var member_cost := int(round(cost * best_mult))
 		var pay := int(m.get("rewards", {}).get("items", {}).get("spirit_stone", 0))
-		assert_true(pay >= int(ceil(cost * 1.2)), "%s pays %d for items costing %d" % [id, pay, cost])
+		assert_true(pay >= int(ceil(member_cost * 1.2)), "%s pays %d for items costing %d to a member" % [id, pay, member_cost])
 
 
 ## MISS-001: a lost mission fight cools the mission down.
