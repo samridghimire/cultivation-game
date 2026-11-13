@@ -1365,6 +1365,7 @@ const YARD_ROOFS: Array[String] = ["4a6fa5", "c9a35a", "a8443a", "6b6f78"]
 const YARD_BUILDINGS: Array[String] = ["workshop", "clinic", "orphanage", "sect_hall", "family_home", "auction"]
 const YARD_PATH_W := 11.0
 const YARD_PATH_MAX := 260.0
+const YARD_PATH_MAX_PLACE := 420.0  # GFX-132: temple, workshop, clinic, sect hall may sit further from a road
 const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10)}
 
 
@@ -1412,53 +1413,55 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 	for b in buildings.size():
 		var br: Rect2 = buildings[b]
 		var door := Vector2(br.get_center().x, br.end.y)
-		var best: Array[Rect2] = []
-		var best_len := INF
+		var cands: Array[Dictionary] = []  # {"rects": Array[Rect2], "len": float}
 		var touching := false
+		var w := YARD_PATH_W
+		var limit := YARD_PATH_MAX_PLACE if own_pl[b] >= 0 else YARD_PATH_MAX
 		for road in roads:
-			if road.grow(1.0).has_point(door):
+			if road.grow(1.0).has_point(door) or road.grow(12.0).intersects(br):  # the door or the whole building stands at the road
 				touching = true
-			var cand: Array[Rect2] = []
-			var length := 0.0
-			var w := YARD_PATH_W
 			if road.size.x >= road.size.y:  # a horizontal road
-				if road.position.y >= door.y:  # below: straight down
-					cand = [Rect2(door.x - w / 2.0, door.y, w, road.position.y + 1.0 - door.y)]
-					length = road.position.y - door.y
-				else:  # above: along the bottom edge to the nearer side, then up
-					var side_x := br.end.x + 8.0
-					if door.x - (br.position.x - 8.0) < side_x - door.x:
-						side_x = br.position.x - 8.0
-					var x0 := minf(door.x, side_x) - w / 2.0
-					cand = [Rect2(x0, door.y, absf(side_x - door.x) + w, w), Rect2(side_x - w / 2.0, road.end.y - 1.0, w, door.y + w - road.end.y + 1.0)]
-					length = absf(side_x - door.x) + door.y - road.end.y
-			else:  # a vertical road: down a step, then sideways
+				if road.position.y >= door.y:  # below: straight down, or sideways then down
+					cands.append({"rects": [Rect2(door.x - w / 2.0, door.y, w, road.position.y + 1.0 - door.y)], "len": road.position.y - door.y})
+					for sx in _side_xs(br):
+						var x0: float = minf(door.x, sx) - w / 2.0
+						cands.append({"rects": [Rect2(x0, door.y, absf(sx - door.x) + w, w), Rect2(sx - w / 2.0, door.y, w, road.position.y + 1.0 - door.y)], "len": absf(sx - door.x) + road.position.y - door.y})
+				else:  # above: along the bottom edge to a side, then up
+					for sx in _side_xs(br):
+						var x0: float = minf(door.x, sx) - w / 2.0
+						cands.append({"rects": [Rect2(x0, door.y, absf(sx - door.x) + w, w), Rect2(sx - w / 2.0, road.end.y - 1.0, w, door.y + w - road.end.y + 1.0)], "len": absf(sx - door.x) + door.y - road.end.y})
+					# last resort: straight up behind the building (hidden under its footprint), a back-door path
+					cands.append({"rects": [Rect2(door.x - w / 2.0, road.end.y - 1.0, w, door.y - 20.0 - road.end.y + 1.0)], "len": door.y - road.end.y + 60.0})
+			else:  # a vertical road: down a step (or further), then sideways
 				var gap := road.position.x - door.x if road.position.x > door.x else door.x - road.end.x
 				if gap < 0.0:
 					touching = true
 					continue
 				var x1 := door.x if road.position.x > door.x else road.end.x - 1.0
 				var x2 := road.position.x + 1.0 if road.position.x > door.x else door.x
-				cand = [Rect2(door.x - w / 2.0, door.y, w, w), Rect2(x1, door.y, x2 - x1, w)]
-				length = gap
-			if length < best_len:
-				best_len = length
-				best = cand
-		if touching or best.is_empty() or best_len > YARD_PATH_MAX:
+				for drop in [w, 36.0, 72.0]:
+					cands.append({"rects": [Rect2(door.x - w / 2.0, door.y, w, drop), Rect2(x1, door.y + drop - w, x2 - x1, w)], "len": gap + drop - w})
+		if touching:
 			continue
-		var blocked := false
-		for r in best:
-			if r.position.x < 8.0 or r.position.y < 8.0 or r.end.x > size.x - 8.0 or r.end.y > size.y - 8.0:
-				blocked = true
-			for q in lms.size():
-				if q != own_lm[b] and lms[q].intersects(r) and q < lm_list.size() and str(lm_list[q].get("kind", "")) != "stream":
+		cands.sort_custom(func(m: Dictionary, n: Dictionary) -> bool: return m["len"] < n["len"])
+		var chosen: Array = []
+		for c in cands:
+			if float(c["len"]) > limit:
+				break
+			var blocked := false
+			for r: Rect2 in c["rects"]:
+				if r.position.x < 8.0 or r.position.y < 8.0 or r.end.x > size.x - 8.0 or r.end.y > size.y - 8.0:
 					blocked = true
-			for j in places.size():
-				if j != own_pl[b] and keep[j].intersects(r):
-					blocked = true
-		if blocked:
-			continue
-		for r in best:
+				for q in lms.size():
+					if q != own_lm[b] and lms[q].intersects(r) and q < lm_list.size() and str(lm_list[q].get("kind", "")) != "stream":
+						blocked = true
+				for j in places.size():
+					if j != own_pl[b] and keep[j].intersects(r):
+						blocked = true
+			if not blocked:
+				chosen = c["rects"]
+				break
+		for r: Rect2 in chosen:
 			paths_out.append({"rect": r, "door": b})
 	# yards, roofs and props, per house
 	var yards_out: Array[Dictionary] = out["yards"]
@@ -1477,20 +1480,48 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 		yards_out.append({"rect": Rect2(hr.get_center().x - hr.size.x * 0.7, hr.end.y - 4.0, hr.size.x * 1.4, 24.0)})
 		var kinds := YARD_PROP_SIZES.keys()
 		var left := rng.randi() % 2 == 0
+		var placed := 0
 		for m in rng.randi_range(1, 2):
 			var kind: String = kinds[rng.randi() % kinds.size()]
-			var psz: Vector2 = YARD_PROP_SIZES[kind]
-			var px := hr.position.x - psz.x - 22.0 if left else hr.end.x + 22.0
-			var rect := Rect2(px, hr.end.y - psz.y - 2.0 - 26.0 * m + 26.0, psz.x, psz.y)
-			if _market_blocked(rect, solid, [] as Array[Rect2], lms, 6.0, size, Rect2()):
-				continue
-			var clash := false
-			for q: Dictionary in props_out:
-				if (q["rect"] as Rect2).grow(4.0).intersects(rect):
-					clash = true
-			if not clash:
-				props_out.append({"kind": kind, "rect": rect})
+			var order: Array[String] = [kind]
+			for k2 in ["water_jar", "woodpile", "bench"]:  # smaller props where the first pick does not fit
+				if k2 != kind:
+					order.append(k2)
+			var done := false
+			for k in order:
+				var psz: Vector2 = YARD_PROP_SIZES[k]
+				# beside the house (preferred side first), then in front below the yard, then behind
+				var spots: Array[Rect2] = []
+				for lf in [left, not left]:
+					var px := hr.position.x - psz.x - 22.0 if lf else hr.end.x + 22.0
+					spots.append(Rect2(px, hr.end.y - psz.y - 2.0 - 26.0 * m + 26.0, psz.x, psz.y))
+				spots.append(Rect2(hr.position.x + hr.size.x * 0.1, hr.end.y + 26.0 + 4.0 * m, psz.x, psz.y))
+				spots.append(Rect2(hr.end.x - hr.size.x * 0.1 - psz.x, hr.end.y + 26.0 + 4.0 * m, psz.x, psz.y))
+				spots.append(Rect2(hr.get_center().x - psz.x / 2.0, hr.position.y - psz.y - 8.0, psz.x, psz.y))
+				for rect in spots:
+					if _market_blocked(rect, solid, [] as Array[Rect2], lms, 6.0, size, Rect2()):
+						continue
+					var clash := false
+					for q: Dictionary in props_out:
+						if (q["rect"] as Rect2).grow(4.0).intersects(rect):
+							clash = true
+					if not clash:
+						props_out.append({"kind": k, "rect": rect})
+						done = true
+						placed += 1
+						break
+				if done:
+					break
 			left = not left if m == 0 else left
+	return out
+
+
+## GFX-132: x positions beside a building (near, then further out, each side) where a footpath may run up or down.
+static func _side_xs(br: Rect2) -> Array[float]:
+	var out: Array[float] = []
+	for off in [8.0, 36.0, 70.0]:
+		out.append(br.end.x + off)
+		out.append(br.position.x - off)
 	return out
 
 
