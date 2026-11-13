@@ -278,6 +278,49 @@ static func shop_stock(data: GameData, max_price: int, stock_tags: Array) -> Arr
 	return ids
 
 
+## WU-532: true when `item_id` is useful to `c` right now: a manual they can learn and do not know, a pill their realm
+## accepts (`realm_block` and `Effects.check` clear), or gear that beats what they wear (no stat lower, one higher).
+static func useful_now(c: CharacterData, data: GameData, item_id: String) -> bool:
+	var item: Dictionary = data.items.get(item_id, {})
+	if item.is_empty():
+		return false
+	var tech_id := manual_technique(data, item_id)
+	if tech_id != "":
+		return not Techniques.knows(c, tech_id) and realm_block(c, data, item_id) == ""
+	if item.has("equip"):
+		var slot := Equipment.slot_of(data, item_id)
+		var worn := String(c.equipment.get(slot, ""))
+		var worn_stats: Dictionary = {} if worn == "" else data.items[worn].get("equip", {}).get("stats", {})
+		var higher := false
+		for stat in ["attack", "defense", "max_hp", "speed"]:
+			var val := int(item["equip"].get("stats", {}).get(stat, 0))
+			var worn_val := int(worn_stats.get(stat, 0))
+			if val < worn_val:
+				return false
+			if val > worn_val:
+				higher = true
+		return higher
+	if category(item) == "Pills":
+		return realm_block(c, data, item_id) == "" and Effects.check(c, data, item.get("effects", {})) == ""
+	return false
+
+
+## WU-532: the Buy tab's order: the `hinted` item first, then items useful now (see useful_now), then the rest in
+## the given (today's) order. Stable within each group.
+static func shop_order(c: CharacterData, data: GameData, ids: Array, hinted: String) -> Array:
+	var first: Array = []
+	var useful: Array = []
+	var rest: Array = []
+	for id: Variant in ids:
+		if hinted != "" and String(id) == hinted:
+			first.append(id)
+		elif useful_now(c, data, String(id)):
+			useful.append(id)
+		else:
+			rest.append(id)
+	return first + useful + rest
+
+
 ## True when a merchant with these tags would buy `item_id` back (tagged
 ## merchants only, and the item must have a sell price).
 static func merchant_buys(data: GameData, item_id: String, stock_tags: Array, buy_tags: Array = []) -> bool:

@@ -36,6 +36,7 @@ var _buy_tags: Array = []
 var _faction := ""
 var _selling := false
 var _selected := ""
+const FOR_YOU_TAG := "  (for you)"
 var _cat_row: HBoxContainer
 var _sell_all_button: Button
 var _sell_all_note: Label
@@ -247,7 +248,7 @@ func open(merchant_name: String = "Merchant", max_price: int = 0, stock_tags: Ar
 	_refresh_hint()
 	_selling = false
 	_category = "All"
-	_hinted = hinted_item(GameState.data, _hud_hint(), item_ids())
+	_hinted = hinted_item(GameState.data, _hud_hint(), _stock_ids())
 	_selected = _hinted
 	_quantity = 1
 	_rebuild()
@@ -267,6 +268,11 @@ func close() -> void:
 func item_ids() -> Array:
 	if _selling:
 		return Items.buyback_ids(GameState.player, GameState.data, _stock_tags, _buy_tags)
+	return Items.shop_order(GameState.player, GameState.data, _stock_ids(), _hinted)
+
+
+## Today's Buy-tab stock in price order, before WU-532's "for you first" ordering.
+func _stock_ids() -> Array:
 	var ids := Items.shop_stock(GameState.data, _max_price, _stock_tags)
 	for item_id: Variant in GameState.festival_stock(_stock_tags):
 		if not ids.has(item_id):
@@ -560,6 +566,8 @@ func _rebuild() -> void:
 			var realm_text := realm_tag(p, data, item_id)
 			if realm_text != "" and row_fits(label + realm_text, ROW_BADGE_PADDING):
 				label += realm_text
+			if item_id != _hinted and Items.useful_now(p, data, item_id) and row_fits(label + FOR_YOU_TAG, ROW_BADGE_PADDING):
+				label += FOR_YOU_TAG
 		if not _selling and GameState.festival_stock(_stock_tags).has(item_id) and not Items.shop_stock(data, _max_price, _stock_tags).has(item_id):
 			label += " (festival)"
 		if not _selling and item_id == _hinted:
