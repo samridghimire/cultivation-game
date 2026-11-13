@@ -2,95 +2,95 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   37  161    -    37         0    1     0     0  11.8
+     1   37  161    -    37         0    1     0     0  12.4
         first win day 14 (wild_boar), style bought day -
-     2   14   79    -    14         0    4     0     0  13.2
+     2   14   79    -    14         0    4     0     0  14.0
         first win day 14 (wild_boar), style bought day -
-     3   14  138    -    14         0    1     1     0  11.1
+     3   14  138    -    14         0    1     1     0  11.6
         first win day 14 (wild_boar), style bought day -
-     4   14  172    -    14         0    1     0     0  11.6
+     4   14  172    -    14         0    1     0     0  12.1
         first win day 14 (wild_boar), style bought day -
-     5   14   45  291    14         0    1     0     0  11.1
+     5   14   45  291    14         0    1     0     0  12.1
         first win day 14 (wild_boar), style bought day -
-     6   14  170    -    14         0    2     0     0  10.0
+     6   14  170    -    14         0    2     0     0  10.5
         first win day 14 (wild_boar), style bought day -
-     7   14  107    -    14         0    2     0     0  12.6
+     7   14  107    -    14         0    2     0     0  13.2
         first win day 14 (wild_boar), style bought day -
-     8   14   82    -    14         0    1     1     0  12.9
+     8   14   82    -    14         0    1     1     0  13.9
         first win day 16 (wild_boar), style bought day -
-     9   14  200    -    14         0    2     0     0  11.2
+     9   14  200    -    14         0    2     0     0  11.8
         first win day 14 (wild_boar), style bought day -
-    10   14  107    -    14         0    2     0     0  10.4
+    10   14  107    -    14         0    2     0     0  11.1
         first win day 14 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 11.6 log lines/month
+Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 12.1 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
 Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR5": 2, "QR7": 2, "QR4": 3, "Foundation Establishment, Early": 1, "QR6": 2 }
 Stones at the QR9 bottleneck (QA-146): median 33 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 19, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 11, "withered_bone_marsh": 1 }; taken (times): {  }
-Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "world": 309, "progress": 325, "karma": 1 }
+Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "world": 291, "artifact": 99, "progress": 325, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   44  261    -    44         1   38     3     0  86.8
+     1   44  261    -    44         1   38     3     0  84.5
         first win day 14 (wild_boar), style bought day 27
-     2   14  143  868    14         1   40     6     0  84.7
+     2   14  143  868    14         1   40     6     0  84.1
         first win day 14 (wild_boar), style bought day 49
-     3   14  217    -    14         0   40     1     0  80.2
+     3   14  217    -    14         0   40     1     0  79.2
         first win day 14 (wild_boar), style bought day 44
-     4   14  306    -    14         1   33     5     0  70.6
+     4   14  267    -    14         0   39     0     0  75.3
         first win day 14 (wild_boar), style bought day 44
-     5   14   76  531    14         0   37     1     0  80.5
+     5   14   76  576    14         0   34     1     0  80.6
         first win day 14 (wild_boar), style bought day 45
-     6   14  282    -    14         0   38     2     0  81.2
+     6   14  202    -    14         0   39     2     0  85.3
         first win day 14 (wild_boar), style bought day 44
-     7   14  226    -    14         0   39     3     0  81.2
+     7   14  226    -    14         0   39     3     0  80.6
         first win day 14 (wild_boar), style bought day 43
-     8   14  151  846    14         0   48     2     0  97.2
+     8   14  147  907    14         0   46     4     0  86.1
         first win day 48 (mountain_bandit), style bought day 48
-     9   14  290    -    14         0   45     4     0  84.9
+     9   14  316    -    14         0   41     2     0  82.2
         first win day 14 (wild_boar), style bought day 48
-    10   14  141    -    14         0   44     3     0  83.6
+    10   14  147  887    14         1   42     2     0  84.8
         first win day 14 (wild_boar), style bought day 46
-Medians (day): QR1 14, QR3 226, QR9 846 (3/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 3, fled 0; 83.6 log lines/month
+Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 84.1 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 45 (10 seeds)
-Sect trials: Inner Disciple median day 696 (5/10 seeds); trials won 8, lost 2; stones at the last month: median 341
+Sect trials: Inner Disciple median day 699 (6/10 seeds); trials won 7, lost 4; stones at the last month: median 341
 Distinct action kinds per month: 7.2; months after the first with no log lines: 0
-Injury treatments (QA-128): 20, clinic stones 177
-Iron Fist level median (QA-138): m03 2, m06 3, m12 5; first Mist Wolf win: median day 548 (9/10 seeds)
-Spar-hint bouts (QA-138): 9, refusals: []
-Armor shopping (QA-140): armor worn by day 376 median (10/10 seeds); 0 loot sales for 0 stones, 10 trips to a smithy
-Road encounters (QA-118): 7/10 seeds met one; { "road_milestone_carver": 2, "road_star_market_cracked_slate": 2, "road_fallen_rogue": 1, "road_highwayman": 1, "road_overturned_cart": 1, "road_lost_child": 2, "road_mushroom_basket": 1, "road_rain_shelter": 1, "road_caravan_fire": 2, "road_talisman_peddler": 1 }
-Sect contribution (QA-146): m06 median 584, m12 median 1744; stage at m12: { "QR6": 3, "QR9": 2, "QR7": 3, "Foundation Establishment, Middle": 1, "QR8": 1 }
-Stones at the QR9 bottleneck (QA-146): median 267 (1/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 22, "withered_bone_marsh": 1, "azure_peak": 3 }; taken (times): { "qingshi_village": 62, "misty_forest": 8 }
-Lines by category: { "warning": 248, "danger": 830, "info": 1994, "almanac": 1666, "world": 2472, "progress": 2415, "karma": 284, "travel": 56, "social": 2, "normal": 3 }
+Injury treatments (QA-128): 15, clinic stones 190
+Iron Fist level median (QA-138): m03 2, m06 3, m12 5; first Mist Wolf win: median day 628 (10/10 seeds)
+Spar-hint bouts (QA-138): 5, refusals: []
+Armor shopping (QA-140): armor worn by day 376 median (10/10 seeds); 0 loot sales for 0 stones, 11 trips to a smithy
+Road encounters (QA-118): 8/10 seeds met one; { "road_milestone_carver": 3, "road_star_market_cracked_slate": 1, "road_fallen_rogue": 2, "road_highwayman": 3, "road_talisman_peddler": 1, "road_overturned_cart": 1, "road_caravan_guard": 1, "road_caravan_fire": 2 }
+Sect contribution (QA-146): m06 median 578, m12 median 1804; stage at m12: { "QR6": 2, "QR9": 3, "QR7": 4, "Foundation Establishment, Middle": 1 }
+Stones at the QR9 bottleneck (QA-146): median 188 (1/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "withered_bone_marsh": 1, "azure_peak": 3 }; taken (times): { "qingshi_village": 62, "misty_forest": 7 }
+Lines by category: { "warning": 240, "danger": 792, "info": 2021, "almanac": 1668, "world": 2171, "artifact": 219, "progress": 2419, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  world          29.9/month (busiest month in any seed: 153)
-  combat         24.7/month (busiest month in any seed: 97)
-  cultivation    11.1/month (busiest month in any seed: 58)
-  trade           4.7/month (busiest month in any seed: 18)
-  family          4.6/month (busiest month in any seed: 21)
-  sect            4.3/month (busiest month in any seed: 19)
+  world          29.6/month (busiest month in any seed: 166)
+  combat         24.3/month (busiest month in any seed: 93)
+  cultivation    11.4/month (busiest month in any seed: 58)
+  trade           4.5/month (busiest month in any seed: 18)
+  family          4.5/month (busiest month in any seed: 19)
+  sect            4.0/month (busiest month in any seed: 18)
   life            0.8/month (busiest month in any seed: 25)
   (none)          0.2/month (busiest month in any seed: 10)
 Most repeated line templates (per month, averaged):
-   1.62  Tomorrow: The Great Old Tusker walks Misty Forest.
-   1.53  Almanac: Good for trade. Buyers are generous when the wind sits in the east.
-   1.47  Tomorrow: steady hands.
-   1.42  Tomorrow: good for gathering.
-   1.40  Almanac: Market-day wind. Drovers sing out their prices and nobody haggles hard today.
-   1.37  Almanac: Steady hands. The cicadas are quiet, the lamp burns straight; work goes smooth.
-   1.35  Almanac: Good for fishing. The water is calm and the fish are hungry.
-   1.32  Tomorrow: good for trade.
-   1.28  Almanac: Fish rise to the bait. Fish rise to the bait; the river god is in a good mood.
-   1.28  Almanac: Good for gathering. Herbs stand thick and bright on the hillsides.
+   1.50  The artifact drinks the change in you (+N energy, N in all).
+   1.25  Tomorrow: steady hands.
+   1.18  Tomorrow: good for gathering.
+   1.08  Tomorrow: good for trade.
+   1.03  Tomorrow: good for gifts.
+   1.03  Tomorrow: good for practice.
+   1.02  Tomorrow: good for fishing.
+   1.00  You practice the Iron Fist for N days.
+   0.98  Tomorrow: market-day wind.
+   0.90  Tomorrow: a day for kind words.
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -185,20 +185,20 @@ Longest 'nothing new' stretches:
 Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, region
   seed  1 m34  respawn mist_wolf (95%) lives=4 stones=310 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
       | The sect treasury grants you Foundation Establishment Pill for 250 contribution. (1513 con
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 92 atk. Foe: 228
       | You fall. (5 rounds, 0/240 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m18  respawn mist_wolf (80%) lives=3 stones=195 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Almanac: Good for practice. Hands and mind are quick; practice sinks in deeper.
       | Tomorrow: a day for kind words.
       | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 221 hp, 74 atk. Foe: 2
       | You fall. (5 rounds, 0/221 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m20  respawn mist_wolf (80%) lives=2 stones=171 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
       | Almanac: Steady hands. The cicadas are quiet, the lamp burns straight; work goes smooth.
@@ -209,20 +209,20 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  4 m44  respawn mist_wolf (92%) lives=4 stones=235 qingshi_village
       cause: You were slain by a Mist Wolf at age 19.
-      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | Tomorrow: a day for kind words.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 94 atk. Foe: 228
       | You fall. (5 rounds, 0/224 hp left)
       | You were slain by a Mist Wolf at age 19.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m15  respawn mist_wolf (95%) lives=2 stones=196 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Almanac: Good for fishing. The water is calm and the fish are hungry.
       | Tomorrow: good for practice.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 71 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m68  respawn Elder Mo (20%) lives=4 stones=644 qingshi_village
       cause: The final bolt of the Core Formation tribulation tears through you. Your body turns to ash.
       | Heaven answers your breakthrough: tribulation clouds gather over the Core Formation thresh
@@ -233,12 +233,12 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m29  respawn mist_wolf (95%) lives=3 stones=169 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | Almanac: Steady hands. The cicadas are quiet, the lamp burns straight; work goes smooth.
       | Tomorrow: market-day wind.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 73 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
   mist_wolf                  164 fights 158 wins  real  96%  rated  96%  deaths  6  162/0/0/2
   Elder Mo                    51 fights   1 wins  real   1%  rated   7%  deaths  1  0/0/0/51
@@ -300,13 +300,13 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
   seed  1 +60 days stage 0: hp 450 atk 259 def 54 spd 10 | techniques iron_fist L8 | gear none | rated 2% / 10% / 10%
     HUD hints for seed 1 at that moment:
       - Your sect's home is Azure Cloud Hall in Azure Peak (10 days by road): your sect's own missions and the monthly lecture.
+      - Unseal Storage Space in the artifact (O)
       - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4726). Claim it at the sect treasury and learn it there.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4726). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
+      - Good for fishing: Village Pond Jetty, here.
       - The Wandering Merchant here would pay about 417 spirit stones for your ore and beast materials.
       - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
       - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 22 days, against 1 year, 2 months and 8 days at Spirit Spring here.
-      - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
-      - Sect mission ready: Drive Off the Fog-Antler Stag (70 contribution, 6 days) at the Sect Recruitment Hall here. 2 more are too dangerous for you yet.
   seed  2 at entry stage 0: hp 290 atk 146 def 35 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 1%
@@ -446,20 +446,20 @@ Longest 'nothing new' stretches:
 Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, region
   seed  1 m34  respawn mist_wolf (95%) lives=4 stones=310 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | You march him to the guardhouse. The stallholders he has robbed for months cheer you all t
       | The sect treasury grants you Foundation Establishment Pill for 250 contribution. (1513 con
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 240 hp, 92 atk. Foe: 228
       | You fall. (5 rounds, 0/240 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m18  respawn mist_wolf (80%) lives=3 stones=195 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Almanac: Good for practice. Hands and mind are quick; practice sinks in deeper.
       | Tomorrow: a day for kind words.
       | Sect mission: Patrol the Misty Peaks. You face the Mist Wolf. (You: 221 hp, 74 atk. Foe: 2
       | You fall. (5 rounds, 0/221 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  2 m20  respawn mist_wolf (80%) lives=2 stones=171 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
       | Almanac: Steady hands. The cicadas are quiet, the lamp burns straight; work goes smooth.
@@ -470,20 +470,20 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed  4 m44  respawn mist_wolf (92%) lives=4 stones=235 qingshi_village
       cause: You were slain by a Mist Wolf at age 19.
-      | You spot a spirit stone glinting in a ditch. (+1 Spirit Stone)
       | Tomorrow: a day for kind words.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 224 hp, 94 atk. Foe: 228
       | You fall. (5 rounds, 0/224 hp left)
       | You were slain by a Mist Wolf at age 19.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m15  respawn mist_wolf (95%) lives=2 stones=196 qingshi_village
       cause: You were slain by a Mist Wolf at age 17.
-      | Almanac: Good for fishing. The water is calm and the fish are hungry.
       | Tomorrow: good for practice.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 71 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 17.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
   seed  5 m68  respawn Elder Mo (20%) lives=4 stones=644 qingshi_village
       cause: The final bolt of the Core Formation tribulation tears through you. Your body turns to ash.
       | Heaven answers your breakthrough: tribulation clouds gather over the Core Formation thresh
@@ -494,12 +494,12 @@ Deaths (7): seed, game month, final?, foe (rated odds), lives left, stones, regi
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
   seed 10 m29  respawn mist_wolf (95%) lives=3 stones=169 qingshi_village
       cause: You were slain by a Mist Wolf at age 18.
-      | Almanac: Steady hands. The cicadas are quiet, the lamp burns straight; work goes smooth.
       | Tomorrow: market-day wind.
       | Sect mission: Cull the Mist Wolves. You face the Mist Wolf. (You: 255 hp, 73 atk. Foe: 228
       | You fall. (6 rounds, 0/255 hp left)
       | You were slain by a Mist Wolf at age 18.
       | The Creation Artifact pulls your soul back. You awaken at Meditation Rock (Qingshi Village
+      | A cold voice, close and unhurried. "Dead, and yet here. Do not thank me. Count what it cos
 Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mission/deed/bounty/other
   mist_wolf                  164 fights 158 wins  real  96%  rated  96%  deaths  6  162/0/0/2
   Elder Mo                    51 fights   1 wins  real   1%  rated   7%  deaths  1  0/0/0/51
@@ -561,13 +561,13 @@ Foundation entry gap (QA-114): curious player right after the breakthrough vs th
   seed  1 +60 days stage 0: hp 450 atk 259 def 54 spd 10 | techniques iron_fist L8 | gear none | rated 2% / 10% / 10%
     HUD hints for seed 1 at that moment:
       - Your sect's home is Azure Cloud Hall in Azure Peak (10 days by road): your sect's own missions and the monthly lecture.
+      - Unseal Storage Space in the artifact (O)
       - Your sect treasury hands out the Azure Cloud Heart Sutra (qi x1.9, yours x1.0) for 700 contribution (you have 4726). Claim it at the sect treasury and learn it there.
       - Your defence is thin. Claim Manual: Stone Skin Tempering from your sect treasury (45 contribution, you have 4726). The Heavenforge Smithy in Fallen Star Market (10 days) sells Profound Iron Lamellar for 900 stones. Foundation foes hit hard.
+      - Good for fishing: Village Pond Jetty, here.
       - The Wandering Merchant here would pay about 417 spirit stones for your ore and beast materials.
       - Spirit Herb grows at Village Herb Slope: gather it to refine Qi Gathering Pill (it sells for more than the ingredients cost).
       - Travel to Azure Peak (10 days): Cloud-Sea Cliff gathers the next stage in about 5 months and 22 days, against 1 year, 2 months and 8 days at Spirit Spring here.
-      - The Core Disciple trial is too hard for now: learn a body technique such as Stone Skin Tempering and wear armor first. It is open at the Sect Recruitment Hall here; you face the Sword Pavilion Warden (Deadly, 0 in 100), and a loss only injures you. The rank pays 20 stones and a Qi Gathering Pill a month.
-      - Sect mission ready: Drive Off the Fog-Antler Stag (70 contribution, 6 days) at the Sect Recruitment Hall here. 2 more are too dangerous for you yet.
   seed  2 at entry stage 0: hp 290 atk 146 def 35 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  2 +60 days stage 0: hp 414 atk 209 def 50 spd 10 | techniques iron_fist L6 | gear none | rated 0% / 0% / 0%
   seed  3 at entry stage 0: hp 504 atk 194 def 59 spd 10 | techniques iron_fist L5 | gear none | rated 0% / 0% / 1%
@@ -1383,7 +1383,7 @@ Beast Tamer (bought)        -3.5  -0.3   0.0   0.0   0.0   0.0   0.0 |  0.4   - 
 Beast Tamer (gathered)       3.4   4.2   2.1   2.8   4.8   5.5   4.2 |  3.0    0%   86%   13% |  1.29
 Beast Tamer (odd jobs)       1.2   1.2   1.2   3.5   2.3   2.3   4.6 |  2.0  100%    0%    0% |  0.78
 (gatherer)                   6.4   6.8   7.2   7.6   5.8   6.4   6.5 |  0.0   -    -     - |  2.23
-(sect missions)             -4.1   0.6   0.6   0.6   1.8   1.8  -4.9 |  0.0   -    -     - |  0.38
+(sect missions)              1.1  -5.2   0.6   0.6   0.6   1.2   1.2 |  0.0   -    -     - |  0.30
 (stones a week by quarter, then the rank reached and the share of positive profession stones from work / crafting / commissions, blank when a broke crafter netted under 1 stone; per day = stones per day spent)
 
 ## crafter start (new Alchemist, seeds 1-10, 180 days)
@@ -1523,11 +1523,11 @@ First Foundation Establishment year: 10 seeds, sensed threats: slip away
   region / variant               won  lost  fled  injur  lives  stones  stage
   qingshi_village rogue             3     0     0      0      0      36      0
       met 32 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 42 fights rated <50%: 1, 50-75%: 2, 75-95%: 3, >95%: 36
-  qingshi_village sect             12     1     0      0      0     230      0
+  qingshi_village sect             12     1     0      0      0     226      0
       met 131 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 141 fights rated <50%: 14, 50-75%: 1, 75-95%: 27, >95%: 99
   misty_forest rogue                9     2     2      0      0     316      0
       met 121 foes in all, evaded 18; stage by month 3/6/12: 0/0/0; 103 fights rated <50%: 18, 50-75%: 6, 75-95%: 24, >95%: 55
-  misty_forest sect                18     1     0      0      0     637      0
+  misty_forest sect                18     1     0      0      0     629      0
       met 202 foes in all, evaded 17; stage by month 3/6/12: 0/0/0; 185 fights rated <50%: 17, 50-75%: 3, 75-95%: 46, >95%: 119
   fallen_star_market rogue          4     2     1      1      0      53      0
       met 63 foes in all, evaded 8; stage by month 3/6/12: 0/0/0; 57 fights rated <50%: 21, 50-75%: 2, 75-95%: 0, >95%: 34
@@ -1535,7 +1535,7 @@ First Foundation Establishment year: 10 seeds, sensed threats: slip away
       met 151 foes in all, evaded 4; stage by month 3/6/12: 0/0/0; 147 fights rated <50%: 28, 50-75%: 1, 75-95%: 23, >95%: 95
   azure_peak rogue                 10     1     0      0      0     282      1
       met 98 foes in all, evaded 4; stage by month 3/6/12: 0/0/1; 101 fights rated <50%: 1, 50-75%: 2, 75-95%: 27, >95%: 71
-  azure_peak sect                  19     0     0      0      0     582      1
+  azure_peak sect                  19     0     0      0      0     578      1
       met 201 foes in all, evaded 5; stage by month 3/6/12: 0/1/1; 201 fights rated <50%: 9, 50-75%: 1, 75-95%: 31, >95%: 160
   withered_bone_marsh rogue        12     1     0      0      0     634      1
       met 133 foes in all, evaded 28; stage by month 3/6/12: 0/0/1; 105 fights rated <50%: 10, 50-75%: 1, 75-95%: 21, >95%: 73
@@ -1556,11 +1556,11 @@ First Foundation Establishment year: 10 seeds, sensed threats: fight
   region / variant               won  lost  fled  injur  lives  stones  stage
   qingshi_village rogue             3     0     0      0      0      36      0
       met 32 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 42 fights rated <50%: 1, 50-75%: 2, 75-95%: 3, >95%: 36
-  qingshi_village sect             12     1     0      0      0     230      0
+  qingshi_village sect             12     1     0      0      0     226      0
       met 131 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 141 fights rated <50%: 14, 50-75%: 1, 75-95%: 27, >95%: 99
   misty_forest rogue                9     4     0      1      0     211      0
       met 120 foes in all, evaded 5; stage by month 3/6/12: 0/0/0; 115 fights rated <50%: 33, 50-75%: 5, 75-95%: 24, >95%: 53
-  misty_forest sect                16     1     0      0      0     596      0
+  misty_forest sect                16     1     0      0      0     592      0
       met 203 foes in all, evaded 5; stage by month 3/6/12: 0/0/0; 198 fights rated <50%: 39, 50-75%: 3, 75-95%: 43, >95%: 113
   fallen_star_market rogue          4     2     0      1      0      53      0
       met 59 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 59 fights rated <50%: 21, 50-75%: 2, 75-95%: 0, >95%: 36
@@ -1568,7 +1568,7 @@ First Foundation Establishment year: 10 seeds, sensed threats: fight
       met 153 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 152 fights rated <50%: 33, 50-75%: 1, 75-95%: 24, >95%: 94
   azure_peak rogue                 10     1     0      0      0     282      1
       met 99 foes in all, evaded 2; stage by month 3/6/12: 0/0/1; 103 fights rated <50%: 4, 50-75%: 2, 75-95%: 27, >95%: 70
-  azure_peak sect                  19     0     0      0      0     582      1
+  azure_peak sect                  19     0     0      0      0     578      1
       met 198 foes in all, evaded 2; stage by month 3/6/12: 0/1/1; 200 fights rated <50%: 9, 50-75%: 2, 75-95%: 31, >95%: 158
   withered_bone_marsh rogue        12     1     0      0      0     634      1
       met 132 foes in all, evaded 12; stage by month 3/6/12: 0/0/1; 120 fights rated <50%: 25, 50-75%: 1, 75-95%: 21, >95%: 73
@@ -1578,7 +1578,7 @@ First Foundation Establishment year: 10 seeds, sensed threats: fight
       met 82 foes in all, evaded 5; stage by month 3/6/12: 0/1/1; 81 fights rated <50%: 10, 50-75%: 3, 75-95%: 12, >95%: 56
   myriad_peaks_ridge sect          16     0     0      0      0     618      2
       met 174 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 181 fights rated <50%: 0, 50-75%: 1, 75-95%: 14, >95%: 166
-  median of all runs: won 10 lost 1 fled 0 injuries 0 lives 0 stones 219 stage 0
+  median of all runs: won 10 lost 1 fled 0 injuries 0 lives 0 stones 216 stage 0
   runs with no artifact life spent: 104 of 120
   rated odds of every fight fought (all runs): 1594 fights rated <50%: 249, 50-75%: 27, 75-95%: 265, >95%: 1053
   median win share of fought fights: 91%
@@ -1589,11 +1589,11 @@ First Core Formation year: 10 seeds, sensed threats: slip away
   region / variant               won  lost  fled  injur  lives  stones  stage
   qingshi_village rogue             9     0     0      0      0     605      0
       met 82 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 92 fights rated <50%: 2, 50-75%: 0, 75-95%: 0, >95%: 90
-  qingshi_village sect             17     0     0      0      0     619      0
+  qingshi_village sect             17     0     0      0      0     615      0
       met 165 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 175 fights rated <50%: 1, 50-75%: 0, 75-95%: 0, >95%: 174
   misty_forest rogue               16     0     0      0      0    4859      0
       met 156 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 156 fights rated <50%: 0, 50-75%: 0, 75-95%: 3, >95%: 153
-  misty_forest sect                25     0     0      0      0    3046      0
+  misty_forest sect                25     0     0      0      0    3042      0
       met 249 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 248 fights rated <50%: 0, 50-75%: 2, 75-95%: 4, >95%: 242
   fallen_star_market rogue          9     0     0      0      0    1036      0
       met 82 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 82 fights rated <50%: 1, 50-75%: 0, 75-95%: 0, >95%: 81
@@ -1605,13 +1605,13 @@ First Core Formation year: 10 seeds, sensed threats: slip away
       met 221 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 226 fights rated <50%: 1, 50-75%: 1, 75-95%: 7, >95%: 217
   withered_bone_marsh rogue        14     0     0      0      0    3477      0
       met 147 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 146 fights rated <50%: 1, 50-75%: 0, 75-95%: 2, >95%: 143
-  withered_bone_marsh sect         24     0     0      0      0    3343      0
+  withered_bone_marsh sect         24     0     0      0      0    3339      0
       met 241 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 241 fights rated <50%: 0, 50-75%: 2, 75-95%: 5, >95%: 234
   myriad_peaks_ridge rogue          8     0     0      0      0    2835      1
       met 82 foes in all, evaded 0; stage by month 3/6/12: 0/0/1; 87 fights rated <50%: 1, 50-75%: 2, 75-95%: 3, >95%: 81
-  myriad_peaks_ridge sect          18     0     0      0      0    2939      1
+  myriad_peaks_ridge sect          18     0     0      0      0    2935      1
       met 179 foes in all, evaded 1; stage by month 3/6/12: 0/1/1; 179 fights rated <50%: 0, 50-75%: 1, 75-95%: 3, >95%: 175
-  median of all runs: won 15 lost 0 fled 0 injuries 0 lives 0 stones 1593 stage 0
+  median of all runs: won 15 lost 0 fled 0 injuries 0 lives 0 stones 1589 stage 0
   runs with no artifact life spent: 112 of 120
   rated odds of every fight fought (all runs): 1896 fights rated <50%: 9, 50-75%: 9, 75-95%: 30, >95%: 1848
   median win share of fought fights: 100%

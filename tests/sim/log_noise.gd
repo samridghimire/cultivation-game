@@ -1,7 +1,8 @@
 extends SceneTree
 ## Log-noise sim (QA-059): how many message-log lines a curious player sees per topic per
 ## month, and which line templates repeat the most (names and digits stripped).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/log_noise.gd -- [seeds] [months]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/log_noise.gd -- [seeds] [months] [--log-templates]
+## --log-templates also lists the top 10 line templates of the two loudest topics (QA-211).
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 
@@ -10,6 +11,7 @@ var _gs: Node
 var _clock: Node
 var _topic_counts := {}
 var _template_counts := {}
+var _topic_templates := {}  # topic -> {template -> count}
 var _by_month := {}  # topic -> {month -> count}
 
 
@@ -28,6 +30,9 @@ func _on_message(text: String, _category: String) -> void:
 	_by_month[key] = int(_by_month.get(key, 0)) + 1
 	var tpl := _template(text)
 	_template_counts[tpl] = int(_template_counts.get(tpl, 0)) + 1
+	var per: Dictionary = _topic_templates.get(topic, {})
+	per[tpl] = int(per.get(tpl, 0)) + 1
+	_topic_templates[topic] = per
 
 
 func _template(text: String) -> String:
@@ -46,8 +51,12 @@ func _template(text: String) -> String:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	var seeds := int(args[0]) if args.size() > 0 else 5
-	var months := int(args[1]) if args.size() > 1 else 12
+	var nums: Array[String] = []
+	for a: String in args:
+		if not a.begins_with("--"):
+			nums.append(a)
+	var seeds := int(nums[0]) if nums.size() > 0 else 5
+	var months := int(nums[1]) if nums.size() > 1 else 12
 	_gs = root.get_node("GameState")
 	_clock = root.get_node("GameClock")
 	_bus = root.get_node("EventBus")
@@ -73,4 +82,12 @@ func _run() -> void:
 	tpls.sort_custom(func(a: String, b: String) -> bool: return _template_counts[a] > _template_counts[b] or (_template_counts[a] == _template_counts[b] and a < b))
 	for i in mini(10, tpls.size()):
 		print("  %5.2f  %s" % [float(_template_counts[tpls[i]]) / total_months, String(tpls[i]).left(110)])
+	if args.has("--log-templates"):
+		for t: String in topics.slice(0, 2):
+			print("Top templates in topic '%s' (per month, averaged):" % t)
+			var per: Dictionary = _topic_templates[t]
+			var keys: Array = per.keys()
+			keys.sort_custom(func(a: String, b: String) -> bool: return per[a] > per[b] or (per[a] == per[b] and a < b))
+			for i in mini(10, keys.size()):
+				print("  %5.2f  %s" % [float(per[keys[i]]) / total_months, String(keys[i]).left(110)])
 	quit()
