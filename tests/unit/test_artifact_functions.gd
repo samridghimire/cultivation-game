@@ -265,3 +265,42 @@ func test_tag_mult_validation() -> void:  # ART-013
 	assert_true(ArtifactFunctions.validate(d).size() > 0, "unused tag")
 	d.artifact["energy"]["tag_mult"] = saved
 	assert_eq(ArtifactFunctions.validate(d).size(), 0)
+
+
+func test_spoils_hint() -> void:  # ART-014
+	var c := _qi_refiner()
+	var flags := {}
+	var line := ArtifactFunctions.spoils_hint(c, data(), {"boar_hide": 2, "boar_meat": 1}, flags)
+	var each := ArtifactFunctions.energy_value(data(), "boar_hide")
+	assert_true(each > 0)
+	assert_true(line.begins_with("The artifact stirs: Boar Hide would feed it +%d." % (each * 2)), line)
+	assert_eq(ArtifactFunctions.spoils_hint(c, data(), {"spirit_stone": 5}, flags), "", "stones are not tasty")
+	assert_eq(ArtifactFunctions.spoils_hint(c, data(), {"no_such_item": 1}, flags), "", "unknown item")
+	var keep := ""
+	for item_id: String in data().items:
+		if ArtifactFunctions.tag_mult(data(), item_id) <= 0.0:
+			keep = item_id
+			break
+	assert_eq(ArtifactFunctions.spoils_hint(c, data(), {keep: 3}, flags), "", "refused items")
+	for function_id: String in ArtifactFunctions.KNOWN:
+		c.artifact_functions.append(function_id)
+	assert_eq(ArtifactFunctions.spoils_hint(c, data(), {"boar_hide": 2}, flags), "", "every seal open")
+
+
+func test_game_state_spoils_hint_once_a_day() -> void:  # ART-014
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var c := CharacterFactory.create("Stir", gs.data, seeded_rng())
+	gs.start_session(c)
+	c.realm_index = gs.data.realm_index_of("qi_refining")
+	c.stage = 9
+	var boar: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	boar["hp"] = -9
+	boar["attack"] = -9
+	var day: int = GameClock.total_days
+	assert_true(gs.fight_enemy(boar))
+	var first := "\n".join(gs.last_fight_spoils)
+	assert_true(first.contains("The artifact stirs: Boar Hide"), first)
+	GameClock.total_days = day  # a fight takes days; replay the second win on the same day
+	assert_true(gs.fight_enemy(boar))
+	assert_false("\n".join(gs.last_fight_spoils).contains("The artifact stirs"), "once a day")
+	gs.end_session()

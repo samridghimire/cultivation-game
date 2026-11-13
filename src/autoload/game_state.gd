@@ -4051,6 +4051,12 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 					last_fight_spoils.append("%s (sells for %d%s)" % [note, worth[note]["price"], " each" if int(worth[note]["count"]) > 1 else ""])
 				else:
 					last_fight_spoils.append(note)
+		var stir_day := GameClock.total_days
+		if _artifact_spoils_day != stir_day and not bool(enemy.get("friendly", false)):
+			var stir := ArtifactFunctions.spoils_hint(player, data, enemy.get("rewards", {}).get("items", {}), world_flags)
+			if stir != "":
+				_artifact_spoils_day = stir_day
+				last_fight_spoils.append(stir)
 	var advice := Combat.loss_advice(player, data, enemy, result)
 	if advice != "" and not result["victory"] and not bool(enemy.get("friendly", false)):
 		advice += Guidance.fairer_fight_note(Guidance.fair_fights(player, data, world_flags, GameClock.total_days, current_region, npcs, npc_favor), String(enemy.get("name", "")))
@@ -4566,12 +4572,14 @@ func _artifact_whisper(moment: String) -> void:
 
 var _artifact_pending := 0
 var _artifact_line_day := -1
+var _artifact_spoils_day := -1
 
 
 ## ART-009: a new or loaded session starts with no folded energy gains from the previous one.
 func _reset_artifact_line() -> void:
 	_artifact_pending = 0
 	_artifact_line_day = -1
+	_artifact_spoils_day = -1
 
 
 ## SEASON-001: on the first pass into a new season post its name and a short digest, once per season (world flag).

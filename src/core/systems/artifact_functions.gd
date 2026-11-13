@@ -148,6 +148,25 @@ static func next_seal_line(c: CharacterData, data: GameData, flags: Dictionary) 
 	return "Artifact: %d / %d energy toward %s" % [c.artifact_energy, int(best["cost"]), best["name"]]
 
 
+## ART-014: "The artifact stirs: Boar Hide would feed it +N." for the best tasty item among `spoils` ({item_id: count}),
+## only while a seal is still closed and `next_seal_line` would show. Refused items (tag_mult 0) never count.
+static func spoils_hint(c: CharacterData, data: GameData, spoils: Dictionary, flags: Dictionary) -> String:
+	if next_seal_line(c, data, flags) == "":
+		return ""
+	var best_id := ""
+	var best := 0
+	for item_id: String in spoils:
+		if tag_mult(data, item_id) <= 1.0:
+			continue
+		var total := energy_value(data, item_id) * int(spoils[item_id])
+		if total > best or (total == best and total > 0 and item_id < best_id):
+			best = total
+			best_id = item_id
+	if best <= 0:
+		return ""
+	return "The artifact stirs: %s would feed it +%d." % [data.items.get(best_id, {}).get("name", best_id), best]
+
+
 ## ART-009: records the character's current progress as already credited.
 static func sync_marks(c: CharacterData) -> void:
 	c.artifact_marks = {"realm": c.realm_index, "stage": c.stage,
