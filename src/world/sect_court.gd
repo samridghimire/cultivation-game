@@ -179,28 +179,41 @@ static func plank_color(snowy: bool) -> Color:
 static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
 	var wood := plank_color(snowy)
 	var seam := wood.darkened(0.4)
-	ci.draw_rect(Rect2(court.position.x + 2.0, court.end.y + 2.0, court.size.x, 6.0), Color(0.05, 0.08, 0.06, 0.35))
-	ci.draw_rect(court, wood)
+	var edge := Scenery.ragged_outline(court, hash(str(court)), 8.0, 3.0)  # GFX-136: a ragged raised platform, not a brick rectangle
+	var shadow := PackedVector2Array()
+	for q in edge:
+		shadow.append(q + Vector2(2, 6))
+	ci.draw_colored_polygon(shadow, Color(0.05, 0.08, 0.06, 0.35))
+	ci.draw_colored_polygon(edge, wood)
+	var inner := court.grow(-3.0)
 	var y := court.position.y + 8.0
 	var row := 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(str(court) + "|planks")
 	while y < court.end.y:
-		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), seam, 1.0)
+		ci.draw_line(Vector2(inner.position.x, y), Vector2(inner.end.x, y), seam, 1.0)
 		if snowy and row % 2 == 0:  # GFX-122: thin snow along every 2nd plank edge
-			ci.draw_line(Vector2(court.position.x, y - 1.0), Vector2(court.end.x, y - 1.0), Color(0.94, 0.97, 1.0, 0.85), 1.0)
+			ci.draw_line(Vector2(inner.position.x, y - 1.0), Vector2(inner.end.x, y - 1.0), Color(0.94, 0.97, 1.0, 0.85), 1.0)
 		var x := court.position.x + (12.0 if row % 2 == 1 else 0.0) + 24.0
-		while x < court.end.x:
-			ci.draw_line(Vector2(x, y), Vector2(x, minf(y + 8.0, court.end.y)), seam, 1.0)
+		while x < inner.end.x:
+			ci.draw_line(Vector2(x, y), Vector2(x, minf(y + 8.0, inner.end.y)), seam, 1.0)
+			if rng.randf() < 0.07:  # a dark, rotten board
+				ci.draw_rect(Rect2(x + 1.0, y + 1.0, 34.0, 6.0), wood.darkened(0.3))
 			x += 36.0
 		y += 8.0
 		row += 1
-	ci.draw_rect(court, seam.darkened(0.2), false, 2.0)
-	if snowy:  # the outer rim only
-		ci.draw_rect(court.grow(-1.0), Color(0.94, 0.97, 1.0, 0.85), false, 1.0)
-	# Stilts under the front edge.
-	var px := court.position.x + 8.0
-	while px < court.end.x - 4.0:
-		ci.draw_rect(Rect2(px, court.end.y, 4.0, 7.0), Color("2b2118"))
-		px += 36.0
+	var rim := edge.duplicate()
+	rim.append(edge[0])
+	ci.draw_polyline(rim, seam.darkened(0.2), 2.0)
+	if snowy:  # patchy snow on the outer rim only
+		for i in range(0, edge.size() - 1, 2):
+			ci.draw_line(edge[i], edge[i + 1], Color(0.94, 0.97, 1.0, 0.85), 1.0)
+	# 4-6 stilts under the front edge.
+	var stilts := clampi(int(court.size.x / 36.0), 4, 6)
+	for i in stilts:
+		var px := court.position.x + 10.0 + (court.size.x - 24.0) * float(i) / float(stilts - 1)
+		ci.draw_rect(Rect2(px, court.end.y + 1.0, 4.0, 9.0), Color("2b2118"))
+		ci.draw_rect(Rect2(px, court.end.y + 1.0, 1.0, 9.0), Color("5a4630"))
 	# A low rail along the front with a gap in front of the door.
 	var cx := hall.get_center().x
 	var rail := Color("3a2a1c")

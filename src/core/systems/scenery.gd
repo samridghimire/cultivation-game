@@ -649,8 +649,21 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 		pos = inset
 		while pos < len_total - inset - 4.0:
 			var l := minf(7.0 + rng.randf() * 3.0, len_total - inset - pos)
-			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset, l - 1.0, width - inset * 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+			var pflag := ""
+			var proll := rng.randf()
+			if proll < 0.05:
+				pflag = "missing"  # GFX-136: a dark gap where a plank rotted away
+			elif proll < 0.12:
+				pflag = "dark"
+			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset, l - 1.0, width - inset * 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": pflag})
 			pos += l
+		# GFX-136: reed tufts along both edges of the boardwalk
+		var tuft_at := 14.0 + rng.randf() * 30.0
+		while tuft_at < len_total - 14.0:
+			for side in 2:
+				if rng.randf() < 0.55:
+					out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, tuft_at, 0.0 if side == 0 else width - 3.0, 2.0, 3.0), "shade": 1.0 if rng.randf() < 0.5 else -1.0, "flag": ""})
+			tuft_at += 40.0 + rng.randf() * 60.0
 	else:
 		var strip := 3.0
 		# GFX-131: roads that wander: broken edge strips, wobbling ruts, no ruts near a crossing.
@@ -1237,20 +1250,21 @@ static func marsh_features(region_seed: int, size: Vector2, keepouts: Array[Rect
 	var pools: Array[Dictionary] = []
 	var taken: Array[Rect2] = []
 	var tries := 0
-	var want := rng.randi_range(6, 10)
-	while pools.size() < want and tries < 400:
+	var want := rng.randi_range(10, 16)
+	while pools.size() < want and tries < 800:
 		tries += 1
-		var rx := rng.randf_range(26.0, 62.0)
+		var rx := rng.randf_range(15.0, 45.0)  # GFX-136: pools 30-90 px wide
 		var ry := rx * rng.randf_range(0.4, 0.65)
 		var c := Vector2(rng.randf_range(rx + 40.0, size.x - rx - 40.0), rng.randf_range(ry + 40.0, size.y - ry - 40.0))
 		var rect := Rect2(c - Vector2(rx, ry) * 1.2, Vector2(rx, ry) * 2.4)
 		if _marsh_hits(rect, keepouts, taken, 14.0):
 			continue
 		var pts := PackedVector2Array()
-		var n := 14
+		var n := 18
+		var shape_seed := rng.randi()
 		for i in n:
 			var a := TAU * float(i) / float(n)
-			var j := rng.randf_range(0.78, 1.18)
+			var j := pond_mask_radius(a, shape_seed, 0.22) * rng.randf_range(0.94, 1.06)
 			pts.append(c + Vector2(cos(a) * rx * j, sin(a) * ry * j))
 		var lilies: Array[Dictionary] = []
 		if pools.size() < 3:
@@ -1268,7 +1282,42 @@ static func marsh_features(region_seed: int, size: Vector2, keepouts: Array[Rect
 	for i in 14:
 		var at := Vector2(rng.randf_range(40.0, size.x - 40.0), rng.randf_range(40.0, size.y - 40.0))
 		_marsh_add_reeds(reeds, clump_rects, at, rng, keepouts, taken, size)
-	return {"pools": pools, "reeds": reeds}
+	# GFX-136: dark mud patches, half-sunk bones and dead stumps on open ground (never on a keepout or a pool).
+	var mud: Array[Dictionary] = []
+	var bones: Array[Dictionary] = []
+	var dead: Array[Dictionary] = []
+	var mud_want := rng.randi_range(6, 10)
+	tries = 0
+	while mud.size() < mud_want and tries < 600:
+		tries += 1
+		var w := rng.randf_range(40.0, 90.0)
+		var h := w * rng.randf_range(0.4, 0.6)
+		var r := Rect2(Vector2(rng.randf_range(30.0, size.x - w - 30.0), rng.randf_range(30.0, size.y - h - 30.0)), Vector2(w, h))
+		if _marsh_hits(r.grow(6.0), keepouts, taken, 8.0):
+			continue
+		taken.append(r)
+		mud.append({"rect": r, "pts": ragged_outline(r, rng.randi(), minf(h * 0.45, 14.0), 4.0)})
+	var dead_want := rng.randi_range(6, 10)
+	tries = 0
+	while dead.size() < dead_want and tries < 600:
+		tries += 1
+		var at := Vector2(rng.randf_range(40.0, size.x - 40.0), rng.randf_range(60.0, size.y - 40.0))
+		var r := Rect2(at - Vector2(16, 40), Vector2(32, 46))
+		if _marsh_hits(r, keepouts, taken, 6.0):
+			continue
+		taken.append(r)
+		dead.append({"pos": at, "stump": rng.randf() < 0.4, "h": rng.randf_range(30.0, 48.0), "lean": rng.randf_range(-6.0, 6.0)})
+	var bone_want := rng.randi_range(5, 8)
+	tries = 0
+	while bones.size() < bone_want and tries < 600:
+		tries += 1
+		var at := Vector2(rng.randf_range(40.0, size.x - 40.0), rng.randf_range(40.0, size.y - 40.0))
+		var r := Rect2(at - Vector2(8, 5), Vector2(16, 10))
+		if _marsh_hits(r, keepouts, taken, 4.0):
+			continue
+		taken.append(r)
+		bones.append({"pos": at, "angle": rng.randf() * PI, "len": rng.randf_range(7.0, 12.0)})
+	return {"pools": pools, "reeds": reeds, "mud": mud, "bones": bones, "dead": dead}
 
 ## GFX-135: smoothed seeded radius factor (1.0 +/- amp) of a ragged shoreline at `angle` (radians): 12 control points round the
 ## circle, cosine-interpolated. Same seed, same shape; different seeds differ.
@@ -1357,6 +1406,10 @@ static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
 	var out := blocked_rects(region)
 	for lm in landmark_rects(region):
 		out.append(lm.grow(14.0))
+	for p: Dictionary in region.get("places", []):  # GFX-136: the name label band above/below each place
+		var pp: Array = p.get("pos", [0, 0])
+		var ps: Array = p.get("size", [64, 64])
+		out.append(Rect2(float(pp[0]) - maxf(float(ps[0]) / 2.0, 60.0), float(pp[1]) - float(ps[1]) / 2.0 - 36.0, maxf(float(ps[0]), 120.0), float(ps[1]) + 72.0))
 	for spot: Array in region.get("npc_spots", []):
 		out.append(Rect2(float(spot[0]) - 40.0, float(spot[1]) - 40.0, 80.0, 80.0))
 	var arrival: Array = []
@@ -1847,7 +1900,7 @@ static func _marsh_add_reeds(out: Array[Dictionary], clump_rects: Array[Rect2], 
 		if cr.intersects(rect):
 			return
 	for pr in pools:
-		if pr.grow(-10.0).intersects(Rect2(at - Vector2(2, 2), Vector2(4, 4))):
+		if pr.grow(-minf(10.0, minf(pr.size.x, pr.size.y) * 0.4)).intersects(Rect2(at - Vector2(2, 2), Vector2(4, 4))):
 			return
 	var stalks: Array[Dictionary] = []
 	for i in rng.randi_range(3, 7):

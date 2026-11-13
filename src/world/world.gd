@@ -1214,6 +1214,7 @@ func _draw() -> void:
 		_draw_landmark(lm)
 	_draw_field_scarecrow(map)
 	_draw_marsh_life(map)
+	_draw_marsh_decor()
 	_draw_market_props()
 	_draw_yard_props()
 	_draw_square_props()
@@ -1448,29 +1449,70 @@ func _draw_market_props() -> void:
 ## GFX-125: shallow pools of a bog (pale ice with a crack in winter, ripples in rain). Drawn under the landmarks.
 func _draw_marsh_pools() -> void:
 	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for m: Dictionary in _marsh.get("mud", []):  # GFX-136: dark mud patches
+		var mp: PackedVector2Array = m["pts"]
+		var mr: Rect2 = m["rect"]
+		draw_colored_polygon(mp, Color("232a1c") if not winter else Color("5a6068"))
+		draw_colored_polygon(Scenery.ragged_outline(mr.grow(-5.0), hash(str(mr)) + 1, 6.0, 3.0), Color("2e3624") if not winter else Color("6c737a"))
+		if winter:
+			for i in range(0, mp.size() - 1, 3):
+				draw_line(mp[i], mp[i + 1], Color(0.94, 0.97, 1.0, 0.8), 1.0)
 	for pool: Dictionary in _marsh.get("pools", []):
 		var pts: PackedVector2Array = pool["pts"]
 		var c: Vector2 = pool["center"]
 		var r: Rect2 = pool["rect"]
 		var rim := PackedVector2Array()
 		for q in pts:
-			rim.append(c + (q - c) * 1.12)
-		if winter:
-			draw_colored_polygon(rim, Color("b9c9d6"))
-			draw_colored_polygon(pts, Color("dfe9f1"))
-			draw_line(c + Vector2(-r.size.x * 0.25, -2), c + Vector2(r.size.x * 0.1, 3), Color("8fa3b5"), 1.0)
-			draw_line(c + Vector2(r.size.x * 0.1, 3), c + Vector2(r.size.x * 0.22, -4), Color("8fa3b5"), 1.0)
+			rim.append(c + (q - c) * 1.14)
+		if winter:  # frozen grey ice with a snow edge
+			draw_colored_polygon(rim, Color("e8eef4"))
+			draw_colored_polygon(pts, Color("9aa6b0"))
+			var sheen := PackedVector2Array()
+			for q in pts:
+				sheen.append(c + (q - c) * 0.6)
+			draw_colored_polygon(sheen, Color("aab5be"))
+			draw_line(c + Vector2(-r.size.x * 0.25, -2), c + Vector2(r.size.x * 0.1, 3), Color("737f8a"), 1.0)
+			draw_line(c + Vector2(r.size.x * 0.1, 3), c + Vector2(r.size.x * 0.22, -4), Color("737f8a"), 1.0)
 			continue
-		draw_colored_polygon(rim, Color("5d7a6a"))
-		draw_colored_polygon(pts, Color("1f3d3f"))
+		draw_colored_polygon(rim, Color("2a3322"))  # murky mud bank
+		draw_colored_polygon(pts, Color("2b4a3a"))
 		var hi := PackedVector2Array()
 		for q in pts:
 			hi.append(c + (q - c) * 0.55 + Vector2(-3, -2))
-		draw_colored_polygon(hi, Color("2d5654"))
-		draw_line(c + Vector2(-r.size.x * 0.2, -r.size.y * 0.12), c + Vector2(-r.size.x * 0.02, -r.size.y * 0.16), Color(0.7, 0.85, 0.9, 0.35), 1.0)
+		draw_colored_polygon(hi, Color("3a5a45"))
+		draw_line(c + Vector2(-r.size.x * 0.2, -r.size.y * 0.12), c + Vector2(-r.size.x * 0.02, -r.size.y * 0.16), Color(0.7, 0.85, 0.9, 0.3), 1.0)
 		if _weather_kind in ["rain", "storm"]:
 			for off in [Vector2(-10, 2), Vector2(8, -4)]:
 				draw_arc(c + off, 4.0, 0.0, TAU, 12, Color(0.8, 0.9, 0.95, 0.4), 1.0)
+
+
+## GFX-136: half-sunk bones and dead trees/stumps of the marsh (after the landmarks).
+func _draw_marsh_decor() -> void:
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for b: Dictionary in _marsh.get("bones", []):
+		var at: Vector2 = b["pos"]
+		var d := Vector2(cos(float(b["angle"])), sin(float(b["angle"]))) * float(b["len"]) * 0.5
+		draw_line(at - d, at + d, Color("d8d0b8"), 3.0)
+		draw_circle(at - d, 2.0, Color("d8d0b8"))
+		draw_circle(at + d, 2.0, Color("d8d0b8"))
+		draw_line(at - d + Vector2(0, 2), at + d + Vector2(0, 2), Color(0.1, 0.12, 0.08, 0.5), 1.0)
+	for t: Dictionary in _marsh.get("dead", []):
+		var p: Vector2 = t["pos"]
+		if bool(t["stump"]):
+			draw_circle(p + Vector2(0, 4), 9.0, Color(0, 0, 0, 0.2))
+			draw_rect(Rect2(p + Vector2(-5, -8), Vector2(10, 12)), Color("2a1f16"))
+			draw_rect(Rect2(p + Vector2(-5, -9), Vector2(10, 3)), Color("5a4630"))
+			if winter:
+				draw_rect(Rect2(p + Vector2(-6, -11), Vector2(12, 3)), Color("f4f8ff"))
+		else:
+			var h: float = t["h"]
+			var lean: float = t["lean"]
+			draw_circle(p + Vector2(0, 4), 10.0, Color(0, 0, 0, 0.2))
+			draw_line(p, p + Vector2(lean, -h), Color("2a1f16"), 3.0)
+			draw_line(p + Vector2(lean * 0.5, -h * 0.5), p + Vector2(lean * 0.5 + 12.0, -h * 0.75), Color("3b3a2c"), 2.0)
+			draw_line(p + Vector2(lean * 0.7, -h * 0.7), p + Vector2(lean * 0.7 - 10.0, -h * 0.9), Color("3b3a2c"), 2.0)
+			if winter:
+				draw_rect(Rect2(p + Vector2(lean - 3.0, -h - 2.0), Vector2(6, 3)), Color("f4f8ff"))
 
 
 ## GFX-125: lily pads on the pools and the bog's ponds, then reed clumps (snow caps in winter).
@@ -2232,6 +2274,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
 			"plank":
 				c = Color("7a5a38").lightened(0.06 * shade) if shade >= 0.0 else Color("7a5a38").darkened(-0.1 * shade)
+				if t["flag"] == "missing":  # GFX-136: a rotted-away board shows black water
+					draw_rect(r, Color("141a14"))
+					continue
+				if t["flag"] == "dark":
+					c = c.darkened(0.35)
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
 			"rut", "edge":
