@@ -826,6 +826,10 @@ func _process(_d: float) -> bool:
 		frames = 0
 		return false
 	frames += 1
+	if shot["name"] != "season_card" and hud.get("_season_card").visible:  # WU-534: a season-start card queued behind a screen
+		hud.get("_season_card").close()
+		frames = 0
+		return false
 	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
 	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]):  # QA-182: queued notices covered the modals
 		if banner_wait_start < 0:

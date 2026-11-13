@@ -3646,7 +3646,7 @@ func test_season_review_emits_once_per_boundary() -> void:
 	for t: String in GameState.data.season_tasks["recap"]["fights_won"]:
 		won2.append(t.replace("{n}", "2").replace("{s}", "s"))
 	assert_true(won2.any(func(t: String) -> bool: return t in (seen[0][1] as PackedStringArray)))
-	assert_true((seen[0][1] as PackedStringArray)[(seen[0][1] as PackedStringArray).size() - 1].begins_with("Coming:"))
+	assert_false(Array(seen[0][1] as PackedStringArray).any(func(l: String) -> bool: return l.begins_with("Coming:")), "WU-534: no Coming line in the look back")
 	clock.advance(6 * Calendar.DAYS_PER_MONTH)  # summer -> autumn -> winter in one call
 	assert_eq(seen.size(), 2)
 	assert_eq(seen[1][0], "Autumn")

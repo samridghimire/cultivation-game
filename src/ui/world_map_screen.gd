@@ -316,23 +316,6 @@ static func center_of(fraction: Vector2) -> Vector2:
 	return lo + fraction * (hi - lo)
 
 
-## GFX-059: top-left of a route's day label: beside the line (10 px off it), at the middle or slid
-## along the line (0.35 / 0.65, then further) until it hits no node rect.
-static func route_label_pos(a: Vector2, b: Vector2, label_size: Vector2, node_rects: Array[Rect2]) -> Vector2:
-	var dir := (b - a).normalized()
-	var normal := Vector2(-dir.y, dir.x)
-	if normal.y > 0.0:
-		normal = -normal
-	var push := 10.0 + absf(normal.x) * label_size.x / 2.0 + absf(normal.y) * label_size.y / 2.0
-	var best := Vector2.ZERO
-	for t: float in [0.5, 0.35, 0.65, 0.25, 0.75, 0.42, 0.58]:
-		best = a.lerp(b, t) + normal * push - label_size / 2.0
-		var rect := Rect2(best, label_size).grow(2.0)
-		if not node_rects.any(func(n: Rect2) -> bool: return n.intersects(rect)):
-			return best
-	return best
-
-
 ## WU-530: centre of a route's day label: the route's midpoint, slid along the route (0.35 / 0.65,
 ## then further) until the label rect (size) overlaps no region box and no label already placed.
 static func day_label_pos(a: Vector2, b: Vector2, boxes: Array[Rect2], taken: Array[Rect2], size: Vector2 = Vector2(36, 22)) -> Vector2:

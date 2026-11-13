@@ -1887,7 +1887,7 @@ func _season_card_blocked() -> bool:
 	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
 		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
 	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _encounter.visible or _combat_report.visible \
-			or _realm_card.visible or _tribulation.visible
+			or _realm_card.visible or _tribulation.visible or _any_screen_open()
 
 
 ## The year review stays a banner (WU-031); the season recap now rides on the season card.
@@ -2292,6 +2292,8 @@ func _update_modal() -> void:
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)
 	_hold_banners()
+	if not blocking and (not _pending_kickoff.is_empty() or not _pending_season.is_empty()):
+		_flush_year_review.call_deferred()  # WU-534: a season card queued behind an open screen
 
 
 ## WU-523: banners wait while any modal (screen, shop, dialogue, report, menu) is up, then play in order.

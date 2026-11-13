@@ -780,6 +780,11 @@ static func project_index(data: GameData, id: String) -> int:
 	return -1
 
 
+## WU-534: "a Lotus Bass", "an Ice Perch" (article by the first letter's sound).
+static func a_or_an(name: String) -> String:
+	return ("an " if name.substr(0, 1).to_lower() in ["a", "e", "i", "o", "u"] else "a ") + name
+
+
 ## SEASON-013: the short form of one task for the kickoff line ("land a Lotus Bass", "gather 3 Spirit Herbs").
 static func task_short(data: GameData, t: Dictionary) -> String:
 	var target := String(t["target"])
@@ -788,24 +793,24 @@ static func task_short(data: GameData, t: Dictionary) -> String:
 		"catch":
 			if n > 1:
 				return "land %d %s" % [n, Items.item_plural(data, target, n)]
-			return "land a %s" % String(data.items.get(target, {}).get("name", target))
+			return "land %s" % a_or_an(String(data.items.get(target, {}).get("name", target)))
 		"sell_wanted":  # target is "" (any stall's wanted goods)
 			return "sell %d wanted good%s at a market" % [n, "" if n == 1 else "s"]
 		"gather":
 			return "gather %d %s" % [n, Items.item_plural(data, target, n)]
 		"hunt":
-			return "drive off a %s" % String(data.enemies.get(target, {}).get("name", target)).to_lower()
+			return "drive off %s" % a_or_an(String(data.enemies.get(target, {}).get("name", target)).to_lower())
 		"contest":
 			return "enter the %s" % String(data.world_events.get(target, {}).get("name", target))
 	return String(t.get("text", "")).trim_suffix(".").to_lower()
 
 
 ## SEASON-013: "Festivals: Dragon Boat Festival (month 5)." for the festivals whose fixed month falls in `day`'s season.
-static func festival_line(data: GameData, day: int) -> String:
+static func festival_line(data: GameData, day: int, skip: Array = []) -> String:
 	var season := Calendar.season_of(day)
 	var parts: Array[String] = []
 	for ev: Dictionary in data.world_events.values():
-		if not bool(ev.get("festival", false)):
+		if not bool(ev.get("festival", false)) or String(ev.get("name", "")) in skip:
 			continue
 		for m in ev.get("months", []):
 			if Calendar.season_of((int(m) - 1) * Calendar.DAYS_PER_MONTH) == season:
@@ -818,10 +823,13 @@ static func festival_line(data: GameData, day: int) -> String:
 static func kickoff_lines(data: GameData, day: int, region_id: String) -> PackedStringArray:
 	var out := PackedStringArray()
 	var tasks := tasks_for(data, day)
+	var named: Array = []  # WU-534: festivals a task already names are not listed again
 	if not tasks.is_empty():
 		var parts: Array[String] = []
 		for t: Dictionary in tasks:
 			parts.append(task_short(data, t))
+			if String(t["kind"]) == "contest":
+				named.append(String(data.world_events.get(String(t["target"]), {}).get("name", "")))
 		var line := "Village tasks: %s." % ", ".join(parts)
 		if parts.size() > 1:
 			var last: String = parts.pop_back()
@@ -829,7 +837,7 @@ static func kickoff_lines(data: GameData, day: int, region_id: String) -> Packed
 		if line.length() > 120:
 			line = line.substr(0, 117).strip_edges() + "..."
 		out.append(line)
-	var fest := festival_line(data, day)
+	var fest := festival_line(data, day, named)
 	if fest != "":
 		out.append(fest)
 	var beasts := Wildlife.season_clause(data, region_id, day)

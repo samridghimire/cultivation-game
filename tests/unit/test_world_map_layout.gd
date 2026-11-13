@@ -32,30 +32,6 @@ func test_node_rect_fits_the_whole_name() -> void:
 	assert_eq(WorldMapScreen.node_rect("Hi", Vector2.ZERO, ThemeDB.fallback_font, 14).size.x, 110.0)
 
 
-func test_route_labels_hit_no_node() -> void:
-	var rects := _rects()
-	var footprints: Array[Rect2] = []
-	for r: Rect2 in rects.values():
-		footprints.append(WorldMapScreen.node_footprint(r))
-	var size := Vector2(40, 22)
-	for region: Dictionary in data().regions.values():
-		for route: Dictionary in region.get("routes", []):
-			var to := String(route.get("to", ""))
-			if not rects.has(to):
-				continue
-			var a: Vector2 = (rects[region["id"]] as Rect2).get_center()
-			var b: Vector2 = (rects[to] as Rect2).get_center()
-			var pos := WorldMapScreen.route_label_pos(a, b, size, footprints)
-			assert_false(footprints.any(func(n: Rect2) -> bool: return n.intersects(Rect2(pos, size))), "%s->%s label hits a node" % [region["id"], to])
-
-
-func test_route_label_slides_off_a_node_in_the_middle() -> void:
-	var blocker: Array[Rect2] = [Rect2(95, 80, 10, 40)]
-	var pos := WorldMapScreen.route_label_pos(Vector2(0, 100), Vector2(200, 100), Vector2(30, 20), blocker)
-	assert_false(blocker[0].intersects(Rect2(pos, Vector2(30, 20))))
-	assert_true(pos.y < 100.0)
-
-
 func test_node_colors_are_opaque_and_readable() -> void:
 	for unexplored: bool in [false, true]:
 		var c := WorldMapScreen.node_colors(unexplored)

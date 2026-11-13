@@ -4801,26 +4801,6 @@ func _store_season_snapshot() -> void:
 	player.season_start_sets = player.seasons_completed.size()
 
 
-## The first fixed-date festival of the season after `day`'s: "Coming: the Dragon Boat Festival in month 5." or "".
-func _coming_festival_line(day: int) -> String:
-	var next_day := day + Calendar.days_left_in_season(day) + 1
-	var next_season := Calendar.season_of(next_day)
-	var best := 99
-	var best_name := ""
-	for ev: Dictionary in data.world_events.values():
-		if not bool(ev.get("festival", false)):
-			continue
-		for m in ev.get("months", []):
-			var month := int(m)
-			var probe := (month - 1) * Calendar.DAYS_PER_MONTH
-			if Calendar.season_of(probe) == next_season and month < best:
-				best = month
-				best_name = String(ev.get("name", ""))
-	if best_name == "":
-		return ""
-	return "Coming: the %s in month %d." % [best_name, best]
-
-
 ## SEASON-012: looks back when a season ends. Only the last season ended is reviewed after a long skip.
 func _review_season_if_changed() -> void:
 	var now := GameClock.total_days
@@ -4832,7 +4812,7 @@ func _review_season_if_changed() -> void:
 		return
 	# the season that ended last: the one before today's
 	var last_ended := now - Calendar.day_of(now) - (Calendar.month_of(now) - 1) % 3 * Calendar.DAYS_PER_MONTH - 1
-	var extras := {"coming": _coming_festival_line(last_ended)}
+	var extras := {}  # WU-534: the coming festival rides on the kickoff ("Coming up"), named once
 	var tasks := SeasonTasks.tasks_for(data, last_ended)
 	if not tasks.is_empty() and String(player.season_tasks.get("season_key", "")) == SeasonTasks.season_key(last_ended):
 		var progress: Dictionary = player.season_tasks.get("progress", {})

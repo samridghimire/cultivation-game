@@ -488,7 +488,9 @@ func test_kickoff_lines_each_season() -> void:
 		assert_true(lines[0].length() <= 120, lines[0])
 		assert_true(lines[0].ends_with("."))
 	var summer := SeasonTasks.kickoff_lines(gd, 3 * Calendar.DAYS_PER_MONTH, "qingshi_village")
-	assert_true("Festivals: Dragon Boat Festival (month 5)." in summer)
+	assert_false("Festivals: Dragon Boat Festival (month 5)." in summer, "WU-534: the task line already names it")
+	assert_true(summer[0].contains("Dragon Boat Festival"))
+	assert_eq(SeasonTasks.festival_line(gd, 3 * Calendar.DAYS_PER_MONTH), "Festivals: Dragon Boat Festival (month 5).")
 	assert_true(lines_have_prefix(SeasonTasks.kickoff_lines(gd, 0, "qingshi_village"), "Festivals: ") == (SeasonTasks.festival_line(gd, 0) != ""))
 	assert_true(summer[0].contains("land a Lotus Bass"))
 
@@ -667,3 +669,26 @@ func test_roamer_only_target_is_still_found() -> void:
 					found += 1
 					assert_true(SeasonTasks.where({"kind": "hunt", "target": String(r)}, c, gd, day) != "", "roamer-only %s found" % r)
 	assert_true(found >= 0)
+
+func test_a_or_an_and_short_tasks() -> void:
+	assert_eq(SeasonTasks.a_or_an("Ice Perch"), "an Ice Perch")
+	assert_eq(SeasonTasks.a_or_an("Lotus Bass"), "a Lotus Bass")
+	assert_eq(SeasonTasks.a_or_an("Old Boar"), "an Old Boar")
+	assert_eq(SeasonTasks.a_or_an("Wild Boar"), "a Wild Boar")
+	var data: GameData = _gs().data
+	for id: String in data.items:
+		var name := String(data.items[id].get("name", ""))
+		var short := SeasonTasks.task_short(data, {"kind": "catch", "target": id, "count": 1})
+		assert_eq(short, "land " + SeasonTasks.a_or_an(name))
+
+
+func test_a_festival_is_named_once_in_the_kickoff() -> void:
+	var data: GameData = _gs().data
+	for day in [0, 90, 180, 270]:
+		var lines := SeasonTasks.kickoff_lines(data, day, "qingshi_village")
+		for ev: Dictionary in data.world_events.values():
+			if bool(ev.get("festival", false)):
+				var n := 0
+				for l in lines:
+					n += String(l).count(String(ev.get("name", "")))
+				assert_true(n <= 1, "%s named once (day %d)" % [ev.get("name", ""), day])
