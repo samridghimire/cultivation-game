@@ -402,6 +402,21 @@ static func jetty_land_end(lay: Dictionary) -> Vector2:
 	return Vector2(r.end.x if toward == -1 else r.position.x, r.get_center().y)
 
 
+## GFX-142: where the ragged pond bank crosses the line through `along` (x when `vertical`, else y): the distance from the pond
+## centre to the bank as a fraction of the half extent (like the old ellipse `t`), found by scanning inward from the ellipse.
+static func _pond_rim_t(c: Vector2, half: Vector2, pseed: int, along: float, vertical: bool, positive: bool) -> float:
+	var sgn := 1.0 if positive else -1.0
+	var ext := half.y if vertical else half.x
+	var steps := 48
+	for i in steps + 1:
+		var f := 1.0 - float(i) / float(steps)
+		var p := Vector2(along, c.y + sgn * ext * f) if vertical else Vector2(c.x + sgn * ext * f, along)
+		var n := Vector2((p.x - c.x) / half.x, (p.y - c.y) / half.y)
+		if n.length() <= pond_edge(atan2(n.y, n.x), pseed):
+			return f
+	return 0.0
+
+
 static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 	var pos := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
 	var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
@@ -420,17 +435,18 @@ static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 		var d := pos.distance_to(pc)
 		if d < best_dist:
 			best_dist = d
-			best = {"c": pc, "half": half}
+			best = {"c": pc, "half": half, "seed": hash(str(other["pos"]))}
 	if best.is_empty():
 		return {"rect": own, "vertical": size.y > size.x, "on_water": false}
 	var c: Vector2 = best["c"]
 	var half: Vector2 = best["half"]
+	var pseed: int = best["seed"]
 	var delta := pos - c
 	var vertical := absf(delta.y) / half.y >= absf(delta.x) / half.x
 	var rect: Rect2
 	if vertical:
 		var x := clampf(pos.x, c.x - half.x * 0.8, c.x + half.x * 0.8)
-		var t := sqrt(maxf(0.0, 1.0 - pow((x - c.x) / half.x, 2.0)))
+		var t := _pond_rim_t(c, half, pseed, x, true, delta.y >= 0.0)
 		long_side = minf(long_side, maxf(JETTY_MIN_LEN, half.y * t * 1.5))  # GFX-116: the water end stays inside a shallow pond
 		if delta.y >= 0.0:
 			var rim := c.y + half.y * t
@@ -440,7 +456,7 @@ static func jetty_layout(region: Dictionary, lm: Dictionary) -> Dictionary:
 			rect = Rect2(x - short_side / 2.0, rim2 - JETTY_SHORE, short_side, long_side)
 	else:
 		var y := clampf(pos.y, c.y - half.y * 0.8, c.y + half.y * 0.8)
-		var t2 := sqrt(maxf(0.0, 1.0 - pow((y - c.y) / half.y, 2.0)))
+		var t2 := _pond_rim_t(c, half, pseed, y, false, delta.x >= 0.0)
 		long_side = minf(long_side, maxf(JETTY_MIN_LEN, half.x * t2 * 1.5))
 		if delta.x >= 0.0:
 			var rim3 := c.x + half.x * t2
@@ -1544,10 +1560,18 @@ static func pond_mask_radius(angle: float, seed: int, amp: float) -> float:
 	return 1.0 + amp * lerpf(pts[i0], pts[(i0 + 1) % n], k)
 
 
-## GFX-135: how far out the pond's outer (bank) edge reaches along `angle`, as a fraction of the landmark ellipse: 0.88 .. 1.0.
+## GFX-135: how far out the pond's outer (bank) edge reaches along `angle`, as a fraction of the landmark ellipse: 0.72 .. 1.0.
 static func pond_edge(angle: float, seed: int) -> float:
-	var amp := 0.12
-	return 0.88 + 0.12 * (pond_mask_radius(angle, seed, amp) - (1.0 - amp)) / (2.0 * amp)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed * 31 + 7
+	var v := 0.0
+	var lobes := rng.randi_range(2, 3)
+	for k in lobes:  # GFX-142: low-frequency lobes (period >= 120 degrees) make coves and a bulge
+		var f := float(rng.randi_range(1, 3))
+		v += rng.randf_range(0.6, 1.0) * sin(angle * f + rng.randf() * TAU) / float(lobes)
+	var ripple := (pond_mask_radius(angle, seed, 0.12) - 1.0) / 0.12  # -1..1
+	var e := 0.84 + 0.5 * v + 0.03 * ripple
+	return clampf(e, 0.72, 1.0)
 
 
 ## GFX-135: width of the bank band (px) between the water and the outer edge of a pond.

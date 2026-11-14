@@ -90,6 +90,19 @@ static func meander(src: Image, shape: Dictionary) -> Image:
 ## GFX-135: a pond as an image: ragged mask (Scenery.pond_edge), a muddy/sandy bank band with a darker wet edge, lighter shallows,
 ## deep water in the middle, a few stones and reed clumps on the bank. Frozen ponds are pale ice with seeded cracks and snow drifts
 ## on the bank. Seeded: same inputs, same pixels.
+## GFX-142: seeded value noise over 3-8 px cells, true where a snow drift lies on a frozen pond's bank.
+static func _drift(x: int, y: int, seed: int) -> bool:
+	var cell := 3 + (absi(seed) % 3) * 2
+	var gx := x / cell
+	var gy := y / cell
+	var h := hash(Vector3i(gx, gy, seed))
+	var h2 := hash(Vector3i(gx + 1, gy, seed))
+	var v := float(absi(h) % 1000) / 1000.0
+	var v2 := float(absi(h2) % 1000) / 1000.0
+	var f := float(x % cell) / float(cell)
+	return lerpf(v, v2, f) < 0.62
+
+
 static func pond_image(px: Vector2i, water: Color, frozen: bool, kind: String, seed: int) -> Image:
 	var w := px.x
 	var h := px.y
@@ -116,11 +129,12 @@ static func pond_image(px: Vector2i, water: Color, frozen: bool, kind: String, s
 			var depth := (edge - d) / u  # pixels in from the outer edge
 			var jitter := float((x * 7 + y * 13) % 5) * 0.03
 			var col: Color
-			if depth < 2.0:
-				col = bank.lightened(jitter) if not frozen else (snow if (x * 5 + y * 3) % 7 < 5 else bank)
-			elif depth < 3.0:
+			var bank_w := 3.0 + float(int(fposmod(atan2(ny, nx), TAU) * 3.0 + float(absi(seed) % 5)) % 3) * 1.0  # GFX-142: 3-5 px, by angle
+			if depth < bank_w - 1.0:
+				col = bank.lightened(jitter) if not frozen else (snow if _drift(x, y, seed) else bank)
+			elif depth < bank_w:
 				col = wet if not frozen else ice.darkened(0.12)
-			elif depth < 5.0:
+			elif depth < bank_w + 2.0:
 				col = shallow if not frozen else ice.lightened(0.04)
 			else:
 				col = water.lightened(jitter * 0.4) if not frozen else ice

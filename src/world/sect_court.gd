@@ -175,11 +175,29 @@ static func plank_color(snowy: bool) -> Color:
 	return Color("7d6244") if snowy else Color("6b5238")
 
 
+## GFX-142: the boardwalk platform outline: ragged (amp 6) with one seeded corner missing, so it is never a rectangle.
+static func reed_hall_outline(court: Rect2) -> PackedVector2Array:
+	var seed_v := hash(str(court))
+	var edge := Scenery.ragged_outline(court, seed_v, 14.0, 6.0)
+	var corners := [court.position, Vector2(court.end.x, court.position.y), court.end, Vector2(court.position.x, court.end.y)]
+	var cor: Vector2 = corners[absi(seed_v) % 4]
+	var cut := minf(court.size.x, court.size.y) * 0.3
+	var mid := court.get_center()
+	var out := PackedVector2Array()
+	for q in edge:
+		var d := q.distance_to(cor)
+		if d < cut:
+			var toward := (mid - q).normalized()
+			q += toward * (cut - d) * 0.8
+		out.append(q)
+	return out
+
+
 ## GFX-121: a raised boardwalk platform on short stilts with a rail along its front and reeds at its edge.
 static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
 	var wood := plank_color(snowy)
 	var seam := wood.darkened(0.4)
-	var edge := Scenery.ragged_outline(court, hash(str(court)), 8.0, 3.0)  # GFX-136: a ragged raised platform, not a brick rectangle
+	var edge := reed_hall_outline(court)
 	var shadow := PackedVector2Array()
 	for q in edge:
 		shadow.append(q + Vector2(2, 6))

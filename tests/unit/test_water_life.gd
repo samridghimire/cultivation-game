@@ -56,7 +56,8 @@ func test_ripples_never_land_on_jetty_planks() -> void:
 		{"kind": "jetty", "pos": [100, 150], "size": [28, 88]}]}}
 	var w := WaterLife.new()
 	w.setup(region, true, false, false)
-	assert_true(w.on_jetty(Vector2(100, 140)))
+	var plank: Rect2 = Scenery.jetty_layout(region, region["map"]["landmarks"][1])["rect"]  # GFX-142: the bank is ragged now
+	assert_true(w.on_jetty(plank.get_center()))
 	assert_false(w.on_jetty(Vector2(10, 10)))
 	for i in 3000:
 		w.advance(1.0 / 60.0)

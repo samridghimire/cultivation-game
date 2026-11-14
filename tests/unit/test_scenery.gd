@@ -678,8 +678,10 @@ func test_jetty_runs_out_over_water() -> void:
 				var half := Vector2(float(other["size"][0]), float(other["size"][1])) / 2.0
 				if ((water_end - pc) / half).length() < 1.0:
 					best_in = true
-				var q := ((shore_end - pc) / half).length()
-				best_rim = minf(best_rim, absf(q - 1.0) * minf(half.x, half.y))
+				var nrm := (shore_end - pc) / half
+				var q := nrm.length()
+				var bank := Scenery.pond_edge(atan2(nrm.y, nrm.x), hash(str(other["pos"])))  # GFX-142: the ragged bank, not the ellipse
+				best_rim = minf(best_rim, absf(q - bank) * minf(half.x, half.y))
 			assert_true(best_in, "%s: jetty water end is inside its pond" % region["id"])
 			assert_true(best_rim <= 6.0, "%s: jetty shore end within 6 px of the rim (%.1f)" % [region["id"], best_rim])
 			checked += 1

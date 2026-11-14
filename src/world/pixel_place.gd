@@ -605,8 +605,8 @@ static func _gate_v() -> Array:
 ## A flat stone dais ringed with boulders and a cushion in the middle.
 static func _meditation() -> Array:
 	var c := canvas(44, 30)
-	ell(c, 22, 17, 21, 12, "S")
-	ell(c, 22, 15, 20, 11, "s")
+	blob(c, 22, 17, 21, 12, "S", 1216)
+	blob(c, 22, 15, 20, 11, "s", 1217)
 	ell(c, 22, 15, 14, 7, "S")
 	ell(c, 22, 14, 13, 6, "W")
 	ell(c, 22, 13, 5, 3, "r")
@@ -655,8 +655,8 @@ static func _gather_rubble() -> Array:
 ## GFX-102: a scorched ring round a cracked black rock with ember glints.
 static func _gather_crater() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 21, 24, 12, "k")
-	ell(c, 25, 20, 20, 10, "T")
+	blob(c, 25, 21, 24, 12, "k", 1358)
+	blob(c, 25, 20, 20, 10, "T", 1359)
 	ell(c, 25, 20, 14, 7, "k")
 	ell(c, 25, 18, 9, 6, "S")
 	rect(c, 21, 15, 9, 6, "k")
@@ -671,8 +671,8 @@ static func _gather_crater() -> Array:
 ## GFX-102: a rock outcrop with pale-blue crystal spikes.
 static func _gather_crystal() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 24, 23, 9, "S")
-	ell(c, 25, 22, 21, 8, "s")
+	blob(c, 25, 24, 23, 9, "S", 1474)
+	blob(c, 25, 22, 21, 8, "s", 1475)
 	for p: Array in [[11, 20, 4, 11], [19, 14, 5, 16], [28, 10, 5, 20], [37, 18, 4, 12]]:
 		var x: int = p[0]
 		var h: int = p[3]
@@ -687,8 +687,8 @@ static func _gather_crystal() -> Array:
 ## GFX-102: a white-blue rock shelf under snow with two tiny blue flowers.
 static func _gather_frost() -> Array:
 	var c := canvas(50, 34)
-	ell(c, 25, 22, 24, 11, "B")
-	ell(c, 25, 20, 22, 9, "b")
+	blob(c, 25, 22, 24, 11, "B", 1590)
+	blob(c, 25, 20, 22, 9, "b", 1591)
 	ell(c, 25, 18, 18, 6, "n")
 	rect(c, 4, 22, 42, 2, "B")
 	for p: Array in [[12, 14], [34, 16], [20, 26]]:
@@ -703,6 +703,7 @@ static func _gather_frost() -> Array:
 ## GFX-102: stepped green bands with stone edges and orchid dots (tinted by the place colour).
 static func _gather_terrace() -> Array:
 	var c := canvas(50, 34)
+	blob(c, 25, 18, 24, 15, "s", 1704, 0.1)  # GFX-142: terrace soil, ragged, under the bands
 	for i in 3:
 		var y := 4 + i * 9
 		var inset := 6 - i * 2
@@ -752,8 +753,8 @@ static func _jetty() -> Array:
 ## A cave mouth in a rock face.
 static func _cave() -> Array:
 	var c := canvas(54, 38)
-	ell(c, 27, 24, 26, 12, "s")
-	ell(c, 27, 17, 23, 16, "s")
+	blob(c, 27, 24, 26, 12, "s", 1755)
+	blob(c, 27, 17, 23, 16, "s", 1756)
 	ell(c, 30, 19, 17, 12, "S")
 	ell(c, 27, 16, 23, 15, "s")
 	rect(c, 0, 28, 54, 10, ".")

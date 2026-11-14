@@ -92,9 +92,18 @@ static func ellipse(ci: CanvasItem, center: Vector2, radii: Vector2, color: Colo
 		ci.draw_colored_polygon(pts, color)
 
 
+## GFX-142: a filled ragged ellipse (radius wobbles +-12% by Scenery.pond_mask_radius) for ground bases that must not read as plates.
+static func ragged_ellipse(ci: CanvasItem, center: Vector2, radii: Vector2, color: Color, seed: int) -> void:
+	var pts := PackedVector2Array()
+	for i in 32:
+		var a := TAU * i / 32.0
+		pts.append(center + Vector2.from_angle(a) * radii * Scenery.pond_mask_radius(a, seed, 0.12))
+	ci.draw_colored_polygon(pts, color)
+
+
 ## A pool of qi (the place color) ringed by flat stones.
 static func _meditation(ci: CanvasItem, h: Vector2, c: Color) -> void:
-	ellipse(ci, Vector2.ZERO, h, c.lightened(0.35))
+	ragged_ellipse(ci, Vector2.ZERO, h, c.lightened(0.35), 142)
 	ellipse(ci, Vector2.ZERO, h * 0.75, c)
 	for i in 10:
 		var p := Vector2.from_angle(TAU * i / 10.0) * h * 0.92
@@ -167,8 +176,7 @@ static func _gate(ci: CanvasItem, h: Vector2, c: Color) -> void:
 
 ## Tilled soil with sprouting herbs in the place color.
 static func _herb_patch(ci: CanvasItem, h: Vector2, c: Color) -> void:
-	ellipse(ci, Vector2.ZERO, h, Color("5a4330"))
-	ellipse(ci, Vector2.ZERO, h, OUTLINE, 1.5)
+	ragged_ellipse(ci, Vector2.ZERO, h, Color("5a4330"), 143)
 	for row in 2:
 		for col in 4:
 			var p := Vector2(-h.x * 0.6 + col * h.x * 0.4, -h.y * 0.25 + row * h.y * 0.5)
