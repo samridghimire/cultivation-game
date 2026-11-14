@@ -868,3 +868,30 @@ func test_every_wild_region_has_groves_clear_of_paths_and_places() -> void:
 		for u in Scenery.undergrowth(r, placed):
 			for b in blocked:
 				assert_false(b.has_point(u["pos"]), "%s undergrowth off paths/places" % id)
+
+
+## GFX-147: terrace bands are 3-4 ragged strips inside the rect that never overlap, and are deterministic.
+func test_terrace_bands_stack_without_overlap() -> void:
+	for r: Rect2 in [Rect2(100, 200, 130, 80), Rect2(0, 0, 130, 110)]:
+		var a := Scenery.terrace_bands(r, 9)
+		assert_true(a.size() >= 3 and a.size() <= 4, "3-4 bands")
+		assert_eq(a, Scenery.terrace_bands(r, 9))
+		var prev_bottom := -INF
+		for poly in a:
+			var lo := INF
+			var hi := -INF
+			for q in poly:
+				assert_true(r.has_point(q), "point inside the rect")
+				lo = minf(lo, q.y)
+				hi = maxf(hi, q.y)
+			assert_gt(lo, prev_bottom, "band starts below the previous one")
+			prev_bottom = hi
+		assert_true(a != Scenery.terrace_bands(r, 10))
+
+
+func test_terrace_court_props_are_four_corners_inside() -> void:
+	var court := Rect2(900, 700, 180, 120)
+	var props := SectCourt.terrace_court_props(court)
+	assert_eq(props.size(), 4)
+	for p in props:
+		assert_true(court.has_point(p))

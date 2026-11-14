@@ -267,7 +267,7 @@ static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy:
 
 ## GFX-121: pale stone flags on a raised terrace, a step along the front and snow on the edge in winter.
 static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
-	var base := Color("c9ccd0") if not snowy else Color("e6eaee")
+	var base := Color("c9ccd0") if not snowy else Color("c4cbd3")
 	var mortar := base.darkened(0.22)
 	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 7.0), Color(0, 0, 0, 0.25))
 	ci.draw_rect(court, base)
@@ -282,7 +282,7 @@ static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy
 			x += STONE * 2.0
 		y += STONE
 		row += 1
-	ci.draw_rect(court, mortar.darkened(0.2), false, 2.0)
+	ci.draw_rect(court, mortar.darkened(0.3), false, 3.0)  # GFX-147: a darker kerb
 	# The front step: a lighter lip over a shaded riser.
 	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 6.0), base.darkened(0.12))
 	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 2.0), base.lightened(0.2))
@@ -298,11 +298,39 @@ static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 2.0, 6.0, 10.0), base.darkened(0.15))
 		ci.draw_rect(Rect2(c.x - 6.0, c.y - 9.0, 12.0, 7.0), base.lightened(0.1))
 		ci.draw_rect(Rect2(c.x - 3.0, c.y - 7.0, 6.0, 3.0), Color("f2c75c"))
-	if snowy:
-		ci.draw_rect(Rect2(court.position.x - 2.0, court.position.y - 3.0, court.size.x + 4.0, 4.0), Color("f4f8fb"))
-		ci.draw_rect(Rect2(court.position.x - 2.0, court.end.y - 2.0, court.size.x + 4.0, 5.0), Color("f4f8fb"))
+	for c: Vector2 in terrace_court_props(court):  # GFX-147: stone lanterns at the corners
+		ci.draw_rect(Rect2(c.x - 4.0, c.y + 6.0, 8.0, 3.0), mortar)
+		ci.draw_rect(Rect2(c.x - 2.0, c.y - 1.0, 4.0, 7.0), base.darkened(0.2))
+		ci.draw_rect(Rect2(c.x - 5.0, c.y - 7.0, 10.0, 6.0), base.lightened(0.08))
+		ci.draw_rect(Rect2(c.x - 2.0, c.y - 5.0, 4.0, 3.0), Color("f2c75c"))
+		if snowy:
+			ci.draw_rect(Rect2(c.x - 5.0, c.y - 9.0, 10.0, 3.0), Color("f4f8fb"))
+	if snowy:  # a ragged snow edge, thicker on the north side and in drifts, not a straight bar
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(str(court) + "|snow")
+		for side in [0, 2]:
+			var sy := court.position.y - 3.0 if side == 0 else court.end.y - 2.0
+			var sx := court.position.x - 2.0
+			while sx < court.end.x:
+				var w := rng.randf_range(6.0, 14.0)
+				ci.draw_rect(Rect2(sx, sy + rng.randf_range(-1.0, 1.0), minf(w, court.end.x + 2.0 - sx), rng.randf_range(2.0, 4.0)), Color("f4f8fb"))
+				sx += w + rng.randf_range(0.0, 5.0)
+		for side in [0, 1]:
+			var ex := court.position.x - 1.0 if side == 0 else court.end.x - 2.0
+			var ey := court.position.y
+			while ey < court.end.y:
+				var h := rng.randf_range(4.0, 9.0)
+				ci.draw_rect(Rect2(ex, ey, rng.randf_range(2.0, 3.0), minf(h, court.end.y - ey)), Color("f4f8fb"))
+				ey += h + rng.randf_range(2.0, 8.0)
 		for i in int(court.size.x / 28.0):
 			ci.draw_rect(Rect2(court.position.x + 8.0 + i * 28.0, court.end.y + 3.0, 6.0, 4.0), Color("d6e6ef"))
+
+
+## GFX-147: where the terrace court's stone lanterns stand: its four corners, 12 px in from each.
+static func terrace_court_props(court: Rect2) -> Array[Vector2]:
+	var o := 12.0
+	return [Vector2(court.position.x + o, court.position.y + o + 8.0), Vector2(court.end.x - o, court.position.y + o + 8.0),
+		Vector2(court.position.x + o, court.end.y - o - 2.0), Vector2(court.end.x - o, court.end.y - o - 2.0)]
 
 
 const STELE_W := 136.0  ## the hanging name board (its minimum width)

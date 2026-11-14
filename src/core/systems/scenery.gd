@@ -1441,6 +1441,35 @@ static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: 
 		"look": look, "vertical": vertical}
 
 
+## GFX-147: the bands of a hillside terrace inside `rect`: 3-4 ragged strips stacked top to bottom, each shifted a few px
+## sideways from the one above, with a 3 px gap under each for its riser. Bands never overlap and stay inside `rect`;
+## same seed, same bands. Returned top (highest) to bottom; band `i`'s riser is the gap just below it.
+static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Array]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var n := 3 if rect.size.y < 90.0 else 4
+	var step := rect.size.y / float(n)
+	var out: Array[PackedVector2Array] = []
+	for i in n:
+		var top := rect.position.y + step * float(i) + 1.0
+		var bottom := rect.position.y + step * float(i + 1) - 3.0
+		var left := rect.position.x + 2.0 + float((i + seed_value) % 2) * 5.0 + rng.randf_range(0.0, 3.0)
+		var right := rect.end.x - 2.0 - float((i + seed_value + 1) % 2) * 5.0 - rng.randf_range(0.0, 3.0)
+		var poly := PackedVector2Array()
+		var x := left
+		while x < right:
+			poly.append(Vector2(x, top + rng.randf_range(0.0, 2.0)))
+			x += 8.0
+		poly.append(Vector2(right, top + rng.randf_range(0.0, 2.0)))
+		# the downhill edge is slightly ragged too
+		for k in range(4, 0, -1):
+			var t := float(k) / 5.0
+			poly.append(Vector2(lerpf(left, right, t), bottom - rng.randf_range(0.0, 1.0)))
+		poly.append(Vector2(left, bottom))
+		out.append(poly)
+	return out
+
+
 ## GFX-143: the layout of a rented field plot inside `rect` (GFX-140's field_layout look at the plot's own size). `stage` is the
 ## plot's crop state: -1 empty (bare furrows), 0..3 the growth stage of its most advanced crop (FieldPlots.growth_stage; 3 = ripe).
 ## Returns field_layout's keys plus `border` (1-2 low wattle/stone strips, Rect2, along the sides picked by the seed, outside the

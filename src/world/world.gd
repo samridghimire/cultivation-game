@@ -1235,6 +1235,7 @@ func _draw() -> void:
 	_draw_relief(map)
 	_draw_crags(map)
 	_draw_sect_courts()
+	_draw_terrace_places()
 	_draw_marsh_pools()
 	for lm: Dictionary in map.get("landmarks", []):
 		_draw_landmark(lm)
@@ -1824,6 +1825,44 @@ func _draw_scree_detail(map: Dictionary) -> void:
 			var q: Vector2 = (c["center"] as Vector2) + Vector2(rng.randf_range(-9.0, 9.0), rng.randf_range(-6.0, 6.0))
 			var sz2 := rng.randf_range(2.0, 4.0)
 			draw_rect(Rect2(q, Vector2(sz2, sz2 - 0.5)), rock.lightened(0.2) if rng.randf() < 0.5 else rock.darkened(0.35))
+
+
+## GFX-147: "terrace" gather places as stepped hillside bands: each band a ragged strip of soil with crop rows in the place colour,
+## a darker riser under it, snow on the band tops in winter. No straight box border.
+func _draw_terrace_places() -> void:
+	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	for place: Dictionary in _region.get("places", []):
+		if String(place.get("type", "")) != "gather" or String(place.get("look", "")) != "terrace":
+			continue
+		var sz := _vec(place.get("size", [130, 80]))
+		var r := Rect2(_vec(place["pos"]) - sz / 2.0, sz)
+		var tint := Color(String(place.get("color", "9aa8d0")))
+		var bands := Scenery.terrace_bands(r, int(r.position.x) * 31 + int(r.position.y) * 17)
+		for i in bands.size():
+			var poly := bands[i]
+			var lo: float = poly[0].y
+			var hi: float = poly[0].y
+			var minx: float = poly[0].x
+			var maxx: float = poly[0].x
+			for q in poly:
+				lo = minf(lo, q.y)
+				hi = maxf(hi, q.y)
+				minx = minf(minx, q.x)
+				maxx = maxf(maxx, q.x)
+			var riser := Color("6a5a48").darkened(0.08 * float(i))
+			draw_rect(Rect2(minx + 1.0, hi - 0.5, maxx - minx - 2.0, 3.0), riser)
+			draw_rect(Rect2(minx + 1.0, hi + 2.0, maxx - minx - 2.0, 1.0), riser.darkened(0.3))
+			draw_colored_polygon(poly, Color("7a6a4a").lerp(Color("5a4a32"), 0.15 * float(i)))
+			var y := lo + 4.0
+			while y < hi - 2.0:
+				draw_line(Vector2(minx + 4.0, y), Vector2(maxx - 4.0, y), tint.darkened(0.25) if not snowy else Color("c9d6e2"), 1.0)
+				var x := minx + 6.0 + float(i % 2) * 3.0
+				while x < maxx - 5.0:
+					draw_rect(Rect2(x, y - 2.0, 2.0, 2.0), tint if not snowy else Color("e9f1f8"))
+					x += 7.0
+				y += 5.0
+			if snowy:
+				draw_polyline(poly.slice(0, poly.size() / 2 + 1), Color(0.95, 0.98, 1.0, 0.9), 2.0)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).
