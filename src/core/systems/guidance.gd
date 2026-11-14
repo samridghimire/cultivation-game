@@ -571,6 +571,13 @@ static func short_hint(line: String, data: GameData = null) -> String:
 		if meal_short.length() <= SHORT_HINT_CHARS:
 			return meal_short
 		return "%s: %s -> %s" % [meal.get_string(1), meal.get_string(3), meal.get_string(4)]
+	# GUIDE-238: "Hunter Ma can teach you Iron Fist (favor 12/15); Hunter Ma likes Venison." -> "Hunter Ma teaches Iron Fist (favor 12/15)"
+	re.compile("^(.+?) can teach you (.+?)( \\(favor \\d+/\\d+\\))?(?:;.*?)?(?: in .+?)?\\.$")
+	var teach := re.search(line)
+	if teach != null:
+		var taught := "%s teaches %s%s" % [teach.get_string(1), teach.get_string(2), teach.get_string(3)]
+		if taught.length() <= SHORT_HINT_CHARS:
+			return taught
 	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
 	re.compile("^You know no fighting style\\. (?:Manual|Look for the Manual): (.+?)(?: at (?:the )?(.+?))? (?:teaches|is sold|sells)\\b")
 	var m := re.search(line)
@@ -787,7 +794,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "", today)
 	if buy != "":
 		out.append(buy)
-	var newcomer := _newcomer_hints(c, data, flags, region_id, today) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
+	var newcomer := _newcomer_hints(c, data, flags, region_id, today, people, favor) if c.realm_index <= NEWCOMER_MAX_REALM else PackedStringArray()
 	out.append_array(newcomer)
 	var omen_hint := almanac_hint(c, data, flags, region_id, today, people, favor)
 	if omen_hint != "":
@@ -858,7 +865,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if c.professions.is_empty():
 		out.append(_workshop_hint(c, data))
 	if c.realm_index > NEWCOMER_MAX_REALM:
-		var fighting := first_combat_hint(c, data, region_id)
+		var fighting := fighting_hint(c, data, region_id, people, favor)
 		if fighting != "":
 			out.append(fighting)
 		elif c.techniques.is_empty():
@@ -3693,6 +3700,117 @@ static func _scan_first_combat_manual(c: CharacterData, data: GameData, region_i
 	return best if not best.is_empty() else anywhere
 
 
+## GUIDE-238: a villager in `region_id` (or one route away) who can teach `c` a combat style they lack, whose
+## favor requirement the player meets or is within STYLE_FAVOR_SLACK of. {} when none. Entry: {npc_id, name,
+## technique, tech_name, need, favor, region_id, region_name, days, liked}; `liked` is the first liked item
+## the player holds or the merchant here sells ("" if none). `favor` is GameState.npc_favor.
+const STYLE_FAVOR_SLACK := 10
+static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}) -> Dictionary:
+	if region_id == "" or Techniques.knows_kind(c, data, "combat"):
+		return {}
+	var map := _route_day_map(c, data, region_id, 1)
+	var best: Dictionary = {}
+	for npc_id: String in data.npcs:
+		var def: Dictionary = data.npcs[npc_id]
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null or not npc.alive or not data.dialogues.has(String(def.get("dialogue", ""))):
+			continue
+		var at := Npcs.region_of(npc, data)
+		if not (map["days"] as Dictionary).has(at):
+			continue
+		var have := int(favor.get(npc_id, 0))
+		var lesson := _style_lesson(c, npc, data, data.dialogues[String(def["dialogue"])], have)
+		if lesson.is_empty():
+			continue
+		var days := int(map["days"][at])
+		var key := [days, int(lesson["need"]), npc_id]
+		if not best.is_empty() and key >= (best["_key"] as Array):
+			continue
+		best = {"npc_id": npc_id, "name": npc.name, "technique": lesson["technique"], "tech_name": data.techniques[lesson["technique"]].name,
+			"need": int(lesson["need"]), "favor": have, "region_id": at, "region_name": Exploration.region_name(data, at), "days": days, "liked": "", "_key": key}
+	if best.is_empty():
+		return {}
+	best.erase("_key")
+	if int(best["favor"]) < int(best["need"]):
+		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
+	return best
+
+
+## The cheapest-favor combat lesson in `dialogue` that `c` could take with favor raised to its need: {technique, need}, or {}.
+static func _style_lesson(c: CharacterData, npc: CharacterData, data: GameData, dialogue: Dictionary, have: int) -> Dictionary:
+	var nodes: Dictionary = dialogue.get("nodes", {})
+	var found: Dictionary = {}
+	for node_id: String in nodes:
+		for choice: Dictionary in nodes[node_id].get("choices", []):
+			var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
+			if tech_id == "" or not data.techniques.has(tech_id) or c.techniques.has(tech_id):
+				continue
+			var tech: TechniqueDef = data.techniques[tech_id]
+			if tech.kind != "combat" or data.realm_index_of(tech.min_realm) > c.realm_index:
+				continue
+			var conds: Array[Dictionary] = []
+			if choice.has("if"):
+				conds.append(choice["if"])
+			for other_id: String in nodes:
+				for other: Dictionary in nodes[other_id].get("choices", []):
+					if String(other.get("next", "")) == node_id and other.has("if"):
+						conds.append(other["if"])
+			var need := 0
+			for cond in conds:
+				need = maxi(need, int(cond.get("min_favor", 0)))
+			if need > have + STYLE_FAVOR_SLACK:
+				continue
+			var ctx := {"player": c, "npc": npc, "data": data, "flags": {}, "favor": maxi(have, need), "today": -1}
+			var blocked := false
+			for cond in conds:
+				if Dialogue.unmet_reason(cond, ctx) != "":
+					blocked = true
+			if blocked:
+				continue
+			if found.is_empty() or need < int(found["need"]):
+				found = {"technique": tech_id, "need": need}
+	return found
+
+
+static func _liked_item(c: CharacterData, data: GameData, npc_id: String, region_id: String) -> String:
+	for item_id: String in data.npcs.get(npc_id, {}).get("likes", []):
+		if not data.items.has(item_id):
+			continue
+		if c.item_count(item_id) > 0 or not merchant_place(data, region_id, item_id, true).is_empty():
+			return String(data.items[item_id].get("name", item_id))
+	return ""
+
+
+## GUIDE-238: the no-fighting-style hint: a teacher first (style_teacher), else the manual with any stones gap. "" when a combat technique is known.
+static func fighting_hint(c: CharacterData, data: GameData, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> String:
+	var teacher := style_teacher(c, people, data, region_id, favor)
+	if not teacher.is_empty():
+		return style_teacher_hint(teacher)
+	var manual := first_combat_hint(c, data, region_id)
+	if manual == "":
+		return ""
+	return manual.trim_suffix(".") + _manual_gap(c, data, region_id) + "."
+
+
+## " (N more stones)" when the cheapest manual costs more than the player has, else "".
+static func _manual_gap(c: CharacterData, data: GameData, region_id: String) -> String:
+	var found := first_combat_manual(c, data, region_id)
+	var short := int(found.get("price", 0)) - c.item_count("spirit_stone") if not found.is_empty() else 0
+	return " (%d more stones)" % short if short > 0 else ""
+
+
+## The teacher line for `style_teacher`'s entry: "Hunter Ma can teach you Iron Fist (favor 12/15)." plus what he likes.
+static func style_teacher_hint(t: Dictionary) -> String:
+	var line := "%s can teach you %s" % [t["name"], t["tech_name"]]
+	if int(t["favor"]) < int(t["need"]):
+		line += " (favor %d/%d)" % [int(t["favor"]), int(t["need"])]
+		if String(t["liked"]) != "":
+			line += "; %s likes %s" % [t["name"], t["liked"]]
+	if int(t["days"]) > 0:
+		line += " in %s" % t["region_name"]
+	return line + "."
+
+
 ## "You know no fighting style..." naming where to get one, or "" (GUIDE-019).
 static func first_combat_hint(c: CharacterData, data: GameData, region_id: String) -> String:
 	var found := first_combat_manual(c, data, region_id)
@@ -3875,7 +3993,7 @@ static func _ready_mission_wants(c: CharacterData, data: GameData, item_id: Stri
 
 
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
-static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1) -> PackedStringArray:
+static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1, people: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var breathing := c.techniques.is_empty() and data.techniques.has("basic_breathing")
 	var technique_done := false
@@ -3909,7 +4027,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 				var stall_when := String(offer.get("when", ""))
 				var at := String(offer.get("where", "here"))
 				out.append("Buy %s with spare stones: the %s %s sells them for %d stones%s, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], at, offer["price"], (" (" + stall_when.trim_prefix(", ") + ")") if stall_when != "" else "", Calendar.format_duration(int(offer["days"]))])
-	var fighting := first_combat_hint(c, data, region_id)
+	var fighting := fighting_hint(c, data, region_id, people, favor)
 	if fighting != "":
 		out.append(fighting)
 	var practise := practice_hint(c, data, region_id, today, flags)

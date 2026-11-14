@@ -6783,3 +6783,59 @@ func test_almanac_hint_plain_day_and_no_techniques() -> void:
 	assert_eq(Guidance.almanac_hint(c, data(), {}, "qingshi_village", _plain_day(c)), "")
 	assert_eq(Guidance.almanac_hint(c, data(), {}, "qingshi_village", _omen_day(c, "practice_mult")), "")
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, {}, {}, "qingshi_village", _omen_day(c, "fishing_mult")), "Good for fishing"))
+
+
+func _style_world() -> Dictionary:
+	var d := data()
+	var npcs := {}
+	Npcs.ensure_all(npcs, d, seeded_rng())
+	return npcs
+
+
+func test_style_teacher_in_region_names_favor_and_liked_item() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var npcs := _style_world()
+	var t := Guidance.style_teacher(c, npcs, data(), "qingshi_village", {"hunter_ma": 12})
+	assert_eq(t.get("npc_id", ""), "hunter_ma")
+	assert_eq(t["need"], 15)
+	assert_eq(t["favor"], 12)
+	c.inventory = {"venison": 1}
+	t = Guidance.style_teacher(c, npcs, data(), "qingshi_village", {"hunter_ma": 12})
+	assert_eq(t["liked"], "Venison")
+	var line := Guidance.style_teacher_hint(t)
+	assert_true(line.begins_with("Hunter Ma can teach you Iron Fist (favor 12/15)"), line)
+	assert_true(line.contains("likes Venison"), line)
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, npcs, {}, "qingshi_village", 10, {"hunter_ma": 12}), "can teach you Iron Fist"))
+
+
+func test_style_teacher_ready_has_no_favor_clause() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var t := Guidance.style_teacher(c, _style_world(), data(), "qingshi_village", {"hunter_ma": 20})
+	assert_eq(Guidance.style_teacher_hint(t), "Hunter Ma can teach you Iron Fist.")
+
+
+func test_style_teacher_one_route_away_names_region() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var npcs := _style_world()
+	var next := ""
+	for route: Dictionary in d.regions["qingshi_village"]["routes"]:
+		next = String(route["to"])
+		break
+	npcs["hunter_ma"].home_region = next
+	var t := Guidance.style_teacher(c, npcs, d, "qingshi_village", {"hunter_ma": 20})
+	assert_eq(t.get("region_id", ""), next)
+	assert_true(Guidance.style_teacher_hint(t).contains(" in "), Guidance.style_teacher_hint(t))
+
+
+func test_no_style_teacher_falls_back_to_manual_with_stones_gap() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	c.inventory = {"spirit_stone": 5}
+	var npcs := _style_world()
+	assert_true(Guidance.style_teacher(c, npcs, data(), "qingshi_village", {"hunter_ma": 2}).is_empty(), "favor far short")
+	var line := Guidance.fighting_hint(c, data(), "qingshi_village", npcs, {"hunter_ma": 2})
+	assert_true(line.contains("Wandering Merchant") and line.contains("(10 more stones)"), line)
