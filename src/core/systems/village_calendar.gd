@@ -153,6 +153,16 @@ static func _forage_seasons(out: Array[Dictionary], data: GameData, c: Character
 				break
 
 
+## LOG-005: a great beast's eve is worth a log line only when a season task asks for it or its trail is baited.
+static func _beast_matters(data: GameData, flags: Dictionary, region_id: String, enemy: String, day: int) -> bool:
+	if flags.has(Wildlife.bait_flag(region_id)):
+		return true
+	for t: Dictionary in SeasonTasks.tasks_for(data, day):
+		if String(t.get("kind", "")) == "hunt" and String(t.get("target", "")) == enemy:
+			return true
+	return false
+
+
 ## WILD-006: days a great beast walks an explored region, inside [start, end).
 static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterData, start: int, end: int) -> void:
 	for rid: String in c.visited_regions:
@@ -251,7 +261,8 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 			break
 		# WILD-011: only a beast that is close and that the player has not beaten yet is worth a reminder.
 		if String(e["kind"]) == "great_beast" and (not _near(data, region_id, String(e["region"])) or _is_far(data, region_id, String(e["region"]))  # LOG-004: within 3 travel days
-				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))):
+				or (c != null and c.great_beasts.has(String(e.get("enemy", ""))))
+				or not _beast_matters(data, flags, String(e["region"]), String(e.get("enemy", "")), today + 1)):
 			continue
 		if String(e["kind"]) == "festival_active" and _festival_running_today(active_events, String(e.get("festival_id", "")), today):
 			continue  # GUIDE-230: today's list already says the festival is on

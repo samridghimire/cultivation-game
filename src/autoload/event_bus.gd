@@ -6,6 +6,8 @@ extends Node
 signal message_posted(text: String, category: String)
 ## LOG-004: the newest log line was rewritten in place (a folded repeat); UIs refresh that row.
 signal message_replaced(text: String, category: String)
+## LOG-005: a row `from_end` places from the newest (0 = newest) was merged into a new newest row.
+signal message_folded(text: String, category: String, from_end: int)
 ## Any player state changed; UI should refresh.
 signal player_changed
 signal session_started
@@ -136,9 +138,12 @@ var topic := ""
 const TOPICS: Array[String] = ["combat", "cultivation", "family", "sect", "trade", "world"]
 
 
-func post(text: String, category: String = "info", topic_override: String = "") -> void:
+func post(text: String, category: String = "info", topic_override: String = "", dawn: bool = false) -> void:
 	posted_count += 1
-	history.append({"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic})
+	var row := {"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic}
+	if dawn:
+		row["dawn"] = true  # LOG-005: a day-start line; a practice summary may fold across it
+	history.append(row)
 	if history.size() > HISTORY_LIMIT:
 		history = history.slice(history.size() - HISTORY_LIMIT)
 	message_posted.emit(text, category)
@@ -153,6 +158,30 @@ func replace_last(text: String, category: String = "info") -> bool:
 	history[-1]["day"] = GameClock.total_days
 	message_replaced.emit(text, category)
 	return true
+
+
+## LOG-005: index of the newest non-dawn row with only dawn rows after it, within the last `window` rows; -1 if none.
+func last_non_dawn_index(window: int = 4) -> int:
+	var i := history.size() - 1
+	var seen := 0
+	while i >= 0 and seen < window:
+		if not bool(history[i].get("dawn", false)):
+			return i
+		i -= 1
+		seen += 1
+	return -1
+
+
+## LOG-005: move row `index` to the newest position with new text (dawn rows after it stay in place).
+func fold_row(index: int, text: String, category: String = "info") -> void:
+	var row: Dictionary = history[index]
+	history.remove_at(index)
+	row["text"] = text
+	row["category"] = category
+	row["day"] = GameClock.total_days
+	var from_end := history.size() - index
+	history.append(row)
+	message_folded.emit(text, category, from_end)
 
 
 ## Forget past messages (a new or loaded session starts with an empty log).

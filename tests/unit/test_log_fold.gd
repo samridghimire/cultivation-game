@@ -101,3 +101,50 @@ func test_forecast_only_when_changed_or_bad() -> void:
 	assert_true(gs._forecast_worth_posting("In season in Qingshi Village: mugwort."))
 	assert_eq(Guidance.forecast_kind(clear), "clear")
 	gs.end_session()
+
+
+## LOG-005: dawn lines between two practice summaries do not stop the fold.
+func test_fold_across_dawn_lines() -> void:
+	_start()
+	var gs := _gs()
+	var before := EventBus.history.size()
+	gs._post_foldable(3, "You practice the Iron Fist for 3 days.")
+	EventBus.post("Tomorrow: market day.", "world", "", true)
+	gs._post_foldable(2, "You practice the Iron Fist for 2 days.")
+	assert_eq(EventBus.history.size() - before, 2)
+	assert_eq(String(EventBus.history[-1]["text"]), "You practice the Iron Fist for 5 days.")
+	assert_eq(String(EventBus.history[-2]["text"]), "Tomorrow: market day.")
+	EventBus.post("A good omen.", "almanac", "", true)
+	gs._post_foldable(1, "You practice the Iron Fist for 1 day.")
+	assert_eq(EventBus.history.size() - before, 3)
+	assert_eq(String(EventBus.history[-1]["text"]), "You practice the Iron Fist for 6 days.")
+	gs.end_session()
+
+
+func test_fight_between_stops_the_fold() -> void:
+	_start()
+	var gs := _gs()
+	var before := EventBus.history.size()
+	gs._post_foldable(3, "You practice the Iron Fist for 3 days.")
+	EventBus.post("You win the fight.", "combat")
+	EventBus.post("Tomorrow: market day.", "world", "", true)
+	gs._post_foldable(2, "You practice the Iron Fist for 2 days.")
+	assert_eq(EventBus.history.size() - before, 4)
+	gs.end_session()
+
+
+func test_great_beast_eve_needs_a_reason() -> void:
+	var c := _start()
+	var gs := _gs()
+	var any := false
+	for rid: String in gs.data.regions:
+		var day := Wildlife.next_great_day(gs.data, rid, GameClock.total_days, c.realm_index, c)
+		if day < 0:
+			continue
+		var enemy := Wildlife.active_great_enemy(c, gs.data, rid)
+		any = true
+		assert_false(VillageCalendar._beast_matters(gs.data, {}, rid, enemy, day))
+		assert_true(VillageCalendar._beast_matters(gs.data, {Wildlife.bait_flag(rid): day}, rid, enemy, day))
+		break
+	assert_true(any)
+	gs.end_session()

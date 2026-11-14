@@ -2881,13 +2881,19 @@ var _fold_prev: Dictionary = {}
 ## Posts a practice/cultivate summary, or folds it into the previous one when nothing else was posted since (LogFold).
 func _post_foldable(days: int, text: String) -> void:
 	var today := GameClock.total_days
-	if not _fold_prev.is_empty() and int(_fold_prev["count"]) == EventBus.posted_count:
-		var merged := LogFold.fold(String(_fold_prev["text"]), int(_fold_prev["day"]), text, today)
-		if merged != "" and EventBus.replace_last(merged):
-			_fold_prev = {"text": merged, "day": today + days, "count": EventBus.posted_count}
-			return
+	if not _fold_prev.is_empty():
+		var idx := EventBus.last_non_dawn_index()  # LOG-005: dawn lines in between do not break the fold
+		if idx >= 0 and String(EventBus.history[idx]["text"]) == String(_fold_prev["text"]):
+			var merged := LogFold.fold(String(_fold_prev["text"]), int(_fold_prev["day"]), text, today)
+			if merged != "":
+				if idx == EventBus.history.size() - 1:
+					EventBus.replace_last(merged)
+				else:
+					EventBus.fold_row(idx, merged)
+				_fold_prev = {"text": merged, "day": today + days}
+				return
 	EventBus.post(text)
-	_fold_prev = {"text": text, "day": today + days, "count": EventBus.posted_count}  # the day this action ends
+	_fold_prev = {"text": text, "day": today + days}  # the day this action ends
 
 
 func practice_technique(tech_id: String, days: int) -> void:
@@ -4744,7 +4750,7 @@ func _post_reminders() -> void:
 		tomorrow = {}
 	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, tomorrow)
 	for e in VillageCalendar.dawn_lines(VillageCalendar.mark_lines(player, today), omen_line, reminders):  # LOG-001
-		EventBus.post(String(e["text"]), String(e["category"]))
+		EventBus.post(String(e["text"]), String(e["category"]), "", true)
 
 
 ## Folds the posts made during a 5+ day action into last_digest (DAY-001).

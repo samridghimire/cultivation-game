@@ -3037,7 +3037,10 @@ func test_great_beast_calendar_and_reminder() -> void:
 	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 0, "unexplored")
 	gs.player.visited_regions.append("misty_forest")
 	assert_eq(kinds.call(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player)), 2)
-	var lines := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
+	var quiet := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
+	assert_false(" ".join(quiet).contains("Great "), "LOG-005: no hunt, no bait, no eve line: " + str(quiet))
+	var baited := {Wildlife.bait_flag("misty_forest"): day}
+	var lines := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, baited)
 	assert_true(" ".join(lines).contains("Great "), str(lines))
 	# WILD-011: a far region's beast posts nothing, a beaten one posts nothing, the screen list is unchanged.
 	var beast_name := Wildlife.display_name(gs.data, String(def["enemy"]), true)
@@ -3045,7 +3048,7 @@ func test_great_beast_calendar_and_reminder() -> void:
 	assert_false(" ".join(far).contains(beast_name), "far region: " + str(far))
 	var before := VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player).size()
 	gs.player.great_beasts[String(def["enemy"])] = day - 3
-	var beaten := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, {})
+	var beaten := VillageCalendar.reminders(gs.data, {}, {}, [], "misty_forest", day - 1, gs.player, baited)
 	assert_false(" ".join(beaten).contains(beast_name), "beaten: " + str(beaten))
 	assert_eq(VillageCalendar.upcoming(gs.data, {}, {}, [], "qingshi_village", day, 14, gs.player).size(), before)
 

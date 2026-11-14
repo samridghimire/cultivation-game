@@ -97,6 +97,7 @@ func _init() -> void:
 	footer.add_child(UIStyle.label("[PgUp/PgDn] or right stick: scroll", 14, DATE_COLOR))
 	EventBus.message_posted.connect(_on_message_posted_rebuild)
 	EventBus.message_replaced.connect(_on_message_posted_rebuild)
+	EventBus.message_folded.connect(_on_message_folded_rebuild)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -190,6 +191,11 @@ func _rebuild() -> void:
 
 func _scroll_to_end() -> void:
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+
+
+func _on_message_folded_rebuild(_t: String, _c: String, _from_end: int) -> void:
+	if visible:
+		_rebuild()
 
 
 func _on_message_posted_rebuild(_t: String, _c: String) -> void:
