@@ -973,6 +973,7 @@ static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: i
 		var lesson_name := _lesson_name(lessons[i].get("effects", {}), data)
 		result.append({"kind": "lesson", "name": lesson_name, "need_favor": int(tier_def.get("min", 0)),
 			"known": c.lessons_taught.has("%s:%d" % [npc_id, i]),
+			"practice_only": (lessons[i].get("effects", {}) as Dictionary).keys() == ["practice_days"],
 			"text": _teaching_text(lesson_name + " lesson", String(tier_def.get("name", "")).to_lower())})
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["need_favor"]) != int(b["need_favor"]):

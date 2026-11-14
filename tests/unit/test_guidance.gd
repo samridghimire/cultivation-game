@@ -6933,3 +6933,49 @@ func test_with_worth_skips_long_lines() -> void:
 func test_spoils_worth_names_best_item_and_price() -> void:
 	var w := Guidance.spoils_worth(data(), data().enemies["wild_boar"])
 	assert_true(w.ends_with(" %d" % int(w.get_slice(" ", w.get_slice_count(" ") - 1))) and w != "")
+
+
+## GUIDE-241: the day (>= 0) on which `npc_id`'s weekly slot falls, at or after `from`.
+func _teacher_slot_day(npc_id: String, from: int = 100) -> int:
+	var day := from
+	while (day + npc_id.hash()) % 7 != 0:
+		day += 1
+	return day
+
+
+func _styled() -> CharacterData:
+	var c := _fresh()
+	c.techniques = {"iron_fist": 1}
+	return c
+
+
+func test_next_teacher_hint_names_teaching_within_reach() -> void:
+	var c := _styled()
+	var npcs := _style_world()
+	var day := _teacher_slot_day("hunter_ma")
+	var line := Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {"hunter_ma": 52}, day)
+	assert_true(line.contains("could teach you"), line)
+	assert_true(line.contains("(favor "), line)
+
+
+func test_next_teacher_hint_cooldown_only_one_day_in_seven() -> void:
+	var c := _styled()
+	var npcs := _style_world()
+	var favor := {"hunter_ma": 52}
+	var shown := 0
+	for day in range(100, 107):
+		var line := Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", favor, day)
+		if line.begins_with("Hunter Ma"):
+			shown += 1
+	assert_eq(shown, 1)
+
+
+func test_next_teacher_hint_never_names_known_or_too_far() -> void:
+	var c := _styled()
+	var npcs := _style_world()
+	var day := _teacher_slot_day("hunter_ma")
+	assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {}, day).begins_with("Hunter Ma"), false)
+	c.lessons_taught["hunter_ma:0"] = 3
+	c.lessons_taught["hunter_ma:1"] = 3
+	assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {"hunter_ma": 100}, day).begins_with("Hunter Ma"), false)
+	assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {"hunter_ma": 100}, -1), "")

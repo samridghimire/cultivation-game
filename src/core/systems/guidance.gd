@@ -875,6 +875,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(fighting)
 		elif c.techniques.is_empty():
 			out.append(TECHNIQUE_HINT)
+		elif today >= 0:
+			var next_teacher := next_teacher_hint(c, people, data, region_id, favor, today)
+			if next_teacher != "":
+				out.append(next_teacher)
 	for hint in [_dao_hint(c, data), _abode_hint(c, data, region_id, flags), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
@@ -3742,6 +3746,42 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
 		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
 	return best
+
+
+## GUIDE-241: a low-priority line once a fighting style is known: the nearest villager (this region, then one route
+## away) with a not-yet-known teaching (never practice-only) within STYLE_FAVOR_SLACK favor of the player, worded
+## "<Name> could teach you <Thing> (favor N/M)". Shown on one day in seven per teacher (a stateless weekly slot, so
+## an ignored hint returns after 6 quiet days). "" when none or `today` < 0.
+static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int) -> String:
+	if region_id == "" or today < 0:
+		return ""
+	var map := _route_day_map(c, data, region_id, 1)
+	var best_key: Array = []
+	var line := ""
+	for npc_id: String in data.npcs:
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null or not npc.alive:
+			continue
+		var at := Npcs.region_of(npc, data)
+		if not (map["days"] as Dictionary).has(at):
+			continue
+		if (today + npc_id.hash()) % 7 != 0:
+			continue
+		var have := int(favor.get(npc_id, 0))
+		for t in Npcs.teachings(npc_id, c, data, have):
+			var need := int(t["need_favor"])
+			if bool(t["known"]) or bool(t.get("practice_only", false)) or need > have + STYLE_FAVOR_SLACK:
+				continue
+			var key := [int(map["days"][at]), need, npc_id]
+			if not best_key.is_empty() and key >= best_key:
+				continue
+			best_key = key
+			line = "%s could teach you %s (favor %d/%d)" % [npc.name, t["name"], have, need]
+			if int(map["days"][at]) > 0:
+				line += " in %s" % Exploration.region_name(data, at)
+			line += "."
+			break
+	return line
 
 
 ## GUIDE-239: one clause on how to close a favor gap with `npc_id`: a liked item held, one sold here, one a foe
