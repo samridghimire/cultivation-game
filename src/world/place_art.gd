@@ -76,8 +76,9 @@ static func draw(ci: CanvasItem, kind: String, size: Vector2, color: Color, acti
 
 ## GFX-100: a soft 2-step ground shadow under a building base (`base` = bottom-centre), 1.1x the footprint wide.
 static func contact_shadow(ci: CanvasItem, base: Vector2, width: float) -> void:
-	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.55, 4.0), Color(0, 0, 0, 0.12))
-	ellipse(ci, base + Vector2(0, 1), Vector2(width * 0.46, 3.0), Color(0, 0, 0, 0.22))
+	var seed_value := int(base.x) * 31 + int(base.y)
+	ci.draw_colored_polygon(Scenery.shadow_blob(base + Vector2(0, 1), Vector2(width * 0.55, 4.0), seed_value), Color(0, 0, 0, 0.12))
+	ci.draw_colored_polygon(Scenery.shadow_blob(base + Vector2(0, 1), Vector2(width * 0.46, 3.0), seed_value + 1), Color(0, 0, 0, 0.2))
 
 
 ## Ellipse filled (or outlined with width > 0) centered at `center`.

@@ -1873,6 +1873,13 @@ func _draw_sect_courts() -> void:
 			var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
 			var court := SectCourt.court_rect(place, _region)
 			SectCourt.draw_court(self, hall, court, snowy, SectCourt.court_style(place))
+			if SectCourt.court_style(place) == "planks":  # GFX-148: a short jetty toward the nearest pool
+				var pool_rects: Array[Rect2] = []
+				for pool: Dictionary in _marsh.get("pools", []):
+					pool_rects.append(pool["rect"])
+				for board: Rect2 in Scenery.platform_jetty(court, pool_rects):
+					draw_rect(board, Color("6e5636") if not snowy else Color("c9d3da"))
+					draw_rect(board, Color("2b2118"), false, 1.0)
 			var high: Variant = _region.get("map", {}).get("high", null)
 			if high is Dictionary and bool(high.get("rail", false)):
 				SectCourt.draw_rail(self, court, snowy)
@@ -2475,7 +2482,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 			else:
 				draw_rect(v, base)
 				if snowy:  # a 2-4 px snow bank along the verge
-					draw_rect(Rect2(v.position - Vector2(1, 1), v.size + Vector2(2, 2)).intersection(Rect2(v.position, v.size)), Color(snow, 0.9))
+					draw_colored_polygon(Scenery.snow_bank(v, hash("%s|%s|bank" % [_region.get("id", ""), v])), Color(snow, 0.9))
 
 
 ## GFX-146: the murky region water colour (boardwalk gaps and missing boards show it, darkened by the caller).

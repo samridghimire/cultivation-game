@@ -895,3 +895,42 @@ func test_terrace_court_props_are_four_corners_inside() -> void:
 	assert_eq(props.size(), 4)
 	for p in props:
 		assert_true(court.has_point(p))
+
+
+func test_snow_bank_is_ragged_three_to_five_px() -> void:
+	var v := Rect2(100, 200, 40, 4)
+	var poly := Scenery.snow_bank(v, 7)
+	assert_true(poly.size() >= 8)
+	assert_eq(poly, Scenery.snow_bank(v, 7), "deterministic")
+	for q in poly:
+		assert_true(q.y >= v.position.y - 1.5 and q.y <= v.position.y + 4.5)
+
+
+func test_track_offset_keeps_tracks_on_narrow_roads() -> void:
+	for width in [14.0, 18.0, 22.0, 40.0]:
+		for wob in [-3.0, 3.0]:
+			for frac in [0.22, 0.74]:
+				var off := Scenery.track_offset(width, frac, wob, 3.0)
+				assert_true(off >= 0.0 and off + 3.0 <= width, "track on the road at width %s" % width)
+	assert_true(absf(Scenery.track_offset(20.0, 0.5, 3.0, 2.0) - Scenery.track_offset(20.0, 0.5, 0.0, 2.0)) < 20.0 / 2.0)
+
+
+func test_shadow_blob_is_not_an_ellipse() -> void:
+	for seed_value in [1, 2, 3]:
+		var poly := Scenery.shadow_blob(Vector2.ZERO, Vector2(40, 4), seed_value)
+		var lo := INF
+		var hi := 0.0
+		for q in poly:
+			var r := Vector2(q.x / 40.0, q.y / 4.0).length()
+			lo = minf(lo, r)
+			hi = maxf(hi, r)
+		assert_true(hi / lo >= 1.1, "radius varies >= 10%% (seed %s)" % seed_value)
+
+
+func test_platform_jetty_reaches_near_water_only() -> void:
+	var court := Rect2(400, 200, 180, 120)
+	var near: Array[Rect2] = [Rect2(620, 220, 80, 60)]
+	var boards := Scenery.platform_jetty(court, near)
+	assert_true(boards.size() >= 3 and boards.size() <= 4)
+	var far: Array[Rect2] = [Rect2(900, 700, 80, 60)]
+	assert_eq(Scenery.platform_jetty(court, far).size(), 0)

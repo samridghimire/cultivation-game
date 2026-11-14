@@ -937,7 +937,7 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 				while wi + 1 < wob_at.size() and wob_at[wi + 1] <= pos:
 					wi += 1
 				var th2 := float(rng.randi_range(2, 3))
-				var rr := _road_rect(path_rect, along_x, pos, width * off_f - 1.0 + wobble[wi], l, th2)
+				var rr := _road_rect(path_rect, along_x, pos, track_offset(width, off_f, wobble[wi], th2), l, th2)
 				var near := false
 				for c in crossings:
 					if c.intersects(rr):
@@ -1028,6 +1028,77 @@ static func road_verge(path_rect: Rect2, seed_value: int, region: Dictionary = {
 				out.append(r)
 			pos += l + rng.randf_range(10.0, 30.0)
 	return out
+
+
+## GFX-148: a 3-5 px ragged snow bank polygon along the outer long edge of a verge rect `v` (deterministic by seed).
+static func snow_bank(v: Rect2, seed_value: int) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var along_x := v.size.x >= v.size.y
+	var len_total := v.size.x if along_x else v.size.y
+	var n := maxi(int(len_total / 4.0), 2)
+	var top := PackedVector2Array()
+	var low := PackedVector2Array()
+	for i in n + 1:
+		var t := float(i) / float(n)
+		var depth := rng.randf_range(3.0, 5.0)
+		if i == 0 or i == n:
+			depth = 1.5  # the bank tapers at both ends
+		if along_x:
+			top.append(Vector2(v.position.x + len_total * t, v.position.y - 1.0))
+			low.append(Vector2(v.position.x + len_total * t, v.position.y - 1.0 + depth))
+		else:
+			top.append(Vector2(v.position.x - 1.0, v.position.y + len_total * t))
+			low.append(Vector2(v.position.x - 1.0 + depth, v.position.y + len_total * t))
+	low.reverse()
+	var out := top
+	out.append_array(low)
+	return out
+
+
+## GFX-148: the across-road offset of a wheel track: `frac` of the road `width`, plus `wobble`, clamped so a track of
+## `thick` px stays on the road (narrow roads shrink the wobble to a tenth of their width).
+static func track_offset(width: float, frac: float, wobble: float, thick: float) -> float:
+	var lim := minf(3.0, width * 0.1)
+	var off := width * frac - 1.0 + clampf(wobble, -lim, lim)
+	return clampf(off, 0.0, maxf(width - thick, 0.0))
+
+
+## GFX-148: a 3-4 board jetty from a raised platform `court` toward the nearest of `pools` (rects). Returns the boards
+## (each 8 px long across 14 px of width, laid end to end) or [] when no pool is within 120 px of the platform.
+static func platform_jetty(court: Rect2, pools: Array[Rect2]) -> Array[Rect2]:
+	var best := INF
+	var target := Vector2.ZERO
+	for pr in pools:
+		var near := Vector2(clampf(court.get_center().x, pr.position.x, pr.end.x), clampf(court.get_center().y, pr.position.y, pr.end.y))
+		var edge := Vector2(clampf(near.x, court.position.x, court.end.x), clampf(near.y, court.position.y, court.end.y))
+		var d := edge.distance_to(near)
+		if d < best:
+			best = d
+			target = pr.get_center()
+	if best > 120.0:
+		return []
+	var out: Array[Rect2] = []
+	var dir := target - court.get_center()
+	var horizontal := absf(dir.x) / maxf(court.size.x, 1.0) > absf(dir.y) / maxf(court.size.y, 1.0)
+	var n := 4 if best > 24.0 else 3
+	for i in n:
+		if horizontal:
+			var x := court.end.x + float(i) * 9.0 if dir.x > 0.0 else court.position.x - float(i + 1) * 9.0 + 1.0
+			out.append(Rect2(x, clampf(target.y, court.position.y + 10.0, court.end.y - 10.0) - 7.0, 8.0, 14.0))
+		else:
+			var y := court.end.y + 10.0 + float(i) * 9.0 if dir.y > 0.0 else court.position.y - float(i + 1) * 9.0 + 1.0
+			out.append(Rect2(clampf(target.x, court.position.x + 10.0, court.end.x - 10.0) - 7.0, y, 14.0, 8.0))
+	return out
+
+
+## GFX-148: an irregular low-alpha ground shadow polygon (lobed, radius varies >= 10%) under a building base.
+static func shadow_blob(center: Vector2, radii: Vector2, seed_value: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 24:
+		var a := TAU * float(i) / 24.0
+		pts.append(center + Vector2.from_angle(a) * radii * pond_mask_radius(a, seed_value, 0.15))
+	return pts
 
 
 static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: float, length: float, thick: float) -> Rect2:
