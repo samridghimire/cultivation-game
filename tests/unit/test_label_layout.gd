@@ -140,3 +140,15 @@ func test_person_offset_rises_when_sides_are_taken() -> void:
 	var d := LabelLayout.person_offset(label, 120.0, places)
 	assert_true(d.y < 0.0 and d.y <= -12.0)
 	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
+
+
+func test_covered_label_slides_sideways_clear_of_building() -> void:  # WU-540
+	var place_label := Rect2(300, 505, 160, 16)
+	var person := Rect2(388, 535, 84, 16)
+	var roof := Rect2(335, 533, 90, 80)
+	var rects: Array[Rect2] = [place_label, person]
+	var res := LabelLayout.resolve(rects, SCREEN, [], {}, {1: [roof, place_label]})
+	assert_false(res[1]["faded"])
+	var moved := Rect2(person.position + Vector2(res[1]["dx"], res[1]["offset"]), person.size)
+	assert_false(moved.intersects(roof))
+	assert_false(moved.intersects(place_label))

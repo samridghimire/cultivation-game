@@ -19,6 +19,7 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 		var skip: int = int(own_blocker.get(ri, -1))
 		var chosen := rect
 		var offset := 0.0
+		var dx := 0.0
 		var faded := false
 		var extra: Array[Rect2] = []
 		extra.assign(covers.get(ri, []))
@@ -39,8 +40,23 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 					offset = dy
 					faded = false
 					break
+			if faded and covers.has(ri):  # WU-540: a person's label that cannot move vertically slides sideways clear of the building
+				for k in range(1, 9):
+					var done := false
+					for dir in [1.0, -1.0]:
+						var moved := Rect2(rect.position + Vector2(dir * 12.0 * k, 0), rect.size)
+						if screen.size != Vector2.ZERO and not screen.encloses(moved):
+							continue
+						if not _hits(moved, placed, skip) and not _hits(moved, extra):
+							chosen = moved
+							dx = dir * 12.0 * k
+							faded = false
+							done = true
+							break
+					if done:
+						break
 		placed.append(chosen)
-		out.append({"offset": offset, "faded": faded})
+		out.append({"offset": offset, "faded": faded, "dx": dx})
 	return out
 
 

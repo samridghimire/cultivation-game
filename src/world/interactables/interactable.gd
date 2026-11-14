@@ -462,6 +462,10 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		var covered: bool = result[i]["faded"]
 		var prev: float = was_lift[node]
 		var changed: bool = lift != prev or covered != node.label_covered
+		var slide: float = result[i].get("dx", 0.0)
+		if slide != 0.0:  # WU-540
+			node.screen_shift_x += slide
+			changed = true
 		node.screen_lift = lift
 		node.label_covered = covered
 		if changed:

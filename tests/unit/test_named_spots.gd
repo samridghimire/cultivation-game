@@ -46,3 +46,11 @@ func test_legal_spot_is_kept_and_illegal_one_moves() -> void:
 
 func test_crossing_is_found_in_qingshi() -> void:
 	assert_eq(Npcs.road_crossings(data().regions["qingshi_village"]).size(), 1)
+
+
+func test_on_stair_detects_steps_landmark() -> void:  # WU-540
+	var region := {"map": {"landmarks": [{"kind": "steps", "pos": [980, 520], "size": [70, 100]}]}}
+	assert_true(Npcs.on_stair(Vector2(980, 520), region))
+	assert_true(Npcs.on_stair(Vector2(1000, 575), region))
+	assert_false(Npcs.on_stair(Vector2(900, 520), region))
+	assert_false(Npcs.on_stair(Vector2(980, 600), {"map": {}}))

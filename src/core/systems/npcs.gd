@@ -559,7 +559,20 @@ static func _named_ok(pos: Vector2, region: Dictionary, crossings: Array[Rect2],
 	for q in placed:
 		if pos.distance_to(q) < HAUNT_SPACING:
 			return false
-	return true
+	return not on_stair(pos, region)
+
+
+## WU-540: whether `pos` stands on (or within 12 px of) a `steps` landmark, a hall stair nobody should stand on.
+static func on_stair(pos: Vector2, region: Dictionary) -> bool:
+	for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+		if String(lm.get("kind", "")) != "steps":
+			continue
+		var c: Array = lm["pos"]
+		var sz: Array = lm["size"]
+		var r := Rect2(float(c[0]) - float(sz[0]) / 2.0, float(c[1]) - float(sz[1]) / 2.0, float(sz[0]), float(sz[1]))
+		if r.grow(12.0).has_point(pos):
+			return true
+	return false
 
 
 ## SPOT-002: settles hand-placed named people (id -> position, already through settle_stand). Someone whose spot
