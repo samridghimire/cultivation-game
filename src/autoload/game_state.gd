@@ -32,6 +32,8 @@ var last_loss_advice: String = ""
 var combat_report_shown: bool = false
 ## True when the last fight was a friendly spar (SPAR-001): the report reads like one.
 var last_fight_friendly: bool = false
+## LOG-006: Combat.summary of the last fight (2 lines when it was never in doubt, else empty); WU-536 shows it.
+var last_fight_summary: Array[String] = []
 ## Reward notes of the last won fight ("+8 Spirit Stone"...), shown in the combat report.
 var last_fight_spoils: PackedStringArray = PackedStringArray()
 var hunt_ally: Dictionary = {}  ## WILD-016: the village hunters' strike for the next fight ({} = none).
@@ -4088,6 +4090,7 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 	EventBus.combat_started.emit(enemy)
 	var result := Combat.resolve(player, data, enemy, rng, allies, start_hp)
 	last_fight_hp = int(result["player_hp"])
+	last_fight_summary = Combat.summary(result, Combat.foe_name(enemy), pre_odds) if pre_odds >= 0.0 and not bool(enemy.get("friendly", false)) else ([] as Array[String])
 	last_fight_playback = {"trace": result["trace"], "player_max": result["player_max_hp"], "enemy_max": result["enemy_max_hp"]}
 	# The full blow-by-blow goes out with combat_finished; the log gets a summary.
 	var lines: PackedStringArray = result["log"]

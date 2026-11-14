@@ -398,3 +398,36 @@ func test_win_chance_close_to_large_sample() -> void:
 			var gap := absf(Combat.win_chance(c, data(), foe) - Combat.win_chance(c, data(), foe, 2000))
 			worst = maxf(worst, gap)
 			assert_true(gap < 0.05, "%s stage %d off by %.3f" % [foe_id, stage, gap])
+
+
+func _fake_result(victory: bool, hp: int, best: int, word: String = "solid blow") -> Dictionary:
+	return {"victory": victory, "draw": false, "escaped": false, "rounds": 5, "player_hp": hp, "player_max_hp": 50, "best_blow": {"damage": best, "word": word}}
+
+
+func test_summary_for_an_easy_win() -> void:
+	var lines := Combat.summary(_fake_result(true, 26, 10, "a solid blow"), "the Wild Boar", 0.95)
+	assert_eq(lines.size(), 2)
+	assert_eq(lines[0], "You beat the Wild Boar in 5 exchanges, losing 24 hp.")
+	assert_eq(lines[1], "Your best blow: a solid blow for 10.")
+
+
+func test_summary_empty_for_a_fair_fight() -> void:
+	assert_eq(Combat.summary(_fake_result(true, 26, 10), "the Wild Boar", 0.6).size(), 0)
+	assert_eq(Combat.summary(_fake_result(false, 0, 10), "the Wild Boar", 0.6).size(), 0)
+
+
+func test_summary_for_a_hopeless_loss() -> void:
+	var lines := Combat.summary(_fake_result(false, 0, 3, ""), "the Mist Wolf", 0.05)
+	assert_eq(lines.size(), 2)
+	assert_true(lines[0].begins_with("You fell to the Mist Wolf in 5 exchanges"))
+	assert_eq(lines[1], "Your best blow: a blow for 3.")
+
+
+func test_resolve_reports_best_blow_and_summary_is_deterministic() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	var enemy: Dictionary = data().enemies["mountain_bandit"]
+	var a := Combat.resolve(c, data(), enemy, seeded_rng())
+	var b := Combat.resolve(c, data(), enemy, seeded_rng())
+	assert_eq(a["best_blow"], b["best_blow"])
+	assert_eq(Combat.summary(a, "the bandit", 0.95), Combat.summary(b, "the bandit", 0.95))

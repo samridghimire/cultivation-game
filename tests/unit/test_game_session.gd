@@ -4213,3 +4213,13 @@ func test_hunter_ma_after_the_lesson() -> void:
 			break
 	assert_eq(int(gs.npc_favor["hunter_ma"]), 17, "favor again after a week")
 	gs.end_dialogue()
+
+func test_fight_enemy_stores_summary_for_an_easy_win_only() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 3
+	var weak: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	assert_true(gs.fight_enemy(weak))
+	assert_eq(gs.last_fight_summary.size(), 2)
+	assert_true(gs.last_fight_summary[0].begins_with("You beat"), gs.last_fight_summary[0])
+	gs.end_session()

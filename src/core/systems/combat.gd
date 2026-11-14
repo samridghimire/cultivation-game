@@ -195,6 +195,7 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	while trace.size() < lines.size():
 		trace.append([player_hp, maxi(enemy_hp, 0)])
 	var rounds := 0
+	var best_blow := {"damage": 0, "word": ""}
 	while rounds < MAX_ROUNDS and player_hp > 0 and enemy_hp > 0:
 		rounds += 1
 		for player_turn in ([true, false] if player_first else [false, true]):
@@ -205,6 +206,8 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 			var hit := _strike(atk, def, rng)
 			if player_turn:
 				enemy_hp -= hit["damage"]
+				if not hit["dodged"] and int(hit["damage"]) > int(best_blow["damage"]):
+					best_blow = {"damage": int(hit["damage"]), "word": blow_phrase(int(hit["damage"]), int(e["max_hp"])).trim_prefix(": ")}
 				if hit["dodged"]:
 					lines.append("%s evades your strike." % foe_cap)
 				else:
@@ -255,7 +258,32 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 		"enemy_hp": maxi(enemy_hp, 0),
 		"enemy_max_hp": e["max_hp"],
 		"talismans_used": used,
+		"best_blow": best_blow,
 	}
+
+
+## LOG-006: a two-line report for a fight that was never in doubt (rated >= 0.9 and won, or
+## <= 0.1 and lost or escaped), else []. Pure; `rated` is the win chance the caller already rated.
+static func summary(result: Dictionary, foe: String, rated: float) -> Array[String]:
+	var out: Array[String] = []
+	var won := bool(result.get("victory", false))
+	var lost := not won and not bool(result.get("draw", false))
+	if not ((won and rated >= 0.9) or (lost and rated <= 0.1)):
+		return out
+	var rounds := int(result.get("rounds", 0))
+	var hp_lost := maxi(0, int(result.get("player_max_hp", 0)) - int(result.get("player_hp", 0)))
+	var unit := "exchange" if rounds == 1 else "exchanges"
+	if won:
+		out.append("You beat %s in %d %s, losing %d hp." % [foe, rounds, unit, hp_lost])
+	elif bool(result.get("escaped", false)):
+		out.append("You were beaten by %s in %d %s and fled with your life." % [foe, rounds, unit])
+	else:
+		out.append("You fell to %s in %d %s." % [foe, rounds, unit])
+	var best: Dictionary = result.get("best_blow", {})
+	if int(best.get("damage", 0)) > 0:
+		var word := String(best.get("word", ""))
+		out.append("Your best blow: %s for %d." % ["a blow" if word == "" else word, int(best["damage"])])
+	return out
 
 
 ## How the fight log names `enemy`: "the Mist Wolf", or just "Xue Yao" for a
