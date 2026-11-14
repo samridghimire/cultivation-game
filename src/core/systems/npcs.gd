@@ -529,6 +529,67 @@ static func settle_stand(pos: Vector2, region: Dictionary, named: bool) -> Vecto
 	return nudge_arrival(nudge_stop(pos, region), region)
 
 
+## SPOT-002: named folk keep this far from the arrival point and every region entrance, and stay off road crossings.
+const NAMED_ARRIVAL_CLEAR := 48.0
+const NAMED_CROSSING_MARGIN := 24.0
+
+
+## SPOT-002: the road crossings of `region` (every overlap of two `map.paths` rects), grown by NAMED_CROSSING_MARGIN.
+static func road_crossings(region: Dictionary) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var paths: Array = region.get("map", {}).get("paths", [])
+	for i in paths.size():
+		for j in range(i + 1, paths.size()):
+			var a: Array = paths[i]
+			var b: Array = paths[j]
+			var ra := Rect2(float(a[0]), float(a[1]), float(a[2]), float(a[3]))
+			var rb := Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3]))
+			if ra.intersects(rb):
+				out.append(ra.intersection(rb).grow(NAMED_CROSSING_MARGIN))
+	return out
+
+
+static func _named_ok(pos: Vector2, region: Dictionary, crossings: Array[Rect2], arrivals: Array[Vector2], placed: Array[Vector2]) -> bool:
+	for r in crossings:
+		if r.has_point(pos):
+			return false
+	for a in arrivals:
+		if pos.distance_to(a) < NAMED_ARRIVAL_CLEAR:
+			return false
+	for q in placed:
+		if pos.distance_to(q) < HAUNT_SPACING:
+			return false
+	return true
+
+
+## SPOT-002: settles hand-placed named people (id -> position, already through settle_stand). Someone whose spot
+## is legal (not on a road crossing, 48 px from the arrival point and region entrances, 40 px from the figures
+## placed before them in id order, `others` included) keeps it; the rest take the nearest free spot of a ring search.
+static func settle_named(stands: Dictionary, region: Dictionary, others: Array[Vector2] = []) -> Dictionary:
+	var crossings := road_crossings(region)
+	var arrivals := arrival_points(region)
+	var placed: Array[Vector2] = others.duplicate()
+	var ids: Array = stands.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return a.naturalnocasecmp_to(b) < 0)
+	var out := {}
+	for id: String in ids:
+		var pos: Vector2 = stands[id]
+		if not _named_ok(pos, region, crossings, arrivals, placed):
+			var found := false
+			for step in range(1, 40):
+				for k in 16:
+					var cand := pos + Vector2.from_angle(TAU * float(k) / 16.0) * (8.0 * float(step))
+					if stop_is_clear(cand, region) and _named_ok(cand, region, crossings, arrivals, placed):
+						pos = cand
+						found = true
+						break
+				if found:
+					break
+		out[id] = pos
+		placed.append(pos)
+	return out
+
+
 ## FOLK-032: generated villagers keep this far from every travel place (signpost) and the region's arrival point.
 const ARRIVAL_CLEAR := 120.0
 

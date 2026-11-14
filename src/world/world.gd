@@ -801,6 +801,11 @@ func _place_at_spawn_anchor() -> void:
 
 
 func _build_npcs() -> void:
+	var named_stands := {}
+	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
+		if GameState.data.npcs.has(c.id):
+			named_stands[c.id] = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)
+	named_stands = Npcs.settle_named(named_stands, _region)  # SPOT-002
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
 		if not GameState.data.npcs.has(c.id):
 			continue  # Generated NPCs are placed by _build_generated_npcs().
@@ -809,7 +814,7 @@ func _build_npcs() -> void:
 		node.art_kind = "npc"
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
-		node.position = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)  # FOLK-017, WU-484
+		node.position = named_stands[c.id]  # FOLK-017, WU-484, SPOT-002
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)
