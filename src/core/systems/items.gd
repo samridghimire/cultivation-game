@@ -280,6 +280,11 @@ static func festival_problem(data: GameData, item: Dictionary) -> String:
 	return ""
 
 
+## SHOP-005: true when the item `item_id` is not a festival good, or `day` is inside its window (day < 0 = no check).
+static func in_season(data: GameData, item_id: String, day: int) -> bool:
+	return day < 0 or festival_in_season(data, data.items.get(item_id, {}), day)
+
+
 ## SHOP-003: true when `item` has no `festival`, or `today` lies from 30 days before that festival's start (day 1 of
 ## each of its `months`) through its last day (start + max_days), in this, the previous or the next year.
 static func festival_in_season(data: GameData, item: Dictionary, today: int) -> bool:

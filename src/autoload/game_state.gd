@@ -3308,6 +3308,8 @@ func market_multiplier() -> float:
 
 ## SHOP-002: remembers the item a hint sends you to buy in another region.
 func note_buy_hint(hint: String) -> void:
+	if not Guidance.is_buy_hint(hint):  # SHOP-005
+		return
 	var region := Guidance.hinted_region(data, hint, current_region)
 	if region == "":
 		return

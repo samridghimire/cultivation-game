@@ -4585,6 +4585,39 @@ func test_qi_pill_offer_skips_closed_festival_goods() -> void:
 	assert_eq(String(open.get("item_id", "")), "festival_test_pill", "inside the window: named")
 
 
+## SHOP-005: the seller lookups never name a festival good outside its window, and name it again inside.
+func test_seller_lookups_skip_closed_festival_goods() -> void:
+	var d := data()
+	var pill: Dictionary = d.items["qi_gathering_pill"].duplicate(true)
+	pill["id"] = "festival_test_pill"
+	pill["name"] = "Festival Test Pill"
+	pill["price"] = 1
+	pill["festival"] = "mid_autumn_festival"
+	d.items["festival_test_pill"] = pill
+	var start := (8 - 1) * Calendar.DAYS_PER_MONTH
+	var closed := Guidance.merchant_selling(d, "qingshi_village", "festival_test_pill", 1)
+	var open := Guidance.merchant_selling(d, "qingshi_village", "festival_test_pill", start)
+	var near_closed := Guidance.merchant_sells_nearby(d, "festival_test_pill", "qingshi_village", false, 1)
+	var near_open := Guidance.merchant_sells_nearby(d, "festival_test_pill", "qingshi_village", false, start)
+	var in_closed := Items.in_season(d, "festival_test_pill", 1)
+	var in_open := Items.in_season(d, "festival_test_pill", start)
+	d.items.erase("festival_test_pill")
+	assert_eq(closed, "", "closed window: no seller named")
+	assert_true(open != "", "inside the window: a seller is named")
+	assert_false(near_closed)
+	assert_true(near_open)
+	assert_false(in_closed)
+	assert_true(in_open)
+
+
+## SHOP-005: only hints that send you to buy count as buy hints.
+func test_is_buy_hint_kinds() -> void:
+	assert_true(Guidance.is_buy_hint("Buy Qi Gathering Pill in Qingshi Village."))
+	assert_true(Guidance.is_buy_hint("The Wandering Merchant sells Wooden Sword for 5 stones."))
+	assert_false(Guidance.is_buy_hint("Sell your Wolf Pelt to the Wandering Merchant."))
+	assert_false(Guidance.is_buy_hint("Gather Moon Herb in Qingshi Village."))
+
+
 ## SHOP-004: Guidance.hinted_item_ids names every item in a hint, longest first.
 func test_hinted_item_ids_names_every_item() -> void:
 	var d := data()

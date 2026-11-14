@@ -4091,6 +4091,11 @@ func test_buy_hint_is_remembered_for_the_hinted_region() -> void:
 	assert_eq(gs.buy_hints.get(other, []), ["qi_gathering_pill"])
 	gs.note_buy_hint("Nothing to buy here.")
 	assert_eq(gs.buy_hints.get(other, []), ["qi_gathering_pill"])
+	# SHOP-005: a non-buy hint that names an item and a region is not remembered.
+	gs.buy_hints.clear()
+	gs.note_buy_hint("Sell your %s in %s." % [item_name, Exploration.region_name(gs.data, other)])
+	assert_false(gs.buy_hints.has(other))
+	gs.note_buy_hint("Buy a %s in %s." % [item_name, Exploration.region_name(gs.data, other)])
 	gs.buy_hints.clear()
 
 

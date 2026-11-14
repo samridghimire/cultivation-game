@@ -981,7 +981,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 		if region_id != "":
 			var armor_id := affordable_armor(c, data, region_id, budget)
 			if armor_id != "":
-				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
+				line += " The %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id, int(flags.get("_today", -1))), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 			else:
 				var far_clause := _far_armor_clause(c, data, region_id, budget)
 				line += far_clause
@@ -989,7 +989,7 @@ static func thin_defence_hint(c: CharacterData, data: GameData, region_id: Strin
 					# GUIDE-090: not affordable with stones, but the loot would pay for it.
 					var loot_armor := affordable_armor(c, data, region_id, (c.item_count("spirit_stone") if budget < 0 else budget) + int(offer.get("total", 0)))
 					if loot_armor != "" and not offer.is_empty():
-						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor, _season_in(flags)), _sell_first_clause(offer)]
+						line += " The %s sells %s for %d stones.%s" % [merchant_selling(data, region_id, loot_armor, int(flags.get("_today", -1))), data.items[loot_armor]["name"], merchant_price(c, data, region_id, loot_armor, _season_in(flags)), _sell_first_clause(offer)]
 		if line.length() == armor_start:
 			line += " Wear armor."
 	if not has_body and treasury.is_empty() and buy_here == "":
@@ -1337,6 +1337,11 @@ static func first_hop(c: CharacterData, data: GameData, from_id: String, to_id: 
 	return cur
 
 
+## SHOP-005: true when `hint` sends the player to buy something ("Buy ..." or "... sells ..."), not to sell, gather or craft.
+static func is_buy_hint(hint: String) -> bool:
+	return hint.contains("Buy ") or hint.contains(" sells ")
+
+
 ## SHOP-002: the id of the item whose name appears in `hint` (longest name wins); "" when none.
 static func hinted_item_id(data: GameData, hint: String) -> String:
 	var all := hinted_item_ids(data, hint)
@@ -1475,9 +1480,9 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 				if herb_place(c, data, ing, region_id) != "" or Exploration.best_gather_place(c, data, ing, region_id) != "":
 					bought_only = false
 					break
-				var found := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, ing))
+				var found := nearest_selling(c, data, region_id, func(r: String) -> String: return merchant_selling(data, r, ing, today))
 				if found.is_empty():
-					var stall := timed_stall(data, region_id, ing)
+					var stall := timed_stall(data, region_id, ing, today)
 					if today >= 0 and not stall.is_empty() and item_id == "":
 						return _stall_ingredient_line(c, data, recipe, ing, stall, today)
 					bought_only = false
@@ -1489,7 +1494,7 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 				continue
 			var line := ""
 			if int(seller["days"]) == 0:
-				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id), merchant_price(c, data, region_id, item_id, season)]
+				line = "Your %s needs %s: the %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), merchant_selling(data, region_id, item_id, today), merchant_price(c, data, region_id, item_id, season)]
 			else:
 				line = "Your %s needs %s: the %s %s sells them for %d stones each." % [recipe["name"], Items.item_plural(data, item_id, 2), seller["result"], _far_where(c, data, region_id, seller), merchant_price(c, data, seller["region_id"], item_id, season)]
 			if c.item_count("spirit_stone") < Alchemy.shortfall_cost(c, data, recipe_id):
@@ -1504,28 +1509,28 @@ static func buy_ingredient_hint(c: CharacterData, data: GameData, region_id: Str
 
 
 ## GUIDE-066: display name of the first merchant place in `region_id` that stocks `item_id`; "" if none.
-static func merchant_selling(data: GameData, region_id: String, item_id: String) -> String:
-	var place := merchant_place(data, region_id, item_id)
+static func merchant_selling(data: GameData, region_id: String, item_id: String, today: int = -1) -> String:
+	var place := merchant_place(data, region_id, item_id, false, today)
 	return String(place.get("display_name", "merchant")) if not place.is_empty() else ""
 
 
 ## GUIDE-208: like `merchant_selling`, but a market-day stall that is the only seller also counts, with its next market
 ## day when `today` >= 0: "Herb Stall, next market day in 3 days" / "Herb Stall, open today". "" if none.
 static func merchant_selling_when(data: GameData, region_id: String, item_id: String, today: int = -1) -> String:
-	var name := merchant_selling(data, region_id, item_id)
+	var name := merchant_selling(data, region_id, item_id, today)
 	if name != "":
 		return name
-	var stall := timed_stall(data, region_id, item_id)
+	var stall := timed_stall(data, region_id, item_id, today)
 	if stall.is_empty():
 		return ""
 	return String(stall.get("display_name", "market stall")) + _market_when(stall, today)
 
 
 ## MARKET-003: the market-day stall (a merchant place with `open_days`) in `region_id` that stocks `item_id`, or {}.
-static func timed_stall(data: GameData, region_id: String, item_id: String) -> Dictionary:
+static func timed_stall(data: GameData, region_id: String, item_id: String, today: int = -1) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
-		if String(p.get("type", "")) == "merchant" and p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+		if String(p.get("type", "")) == "merchant" and p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0)), today):
 			return p
 	return {}
 
@@ -1539,13 +1544,13 @@ static func _stall_ingredient_line(c: CharacterData, data: GameData, recipe: Dic
 ## GUIDE-073: the first merchant place in `region_id` that stocks `item_id`, or {}. Market-day stalls are skipped
 ## (MARKET-003: a closed stall is never pointed at as if it were open; see `timed_stall`).
 ## MARKET-006: with `with_stall`, a stall that is the only seller comes back as a copy flagged `stall: true`.
-static func merchant_place(data: GameData, region_id: String, item_id: String, with_stall: bool = false) -> Dictionary:
+static func merchant_place(data: GameData, region_id: String, item_id: String, with_stall: bool = false, today: int = -1) -> Dictionary:
 	var item: Dictionary = data.items.get(item_id, {})
 	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
-		if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+		if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0)), today):
 			return p
 	if with_stall:
-		var stall := timed_stall(data, region_id, item_id)
+		var stall := timed_stall(data, region_id, item_id, today)
 		if not stall.is_empty():
 			var flagged := stall.duplicate()
 			flagged["stall"] = true
@@ -2255,19 +2260,19 @@ static func available_nearby(c: CharacterData, data: GameData, item_id: String, 
 	var season := Calendar.season_of(today) if today >= 0 else ""
 	if _gatherable_items(c, data, region_id, season).has(item_id):
 		return true
-	return merchant_sells_nearby(data, item_id, region_id, local_only)
+	return merchant_sells_nearby(data, item_id, region_id, local_only, today)
 
 
 ## True when a merchant in `region_id` or a region one route away stocks `item_id` (any region when "").
 ## With `local_only` (GUIDE-178) only `region_id` itself counts.
-static func merchant_sells_nearby(data: GameData, item_id: String, region_id: String, local_only: bool = false) -> bool:
+static func merchant_sells_nearby(data: GameData, item_id: String, region_id: String, local_only: bool = false, today: int = -1) -> bool:
 	var item: Dictionary = data.items.get(item_id, {})
 	for rid: String in data.regions:
 		if region_id != "" and (rid != region_id if local_only else not Exploration.is_nearby(data, region_id, rid)):
 			continue
 		for p: Dictionary in data.regions[rid].get("places", []):
 			# MARKET-002: a stall that is only open some days is not a dependable local source.
-			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+			if String(p.get("type", "")) == "merchant" and not p.has("open_days") and Items.merchant_sells(data, item, p.get("stock_tags", []), int(p.get("max_price", 0)), today):
 				return true
 	return false
 
@@ -3713,7 +3718,7 @@ static func armor_hint(c: CharacterData, data: GameData, region_id: String, flag
 		if far != "":
 			return "Armor keeps you standing." + far
 		return _loot_armor_hint(c, data, region_id, flags)
-	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
+	return "Armor keeps you standing: the %s sells %s for %d stones." % [merchant_selling(data, region_id, armor_id, int(flags.get("_today", -1))), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 
 
 ## GUIDE-143: a sect member in Qi Refining (stage >= ARMOR_HINT_MIN_STAGE) with no body art hears about a
@@ -3738,7 +3743,7 @@ static func _loot_armor_hint(c: CharacterData, data: GameData, region_id: String
 	var budget := c.item_count("spirit_stone") + int(offer["total"])
 	var armor_id := affordable_armor(c, data, region_id, budget)
 	if armor_id != "":
-		return "Armor keeps you standing: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
+		return "Armor keeps you standing: sell your %s to the %s (about %d stones), then the %s sells %s for %d stones." % [offer["goods"], offer["merchant"], offer["total"], merchant_selling(data, region_id, armor_id, int(flags.get("_today", -1))), data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))]
 	var far := _far_armor_clause(c, data, region_id, budget)
 	if far == "":
 		return ""

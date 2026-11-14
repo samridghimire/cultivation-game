@@ -281,7 +281,7 @@ static func _gather_estimate(c: CharacterData, data: GameData, entry: Dictionary
 ## nearby sells it) and the gathering estimate runs past the order's deadline.
 static func can_meet_in_time(c: CharacterData, data: GameData, entry: Dictionary, region_id: String, today: int) -> bool:
 	var id := short_ingredient(c, data, entry)
-	if id == "" or id == STONE_ID or Guidance.merchant_sells_nearby(data, id, region_id):
+	if id == "" or id == STONE_ID or Guidance.merchant_sells_nearby(data, id, region_id, false, today):
 		return true
 	return not _gather_estimate(c, data, entry, id, region_id, today).contains("longer than the order has")
 
