@@ -298,7 +298,7 @@ static func reminders(data: GameData, npcs: Dictionary, favor: Dictionary, activ
 				break
 	# CAL-011: the almanac comes last, and only on a day that is not plain.
 	if out.size() < MAX_REMINDERS and not tomorrow_omen.is_empty() and not Almanac.is_plain(tomorrow_omen):
-		out.append("Tomorrow: %s." % String(tomorrow_omen.get("name", "")).to_lower())
+		out.append("Tomorrow: %s." % Almanac.eve_of(tomorrow_omen))
 	return out
 
 

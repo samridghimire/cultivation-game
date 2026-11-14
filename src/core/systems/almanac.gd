@@ -98,6 +98,12 @@ static func tomorrow_line(omen: Dictionary) -> String:
 	return "Tomorrow: %s." % String(omen.get("name", ""))
 
 
+## C-360: the omen as tomorrow's forecast in the evening log line: its `eve` text, else its lowercased name.
+static func eve_of(omen: Dictionary) -> String:
+	var e := String(omen.get("eve", ""))
+	return e if e != "" else String(omen.get("name", "")).to_lower()
+
+
 ## LOG-003: whether `omen` (on `day`) is worth a log forecast: a fishing omen while a catch task is open, a gathering
 ## omen while a gather task is open. Plain flavour omens stay on the Today card and the journal.
 static func matters_for_tasks(omen: Dictionary, c: CharacterData, data: GameData, day: int) -> bool:
@@ -129,6 +135,8 @@ static func validate(data: GameData) -> Array[String]:
 				errs.append("almanac.json omen '%s' needs text of 1..120 chars" % id)
 			elif String(t).to_lower().begins_with(String(o.get("name", "")).to_lower().rstrip(".")):
 				errs.append("almanac.json omen '%s' text must not start with the omen's own name (the line already says it)" % id)
+		if o.has("eve") and (not (o["eve"] is String) or String(o["eve"]).is_empty() or String(o["eve"]).length() > 60):
+			errs.append("almanac.json omen '%s' eve must be 1..60 chars" % id)
 		if o.has("talk"):
 			var talk: Variant = o["talk"]
 			if not (talk is Array) or (talk as Array).is_empty() or (talk as Array).size() > 4:

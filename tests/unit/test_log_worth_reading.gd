@@ -104,3 +104,21 @@ func test_mission_intro_skipped_when_the_report_opens() -> void:
 		assert_eq(heard.filter(func(t: String) -> bool: return t.contains("You face")).size(), 0 if shown else 1, "report shown: %s" % shown)
 		assert_gt(heard.size(), 0, "the outcome line is still posted")
 		gs.end_session()
+
+
+## C-360: every non-plain omen has an `eve` forecast text and the joined Tomorrow line uses it.
+func test_eve_texts_validate_and_feed_the_joined_line() -> void:
+	var d := data()
+	for o: Dictionary in d.almanac["omens"]:
+		if Almanac.is_plain(o):
+			continue
+		var e := String(o.get("eve", ""))
+		assert_true(e != "" and e.length() <= 60, "%s eve" % o["id"])
+		assert_eq(Almanac.eve_of(o), e)
+	assert_eq(Almanac.eve_of({"name": "Good Day"}), "good day")
+	var bad := data()
+	bad.almanac["omens"][2]["eve"] = "x".repeat(61)
+	assert_gt(Almanac.validate(bad).size(), 0)
+	var fish := _omen("fishing_mult")
+	var lines := VillageCalendar.dawn_lines(PackedStringArray(), "", PackedStringArray(["Tomorrow: market day in Fallen Star Market.", "Tomorrow: %s." % Almanac.eve_of(fish)]))
+	assert_true(String(lines[0]["text"]).ends_with(" and %s." % String(fish["eve"])), str(lines))
