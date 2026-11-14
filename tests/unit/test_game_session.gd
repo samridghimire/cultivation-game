@@ -4223,3 +4223,12 @@ func test_fight_enemy_stores_summary_for_an_easy_win_only() -> void:
 	assert_eq(gs.last_fight_summary.size(), 2)
 	assert_true(gs.last_fight_summary[0].begins_with("You beat"), gs.last_fight_summary[0])
 	gs.end_session()
+
+
+func test_new_game_in_qingshi_names_hunter_ma_on_day_one() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.techniques = {}
+	gs.current_region = "qingshi_village"
+	var line: String = Guidance.fighting_hint(c, gs.data, gs.current_region, gs.npcs, gs.npc_favor)
+	assert_true(line.begins_with("Hunter Ma can teach you Iron Fist"), line)

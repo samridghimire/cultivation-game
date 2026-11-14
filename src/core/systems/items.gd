@@ -162,6 +162,15 @@ static func sources(data: GameData, item_id: String) -> Array[String]:
 	return lines
 
 
+## GUIDE-239: ids of the enemies whose rewards give `item_id` (data order).
+static func dropped_by(data: GameData, item_id: String) -> Array[String]:
+	var out: Array[String] = []
+	for enemy_id: String in data.enemies:
+		if _gives(data.enemies[enemy_id], item_id):
+			out.append(enemy_id)
+	return out
+
+
 ## True when something in the data really gives `item_id` (ITEM-002): a
 ## merchant, gather table, recipe, enemy drop, encounter or choice, mission,
 ## inheritance, secret realm, sect shop or stipend, auction lot, deed, world

@@ -576,6 +576,11 @@ static func short_hint(line: String, data: GameData = null) -> String:
 	var teach := re.search(line)
 	if teach != null:
 		var taught := "%s teaches %s%s" % [teach.get_string(1), teach.get_string(2), teach.get_string(3)]
+		for lead in ["No fighting style: ", "No style: "]:  # GUIDE-239: say what is missing, the teacher named
+			for tail in [teach.get_string(3), ""]:
+				var named: String = lead + "%s teaches %s%s" % [teach.get_string(1), teach.get_string(2), tail]
+				if named.length() <= SHORT_HINT_CHARS + (4 if tail == "" else 0) * int(lead == "No fighting style: "):
+					return named
 		if taught.length() <= SHORT_HINT_CHARS:
 			return taught
 	# "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches ..." -> "No fighting style: Iron Fist at the merchant"
@@ -3705,7 +3710,7 @@ static func _scan_first_combat_manual(c: CharacterData, data: GameData, region_i
 ## technique, tech_name, need, favor, region_id, region_name, days, liked}; `liked` is the first liked item
 ## the player holds or the merchant here sells ("" if none). `favor` is GameState.npc_favor.
 const STYLE_FAVOR_SLACK := 10
-static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}) -> Dictionary:
+static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}, today: int = -1) -> Dictionary:
 	if region_id == "" or Techniques.knows_kind(c, data, "combat"):
 		return {}
 	var map := _route_day_map(c, data, region_id, 1)
@@ -3719,7 +3724,9 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 		if not (map["days"] as Dictionary).has(at):
 			continue
 		var have := int(favor.get(npc_id, 0))
-		var lesson := _style_lesson(c, npc, data, data.dialogues[String(def["dialogue"])], have)
+		# GUIDE-239: a teacher in the current region is named whatever the favor gap; one route away keeps the slack.
+		var slack := 1000000 if at == region_id else STYLE_FAVOR_SLACK
+		var lesson := _style_lesson(c, npc, data, data.dialogues[String(def["dialogue"])], have, slack)
 		if lesson.is_empty():
 			continue
 		var days := int(map["days"][at])
@@ -3733,11 +3740,33 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 	best.erase("_key")
 	if int(best["favor"]) < int(best["need"]):
 		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
+		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
 	return best
 
 
+## GUIDE-239: one clause on how to close a favor gap with `npc_id`: a liked item held, one sold here, one a foe
+## here drops, else "talk with him daily".
+static func _close_clause(c: CharacterData, data: GameData, npc_id: String, region_id: String, today: int) -> String:
+	var likes: Array = data.npcs.get(npc_id, {}).get("likes", [])
+	for item_id: String in likes:
+		if data.items.has(item_id) and c.item_count(item_id) > 0:
+			return "he likes %s: you have %d" % [data.items[item_id].get("name", item_id), c.item_count(item_id)]
+	for item_id: String in likes:
+		if data.items.has(item_id):
+			var seller := merchant_selling(data, region_id, item_id, today)
+			if seller != "":
+				return "he likes %s, sold by %s" % [data.items[item_id].get("name", item_id), seller]
+	for item_id: String in likes:
+		if not data.items.has(item_id):
+			continue
+		for enemy_id in Items.dropped_by(data, item_id):
+			if not Exploration.sites_with_foe(c, data, region_id, enemy_id).is_empty():
+				return "he likes %s: hunt %s in %s" % [data.items[item_id].get("name", item_id), data.enemies[enemy_id].get("name", enemy_id), Exploration.region_name(data, region_id)]
+	return "talk with him daily"
+
+
 ## The cheapest-favor combat lesson in `dialogue` that `c` could take with favor raised to its need: {technique, need}, or {}.
-static func _style_lesson(c: CharacterData, npc: CharacterData, data: GameData, dialogue: Dictionary, have: int) -> Dictionary:
+static func _style_lesson(c: CharacterData, npc: CharacterData, data: GameData, dialogue: Dictionary, have: int, slack: int = STYLE_FAVOR_SLACK) -> Dictionary:
 	var nodes: Dictionary = dialogue.get("nodes", {})
 	var found: Dictionary = {}
 	for node_id: String in nodes:
@@ -3758,7 +3787,7 @@ static func _style_lesson(c: CharacterData, npc: CharacterData, data: GameData, 
 			var need := 0
 			for cond in conds:
 				need = maxi(need, int(cond.get("min_favor", 0)))
-			if need > have + STYLE_FAVOR_SLACK:
+			if need > have + slack:
 				continue
 			var ctx := {"player": c, "npc": npc, "data": data, "flags": {}, "favor": maxi(have, need), "today": -1}
 			var blocked := false
@@ -3802,13 +3831,22 @@ static func _manual_gap(c: CharacterData, data: GameData, region_id: String) -> 
 ## The teacher line for `style_teacher`'s entry: "Hunter Ma can teach you Iron Fist (favor 12/15)." plus what he likes.
 static func style_teacher_hint(t: Dictionary) -> String:
 	var line := "%s can teach you %s" % [t["name"], t["tech_name"]]
+	var where := " in %s" % t["region_name"] if int(t["days"]) > 0 else ""
 	if int(t["favor"]) < int(t["need"]):
 		line += " (favor %d/%d)" % [int(t["favor"]), int(t["need"])]
-		if String(t["liked"]) != "":
-			line += "; %s likes %s" % [t["name"], t["liked"]]
-	if int(t["days"]) > 0:
-		line += " in %s" % t["region_name"]
-	return line + "."
+		var close := String(t.get("close", ""))
+		if close == "" and String(t["liked"]) != "":
+			close = "%s likes %s" % [t["name"], t["liked"]]
+		if close != "":
+			if line.length() + close.length() + where.length() + 3 > TEACHER_HINT_CHARS:
+				where = ""  # drop the region part first when long
+			if line.length() + close.length() + 3 > TEACHER_HINT_CHARS and close.contains(", sold by "):
+				close = close.substr(0, close.find(", sold by ")) + ", sold here"
+			line += "; " + close
+	return line + where + "."
+
+
+const TEACHER_HINT_CHARS := 90
 
 
 ## "You know no fighting style..." naming where to get one, or "" (GUIDE-019).

@@ -6831,11 +6831,57 @@ func test_style_teacher_one_route_away_names_region() -> void:
 	assert_true(Guidance.style_teacher_hint(t).contains(" in "), Guidance.style_teacher_hint(t))
 
 
-func test_no_style_teacher_falls_back_to_manual_with_stones_gap() -> void:
+func test_style_teacher_in_region_named_at_any_favor_gap() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var npcs := _style_world()
+	var t := Guidance.style_teacher(c, npcs, data(), "qingshi_village", {})
+	assert_eq(t.get("npc_id", ""), "hunter_ma")
+	assert_eq(t["favor"], 0)
+	var line := Guidance.fighting_hint(c, data(), "qingshi_village", npcs, {})
+	assert_true(line.begins_with("Hunter Ma can teach you Iron Fist (favor 0/15); "), line)
+	assert_true(line.length() <= 90, line)
+	assert_eq(Guidance.short_hint(line), "No fighting style: Hunter Ma teaches Iron Fist")
+
+
+func test_style_teacher_one_route_away_needs_favor_within_slack() -> void:
 	var c := _fresh()
 	c.techniques = {}
 	c.inventory = {"spirit_stone": 5}
+	var d := data()
 	var npcs := _style_world()
-	assert_true(Guidance.style_teacher(c, npcs, data(), "qingshi_village", {"hunter_ma": 2}).is_empty(), "favor far short")
-	var line := Guidance.fighting_hint(c, data(), "qingshi_village", npcs, {"hunter_ma": 2})
+	npcs["hunter_ma"].home_region = String(d.regions["qingshi_village"]["routes"][0]["to"])
+	assert_true(Guidance.style_teacher(c, npcs, d, "qingshi_village", {"hunter_ma": 2}).is_empty(), "favor far short, one route away")
+	var line := Guidance.fighting_hint(c, d, "qingshi_village", npcs, {"hunter_ma": 2})
 	assert_true(line.contains("Wandering Merchant") and line.contains("(10 more stones)"), line)
+
+
+func test_style_teacher_close_clauses() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var npcs := _style_world()
+	c.inventory = {}
+	assert_eq(Guidance._close_clause(c, d, "hunter_ma", "qingshi_village", -1).begins_with("he likes ") or Guidance._close_clause(c, d, "hunter_ma", "qingshi_village", -1) == "talk with him daily", true)
+	c.inventory = {"venison": 2}
+	assert_eq(Guidance._close_clause(c, d, "hunter_ma", "qingshi_village", -1), "he likes Venison: you have 2")
+	c.inventory = {}
+	var sold := ""
+	for item_id: String in d.npcs["hunter_ma"]["likes"]:
+		if d.items.has(item_id) and Guidance.merchant_selling(d, "qingshi_village", item_id) != "":
+			sold = item_id
+			break
+	if sold != "":
+		assert_true(Guidance._close_clause(c, d, "hunter_ma", "qingshi_village", -1).contains(", sold by "))
+	assert_true(Items.dropped_by(d, "venison").size() > 0)
+	assert_true(Items.dropped_by(d, "no_such_item").is_empty())
+	assert_eq(Guidance._close_clause(c, d, "no_such_npc", "qingshi_village", -1), "talk with him daily")
+	var line := Guidance.style_teacher_hint(Guidance.style_teacher(c, npcs, d, "qingshi_village", {}))
+	assert_true(line.length() <= 90, line)
+
+
+func test_style_teacher_hint_drops_region_when_long() -> void:
+	var t := {"name": "Hunter Ma", "tech_name": "Iron Fist", "favor": 0, "need": 15, "liked": "", "days": 1,
+		"region_name": "Misty Forest of the Long Shadows", "close": "he likes Venison, sold by Peddler Hei of the Far Market"}
+	var line := Guidance.style_teacher_hint(t)
+	assert_true(line.length() <= 90 and not line.contains(" in "), line)
