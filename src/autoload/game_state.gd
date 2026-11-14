@@ -233,9 +233,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 			ends_early = false
 			var wt := String(wake["text"])
 			wake_text = "You open your eyes: %s." % (wt.substr(0, 1).to_lower() + wt.substr(1)).trim_suffix(".").left(90)
-			if not world_flags.get("wake_tip_shown", false):  # WU-538: say once how to turn it off
-				world_flags["wake_tip_shown"] = true
-				wake_text += " (turn this off in Settings)"
+			wake_text += _wake_tip()
 	player.last_meditated_day = GameClock.total_days + days
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)
@@ -261,7 +259,20 @@ func _chore_wake(asked: int) -> Dictionary:
 	if wake.is_empty() or int(wake["day"]) - GameClock.total_days >= asked:
 		return {}
 	var wt := String(wake["text"])
-	return {"days": int(wake["day"]) - GameClock.total_days, "text": "You open your eyes: %s." % (wt.substr(0, 1).to_lower() + wt.substr(1)).trim_suffix(".").left(90)}
+	return {"days": int(wake["day"]) - GameClock.total_days, "text": "You open your eyes: %s." % (wt.substr(0, 1).to_lower() + wt.substr(1)).trim_suffix(".").left(90) + _wake_tip()}
+
+
+## SKIP-003 (WU-538): the one-time " (turn this off in Settings)" tip, for the first early wake of any kind per save.
+func _wake_tip() -> String:
+	if world_flags.get("wake_tip_shown", false):
+		return ""
+	world_flags["wake_tip_shown"] = true
+	return " (turn this off in Settings)"
+
+
+## SKIP-003: the player met this villager, so GUIDE-241's "who can teach you next" line skips them for 21 days.
+func _note_teacher_seen(npc_id: String) -> void:
+	Effects.apply(player, data, {"set_flag": Guidance.TEACH_HINT_FLAG + npc_id, "flag_days": Guidance.TEACH_HINT_DAYS}, world_flags, current_region, GameClock.total_days)
 
 
 ## WILD-022: hang a great-beast trophy from the pack on the wall of your home in this region (no time passes).
@@ -1749,6 +1760,7 @@ func start_dialogue(npc_id: String) -> void:
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
 	_named_remembers(npc_id)
+	_note_teacher_seen(npc_id)
 	_teach_lessons(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
 
@@ -1769,6 +1781,7 @@ func _teach_lessons(npc_id: String) -> void:
 	var lesson: Dictionary = due[0]["lesson"]
 	var notes := Effects.apply(player, data, lesson.get("effects", {}), world_flags, current_region, today)
 	player.lessons_taught[String(due[0]["key"])] = today
+	_note_teacher_seen(npc_id)
 	EventBus.post("%s: \"%s\"" % [npc.name, Folk.lesson_line(lesson, npc.name, player.name)], "people")
 	for note in notes:
 		EventBus.post(note, "progress")
@@ -2295,6 +2308,7 @@ func chat(npc_id: String) -> void:
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
+	_note_teacher_seen(npc_id)
 	_teach_lessons(npc_id)
 	var wall_line := Trophies.comment(player, npcs, data, world_flags, current_region, GameClock.total_days)  # WILD-022
 	if wall_line != "":

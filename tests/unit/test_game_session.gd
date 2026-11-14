@@ -4378,6 +4378,47 @@ func test_long_chores_wake_for_a_festival() -> void:
 	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You put down your tools: ")))
 
 
+## SKIP-003: the first early wake of any kind carries the Settings tip; later ones (meditation too) do not.
+func test_chore_wake_carries_the_tip_once() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.wake_for_dates = true
+	gs.current_region = "qingshi_village"
+	var table: Array = [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	var posts: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: posts.append(text)
+	EventBus.message_posted.connect(cb)
+	var day: int = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 4, "end_day": day + 14}]
+	gs.gather(table, 15)
+	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You straighten up") and t.contains("(turn this off in Settings)")))
+	assert_true(gs.world_flags.get("wake_tip_shown", false))
+	posts.clear()
+	day = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 6, "end_day": day + 14}]
+	gs.cultivate(30)
+	EventBus.message_posted.disconnect(cb)
+	var woke := posts.filter(func(t: String) -> bool: return t.begins_with("You open your eyes: "))
+	assert_eq(woke.size(), 1)
+	assert_false(String(woke[0]).contains("Settings"), "no second tip")
+
+
+## SKIP-003: chatting with a villager sets teach_hint_seen_<id> for 21 days.
+func test_chat_sets_teach_hint_flag() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var npc := CharacterFactory.create("Li Wei", gs.data, seeded_rng(9))
+	npc.id = "li_wei"
+	gs.npcs["li_wei"] = npc
+	gs.chat("li_wei")
+	var key: String = Guidance.TEACH_HINT_FLAG + "li_wei"
+	assert_true(Effects.flag_active(gs.world_flags, key, clock.total_days))
+	assert_false(Effects.flag_active(gs.world_flags, key, clock.total_days + 21))
+
+
 ## SKIP-002: fewer days done, fewer rolls (rounded down, at least one past half).
 func test_gather_rolls_scale_with_days_done() -> void:
 	var c := new_character()

@@ -876,7 +876,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		elif c.techniques.is_empty():
 			out.append(TECHNIQUE_HINT)
 		elif today >= 0:
-			var next_teacher := next_teacher_hint(c, people, data, region_id, favor, today)
+			var next_teacher := next_teacher_hint(c, people, data, region_id, favor, today, flags)
 			if next_teacher != "":
 				out.append(next_teacher)
 	for hint in [_dao_hint(c, data), _abode_hint(c, data, region_id, flags), _family_hint(c, data, people)]:
@@ -3748,11 +3748,15 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 	return best
 
 
+const TEACH_HINT_FLAG := "teach_hint_seen_"  # SKIP-003: timed world flag per teacher
+const TEACH_HINT_DAYS := 21
+
+
 ## GUIDE-241: a low-priority line once a fighting style is known: the nearest villager (this region, then one route
 ## away) with a not-yet-known teaching (never practice-only) within STYLE_FAVOR_SLACK favor of the player, worded
-## "<Name> could teach you <Thing> (favor N/M)". Shown on one day in seven per teacher (a stateless weekly slot, so
-## an ignored hint returns after 6 quiet days). "" when none or `today` < 0.
-static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int) -> String:
+## "<Name> could teach you <Thing> (favor N/M)". SKIP-003: a teacher is skipped for TEACH_HINT_DAYS after the player
+## chats with them (timed world flag `teach_hint_seen_<id>` in `flags`). "" when none or `today` < 0.
+static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int, flags: Dictionary = {}) -> String:
 	if region_id == "" or today < 0:
 		return ""
 	var map := _route_day_map(c, data, region_id, 1)
@@ -3765,7 +3769,7 @@ static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData
 		var at := Npcs.region_of(npc, data)
 		if not (map["days"] as Dictionary).has(at):
 			continue
-		if (today + npc_id.hash()) % 7 != 0:
+		if Effects.flag_active(flags, TEACH_HINT_FLAG + npc_id, today):
 			continue
 		var have := int(favor.get(npc_id, 0))
 		for t in Npcs.teachings(npc_id, c, data, have):

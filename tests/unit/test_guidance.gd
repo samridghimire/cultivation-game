@@ -6958,16 +6958,21 @@ func test_next_teacher_hint_names_teaching_within_reach() -> void:
 	assert_true(line.contains("(favor "), line)
 
 
-func test_next_teacher_hint_cooldown_only_one_day_in_seven() -> void:
+func test_next_teacher_hint_hides_for_21_days_after_a_chat() -> void:
 	var c := _styled()
 	var npcs := _style_world()
 	var favor := {"hunter_ma": 52}
-	var shown := 0
-	for day in range(100, 107):
-		var line := Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", favor, day)
-		if line.begins_with("Hunter Ma"):
-			shown += 1
-	assert_eq(shown, 1)
+	var key := Guidance.TEACH_HINT_FLAG + "hunter_ma"
+	var others := {}
+	for npc_id: String in data().npcs:
+		if npc_id != "hunter_ma":
+			others[Guidance.TEACH_HINT_FLAG + npc_id] = {"until": 1000}  # only Hunter Ma is in play
+	assert_true(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", favor, 100, others).begins_with("Hunter Ma"), "old saves: no flag, shown")
+	var flags := others.duplicate()
+	flags[key] = {"until": 121}
+	for day in [100, 110, 120]:
+		assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", favor, day, flags), "")
+	assert_true(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", favor, 121, flags).begins_with("Hunter Ma"))
 
 
 func test_next_teacher_hint_never_names_known_or_too_far() -> void:
