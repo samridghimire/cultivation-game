@@ -4178,3 +4178,38 @@ func test_hunter_ma_teaches_iron_fist() -> void:
 		if String(ch["label"]).begins_with("Show me how you fight"):
 			assert_true(bool(ch["disabled"]), "locked once learned")
 	gs.end_dialogue()
+
+
+## C-363: after the lesson Hunter Ma hides it and offers a spar (favor once a week); a bought manual never sees the lesson.
+func test_hunter_ma_after_the_lesson() -> void:
+	var gs := _game_state()
+	var c := _start()
+	gs.npc_favor["hunter_ma"] = 15
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}  # bought the manual
+	gs.start_dialogue("hunter_ma")
+	var spars: Array[int] = []
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		assert_false(String(ch["label"]).begins_with("Show me how you fight"), "lesson hidden")
+		if String(ch["label"]).begins_with("Spar with me"):
+			spars.append(int(ch["index"]))
+	assert_eq(spars.size(), 1, "one spar choice listed")
+	var day := GameClock.total_days
+	gs.choose_dialogue(spars[0])
+	assert_eq(GameClock.total_days - day, 1, "one day")
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 16, "+1 favor the first time")
+	gs.start_dialogue("hunter_ma")
+	spars.clear()
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Spar with me"):
+			spars.append(int(ch["index"]))
+	assert_eq(spars.size(), 1, "still one listed")
+	gs.choose_dialogue(spars[0])
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 16, "no more favor within the week")
+	GameClock.total_days += 8
+	gs.start_dialogue("hunter_ma")
+	for ch: Dictionary in gs.dialogue_view()["choices"]:
+		if String(ch["label"]).begins_with("Spar with me"):
+			gs.choose_dialogue(int(ch["index"]))
+			break
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 17, "favor again after a week")
+	gs.end_dialogue()

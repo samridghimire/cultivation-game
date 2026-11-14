@@ -1953,7 +1953,7 @@ func _current_dialogue() -> Dictionary:
 
 
 func _dialogue_ctx(npc_id: String) -> Dictionary:
-	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0)), "rival": Rivals.rival_of(player, npcs)}
+	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0)), "today": GameClock.total_days, "rival": Rivals.rival_of(player, npcs)}
 
 
 ## Spend time courting an NPC (needs some favor first); raises their favor.

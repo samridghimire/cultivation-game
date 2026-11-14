@@ -8,7 +8,8 @@ extends RefCounted
 ## node: {"text", "speaker" (optional), "choices": [choice]}
 ## choice: {"label", "next" (node id; "" or "end" ends), "if", "effects",
 ##          "favor" (int, change in this NPC's favor), "days",
-##          "show_locked" (bool: show disabled with a reason instead of hiding)}
+##          "show_locked" (bool: show disabled with a reason instead of hiding),
+##          "hide_if" (a condition block like "if": the choice is not listed at all while it passes)}
 ## Text may use {player}, {npc}, {npc_realm}, {player_realm}, {rival} and {rival_realm}
 ## (the player's rival, RIVAL-003; empty when there is none).
 ##
@@ -45,6 +46,8 @@ static func view(dialogue: Dictionary, node_id: String, ctx: Dictionary) -> Dict
 	var raw: Array = node.get("choices", [])
 	for i in raw.size():
 		var choice: Dictionary = raw[i]
+		if choice.has("hide_if") and unmet_reason(choice["hide_if"], ctx) == "":
+			continue
 		var reason := _choice_blocker(choice, ctx)
 		if reason != "" and not choice.get("show_locked", false):
 			continue
@@ -77,7 +80,7 @@ static func choose(dialogue: Dictionary, node_id: String, index: int, ctx: Dicti
 	var notes: PackedStringArray = []
 	var effects: Dictionary = choice.get("effects", {})
 	if not effects.is_empty():
-		notes = Effects.apply(ctx["player"], ctx["data"], effects, ctx["flags"])
+		notes = Effects.apply(ctx["player"], ctx["data"], effects, ctx["flags"], "", int(ctx.get("today", -1)))
 	var favor := int(choice.get("favor", 0)) if ctx["npc"] != null else 0
 	if favor != 0:
 		notes.append("%s's favor %+d" % [(ctx["npc"] as CharacterData).name, favor])
@@ -102,9 +105,10 @@ static func unmet_reason(cond: Dictionary, ctx: Dictionary) -> String:
 		return "Your reputation is too dark."
 	if cond.has("max_alignment") and c.alignment > int(cond["max_alignment"]):
 		return "You are too righteous."
-	if cond.has("flag") and not flags.get(cond["flag"], false):
+	var today := int(ctx.get("today", -1))
+	if cond.has("flag") and not _flag_on(flags, String(cond["flag"]), today):
 		return "Not yet."
-	if cond.has("not_flag") and flags.get(cond["not_flag"], false):
+	if cond.has("not_flag") and _flag_on(flags, String(cond["not_flag"]), today):
 		return "No longer possible."
 	if cond.has("min_favor") and favor < int(cond["min_favor"]):
 		return "Needs more favor (%d/%d)." % [favor, int(cond["min_favor"])]
@@ -128,6 +132,14 @@ static func unmet_reason(cond: Dictionary, ctx: Dictionary) -> String:
 	if cond.has("above_npc") and npc != null and (c.realm_index > npc.realm_index) != bool(cond["above_npc"]):
 		return "Your cultivation does not match."
 	return ""
+
+
+## A timed flag ({"until": day}) only counts while `today` (ctx "today", -1 = unknown) is before it.
+static func _flag_on(flags: Dictionary, key: String, today: int) -> bool:
+	var v: Variant = flags.get(key, false)
+	if v is Dictionary and today >= 0:
+		return Effects.flag_active(flags, key, today)
+	return bool(v)
 
 
 static func format(text: String, ctx: Dictionary) -> String:
@@ -179,6 +191,7 @@ static func validate(dialogue: Dictionary, data: GameData) -> PackedStringArray:
 			if tech != "" and not data.techniques.has(tech):
 				errors.append("Dialogue '%s' node '%s' teaches unknown technique '%s'" % [id, node_id, tech])
 			conds.append(choice.get("if", {}))
+			conds.append(choice.get("hide_if", {}))
 	for cond: Dictionary in conds:
 		for key in ["min_realm", "max_realm"]:
 			if cond.has(key) and data.realm_index_of(cond[key]) < 0:
