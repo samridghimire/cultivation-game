@@ -934,3 +934,27 @@ func test_platform_jetty_reaches_near_water_only() -> void:
 	assert_true(boards.size() >= 3 and boards.size() <= 4)
 	var far: Array[Rect2] = [Rect2(900, 700, 80, 60)]
 	assert_eq(Scenery.platform_jetty(court, far).size(), 0)
+
+
+func test_terrace_layout_worn_court() -> void:
+	var court := Rect2(100, 100, 300, 200)
+	var hall := Rect2(150, 100, 200, 80)
+	var lay := SectCourt.terrace_layout(court, hall, 7)
+	assert_eq(lay, SectCourt.terrace_layout(court, hall, 7), "deterministic")
+	var widths := {}
+	for f: Dictionary in lay["flags"]:
+		var r: Rect2 = f["rect"]
+		assert_true(court.grow(0.5).encloses(r), "flag inside court")
+		widths[int(r.size.x)] = true
+	assert_true(widths.size() >= 3, "flags vary in width")
+	assert_true((lay["moss"] as Array).size() >= 1 and (lay["moss"] as Array).size() <= 10, "moss count")
+	var nc := (lay["cracks"] as Array).size()
+	assert_true(nc >= 2 and nc <= 3, "2-3 cracks")
+	assert_true(court.encloses(lay["strip"]), "strip inside court")
+
+
+func test_stair_treads_count_and_widen() -> void:
+	for h in [60.0, 144.0, 300.0]:
+		var t := SectCourt.stair_treads(Rect2(0, 0, 64, h))
+		assert_true(t.size() >= 5 and t.size() <= 8, "5-8 treads for height %s" % h)
+		assert_true((t[-1]["rect"] as Rect2).size.x > (t[0]["rect"] as Rect2).size.x, "widens toward the bottom")

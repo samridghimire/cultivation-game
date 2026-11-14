@@ -1936,18 +1936,18 @@ func _draw_tiled(tile: Texture2D, area: Rect2) -> void:
 
 ## GFX-079: stone steps down a slope (walkable): pale treads with a dark riser line under each, side kerbs.
 func _draw_steps(r: Rect2) -> void:
-	draw_rect(r, Color("9aa3a8"))
-	var y := r.position.y
-	var i := 0
-	while y < r.end.y:
-		var h := minf(14.0, r.end.y - y)
-		draw_rect(Rect2(r.position.x, y, r.size.x, h), Color("b4bcc0") if i % 2 == 0 else Color("a5aeb2"))
-		draw_rect(Rect2(r.position.x, y, r.size.x, 2.0), Color("d6dde0"))  # GFX-113: the lit tread edge
-		draw_rect(Rect2(r.position.x, y + h - 3.0, r.size.x, 3.0), Color("6f787e"))
-		y += 14.0
-		i += 1
-	draw_rect(Rect2(r.position.x - 4.0, r.position.y, 4.0, r.size.y), Color("5f686e"))
-	draw_rect(Rect2(r.end.x, r.position.y, 4.0, r.size.y), Color("5f686e"))
+	# GFX-151: 5-8 deep treads, a lit front edge and a shadow under each, widening toward the bottom, no side rails.
+	var winter := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	var treads := SectCourt.stair_treads(r)
+	draw_rect(r.grow(2.0), Color("5f686e"))
+	for i in treads.size():
+		var t: Dictionary = treads[i]
+		var tr: Rect2 = t["rect"]
+		draw_rect(tr, Color("b4bcc0") if i % 2 == 0 else Color("a9b2b6"))
+		draw_rect(t["tread"], Color("dde3e6"))
+		draw_rect(t["shadow"], Color("6f787e"))
+		if winter:
+			draw_rect(Rect2(tr.position.x, tr.position.y + 2.0, tr.size.x, 2.0), Color(0.95, 0.98, 1.0, 0.8))
 	# GFX-113: stone lanterns on both sides, every other tread, in a high (map.high) region.
 	if _region.get("map", {}).get("high", null) is Dictionary:
 		var ly := r.position.y + 10.0

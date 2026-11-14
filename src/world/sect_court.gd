@@ -271,22 +271,25 @@ static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy
 	var mortar := base.darkened(0.22)
 	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 7.0), Color(0, 0, 0, 0.25))
 	ci.draw_rect(court, base)
-	var row := 0
-	var y := court.position.y
-	while y < court.end.y:
-		ci.draw_line(Vector2(court.position.x, y), Vector2(court.end.x, y), mortar, 1.0)
-		var x := court.position.x + (STONE if row % 2 == 1 else 0.0)
-		while x < court.end.x:
-			if x > court.position.x:
-				ci.draw_line(Vector2(x, y), Vector2(x, minf(y + STONE, court.end.y)), mortar, 1.0)
-			x += STONE * 2.0
-		y += STONE
-		row += 1
+	var cx := hall.get_center().x
+	var lay := terrace_layout(court, hall, hash(str(court) + "|flags"))
+	for f: Dictionary in lay["flags"]:
+		var fr: Rect2 = f["rect"]
+		ci.draw_rect(fr, Scenery.paving_shade(base, int(f["seed"])))
+		ci.draw_rect(fr, mortar, false, 1.0)
+	var strip: Rect2 = lay["strip"]  # GFX-151: the worn processional strip from the stair to the hall door
+	ci.draw_rect(strip, base.darkened(0.14))
+	ci.draw_rect(Rect2(strip.position.x, strip.position.y, 1.0, strip.size.y), mortar.darkened(0.1))
+	ci.draw_rect(Rect2(strip.end.x - 1.0, strip.position.y, 1.0, strip.size.y), mortar.darkened(0.1))
+	for m: Vector2 in lay["moss"]:
+		ci.draw_rect(Rect2(m.x, m.y, 2.0, 1.0), Color("5f8a46"))
+		ci.draw_rect(Rect2(m.x + 1.0, m.y - 1.0, 1.0, 1.0), Color("7aa35a"))
+	for crack: PackedVector2Array in lay["cracks"]:
+		ci.draw_polyline(crack, mortar.darkened(0.25), 1.0)
 	ci.draw_rect(court, mortar.darkened(0.3), false, 3.0)  # GFX-147: a darker kerb
 	# The front step: a lighter lip over a shaded riser.
 	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 6.0), base.darkened(0.12))
 	ci.draw_rect(Rect2(court.position.x, court.end.y - 6.0, court.size.x, 2.0), base.lightened(0.2))
-	var cx := hall.get_center().x
 	for i in 3:
 		var w := 44.0 + 14.0 * i
 		var step := Rect2(cx - w / 2.0, hall.end.y + 6.0 * i, w, 6.0)
@@ -324,6 +327,67 @@ static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy
 				ey += h + rng.randf_range(2.0, 8.0)
 		for i in int(court.size.x / 28.0):
 			ci.draw_rect(Rect2(court.position.x + 8.0 + i * 28.0, court.end.y + 3.0, 6.0, 4.0), Color("d6e6ef"))
+
+
+## GFX-151: the terrace court's worn paving. {flags: [{rect, seed}] rows of 3-4 flag widths (24..40 px) offset row to row
+## so joints never line up, strip: Rect2 (the processional strip from the hall door to the court's front),
+## moss: Vector2 x 6-10 at joint corners, cracks: 2-3 short polylines}. Deterministic from `seed`; flags lie inside `court`.
+static func terrace_layout(court: Rect2, hall: Rect2, seed: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var flags: Array[Dictionary] = []
+	var joints: Array[Vector2] = []
+	var y := court.position.y
+	var prev_joints: Array[float] = []
+	while y < court.end.y:
+		var h := minf(STONE, court.end.y - y)
+		var cur: Array[float] = []
+		var x := court.position.x
+		while x < court.end.x:
+			var w := float(rng.randi_range(24, 40))
+			for _try in 4:  # keep this row's joints off the previous row's
+				var clash := false
+				for pj in prev_joints:
+					if absf(pj - (x + w)) < 4.0:
+						clash = true
+				if not clash:
+					break
+				w += 5.0
+			w = minf(w, court.end.x - x)
+			flags.append({"rect": Rect2(x, y, w, h), "seed": rng.randi()})
+			if x + w < court.end.x - 1.0:
+				cur.append(x + w)
+				joints.append(Vector2(x + w, y))
+			x += w
+		prev_joints = cur
+		y += STONE
+	var cx := hall.get_center().x
+	var strip := Rect2(cx - 10.0, hall.end.y, 20.0, court.end.y - hall.end.y)
+	var moss: Array[Vector2] = []
+	var pool := joints.duplicate()
+	for _i in rng.randi_range(6, 10):
+		if pool.is_empty():
+			break
+		moss.append(pool.pop_at(rng.randi() % pool.size()))
+	var cracks: Array[PackedVector2Array] = []
+	for _i in rng.randi_range(2, 3):
+		var fl: Rect2 = flags[rng.randi() % flags.size()]["rect"]
+		var a := fl.position + Vector2(fl.size.x * 0.2, 2.0)
+		cracks.append(PackedVector2Array([a, a + Vector2(5, 4), a + Vector2(3, 8), a + Vector2(10, 11)]))
+	return {"flags": flags, "strip": strip, "moss": moss, "cracks": cracks}
+
+
+## GFX-151: the stair treads of a `steps` landmark rect: 5-8 treads (by height) that widen a little toward the bottom.
+## [{rect, tread: Rect2 (the lit front edge), shadow: Rect2 (under it)}].
+static func stair_treads(r: Rect2) -> Array[Dictionary]:
+	var n := clampi(int(r.size.y / 18.0), 5, 8)
+	var h := r.size.y / float(n)
+	var out: Array[Dictionary] = []
+	for i in n:
+		var grow := 6.0 * float(i) / float(n)
+		var tr := Rect2(r.position.x - grow, r.position.y + h * i, r.size.x + grow * 2.0, h)
+		out.append({"rect": tr, "tread": Rect2(tr.position.x, tr.position.y, tr.size.x, 2.0), "shadow": Rect2(tr.position.x, tr.end.y - 3.0, tr.size.x, 3.0)})
+	return out
 
 
 ## GFX-147: where the terrace court's stone lanterns stand: its four corners, 12 px in from each.
