@@ -7,7 +7,7 @@ signal message_posted(text: String, category: String)
 ## LOG-004: the newest log line was rewritten in place (a folded repeat); UIs refresh that row.
 signal message_replaced(text: String, category: String)
 ## LOG-005: a row `from_end` places from the newest (0 = newest) was merged into a new newest row.
-signal message_folded(text: String, category: String, from_end: int)
+signal message_folded(text: String, category: String, id: int)
 ## Any player state changed; UI should refresh.
 signal player_changed
 signal session_started
@@ -129,6 +129,8 @@ const HISTORY_LIMIT := 200
 var history: Array[Dictionary] = []
 ## Messages posted since boot (never trimmed, unlike history), so callers can count news.
 var posted_count := 0
+## LOG-007: id of the next history row (session-only, monotonically increasing, never saved).
+var _next_id := 1
 
 
 ## Topic of the action under way ("combat", "cultivation", "family", "sect",
@@ -140,7 +142,8 @@ const TOPICS: Array[String] = ["combat", "cultivation", "family", "sect", "trade
 
 func post(text: String, category: String = "info", topic_override: String = "", dawn: bool = false) -> void:
 	posted_count += 1
-	var row := {"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic}
+	var row := {"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic, "id": _next_id}
+	_next_id += 1
 	if dawn:
 		row["dawn"] = true  # LOG-005: a day-start line; a practice summary may fold across it
 	history.append(row)
@@ -179,9 +182,8 @@ func fold_row(index: int, text: String, category: String = "info") -> void:
 	row["text"] = text
 	row["category"] = category
 	row["day"] = GameClock.total_days
-	var from_end := history.size() - index
 	history.append(row)
-	message_folded.emit(text, category, from_end)
+	message_folded.emit(text, category, int(row.get("id", -1)))
 
 
 ## Forget past messages (a new or loaded session starts with an empty log).

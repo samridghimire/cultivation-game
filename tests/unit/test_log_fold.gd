@@ -148,3 +148,22 @@ func test_great_beast_eve_needs_a_reason() -> void:
 		break
 	assert_true(any)
 	gs.end_session()
+
+
+## LOG-007: a folded row is found by id even when the HUD collapsed an earlier "(x2)" row.
+func test_fold_addresses_row_by_id() -> void:
+	_start()
+	var gs := _gs()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	(Engine.get_main_loop() as SceneTree).root.add_child(hud)
+	EventBus.post("You practice the Iron Fist for 3 days.")
+	gs._fold_prev = {"text": "You practice the Iron Fist for 3 days.", "day": GameClock.total_days}
+	EventBus.post("Dawn line.", "world", "", true)
+	EventBus.post("Dawn line.", "world", "", true)  # collapsed into (x2) by the HUD
+	gs._post_foldable(2, "You practice the Iron Fist for 2 days.")
+	var lines: Array = hud.get("_log_lines")
+	var ids: Array = hud.get("_log_ids")
+	assert_true(String(lines[-1]).contains("5 days"), String(lines[-1]))
+	assert_eq(lines.size(), ids.size())
+	hud.free()
+	gs.end_session()

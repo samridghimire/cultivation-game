@@ -193,7 +193,7 @@ func _scroll_to_end() -> void:
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 
-func _on_message_folded_rebuild(_t: String, _c: String, _from_end: int) -> void:
+func _on_message_folded_rebuild(_t: String, _c: String, _id: int) -> void:
 	if visible:
 		_rebuild()
 

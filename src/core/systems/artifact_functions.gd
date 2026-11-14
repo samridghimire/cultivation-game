@@ -408,3 +408,18 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(InnerWorld.validate(data))
 	errors.append_array(SpiritGarden.validate(data))
 	return errors
+
+
+## LOG-007: the quiet energy line. One line when `after` crosses a multiple of 25 that `before` had not reached, and
+## never within ENERGY_LINE_DAYS of the last one (`last_line_day` < 0 when none yet).
+const ENERGY_LINE_STEP := 25
+const ENERGY_LINE_DAYS := 30
+
+
+static func energy_line(before: int, after: int, last_line_day: int, today: int) -> String:
+	var mark := after / ENERGY_LINE_STEP * ENERGY_LINE_STEP
+	if mark <= 0 or mark <= before / ENERGY_LINE_STEP * ENERGY_LINE_STEP:
+		return ""
+	if last_line_day >= 0 and today - last_line_day < ENERGY_LINE_DAYS:
+		return ""
+	return "The artifact grows warmer (%d energy)." % after

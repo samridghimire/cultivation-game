@@ -304,3 +304,13 @@ func test_game_state_spoils_hint_once_a_day() -> void:  # ART-014
 	assert_true(gs.fight_enemy(boar))
 	assert_false("\n".join(gs.last_fight_spoils).contains("The artifact stirs"), "once a day")
 	gs.end_session()
+
+
+## LOG-007: the quiet energy line.
+func test_energy_line_crossing() -> void:
+	assert_eq(ArtifactFunctions.energy_line(20, 27, -1, 100), "The artifact grows warmer (27 energy).")
+	assert_eq(ArtifactFunctions.energy_line(48, 52, -1, 100), "The artifact grows warmer (52 energy).")
+	assert_eq(ArtifactFunctions.energy_line(26, 40, -1, 100), "")
+	assert_eq(ArtifactFunctions.energy_line(0, 10, -1, 100), "")
+	assert_eq(ArtifactFunctions.energy_line(20, 27, 90, 100), "", "crossed twice within 30 days: silent")
+	assert_eq(ArtifactFunctions.energy_line(20, 27, 60, 100) != "", true)

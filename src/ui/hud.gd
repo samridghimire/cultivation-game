@@ -55,6 +55,7 @@ var _last_text: String = ""
 var _last_category: String = ""
 var _repeat: int = 0
 var _log_truncated := false  ## WU-531: the label shows only the newest messages that fit (or a cut-down newest one)
+var _log_ids: Array[int] = []  ## LOG-007: EventBus history id of each HUD log line (parallel to _log_lines).
 var _log_lines: Array[String] = []  ## BBCode of each HUD log line, for collapsing repeats.
 var _status_panel: Control
 var _companion_chip: HBoxContainer  ## WU-413: the friend who fights beside you today.
@@ -315,7 +316,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_days_advanced_fair_fight)
 	EventBus.region_changed.connect(_on_region_changed_refresh)
 	EventBus.region_changed.connect(_on_arrival)
-	EventBus.message_posted.connect(_on_message)
+	EventBus.message_posted.connect(_on_message_posted)
 	EventBus.message_replaced.connect(_on_message_replaced)
 	EventBus.message_folded.connect(_on_message_folded)
 	Settings.changed.connect(_on_setting_changed)
@@ -672,7 +673,7 @@ func _build_log() -> void:
 	# Seed from the history so the log survives a world reload (travel, respawn).
 	var recent: Array = EventBus.history.slice(maxi(0, EventBus.history.size() - MAX_LOG_LINES))
 	for e: Dictionary in recent:
-		_on_message(String(e.get("text", "")), String(e.get("category", "info")))
+		_on_message(String(e.get("text", "")), String(e.get("category", "info")), int(e.get("id", -1)))
 
 
 ## Anchors and offsets as (left, top, right, bottom).
@@ -1293,11 +1294,13 @@ func _on_message_replaced(text: String, category: String) -> void:
 
 
 ## LOG-005: a practice row moved past dawn lines to the newest position.
-func _on_message_folded(text: String, category: String, from_end: int) -> void:
-	var i := _log_lines.size() - 1 - from_end
+func _on_message_folded(text: String, category: String, id: int) -> void:
+	var i := _log_ids.find(id)  # LOG-007: by id, since collapsed "(x2)" rows make positions differ from the history
 	if i < 0:
 		return
 	_log_lines.remove_at(i)
+	_log_ids.remove_at(i)
+	_log_ids.append(id)
 	_log_lines.append(_log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text))
 	_repeat = 1
 	_last_text = text
@@ -1308,12 +1311,20 @@ func _on_message_folded(text: String, category: String, from_end: int) -> void:
 	_fit_log_card.call_deferred()
 
 
-func _on_message(text: String, category: String) -> void:
+func _on_message_posted(text: String, category: String) -> void:
+	var id := -1
+	if not EventBus.history.is_empty():
+		id = int(EventBus.history[-1].get("id", -1))
+	_on_message(text, category, id)
+
+
+func _on_message(text: String, category: String, id: int = -1) -> void:
 	_last_message_msec = Time.get_ticks_msec()
 	var color: Color = UIStyle.CATEGORY_COLORS.get(category, Color.WHITE)
 	if _repeat > 0 and text == _last_text and category == _last_category and not _log_lines.is_empty():
 		_repeat += 1
 		_log_lines[-1] = _log_line(color, collapsed_line(text, _repeat))
+		_log_ids[-1] = id
 		# Rewriting the last paragraph in place is unreliable (trailing "\n"); the log is short, so rebuild it.
 		_log.clear()
 		for line: String in _log_lines:
@@ -1325,6 +1336,7 @@ func _on_message(text: String, category: String) -> void:
 	_last_category = category
 	var line := _log_line(color, text)
 	_log_lines.append(line)
+	_log_ids.append(id)
 	if _log_truncated:
 		_log_truncated = false
 		_log.clear()
@@ -1334,6 +1346,7 @@ func _on_message(text: String, category: String) -> void:
 		_log.append_text(line)
 	if _log_lines.size() > MAX_LOG_LINES:
 		_log_lines.pop_front()
+		_log_ids.pop_front()
 		_log.remove_paragraph(0)
 	_fit_log_card.call_deferred()
 

@@ -14,7 +14,10 @@ func test_history_records_posts_with_day_and_is_capped() -> void:
 	clock.total_days = 40
 	bus.post("A breeze stirs.", "info")
 	assert_eq(bus.history.size(), 1)
-	assert_eq(bus.history[0], {"text": "A breeze stirs.", "category": "info", "day": 40, "topic": ""})
+	var first: Dictionary = bus.history[0].duplicate()
+	assert_true(int(first.get("id", 0)) > 0, "LOG-007: every row has an id")
+	first.erase("id")
+	assert_eq(first, {"text": "A breeze stirs.", "category": "info", "day": 40, "topic": ""})
 	for i in bus.HISTORY_LIMIT + 5:
 		bus.post("line %d" % i, "progress")
 	assert_eq(bus.history.size(), bus.HISTORY_LIMIT)

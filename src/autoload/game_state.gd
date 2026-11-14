@@ -4646,17 +4646,29 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	EventBus.player_changed.emit()
 
 
-## ART-009: the artifact drinks the player's growth. LOG-002: at most one energy line per ARTIFACT_LINE_DAYS
-## days (gains in between are folded into the next line), and one hum per newly unsealable function.
+## ART-009: the artifact drinks the player's growth. LOG-007: no weekly energy line; a rise adds "The artifact
+## drinks deep" to its progress line, else one "grows warmer" line per 25 energy crossed, 30 days apart, and one hum per newly unsealable function.
 func _artifact_wakes(extra: int = 0) -> void:
 	if player == null or not player.alive:
 		return
-	_artifact_pending += extra + ArtifactFunctions.drink_progress(player, data, GameClock.total_days)
+	var rose := player.realm_index != int(player.artifact_marks.get("realm", player.realm_index)) \
+			or player.stage != int(player.artifact_marks.get("stage", player.stage))
+	var drunk := ArtifactFunctions.drink_progress(player, data, GameClock.total_days)
+	_artifact_pending += extra + drunk
 	var today := GameClock.total_days
-	if _artifact_pending > 0 and (_artifact_line_day < 0 or today - _artifact_line_day >= ARTIFACT_LINE_DAYS):
-		_artifact_line_day = today
-		EventBus.post("The artifact drinks the change in you (+%d energy, %d in all)." % [_artifact_pending, player.artifact_energy], "artifact")
-		_artifact_pending = 0
+	if _artifact_pending > 0:
+		# LOG-007: a stage/realm rise carries the drink on its own progress line; otherwise only a crossing line.
+		var last := EventBus.history[-1] if not EventBus.history.is_empty() else {}
+		if rose and drunk > 0 and String(last.get("text", "")).begins_with("Your cultivation rises to") \
+				and String(last.get("category", "")) == "progress":
+			EventBus.replace_last("%s The artifact drinks deep (+%d)." % [String(last["text"]), _artifact_pending], "progress")
+			_artifact_pending = 0
+		else:
+			var line := ArtifactFunctions.energy_line(player.artifact_energy - _artifact_pending, player.artifact_energy, _artifact_line_day, today)
+			if line != "":
+				_artifact_line_day = today
+				EventBus.post(line, "artifact")
+				_artifact_pending = 0
 	for function_id in ArtifactFunctions.ready_to_unseal(player, data, world_flags):
 		var flag := "artifact_hum_" + function_id
 		if not world_flags.get(flag, false):
@@ -4672,7 +4684,6 @@ func _artifact_whisper(moment: String) -> void:
 		EventBus.post(line, "artifact")
 
 
-const ARTIFACT_LINE_DAYS := 7
 var _artifact_pending := 0
 var _artifact_line_day := -1
 var _artifact_spoils_day := -1

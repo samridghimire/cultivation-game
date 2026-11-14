@@ -4025,21 +4025,38 @@ func test_new_session_drops_folded_artifact_gains() -> void:
 	assert_eq(gs._artifact_pending, 0)
 
 
-## LOG-002: the "artifact drinks the change" line posts once a week; gains in between fold into the next line.
-func test_artifact_energy_line_posts_once_a_week() -> void:
+## LOG-007: no weekly energy line; one "grows warmer" line on crossing a multiple of 25, 30 days apart.
+func test_artifact_energy_line_quiet() -> void:
 	var gs := _game_state()
-	_start()
+	var c := _start()
 	var bus := _root().get_node("EventBus")
-	gs._artifact_wakes(10)
-	assert_eq(gs._artifact_pending, 0, "the first gain posts")
+	c.artifact_energy = 20
 	var count: int = bus.posted_count
-	gs._artifact_wakes(10)
-	assert_eq(bus.posted_count, count, "no second line inside the window")
-	assert_eq(gs._artifact_pending, 10, "the gain is folded, not lost")
-	gs._artifact_line_day -= GameState.ARTIFACT_LINE_DAYS
-	gs._artifact_wakes(5)
-	assert_eq(gs._artifact_pending, 0, "the next week's line carries the folded gains")
-	assert_gt(bus.posted_count, count)
+	c.artifact_energy += 3
+	gs._artifact_wakes(3)
+	assert_eq(bus.posted_count, count, "no line below the mark")
+	assert_eq(gs._artifact_pending, 3)
+	c.artifact_energy += 4
+	gs._artifact_wakes(4)
+	assert_eq(String(bus.history[-1]["text"]), "The artifact grows warmer (27 energy).")
+	assert_eq(gs._artifact_pending, 0)
+	count = bus.posted_count
+	c.artifact_energy = 55
+	gs._artifact_wakes(28)
+	assert_eq(bus.posted_count, count, "second crossing inside 30 days is silent")
+
+
+func test_artifact_stage_rise_adds_suffix() -> void:
+	var gs := _game_state()
+	var c := _start()
+	var bus := _root().get_node("EventBus")
+	gs._artifact_wakes()  # records the marks
+	c.stage += 1
+	bus.post("Your cultivation rises to Test Layer!", "progress")
+	var count: int = bus.history.size()
+	gs._artifact_wakes()
+	assert_eq(bus.history.size(), count, "no separate artifact line")
+	assert_true(String(bus.history[-1]["text"]).contains("The artifact drinks deep (+"), String(bus.history[-1]["text"]))
 
 
 func test_artifact_first_win_feeds_once() -> void:
