@@ -83,7 +83,10 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 ## above their head, `feet_y` the y of their feet. Clear of `place_rects` -> Vector2.ZERO; else it slides sideways in
 ## 4 px steps up to 40 px, then tries again 4..80 px higher. It never moves down (that put it on the figure).
 ## Returns the offset to add to the label; Vector2.ZERO when nothing fits.
-static func person_offset(label: Rect2, _feet_y: float, place_rects: Array[Rect2]) -> Vector2:
+static func person_offset(label: Rect2, _feet_y: float, raw_place_rects: Array[Rect2]) -> Vector2:
+	var place_rects: Array[Rect2] = []
+	for pr in raw_place_rects:  # GFX-145: keep a 2 px margin
+		place_rects.append(pr.grow(2.0))
 	if not _hits(label, place_rects):
 		return Vector2.ZERO
 	for up in range(0, 21):

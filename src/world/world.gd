@@ -1231,6 +1231,7 @@ func _draw() -> void:
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_yard_ground()
 	_draw_market_ground()
+	_draw_scree_detail(map)
 	_draw_relief(map)
 	_draw_crags(map)
 	_draw_sect_courts()
@@ -1705,33 +1706,124 @@ func _draw_relief(map: Dictionary) -> void:
 		rng.seed = int(it["seed"])
 		match it["kind"]:
 			"ledge":
-				var face := rock.darkened(0.35)
-				draw_rect(Rect2(r.position.x + px, r.end.y, r.size.x - px * 2.0, px * 2.0), Color(0, 0, 0, 0.25))
-				var outline := Scenery.jagged_outline(r, int(it["seed"]), maxi(5, int(r.size.x / 10.0)), minf(px * 3.0, r.size.y * 0.3))
-				draw_colored_polygon(outline, face)
-				draw_polyline(outline.slice(1, outline.size() - 1), rock.lightened(0.15), px * 2.0)
-				for c in rng.randi_range(2, 3):
-					var cx := r.position.x + rng.randf_range(0.1, 0.9) * r.size.x
-					draw_line(Vector2(cx, r.position.y + px * 4.0), Vector2(cx + px * 2.0, r.end.y - px * 2.0), face.darkened(0.3), px)
-				draw_rect(r, face.darkened(0.5), false, px)
-				if winter:
-					draw_rect(Rect2(r.position.x, r.position.y - px, r.size.x, px * 2.0), snow_col)
-					draw_rect(Rect2(r.position.x, r.end.y, r.size.x * 0.7, px * 3.0), snow_col)
+				_draw_rock_band(r, int(it["seed"]), rock, winter, px)
 			"boulders":
+				var bi := 0
 				for n in rng.randi_range(3, 5):
 					var rad := rng.randf_range(8.0, 16.0)
 					var c := r.position + Vector2(rng.randf_range(rad, maxf(r.size.x - rad, rad)), rng.randf_range(rad, maxf(r.size.y - rad, rad)))
-					draw_circle(c + Vector2(px, px * 2.0), rad, rock.darkened(0.5))
-					draw_circle(c, rad, rock)
-					draw_circle(c + Vector2(rad * 0.3, rad * 0.35), rad * 0.6, rock.darkened(0.25))
-					draw_circle(c + Vector2(-rad * 0.3, -rad * 0.3), rad * 0.4, rock.lightened(0.3))
+					var rsd := rng.randi()
+					draw_colored_polygon(Scenery.rock_polygon(c + Vector2(1.0, 2.0), rad, rsd), Color(0, 0, 0, 0.28))
+					var body := Scenery.rock_polygon(c, rad, rsd)
+					draw_colored_polygon(body, rock)
+					var lit := PackedVector2Array()
+					for q in body:
+						lit.append(c + (q - c) * 0.55 + (Vector2(-0.3, -0.3) * rad * 0.35))
+					draw_colored_polygon(lit, rock.lightened(0.25))
+					var ring := body.duplicate()
+					ring.append(body[0])
+					draw_polyline(ring, rock.darkened(0.4), 1.0)
+					if winter:
+						draw_colored_polygon(Scenery.rock_polygon(c + Vector2(0, -rad * 0.35), rad * 0.5, rsd + 1), snow_col)
+					bi += 1
 			"drift":
 				var dr := r
 				if summer:
 					dr = Rect2(r.position + Vector2(r.size.x * 0.25, 0.0), Vector2(r.size.x * 0.5, r.size.y * 0.5))
-				draw_rect(Rect2(dr.position + Vector2(px, 0), dr.size - Vector2(px * 2.0, 0)), snow_col)
-				draw_rect(Rect2(dr.position.x, dr.position.y + px, dr.size.x, dr.size.y - px * 2.0), snow_col)
-				draw_rect(Rect2(dr.position.x + px, dr.end.y - px, dr.size.x - px * 2.0, px), shade_col)
+				var dpoly := Scenery.ragged_outline(dr, int(it["seed"]), minf(dr.size.y * 0.5, 8.0), 3.0)
+				draw_colored_polygon(dpoly, snow_col)
+				var shade := Scenery.ragged_outline(Rect2(dr.position.x + 3.0, dr.end.y - 4.0, dr.size.x - 6.0, 3.0), int(it["seed"]) + 7, 1.5, 1.0)
+				draw_colored_polygon(shade, Color(shade_col, 0.7))
+
+
+## GFX-145: a rock band: ragged top and bottom edges that taper at both ends, a lit top face over two darker strata
+## split by dark crack lines, a contact shadow, and (in winter) a snow cap that follows the jagged top plus snow pockets.
+func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var n := maxi(6, int(r.size.x / 12.0))
+	var top: Array[Vector2] = []
+	var bot: Array[Vector2] = []
+	for i in n + 1:
+		var t := float(i) / float(n)
+		var taper := clampf(minf(t, 1.0 - t) / 0.15, 0.0, 1.0)  # 0 at the ends, 1 from 15% in
+		var squeeze := (1.0 - taper) * r.size.y * 0.3
+		var x := r.position.x + r.size.x * t
+		top.append(Vector2(x, r.position.y + squeeze + rng.randf() * minf(px * 3.0, r.size.y * 0.2)))
+		var ty := top[top.size() - 1].y
+		bot.append(Vector2(x, maxf(r.end.y - squeeze - rng.randf() * minf(px * 2.0, r.size.y * 0.15), ty + maxf(r.size.y * 0.3, 4.0))))
+	var face := rock.darkened(0.38)
+	var shadow := PackedVector2Array()
+	for b in bot:
+		shadow.append(b + Vector2(0, 2.0))
+	for i in range(top.size() - 1, -1, -1):
+		shadow.append(top[i] + Vector2(0, 2.0))
+	var body := PackedVector2Array()
+	for t_pt in top:
+		body.append(t_pt)
+	for i in range(bot.size() - 1, -1, -1):
+		body.append(bot[i])
+	draw_colored_polygon(shadow, Color(0, 0, 0, 0.22))
+	draw_colored_polygon(body, face)
+	var fracs := [0.0, 0.3, 0.65, 1.0]
+	var shades := [rock.lightened(0.12), face.lightened(0.06), face.darkened(0.15)]
+	for s in 3:
+		var strip := PackedVector2Array()
+		for i in top.size():
+			strip.append(top[i].lerp(bot[i], fracs[s]))
+		for i in range(top.size() - 1, -1, -1):
+			strip.append(top[i].lerp(bot[i], fracs[s + 1]))
+		draw_colored_polygon(strip, shades[s])
+		if s > 0:
+			var crack := PackedVector2Array()
+			for i in top.size():
+				crack.append(top[i].lerp(bot[i], fracs[s]) + Vector2(0, rng.randf_range(-0.8, 0.8)))
+			draw_polyline(crack, face.darkened(0.55), 1.5)
+	for c in rng.randi_range(2, 3):  # vertical fissures
+		var i := rng.randi_range(1, maxi(top.size() - 2, 1))
+		draw_line(top[i].lerp(bot[i], 0.2), top[i].lerp(bot[i], 0.8) + Vector2(px, 0), face.darkened(0.5), 1.0)
+	if winter:
+		var cap := PackedVector2Array()
+		for t_pt in top:
+			cap.append(t_pt + Vector2(0, -1.0))
+		for i in range(top.size() - 1, -1, -1):
+			cap.append(top[i] + Vector2(0, 2.5 + rng.randf() * 1.5))
+		draw_colored_polygon(cap, Color("e8eef4"))
+		for k in rng.randi_range(1, 3):
+			var i2 := rng.randi_range(1, maxi(top.size() - 2, 1))
+			var pc := top[i2].lerp(bot[i2], rng.randf_range(0.4, 0.7))
+			draw_colored_polygon(Scenery.rock_polygon(pc, rng.randf_range(3.0, 5.0), rng.randi()), Color("e8eef4"))
+
+
+## GFX-145: sparse pebble clusters and faint lighter slope bands on a scree map (under the decor, clear of paths and places).
+func _draw_scree_detail(map: Dictionary) -> void:
+	if str(map.get("ground_style", "")) != "scree":
+		return
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	var keep: Array[Rect2] = []
+	for pr in map.get("paths", []):
+		keep.append(Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3])).grow(6.0))
+	for p: Dictionary in _region.get("places", []) + _region.get("abodes", []):
+		var pos: Array = p.get("pos", [0, 0])
+		var sz: Array = p.get("size", [64, 64])
+		var psize := Vector2(float(sz[0]), float(sz[1]))
+		keep.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(8.0))
+	for b: Dictionary in Scenery.scree_bands(_region):
+		var br: Rect2 = b["rect"]
+		var skip := false
+		for k in keep:
+			if k.intersects(br):
+				skip = true
+				break
+		if not skip:
+			draw_colored_polygon(Scenery.ragged_outline(br, int(b["seed"]), 24.0, 8.0), Color(rock.lightened(0.2), 0.07))
+	for c: Dictionary in Scenery.scree_clusters(_region, keep):
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(c["seed"])
+		for i in int(c["count"]):
+			var q: Vector2 = (c["center"] as Vector2) + Vector2(rng.randf_range(-9.0, 9.0), rng.randf_range(-6.0, 6.0))
+			var sz2 := rng.randf_range(2.0, 4.0)
+			draw_rect(Rect2(q, Vector2(sz2, sz2 - 0.5)), rock.lightened(0.2) if rng.randf() < 0.5 else rock.darkened(0.35))
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).

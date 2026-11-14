@@ -678,6 +678,65 @@ static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -
 	return out
 
 
+## GFX-145: an irregular rock outline, 6-9 points round `center`, each at 0.75-1.0 x `radius`; same seed, same rock.
+static func rock_polygon(center: Vector2, radius: float, seed: int) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var n := rng.randi_range(6, 9)
+	var out := PackedVector2Array()
+	var a0 := rng.randf() * TAU
+	for i in n:
+		var a := a0 + TAU * float(i) / float(n)
+		out.append(center + Vector2(cos(a), sin(a)) * radius * rng.randf_range(0.75, 1.0))
+	return out
+
+
+## GFX-145: pebble clusters of a scree map, ~1 per 64x64 px, [{center: Vector2, seed: int, count: int}]. Seeded by the region id;
+## no centre lies in a `keepouts` rect (paths, places) or within 8 px of the map border. Empty for other ground styles.
+static func scree_clusters(region: Dictionary, keepouts: Array[Rect2]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	if String(map.get("ground_style", "")) != "scree":
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|scree_clusters")
+	var cells_x := int(float(size_arr[0]) / 64.0)
+	var cells_y := int(float(size_arr[1]) / 64.0)
+	var density := clampf(float(map.get("scree_density", 1.0)), 0.2, 1.0)
+	for cy in cells_y:
+		for cx in cells_x:
+			var c := Vector2((cx + rng.randf_range(0.1, 0.9)) * 64.0, (cy + rng.randf_range(0.1, 0.9)) * 64.0)
+			var cnt := rng.randi_range(3, 6)
+			var sd := rng.randi()
+			if rng.randf() > density * 0.6 or c.x < 8.0 or c.y < 8.0:
+				continue
+			var blocked := false
+			for k in keepouts:
+				if k.has_point(c):
+					blocked = true
+					break
+			if not blocked:
+				out.append({"center": c, "seed": sd, "count": cnt})
+	return out
+
+
+## GFX-145: 2-4 faint lighter slope bands across a scree map, [{rect: Rect2, seed: int}], seeded by the region id.
+static func scree_bands(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	if String(map.get("ground_style", "")) != "scree":
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|scree_bands")
+	for i in rng.randi_range(2, 4):
+		var w := rng.randf_range(300.0, 620.0)
+		var h := rng.randf_range(40.0, 80.0)
+		out.append({"rect": Rect2(rng.randf_range(0.0, maxf(float(size_arr[0]) - w, 1.0)), rng.randf_range(0.0, maxf(float(size_arr[1]) - h, 1.0)), w, h), "seed": rng.randi()})
+	return out
+
+
 ## GFX-133: a closed, ragged outline for a ground fill: a rounded rect (corner `radius`) whose edge is pushed in or out
 ## along its normal by smoothed seeded noise of up to `amp` px, sampled every 8 px. Never an axis-aligned rectangle; same seed, same shape.
 static func ragged_outline(rect: Rect2, seed: int, radius: float, amp: float) -> PackedVector2Array:

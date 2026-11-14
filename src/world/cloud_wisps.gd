@@ -14,7 +14,7 @@ static func layout(region_id: String, count: int, map_size: Vector2) -> Array[Di
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([region_id, "cloud_wisps"])
 	for i in clampi(count, 0, 8):
-		var w := rng.randf_range(160.0, 320.0)
+		var w := rng.randf_range(80.0, 160.0)
 		out.append({
 			"y": rng.randf_range(0.0, 130.0),
 			"h": rng.randf_range(26.0, 48.0),
@@ -50,5 +50,14 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var tex := Ambient.soft_texture()
-	for w in _wisps:
-		draw_texture_rect(tex, Rect2(wisp_x(w, _clock, _map_width), float(w["y"]), float(w["w"]), float(w["h"])), false, Color(0.96, 0.98, 1.0, float(w["alpha"])))
+	for i in _wisps.size():
+		var w: Dictionary = _wisps[i]
+		var x := wisp_x(w, _clock, _map_width)
+		var ww := float(w["w"])
+		var hh := float(w["h"])
+		for k in 4:  # GFX-145: 3-5 overlapping soft puffs of falling alpha, no hard edge
+			var t := float(k) / 3.0
+			var pw := ww * lerpf(0.5, 0.3, absf(t - 0.5) * 2.0 * 0.5 + 0.5 * float((i + k) % 2))
+			var cx := x + ww * lerpf(0.2, 0.8, t)
+			var ph := hh * (0.8 + 0.25 * float((i + k) % 3))
+			draw_texture_rect(tex, Rect2(cx - pw / 2.0, float(w["y"]) + (hh - ph) / 2.0, pw, ph), false, Color(0.96, 0.98, 1.0, float(w["alpha"]) * lerpf(1.0, 0.55, absf(t - 0.5) * 2.0)))
