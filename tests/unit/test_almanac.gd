@@ -94,6 +94,13 @@ func test_talk_validation() -> void:
 	d.almanac["omens"].pop_back()
 
 
+## C-354: every omen has three village talk lines.
+func test_every_omen_has_three_talk_lines() -> void:
+	var d := GameData.load_from_dir()
+	for o: Dictionary in d.almanac["omens"]:
+		assert_eq((o.get("talk", []) as Array).size(), 3, "%s talk lines" % o["id"])
+
+
 func test_villager_greeting_uses_omen_talk_a_quarter_of_the_time() -> void:
 	var d := data()
 	var saved: Array = d.almanac["omens"]
