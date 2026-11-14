@@ -128,3 +128,9 @@ func test_yard_outline_is_ragged() -> void:
 		if _off_box(yd["outline"], yd["rect"]):
 			ragged += 1
 	assert_eq(ragged, (y["yards"] as Array).size())
+
+
+## GFX-138: the flagstone ring round the tree keeps at least 8 stones although a cottage blocks one side.
+func test_ring_has_an_arc_of_stones() -> void:
+	var sq := Scenery.village_square(data().regions["qingshi_village"])
+	assert_true((sq["stones"] as Array).size() >= 8, "stones: %d" % (sq["stones"] as Array).size())

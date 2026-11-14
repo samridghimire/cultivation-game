@@ -126,3 +126,18 @@ func test_place_buildings_have_footpaths_clear_of_landmarks() -> void:
 					touching = true
 			assert_true(touching or door_has.has(idx), "%s has a footpath" % pl.get("id", "?"))
 			idx += 1
+
+
+## GFX-138: every Qingshi house (also the far SE and SW ones) gets a footpath that reaches a road.
+func test_all_qingshi_houses_have_a_footpath() -> void:
+	var r := _region()
+	var y := Scenery.village_yards(r, _size(r))
+	var doors := {}
+	for f: Dictionary in y["footpaths"]:
+		doors[int(f["door"])] = true
+	var houses := 0
+	for lm: Dictionary in r["map"]["landmarks"]:
+		if str(lm.get("kind", "")) == "house":
+			houses += 1
+	for i in houses:
+		assert_true(doors.has(i), "house %d has a footpath" % i)

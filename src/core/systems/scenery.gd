@@ -1903,7 +1903,13 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		if str(pl.get("look", "")) == "crater":
 			var pos: Array = pl["pos"]
 			var sz: Array = pl.get("size", [100, 100])
-			scorch.append({"center": Vector2(float(pos[0]), float(pos[1])), "radius": maxf(float(sz[0]), float(sz[1])) * 0.8})
+			var sc := Vector2(float(pos[0]), float(pos[1]))
+			var srad := maxf(float(sz[0]), float(sz[1])) * 0.8
+			var souts: Array[PackedVector2Array] = []  # GFX-138: five ragged nested outlines instead of plain circles
+			for k in 5:
+				var f := 1.0 - float(k) / 5.0
+				souts.append(ragged_outline(Rect2(sc - Vector2(srad, srad) * f, Vector2(srad, srad) * 2.0 * f), hash("%s|scorch|%d" % [region.get("id", ""), k]), srad * f, maxf(3.0, srad * 0.07)))
+			scorch.append({"center": sc, "radius": srad, "outlines": souts})
 	var props: Array[Dictionary] = []
 	var kinds := ["barrel", "crate", "sack"]
 	# GFX-134: the paved avenue (76 px) from the travel place (gate) to the nearest cross street, when a vertical road meets it
@@ -1956,16 +1962,26 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 	arng.seed = hash("%s|avenue" % region.get("id", ""))
 	# GFX-134: clusters of crates, barrels and sacks along the avenue (appended to props so they draw and test alike)
 	var clusters := 0
-	for attempt in 200:
+	var tight: Array[Rect2] = []  # GFX-138: the avenue is hemmed in by places, so its crates keep only a thin margin from them
+	for pl: Dictionary in region.get("places", []):
+		tight.append(Npcs.place_keepout(pl).grow(2.0))
+	var anchors: Array[float] = []  # GFX-138: cluster y positions, at least 120 px apart so they spread along the whole avenue
+	for attempt in 400:
 		if clusters >= 3:
 			break
-		var side := -1.0 if arng.randf() < 0.5 else 1.0
+		var side := -1.0 if attempt % 2 == 0 else 1.0
 		var cy := arng.randf_range(avenue.position.y + 30.0, avenue.end.y - 60.0)
+		var near := false
+		for ay in anchors:
+			if absf(ay - cy) < 120.0:
+				near = true
+		if near:
+			continue
 		var cx := avenue.position.x - 22.0 if side < 0.0 else avenue.end.x + 8.0
 		var placed: Array[Dictionary] = []
 		for n in 3:
 			var rect := Rect2(Vector2(cx + (float(n % 2) * 12.0 * -side), cy + float(n) * 11.0).round(), Vector2(10, 10))
-			if _market_blocked(rect, roads, solid, lms, 1.0, size, Rect2()):
+			if _market_blocked(rect, roads, tight, lms, 1.0, size, Rect2()):
 				continue
 			var clash := false
 			for q in props + placed:
@@ -1975,6 +1991,7 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 				placed.append({"kind": kinds[arng.randi() % 3], "rect": rect})
 		if placed.size() >= 2:
 			props.append_array(placed)
+			anchors.append(cy)
 			clusters += 1
 	# the crater plaza: a round scorched ring, faint star-shard stones and a low rope fence on two sides
 	for pl: Dictionary in region.get("places", []):
@@ -2013,6 +2030,15 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 					posts.append(pr)
 			if posts.size() >= 2:
 				fence.append({"posts": posts})
+		# GFX-138: short second runs along the south side, one each side of the avenue road (never across it)
+		for sx: float in [-1.0, 1.0]:
+			var south_posts: Array[Rect2] = []
+			for k in 4:
+				var spr := Rect2(Vector2(cpos.x + sx * (45.0 + float(k) * 22.0) - 2.0, cpos.y + ring_rect.size.y * 0.5 + 4.0).round(), Vector2(4, 8))
+				if not _market_blocked(spr, roads, inner_solid, lms, 2.0, size, Rect2()):
+					south_posts.append(spr)
+			if south_posts.size() >= 2:
+				fence.append({"posts": south_posts})
 		out["fence"] = fence
 	return out
 
@@ -2104,10 +2130,13 @@ static func village_square(region: Dictionary) -> Dictionary:
 		var tp: Vector2 = tree["pos"]
 		var stone_keep: Array[Rect2] = []  # roads are drawn over stones, so only places and landmarks block them
 		for pl: Dictionary in region.get("places", []):
-			stone_keep.append(Npcs.place_keepout(pl).grow(12.0))
+			stone_keep.append(Npcs.place_keepout(pl))  # GFX-138: the plain keepout (no extra margin) so the ring may wrap a cottage's far side
 		stone_keep.append_array(landmark_rects(region))
-		for i in rng.randi_range(10, 16):
-			var a := TAU * float(i) / 13.0 + rng.randf_range(-0.2, 0.2)
+		# GFX-138: try a dense ring of angles so the free sides still get an arc of at least 8 stones when a cottage blocks one side
+		for i in 30:
+			if stones.size() >= 14:
+				break
+			var a := TAU * float(i) / 30.0 + rng.randf_range(-0.08, 0.08)
 			var sz := rng.randf_range(10.0, 18.0)
 			var c := tp + Vector2(cos(a) * rng.randf_range(32.0, 40.0), sin(a) * rng.randf_range(18.0, 24.0) + 14.0)
 			var sr := Rect2(c - Vector2(sz, sz * 0.7) / 2.0, Vector2(sz, sz * 0.7)).abs()
@@ -2154,6 +2183,7 @@ const YARD_ROOFS: Array[String] = ["4a6fa5", "c9a35a", "a8443a", "6b6f78"]
 const YARD_BUILDINGS: Array[String] = ["workshop", "clinic", "orphanage", "sect_hall", "family_home", "auction"]
 const YARD_PATH_W := 11.0
 const YARD_PATH_MAX := 260.0
+const YARD_PATH_FALLBACK := 520.0  # GFX-138: a house that finds no short path may take a longer one round a field
 const YARD_PATH_MAX_PLACE := 420.0  # GFX-132: temple, workshop, clinic, sect hall may sit further from a road
 const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10)}
 
@@ -2235,7 +2265,7 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 		cands.sort_custom(func(m: Dictionary, n: Dictionary) -> bool: return m["len"] < n["len"])
 		var chosen: Array = []
 		for c in cands:
-			if float(c["len"]) > limit:
+			if float(c["len"]) > limit and not (own_pl[b] < 0 and float(c["len"]) <= YARD_PATH_FALLBACK):
 				break
 			var blocked := false
 			for r: Rect2 in c["rects"]:

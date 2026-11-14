@@ -76,3 +76,40 @@ func test_market_life_draws_in_both_seasons() -> void:
 func test_lantern_string_contrast() -> void:
 	assert_true(MarketLife.LANTERN_RED.get_luminance() - MarketLife.STRING_COLOR.get_luminance() > 0.2)
 	assert_true(MarketLife.LANTERN_CORE.get_luminance() > MarketLife.LANTERN_RED.get_luminance())
+
+
+## GFX-138: the market's crate clusters are spread out, the scorch is a ragged outline and the fence has a south run.
+func test_market_dress_loose_ends() -> void:
+	var r: Dictionary = data().regions["fallen_star_market"]
+	var s: Array = r["map"]["size"]
+	var d := Scenery.market_props(r, Vector2(float(s[0]), float(s[1])))
+	for sc: Dictionary in d["scorch"]:
+		assert_eq((sc["outlines"] as Array).size(), 5)
+		var o: PackedVector2Array = sc["outlines"][0]
+		var lo := 1e9
+		var hi := 0.0
+		for p in o:
+			lo = minf(lo, p.distance_to(sc["center"]))
+			hi = maxf(hi, p.distance_to(sc["center"]))
+		assert_true(hi - lo > 1.0, "scorch outline is not a circle")
+	var av: Rect2 = d["avenue"]
+	var ys: Array[float] = []
+	for p: Dictionary in d["props"]:
+		var rc: Rect2 = p["rect"]
+		if rc.position.x > av.position.x - 30.0 and rc.end.x < av.end.x + 30.0 and rc.position.y >= av.position.y:
+			ys.append(rc.position.y)
+	ys.sort()
+	var groups := 0
+	var last := -1e9
+	for y in ys:
+		if y - last >= 100.0:
+			groups += 1
+		last = y
+	assert_true(groups >= 2, "avenue crates form >= 2 separate clusters: %s" % [ys])
+	var south := 0
+	var cy: float = (r["places"] as Array).filter(func(p: Dictionary) -> bool: return str(p.get("look", "")) == "crater")[0]["pos"][1]
+	for f: Dictionary in d["fence"]:
+		var first: Rect2 = f["posts"][0]
+		if first.position.y > cy + 40.0:
+			south += 1
+	assert_true(south >= 1, "south fence run")

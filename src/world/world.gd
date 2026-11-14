@@ -1434,9 +1434,8 @@ func _draw_market_ground() -> void:
 	if ring.size() >= 3:
 		draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26) if not snowy else Color(0.6, 0.57, 0.6, 0.6))
 	for s: Dictionary in _market_dress["scorch"]:
-		for i in 5:
-			var f := 1.0 - float(i) / 5.0
-			draw_circle(s["center"], float(s["radius"]) * f, Color(0.08, 0.05, 0.04, 0.12))
+		for o: PackedVector2Array in s.get("outlines", []):
+			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
 	for sh: Rect2 in _market_dress.get("shards", []):
 		draw_rect(sh.grow(2.0), Color(0.6, 0.85, 1.0, 0.18))
 		draw_rect(sh, Color("7d8aa8"))
