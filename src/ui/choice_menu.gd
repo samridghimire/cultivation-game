@@ -16,6 +16,7 @@ var _portrait: PortraitBox
 var _friend_row: HBoxContainer
 var _friend_label: Label
 var _friend_hearts: TextureRect
+var _likes_label: Label  ## WU-539
 var _teach_box: VBoxContainer  ## WU-537: the "Teaches:" lines under the friend row
 
 
@@ -47,6 +48,9 @@ func _init() -> void:
 	_friend_label = UIStyle.label("", 15, Color(0.85, 0.75, 0.6))
 	_friend_row.add_child(_friend_label)
 	box.add_child(_friend_row)
+	_likes_label = UIStyle.label("", 14, Color(0.7, 0.8, 0.7))
+	_likes_label.visible = false
+	box.add_child(_likes_label)
 	_teach_box = VBoxContainer.new()
 	_teach_box.visible = false
 	box.add_child(_teach_box)
@@ -95,6 +99,8 @@ func friendship_text() -> String:
 
 func _set_header(header: Dictionary) -> void:
 	_friend_row.visible = not header.is_empty()
+	_likes_label.text = String(header.get("likes", ""))
+	_likes_label.visible = _likes_label.text != ""
 	if header.is_empty():
 		return
 	_friend_label.text = String(header["label"])
@@ -126,6 +132,11 @@ func teaches_texts() -> PackedStringArray:
 	return out
 
 
+## Test hook: the visible "Likes:" line ("" when hidden).
+func likes_text() -> String:
+	return _likes_label.text if _likes_label.visible else ""
+
+
 func portrait_visible() -> bool:
 	return _portrait.visible
 
@@ -149,6 +160,7 @@ func _rebuild() -> void:
 	_set_header(_source.menu_header() if _source.has_method("menu_header") else {})
 	_set_teaches(_source.menu_teaches() if _source.has_method("menu_teaches") else [])
 	var options: Array[Dictionary] = _source.menu_options()
+	var any_line := false
 	if options.is_empty():
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))
 	for option in options:
@@ -164,6 +176,7 @@ func _rebuild() -> void:
 		var warn := refused or String(option.get("tone", "")) == "warning"
 		# A warning-toned option keeps its own description, only tinted.
 		var line: String = reason if refused else String(option.get("description", ""))
+		any_line = any_line or line != ""
 		if b.disabled:
 			b.focus_mode = Control.FOCUS_ALL
 		b.focus_entered.connect(_show_line.bind(line, warn))
@@ -173,6 +186,7 @@ func _rebuild() -> void:
 	leave.focus_entered.connect(_show_line.bind("", false))
 	_buttons.add_child(leave)
 	_description.text = ""
+	_description.visible = any_line  # WU-539: no empty band when no option has a description
 	_fit_scroll.call_deferred()
 	_focus_first.call_deferred()
 

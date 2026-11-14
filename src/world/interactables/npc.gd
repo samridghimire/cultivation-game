@@ -227,13 +227,34 @@ static func look_of(id: String, fallback: Color) -> Dictionary:
 
 
 ## WU-418: {label, hearts} for the menu header of a generated villager at a friendship tier; {} otherwise.
+## WU-539: a named villager always gets one ("Favor N" plus the tier name) and a "likes" line of learned tastes.
 func menu_header() -> Dictionary:
-	if GameState.player == null or GameState.data.npcs.has(npc_id) or GameState.friendship_tier_count() == 0:
+	if GameState.player == null or GameState.friendship_tier_count() == 0:
 		return {}
 	var filled := GameState.friendship_hearts(npc_id)
-	if filled <= 0:
-		return {}
-	return {"label": GameState.friendship_label(npc_id), "hearts": HudIcons.hearts(GameState.friendship_tier_count(), filled, 3)}
+	var hearts := HudIcons.hearts(GameState.friendship_tier_count(), filled, 3)
+	if not GameState.data.npcs.has(npc_id):
+		if filled <= 0:
+			return {}
+		return {"label": GameState.friendship_label(npc_id), "hearts": hearts}
+	var label := "Favor %d" % int(GameState.npc_favor.get(npc_id, 0))
+	var tier := GameState.friendship_label(npc_id)
+	if tier != "":
+		label += " \u00b7 " + tier
+	return {"label": label, "hearts": hearts, "likes": likes_line(GameState.world_flags, GameState.data, npc_id)}
+
+
+## WU-539: "Likes: A, B, C" from the tastes the player has learned (max 3), or "".
+static func likes_line(flags: Dictionary, data: GameData, id: String) -> String:
+	var names: Array[String] = []
+	var tastes := Family.known_tastes(flags, data, id)
+	for item_id: String in tastes:
+		if int(tastes[item_id]) > 0:
+			names.append(String(data.items[item_id].get("name", item_id)))
+	names.sort()
+	if names.is_empty():
+		return ""
+	return "Likes: " + ", ".join(names.slice(0, 3))
 
 
 ## WU-537: up to 3 [{text, known}] from Npcs.teachings for the "Teaches:" lines; [] when this villager teaches nothing.

@@ -9,7 +9,7 @@ func test_hunter_ma_lists_iron_fist_and_lessons() -> void:
 	assert_eq(fist.size(), 1)
 	assert_eq(int(fist[0]["need_favor"]), 15)
 	assert_false(bool(fist[0]["known"]))
-	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 15)")
+	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 0/15)")
 	var lessons := list.filter(func(t: Dictionary) -> bool: return t["kind"] == "lesson")
 	assert_eq(lessons.size(), 2)
 	assert_eq(int(list[0]["need_favor"]), 15, "sorted by need")
@@ -37,3 +37,12 @@ func test_no_teaching_returns_empty() -> void:
 		if not data().npcs[id].has("lessons") and not data().dialogues.has(String(data().npcs[id].get("dialogue", ""))):
 			assert_eq(Npcs.teachings(id, c, data(), 0).size(), 0)
 	assert_eq(Npcs.teachings("nobody", c, data(), 0).size(), 0)
+
+
+## WU-539: a locked technique shows progress; once reachable it shows the plain need.
+func test_teaching_text_shows_progress() -> void:
+	var c := CharacterData.new()
+	var fist := Npcs.teachings("hunter_ma", c, data(), 4).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
+	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 4/15)")
+	fist = Npcs.teachings("hunter_ma", c, data(), 20).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
+	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 15)")

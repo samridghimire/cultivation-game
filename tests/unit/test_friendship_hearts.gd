@@ -108,3 +108,30 @@ func test_menu_teaches_lines() -> void:
 	assert_true(menu.teaches_texts().is_empty())
 	menu.free()
 	node.free()
+
+
+## WU-539: a named villager's menu header shows favor and the tastes the player has learned.
+func test_named_villager_header() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	node.npc_id = "hunter_ma"
+	var header: Dictionary = node.menu_header()
+	assert_eq(header["label"], "Favor 0")
+	assert_eq(header["likes"], "")
+	var menu := ChoiceMenu.new()
+	menu._set_header(header)
+	assert_true(menu.hearts_visible())
+	assert_eq(menu.likes_text(), "")
+	var item_id := String(gs.data.items.keys()[0])
+	gs.world_flags["taste_hunter_ma_" + item_id] = 1
+	gs.npc_favor["hunter_ma"] = 25
+	header = node.menu_header()
+	assert_true(String(header["label"]).begins_with("Favor 25 · "))
+	assert_eq(header["likes"], "Likes: " + String(gs.data.items[item_id].get("name", item_id)))
+	menu._set_header(header)
+	assert_true(menu.likes_text().begins_with("Likes: "))
+	menu._set_header({})
+	assert_eq(menu.likes_text(), "")
+	menu.free()
+	node.free()

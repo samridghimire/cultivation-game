@@ -942,7 +942,7 @@ static func _gender_word(c: CharacterData, male: String, female: String, other: 
 ## the `min_favor` gates leading to it) and every `lessons` tier of data/npcs.json. Entries
 ## {kind: "technique"|"lesson", name, need_favor, known, text (<= 60 chars)}, sorted by need then name. Known ones
 ## (technique learned, lesson taught) stay listed with known = true, even when the dialogue hides the choice. `favor` (the player's
-## current favor) is reserved for callers that want to mark what is within reach; the list itself never depends on it.
+## current favor) turns a locked technique's text into progress ("favor 4/15"); the list itself never depends on it.
 static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: int = 0) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var def: Dictionary = data.npcs.get(npc_id, {})
@@ -962,7 +962,7 @@ static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: i
 						need = maxi(need, int(other["if"].get("min_favor", 0)))
 			var tech_name: String = data.techniques[tech_id].name
 			result.append({"kind": "technique", "name": tech_name, "need_favor": need, "known": c.techniques.has(tech_id),
-				"text": _teaching_text(tech_name, "favor %d" % need)})
+				"text": _teaching_text(tech_name, "favor %d" % need if favor >= need else "favor %d/%d" % [favor, need])})
 	var tiers: Array = data.family.get("folk_tiers", [])
 	var lessons: Array = Folk.lessons_of(data, npc_id)
 	for i in lessons.size():
