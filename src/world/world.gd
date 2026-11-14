@@ -2484,6 +2484,16 @@ func _draw_undergrowth(u: Dictionary) -> void:
 				for o: Vector2 in [Vector2(-4, 0), Vector2(3, 1), Vector2(0, -3)]:
 					draw_line(p + o * k, p + (o + Vector2(0, 3)) * k, Color("e8e0cc"), 1.5)
 					draw_circle(p + o * k, 2.2 * k, Color("b8553a"))
+		"reed":
+			var rc := Color("d8ecf2") if snowy else leaf.lightened(0.05)
+			for x in [-4.0, 0.0, 4.0]:
+				draw_line(p + Vector2(x, 4) * k, p + Vector2(x * 0.8 * sgn, -11.0 + absf(x)) * k, rc, 1.5)
+			if not snowy:
+				draw_rect(Rect2(p + Vector2(-1.5, -14) * k, Vector2(3, 5) * k), Color("6a4a30"))
+		"stone":
+			var sc := Color("e4ecf2") if snowy else Color("8a8780")
+			draw_colored_polygon(PackedVector2Array([p + Vector2(-6, 3) * k, p + Vector2(-4, -3) * k, p + Vector2(3, -4) * k, p + Vector2(7, 3) * k]), sc)
+			draw_line(p + Vector2(-4, -3) * k, p + Vector2(3, -4) * k, sc.lightened(0.3), 1.5)
 		"log":
 			var a := p + Vector2(-13, 0) * k * sgn
 			var b := p + Vector2(13, 2) * k * sgn

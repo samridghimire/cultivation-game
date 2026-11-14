@@ -20,7 +20,10 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "groves", "rock_clusters", "edge_belt"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "groves", "undergrowth_kinds", "rock_clusters", "edge_belt"]
+## map.decor.undergrowth_kinds (GFX-144): weights for what grows under groves (filler kinds; logs always come on top).
+const UNDERGROWTH_KINDS: PackedStringArray = ["fern", "bush", "mushroom", "reed", "stone"]
+const DEFAULT_UNDERGROWTH := {"fern": 6.0, "bush": 4.0}
 ## map.decor.groves (GFX-139): dense groves of 6-15 trees, the tallest in the middle, with open glades between them.
 const MAX_GROVES := 10
 const GROVE_RADIUS := 95.0
@@ -211,6 +214,21 @@ static func _place_grove(out: Array[Dictionary], cfg: Dictionary, color: Color, 
 	return placed
 
 
+## GFX-144: one weighted undergrowth kind (keys in insertion order).
+static func _pick_undergrowth(weights: Dictionary, rng: RandomNumberGenerator) -> String:
+	var total := 0.0
+	for k: Variant in weights:
+		total += float(weights[k])
+	var roll := rng.randf() * total
+	var last := "fern"
+	for k: Variant in weights:
+		last = String(k)
+		roll -= float(weights[k])
+		if roll < 0.0:
+			return last
+	return last
+
+
 ## GFX-139: undergrowth for the groves in `decor` ([{kind: "fern"|"bush"|"log"|"mushroom", pos, scale}]): 2-4 fallen logs
 ## in all, ferns/bushes and mushroom clusters under the groves, never on paths, places, npc_spots or spawn.
 static func undergrowth(region: Dictionary, decor: Array[Dictionary]) -> Array[Dictionary]:
@@ -231,6 +249,8 @@ static func undergrowth(region: Dictionary, decor: Array[Dictionary]) -> Array[D
 	rng.seed = hash([str(region.get("id", "")), "undergrowth"])
 	var keys: Array = groves.keys()
 	keys.sort()
+	var custom: bool = region.get("map", {}).get("decor", {}).has("undergrowth_kinds")
+	var weights: Dictionary = region.get("map", {}).get("decor", {}).get("undergrowth_kinds", DEFAULT_UNDERGROWTH)
 	var logs := 0
 	var want_logs := rng.randi_range(2, 4)
 	for k: Variant in keys:
@@ -239,9 +259,10 @@ static func undergrowth(region: Dictionary, decor: Array[Dictionary]) -> Array[D
 		var radius: float = g["grove_radius"]
 		var plan: Array[String] = []
 		for i in rng.randi_range(5, 9):
-			plan.append("fern" if rng.randf() < 0.6 else "bush")
-		for i in rng.randi_range(1, 2):
-			plan.append("mushroom")
+			plan.append(_pick_undergrowth(weights, rng))
+		if not custom:
+			for i in rng.randi_range(1, 2):
+				plan.append("mushroom")
 		if logs < want_logs:
 			plan.append("log")
 			logs += 1
@@ -1180,6 +1201,14 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "groves":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_GROVES:
 					errors.append("Region '%s' map.decor.groves must be 0-%d" % [region["id"], MAX_GROVES])
+			elif key == "undergrowth_kinds":
+				var uk: Variant = decor[key]
+				if not (uk is Dictionary) or (uk as Dictionary).is_empty():
+					errors.append("Region '%s' map.decor.undergrowth_kinds must be a non-empty object" % region["id"])
+				else:
+					for ukey: Variant in uk:
+						if not UNDERGROWTH_KINDS.has(String(ukey)) or not ((uk[ukey] is float or uk[ukey] is int) and float(uk[ukey]) > 0.0):
+							errors.append("Region '%s' map.decor.undergrowth_kinds '%s' must be one of (%s) with weight > 0" % [region["id"], ukey, ", ".join(UNDERGROWTH_KINDS)])
 			elif key == "edge_belt":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_EDGE_BELT:
 					errors.append("Region '%s' map.decor.edge_belt must be 0-%d" % [region["id"], MAX_EDGE_BELT])

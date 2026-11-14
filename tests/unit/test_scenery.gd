@@ -827,3 +827,44 @@ func test_undergrowth_is_deterministic_and_clear() -> void:
 
 func test_validate_flags_bad_groves() -> void:
 	assert_true(Scenery.MAX_GROVES >= 8)
+
+
+## GFX-144: groves in every wild, with region-fitting undergrowth.
+func test_undergrowth_kinds_follow_the_region() -> void:
+	var r := _grove_region()
+	r["map"]["decor"]["undergrowth_kinds"] = {"reed": 3, "stone": 1}
+	var kinds := {}
+	for u in Scenery.undergrowth(r, Scenery.place(r, seeded_rng())):
+		kinds[u["kind"]] = true
+	assert_true(kinds.has("reed") and kinds.has("stone"), "reeds and stones under the grove")
+	assert_false(kinds.has("fern") or kinds.has("bush") or kinds.has("mushroom"), "only the listed kinds (plus logs)")
+
+
+func test_validate_flags_bad_undergrowth_kinds() -> void:
+	var d := GameData.new()
+	var r := _grove_region()
+	r["map"]["decor"]["undergrowth_kinds"] = {"lava": 2}
+	d.regions = {"test": r}
+	assert_true(Scenery.validate(d).size() > 0, "unknown kind rejected")
+	r["map"]["decor"]["undergrowth_kinds"] = {"reed": 0}
+	assert_true(Scenery.validate(d).size() > 0, "zero weight rejected")
+	r["map"]["decor"]["undergrowth_kinds"] = {"reed": 2}
+	assert_eq(Scenery.validate(d).size(), 0, "valid")
+
+
+func test_every_wild_region_has_groves_clear_of_paths_and_places() -> void:
+	var regions: Dictionary = data().regions
+	for id in ["qingshi_village", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge", "misty_forest"]:
+		var r: Dictionary = regions[id]
+		var placed := Scenery.place(r, seeded_rng())
+		var groves := {}
+		var blocked := Scenery.blocked_rects(r)
+		for d in placed:
+			if d.has("grove"):
+				groves[d["grove"]] = true
+				for b in blocked:
+					assert_false(b.has_point(d["pos"]), "%s grove tree off paths/places" % id)
+		assert_true(groves.size() >= 2, "%s has groves: %d" % [id, groves.size()])
+		for u in Scenery.undergrowth(r, placed):
+			for b in blocked:
+				assert_false(b.has_point(u["pos"]), "%s undergrowth off paths/places" % id)
