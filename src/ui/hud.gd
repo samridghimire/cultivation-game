@@ -835,7 +835,7 @@ func _refresh_fair_fight() -> void:
 	if int(Settings.get_value("hud_hints")) > 0 and GameState.player != null:
 		entries = Guidance.fair_fights(GameState.player, GameState.data, GameState.world_flags, GameClock.total_days, GameState.current_region, GameState.npcs, GameState.npc_favor)
 	var line := fair_fight_line(entries, _fair.get_theme_font("font"), 14, _fair.custom_minimum_size.x)
-	_fair.text = Guidance.short_fight_line(line, GameState.data)  # GUIDE-223: one line; the tooltip keeps the full text
+	_fair.text = Guidance.with_worth(Guidance.short_fight_line(line, GameState.data), entries[0] if not entries.is_empty() else {})  # GUIDE-223: one line; the tooltip keeps the full text
 	_fair.tooltip_text = "\n".join(entries.map(func(e: Dictionary) -> String: return String(e.get("text", ""))))
 	_fair.visible = line != ""
 	_fit_panels.call_deferred()

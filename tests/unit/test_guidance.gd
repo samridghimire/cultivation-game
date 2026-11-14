@@ -6888,3 +6888,48 @@ func test_style_teacher_hint_drops_region_when_long() -> void:
 		"region_name": "Misty Forest of the Long Shadows", "close": "he likes Venison, sold by Peddler Hei of the Far Market"}
 	var line := Guidance.style_teacher_hint(t)
 	assert_true(line.length() <= 90 and not line.contains(" in "), line)
+
+
+## GUIDE-240: after 3 wins against the leading easy foe, a fair fight against a fresher foe leads.
+func _easy_boar_and_wolf() -> Array[Dictionary]:
+	var boar := {"text": "Easy fight: Wild Boar (99 in 100)", "chance": 0.99, "kind": "roamer", "enemy_id": "wild_boar", "worth": "hide 6"}
+	var wolf := {"text": "Fair fight: Mist Wolf (72 in 100)", "chance": 0.72, "kind": "roamer", "enemy_id": "mist_wolf", "worth": "hide 6"}
+	return [boar, wolf]
+
+
+func test_prefer_fresh_foe_keeps_easy_foe_until_three_wins() -> void:
+	var c := _fighter()
+	var list := _easy_boar_and_wolf()
+	c.wins_by_foe = {"wild_boar": 2}
+	Guidance.prefer_fresh_foe(list, c)
+	assert_eq(list[0]["enemy_id"], "wild_boar")
+
+
+func test_prefer_fresh_foe_promotes_fair_fight_after_three_wins() -> void:
+	var c := _fighter()
+	var list := _easy_boar_and_wolf()
+	c.wins_by_foe = {"wild_boar": 3}
+	Guidance.prefer_fresh_foe(list, c)
+	assert_eq(list[0]["enemy_id"], "mist_wolf")
+	assert_true(bool(list[0]["fresh"]))
+	assert_eq(Guidance.with_worth("Fair fight: Mist Wolf · 72%", list[0]), "Fair fight: Mist Wolf · 72% · hide 6")
+
+
+func test_prefer_fresh_foe_without_fair_fight_keeps_boar() -> void:
+	var c := _fighter()
+	var list: Array[Dictionary] = [_easy_boar_and_wolf()[0]]
+	c.wins_by_foe = {"wild_boar": 9}
+	Guidance.prefer_fresh_foe(list, c)
+	assert_eq(list[0]["enemy_id"], "wild_boar")
+	assert_eq(Guidance.with_worth("Easy fight: Wild Boar · 99%", list[0]), "Easy fight: Wild Boar · 99%")
+
+
+func test_with_worth_skips_long_lines() -> void:
+	var e := {"fresh": true, "worth": "hide 6"}
+	var long_line := "Fair fight: " + "x".repeat(45)
+	assert_eq(Guidance.with_worth(long_line, e), long_line)
+
+
+func test_spoils_worth_names_best_item_and_price() -> void:
+	var w := Guidance.spoils_worth(data(), data().enemies["wild_boar"])
+	assert_true(w.ends_with(" %d" % int(w.get_slice(" ", w.get_slice_count(" ") - 1))) and w != "")

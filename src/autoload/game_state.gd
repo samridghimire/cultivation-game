@@ -4155,6 +4155,9 @@ func fight_enemy(enemy: Dictionary, start_hp: int = -1, prefix: String = "") -> 
 		devour_target = enemy
 	if not enemy.get("spar", false):
 		LifeStats.add(player, "fights_won" if result["victory"] else "fights_lost")
+		if result["victory"] and not bool(enemy.get("friendly", false)):
+			var foe_key := String(enemy.get("id", enemy.get("name", "")))
+			player.wins_by_foe[foe_key] = int(player.wins_by_foe.get(foe_key, 0)) + 1
 		if result["victory"] and not bool(enemy.get("friendly", false)) and String(enemy.get("realm", "")) != "":
 			world_flags[Guidance.beat_realm_flag(String(enemy["realm"]))] = true
 	EventBus.combat_finished.emit(enemy.get("name", "enemy"), result["victory"], result["log"])

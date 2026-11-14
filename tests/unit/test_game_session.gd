@@ -4274,3 +4274,19 @@ func test_long_meditation_wakes_for_a_festival() -> void:
 	EventBus.message_posted.disconnect(cb)
 	assert_eq(clock.total_days, int(wake["day"]))
 	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You open your eyes: ")))
+
+
+## GUIDE-240: each won fight counts against the foe's id, saved with the character.
+func test_wins_by_foe_counts_and_saves() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var foe: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	foe["hp"] = -1000
+	foe["attack"] = -1000
+	foe["speed"] = -1000
+	assert_true(gs.fight_enemy(foe))
+	assert_true(gs.fight_enemy(foe))
+	assert_eq(int(c.wins_by_foe.get("wild_boar", 0)), 2)
+	var back := CharacterData.from_dict(c.to_dict())
+	assert_eq(int(back.wins_by_foe.get("wild_boar", 0)), 2)
+	assert_eq(CharacterData.from_dict({}).wins_by_foe, {})

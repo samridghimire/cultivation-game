@@ -80,6 +80,7 @@ func test_every_character_field_survives_a_save() -> void:
 	c.mission_losses = {"x_mission": 390}
 	c.deed_days = {"help_villager": 12}
 	c.life_stats = {"fights_won": 3}
+	c.wins_by_foe = {"wild_boar": 4}
 	c.year_start_stats = {"fights_won": 1}
 	c.season_start_stats = {"fights_won": 1}
 	c.trial_progress = {"fist_saint_grave": 2}

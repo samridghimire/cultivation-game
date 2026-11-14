@@ -5337,6 +5337,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id))
 	found.sort_custom(fair_fight_before)
+	prefer_fresh_foe(found, c)
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
 
 
@@ -5447,7 +5448,55 @@ static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameDa
 	var chance := Combat.win_chance(c, data, enemy)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here")})
+	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy)})
+
+
+## GUIDE-240: wins against one foe after which the HUD fight line looks for a fairer one.
+const FIGHT_REPEAT_WINS := 3
+
+
+## GUIDE-240: when the first entry is an easy fight against a foe beaten FIGHT_REPEAT_WINS+ times, moves the best
+## fair (not easy) fight against a fresher foe to the front and marks it "fresh". The list is sorted nearest first
+## and holds only fights within one route; with no such fight it stays as it is.
+static func prefer_fresh_foe(found: Array[Dictionary], c: CharacterData) -> void:
+	if found.is_empty() or float(found[0]["chance"]) < EASY_FIGHT_CHANCE or not _worn_foe(found[0], c):
+		return
+	for i in range(1, found.size()):
+		var f := found[i]
+		if float(f["chance"]) < EASY_FIGHT_CHANCE and not _worn_foe(f, c) and String(f.get("kind", "")) != "trial":
+			f["fresh"] = true
+			found.remove_at(i)
+			found.insert(0, f)
+			return
+
+
+static func _worn_foe(entry: Dictionary, c: CharacterData) -> bool:
+	var key := String(entry.get("enemy_id", ""))
+	return key != "" and int(c.wins_by_foe.get(key, 0)) >= FIGHT_REPEAT_WINS
+
+
+## GUIDE-240: "hide 6": the best-selling spoil of a foe and its sell price, "" when it drops nothing sellable.
+static func spoils_worth(data: GameData, enemy: Dictionary) -> String:
+	var best_id := ""
+	var best := 0
+	for id: String in enemy.get("rewards", {}).get("items", {}):
+		var price := Items.sell_price(data, id)
+		if price > best:
+			best = price
+			best_id = id
+	if best_id == "":
+		return ""
+	var name := String(data.items.get(best_id, {}).get("name", best_id)).to_lower()
+	return "%s %d" % [name.get_slice(" ", name.get_slice_count(" ") - 1), best]
+
+
+## GUIDE-240: the short HUD line plus " · hide 6" for a promoted fresh foe, when it stays within 60 characters.
+static func with_worth(short_line: String, entry: Dictionary) -> String:
+	var worth := String(entry.get("worth", ""))
+	if not bool(entry.get("fresh", false)) or worth == "":
+		return short_line
+	var full := "%s · %s" % [short_line, worth]
+	return full if full.length() <= 60 else short_line
 
 
 ## Spirit stones in a reward/effects dict's `items`, 0 when none.

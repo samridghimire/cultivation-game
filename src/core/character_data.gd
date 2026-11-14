@@ -148,6 +148,7 @@ var mission_losses: Dictionary = {}
 ## Open crafting orders (PROF-001, Commissions): [{profession, recipe, item, count, reward, xp, due_day}].
 var commissions: Array = []
 var life_stats: Dictionary = {}  # LifeStats key -> count
+var wins_by_foe: Dictionary = {}  # GUIDE-240: enemy id -> fights won against it (saved)
 var year_start_stats: Dictionary = {}  # life_stats at the last new year (YEAR-001)
 var year_start_year: int = 0  # the year the snapshot was taken in (YEAR-002); 0 = unknown (old saves)
 var last_meditated_day: int = -1  # GameClock day the last cultivation ended (GUIDE-057); -1 = never/unknown
@@ -313,6 +314,7 @@ func to_dict() -> Dictionary:
 		"mission_losses": mission_losses.duplicate(),
 		"deed_days": deed_days.duplicate(),
 		"life_stats": life_stats.duplicate(),
+		"wins_by_foe": wins_by_foe.duplicate(),
 		"year_start_stats": year_start_stats.duplicate(),
 		"year_start_year": year_start_year,
 		"last_meditated_day": last_meditated_day,
@@ -483,6 +485,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.mission_losses = _int_values(d.get("mission_losses", {}))
 	c.deed_days = _int_values(d.get("deed_days", {}))
 	c.life_stats = _int_values(d.get("life_stats", {}))
+	c.wins_by_foe = _int_values(d.get("wins_by_foe", {}))
 	c.year_start_stats = _int_values(d.get("year_start_stats", {}))
 	c.year_start_year = int(d.get("year_start_year", 0))
 	c.last_meditated_day = int(d.get("last_meditated_day", -1))
