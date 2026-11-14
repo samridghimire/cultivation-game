@@ -4,6 +4,8 @@ extends RefCounted
 ## villagers, festivals, season starts) for a window of days. Pure functions, no state, no rng.
 
 const MAX_REMINDERS := 3
+## SKIP-001: dated kinds that cut a long meditation short (not markets, forage, seasons, almanac or festival months).
+const WAKE_KINDS := ["festival_day", "festival_active", "hunt", "great_beast", "field", "rent", "request", "secret_realm", "event", "birthday"]
 const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season", "almanac"]
 
 
@@ -26,6 +28,24 @@ static func family_birthdays(c: CharacterData, npcs: Dictionary, data: GameData,
 		if d >= 0 and d < span:
 			out.append({"day": start + d, "kind": "birthday", "text": "%s's birthday" % npc.name, "region": "", "npc_id": id, "family": true})
 	return out
+
+
+## SKIP-001: the first dated thing strictly after `start`, inside (start, start + span), worth waking for in this region
+## (or anywhere): `{day, kind, text}`, or `{}`. A great beast wakes you only when it matters (see `_beast_matters`).
+static func wake_day(data: GameData, npcs: Dictionary, favor: Dictionary, active_events: Array,
+		region_id: String, start: int, span: int, c: CharacterData, flags: Dictionary) -> Dictionary:
+	if span <= 1:
+		return {}
+	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, start, span, c, flags):
+		var day := int(e["day"])
+		var kind := String(e["kind"])
+		var rid := String(e.get("region", ""))
+		if day <= start or day >= start + span or not WAKE_KINDS.has(kind) or (rid != "" and rid != region_id):
+			continue
+		if kind == "great_beast" and not _beast_matters(data, flags, rid, String(e.get("enemy", "")), day):
+			continue
+		return {"day": day, "kind": kind, "text": String(e["text"])}
+	return {}
 
 
 ## Every dated thing in [start, start + span) days, soonest first.

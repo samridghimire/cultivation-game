@@ -64,6 +64,7 @@ func _run() -> void:
 			# Each test starts from its own seed, so no test depends on how much
 			# randomness the tests before it happened to use.
 			root.get_node("GameState").rng.seed = hash(file_name + "::" + method_name + OS.get_environment("TEST_SEED_SALT"))
+			root.get_node("GameState").wake_for_dates = false  # SKIP-001: tests that want the wake-up switch it on
 			var errors_before := errors.count
 			var started := Time.get_ticks_msec()
 			await instance.call(method_name)

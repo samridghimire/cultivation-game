@@ -438,3 +438,23 @@ func test_dawn_lines_fold_other_reminder_shapes() -> void:
 	assert_eq(out.size(), 1)
 	assert_eq(String(out[0]["text"]), "Tomorrow: Mei asked you to the Lantern Festival and Fish Stall wants Boar Hide (x1.5; you have 3).")
 	assert_eq(VillageCalendar._reminder_body("Tomorrow Fish Stall wants Boar Hide; you have 3."), "Fish Stall wants Boar Hide (you have 3)")
+
+
+## SKIP-001: wake_day.
+func _lantern(start: int, offset: int, region: String = "qingshi_village") -> Array:
+	return [{"id": "lantern_festival", "region": region, "start_day": start + offset, "end_day": start + offset + 5}]
+
+
+func test_wake_day_finds_a_festival_in_the_span() -> void:
+	var start := 9 * Calendar.DAYS_PER_MONTH + 12  # clear of the season's village hunt
+	var w := VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 10), "qingshi_village", start, 30, null, {})
+	assert_eq(int(w.get("day", -1)), start + 10)
+	assert_eq(String(w["kind"]), "festival_active")
+	assert_true(VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 10), "qingshi_village", start, 5, null, {}).is_empty())
+
+
+func test_wake_day_ignores_other_regions_markets_and_today() -> void:
+	var start := 9 * Calendar.DAYS_PER_MONTH + 12
+	assert_true(VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 10, "misty_forest"), "qingshi_village", start, 30, null, {}).is_empty())
+	assert_true(VillageCalendar.wake_day(data(), {}, {}, [], "qingshi_village", start, 12, null, {}).is_empty(), "market days never wake")
+	assert_true(VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 0), "qingshi_village", start, 30, null, {}).is_empty(), "today is ignored")

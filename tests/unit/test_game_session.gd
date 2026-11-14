@@ -4232,3 +4232,28 @@ func test_new_game_in_qingshi_names_hunter_ma_on_day_one() -> void:
 	gs.current_region = "qingshi_village"
 	var line: String = Guidance.fighting_hint(c, gs.data, gs.current_region, gs.npcs, gs.npc_favor)
 	assert_true(line.begins_with("Hunter Ma can teach you Iron Fist"), line)
+
+
+## SKIP-001: a long meditation wakes for a festival; a short one is never cut.
+func test_long_meditation_wakes_for_a_festival() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.wake_for_dates = true
+	gs.current_region = "qingshi_village"
+	var day: int = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 6, "end_day": day + 14}]
+	var posts: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: posts.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.cultivate(5)
+	assert_eq(clock.total_days, day + 5, "under 7 days is never interrupted")
+	day = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 6, "end_day": day + 14}]
+	var wake := VillageCalendar.wake_day(gs.data, gs.npcs, gs.npc_favor, gs.world_events, "qingshi_village", day, 30, gs.player, gs.world_flags)
+	assert_false(wake.is_empty())
+	assert_true(int(wake["day"]) <= day + 6, "the festival, or something sooner (your birthday), wakes you")
+	gs.cultivate(30)
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(clock.total_days, int(wake["day"]))
+	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You open your eyes: ")))
