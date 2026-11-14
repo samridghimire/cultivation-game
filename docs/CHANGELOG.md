@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-14 [GFX-139] Misty Forest grows in dense groves with glades, ferns, mushrooms and fallen logs instead of an even sprinkle of trees.
 - 2026-11-14 [SHOP-004] Buy hints never send you for festival goods out of season, and a shop remembers up to four errands per region, even after a save.
 - 2026-11-14 [GFX-137] The herb patch, quarry tailings, bog pool and abode sit on ragged ground instead of flat ellipse plates.
 - 2026-11-14 [LOG-004] The log is quieter: repeated practice folds into one line, forecasts only when the weather changes or turns bad, great-beast eves only when the beast is near.

@@ -3,8 +3,8 @@
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
 ## State on 2026-11-14 (planner, 00:10 UTC)
-- 8 tasks landed (GFX-135, C-362, SPOT-001, GFX-140, GFX-136, LOG-004, GFX-137, SHOP-004). Review covered up to cede3c0
-  (SPOT-001 look-line fix inline, nothing filed). Live claims: C-361, GFX-139, GUIDE-238.
+- 9 tasks landed (GFX-135, C-362, SPOT-001, GFX-140, GFX-136, LOG-004, GFX-137, SHOP-004, GFX-139; its Follow-up -> GFX-144). Review covered up to cede3c0
+  (SPOT-001 look-line fix inline, nothing filed). Live claims: C-361, GUIDE-238.
 - Planner shots (1280x720; default first hour, `--season=Winter --region=qingshi_village,withered_bone_marsh,misty_forest`):
   fields, marsh pools and villager spacing good. Found: winter roads = one row of centre dashes (GFX-124 rule) -> GFX-141 (spec
   file, also ragged verges and the marsh boardwalk); jetty ponds still ellipses, frozen ones with a dotted ring, PixelPlace
