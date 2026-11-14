@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-15 (planner, 06:10 UTC)
+- 12 tasks landed (C-354, GFX-138, TEACH-001, GFX-149, WU-538, NPCFOE-001, SKIP-002, GFX-150, C-365, WU-537, GFX-151,
+  GUIDE-241). Review covered up to e7caf39 (no fixes; notes folded into QA-219 and SKIP-003). No live claims.
+- Planner shots (1280x720; `--region=azure_peak,myriad_peaks_ridge,withered_bone_marsh,fallen_star_market`, `--friend=hunter_ma`):
+  scree trails and the Azure stair read right. Spring ridge drifts = white bars, crate rocks, invisible stones -> GFX-153 (spec
+  file); near-white court + boat terraces -> GFX-154; marsh main road plank floor -> GFX-152; labels on labels -> WU-540;
+  market flagstone grid -> GFX-155; named villagers show no favor -> WU-539.
+- New: SPAR-001 (teacher bouts for mortals, planner default), SKIP-003, C-368 (reachable likes), C-367 (a teacher per region,
+  planner default). **Systems queue is thin** (SPAR-001, SKIP-003 ready; LOG-008 waits on QA-219, ART-012 on QA-212): next
+  planner should add systems work from QA-219's Follow-ups.
+- Next planner: view GFX-152/153 shots when they land; write LOG-008's exact cuts from QA-219.
+
 ## State on 2026-11-15 (planner, 00:10 UTC)
 - 12 tasks landed (WU-536, GFX-145, C-360, GUIDE-239, GFX-146, SKIP-001, GFX-147, QA-218, GFX-148, LOG-007, GUIDE-240, C-364).
   Review covered up to 80122b2 (SKIP-001 wake-on-ending and GUIDE-239 pronoun fixed inline; nothing filed). Live claims:

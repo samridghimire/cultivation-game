@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-15 [GUIDE-241] Once you know a fighting style, Next steps now and then names the nearest villager with something new to teach.
+- 2026-11-15 [GFX-151] The Azure Cloud Hall court is worn stone with moss, cracks and a processional strip, reached by a deep stone stair.
+- 2026-11-15 [C-365] Sect hunts now send you after elder jade pythons and poison toads, true Core Formation fights with richer spoils.
+- 2026-11-15 [WU-537] A villager's menu lists what they can teach and what friendship it needs.
+- 2026-11-15 [GFX-150] Ridge ledges have stepped rock silhouettes, cloud wisps are puffy, terraces curve and the ridge ground has lichen and shale patches.
+- 2026-11-15 [SKIP-002] Long gathering and work stretches also stop for festivals and hunts, paid for the days worked; requests wake you the day before.
+- 2026-11-15 [NPCFOE-001] Rival cultivators you fight are tougher and keep pace with your stage.
+- 2026-11-15 [WU-538] A setting turns off waking from long meditation for festivals and hunts.
+- 2026-11-15 [GFX-149] Mountain roads are worn trails with stepping stones instead of paved highways.
+- 2026-11-15 [TEACH-001] The game knows what each villager can teach and what friendship it takes.
+- 2026-11-15 [GFX-138] Every Qingshi house has a footpath, the village square has a fuller ring of flagstones, and the market's crater scorch and crates look less regular.
+- 2026-11-15 [C-354] Villagers talk about the day's omen.
 - 2026-11-14 [C-364] Core Formation wilds have tougher, trickier foes; fewer Core fights are foregone conclusions.
 - 2026-11-14 [GUIDE-240] After three easy wins over the same beast, the HUD suggests a fair fight instead.
 - 2026-11-14 [LOG-007] The Creation Artifact's energy gains no longer post their own weekly line; they ride on the breakthrough line that caused them.
