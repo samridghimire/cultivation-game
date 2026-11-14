@@ -458,3 +458,22 @@ func test_wake_day_ignores_other_regions_markets_and_today() -> void:
 	assert_true(VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 10, "misty_forest"), "qingshi_village", start, 30, null, {}).is_empty())
 	assert_true(VillageCalendar.wake_day(data(), {}, {}, [], "qingshi_village", start, 12, null, {}).is_empty(), "market days never wake")
 	assert_true(VillageCalendar.wake_day(data(), {}, {}, _lantern(start, 0), "qingshi_village", start, 30, null, {}).is_empty(), "today is ignored")
+
+
+## [REVIEW] an event that ends (or a realm that closes) inside the span does not wake you; one that begins does.
+func test_wake_day_skips_endings() -> void:
+	var start := 9 * Calendar.DAYS_PER_MONTH + 12
+	var eid := ""
+	for id: String in data().world_events:
+		if not WorldEvents.is_festival(data(), id):
+			eid = id
+			break
+	if eid == "":
+		return
+	var c := CharacterData.new()  # events are the player's own dates: only listed with a character
+	var ending := [{"id": eid, "region": "qingshi_village", "start_day": start - 3, "end_day": start + 4}]
+	var w := VillageCalendar.wake_day(data(), {}, {}, ending, "qingshi_village", start, 12, c, {})
+	assert_false(not w.is_empty() and String(w["text"]).contains(" ends "), str(w))
+	var beginning := [{"id": eid, "region": "qingshi_village", "start_day": start + 4, "end_day": start + 9}]
+	w = VillageCalendar.wake_day(data(), {}, {}, beginning, "qingshi_village", start, 12, c, {})
+	assert_true(not w.is_empty() and int(w["day"]) <= start + 4, str(w))

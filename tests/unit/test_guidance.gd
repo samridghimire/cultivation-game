@@ -6875,7 +6875,10 @@ func test_style_teacher_close_clauses() -> void:
 		assert_true(Guidance._close_clause(c, d, "hunter_ma", "qingshi_village", -1).contains(", sold by "))
 	assert_true(Items.dropped_by(d, "venison").size() > 0)
 	assert_true(Items.dropped_by(d, "no_such_item").is_empty())
-	assert_eq(Guidance._close_clause(c, d, "no_such_npc", "qingshi_village", -1), "talk with him daily")
+	assert_eq(Guidance._close_clause(c, d, "no_such_npc", "qingshi_village", -1), "talk with them daily")
+	# [REVIEW] the clause follows the teacher's gender (Blood Lotus Xue is a woman).
+	var xue := Guidance._close_clause(CharacterData.new(), d, "blood_lotus_xue", "qingshi_village", -1)
+	assert_true(xue.begins_with("she likes ") or xue == "talk with her daily", xue)
 	var line := Guidance.style_teacher_hint(Guidance.style_teacher(c, npcs, d, "qingshi_village", {}))
 	assert_true(line.length() <= 90, line)
 

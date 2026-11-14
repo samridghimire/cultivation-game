@@ -42,6 +42,8 @@ static func wake_day(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		var rid := String(e.get("region", ""))
 		if day <= start or day >= start + span or not WAKE_KINDS.has(kind) or (rid != "" and rid != region_id):
 			continue
+		if (kind == "secret_realm" or kind == "event") and not e.has("last_day"):
+			continue  # a realm closing or an event ending is nothing to wake for (only openings carry last_day)
 		if kind == "great_beast" and not _beast_matters(data, flags, rid, String(e.get("enemy", "")), day):
 			continue
 		return {"day": day, "kind": kind, "text": String(e["text"])}

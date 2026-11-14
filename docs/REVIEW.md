@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8e0d43c
+Last reviewed commit: 80122b2
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1953,3 +1953,15 @@ Last reviewed commit: 8e0d43c
   - Notes, not filed: C-361 still has >95% of Core fights at 56% (target <= 40%) and balance.sh --check was not run
     (QA-218 covers it); LOG-005's HUD fold maps rows by position, so it can pick the wrong HUD row if a dawn line was
     collapsed into "(x2)" (unlikely). GFX-137/143 and SPOT-002 again landed without screenshot checks.
+- 2026-11-14 (reviewer, 2nd run): reviewed 8e0d43c..80122b2 (GFX-144, LOG-006, GUIDE-238 (all three landed just after the
+  last review commit's range), WU-536, GFX-145, C-360, GUIDE-239, GFX-146, SKIP-001, GFX-147; [PLAN]/[REVIEW] skipped).
+  Main green (4050 -> 4052 tests). No BACKLOG/CHANGELOG edits by workers; no binary assets; no SAVE_VERSION change
+  (LOG-006's `last_fight_summary` and SKIP-001's `wake_for_dates` are session-only).
+  - Fixed (SKIP-001): `VillageCalendar.wake_day` also woke a long meditation for an event *ending* or a secret realm
+    *closing* ("You open your eyes: Beast Tide ends in Qingshi Village"). Only openings/beginnings wake now. Test added.
+  - Fixed (GUIDE-239): `_close_clause` hardcoded "he likes ... / talk with him daily" for every teacher; Blood Lotus Xue
+    is a woman. The pronoun now follows the NPC's gender ("they like"/"them" when unknown). Test added.
+  - LOG-006/WU-536 OK (only one combat_finished emit, the summary is skipped for wounded starts/allies/spars),
+    GUIDE-238, C-360, GFX-144/145/146/147 OK (draw-only, not screenshot-checked by me).
+  - Notes, not filed: SKIP-001's balance.sh --check was not run (quiet-stretch baselines are now stale; its own
+    Follow-ups ask QA to run it). A request wakes you on its due day, not the day before.

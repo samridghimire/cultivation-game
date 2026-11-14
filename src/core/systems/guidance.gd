@@ -3745,24 +3745,27 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 
 
 ## GUIDE-239: one clause on how to close a favor gap with `npc_id`: a liked item held, one sold here, one a foe
-## here drops, else "talk with him daily".
+## here drops, else "talk with him daily" (pronoun from the NPC's gender).
 static func _close_clause(c: CharacterData, data: GameData, npc_id: String, region_id: String, today: int) -> String:
 	var likes: Array = data.npcs.get(npc_id, {}).get("likes", [])
+	var gender := String(data.npcs.get(npc_id, {}).get("gender", ""))
+	var he_likes := "she likes" if gender == "female" else ("he likes" if gender == "male" else "they like")
+	var him := "her" if gender == "female" else ("him" if gender == "male" else "them")
 	for item_id: String in likes:
 		if data.items.has(item_id) and c.item_count(item_id) > 0:
-			return "he likes %s: you have %d" % [data.items[item_id].get("name", item_id), c.item_count(item_id)]
+			return he_likes + " %s: you have %d" % [data.items[item_id].get("name", item_id), c.item_count(item_id)]
 	for item_id: String in likes:
 		if data.items.has(item_id):
 			var seller := merchant_selling(data, region_id, item_id, today)
 			if seller != "":
-				return "he likes %s, sold by %s" % [data.items[item_id].get("name", item_id), seller]
+				return he_likes + " %s, sold by %s" % [data.items[item_id].get("name", item_id), seller]
 	for item_id: String in likes:
 		if not data.items.has(item_id):
 			continue
 		for enemy_id in Items.dropped_by(data, item_id):
 			if not Exploration.sites_with_foe(c, data, region_id, enemy_id).is_empty():
-				return "he likes %s: hunt %s in %s" % [data.items[item_id].get("name", item_id), data.enemies[enemy_id].get("name", enemy_id), Exploration.region_name(data, region_id)]
-	return "talk with him daily"
+				return he_likes + " %s: hunt %s in %s" % [data.items[item_id].get("name", item_id), data.enemies[enemy_id].get("name", enemy_id), Exploration.region_name(data, region_id)]
+	return "talk with %s daily" % him
 
 
 ## The cheapest-favor combat lesson in `dialogue` that `c` could take with favor raised to its need: {technique, need}, or {}.
