@@ -51,15 +51,9 @@ func test_walked_earth() -> void:
 	assert_true(sky > 0, "rain puddles")
 	for t in Scenery.path_tiles(_region("grass"), rect, "rain", true):
 		assert_false(t["kind"] == "puddle", "no puddles in snow")
-	var ruts_w := 0
 	for t in Scenery.path_tiles(_region("grass"), rect, "clear", true):
 		if t["kind"] == "rut":
-			ruts_w += 1
-	var ruts_s := 0
-	for t in Scenery.path_tiles(_region("grass"), rect):
-		if t["kind"] == "rut":
-			ruts_s += 1
-	assert_true(ruts_w < ruts_s, "snow covers most ruts")
+			assert_eq(t["flag"], "slush", "winter ruts are slush")
 
 
 func test_nothing_under_a_place() -> void:

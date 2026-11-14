@@ -737,15 +737,24 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 				pos += l
 	elif style == "bog" and str(map.get("water", "clear")) == "murky":
 		pos = inset
+		var planks := 0
+		var missing := 0
+		var prev_missing := false
 		while pos < len_total - inset - 4.0:
-			var l := minf(7.0 + rng.randf() * 3.0, len_total - inset - pos)
+			var l := minf(6.0 + rng.randf() * 6.0, len_total - inset - pos)
 			var pflag := ""
 			var proll := rng.randf()
-			if proll < 0.05:
-				pflag = "missing"  # GFX-136: a dark gap where a plank rotted away
-			elif proll < 0.12:
+			planks += 1
+			# GFX-141: a rotted board is rare (<= 1 in 14) and never two in a row
+			if proll < 0.06 and not prev_missing and float(missing + 1) * 14.0 <= float(planks):
+				pflag = "missing"
+				missing += 1
+			elif proll < 0.16:
 				pflag = "dark"
-			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset, l - 1.0, width - inset * 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": pflag})
+			prev_missing = pflag == "missing"
+			var side_a := float(rng.randi_range(0, 2))  # each board's ends sit 0-2 px off the line
+			var side_b := float(rng.randi_range(0, 2))
+			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset + side_a, l - 1.0, width - inset * 2.0 - side_a - side_b), "shade": rng.randf() * 2.0 - 1.0, "flag": pflag})
 			pos += l
 		# GFX-136: reed tufts along both edges of the boardwalk
 		var tuft_at := 14.0 + rng.randf() * 30.0
@@ -777,21 +786,34 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 					if gx < len_total - 3.0:
 						out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, gx, base_off + shift + (1.0 if side == 0 else -1.0), 3.0, 4.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
 				pos += l + gap
-		for off_f: float in [0.3, 0.62]:
+		# GFX-141: two wheel tracks that wander together (one shared wobble per road), each 2-3 px thick, broken by 6-20 px gaps.
+		var wobble: Array[float] = []  # one offset per 30-60 px stretch of road
+		var wob_at: Array[float] = []
+		var wpos := 0.0
+		while wpos < len_total + 60.0:
+			wob_at.append(wpos)
+			wobble.append(rng.randf_range(-3.0, 3.0))
+			wpos += rng.randf_range(30.0, 60.0)
+		for off_f: float in [0.22, 0.74]:
 			pos = rng.randf() * 10.0
-			var wob := 0.0
 			while pos < len_total:
 				var l := minf(rng.randf_range(14.0, 36.0), len_total - pos)
-				wob = clampf(wob + float(rng.randi_range(-2, 2)), -3.0, 3.0)
-				var rr := _road_rect(path_rect, along_x, pos, width * off_f - 2.0 + wob, l, 4.0)
+				var wi := 0
+				while wi + 1 < wob_at.size() and wob_at[wi + 1] <= pos:
+					wi += 1
+				var th2 := float(rng.randi_range(2, 3))
+				var rr := _road_rect(path_rect, along_x, pos, width * off_f - 1.0 + wobble[wi], l, th2)
 				var near := false
 				for c in crossings:
 					if c.intersects(rr):
 						near = true
 						break
 				if not near:
-					out.append({"kind": "rut", "rect": rr, "shade": -0.3, "flag": ""})
-				pos += l + rng.randf_range(4.0, 12.0)
+					out.append({"kind": "rut", "rect": rr, "shade": -0.3, "flag": "slush" if winter else ""})
+				pos += l + rng.randf_range(6.0, 20.0)
+		if winter:  # footprints trodden between the tracks
+			for i in int(len_total / 24.0):
+				out.append({"kind": "print", "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - 3.0, 0.0), width * rng.randf_range(0.36, 0.6), 3.0, 2.0), "shade": 0.0, "flag": ""})
 		var n := int(len_total / 22.0)
 		for i in n:
 			var k := "puddle" if style == "bog" else "tuft"
@@ -821,14 +843,56 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 				if Npcs.place_keepout(pl).intersects(t["rect"]):
 					hit = true
 					break
-		if not hit and winter and t["kind"] == "rut":  # GFX-124: snow covers the ruts except a trodden centre
-			var tr: Rect2 = t["rect"]
-			var mid := path_rect.get_center()
-			var centre := absf((tr.get_center().y - mid.y) if along_x else (tr.get_center().x - mid.x)) < width * 0.2
-			hit = not centre
 		if not hit:
 			kept.append(t)
 	return kept
+
+
+## GFX-141: ragged road edges. Small rects (2-6 px deep, 6-20 px long) along both long edges every 10-30 px: a rect inside
+## `path_rect` is a bite of verge into the road, one outside it is road spilling onto the verge. Skipped where a crossing road,
+## a bridge or a place keepout of `region` meets the edge.
+static func road_verge(path_rect: Rect2, seed_value: int, region: Dictionary = {}) -> Array[Rect2]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var len_total := path_rect.size.x if along_x else path_rect.size.y
+	var width := path_rect.size.y if along_x else path_rect.size.x
+	var map: Dictionary = region.get("map", {})
+	var avoid: Array[Rect2] = []
+	for lm: Dictionary in map.get("landmarks", []):
+		if str(lm.get("kind", "")) == "stream":
+			var sz: Array = lm["size"]
+			var c: Array = lm["pos"]
+			avoid.append(Rect2(float(c[0]) - float(sz[0]) * 0.5, float(c[1]) - float(sz[1]) * 0.5, float(sz[0]), float(sz[1])).grow(6.0))
+	for pr: Variant in map.get("paths", []):
+		var pa: Array = pr
+		var other := Rect2(float(pa[0]), float(pa[1]), float(pa[2]), float(pa[3]))
+		if other != path_rect and other.grow(8.0).intersects(path_rect):
+			avoid.append(other.grow(8.0))
+	for pl: Dictionary in region.get("places", []):
+		avoid.append(Npcs.place_keepout(pl))
+	var out: Array[Rect2] = []
+	for side in 2:
+		var pos := rng.randf_range(0.0, 12.0)
+		while pos < len_total - 6.0:
+			var l := minf(rng.randf_range(6.0, 20.0), len_total - pos)
+			var depth := rng.randf_range(2.0, 6.0)
+			var inward := rng.randf() < 0.5
+			var across: float
+			if side == 0:
+				across = 0.0 if inward else -depth
+			else:
+				across = width - depth if inward else width
+			var r := _road_rect(path_rect, along_x, pos, across, l, depth)
+			var hit := false
+			for a: Rect2 in avoid:
+				if a.intersects(r):
+					hit = true
+					break
+			if not hit:
+				out.append(r)
+			pos += l + rng.randf_range(10.0, 30.0)
+	return out
 
 
 static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: float, length: float, thick: float) -> Rect2:

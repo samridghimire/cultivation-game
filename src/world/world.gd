@@ -2267,6 +2267,10 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
 ## GFX-112: the road surface (ruts, slabs, planks, puddles, tufts) over one path rect.
 func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
+	var rmap: Dictionary = _region.get("map", {})
+	if str(rmap.get("ground_style", "grass")) == "bog" and str(rmap.get("water", "clear")) == "murky":
+		var bed := rect.grow(-3.0)  # GFX-141: dark water shows in the 1 px gaps between boards
+		draw_rect(bed, Color("141a14"))
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
@@ -2293,7 +2297,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
 			"rut", "edge":
-				draw_rect(r, base.darkened(0.45 if t["flag"] == "gutter" else (0.22 if t["kind"] == "rut" else 0.12)))
+				draw_rect(r, base.darkened(0.45 if t["flag"] == "gutter" else (0.15 if t["flag"] == "slush" else (0.22 if t["kind"] == "rut" else 0.12))))
 			"puddle":
 				draw_rect(r, Color(0.5, 0.6, 0.7, 0.7) if t["flag"] == "sky" else Color(0.2, 0.26, 0.3, 0.8))
 			"pebble":
@@ -2309,6 +2313,16 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				draw_rect(Rect2(r.position, Vector2(minf(2.0, r.size.x), r.size.y)), Color(cap, 0.45))
 			else:
 				draw_rect(Rect2(r.position, Vector2(r.size.x, minf(2.0, r.size.y))), cap)
+	if str(rmap.get("ground_style", "grass")) in ["grass", "litter"] or (str(rmap.get("ground_style", "")) == "bog" and str(rmap.get("water", "clear")) != "murky"):
+		var gcol := Color(map_grass_color())
+		var snow := Color(0.93, 0.95, 1.0)
+		for v: Rect2 in Scenery.road_verge(rect, hash("%s|%s|verge" % [_region.get("id", ""), rect]), _region):
+			if rect.encloses(v):
+				draw_rect(v, snow if snowy else gcol)
+			else:
+				draw_rect(v, base)
+				if snowy:  # a 2-4 px snow bank along the verge
+					draw_rect(Rect2(v.position - Vector2(1, 1), v.size + Vector2(2, 2)).intersection(Rect2(v.position, v.size)), Color(snow, 0.9))
 
 
 func map_grass_color() -> String:
