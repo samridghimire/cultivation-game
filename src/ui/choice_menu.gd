@@ -16,6 +16,7 @@ var _portrait: PortraitBox
 var _friend_row: HBoxContainer
 var _friend_label: Label
 var _friend_hearts: TextureRect
+var _teach_box: VBoxContainer  ## WU-537: the "Teaches:" lines under the friend row
 
 
 func _init() -> void:
@@ -46,6 +47,9 @@ func _init() -> void:
 	_friend_label = UIStyle.label("", 15, Color(0.85, 0.75, 0.6))
 	_friend_row.add_child(_friend_label)
 	box.add_child(_friend_row)
+	_teach_box = VBoxContainer.new()
+	_teach_box.visible = false
+	box.add_child(_teach_box)
 	# Long menus (a sect's whole shop) scroll instead of running off the screen (WU-065).
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -97,6 +101,31 @@ func _set_header(header: Dictionary) -> void:
 	_friend_hearts.texture = header["hearts"]
 
 
+## WU-537: rows of [{text, known}] under the title; known ones are greyed with a check mark.
+func _set_teaches(lines: Array) -> void:
+	for child in _teach_box.get_children():
+		_teach_box.remove_child(child)
+		child.queue_free()
+	_teach_box.visible = not lines.is_empty()
+	if lines.is_empty():
+		return
+	_teach_box.add_child(UIStyle.label("Teaches:", 15, Color(0.85, 0.75, 0.6)))
+	for line: Dictionary in lines:
+		var known := bool(line.get("known", false))
+		var l := UIStyle.label(("  \u2713 " if known else "  - ") + String(line["text"]), 14,
+			Color(0.55, 0.55, 0.58) if known else Color(0.85, 0.85, 0.9))
+		_teach_box.add_child(l)
+
+
+## Test hook: the visible "Teaches:" texts.
+func teaches_texts() -> PackedStringArray:
+	var out := PackedStringArray()
+	if _teach_box.visible:
+		for child in _teach_box.get_children():
+			out.append((child as Label).text)
+	return out
+
+
 func portrait_visible() -> bool:
 	return _portrait.visible
 
@@ -118,6 +147,7 @@ func _rebuild() -> void:
 	_title.text = _source.display_name
 	_portrait.set_portrait(_source.portrait_texture() if _source.has_method("portrait_texture") else null)
 	_set_header(_source.menu_header() if _source.has_method("menu_header") else {})
+	_set_teaches(_source.menu_teaches() if _source.has_method("menu_teaches") else [])
 	var options: Array[Dictionary] = _source.menu_options()
 	if options.is_empty():
 		_buttons.add_child(UIStyle.label("There is nothing to do here.", 16))

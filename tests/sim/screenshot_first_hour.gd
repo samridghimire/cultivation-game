@@ -12,6 +12,7 @@ extends SceneTree
 ## WU-502: append `-- --terraces=N` (0..3) for the Herb Slope terrace stage.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
+## WU-537: `--friend=hunter_ma` opens that named villager instead.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
@@ -214,7 +215,11 @@ func _start() -> void:
 	if OS.get_cmdline_user_args().has("--quarrel"):  # QA-182: a FOLK-004 quarrel between two villagers
 		_quarrel_shots(gs, c)
 		special = true
-	if OS.get_cmdline_user_args().has("--friend"):  # WU-418: a Qingshi villager at favor 65 and their menu
+	var friend_arg := false
+	for a in OS.get_cmdline_user_args():
+		if a == "--friend" or a.begins_with("--friend="):  # WU-537: --friend=<npc_id> opens that named villager's menu
+			friend_arg = true
+	if friend_arg:  # WU-418: a Qingshi villager at favor 65 and their menu
 		_friend_shots(gs)
 		special = true
 	if OS.get_cmdline_user_args().has("--friend-scene"):  # FOLK-016: Xiao Ling's scene card with its gift line
@@ -762,8 +767,18 @@ func _friend_shots(gs: Node) -> void:
 	shots.append({"name": "friend", "open": func() -> void:
 		hud.get("_banner").visible = false
 		gs.current_region = "qingshi_village"
+		var want := ""
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with("--friend="):
+				want = arg.substr(9)
 		for node in world.find_children("*", "Interactable", true, false):
 			var id := String(node.get("npc_id") if node.get("npc_id") != null else "")
+			if want != "" and id == want:
+				gs.npc_favor[id] = 65
+				hud.get("_choice_menu").open_for(node)
+				return
+			if want != "":
+				continue
 			if id != "" and gs.npcs.has(id) and not gs.data.npcs.has(id):
 				gs.npc_favor[id] = 65
 				hud.get("_choice_menu").open_for(node)

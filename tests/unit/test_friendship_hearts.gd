@@ -85,3 +85,26 @@ func test_tier_up_emits_signal_with_banner_portrait() -> void:
 	b.finish_current()
 	assert_false(b.portrait_shown())
 	b.free()
+
+
+## WU-537: a teacher's menu lists what they teach; a non-teacher's has no line.
+func test_menu_teaches_lines() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	node.npc_id = "hunter_ma"
+	var lines: Array = node.menu_teaches()
+	assert_true(lines.size() >= 1 and lines.size() <= 3)
+	var menu := ChoiceMenu.new()
+	menu._set_teaches(lines)
+	var texts := menu.teaches_texts()
+	assert_eq(texts[0], "Teaches:")
+	assert_eq(texts.size(), lines.size() + 1)
+	menu._set_teaches([{"text": "Iron Fist (favor 40)", "known": true}])
+	assert_true(menu.teaches_texts()[1].contains("✓"))
+	node.npc_id = "broker_qian"
+	assert_true(node.menu_teaches().is_empty())
+	menu._set_teaches(node.menu_teaches())
+	assert_true(menu.teaches_texts().is_empty())
+	menu.free()
+	node.free()

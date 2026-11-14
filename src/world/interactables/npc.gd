@@ -236,6 +236,18 @@ func menu_header() -> Dictionary:
 	return {"label": GameState.friendship_label(npc_id), "hearts": HudIcons.hearts(GameState.friendship_tier_count(), filled, 3)}
 
 
+## WU-537: up to 3 [{text, known}] from Npcs.teachings for the "Teaches:" lines; [] when this villager teaches nothing.
+func menu_teaches() -> Array:
+	var lines: Array = []
+	if GameState.player == null:
+		return lines
+	for t: Dictionary in Npcs.teachings(npc_id, GameState.player, GameState.data, int(GameState.npc_favor.get(npc_id, 0))):
+		if lines.size() >= 3:
+			break
+		lines.append({"text": String(t["text"]), "known": bool(t["known"])})
+	return lines
+
+
 func portrait_texture() -> Texture2D:
 	return PixelFigure.frame(figure_look(), "down", 0)
 
