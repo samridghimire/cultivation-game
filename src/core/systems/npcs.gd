@@ -936,3 +936,70 @@ static func _gender_word(c: CharacterData, male: String, female: String, other: 
 		"female":
 			return female
 	return other
+
+
+## TEACH-001: what a named villager can teach: every dialogue choice with a `learn_technique` effect (favor need from
+## the `min_favor` gates leading to it) and every `lessons` tier of data/npcs.json. Entries
+## {kind: "technique"|"lesson", name, need_favor, known, text (<= 60 chars)}, sorted by need then name. Known ones
+## (technique learned, lesson taught) stay listed with known = true, even when the dialogue hides the choice. `favor` (the player's
+## current favor) is reserved for callers that want to mark what is within reach; the list itself never depends on it.
+static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: int = 0) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	var dialogue: Dictionary = data.dialogues.get(String(def.get("dialogue", "")), {})
+	var nodes: Dictionary = dialogue.get("nodes", {})
+	var seen: Dictionary = {}
+	for node_id: String in nodes:
+		for choice: Dictionary in nodes[node_id].get("choices", []):
+			var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
+			if tech_id == "" or not data.techniques.has(tech_id) or seen.has(tech_id):
+				continue
+			seen[tech_id] = true
+			var need := int(choice.get("if", {}).get("min_favor", 0))
+			for other_id: String in nodes:
+				for other: Dictionary in nodes[other_id].get("choices", []):
+					if String(other.get("next", "")) == node_id and other.has("if"):
+						need = maxi(need, int(other["if"].get("min_favor", 0)))
+			var tech_name: String = data.techniques[tech_id].name
+			result.append({"kind": "technique", "name": tech_name, "need_favor": need, "known": c.techniques.has(tech_id),
+				"text": _teaching_text(tech_name, "favor %d" % need)})
+	var tiers: Array = data.family.get("folk_tiers", [])
+	var lessons: Array = Folk.lessons_of(data, npc_id)
+	for i in lessons.size():
+		var tier := int(lessons[i].get("tier", 0))
+		if tier < 0 or tier >= tiers.size():
+			continue
+		var tier_def: Dictionary = tiers[tier]
+		var lesson_name := _lesson_name(lessons[i].get("effects", {}), data)
+		result.append({"kind": "lesson", "name": lesson_name, "need_favor": int(tier_def.get("min", 0)),
+			"known": c.lessons_taught.has("%s:%d" % [npc_id, i]),
+			"text": _teaching_text(lesson_name + " lesson", String(tier_def.get("name", "")).to_lower())})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["need_favor"]) != int(b["need_favor"]):
+			return int(a["need_favor"]) < int(b["need_favor"])
+		return String(a["name"]) < String(b["name"]))
+	return result
+
+
+static func _teaching_text(label: String, need: String) -> String:
+	var line := "%s (%s)" % [label, need]
+	if line.length() > 60:
+		line = "%s... (%s)" % [label.substr(0, 60 - need.length() - 6), need]
+	return line
+
+
+## A short name for a lesson's effects: the dish, recipe or technique taught, else what it trains.
+static func _lesson_name(effects: Dictionary, data: GameData) -> String:
+	if effects.has("learn_dish"):
+		return String(Cooking.meal(data, String(effects["learn_dish"])).get("name", effects["learn_dish"]))
+	if effects.has("learn_recipe"):
+		return String(data.recipes.get(String(effects["learn_recipe"]), {}).get("name", effects["learn_recipe"]))
+	if effects.has("learn_technique") and data.techniques.has(String(effects["learn_technique"])):
+		return String(data.techniques[String(effects["learn_technique"])].name)
+	if effects.has("dao_insight"):
+		return "Insight"
+	if effects.has("practice_days"):
+		return "Training"
+	if effects.has("attributes"):
+		return "Attribute"
+	return "Village"
