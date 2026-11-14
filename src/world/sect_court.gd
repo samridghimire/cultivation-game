@@ -212,12 +212,14 @@ static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy:
 		ci.draw_line(Vector2(inner.position.x, y), Vector2(inner.end.x, y), seam, 1.0)
 		if snowy and row % 2 == 0:  # GFX-122: thin snow along every 2nd plank edge
 			ci.draw_line(Vector2(inner.position.x, y - 1.0), Vector2(inner.end.x, y - 1.0), Color(0.94, 0.97, 1.0, 0.85), 1.0)
-		var x := court.position.x + (12.0 if row % 2 == 1 else 0.0) + 24.0
+		# GFX-152: long boards laid end to end (40-90 px) with joints that never line up between rows, not bricks
+		var x := court.position.x + rng.randf_range(8.0, 40.0)
 		while x < inner.end.x:
-			ci.draw_line(Vector2(x, y), Vector2(x, minf(y + 8.0, inner.end.y)), seam, 1.0)
+			ci.draw_line(Vector2(x, y + 1.0), Vector2(x, minf(y + 7.0, inner.end.y)), Color(seam, 0.6), 1.0)
+			var bl := rng.randf_range(40.0, 90.0)
 			if rng.randf() < 0.07:  # a dark, rotten board
-				ci.draw_rect(Rect2(x + 1.0, y + 1.0, 34.0, 6.0), wood.darkened(0.3))
-			x += 36.0
+				ci.draw_rect(Rect2(x + 1.0, y + 1.0, minf(bl - 2.0, inner.end.x - x), 6.0), wood.darkened(0.3))
+			x += bl
 		y += 8.0
 		row += 1
 	var rim := edge.duplicate()

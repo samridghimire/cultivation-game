@@ -2453,7 +2453,22 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 	var rmap: Dictionary = _region.get("map", {})
 	if str(rmap.get("ground_style", "grass")) == "bog" and str(rmap.get("water", "clear")) == "murky":
 		var bed := rect.grow(-3.0)  # GFX-141: murky water shows in the 1 px gaps between boards
-		draw_rect(bed, _bog_water().darkened(0.3))
+		var vertical := rect.size.x < rect.size.y  # GFX-152: a north-south walkway gets a bed as narrow as the east-west one
+		if vertical:
+			bed = Rect2(rect.position.x + rect.size.x * 0.17, rect.position.y + 3.0, rect.size.x * 0.66, rect.size.y - 6.0)
+		draw_rect(bed, Color("34475a") if snowy else _bog_water().darkened(0.3))  # winter: dark ice, never open water
+		if snowy:
+			var crng := RandomNumberGenerator.new()
+			crng.seed = hash("%s|%s|ice" % [_region.get("id", ""), rect])
+			var along := (bed.size.y if vertical else bed.size.x)
+			var cp := 0.0
+			while cp < along - 8.0:
+				var across := crng.randf_range(1.0, (bed.size.x if vertical else bed.size.y) - 2.0)
+				var clen := crng.randf_range(6.0, 14.0)
+				var a := bed.position + (Vector2(across, cp) if vertical else Vector2(cp, across))
+				var b := a + (Vector2(crng.randf_range(-2.0, 2.0), clen) if vertical else Vector2(clen, crng.randf_range(-2.0, 2.0)))
+				draw_line(a, b, Color("b9cde0"), 1.0)
+				cp += crng.randf_range(10.0, 26.0)
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
@@ -2496,6 +2511,8 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 					c = c.darkened(0.15)
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
+				if snowy and shade > -0.3:  # GFX-152: a snow cap on most boards
+					draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)) if rect.size.x >= rect.size.y else Rect2(r.position, Vector2(2.0, r.size.y)), Color(0.93, 0.95, 1.0, 0.85))
 			"mud":
 				draw_rect(r, base.darkened(0.3))
 			"stub":

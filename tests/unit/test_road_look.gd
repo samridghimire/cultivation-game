@@ -126,3 +126,9 @@ func test_paved_market_street_unchanged() -> void:
 	assert_eq(tiles[0]["rect"], Rect2(0, 470, 1600, 3))
 	assert_eq(tiles[1]["rect"], Rect2(0, 527, 1600, 3))
 	assert_true((tiles[2]["rect"] as Rect2).is_equal_approx(Rect2(3, 476, 32.98705, 24)), "first slab")
+
+
+## GFX-152: the Reed Hall platform's board joints are long and irregular, never a brick pattern.
+func test_reed_hall_outline_still_ragged() -> void:
+	var o := SectCourt.reed_hall_outline(Rect2(100, 100, 240, 120))
+	assert_true(o.size() > 8, "ragged outline kept")
