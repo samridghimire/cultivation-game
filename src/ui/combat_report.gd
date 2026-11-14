@@ -33,6 +33,11 @@ var playing: bool = false
 ## WU-413: the friend who fought at your side ("" = none); set before show_fight.
 var companion_name: String = ""
 var _companion: Label
+## WU-536: Combat.summary lines for a fight that was never in doubt ([] = show every blow); set before show_fight.
+var summary: Array[String] = []
+var _collapsed: bool = false
+var _noted: bool = false  # advice/spoils already in the log
+var _blows_button: Button
 
 const TICK_SECONDS: float = 0.25
 
@@ -77,6 +82,10 @@ func _init() -> void:
 	_devour_button.name = "Devour"
 	UIStyle.tint_button_text(_devour_button, UIStyle.CATEGORY_COLORS["danger"])
 	box.add_child(_devour_button)
+	_blows_button = UIStyle.button("Show every blow", show_every_blow)
+	_blows_button.name = "ShowBlows"
+	_blows_button.visible = false
+	box.add_child(_blows_button)
 	_skip_button = UIStyle.button("Skip", skip)
 	_skip_button.name = "Skip"
 	box.add_child(_skip_button)
@@ -170,7 +179,11 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_companion.text = companion_line(companion_name)
 	_companion.visible = companion_name != ""
 	_log.clear()
-	_log.custom_minimum_size.y = minf(log_height(lines.size() + spoils.size() + (2 if advice != "" else 0)), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
+	_noted = false
+	_collapsed = not summary.is_empty() and not lines.is_empty()
+	_blows_button.visible = false
+	var shown_rows := (summary.size() + 1) if _collapsed else lines.size()
+	_log.custom_minimum_size.y = minf(log_height(shown_rows + spoils.size() + (4 if advice != "" else 0)), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
 	_shown = 0
 	var has_bars := trace.size() >= lines.size() and not trace.is_empty() and player_max > 0 and enemy_max > 0
 	_player_bar.get_parent().visible = has_bars
@@ -185,7 +198,7 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_friendly = friendly
 	_stage.visible = has_bars
 	_stage.setup(enemy_id, enemy_tags)
-	playing = has_bars and bool(Settings.get_value("animate_fights"))
+	playing = has_bars and bool(Settings.get_value("animate_fights")) and not _collapsed
 	visible = true
 	_devour_button.visible = false
 	if playing:
@@ -269,11 +282,52 @@ func skip() -> void:
 	if not visible:
 		return
 	_stage.clear_floaters()
-	if _shown < _lines.size():
+	if _collapsed:
+		_render_summary()
+	elif _shown < _lines.size():
 		while _shown < _lines.size():
 			_reveal(_shown, false)
 			_shown += 1
 	_finish()
+
+
+## The short report: summary lines, then the closing "collapses" line (which also sets the final bars).
+func _render_summary() -> void:
+	if _shown >= _lines.size():
+		return
+	for line in summary:
+		_log.append_text(line + "\n")
+	_shown = _lines.size() - 1
+	_reveal(_shown, false)
+	_shown = _lines.size()
+	_blows_button.visible = true
+
+
+## Expands the short report into the full blow-by-blow in place.
+func show_every_blow() -> void:
+	if not _collapsed:
+		return
+	_collapsed = false
+	_blows_button.visible = false
+	_log.clear()
+	_noted = false
+	_shown = 0
+	while _shown < _lines.size():
+		_reveal(_shown, false)
+		_shown += 1
+	_log.custom_minimum_size.y = minf(log_height(_lines.size() + _spoils.size() + (2 if _advice != "" else 0)), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
+	_append_endnotes()
+	_close_button.grab_focus.call_deferred()
+
+
+func _append_endnotes() -> void:
+	if _noted:
+		return
+	_noted = true
+	if not _victory and _advice != "":
+		_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.CATEGORY_COLORS["warning"].to_html(false), _advice])
+	if _victory and not _spoils.is_empty():
+		_log.append_text("[color=#%s]Spoils: %s[/color]\n" % [UIStyle.ACCENT.to_html(false), ", ".join(_spoils)])
 
 
 func _finish() -> void:
@@ -283,10 +337,7 @@ func _finish() -> void:
 	_close_button.disabled = false
 	if _stage.visible:
 		_stage.show_end_pose(_victory, _friendly)
-	if not _victory and _advice != "":
-		_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.CATEGORY_COLORS["warning"].to_html(false), _advice])
-	if _victory and not _spoils.is_empty():
-		_log.append_text("[color=#%s]Spoils: %s[/color]\n" % [UIStyle.ACCENT.to_html(false), ", ".join(_spoils)])
+	_append_endnotes()
 	_show_devour(_victory)
 	_close_button.grab_focus.call_deferred()
 

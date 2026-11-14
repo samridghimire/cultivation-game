@@ -1501,6 +1501,7 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_choice_menu.close()
 	_close_screens()
 	_combat_report.companion_name = GameState.last_fight_companion
+	_combat_report.summary = GameState.last_fight_summary
 	_combat_report.show_fight(enemy_name, victory, lines, GameState.last_loss_advice, GameState.last_fight_spoils,
 			GameState.last_fight_playback.get("trace", []), int(GameState.last_fight_playback.get("player_max", 0)), int(GameState.last_fight_playback.get("enemy_max", 0)), GameState.last_fight_friendly, _fight_rating,
 			str(_fight_enemy.get("id", "")), _fight_enemy.get("tags", []))

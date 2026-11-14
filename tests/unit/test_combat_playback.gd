@@ -77,6 +77,44 @@ func test_no_trace_is_instant() -> void:
 
 
 ## Frees the report and restores the player's "Animate fights" setting (set_value saves it).
+func test_easy_fight_shows_summary_not_blows() -> void:
+	var r := _report(true)
+	r.summary = ["You beat Foe in 2 exchanges, losing 3 hp.", "Your best blow: a blow for 5."] as Array[String]
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(["a herb"]), TRACE, 20, 10)
+	assert_false(r.playing, "no blow-by-blow playback")
+	var t := _text(r)
+	assert_true(t.contains("You beat Foe in 2 exchanges"))
+	assert_true(t.contains("You defeat the foe!"), "the collapses line stays")
+	assert_true(t.contains("Spoils: a herb"))
+	assert_false(t.contains("Foe hits you for 3"), "blows hidden")
+	assert_true(r._blows_button.visible)
+	assert_eq(int(r._enemy_bar.value), 0)
+	assert_false(r._close_button.disabled)
+	_done(r)
+
+
+func test_show_every_blow_expands_in_place() -> void:
+	var r := _report(true)
+	r.summary = ["You beat Foe in 2 exchanges, losing 3 hp."] as Array[String]
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(["a herb"]), TRACE, 20, 10)
+	r.show_every_blow()
+	var t := _text(r)
+	assert_true(t.contains("Foe hits you for 3"))
+	assert_false(t.contains("You beat Foe in 2"))
+	assert_true(t.contains("Spoils: a herb"))
+	assert_false(r._blows_button.visible)
+	_done(r)
+
+
+func test_close_fight_shows_full_log() -> void:
+	var r := _report(false)
+	r.summary = [] as Array[String]
+	r.show_fight("Foe", true, PackedStringArray(LINES), "", PackedStringArray(), TRACE, 20, 10)
+	assert_true(_text(r).contains("Foe hits you for 3"))
+	assert_false(r._blows_button.visible)
+	_done(r)
+
+
 func _done(r: CombatReport) -> void:
 	r.queue_free()
 	_settings().set_value("animate_fights", _old_animate)
