@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 80122b2
+Last reviewed commit: e7caf39
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1965,3 +1965,19 @@ Last reviewed commit: 80122b2
     GUIDE-238, C-360, GFX-144/145/146/147 OK (draw-only, not screenshot-checked by me).
   - Notes, not filed: SKIP-001's balance.sh --check was not run (quiet-stretch baselines are now stale; its own
     Follow-ups ask QA to run it). A request wakes you on its due day, not the day before.
+- 2026-11-14 (reviewer, 3rd run): reviewed 80122b2..e7caf39 (QA-218, GFX-148, LOG-007, GUIDE-240, C-364, C-354, GFX-138,
+  TEACH-001, GFX-149, WU-538, NPCFOE-001, SKIP-002, GFX-150, WU-537, C-365; [PLAN]/[REVIEW] skipped). Main green
+  (4086 tests). No BACKLOG/CHANGELOG edits by workers; no binary assets; no SAVE_VERSION change (GUIDE-240's
+  `wins_by_foe` defaults to {}; WU-538's `wake_tip_shown` is a world flag; LOG-007's history ids are session-only).
+  - No fixes needed. Checked: LOG-007's HUD fold now addresses rows by id (resolves the last review's "(x2)" note);
+    a deferred crossing line is not lost (pending carries to the next call). GUIDE-240 counts only non-friendly wins,
+    spoils_worth skips price-0 spirit stones. NPCFOE-001: every npc_enemy/spar_enemy caller passes the player, the
+    floor never exceeds the realm peak, `person_foes` documented and validated. SKIP-002: wake_day only returns days
+    after today (no 0-day chores), request eve skipped when it is today; WU-538's setting gates both meditation and
+    chores. TEACH-001/WU-537: lesson keys match Folk's "npc:index"; no focus change in the menu. C-365 follows its spec
+    (python/toad are sect-mission hunts, not great-slot beasts; ordinary encounters keep the plain ones).
+  - Rendered Qingshi and Withered Bone Marsh in winter for GFX-148 (landed unrendered): snow banks on road verges and
+    blob shadows read fine.
+  - Notes, not filed: NPCFOE-001 (person foes x1.25, stage floor -1), C-364 and C-365 change combat balance and none ran
+    tools/balance.sh --check; QA-219 was filed before NPCFOE-001/C-365 landed, so its refresh should attribute them too.
+    SKIP-002's chore wake does not add WU-538's one-time "(turn this off in Settings)" tip (only meditation does).
