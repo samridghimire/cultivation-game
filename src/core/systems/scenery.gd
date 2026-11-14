@@ -1298,6 +1298,58 @@ static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: 
 		"look": look, "vertical": vertical}
 
 
+## GFX-143: the layout of a rented field plot inside `rect` (GFX-140's field_layout look at the plot's own size). `stage` is the
+## plot's crop state: -1 empty (bare furrows), 0..3 the growth stage of its most advanced crop (FieldPlots.growth_stage; 3 = ripe).
+## Returns field_layout's keys plus `border` (1-2 low wattle/stone strips, Rect2, along the sides picked by the seed, outside the
+## furrows), `crop_style` ("" | sprout | young | leafy | ripe), `crop_color`, `snow` (winter troughs) and `ripe`.
+## Crops show whatever the season (a frozen field keeps its crop); empty plots show none.
+static func plot_layout(rect: Rect2, seed_value: int, season: String, stage: int, no_snow: bool = false) -> Dictionary:
+	var lay := field_layout(rect, seed_value, "Summer", no_snow)
+	var snow := is_snowy(season) and not no_snow
+	var look: Dictionary = lay["look"].duplicate()
+	look["snow"] = snow
+	var style := ""
+	var color := Color("00000000")
+	match stage:
+		0:
+			style = "sprout"
+			color = Color("8fd16a")
+		1:
+			style = "young"
+			color = Color("6fbf4c")
+		2:
+			style = "leafy"
+			color = Color("3f8a30")
+		3:
+			style = "ripe"
+			color = Color("d9aa3a")
+	if style == "":
+		lay["crops"] = [] as Array[Vector2]
+	look["style"] = style if style != "" else "bare"
+	look["color"] = color
+	look["sheaves"] = false
+	lay["look"] = look
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|border" % seed_value)
+	var border: Array[Rect2] = []
+	var first := rng.randi_range(0, 3)
+	var picks: Array[int] = [first]
+	if rng.randf() < 0.5:
+		picks.append((first + 1) % 4)
+	for side: int in picks:
+		match side:
+			0: border.append(Rect2(rect.position.x + 2.0, rect.position.y, rect.size.x - 4.0, 3.0))
+			1: border.append(Rect2(rect.end.x - 3.0, rect.position.y + 2.0, 3.0, rect.size.y - 4.0))
+			2: border.append(Rect2(rect.position.x + 2.0, rect.end.y - 3.0, rect.size.x - 4.0, 3.0))
+			_: border.append(Rect2(rect.position.x, rect.position.y + 2.0, 3.0, rect.size.y - 4.0))
+	lay["border"] = border
+	lay["crop_style"] = style
+	lay["crop_color"] = color
+	lay["snow"] = snow
+	lay["ripe"] = stage == 3
+	return lay
+
+
 ## GFX-043: the newest footprint list: `prints` plus `pos`, oldest dropped beyond `cap` (default 12).
 static func add_footprint(prints: Array, pos: Vector2, cap: int = 12) -> Array:
 	var out := prints.duplicate()

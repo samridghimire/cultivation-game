@@ -58,56 +58,43 @@ func draw_generated_art() -> bool:
 	var plot_key := FieldPlots.key(GameState.current_region, place) if not place.is_empty() else ""
 	var today := GameClock.total_days
 	var rented := not place.is_empty() and GameState.player != null and FieldPlots.rented(GameState.player, plot_key, today)
+	var crops_now: Array = GameState.player.field_plots.get(plot_key, {}).get("crops", []) if not place.is_empty() and GameState.player != null else []
+	var stage := -1  # GFX-143: the plot's most advanced crop (empty = bare furrows)
+	for crop: Dictionary in crops_now:
+		stage = maxi(stage, FieldPlots.growth_stage(int(crop["days_left"]), FieldPlots.crop_total_days(place, String(crop["item"]))))
+	var no_snow := bool(GameState.data.regions.get(GameState.current_region, {}).get("map", {}).get("no_snow", false))
+	var season := Calendar.season_of(GameClock.total_days)
+	var lay := Scenery.plot_layout(rect, hash("%s|%s" % [plot_key, size]), season, stage, no_snow)
 	var soil := color if rented else color.lightened(0.12)
-	var edge := Scenery.ragged_outline(rect, hash("%s|%s" % [plot_key, size]), 14.0, 3.0)  # GFX-140: ragged tilled earth
-	draw_colored_polygon(edge, soil)
-	var closed := edge.duplicate()
-	closed.append(edge[0])
+	var outline: PackedVector2Array = lay["outline"]
+	draw_colored_polygon(outline, soil.darkened(0.15))
+	var vertical: bool = lay["vertical"]
+	for row: Dictionary in lay["rows"]:
+		var band: Rect2 = row["rect"]
+		draw_rect(band, soil.darkened(0.4) if bool(row["dark"]) else soil.lightened(0.05))
+		if bool(row["dark"]) and bool(lay["snow"]):
+			draw_rect(band.grow_individual(0, -1, 0, -1) if not vertical else band.grow_individual(-1, 0, -1, 0), Color(0.92, 0.96, 1.0, 0.8))
+	var closed := outline.duplicate()
+	closed.append(outline[0])
 	draw_polyline(closed, Color(0.16, 0.11, 0.07), 2.0)
-	for i in 4:
-		var y := rect.position.y + 8.0 + i * (size.y - 14.0) / 3.0
-		draw_line(Vector2(rect.position.x + 4.0, y), Vector2(rect.end.x - 4.0, y), soil.darkened(0.3), 2.0)
-	if place.is_empty() or GameState.player == null:
-		return true
-	var tilled := maxi(1, int(place.get("plots", 1)))  # GFX-096: each plot is a tilled bed, empty until planted
-	for i in tilled:
-		var bx := rect.position.x + size.x * (i + 1.0) / (tilled + 1.0)
-		var bed := Rect2(bx - 12.0, rect.position.y + size.y * 0.35, 24.0, size.y * 0.5)
-		draw_rect(bed, soil.darkened(0.25))
-		for j in 3:
-			draw_line(Vector2(bed.position.x + 2.0, bed.position.y + 4.0 + j * (bed.size.y - 8.0) / 2.0), Vector2(bed.end.x - 2.0, bed.position.y + 4.0 + j * (bed.size.y - 8.0) / 2.0), soil.darkened(0.45), 2.0)
-	if rented:  # rope marker along the edges
+	for strip: Rect2 in lay["border"]:  # a low wattle fence on one or two sides only
+		draw_rect(strip, Color("7a5a38"))
+		draw_rect(Rect2(strip.position, Vector2(strip.size.x, 1.0)) if strip.size.x > strip.size.y else Rect2(strip.position, Vector2(1.0, strip.size.y)), Color("a8814e"))
+		if bool(lay["snow"]):
+			draw_rect(Rect2(strip.position, Vector2(strip.size.x, 1.0)) if strip.size.x > strip.size.y else Rect2(strip.position, Vector2(1.0, strip.size.y)), Color(0.94, 0.97, 1.0))
+	var cstyle: String = lay["crop_style"]
+	var ccolor: Color = lay["crop_color"]
+	var ch := {"sprout": 3.0, "young": 5.0, "leafy": 7.0, "ripe": 8.0}.get(cstyle, 0.0) as float
+	for p: Vector2 in lay["crops"]:
+		draw_rect(Rect2(p + Vector2(-1.5, -ch), Vector2(3, ch)), ccolor)
+		draw_rect(Rect2(p + Vector2(-1.5, -ch), Vector2(3, 1.5)), ccolor.lightened(0.25))
+	if rented:  # rope marker at the corners
 		var rope := Color("c9b27a")
 		for corner in [rect.position, Vector2(rect.end.x, rect.position.y), Vector2(rect.position.x, rect.end.y), rect.end]:
 			draw_rect(Rect2(corner - Vector2(2, 2), Vector2(4, 4)), rope)
-		draw_line(rect.position + Vector2(2, 2), Vector2(rect.end.x - 2, rect.position.y + 2), rope, 1.0)
-		draw_line(Vector2(rect.position.x + 2, rect.end.y - 2), rect.end - Vector2(2, 2), rope, 1.0)
-	var crops: Array = GameState.player.field_plots.get(plot_key, {}).get("crops", [])
-	var slots := maxi(1, int(place.get("plots", 1)))
-	for i in mini(crops.size(), slots):
-		var crop: Dictionary = crops[i]
-		var base := Vector2(rect.position.x + size.x * (i + 1.0) / (slots + 1.0), rect.position.y + size.y * 0.65)
-		var total := FieldPlots.crop_total_days(place, String(crop["item"]))
-		_draw_crop(base, FieldPlots.growth_stage(int(crop["days_left"]), total), String(crop["item"]))
-	if FieldPlots.is_frozen(place, today):
-		draw_rect(rect, Color(0.8, 0.9, 1.0, 0.3))
+	if FieldPlots.is_frozen(place, GameClock.total_days) if not place.is_empty() else false:
+		draw_rect(rect, Color(0.8, 0.9, 1.0, 0.2))
 	return true
-
-
-func _draw_crop(base: Vector2, stage: int, item_id: String) -> void:
-	var px := float(Sprites.scale())  # GFX-033: line weights and the fruit follow the pixel scale
-	var green := Color("8fd16a") if stage < 2 else Color("5fae44")
-	var height: float = crop_height(stage)
-	draw_line(base, base + Vector2(0, -height), green, px)
-	if stage >= 1:
-		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(-5, -height * 0.8), green, px)
-		draw_line(base + Vector2(0, -height * 0.5), base + Vector2(5, -height * 0.8), green, px)
-	if stage >= 2:
-		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(-7, -height), green, px)
-		draw_line(base + Vector2(0, -height * 0.8), base + Vector2(7, -height), green, px)
-	if stage == 3:
-		var tint: Color = ItemIcon.TINTS[absi(item_id.hash()) % ItemIcon.TINTS.size()]
-		draw_rect(Rect2(base + Vector2(-px, -height - 2 * px), Vector2(2 * px + 1, 2 * px + 1)), tint)
 
 
 ## World-pixel height of a crop by growth stage 0..3: sprouts 4-6 px, ripe about a villager's head (16).

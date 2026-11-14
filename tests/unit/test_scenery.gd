@@ -554,6 +554,26 @@ func test_field_layout_stays_inside_and_is_deterministic() -> void:
 	assert_true(Scenery.field_layout(Rect2(0, 0, 80, 150), 1, "Spring")["vertical"])
 
 
+## GFX-143: a rented plot uses field_layout rows for its rect, borders 1-2 sides, shows crops by stage and snow in winter.
+func test_plot_layout_follows_the_plot_state() -> void:
+	var r := Rect2(0, 0, 80, 50)
+	var base := Scenery.field_layout(r, 5, "Summer")
+	var empty := Scenery.plot_layout(r, 5, "Summer", -1)
+	assert_eq((empty["rows"] as Array).size(), (base["rows"] as Array).size())
+	assert_eq((empty["crops"] as Array).size(), 0, "empty plot: bare furrows")
+	assert_gt((Scenery.plot_layout(r, 5, "Summer", 1)["crops"] as Array).size(), 0)
+	assert_true(Scenery.plot_layout(r, 5, "Summer", 3)["ripe"])
+	assert_eq(Scenery.plot_layout(r, 5, "Summer", 3)["crop_color"], Color("d9aa3a"))
+	assert_false(Scenery.plot_layout(r, 5, "Summer", 2)["ripe"])
+	for s in 12:
+		var n := (Scenery.plot_layout(r, s, "Summer", -1)["border"] as Array).size()
+		assert_true(n >= 1 and n <= 2, "border on 1-2 sides")
+	assert_true(Scenery.plot_layout(r, 5, "Winter", -1)["snow"])
+	assert_false(Scenery.plot_layout(r, 5, "Winter", -1, true)["snow"])
+	assert_false(Scenery.plot_layout(r, 5, "Summer", -1)["snow"])
+	assert_eq(Scenery.plot_layout(r, 5, "Winter", 0)["crop_style"], "sprout", "a frozen field keeps its crop")
+
+
 ## WU-500: at every project stage every jetty post stands in the water or within 6 px of the pond's rim.
 func test_jetty_posts_stand_in_the_water() -> void:
 	var region: Dictionary = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data.regions["qingshi_village"]
