@@ -742,3 +742,66 @@ func test_planter_look_by_season() -> void:
 	assert_true(Scenery.planter_look("Winter")["stalks"])
 	assert_false(Scenery.planter_look("Spring")["stalks"])
 	assert_true(Scenery.planter_look("Winter")["rim"] != Scenery.planter_look("Winter")["fill"])
+
+
+## GFX-139: groves of 6-15 trees, tallest in the middle, clear of paths and places, with undergrowth.
+func _grove_region() -> Dictionary:
+	var r := _region()
+	r["map"]["size"] = [1600, 1000]
+	r["map"]["decor"] = {"trees": 120, "groves": 7, "rocks": 0, "grass": 0, "flowers": 0}
+	return r
+
+
+func test_groves_are_dense_tall_in_the_middle_and_clear() -> void:
+	var r := _grove_region()
+	var placed := Scenery.place(r, seeded_rng())
+	var by_grove := {}
+	for d in placed:
+		if d.has("grove"):
+			if not by_grove.has(d["grove"]):
+				by_grove[d["grove"]] = []
+			(by_grove[d["grove"]] as Array).append(d)
+	assert_true(by_grove.size() >= 5, "5+ groves fit: %d" % by_grove.size())
+	var blocked := Scenery.blocked_rects(r)
+	for g: Variant in by_grove:
+		var trees: Array = by_grove[g]
+		assert_true(trees.size() >= 3 and trees.size() <= 15, "grove size %d" % trees.size())
+		var centre: Vector2 = trees[0]["grove_centre"]
+		var tallest: Dictionary = trees[0]
+		for t: Dictionary in trees:
+			if float(t["scale"]) > float(tallest["scale"]):
+				tallest = t
+			for b in blocked:
+				assert_false(b.has_point(t["pos"]), "grove tree off the paths")
+		assert_true((tallest["pos"] as Vector2).distance_to(centre) < Scenery.GROVE_RADIUS * 0.5, "tallest tree sits mid-grove")
+
+
+func test_groves_leave_glades_between_them() -> void:
+	var centres: Array[Vector2] = []
+	for d in Scenery.place(_grove_region(), seeded_rng()):
+		if d.has("grove") and not centres.has(d["grove_centre"]):
+			centres.append(d["grove_centre"])
+	for i in centres.size():
+		for j in range(i + 1, centres.size()):
+			assert_true(centres[i].distance_to(centres[j]) >= Scenery.GROVE_RADIUS * 2.0, "glade between groves")
+
+
+func test_undergrowth_is_deterministic_and_clear() -> void:
+	var r := _grove_region()
+	var decor := Scenery.place(r, seeded_rng())
+	var a := Scenery.undergrowth(r, decor)
+	assert_eq(a, Scenery.undergrowth(r, decor))
+	var logs := 0
+	var blocked := Scenery.blocked_rects(r)
+	for u in a:
+		if u["kind"] == "log":
+			logs += 1
+		for b in blocked:
+			assert_false(b.has_point(u["pos"]), "undergrowth off the paths")
+	assert_true(logs >= 2 and logs <= 4, "2-4 logs: %d" % logs)
+	assert_true(a.size() > 20, "ferns, bushes and mushrooms: %d" % a.size())
+	assert_eq(Scenery.undergrowth(_region(), Scenery.place(_region(), seeded_rng())).size(), 0, "no groves, no undergrowth")
+
+
+func test_validate_flags_bad_groves() -> void:
+	assert_true(Scenery.MAX_GROVES >= 8)

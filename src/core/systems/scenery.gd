@@ -20,7 +20,11 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "rock_clusters", "edge_belt"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "groves", "rock_clusters", "edge_belt"]
+## map.decor.groves (GFX-139): dense groves of 6-15 trees, the tallest in the middle, with open glades between them.
+const MAX_GROVES := 10
+const GROVE_RADIUS := 95.0
+const GROVE_GAP := 40.0
 ## map.decor.rock_clusters (GFX-053): boulder groups of 3-6 rocks in 2-3 sizes, seeded before the scatter.
 const MAX_ROCK_CLUSTERS := 12
 const ROCK_CLUSTER_RADIUS := 45.0
@@ -76,6 +80,9 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 		var color := Color(String(cfg[kind + "_color"]))
 		var budget := clampi(int(cfg[count_key(kind)]), 0, MAX_COUNT)
 		if kind == "tree":
+			var grove_centres: Array[Vector2] = []
+			for g in clampi(int(cfg.get("groves", 0)), 0, MAX_GROVES):
+				budget -= _place_grove(out, cfg, color, budget, size, blocked, spots, rng, grove_centres, g)
 			for c in clampi(int(cfg.get("clusters", 0)), 0, MAX_CLUSTERS):
 				budget -= _place_clump(out, cfg, color, budget, size, blocked, spots, rng)
 		if kind == "rock":
@@ -162,6 +169,89 @@ static func _place_clump(out: Array[Dictionary], cfg: Dictionary, color: Color, 
 				placed += 1
 				break
 	return placed
+
+
+## GFX-139: a grove of 6-15 trees round a clear centre, scale falling from the middle out (tallest in the middle).
+## Groves keep GROVE_GAP + both radii apart so glades stay open. Items carry "grove": index. Returns trees placed.
+static func _place_grove(out: Array[Dictionary], cfg: Dictionary, color: Color, budget: int, size: Vector2,
+		blocked: Array[Rect2], spots: Array[Vector2], rng: RandomNumberGenerator, centres: Array[Vector2], index: int) -> int:
+	var want := mini(rng.randi_range(6, 15), budget)
+	if want <= 0:
+		return 0
+	var radius := GROVE_RADIUS * clampf(float(want) / 12.0, 0.6, 1.1)
+	var centre := Vector2.ZERO
+	var found := false
+	for attempt in TRIES * 4:
+		centre = Vector2(rng.randf_range(EDGE + radius, size.x - EDGE - radius), rng.randf_range(EDGE + radius, size.y - EDGE - radius))
+		var apart := true
+		for other in centres:
+			if other.distance_to(centre) < GROVE_RADIUS * 2.0 + GROVE_GAP:
+				apart = false
+				break
+		if apart and is_clear(centre, blocked, spots):
+			found = true
+			break
+	if not found:
+		return 0
+	centres.append(centre)
+	var placed := 0
+	for i in want:
+		for attempt in TRIES:
+			var d := 0.0 if i == 0 else sqrt(rng.randf()) * radius
+			var pos := centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * d
+			if pos.x > EDGE and pos.y > EDGE and pos.x < size.x - EDGE and pos.y < size.y - EDGE and is_clear(pos, blocked, spots):
+				var item := _decor_item("tree", pos, color, cfg, rng)
+				item["scale"] = lerpf(1.5, 0.8, d / radius) * rng.randf_range(0.94, 1.06)
+				item["grove"] = index
+				item["grove_centre"] = centre
+				item["grove_radius"] = radius
+				out.append(item)
+				placed += 1
+				break
+	return placed
+
+
+## GFX-139: undergrowth for the groves in `decor` ([{kind: "fern"|"bush"|"log"|"mushroom", pos, scale}]): 2-4 fallen logs
+## in all, ferns/bushes and mushroom clusters under the groves, never on paths, places, npc_spots or spawn.
+static func undergrowth(region: Dictionary, decor: Array[Dictionary]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var groves := {}
+	for d in decor:
+		if d.has("grove") and not groves.has(d["grove"]):
+			groves[d["grove"]] = d
+	if groves.is_empty():
+		return out
+	var blocked := blocked_rects(region)
+	var spots: Array[Vector2] = []
+	for s in region.get("npc_spots", []):
+		spots.append(Vector2(float(s[0]), float(s[1])))
+	if region.has("spawn"):
+		spots.append(Vector2(float(region["spawn"][0]), float(region["spawn"][1])))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([str(region.get("id", "")), "undergrowth"])
+	var keys: Array = groves.keys()
+	keys.sort()
+	var logs := 0
+	var want_logs := rng.randi_range(2, 4)
+	for k: Variant in keys:
+		var g: Dictionary = groves[k]
+		var centre: Vector2 = g["grove_centre"]
+		var radius: float = g["grove_radius"]
+		var plan: Array[String] = []
+		for i in rng.randi_range(5, 9):
+			plan.append("fern" if rng.randf() < 0.6 else "bush")
+		for i in rng.randi_range(1, 2):
+			plan.append("mushroom")
+		if logs < want_logs:
+			plan.append("log")
+			logs += 1
+		for kind in plan:
+			for attempt in TRIES:
+				var pos := centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * sqrt(rng.randf()) * radius * 1.1
+				if is_clear(pos, blocked, spots):
+					out.append({"kind": kind, "pos": pos, "scale": rng.randf_range(0.8, 1.2), "flip": rng.randf() < 0.5})
+					break
+	return out
 
 
 ## GFX-053: a group of 3-6 rocks in 2-3 sizes (scale 0.7..1.9) around a clear centre; returns how many were placed.
@@ -1007,6 +1097,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CLUSTERS:
 					errors.append("Region '%s' map.decor.clusters must be 0-%d" % [region["id"], MAX_CLUSTERS])
+			elif key == "groves":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_GROVES:
+					errors.append("Region '%s' map.decor.groves must be 0-%d" % [region["id"], MAX_GROVES])
 			elif key == "edge_belt":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_EDGE_BELT:
 					errors.append("Region '%s' map.decor.edge_belt must be 0-%d" % [region["id"], MAX_EDGE_BELT])

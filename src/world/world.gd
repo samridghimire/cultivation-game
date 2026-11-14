@@ -45,6 +45,8 @@ var _last_label_pos := Vector2.INF
 var _region: Dictionary = {}
 ## Scenery.place() output, drawn under everything else.
 var _decor: Array[Dictionary] = []
+## GFX-139: Scenery.undergrowth of the region's tree groves, drawn under the decor.
+var _undergrowth: Array[Dictionary] = []
 var _square: Dictionary = {}  ## GFX-131: Scenery.village_square of a map.square region, else empty
 var _yards: Dictionary = {}  ## GFX-127: Scenery.village_yards of a map.yards region, else empty
 var _market_dress: Dictionary = {}  ## GFX-126: Scenery.market_props of a map.market region, else empty
@@ -511,6 +513,8 @@ func _build_decor() -> void:
 				if (it["rect"] as Rect2).grow(6.0).has_point(d["pos"]):
 					return false
 			return true)
+	_undergrowth = Scenery.undergrowth(_region, _decor)
+	_undergrowth.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
 
@@ -1232,6 +1236,8 @@ func _draw() -> void:
 	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
+	for u in _undergrowth:
+		_draw_undergrowth(u)
 	for d in _decor:
 		_draw_decor(d)
 	_draw_margins(map, rid)
@@ -2429,6 +2435,44 @@ func _draw_tree_bamboo(p: Vector2, k: float, c: Color) -> void:
 			y += 6.0
 		draw_line(p + Vector2(x, 12.0 - h) * k, p + Vector2(x + 5, 15.0 - h) * k, c, 2.0)
 		draw_line(p + Vector2(x, 12.0 - h) * k, p + Vector2(x - 5, 15.0 - h) * k, c, 2.0)
+
+
+## GFX-139: ferns, bushes, mushroom clusters and fallen logs under a grove; snow-covered mounds in winter.
+func _draw_undergrowth(u: Dictionary) -> void:
+	var p: Vector2 = u["pos"]
+	var k: float = u["scale"]
+	var sgn := -1.0 if bool(u.get("flip", false)) else 1.0
+	var snowy := Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false))
+	var leaf := Color(String(_region.get("map", {}).get("decor", {}).get("grass_color", "35603f"))).darkened(0.1)
+	match String(u["kind"]):
+		"fern":
+			if snowy:
+				draw_colored_polygon(PackedVector2Array([p + Vector2(-6, 3) * k, p + Vector2(-3, -3) * k, p + Vector2(3, -3) * k, p + Vector2(6, 3) * k]), Color("e4ecf2"))
+				draw_line(p + Vector2(-5, 3) * k, p + Vector2(5, 3) * k, Color("a9b8c6"), 1.5)
+			else:
+				for a in [-0.9, -0.45, 0.0, 0.45, 0.9]:
+					draw_line(p, p + Vector2(sin(a) * 9.0 * sgn, -cos(a) * 9.0) * k, leaf.lightened(0.1 * absf(a)), 1.5)
+		"bush":
+			var col := Color("e4ecf2") if snowy else leaf.darkened(0.1)
+			draw_circle(p + Vector2(-4, 0) * k, 5.0 * k, col)
+			draw_circle(p + Vector2(4, 0) * k, 5.5 * k, col.lightened(0.08))
+			draw_circle(p + Vector2(0, -3) * k, 5.0 * k, col.lightened(0.15))
+		"mushroom":
+			if snowy:
+				draw_circle(p, 4.0 * k, Color("dbe5ee"))
+				draw_circle(p + Vector2(5, 1) * k, 3.0 * k, Color("e8eff5"))
+			else:
+				for o: Vector2 in [Vector2(-4, 0), Vector2(3, 1), Vector2(0, -3)]:
+					draw_line(p + o * k, p + (o + Vector2(0, 3)) * k, Color("e8e0cc"), 1.5)
+					draw_circle(p + o * k, 2.2 * k, Color("b8553a"))
+		"log":
+			var a := p + Vector2(-13, 0) * k * sgn
+			var b := p + Vector2(13, 2) * k * sgn
+			draw_line(a, b, Color("4a3524"), 6.0 * k)
+			draw_line(a + Vector2(0, -2), b + Vector2(0, -2), Color("6a4e34"), 2.0 * k)
+			draw_circle(b, 3.0 * k, Color("8a6a46"))
+			if snowy:
+				draw_line(a + Vector2(0, -3.5 * k), b + Vector2(0, -3.5 * k), Color("eef3f7"), 3.0 * k)
 
 
 func _draw_decor(d: Dictionary) -> void:
