@@ -51,9 +51,13 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 	var stones_start: int = c.item_count("spirit_stone")
 	var density := Exploration.qi_density(gs.data, region_id)
 	var odds: Array[float] = []
+	var foes: Array = []
 	var evaded := [0]
 	var bus: Node = gs.get_node("/root/EventBus")
-	var on_fight := func(enemy: Dictionary) -> void: odds.append(Combat.win_chance(c, gs.data, enemy))
+	var on_fight := func(enemy: Dictionary) -> void:
+		var chance := Combat.win_chance(c, gs.data, enemy)
+		odds.append(chance)
+		foes.append([String(enemy.get("id", enemy.get("name", "?"))), chance])
 	var on_message := func(text: String, _category: String) -> void:
 		if text.contains("slip away before the"):
 			evaded[0] += 1
@@ -95,6 +99,7 @@ static func play(gs: Node, seed_value: int, realm_index: int, region_id: String,
 	var out := {
 		"evaded": evaded[0],
 		"odds": odds,
+		"foes": foes,
 		"stage_m3": stage_m3 if months > 3 else c.stage,
 		"stage_m6": stage_m6 if months > 6 else c.stage,
 		"won": LifeStats.get_stat(c, "fights_won"),
