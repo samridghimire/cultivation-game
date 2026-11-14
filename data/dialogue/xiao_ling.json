@@ -10,9 +10,17 @@
         {"label": "Let's cultivate together.", "next": "together", "days": 30, "favor": 10, "effects": {"qi": 200}},
         {"label": "Share a Spirit Herb with her.", "next": "herb", "effects": {"items": {"spirit_herb": -1}}, "favor": 15, "show_locked": true},
         {"label": "Ask how her cultivation is going.", "next": "progress"},
+        {"label": "Ask how she carries the well yokes all day.", "next": "yoke", "if": {"min_favor": 40, "not_knows_technique": "stone_skin"}, "show_locked": true, "hide_if": {"knows_technique": "stone_skin"}},
         {"label": "Mock her dreams.", "next": "mocked", "favor": -20, "effects": {"alignment": -10}},
         {"label": "Later, Ling.", "next": "end"}
       ]},
+    "yoke": {"text": "You stand like a reed, {player}. Two full buckets on a yoke since I was seven, and nothing bruises me now. Come by when we know each other better and I will show you how to take the weight.",
+      "choices": [
+        {"label": "Carry water with her. (5 days)", "next": "yoke_done", "days": 5, "if": {"min_favor": 40, "not_knows_technique": "stone_skin"}, "effects": {"learn_technique": "stone_skin"}},
+        {"label": "Not today.", "next": "greet"}
+      ]},
+    "yoke_done": {"text": "Knees soft, back straight, let the earth hold the weight. There. You are not a reed anymore.",
+      "choices": [{"label": "...", "next": "greet"}]},
     "together": {"text": "We sat by the Spirit Spring for a month. She chattered the whole time, but your qi feels steadier.",
       "speaker": "",
       "choices": [{"label": "Back to the village.", "next": "greet"}]},
