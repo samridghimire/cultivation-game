@@ -55,9 +55,8 @@ func _draw() -> void:
 		var x := wisp_x(w, _clock, _map_width)
 		var ww := float(w["w"])
 		var hh := float(w["h"])
-		for k in 4:  # GFX-145: 3-5 overlapping soft puffs of falling alpha, no hard edge
-			var t := float(k) / 3.0
-			var pw := ww * lerpf(0.5, 0.3, absf(t - 0.5) * 2.0 * 0.5 + 0.5 * float((i + k) % 2))
-			var cx := x + ww * lerpf(0.2, 0.8, t)
-			var ph := hh * (0.8 + 0.25 * float((i + k) % 3))
-			draw_texture_rect(tex, Rect2(cx - pw / 2.0, float(w["y"]) + (hh - ph) / 2.0, pw, ph), false, Color(0.96, 0.98, 1.0, float(w["alpha"]) * lerpf(1.0, 0.55, absf(t - 0.5) * 2.0)))
+		var puffs := Scenery.wisp_puffs(ww, hh, i + int(float(w["x0"])))
+		for k in range(puffs.size()):  # GFX-150: 3-5 overlapping soft ellipses, never a thin bar
+			var pr: Rect2 = puffs[k]
+			var fall := 1.0 - 0.4 * absf(pr.get_center().x / ww - 0.5) * 2.0
+			draw_texture_rect(tex, Rect2(Vector2(x, float(w["y"])) + pr.position, pr.size), false, Color(0.96, 0.98, 1.0, minf(float(w["alpha"]), 0.35) * fall))

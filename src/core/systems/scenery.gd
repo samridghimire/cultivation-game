@@ -1617,20 +1617,93 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 	for i in n:
 		var top := rect.position.y + step * float(i) + 1.0
 		var bottom := rect.position.y + step * float(i + 1) - 3.0
-		var left := rect.position.x + 2.0 + float((i + seed_value) % 2) * 5.0 + rng.randf_range(0.0, 3.0)
-		var right := rect.end.x - 2.0 - float((i + seed_value + 1) % 2) * 5.0 - rng.randf_range(0.0, 3.0)
-		var poly := PackedVector2Array()
-		var x := left
-		while x < right:
-			poly.append(Vector2(x, top + rng.randf_range(0.0, 2.0)))
-			x += 8.0
-		poly.append(Vector2(right, top + rng.randf_range(0.0, 2.0)))
-		# the downhill edge is slightly ragged too
-		for k in range(4, 0, -1):
-			var t := float(k) / 5.0
-			poly.append(Vector2(lerpf(left, right, t), bottom - rng.randf_range(0.0, 1.0)))
-		poly.append(Vector2(left, bottom))
+		# GFX-150: every other band is 10-20 % narrower, centred with a small seeded shift
+		var full := rect.size.x - 4.0
+		var width := full * (1.0 - (rng.randf_range(0.10, 0.20) if i % 2 == 1 else rng.randf_range(0.0, 0.03)))
+		var left := rect.position.x + 2.0 + (full - width) * rng.randf_range(0.3, 0.7)
+		var right := left + width
+		# the band follows an arc bulging 6-10 px downhill; the ends taper into the ground
+		var bulge := minf(rng.randf_range(6.0, 10.0), (bottom - top) * 0.35)
+		var h := bottom - bulge - top
+		var cols := maxi(int(width / 8.0), 4)
+		var upper := PackedVector2Array()
+		var lower := PackedVector2Array()
+		for k in cols + 1:
+			var t := float(k) / float(cols)
+			var arc := bulge * sin(PI * t)
+			var squeeze := (1.0 - clampf(minf(t, 1.0 - t) / 0.18, 0.0, 1.0)) * h * 0.4
+			upper.append(Vector2(lerpf(left, right, t), top + arc + rng.randf_range(0.0, 1.5)))
+			lower.append(Vector2(lerpf(left, right, t), top + arc + h - squeeze * 2.0 - rng.randf_range(0.0, 1.0)))
+		var poly := upper.duplicate()
+		for k in range(lower.size() - 1, -1, -1):
+			poly.append(lower[k])
 		out.append(poly)
+	return out
+
+
+## GFX-150: the heights of a ledge's 3-6 steps along its length as fractions of its full height: always one step at 1.0 and one at
+## <= 0.6, so the silhouette varies at least 40 %. `rising[i]` is true when step i is higher than the one before it (the lit top facet).
+static func ledge_steps(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "ledge_steps"])
+	var n := rng.randi_range(3, 6)
+	var heights: Array[float] = []
+	for i in n:
+		heights.append(rng.randf_range(0.4, 1.0))
+	var hi := rng.randi_range(0, n - 1)
+	var lo := (hi + rng.randi_range(1, n - 1)) % n
+	heights[hi] = 1.0
+	heights[lo] = rng.randf_range(0.4, 0.6)
+	var rising: Array[bool] = []
+	for i in n:
+		rising.append(i > 0 and heights[i] > heights[i - 1])
+	return {"heights": heights, "rising": rising}
+
+
+## GFX-150: 3-5 overlapping soft ellipses for a cloud wisp of `w` x `h`, [Rect2] relative to the wisp's top-left. Every ellipse is at
+## least 10 px tall and 16 px wide, so a wisp never reads as a thin bar.
+static func wisp_puffs(w: float, h: float, seed_value: int) -> Array[Rect2]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "wisp_puffs"])
+	var out: Array[Rect2] = []
+	var hh := maxf(h, 14.0)
+	for k in rng.randi_range(3, 5):
+		var pw := maxf(w * rng.randf_range(0.28, 0.5), 16.0)
+		var ph := clampf(hh * rng.randf_range(0.6, 1.0), 10.0, maxf(hh, 10.0))
+		var cx := w * (0.15 + 0.7 * rng.randf())
+		var cy := hh * rng.randf_range(0.35, 0.65)
+		out.append(Rect2(cx - pw / 2.0, cy - ph / 2.0, pw, ph))
+	return out
+
+
+## GFX-150: 4-8 large soft tonal patches on a scree map (lichen, rust, shale), [{center, rx, ry, kind, seed}], seeded by the region id;
+## no patch's bounding box touches a `keepouts` rect (paths, places).
+static func ridge_patches(region: Dictionary, keepouts: Array[Rect2]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	if String(map.get("ground_style", "")) != "scree":
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|ridge_patches")
+	var kinds := ["lichen", "rust", "shale"]
+	var want := rng.randi_range(4, 8)
+	for attempt in 80:
+		if out.size() >= want:
+			break
+		var rx := rng.randf_range(50.0, 110.0)
+		var ry := rng.randf_range(30.0, 60.0)
+		var c := Vector2(rng.randf_range(rx + 8.0, float(size_arr[0]) - rx - 8.0), rng.randf_range(ry + 8.0, float(size_arr[1]) - ry - 8.0))
+		var box := Rect2(c - Vector2(rx, ry), Vector2(rx, ry) * 2.0)
+		var blocked := false
+		for k in keepouts:
+			if k.intersects(box):
+				blocked = true
+				break
+		var kind: String = kinds[rng.randi() % 3]
+		var sd := rng.randi()
+		if not blocked:
+			out.append({"center": c, "rx": rx, "ry": ry, "kind": kind, "seed": sd})
 	return out
 
 

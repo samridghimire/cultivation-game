@@ -1744,6 +1744,9 @@ func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: f
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var n := maxi(6, int(r.size.x / 12.0))
+	var steps := Scenery.ledge_steps(seed_value)
+	var heights: Array = steps["heights"]
+	var lit_step: Array[bool] = []
 	var top: Array[Vector2] = []
 	var bot: Array[Vector2] = []
 	for i in n + 1:
@@ -1751,7 +1754,10 @@ func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: f
 		var taper := clampf(minf(t, 1.0 - t) / 0.15, 0.0, 1.0)  # 0 at the ends, 1 from 15% in
 		var squeeze := (1.0 - taper) * r.size.y * 0.3
 		var x := r.position.x + r.size.x * t
-		top.append(Vector2(x, r.position.y + squeeze + rng.randf() * minf(px * 3.0, r.size.y * 0.2)))
+		var si := mini(int(t * float(heights.size())), heights.size() - 1)  # GFX-150: stepped silhouette
+		var drop := r.size.y * (1.0 - float(heights[si])) * 0.7
+		top.append(Vector2(x, r.position.y + squeeze + drop + rng.randf() * minf(px * 3.0, r.size.y * 0.2)))
+		lit_step.append(bool(steps["rising"][si]))
 		var ty := top[top.size() - 1].y
 		bot.append(Vector2(x, maxf(r.end.y - squeeze - rng.randf() * minf(px * 2.0, r.size.y * 0.15), ty + maxf(r.size.y * 0.3, 4.0))))
 	var face := rock.darkened(0.38)
@@ -1766,6 +1772,12 @@ func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: f
 	for i in range(bot.size() - 1, -1, -1):
 		body.append(bot[i])
 	draw_colored_polygon(shadow, Color(0, 0, 0, 0.22))
+	var gsh := PackedVector2Array()  # GFX-150: a darker blob of shadow on the ground below the ledge
+	for i in bot.size():
+		gsh.append(bot[i] + Vector2(0, 2.0 + 4.0 * sin(PI * float(i) / float(bot.size() - 1))))
+	for i in range(bot.size() - 1, -1, -1):
+		gsh.append(bot[i] + Vector2(0, 1.0))
+	draw_colored_polygon(gsh, Color(0, 0, 0, 0.18))
 	draw_colored_polygon(body, face)
 	var fracs := [0.0, 0.3, 0.65, 1.0]
 	var shades := [rock.lightened(0.12), face.lightened(0.06), face.darkened(0.15)]
@@ -1776,12 +1788,18 @@ func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: f
 		for i in range(top.size() - 1, -1, -1):
 			strip.append(top[i].lerp(bot[i], fracs[s + 1]))
 		draw_colored_polygon(strip, shades[s])
+		if s == 0:  # the lit top facet only on the rising steps
+			for i in range(top.size() - 1):
+				if lit_step[i] and lit_step[i + 1]:
+					draw_colored_polygon(PackedVector2Array([top[i], top[i + 1], top[i + 1].lerp(bot[i + 1], 0.3), top[i].lerp(bot[i], 0.3)]), rock.lightened(0.12))
+				else:
+					draw_colored_polygon(PackedVector2Array([top[i], top[i + 1], top[i + 1].lerp(bot[i + 1], 0.3), top[i].lerp(bot[i], 0.3)]), face.lightened(0.04))
 		if s > 0:
 			var crack := PackedVector2Array()
 			for i in top.size():
 				crack.append(top[i].lerp(bot[i], fracs[s]) + Vector2(0, rng.randf_range(-0.8, 0.8)))
 			draw_polyline(crack, face.darkened(0.55), 1.5)
-	for c in rng.randi_range(2, 3):  # vertical fissures
+	for c in rng.randi_range(1, 2):  # vertical cracks
 		var i := rng.randi_range(1, maxi(top.size() - 2, 1))
 		draw_line(top[i].lerp(bot[i], 0.2), top[i].lerp(bot[i], 0.8) + Vector2(px, 0), face.darkened(0.5), 1.0)
 	if winter:
@@ -1810,6 +1828,12 @@ func _draw_scree_detail(map: Dictionary) -> void:
 		var sz: Array = p.get("size", [64, 64])
 		var psize := Vector2(float(sz[0]), float(sz[1]))
 		keep.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(8.0))
+	var patch_col := {"lichen": Color("7d8a6c"), "rust": Color("8c6a52"), "shale": Color("565e68")}
+	for pt: Dictionary in Scenery.ridge_patches(_region, keep):  # GFX-150: big soft tonal patches under the speckle
+		var pc: Vector2 = pt["center"]
+		var prect := Rect2(pc - Vector2(float(pt["rx"]), float(pt["ry"])), Vector2(float(pt["rx"]), float(pt["ry"])) * 2.0)
+		draw_colored_polygon(Scenery.ragged_outline(prect, int(pt["seed"]), minf(prect.size.y * 0.5, 30.0), 8.0), Color(patch_col[pt["kind"]], 0.22))
+		draw_colored_polygon(Scenery.ragged_outline(prect.grow(-prect.size.y * 0.22), int(pt["seed"]) + 3, 20.0, 5.0), Color(patch_col[pt["kind"]], 0.16))
 	for b: Dictionary in Scenery.scree_bands(_region):
 		var br: Rect2 = b["rect"]
 		var skip := false
@@ -1851,8 +1875,12 @@ func _draw_terrace_places() -> void:
 				minx = minf(minx, q.x)
 				maxx = maxf(maxx, q.x)
 			var riser := Color("6a5a48").darkened(0.08 * float(i))
-			draw_rect(Rect2(minx + 1.0, hi - 0.5, maxx - minx - 2.0, 3.0), riser)
-			draw_rect(Rect2(minx + 1.0, hi + 2.0, maxx - minx - 2.0, 1.0), riser.darkened(0.3))
+			var half := poly.size() / 2  # GFX-150: the riser follows the curved downhill edge
+			var edge := PackedVector2Array()
+			for q in range(half, poly.size()):
+				edge.append(poly[q] + Vector2(0, 1.5))
+			draw_polyline(edge, riser, 3.0)
+			draw_polyline(PackedVector2Array(Array(edge).map(func(v: Vector2) -> Vector2: return v + Vector2(0, 2.0))), riser.darkened(0.3), 1.0)
 			draw_colored_polygon(poly, Color("7a6a4a").lerp(Color("5a4a32"), 0.15 * float(i)))
 			var y := lo + 4.0
 			while y < hi - 2.0:
@@ -1863,7 +1891,7 @@ func _draw_terrace_places() -> void:
 					x += 7.0
 				y += 5.0
 			if snowy:
-				draw_polyline(poly.slice(0, poly.size() / 2 + 1), Color(0.95, 0.98, 1.0, 0.9), 2.0)
+				draw_polyline(poly.slice(0, poly.size() / 2), Color(0.95, 0.98, 1.0, 0.9), 2.0)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).
