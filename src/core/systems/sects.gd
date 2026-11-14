@@ -589,15 +589,23 @@ static func available_missions(c: CharacterData, data: GameData, flags: Dictiona
 	if c.is_rogue():
 		return out
 	for mission: Dictionary in data.sect_missions.values():
-		var sects: Array = mission.get("sects", [])
-		var needed_flag := String(mission.get("requires_flag", ""))
-		if needed_flag != "" and not flags.get(needed_flag, false):
-			continue
-		if mission_beneath(c, data, mission):
-			continue
-		if sects.is_empty() or sects.has(c.sect["id"]):
+		if mission_offered(c, data, mission, flags):
 			out.append(String(mission["id"]))
 	return out
+
+
+## True when `c`'s sect lists `mission` right now (sect, flag and max_realm gates; not rank or cooldown).
+## QA-213: the single-mission form of available_missions, so check_mission need not scan the board.
+static func mission_offered(c: CharacterData, data: GameData, mission: Dictionary, flags: Dictionary = {}) -> bool:
+	if c.is_rogue():
+		return false
+	var sects: Array = mission.get("sects", [])
+	var needed_flag := String(mission.get("requires_flag", ""))
+	if needed_flag != "" and not flags.get(needed_flag, false):
+		return false
+	if mission_beneath(c, data, mission):
+		return false
+	return sects.is_empty() or sects.has(c.sect["id"])
 
 
 ## MISSION-003: True when `mission` has a `max_realm` and `c` has risen above it.
@@ -706,7 +714,7 @@ static func check_mission(c: CharacterData, data: GameData, mission_id: String, 
 	var mission: Dictionary = data.sect_missions[mission_id]
 	if mission_beneath(c, data, mission):
 		return mission_rank_realm_reason(c, data, mission)
-	if not available_missions(c, data, flags).has(mission_id):
+	if not mission_offered(c, data, mission, flags):
 		return "Your sect has no need of this now."
 	var rank_realm := mission_rank_realm_reason(c, data, mission)
 	if rank_realm != "":

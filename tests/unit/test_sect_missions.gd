@@ -340,3 +340,17 @@ func test_foundation_missions_per_sect() -> void:
 			if String(m.get("min_realm", "")) == "foundation_establishment" and m.get("sects", []) == [sect_id] and int(m.get("min_rank", 0)) == 0:
 				n += 1
 		assert_true(n >= 2, "%s has 2+ rank-0 Foundation missions" % sect_id)
+
+
+## QA-213: mission_offered is the single-mission form of available_missions (check_mission relies on it).
+func test_mission_offered_matches_available_missions() -> void:
+	for sect_id: String in ["azure_cloud_sect", "myriad_treasure_pavilion"]:
+		for realm in [1, 3]:
+			var c := _disciple(sect_id)
+			c.realm_index = realm
+			var avail := Sects.available_missions(c, data(), {})
+			for m: Dictionary in data().sect_missions.values():
+				assert_eq(Sects.mission_offered(c, data(), m, {}), avail.has(String(m["id"])), "%s %s r%d" % [m["id"], sect_id, realm])
+	var rogue := new_character()
+	for m: Dictionary in data().sect_missions.values():
+		assert_false(Sects.mission_offered(rogue, data(), m, {}), "rogues are offered nothing")
