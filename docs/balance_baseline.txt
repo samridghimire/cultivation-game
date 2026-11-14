@@ -2,59 +2,59 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   37  161    -    37         0    1     0     0  11.4
+     1   37  161    -    37         0    1     0     0  11.0
         first win day 14 (wild_boar), style bought day -
-     2   14   79    -    14         0    4     0     0  13.3
+     2   14   79    -    14         0    4     0     0  12.8
         first win day 14 (wild_boar), style bought day -
-     3   14  138    -    14         0    1     1     0  10.8
+     3   14  138    -    14         0    1     1     0  10.3
         first win day 14 (wild_boar), style bought day -
-     4   14  172    -    14         0    1     0     0  11.1
+     4   14  172    -    14         0    1     0     0  10.5
         first win day 14 (wild_boar), style bought day -
-     5   14   45  291    14         0    1     0     0  11.5
+     5   14   45  291    14         0    1     0     0  11.1
         first win day 14 (wild_boar), style bought day -
-     6   14  170    -    14         0    2     0     0  9.8
+     6   14  170    -    14         0    2     0     0  9.3
         first win day 14 (wild_boar), style bought day -
-     7   14  107    -    14         0    2     0     0  12.8
+     7   14  107    -    14         0    2     0     0  12.2
         first win day 14 (wild_boar), style bought day -
-     8   14   82    -    14         0    1     1     0  12.9
+     8   14   82    -    14         0    1     1     0  12.3
         first win day 16 (wild_boar), style bought day -
-     9   14  200    -    14         0    2     0     0  10.6
+     9   14  200    -    14         0    2     0     0  10.2
         first win day 14 (wild_boar), style bought day -
-    10   14  107    -    14         0    2     0     0  10.5
+    10   14  107    -    14         0    2     0     0  10.1
         first win day 14 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 11.4 log lines/month
+Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 11.0 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
 Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR5": 2, "QR7": 2, "QR4": 3, "Foundation Establishment, Early": 1, "QR6": 2 }
 Stones at the QR9 bottleneck (QA-146): median 33 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 19, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 11, "withered_bone_marsh": 1 }; taken (times): {  }
-Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "artifact": 95, "world": 193, "progress": 331, "karma": 1 }
+Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "artifact": 95, "world": 169, "progress": 297, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   44  261    -    44         1   38     3     0  78.3
+     1   44  261    -    44         1   38     3     0  74.9
         first win day 14 (wild_boar), style bought day 27
-     2   14  143  868    14         1   40     6     0  76.6
+     2   14  143  868    14         1   40     6     0  73.2
         first win day 14 (wild_boar), style bought day 49
-     3   14  217    -    14         0   40     1     0  72.9
+     3   14  217    -    14         0   40     1     0  70.1
         first win day 14 (wild_boar), style bought day 44
-     4   14  267    -    14         0   39     0     0  68.8
+     4   14  267    -    14         0   39     0     0  65.9
         first win day 14 (wild_boar), style bought day 44
-     5   14   76  576    14         0   34     1     0  75.2
+     5   14   76  576    14         0   34     1     0  71.5
         first win day 14 (wild_boar), style bought day 45
-     6   14  202    -    14         0   39     2     0  79.1
+     6   14  202    -    14         0   39     2     0  76.3
         first win day 14 (wild_boar), style bought day 44
-     7   14  226    -    14         0   39     3     0  72.7
+     7   14  226    -    14         0   39     3     0  70.1
         first win day 14 (wild_boar), style bought day 43
-     8   14  147  907    14         0   46     4     0  78.0
+     8   14  147  907    14         0   46     4     0  75.8
         first win day 48 (mountain_bandit), style bought day 48
-     9   14  316    -    14         0   41     2     0  74.1
+     9   14  316    -    14         0   41     2     0  71.7
         first win day 14 (wild_boar), style bought day 48
-    10   14  147  887    14         1   42     2     0  77.3
+    10   14  147  887    14         1   42     2     0  75.3
         first win day 14 (wild_boar), style bought day 46
-Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 76.6 log lines/month
+Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 73.2 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 45 (10 seeds)
 Sect trials: Inner Disciple median day 699 (6/10 seeds); trials won 7, lost 4; stones at the last month: median 341
 Distinct action kinds per month: 7.2; months after the first with no log lines: 0
@@ -66,16 +66,16 @@ Road encounters (QA-118): 8/10 seeds met one; { "road_milestone_carver": 3, "roa
 Sect contribution (QA-146): m06 median 578, m12 median 1804; stage at m12: { "QR6": 2, "QR9": 3, "QR7": 4, "Foundation Establishment, Middle": 1 }
 Stones at the QR9 bottleneck (QA-146): median 188 (1/10 seeds reached it)
 Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "withered_bone_marsh": 1, "azure_peak": 3 }; taken (times): { "qingshi_village": 62, "misty_forest": 7 }
-Lines by category: { "warning": 240, "danger": 792, "info": 2021, "almanac": 1668, "artifact": 211, "world": 1318, "progress": 2443, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
+Lines by category: { "warning": 240, "danger": 792, "info": 1941, "almanac": 1668, "artifact": 211, "world": 1159, "progress": 2344, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  progress       19.2/month (busiest month in any seed: 97)
-  info           16.1/month (busiest month in any seed: 50)
+  progress       18.5/month (busiest month in any seed: 97)
+  info           15.3/month (busiest month in any seed: 48)
   almanac        13.4/month (busiest month in any seed: 47)
-  world          10.9/month (busiest month in any seed: 44)
+  world           9.1/month (busiest month in any seed: 34)
   danger          3.9/month (busiest month in any seed: 20)
   karma           2.4/month (busiest month in any seed: 23)
   artifact        1.9/month (busiest month in any seed: 21)
@@ -84,15 +84,15 @@ Posts per month by topic:
   social          0.0/month (busiest month in any seed: 1)
 Most repeated line templates (per month, averaged):
    1.42  The artifact drinks the change in you (+N energy, N in all).
-   1.12  Tomorrow: The Great Old Tusker walks Misty Forest.
+   1.10  Tomorrow: the carp will crowd the bank.
    1.00  You practice the Iron Fist for N days.
-   0.98  Tomorrow: good for fishing.
-   0.87  Tomorrow: good for gathering.
-   0.82  Tomorrow: fish rise to the bait.
-   0.77  Expect mostly clear weather in Qingshi Village.
-   0.75  <name> is delighted.
-   0.73  Tomorrow: heavy morning dew.
+   0.92  Tomorrow: the hillsides will be thick with herbs.
+   0.90  Tomorrow: the fish will rise to the bait.
+   0.83  Tomorrow: heavy dew will wake the herbs.
+   0.67  Tomorrow: market day at Travelling Market Stall (new wares each time).
    0.67  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
+   0.58  Mission complete: Drive Off the Den Wolves. (+N contribution, +N qi, Azure Cloud Sect reputation +N)
+   0.58  The Den Wolf collapses. (N rounds, N/N hp left; +N Mist Wolf Pelt, +N qi)
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -247,7 +247,7 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   fog_antler_stag            294 fights 288 wins  real  97%  rated  99%  deaths  0  291/0/3/0
   wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/4/86
   mountain_bandit             86 fights  86 wins  real 100%  rated 100%  deaths  0  85/0/0/1
-  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/46/34
+  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/47/33
   den_wolf                    79 fights  74 wins  real  93%  rated  96%  deaths  0  79/0/0/0
   salt_road_captain           50 fights  47 wins  real  94%  rated  92%  deaths  0  0/0/50/0
   blood_lotus_raider          36 fights  33 wins  real  91%  rated  95%  deaths  0  36/0/0/0
@@ -508,7 +508,7 @@ Per foe (QA-091): fights, wins, real win %, mean rated %, deaths, started by mis
   fog_antler_stag            294 fights 288 wins  real  97%  rated  99%  deaths  0  291/0/3/0
   wild_boar                   90 fights  89 wins  real  98%  rated  99%  deaths  0  0/0/4/86
   mountain_bandit             86 fights  86 wins  real 100%  rated 100%  deaths  0  85/0/0/1
-  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/46/34
+  drunk_bully_disciple        80 fights  77 wins  real  96%  rated  95%  deaths  0  0/0/47/33
   den_wolf                    79 fights  74 wins  real  93%  rated  96%  deaths  0  79/0/0/0
   salt_road_captain           50 fights  47 wins  real  94%  rated  92%  deaths  0  0/0/50/0
   blood_lotus_raider          36 fights  33 wins  real  91%  rated  95%  deaths  0  36/0/0/0
@@ -913,6 +913,7 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Foundatio vengeful_sect_elder    encounter wounded_traveller_ evadable                 entry   1%  peak  50%  talisman  42%  bare   0%  veteran on appearance  55%  HARD
   Core Form azure_grand_elder_shadow trial azure_cloud_sect rank  forced                   entry  65%  peak  96%  talisman  99%  bare   0%  veteran on appearance 100%  OK
   Core Form black_iron_bear_king   bounty black_iron_bear_king_ evadable                 entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
+  Core Form black_iron_bear_king   choice ridge_cracked_beast_w forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
   Core Form black_iron_bear_king   encounter mountain_bear_king evadable                 entry  41%  peak  90%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
   Core Form black_iron_bear_king   mission tear_bear_kings_hear forced                   entry  71%  peak  90%  talisman  96%  bare   0%  veteran on appearance 100%  OK
   Core Form black_iron_bear_king   realm drowned_yin_palace flo forced                   entry  24%  peak  90%  talisman  73%  bare   0%  veteran on appearance 100%  HARD
@@ -923,9 +924,15 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form blood_lotus_elder      mission purge_blood_lotus_el forced                   entry  71%  peak  89%  talisman  97%  bare   0%  veteran on appearance 100%  OK
   Core Form cloud_devouring_condor realm skyfall_thunder_pavili forced                   entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE
   Core Form demonic_cultivator     choice ridge_core_devourer_b forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Core Form gale_hawk              choice azure_high_trail_hawk forced                   entry  75%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form gale_hawk              choice ridge_wind_gap_hawk/F forced                   entry  75%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Core Form golden_abacus_guardian trial myriad_treasure_pavili forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
-  Core Form jade_python            encounter wild_python_lair   evadable                 entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
-  Core Form jade_python            mission slay_jade_python     forced                   entry  87%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form jade_python            choice marsh_jade_python_nes forced                   entry  75%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form jade_python            encounter wild_python_lair   evadable                 entry  75%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form jade_python            mission slay_jade_python     forced                   entry  75%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form mire_serpent           choice marsh_lantern_in_the_ forced                   entry  92%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form mire_serpent           choice marsh_mire_serpent_wa forced                   entry  92%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form mire_serpent           roamer withered_bone_marsh   evadable                 entry  92%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     encounter herbs_poison_toad  evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     encounter road_beast_tide_st evadable                 entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Core Form myriad_poison_toad     mission milk_poison_toad     forced                   entry  69%  peak 100%  talisman  98%  bare   0%  veteran on appearance 100%  OK
@@ -933,6 +940,8 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Core Form nether_ghost_king      encounter ruins_ghost_king   evadable                 entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
   Core Form nether_ghost_king      mission seal_ghost_king      forced                   entry  52%  peak  52%  talisman  95%  bare   0%  veteran on appearance 100%  OK
   Core Form nether_ghost_king      realm drowned_yin_palace flo forced                   entry   5%  peak  52%  talisman  38%  bare   0%  veteran on appearance 100%  HARD
+  Core Form storm_wildcat          choice ridge_storm_wildcat_d forced                   entry  95%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Core Form storm_wildcat          roamer myriad_peaks_ridge    evadable                 entry  95%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Core Form sword_madman           bounty sword_madman_bounty   evadable                 entry 100%  peak 100%  talisman 100%  bare  73%  veteran on appearance 100%  TRIVIAL
   Core Form thunder_patriarch_puppet trial thunder_patriarch_seat forced                   entry  52%  peak  99%  talisman  95%  bare   0%  veteran on appearance 100%  OK
   Core Form thunderwing_roc        bounty thunderwing_roc_bount evadable                 entry  30%  peak  92%  talisman  90%  bare   0%  veteran on appearance 100%  HARD
@@ -1047,7 +1056,7 @@ Win rate at stage 0 of each realm (no talismans):
   cloud_eagle                    0%         0%        63%       100%       100%
   cave_guardian                  0%         0%        26%       100%       100%
   demonic_cultivator             0%         0%        32%       100%       100%
-  jade_python                    0%         0%         0%        87%       100%
+  jade_python                    0%         0%         0%        75%       100%
   flame_tailed_fox               0%         0%        24%       100%       100%
   iron_horn_rhino                0%         0%         6%       100%       100%
   ice_soul_spider                0%         0%         5%       100%       100%
@@ -1120,6 +1129,9 @@ Win rate at stage 0 of each realm (no talismans):
   grey_fang_alpha                0%         0%        57%       100%       100%
   market_debt_collector          0%         0%        14%       100%       100%
   bandit_chieftain               0%         0%        71%       100%       100%
+  storm_wildcat                  0%         0%         0%        95%       100%
+  gale_hawk                      0%         0%         0%        75%       100%
+  mire_serpent                   0%         0%         0%        92%       100%
 
 Typical player vs a plain enemy of the same realm and stage (QA-007d target ~60-90%), and at the realm's peak vs a plain enemy one realm up:
   Qi Refining             stage 0:  95%  stage 4:  91%  stage 8:  84%   next realm:   0%
@@ -1186,7 +1198,7 @@ flagged: 0
 Peak curve, 100 fights per foe. Typical player vs the realm's own foes at their data stage.
   realm                      foes  Early   Peak  | player hp/atk/def at Peak | plain foe hp/atk/def at Peak | training atk/def/hp
   foundation_establishment     36   56%   96%  |  1133/ 283/ 202 |  1053/ 257/ 187 | 10/10/40
-  core_formation               14   57%   99%  |  3891/ 953/ 727 |  3580/ 878/ 667 | 13/13/52
+  core_formation               17   57%   99%  |  3891/ 953/ 727 |  3580/ 878/ 667 | 13/13/52
   nascent_soul                  8   41%   98%  | 13087/3219/2562 | 12004/2948/2317 | 16/16/64
   soul_formation                6   31%   91%  | 41397/10194/8261 | 39803/9793/7898 | 19/19/76
   void_refinement               6    8%   76%  | 123531/30411/24688 | 130783/32222/26536 | 22/22/88
@@ -1324,17 +1336,17 @@ Bounty-hunter sim: 10 seeds, 12 months, Core Formation layer 1, sword_madman_bou
   seed  bounties  hunt weeks  stones  stones/month  injuries  lives spent
      1         3           7     300          25.0         0            0
      2         3           8     300          25.0         0            0
-     3         3           6     300          25.0         0            0
+     3         3          13     300          25.0         0            0
      4         3           3     300          25.0         0            0
      5         3           5     300          25.0         0            0
-     6         3          12     300          25.0         0            0
-     7         3          13     300          25.0         0            0
-     8         3          18     300          25.0         0            0
+     6         3          10     300          25.0         0            0
+     7         3          14     300          25.0         0            0
+     8         3           9     300          25.0         0            0
      9         3           9     300          25.0         0            0
-    10         3          10     300          25.0         0            0
-Hunt weeks per bounty claimed: 3.0; fights won 39, lost 0 (100% won)
-Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 33.0 stones.
-Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 5.9x that).
+    10         3           5     300          25.0         0            0
+Hunt weeks per bounty claimed: 2.8; fights won 34, lost 0 (100% won)
+Gathering in fallen_star_market: 1.8 stones/week (best place). One bounty = 56.18 weeks of gather income; a week hunting earns 36.1 stones.
+Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a bounty week earns 6.4x that).
 
 
 ## fishing (Novice/Angler/Old Hand, 100 trips per cell)
@@ -1546,7 +1558,7 @@ First Foundation Establishment year: 10 seeds, sensed threats: slip away
   myriad_peaks_ridge rogue          7     0     0      0      0     744      1
       met 87 foes in all, evaded 10; stage by month 3/6/12: 0/1/1; 83 fights rated <50%: 4, 50-75%: 2, 75-95%: 11, >95%: 66
   myriad_peaks_ridge sect          16     0     0      0      0     618      2
-      met 170 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 177 fights rated <50%: 0, 50-75%: 1, 75-95%: 14, >95%: 162
+      met 171 foes in all, evaded 1; stage by month 3/6/12: 1/2/2; 177 fights rated <50%: 0, 50-75%: 1, 75-95%: 14, >95%: 162
   median of all runs: won 11 lost 1 fled 0 injuries 0 lives 0 stones 272 stage 0
   runs with no artifact life spent: 107 of 120
   rated odds of every fight fought (all runs): 1525 fights rated <50%: 154, 50-75%: 24, 75-95%: 259, >95%: 1088
@@ -1579,10 +1591,10 @@ First Foundation Establishment year: 10 seeds, sensed threats: fight
   myriad_peaks_ridge rogue          6     0     0      0      0     635      1
       met 82 foes in all, evaded 5; stage by month 3/6/12: 0/1/1; 81 fights rated <50%: 10, 50-75%: 3, 75-95%: 12, >95%: 56
   myriad_peaks_ridge sect          16     0     0      0      0     618      2
-      met 170 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 177 fights rated <50%: 0, 50-75%: 1, 75-95%: 14, >95%: 162
+      met 172 foes in all, evaded 0; stage by month 3/6/12: 1/2/2; 179 fights rated <50%: 1, 50-75%: 2, 75-95%: 14, >95%: 162
   median of all runs: won 10 lost 1 fled 0 injuries 0 lives 0 stones 216 stage 0
-  runs with no artifact life spent: 104 of 120
-  rated odds of every fight fought (all runs): 1590 fights rated <50%: 249, 50-75%: 27, 75-95%: 265, >95%: 1049
+  runs with no artifact life spent: 103 of 120
+  rated odds of every fight fought (all runs): 1592 fights rated <50%: 250, 50-75%: 28, 75-95%: 265, >95%: 1049
   median win share of fought fights: 91%
 
 ## first Core Formation year (seeds 1-10)
@@ -1593,29 +1605,29 @@ First Core Formation year: 10 seeds, sensed threats: slip away
       met 15 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 15 fights rated <50%: 2, 50-75%: 0, 75-95%: 0, >95%: 13
   qingshi_village sect              2     0     0      0      0      70      0
       met 17 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 17 fights rated <50%: 2, 50-75%: 0, 75-95%: 0, >95%: 15
-  misty_forest rogue                4     0     0      0      0    2595      0
-      met 35 foes in all, evaded 3; stage by month 3/6/12: 0/0/0; 32 fights rated <50%: 0, 50-75%: 1, 75-95%: 18, >95%: 13
-  misty_forest sect                 3     0     0      0      0    2891      0
-      met 38 foes in all, evaded 2; stage by month 3/6/12: 0/0/0; 36 fights rated <50%: 1, 50-75%: 1, 75-95%: 22, >95%: 12
+  misty_forest rogue                5     0     0      0      0    3039      0
+      met 53 foes in all, evaded 3; stage by month 3/6/12: 0/0/0; 50 fights rated <50%: 4, 50-75%: 1, 75-95%: 19, >95%: 26
+  misty_forest sect                 4     0     0      0      0    4891      0
+      met 59 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 58 fights rated <50%: 6, 50-75%: 1, 75-95%: 22, >95%: 29
   fallen_star_market rogue          1     0     0      0      0      34      0
       met 14 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 14 fights rated <50%: 2, 50-75%: 0, 75-95%: 0, >95%: 12
   fallen_star_market sect           1     0     0      0      0     109      0
       met 13 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 13 fights rated <50%: 2, 50-75%: 0, 75-95%: 0, >95%: 11
-  azure_peak rogue                  4     0     0      0      0    2550      0
-      met 36 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 36 fights rated <50%: 2, 50-75%: 1, 75-95%: 11, >95%: 22
-  azure_peak sect                   3     0     0      0      0    2222      1
-      met 26 foes in all, evaded 0; stage by month 3/6/12: 0/0/1; 26 fights rated <50%: 0, 50-75%: 1, 75-95%: 11, >95%: 14
-  withered_bone_marsh rogue         4     0     0      0      0    4040      0
-      met 39 foes in all, evaded 5; stage by month 3/6/12: 0/0/0; 34 fights rated <50%: 1, 50-75%: 1, 75-95%: 21, >95%: 11
-  withered_bone_marsh sect          4     0     0      0      0    4847      1
-      met 48 foes in all, evaded 2; stage by month 3/6/12: 0/0/1; 46 fights rated <50%: 1, 50-75%: 0, 75-95%: 31, >95%: 14
-  myriad_peaks_ridge rogue          1     0     0      0      0     165      1
-      met 16 foes in all, evaded 1; stage by month 3/6/12: 0/0/1; 15 fights rated <50%: 1, 50-75%: 0, 75-95%: 0, >95%: 14
-  myriad_peaks_ridge sect           3     0     0      0      0    4432      1
-      met 35 foes in all, evaded 0; stage by month 3/6/12: 0/1/1; 35 fights rated <50%: 0, 50-75%: 4, 75-95%: 8, >95%: 23
-  median of all runs: won 2 lost 0 fled 0 injuries 0 lives 0 stones 1085 stage 0
-  runs with no artifact life spent: 112 of 120
-  rated odds of every fight fought (all runs): 319 fights rated <50%: 14, 50-75%: 9, 75-95%: 122, >95%: 174
+  azure_peak rogue                  4     0     0      0      0    2150      0
+      met 42 foes in all, evaded 0; stage by month 3/6/12: 0/0/0; 42 fights rated <50%: 3, 50-75%: 2, 75-95%: 9, >95%: 28
+  azure_peak sect                   6     0     0      0      0    2277      0
+      met 55 foes in all, evaded 1; stage by month 3/6/12: 0/0/0; 54 fights rated <50%: 3, 50-75%: 1, 75-95%: 8, >95%: 42
+  withered_bone_marsh rogue         7     0     0      0      0    4180      0
+      met 80 foes in all, evaded 6; stage by month 3/6/12: 0/0/0; 74 fights rated <50%: 7, 50-75%: 3, 75-95%: 22, >95%: 42
+  withered_bone_marsh sect          8     0     0      0      0    6907      1
+      met 80 foes in all, evaded 4; stage by month 3/6/12: 0/0/1; 76 fights rated <50%: 4, 50-75%: 2, 75-95%: 36, >95%: 34
+  myriad_peaks_ridge rogue          4     0     0      0      0    3545      1
+      met 37 foes in all, evaded 1; stage by month 3/6/12: 0/0/1; 36 fights rated <50%: 0, 50-75%: 1, 75-95%: 11, >95%: 24
+  myriad_peaks_ridge sect           4     0     0      0      0    2217      2
+      met 46 foes in all, evaded 3; stage by month 3/6/12: 0/0/2; 43 fights rated <50%: 4, 50-75%: 0, 75-95%: 9, >95%: 30
+  median of all runs: won 3 lost 0 fled 0 injuries 0 lives 0 stones 1110 stage 0
+  runs with no artifact life spent: 102 of 120
+  rated odds of every fight fought (all runs): 492 fights rated <50%: 39, 50-75%: 11, 75-95%: 136, >95%: 306
   median win share of fought fights: 100%
 
 ## first hour, curious practiser (seeds 1-10, 12 months)
