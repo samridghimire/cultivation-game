@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-14 [C-364] Core Formation wilds have tougher, trickier foes; fewer Core fights are foregone conclusions.
+- 2026-11-14 [GUIDE-240] After three easy wins over the same beast, the HUD suggests a fair fight instead.
+- 2026-11-14 [LOG-007] The Creation Artifact's energy gains no longer post their own weekly line; they ride on the breakthrough line that caused them.
+- 2026-11-14 [GFX-148] Winter road verges get ragged snow banks, shadows under places are soft blobs, and the Reed Hall has a jetty to its pool.
+- 2026-11-14 [QA-218] Balance baseline refreshed: a curious player learns a first fighting style around day 45.
+- 2026-11-14 [GFX-147] Herb terraces step down the hill in ragged bands, and the Azure Cloud Hall court has a kerb, lanterns and a winter snow edge.
+- 2026-11-14 [SKIP-001] A long meditation wakes you for a festival, a hunted great beast, a ripe crop, rent, a request or a secret realm opening.
+- 2026-11-14 [GFX-146] The marsh boardwalk is a narrow, wobbling walk on pilings with missing boards over murky water.
+- 2026-11-14 [GUIDE-239] From day one the HUD tells you Hunter Ma teaches the Iron Fist and how to win his favor.
+- 2026-11-14 [C-360] Evening forecasts speak in a few words of the village almanac.
+- 2026-11-14 [GFX-145] Myriad Peaks Ridge gets jagged rock ledges, irregular boulders, ragged snow drifts and soft cloud puffs.
+- 2026-11-14 [WU-536] Easy fights show a short two-line report, with every blow one button away.
 - 2026-11-14 [GUIDE-238] Without a fighting style, the hint now names a villager who can teach you one and what they like, before the manual.
 - 2026-11-14 [LOG-006] A fight that was never in doubt gets a two-line summary (outcome and best blow) ready for the combat report.
 - 2026-11-14 [GFX-144] Qingshi's outskirts, Azure Peak, the marsh and Myriad Peaks Ridge grow real groves with fitting undergrowth.

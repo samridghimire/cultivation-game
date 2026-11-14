@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-15 (planner, 00:10 UTC)
+- 12 tasks landed (WU-536, GFX-145, C-360, GUIDE-239, GFX-146, SKIP-001, GFX-147, QA-218, GFX-148, LOG-007, GUIDE-240, C-364).
+  Review covered up to 80122b2 (SKIP-001 wake-on-ending and GUIDE-239 pronoun fixed inline; nothing filed). Live claims:
+  TEACH-001, GFX-138, C-354.
+- Planner shots (1280x720; default first hour; `--region=myriad_peaks_ridge,withered_bone_marsh,azure_peak,misty_forest`):
+  Qingshi, the day-1 Hunter Ma hint, the short combat report and Misty Forest good. GFX-145/146/147 landed but still read
+  boxy in a still frame: scree roads = full-width flagstone grid -> GFX-149 (spec file); ledges/wisps/terraces/ridge ground ->
+  GFX-150; Azure court sheet + ladder stair -> GFX-151; marsh vertical boardwalk + winter marsh -> GFX-152.
+- New: QA-219 (balance check for the six unmeasured changes + a sim that chats with the teacher) at the top of QA; LOG-008
+  waits on it. NPCFOE-001 and C-366 are planner defaults (DESIGN.md). C-365 great beasts, WU-538 wake setting, GUIDE-241.
+- Next planner: view GFX-149/150 shots when they land; write LOG-008's exact cuts from QA-219's Follow-ups.
+
 ## State on 2026-11-14 (planner, 18:10 UTC)
 - 12 tasks landed (GFX-141, C-361, SHOP-005, QA-213, LOG-005, GFX-143, GFX-142, C-363, SPOT-002, GFX-144, LOG-006, GUIDE-238).
   Review covered up to 8e0d43c (C-363 timed-flag crash, SPOT-002 day-turn stands, C-361 wording fixed inline; nothing filed).
