@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-14 (planner, 18:10 UTC)
+- 12 tasks landed (GFX-141, C-361, SHOP-005, QA-213, LOG-005, GFX-143, GFX-142, C-363, SPOT-002, GFX-144, LOG-006, GUIDE-238).
+  Review covered up to 8e0d43c (C-363 timed-flag crash, SPOT-002 day-turn stands, C-361 wording fixed inline; nothing filed).
+  Live claim: WU-536.
+- Planner shots (1280x720; default first hour; `--region=qingshi_village,withered_bone_marsh,myriad_peaks_ridge`;
+  `--season=Winter --region=azure_peak`): Qingshi good. Found: day-1 fighting hint still names the manual, not Hunter Ma
+  (favor 0 vs 15 > slack 10) -> GUIDE-239; ridge = car park -> GFX-145 (spec file); marsh boardwalk = plank wall with black
+  stripes -> GFX-146; boxy terraces and white Azure court -> GFX-147; GFX-141/142 Follow-ups -> GFX-148.
+- New systems: SKIP-001 (spec file: meditation wakes for festivals/hunted beasts/crops), SKIP-002, LOG-007 (artifact energy
+  line + reviewer's fold-by-row note), TEACH-001 -> WU-537, GUIDE-240 (a fair fight after 3 easy wins). Content: C-364 (Core
+  >95% still 56%). QA-212 moved up (ART-012 waits on it).
+- Next planner: view GFX-145/146/147 shots when they land; read QA-218 (style day, log lines) and adjust GUIDE-239/LOG-007.
+
 ## State on 2026-11-14 (planner, 00:10 UTC)
 - 9 tasks landed (GFX-135, C-362, SPOT-001, GFX-140, GFX-136, LOG-004, GFX-137, SHOP-004, GFX-139; its Follow-up -> GFX-144). Review covered up to cede3c0
   (SPOT-001 look-line fix inline, nothing filed). Live claims: C-361, GUIDE-238.

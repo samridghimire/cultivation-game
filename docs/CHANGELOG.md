@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-14 [GUIDE-238] Without a fighting style, the hint now names a villager who can teach you one and what they like, before the manual.
+- 2026-11-14 [LOG-006] A fight that was never in doubt gets a two-line summary (outcome and best blow) ready for the combat report.
+- 2026-11-14 [GFX-144] Qingshi's outskirts, Azure Peak, the marsh and Myriad Peaks Ridge grow real groves with fitting undergrowth.
+- 2026-11-14 [SPOT-002] Named villagers like Hunter Ma no longer stand on road crossings, at the arrival point or on top of each other.
+- 2026-11-14 [C-363] Once you know the Iron Fist, Hunter Ma stops offering the lesson and offers to spar with you instead.
+- 2026-11-14 [GFX-142] Ponds have lobed, ragged shores (snowy in winter), places stand on rough ground instead of plates, and the Reed Hall platform has notches.
+- 2026-11-14 [GFX-143] Farmer Tian's Spare Field and every rented plot look like tilled fields with furrows and crops by stage and season.
+- 2026-11-14 [LOG-005] Repeated practice really folds into one log line now, and the great-beast reminder only comes when you hunt that beast.
+- 2026-11-14 [QA-213] The economy balance sim runs twice as fast with identical output.
+- 2026-11-14 [SHOP-005] No hint or "who sells this" answer sends you for festival goods out of season.
+- 2026-11-14 [C-361] Seven new Core Formation encounters and three new Core foes on the ridge, in the deep bog and on Azure Peak.
+- 2026-11-14 [GFX-141] Roads show two wandering wheel tracks with footprints and ragged verges; the marsh boardwalk is old boards.
 - 2026-11-14 [GFX-139] Misty Forest grows in dense groves with glades, ferns, mushrooms and fallen logs instead of an even sprinkle of trees.
 - 2026-11-14 [SHOP-004] Buy hints never send you for festival goods out of season, and a shop remembers up to four errands per region, even after a save.
 - 2026-11-14 [GFX-137] The herb patch, quarry tailings, bog pool and abode sit on ragged ground instead of flat ellipse plates.
