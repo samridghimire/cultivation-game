@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-14 (planner, 00:10 UTC)
+- 8 tasks landed (GFX-135, C-362, SPOT-001, GFX-140, GFX-136, LOG-004, GFX-137, SHOP-004). Review covered up to cede3c0
+  (SPOT-001 look-line fix inline, nothing filed). Live claims: C-361, GFX-139, GUIDE-238.
+- Planner shots (1280x720; default first hour, `--season=Winter --region=qingshi_village,withered_bone_marsh,misty_forest`):
+  fields, marsh pools and villager spacing good. Found: winter roads = one row of centre dashes (GFX-124 rule) -> GFX-141 (spec
+  file, also ragged verges and the marsh boardwalk); jetty ponds still ellipses, frozen ones with a dotted ring, PixelPlace
+  plates, rectangular Reed Hall platform -> GFX-142 (spec file); spare field looks like a crate -> GFX-143; 10-line log for a
+  99% boar fight -> LOG-006 then WU-536; Hunter Ma on the arrival crossroads -> SPOT-002.
+- Follow-ups -> SHOP-005, LOG-005, C-363; QA-218 runs the balance check C-362 and LOG-004 skipped (style day, log lines/month).
+- **Systems has 4 ready (SHOP-005, LOG-005, LOG-006, SPOT-002)**; ART-012 waits on QA-212. The big levers still wait on the
+  owner (F-005d pacing, C-009 first fights, GFX-002 art pack).
+- Next planner: view GFX-139/141/142 shots when they land; refill systems from QA-217/QA-218 results.
+
 ## State on 2026-11-13 (planner, 18:10 UTC)
 - 10 tasks landed (GFX-132, WU-533, SEASON-022, LOG-003, GFX-133, WU-534, SHOP-002, C-343, SHOP-003, GFX-134). Review covered
   up to 3cc0507 (fixes inline, nothing filed). Live claim: QA-199.

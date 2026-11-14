@@ -2,6 +2,14 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-14 [SHOP-004] Buy hints never send you for festival goods out of season, and a shop remembers up to four errands per region, even after a save.
+- 2026-11-14 [GFX-137] The herb patch, quarry tailings, bog pool and abode sit on ragged ground instead of flat ellipse plates.
+- 2026-11-14 [LOG-004] The log is quieter: repeated practice folds into one line, forecasts only when the weather changes or turns bad, great-beast eves only when the beast is near.
+- 2026-11-14 [GFX-136] Withered Bone Marsh looks like a marsh: murky pools, mud, dead trees and half-sunk bones, and the Reed Hall stands on stilts.
+- 2026-11-14 [GFX-140] Fields have ragged edges, furrows and crops that change with the season, and a scarecrow stands in Qingshi.
+- 2026-11-14 [SPOT-001] Villagers no longer crowd together at one spot or at a region entrance.
+- 2026-11-14 [C-362] Hunter Ma teaches you the Iron Fist for free once he likes you enough.
+- 2026-11-14 [GFX-135] Ponds have ragged natural shores with reeds and shallows, and streams wind instead of running ruler straight.
 - 2026-11-13 [GFX-134] Fallen Star Market has a paved avenue from the City Gate, and the Meteor Crater a scorched ring, star shards and a rope fence.
 - 2026-11-13 [SHOP-003] The Wandering Merchant sells festival foods and charms only in the month before their festival.
 - 2026-11-13 [C-343] Core Formation cultivators no longer meet only weak Qi Refining beasts, so their fights are closer.
