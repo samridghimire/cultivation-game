@@ -93,6 +93,9 @@ var enemy_realm_training: Array = []
 ## Each side's attack in a fight is multiplied by a random form in
 ## [1 - spread, 1 + spread], so close fights are not foregone conclusions.
 var combat_form_spread := 0.0
+## NPCFOE-001 (enemies.json person_foes): generated/named people fight stronger.
+var person_foe_power_mult := 1.0
+var person_foe_stage_floor := 0
 ## Fraction of spirit stones lost when beaten by a non-lethal enemy.
 var defeat_stone_loss := 0.2
 var injuries: Dictionary = {}  # id -> Dictionary
@@ -361,6 +364,9 @@ func _load(dir: String) -> void:
 	enemy_technique_level = int(foes.get("enemy_technique_level", enemy_technique_level))
 	enemy_realm_training = foes.get("realm_training", [])
 	combat_form_spread = float(foes.get("form_spread", combat_form_spread))
+	var person_foes: Dictionary = foes.get("person_foes", {})
+	person_foe_power_mult = float(person_foes.get("power_mult", 1.0))
+	person_foe_stage_floor = int(person_foes.get("stage_floor", 0))
 	defeat_stone_loss = float(foes.get("defeat_stone_loss", defeat_stone_loss))
 	for enemy in foes.get("enemies", []):
 		enemies[enemy["id"]] = enemy
@@ -847,6 +853,10 @@ func _validate_world() -> void:
 func _validate_combat() -> void:
 	if combat_form_spread < 0.0 or combat_form_spread >= 1.0:
 		load_errors.append("enemies.json form_spread must be in [0, 1)")
+	if person_foe_power_mult < 1.0 or person_foe_power_mult > 2.0:
+		load_errors.append("enemies.json person_foes power_mult must be in [1.0, 2.0]")
+	if person_foe_stage_floor < -3 or person_foe_stage_floor > 0:
+		load_errors.append("enemies.json person_foes stage_floor must be in [-3, 0]")
 	for entry in enemy_realm_training:
 		if not entry is Dictionary:
 			load_errors.append("enemies.json realm_training entries must be objects")

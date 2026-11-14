@@ -82,13 +82,22 @@ static func check_act(c: CharacterData, npc: CharacterData, act_id: String, data
 
 ## Enemy dictionary (data/enemies.json format) for fighting `npc`. Losing to an
 ## NPC is never lethal: they beat you and take some of your stones.
-static func npc_enemy(npc: CharacterData, data: GameData) -> Dictionary:
+## NPCFOE-001: marked "person" (enemies.json person_foes power_mult applies);
+## with `player`, a person foe in the player's own major realm fights at least
+## at player stage + stage_floor (never above its realm's peak; the NPC's saved
+## stage is untouched).
+static func npc_enemy(npc: CharacterData, data: GameData, player: CharacterData = null) -> Dictionary:
+	var stage := npc.stage
+	if player != null and player.realm_index == npc.realm_index and data.person_foe_stage_floor != 0:
+		var peak := maxi(0, data.realms[npc.realm_index].stage_names.size() - 1)
+		stage = maxi(stage, mini(player.stage + data.person_foe_stage_floor, peak))
 	return {
+		"person": true,
 		"id": npc.id,
 		"name": npc.name,
 		"proper_name": true,
 		"realm": data.realms[npc.realm_index].id,
-		"stage": npc.stage,
+		"stage": stage,
 		"lethal": false,
 		"techniques": npc.techniques.keys(),
 		"rewards": {},

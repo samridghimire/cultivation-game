@@ -152,7 +152,7 @@ func test_encounter_choice_declines_a_hopeless_rival_duel() -> void:
 	c.rival = rival.id
 	var encounter: Dictionary = d.encounters["rival_contest"]
 	assert_eq(FirstHour.encounter_choice(c, d, encounter, {}, people), 1, "skips 'Accept the duel' against a far stronger rival")
-	rival.realm_index = 1
+	rival.realm_index = 0  # a lower realm: NPCFOE-001's stage floor only lifts same-realm rivals
 	rival.stage = 0
 	c.stage = 8
 	assert_eq(FirstHour.encounter_choice(c, d, encounter, {}, people), 0, "takes the duel against a weaker rival")

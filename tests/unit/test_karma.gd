@@ -337,3 +337,46 @@ func test_act_sentence_template_validated() -> void:
 	var d := data()
 	d.karma["acts"]["kill"]["sentence"] = "You end them."
 	assert_eq(Karma.validate(d).size(), 1, "template without {name} rejected")
+
+
+func test_npc_enemy_person_floor() -> void:
+	var d := data()
+	var npc := _person("npc")
+	npc.realm_index = 1
+	npc.stage = 0
+	var player := _person("player")
+	player.realm_index = 1
+	player.stage = 4
+	assert_true(Karma.npc_enemy(npc, d)["person"], "marked person")
+	assert_eq(Karma.npc_enemy(npc, d)["stage"], 0, "no player: no floor")
+	assert_eq(Karma.npc_enemy(npc, d, player)["stage"], 4 + d.person_foe_stage_floor, "floor applies")
+	assert_eq(npc.stage, 0, "saved stage untouched")
+	npc.stage = 8
+	assert_eq(Karma.npc_enemy(npc, d, player)["stage"], 8, "never lowered")
+	npc.stage = 0
+	player.realm_index = 2
+	assert_eq(Karma.npc_enemy(npc, d, player)["stage"], 0, "other realm: no floor")
+	player.realm_index = 1
+	player.stage = 99
+	var peak: int = d.realms[1].stage_names.size() - 1
+	assert_true(Karma.npc_enemy(npc, d, player)["stage"] <= peak, "capped at realm peak")
+
+
+func test_person_foe_power_and_validation() -> void:
+	var d := data()
+	var npc := _person("npc")
+	npc.realm_index = 1
+	var person := Karma.npc_enemy(npc, d)
+	var plain := person.duplicate()
+	plain.erase("person")
+	var ps := Combat.enemy_stats(person, d)
+	var bs := Combat.enemy_stats(plain, d)
+	assert_true(ps["attack"] > bs["attack"] and ps["max_hp"] > bs["max_hp"], "person foes scale up")
+	assert_eq(bs["attack"], Combat.enemy_stats(plain, d)["attack"])
+	var old := d.person_foe_power_mult
+	d.person_foe_power_mult = 3.0
+	d.load_errors.clear()
+	d._validate_combat()
+	assert_true(d.load_errors.size() > 0, "power_mult 3.0 rejected")
+	d.person_foe_power_mult = old
+	d.load_errors.clear()

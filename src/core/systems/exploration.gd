@@ -738,7 +738,7 @@ static func check_chance(c: CharacterData, choice: Dictionary) -> float:
 static func choice_foe(c: CharacterData, data: GameData, choice: Dictionary, people: Dictionary) -> Dictionary:
 	if bool(choice.get("fight_rival", false)):
 		var rival := Rivals.rival_of(c, people)
-		return Karma.npc_enemy(rival, data) if rival != null else {}
+		return Karma.npc_enemy(rival, data, c) if rival != null else {}
 	var id := String(choice.get("enemy", ""))
 	if data.enemies.has(id):
 		return data.enemies[id]

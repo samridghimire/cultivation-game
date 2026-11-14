@@ -79,6 +79,10 @@ static func enemy_stats(enemy: Dictionary, data: GameData) -> Dictionary:
 		s["max_hp"] = maxi(1, roundi(s["max_hp"] * mult))
 		s["attack"] = maxi(1, roundi(s["attack"] * mult))
 		s["defense"] = maxi(0, roundi(s["defense"] * mult))
+	if bool(enemy.get("person", false)) and data.person_foe_power_mult != 1.0:  # NPCFOE-001: gear and pills
+		s["max_hp"] = maxi(1, roundi(s["max_hp"] * data.person_foe_power_mult))
+		s["attack"] = maxi(1, roundi(s["attack"] * data.person_foe_power_mult))
+		s["defense"] = maxi(0, roundi(s["defense"] * data.person_foe_power_mult))
 	s["max_hp"] = maxi(1, s["max_hp"] + int(enemy.get("hp", 0)))
 	s["attack"] = maxi(1, s["attack"] + int(enemy.get("attack", 0)))
 	s["defense"] = maxi(0, s["defense"] + int(enemy.get("defense", 0)))

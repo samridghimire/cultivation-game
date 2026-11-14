@@ -837,7 +837,7 @@ func _road_ambush() -> bool:
 	var ally_id := Karma.roll_ally(player, npcs, data, rng, hunter_id)
 	if ally_id != "":
 		EventBus.post("%s, who owes you a debt, rushes to fight at your side!" % npcs[ally_id].name, "progress")
-	var won := fight_enemy(Karma.npc_enemy(hunter, data))
+	var won := fight_enemy(Karma.npc_enemy(hunter, data, player))
 	Karma.after_hunt(player, data, hunter_id, won)
 	if ally_id != "":
 		player.buffs.erase("ally_aid")
@@ -1213,7 +1213,7 @@ func enter_secret_realm(realm_id: String) -> void:
 func _contest_realm_rival(def: Dictionary) -> bool:
 	var rival := SecretRealms.spawn_rival(npcs, data, def, rng)
 	EventBus.post("%s, a %s cultivator, is here for the same treasure and attacks!" % [rival.name, Cultivation.realm_label(rival, data)], "danger")
-	if not fight_enemy(Karma.npc_enemy(rival, data)):
+	if not fight_enemy(Karma.npc_enemy(rival, data, player)):
 		if _can_act():
 			EventBus.post("%s claims the floor's treasure and leaves you in the dust." % rival.name, "warning")
 		return false
@@ -1392,9 +1392,9 @@ func _rival_consequences(entry: Dictionary) -> void:
 		if bool(entry.get("spar", false)):
 			# RIVAL-023: the same cooldown the NPC menu's spar sets, so the loss advice is true.
 			player.npc_action_days["spar:" + rival.id] = GameClock.total_days
-			fight_enemy(Mentorship.spar_enemy(rival, data))
+			fight_enemy(Mentorship.spar_enemy(rival, data, player))
 		else:
-			fight_enemy(Karma.npc_enemy(rival, data))
+			fight_enemy(Karma.npc_enemy(rival, data, player))
 
 
 ## Leave the pending encounter without choosing (the UI offers this only when
@@ -2359,7 +2359,7 @@ func spar_with(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var npc: CharacterData = npcs[npc_id]
-	var won := fight_enemy(Mentorship.spar_enemy(npc, data))
+	var won := fight_enemy(Mentorship.spar_enemy(npc, data, player))
 	if not _can_act():
 		return
 	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days)
@@ -2480,7 +2480,7 @@ func hostile_act(npc_id: String, act_id: String) -> void:
 	var won := true
 	if bool(act.get("fight", false)):
 		EventBus.post("You turn on %s." % npc.name, "danger")
-		won = fight_enemy(Karma.npc_enemy(npc, data))
+		won = fight_enemy(Karma.npc_enemy(npc, data, player))
 		if not _can_act():
 			return
 	var before := _rival_attitude()

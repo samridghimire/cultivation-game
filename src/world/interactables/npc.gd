@@ -616,7 +616,7 @@ func _mentor_options() -> Array[Dictionary]:
 		var spar_reason := GameState.check_spar(npc_id)
 		var chance := -1.0
 		if spar_reason == "":
-			chance = Combat.win_chance(p, data, Mentorship.spar_enemy(npc, data))
+			chance = Combat.win_chance(p, data, Mentorship.spar_enemy(npc, data, p))
 		options.append(_entry(spar_label(npc.name, npc_id == p.rival, chance), spar_reason, GameState.spar_with.bind(npc_id)))
 	return options
 
@@ -723,7 +723,7 @@ func _hostile_options() -> Array[Dictionary]:
 		var act := Karma.act(data, act_id)
 		var bits: PackedStringArray = []
 		if bool(act.get("fight", false)):
-			bits.append("fight: %s" % UIStyle.fight_label(p, data, Karma.npc_enemy(npc, data)))
+			bits.append("fight: %s" % UIStyle.fight_label(p, data, Karma.npc_enemy(npc, data, p)))
 		if int(act.get("alignment", 0)) != 0:
 			bits.append("alignment %+d" % int(act["alignment"]))
 		var label := "%s %s" % [String(act.get("name", act_id)), npc.name]

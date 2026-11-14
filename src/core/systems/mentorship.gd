@@ -160,8 +160,8 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 
 
 ## The opponent for a friendly bout: no stones taken, no injury, never lethal.
-static func spar_enemy(npc: CharacterData, data: GameData) -> Dictionary:
-	var enemy := Karma.npc_enemy(npc, data)
+static func spar_enemy(npc: CharacterData, data: GameData, player: CharacterData = null) -> Dictionary:
+	var enemy := Karma.npc_enemy(npc, data, player)
 	enemy["spar"] = true
 	enemy["friendly"] = true
 	return enemy

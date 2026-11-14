@@ -5318,7 +5318,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 				and Rivals.attitude(c, rival, int(favor.get(rival.id, 0)), data) != "bitter" \
 				and Mentorship.check_spar(c, rival, int(favor.get(rival.id, 0)), data, today) == "":
 			rated += 1
-			_rate_fight(found, c, data, Mentorship.spar_enemy(rival, data), "rival", "Challenge %s" % rival.name, 0, "Spar %s" % rival.name)
+			_rate_fight(found, c, data, Mentorship.spar_enemy(rival, data, c), "rival", "Challenge %s" % rival.name, 0, "Spar %s" % rival.name)
 	var roaming: Dictionary = {}
 	if found.size() < FAIR_FIGHTS_MAX and region_id != "" and rated < FAIR_FIGHT_MAX_RATED:
 		roaming = _roamer_fight(found, c, data, flags, today, region_id)
