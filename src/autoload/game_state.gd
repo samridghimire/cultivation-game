@@ -12,7 +12,7 @@ const GENERIC_DIALOGUE := "generic_cultivator"
 const INTRO_EVENT_FLAG := "intro_event_seen"
 
 var data: GameData
-var wake_for_dates := true  # SKIP-001: long meditation wakes for dated things (session-only; tests switch it off)
+var wake_for_dates := true  # SKIP-001: long meditation wakes for dated things (tests switch it off; in play the wake_for_events setting also applies, WU-538)
 var player: CharacterData
 ## Persistent world facts, e.g. {"villager_dead": true}.
 var world_flags: Dictionary = {}
@@ -225,7 +225,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 		days = mini(needed, asked)
 	var ends_early := days < asked
 	var wake_text := ""
-	if asked >= 7 and wake_for_dates: # SKIP-001: a long meditation wakes for the day you'd hate to miss (the bottleneck wins when sooner)
+	if asked >= 7 and wake_for_dates and bool(Settings.get_value("wake_for_events")): # SKIP-001: a long meditation wakes for the day you'd hate to miss (the bottleneck wins when sooner)
 		var wake := VillageCalendar.wake_day(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, days, player, world_flags)
 		if not wake.is_empty() and int(wake["day"]) - GameClock.total_days < days:
 			days = int(wake["day"]) - GameClock.total_days
@@ -233,6 +233,9 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 			ends_early = false
 			var wt := String(wake["text"])
 			wake_text = "You open your eyes: %s." % (wt.substr(0, 1).to_lower() + wt.substr(1)).trim_suffix(".").left(90)
+			if not world_flags.get("wake_tip_shown", false):  # WU-538: say once how to turn it off
+				world_flags["wake_tip_shown"] = true
+				wake_text += " (turn this off in Settings)"
 	player.last_meditated_day = GameClock.total_days + days
 	_start_time_skip()
 	var result := Cultivation.cultivate(player, data, days, density)

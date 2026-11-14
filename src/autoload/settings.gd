@@ -37,6 +37,8 @@ const DEFAULTS := {
 	"show_all_labels": false,
 	# Banner card with the year's review on each new year (WU-031).
 	"yearly_recap": true,
+	# A long meditation wakes early for a festival, a hunt or a birthday (WU-538, SKIP-001).
+	"wake_for_events": true,
 }
 
 var path := DEFAULT_PATH
@@ -80,7 +82,7 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"hud_hints":
 			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
-		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion", "show_all_labels", "auto_cast":
+		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion", "show_all_labels", "auto_cast", "wake_for_events":
 			return value if value is bool else DEFAULTS[key]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"

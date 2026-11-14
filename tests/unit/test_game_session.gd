@@ -4276,6 +4276,37 @@ func test_long_meditation_wakes_for_a_festival() -> void:
 	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You open your eyes: ")))
 
 
+## WU-538: the wake-up follows the setting; the "turn this off" tip shows once per save.
+func test_wake_for_events_setting_and_one_time_tip() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var settings := _root().get_node("Settings")
+	gs.start_session(new_character())
+	gs.wake_for_dates = true
+	gs.current_region = "qingshi_village"
+	var posts: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: posts.append(text)
+	EventBus.message_posted.connect(cb)
+	var was: bool = settings.get_value("wake_for_events")
+	settings._values["wake_for_events"] = false
+	var day: int = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 6, "end_day": day + 14}]
+	gs.cultivate(10)
+	assert_eq(clock.total_days, day + 10, "setting off: nothing wakes you")
+	settings._values["wake_for_events"] = true
+	for round in 2:
+		day = clock.total_days
+		gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 6, "end_day": day + 14}]
+		posts.clear()
+		gs.cultivate(30)
+		var woke := posts.filter(func(t: String) -> bool: return t.begins_with("You open your eyes: "))
+		assert_eq(woke.size(), 1, "woke in round %d" % round)
+		assert_eq(String(woke[0]).contains("(turn this off in Settings)"), round == 0, "tip only the first time")
+	EventBus.message_posted.disconnect(cb)
+	settings._values["wake_for_events"] = was
+	assert_true(gs.world_flags.get("wake_tip_shown", false))
+
+
 ## GUIDE-240: each won fight counts against the foe's id, saved with the character.
 func test_wins_by_foe_counts_and_saves() -> void:
 	var c := _start()

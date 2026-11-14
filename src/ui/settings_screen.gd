@@ -26,6 +26,7 @@ var _reduce_motion: CheckButton
 var _auto_cast: CheckButton
 var _show_all_labels: CheckButton
 var _key_help: CheckButton
+var _wake_events: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
 var _general: VBoxContainer
@@ -46,7 +47,7 @@ func _init() -> void:
 	add_child(outer)
 	outer.add_child(UIStyle.label("Settings", 26, UIStyle.ACCENT))
 	_general = VBoxContainer.new()
-	_general.add_theme_constant_override("separation", 8)
+	_general.add_theme_constant_override("separation", 5)
 	outer.add_child(_general)
 	var box := _general
 	_build_controls(outer)
@@ -76,6 +77,11 @@ func _init() -> void:
 	_yearly_recap.add_theme_font_size_override("font_size", 18)
 	_yearly_recap.toggled.connect(func(on: bool): Settings.set_value("yearly_recap", on))
 	box.add_child(_yearly_recap)
+	_wake_events = CheckButton.new()  # WU-538
+	_wake_events.text = "Wake from long meditation for festivals and hunts"
+	_wake_events.add_theme_font_size_override("font_size", 16)
+	_wake_events.toggled.connect(func(on: bool): Settings.set_value("wake_for_events", on))
+	box.add_child(_wake_events)
 
 	_fast_skips = CheckButton.new()
 	_fast_skips.text = "Fast time skips (no meditation/travel overlay)"
@@ -311,6 +317,7 @@ func _sync() -> void:
 	_hints.select(int(Settings.get_value("hud_hints")))
 	_autosave.set_pressed_no_signal(Settings.get_value("autosave"))
 	_yearly_recap.set_pressed_no_signal(Settings.get_value("yearly_recap"))
+	_wake_events.set_pressed_no_signal(Settings.get_value("wake_for_events"))
 	_fast_skips.set_pressed_no_signal(Settings.get_value("fast_time_skips"))
 	_animate_fights.set_pressed_no_signal(Settings.get_value("animate_fights"))
 	_ambient.set_pressed_no_signal(Settings.get_value("ambient_effects"))

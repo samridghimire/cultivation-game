@@ -93,3 +93,16 @@ func test_reduce_motion_defaults_off_and_sanitizes() -> void:
 	assert_eq(SettingsScript.DEFAULTS["reduce_motion"], false)
 	assert_eq(SettingsScript.sanitize("reduce_motion", true), true)
 	assert_eq(SettingsScript.sanitize("reduce_motion", "yes"), false)
+
+
+## WU-538: wake_for_events defaults on, rejects junk and persists.
+func test_wake_for_events_default_and_persistence() -> void:
+	var s := _fresh()
+	assert_true(s.get_value("wake_for_events") == true)
+	assert_true(SettingsScript.sanitize("wake_for_events", "maybe") == true)
+	s.set_value("wake_for_events", false)
+	var t := _fresh()
+	t.load_settings()
+	assert_true(t.get_value("wake_for_events") == false)
+	t.free()
+	_cleanup(s)
