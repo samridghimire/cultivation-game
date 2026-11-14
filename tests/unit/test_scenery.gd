@@ -871,7 +871,7 @@ func test_every_wild_region_has_groves_clear_of_paths_and_places() -> void:
 
 
 ## GFX-147: terrace bands are 3-4 ragged strips inside the rect that never overlap, and are deterministic.
-func test_terrace_bands_stack_without_overlap() -> void:
+func test_terrace_bands_stack_without_gap() -> void:
 	for r: Rect2 in [Rect2(100, 200, 130, 80), Rect2(0, 0, 130, 110)]:
 		var a := Scenery.terrace_bands(r, 9)
 		assert_true(a.size() >= 3 and a.size() <= 4, "3-4 bands")
@@ -884,7 +884,8 @@ func test_terrace_bands_stack_without_overlap() -> void:
 				assert_true(r.has_point(q), "point inside the rect")
 				lo = minf(lo, q.y)
 				hi = maxf(hi, q.y)
-			assert_gt(lo, prev_bottom, "band starts below the previous one")
+			if prev_bottom > -INF:
+				assert_true(lo <= prev_bottom + 2.0 and prev_bottom - lo <= 5.0, "bands touch or overlap by up to 4 px (no gap)")
 			prev_bottom = hi
 		assert_true(a != Scenery.terrace_bands(r, 10))
 
@@ -958,3 +959,20 @@ func test_stair_treads_count_and_widen() -> void:
 		var t := SectCourt.stair_treads(Rect2(0, 0, 64, h))
 		assert_true(t.size() >= 5 and t.size() <= 8, "5-8 treads for height %s" % h)
 		assert_true((t[-1]["rect"] as Rect2).size.x > (t[0]["rect"] as Rect2).size.x, "widens toward the bottom")
+
+
+func test_terrace_flag_shade_has_four_distinct_tones() -> void:
+	var seen := {}
+	for i in 200:
+		seen[str(Scenery.terrace_flag_shade(Color("a9a69b"), i))] = true
+	assert_eq(seen.size(), 4)
+	assert_eq(Scenery.terrace_flag_shade(Color("a9a69b"), 3), Scenery.terrace_flag_shade(Color("a9a69b"), 3))
+
+
+func test_terrace_band_ends_are_blunt() -> void:
+	for sd in 10:
+		for poly in Scenery.terrace_bands(Rect2(0, 0, 130, 100), sd):
+			var half := poly.size() / 2
+			# the end column keeps real thickness (a blunt cap, not a point)
+			assert_true(poly[poly.size() - 1].y - poly[0].y >= 0.0)
+			assert_true(absf((poly[half - 1].y) - poly[half].y) > 0.5, "right end has thickness")

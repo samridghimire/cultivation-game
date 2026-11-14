@@ -1880,24 +1880,31 @@ func _draw_terrace_places() -> void:
 				hi = maxf(hi, q.y)
 				minx = minf(minx, q.x)
 				maxx = maxf(maxx, q.x)
-			var riser := Color("6a5a48").darkened(0.08 * float(i))
-			var half := poly.size() / 2  # GFX-150: the riser follows the curved downhill edge
+			var earth := Color("7a6a4a").lerp(Color("5a4a32"), 0.15 * float(i))
+			if snowy:
+				earth = earth.lerp(Color("8a8f94"), 0.2)
+			var half := poly.size() / 2  # the riser follows the curved downhill edge
+			draw_colored_polygon(poly, earth)
+			# GFX-154: an earthen riser, a 3-4 px darker strip along the lower edge; no outline round the band
 			var edge := PackedVector2Array()
-			for q in range(half, poly.size()):
-				edge.append(poly[q] + Vector2(0, 1.5))
-			draw_polyline(edge, riser, 3.0)
-			draw_polyline(PackedVector2Array(Array(edge).map(func(v: Vector2) -> Vector2: return v + Vector2(0, 2.0))), riser.darkened(0.3), 1.0)
-			draw_colored_polygon(poly, Color("7a6a4a").lerp(Color("5a4a32"), 0.15 * float(i)))
-			var y := lo + 4.0
-			while y < hi - 2.0:
-				draw_line(Vector2(minx + 4.0, y), Vector2(maxx - 4.0, y), tint.darkened(0.25) if not snowy else Color("c9d6e2"), 1.0)
-				var x := minx + 6.0 + float(i % 2) * 3.0
-				while x < maxx - 5.0:
-					draw_rect(Rect2(x, y - 2.0, 2.0, 2.0), tint if not snowy else Color("e9f1f8"))
+			for q in range(half + 2, poly.size() - 2):
+				edge.append(poly[q] + Vector2(0, -1.0))
+			draw_polyline(edge, earth.darkened(0.35), 3.5)
+			# the planted top: rows of tufts in the crop colour (snow caps in winter)
+			var plant := tint.lerp(Scenery.crop_color(String(GroundTiles.ground_season(_season, _region.get("map", {})))), 0.35)
+			var y := lo + 5.0
+			while y < hi - 5.0:
+				var x := minx + 8.0 + float(i % 2) * 3.0
+				while x < maxx - 8.0:
+					if snowy:
+						draw_rect(Rect2(x - 1.0, y, 4.0, 2.0), Color("e9f1f8"))
+					else:
+						draw_rect(Rect2(x, y - 2.0, 2.0, 3.0), plant)
+						draw_rect(Rect2(x + 2.0, y - 3.0, 2.0, 3.0), plant.lightened(0.25))
 					x += 7.0
 				y += 5.0
 			if snowy:
-				draw_polyline(poly.slice(0, poly.size() / 2), Color(0.95, 0.98, 1.0, 0.9), 2.0)
+				draw_polyline(poly.slice(0, half), Color(0.95, 0.98, 1.0, 0.9), 2.0)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).

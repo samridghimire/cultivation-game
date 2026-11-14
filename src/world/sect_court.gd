@@ -269,16 +269,17 @@ static func _draw_planks_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy:
 
 ## GFX-121: pale stone flags on a raised terrace, a step along the front and snow on the edge in winter.
 static func _draw_terrace_court(ci: CanvasItem, hall: Rect2, court: Rect2, snowy: bool) -> void:
-	var base := Color("c9ccd0") if not snowy else Color("c4cbd3")
+	var base := Color("a9a69b") if not snowy else Color("a2a7ac")
 	var mortar := base.darkened(0.22)
+	var mortar_line := Color(mortar.r, mortar.g, mortar.b, 0.5)  # GFX-154: faint joints
 	ci.draw_rect(Rect2(court.position.x + 3.0, court.end.y + 2.0, court.size.x, 7.0), Color(0, 0, 0, 0.25))
 	ci.draw_rect(court, base)
 	var cx := hall.get_center().x
 	var lay := terrace_layout(court, hall, hash(str(court) + "|flags"))
 	for f: Dictionary in lay["flags"]:
 		var fr: Rect2 = f["rect"]
-		ci.draw_rect(fr, Scenery.paving_shade(base, int(f["seed"])))
-		ci.draw_rect(fr, mortar, false, 1.0)
+		ci.draw_rect(fr, Scenery.terrace_flag_shade(base, int(f["seed"])))
+		ci.draw_rect(fr, mortar_line, false, 1.0)
 	var strip: Rect2 = lay["strip"]  # GFX-151: the worn processional strip from the stair to the hall door
 	ci.draw_rect(strip, base.darkened(0.14))
 	ci.draw_rect(Rect2(strip.position.x, strip.position.y, 1.0, strip.size.y), mortar.darkened(0.1))

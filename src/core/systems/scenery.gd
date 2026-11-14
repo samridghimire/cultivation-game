@@ -779,6 +779,12 @@ static func ragged_outline(rect: Rect2, seed: int, radius: float, amp: float) ->
 
 ## GFX-122: a paving slab's colour: a gentle +-8% of `base` (never below 0.92x), and now and then (1 slab in 8) a lighter
 ## worn slab instead of a dark one. Deterministic from `seed`.
+## GFX-154: a terrace-court flag's colour: one of four clearly different tones (about -12 %, -4 %, +4 %, +11 %), by `seed`.
+static func terrace_flag_shade(base: Color, seed: int) -> Color:
+	var f: float = [-0.12, -0.04, 0.04, 0.11][absi(hash([seed, "tone"])) % 4]
+	return base.lightened(f) if f >= 0.0 else base.darkened(-f)
+
+
 static func paving_shade(base: Color, seed: int) -> Color:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
@@ -1606,8 +1612,8 @@ static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: 
 
 
 ## GFX-147: the bands of a hillside terrace inside `rect`: 3-4 ragged strips stacked top to bottom, each shifted a few px
-## sideways from the one above, with a 3 px gap under each for its riser. Bands never overlap and stay inside `rect`;
-## same seed, same bands. Returned top (highest) to bottom; band `i`'s riser is the gap just below it.
+## sideways from the one above. GFX-154: each band reaches 2 px into the next so the slope reads as one; ends are blunt and
+## rounded. Bands stay inside `rect`; same seed, same bands. Returned top (highest) to bottom; band `i`'s riser is the gap just below it.
 static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Array]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -1616,7 +1622,7 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 	var out: Array[PackedVector2Array] = []
 	for i in n:
 		var top := rect.position.y + step * float(i) + 1.0
-		var bottom := rect.position.y + step * float(i + 1) - 3.0
+		var bottom := rect.position.y + step * float(i + 1) + (3.0 if i < n - 1 else -1.0)
 		# GFX-150: every other band is 10-20 % narrower, centred with a small seeded shift
 		var full := rect.size.x - 4.0
 		var width := full * (1.0 - (rng.randf_range(0.10, 0.20) if i % 2 == 1 else rng.randf_range(0.0, 0.03)))
@@ -1631,9 +1637,10 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 		for k in cols + 1:
 			var t := float(k) / float(cols)
 			var arc := bulge * sin(PI * t)
-			var squeeze := (1.0 - clampf(minf(t, 1.0 - t) / 0.18, 0.0, 1.0)) * h * 0.4
-			upper.append(Vector2(lerpf(left, right, t), top + arc + rng.randf_range(0.0, 1.5)))
-			lower.append(Vector2(lerpf(left, right, t), top + arc + h - squeeze * 2.0 - rng.randf_range(0.0, 1.0)))
+			var e := 1.0 - clampf(minf(t, 1.0 - t) / 0.1, 0.0, 1.0)  # GFX-154: a quarter-round cap, not a point
+			var squeeze := (1.0 - sqrt(maxf(1.0 - e * e, 0.0))) * h * 0.4
+			upper.append(Vector2(lerpf(left, right, t), top + arc + squeeze + rng.randf_range(0.0, 1.5)))
+			lower.append(Vector2(lerpf(left, right, t), top + arc + h - squeeze - rng.randf_range(0.0, 1.0)))
 		var poly := upper.duplicate()
 		for k in range(lower.size() - 1, -1, -1):
 			poly.append(lower[k])
