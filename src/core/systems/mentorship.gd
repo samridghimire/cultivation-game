@@ -14,6 +14,32 @@ static func spar_terms(data: GameData) -> Dictionary:
 	return {"days": int(rules.get("days", 1)), "practice_days": int(rules.get("practice_days", 0)), "cooldown_days": int(rules.get("cooldown_days", 0))}
 
 
+## Friendly bouts with the villager who taught you a fighting style (SPAR-001): rules in `mentorship.teacher_bout`.
+static func teacher_bout_terms(data: GameData) -> Dictionary:
+	var rules := _rules(data, "teacher_bout")
+	return {"days": int(rules.get("days", 1)), "practice_days": int(rules.get("practice_days", 0)), "cooldown_days": int(rules.get("cooldown_days", 0)),
+		"win_favor": int(rules.get("win_favor", 0)), "min_favor": int(rules.get("min_favor", 0)), "power_mult": float(rules.get("power_mult", 1.0))}
+
+
+## The technique id `c` knows that villager `npc_id` teaches (a non-method style), else "".
+static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData) -> String:
+	if _rules(data, "teacher_bout").is_empty() or c == null:
+		return ""
+	var def: Dictionary = data.npcs.get(npc_id, {})
+	var nodes: Dictionary = data.dialogues.get(String(def.get("dialogue", "")), {}).get("nodes", {})
+	var ids: Array = []
+	for node_id: String in nodes:
+		for choice: Dictionary in nodes[node_id].get("choices", []):
+			var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
+			if tech_id != "" and data.techniques.has(tech_id) and not ids.has(tech_id):
+				ids.append(tech_id)
+	ids.sort()
+	for tech_id: String in ids:
+		if Techniques.knows(c, tech_id) and not (data.techniques[tech_id] as TechniqueDef).is_method():
+			return tech_id
+	return ""
+
+
 static func is_senior(c: CharacterData, npc: CharacterData) -> bool:
 	return npc.realm_index > c.realm_index or (npc.realm_index == c.realm_index and npc.stage > c.stage)
 
@@ -139,12 +165,20 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 		return "Nobody is offering to spar."
 	if npc.age_years() < int(data.family.get("adult_age", 16)):
 		return "%s is too young." % npc.name
-	if c.realm_index < 1:
-		return "You need to cultivate before you can spar."
-	if npc.realm_index < 1:
-		return "%s does not cultivate." % npc.name
-	if absi(npc.realm_index - c.realm_index) > int(rules.get("max_realm_gap", 1)):
-		return "%s would not cross hands with someone so far from their own realm." % npc.name
+	var teacher_style := teacher_bout_style(c, npc.id, data)
+	if teacher_style != "":
+		rules = rules.duplicate()
+		var bout := _rules(data, "teacher_bout")
+		rules["min_favor"] = int(bout.get("min_favor", 0))
+		rules["same_sect_min_favor"] = int(bout.get("min_favor", 0))
+		rules["cooldown_days"] = int(bout.get("cooldown_days", 0))
+	else:
+		if c.realm_index < 1:
+			return "You need to cultivate before you can spar."
+		if npc.realm_index < 1:
+			return "%s does not cultivate." % npc.name
+		if absi(npc.realm_index - c.realm_index) > int(rules.get("max_realm_gap", 1)):
+			return "%s would not cross hands with someone so far from their own realm." % npc.name
 	if npc.id == c.rival:
 		# RIVAL-012: a rival answers any challenge, unless they are too bitter for a bout.
 		if Rivals.attitude(c, npc, favor, data) == "bitter":
@@ -164,18 +198,26 @@ static func spar_enemy(npc: CharacterData, data: GameData, player: CharacterData
 	var enemy := Karma.npc_enemy(npc, data, player)
 	enemy["spar"] = true
 	enemy["friendly"] = true
+	if player != null and teacher_bout_style(player, npc.id, data) != "":
+		enemy["power_mult"] = float(teacher_bout_terms(data)["power_mult"])
 	return enemy
 
 
 ## After the bout: practice xp for every unmastered non-method technique, the
 ## cooldown, and favor on a win. Returns {favor, practiced, levels, days}.
-static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won: bool, today: int) -> Dictionary:
+static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won: bool, today: int, style: String = "") -> Dictionary:
 	var rules := _rules(data, "spar")
 	var terms := spar_terms(data)
 	var practiced: PackedStringArray = []
 	var levels: PackedStringArray = []
 	var ids: Array = c.techniques.keys()
 	ids.sort()
+	if style != "":
+		# A teacher bout: only the style they taught, on the teacher_bout terms.
+		var bout := teacher_bout_terms(data)
+		rules = {"win_favor": bout["win_favor"]}
+		terms = {"days": bout["days"], "practice_days": bout["practice_days"]}
+		ids = [style]
 	for tech_id: String in ids:
 		var def: TechniqueDef = data.techniques.get(tech_id)
 		if def == null or def.is_method() or Techniques.is_mastered(c, data, tech_id):
@@ -213,6 +255,10 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json mentorship.%s.min_favor must be <= 100" % kind)
 		if int(rules.get("same_sect_min_favor", 0)) > int(rules.get("min_favor", 0)):
 			errors.append("family.json mentorship.%s.same_sect_min_favor must be <= min_favor" % kind)
+	if block.has("teacher_bout"):
+		var days := int(block["teacher_bout"].get("days", 1))
+		if days < 1 or days > 3:
+			errors.append("family.json mentorship.teacher_bout.days must be 1..3")
 	if block.has("pointers") and float(block["pointers"].get("shared_multiplier", 1.0)) < 1.0:
 		errors.append("family.json mentorship.pointers.shared_multiplier must be >= 1")
 	var lines: Array = block.get("pointers", {}).get("lines", [])

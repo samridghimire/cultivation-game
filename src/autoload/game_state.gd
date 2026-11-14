@@ -2381,19 +2381,26 @@ func spar_with(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var npc: CharacterData = npcs[npc_id]
+	var style := Mentorship.teacher_bout_style(player, npc_id, data)
 	var won := fight_enemy(Mentorship.spar_enemy(npc, data, player))
 	if not _can_act():
 		return
-	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days)
+	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days, style)
 	var before := _rival_attitude()
 	if int(result["favor"]) > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
 	var opening := "%s accepts your challenge." if npc_id == player.rival else "You spar with %s."
 	var text := "%s %s" % [opening % npc.name, "You win the bout." if won else "They win the bout."]
-	if not (result["practiced"] as PackedStringArray).is_empty():
+	if style != "":
+		var style_name: String = (data.techniques[style] as TechniqueDef).name
+		text = "You trade blows with %s until your %s sits right. (+%d days practice)" % [npc.name, style_name, int(Mentorship.teacher_bout_terms(data)["practice_days"])]
+		for line in result["levels"]:
+			text += " %s." % line
+	elif not (result["practiced"] as PackedStringArray).is_empty():
 		text += " Your %s grow sharper." % " and ".join(result["practiced"])
-	for line in result["levels"]:
-		text += " %s." % line
+	if style == "":
+		for line in result["levels"]:
+			text += " %s." % line
 	EventBus.post(text, "progress")
 	if npc_id == player.rival:
 		var key := "rival_bouts_won" if won else "rival_bouts_lost"

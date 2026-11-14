@@ -342,3 +342,46 @@ func test_pointer_line_varies_and_validates() -> void:
 	assert_eq(Mentorship.pointer_line(d, "Elder Lu", "Iron Fist", 3), "Elder Lu watches your Iron Fist and points out a flaw.")
 	d.family["mentorship"]["pointers"]["lines"] = ["{npc} nods."]
 	assert_eq(Mentorship.validate(d).size(), 1)
+
+
+## SPAR-001: the villager who taught you a style crosses hands with a mortal pair.
+func _teacher_pair() -> Array[CharacterData]:
+	var d := data()
+	var c := new_character()
+	var npc := new_character(78)
+	npc.id = "hunter_ma"
+	npc.name = "Hunter Ma"
+	npc.age_days = 44 * Calendar.DAYS_PER_YEAR
+	npc.realm_index = 0
+	var style := ""
+	for node: Dictionary in d.dialogues["hunter_ma"]["nodes"].values():
+		for choice: Dictionary in node.get("choices", []):
+			if choice.get("effects", {}).has("learn_technique"):
+				style = String(choice["effects"]["learn_technique"])
+	assert_true(style != "", "Hunter Ma teaches a style")
+	return [c, npc]
+
+
+func test_teacher_bout_needs_the_style() -> void:
+	var d := data()
+	var p := _teacher_pair()
+	var c := p[0]
+	c.realm_index = 0
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d), "", "not yet taught")
+	assert_true(Mentorship.check_spar(c, p[1], 0, d, 100) != "", "mortals cannot spar before the lesson")
+	var style := ""
+	for node: Dictionary in d.dialogues["hunter_ma"]["nodes"].values():
+		for choice: Dictionary in node.get("choices", []):
+			if choice.get("effects", {}).has("learn_technique"):
+				style = String(choice["effects"]["learn_technique"])
+	c.techniques[style] = {"level": 1, "xp": 0.0}
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d), style)
+	assert_eq(Mentorship.check_spar(c, p[1], 0, d, 100), "", "allowed after the lesson")
+	var r := Mentorship.after_spar(c, p[1], d, true, 100, style)
+	assert_eq(r["favor"], 1)
+	assert_eq(Mentorship.check_spar(c, p[1], 0, d, 103) != "", true, "cooldown")
+	assert_eq(Mentorship.check_spar(c, p[1], 0, d, 107), "", "cooldown over")
+	var other := new_character(79)
+	other.id = "villager_x"
+	other.age_days = 30 * Calendar.DAYS_PER_YEAR
+	assert_true(Mentorship.check_spar(c, other, 50, d, 100) != "", "unrelated villager refused")

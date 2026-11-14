@@ -1512,6 +1512,31 @@ func test_spar_with_npc() -> void:
 	gs.end_session()
 
 
+## SPAR-001: a mortal practises the taught style with the villager who taught it.
+func test_teacher_bout_with_hunter_ma() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	ma.realm_index = 0
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 0
+	var clock := _root().get_node("GameClock")
+	var day: int = clock.total_days
+	var favor_before := 0
+	gs.spar_with("hunter_ma")
+	assert_eq(clock.total_days, day + 1, "a teacher bout takes its days")
+	assert_true(c.techniques["iron_fist"]["xp"] > 0.0 or c.techniques["iron_fist"]["level"] > 1, "style practised")
+	assert_true(int(gs.npc_favor["hunter_ma"]) >= favor_before, "favor never drops")
+	assert_true(c.injuries.is_empty())
+	gs.spar_with("hunter_ma")
+	assert_true(_last_text().contains("recently"), _last_text())
+	gs.end_session()
+
+
 ## RIVAL-016: bouts with the rival are scored; other spars are not.
 func test_spar_rival_keeps_score() -> void:
 	var c := _start()

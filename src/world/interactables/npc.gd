@@ -645,12 +645,16 @@ func _mentor_options() -> Array[Dictionary]:
 				label += " (%s)" % (data.techniques[tech_id] as TechniqueDef).name
 		options.append(_entry(label, reason, GameState.ask_pointers.bind(npc_id)))
 	var max_gap := int(data.family.get("mentorship", {}).get("spar", {}).get("max_realm_gap", 1))
-	if p.realm_index >= 1 and npc.realm_index >= 1 and absi(npc.realm_index - p.realm_index) <= max_gap:
+	var style := Mentorship.teacher_bout_style(p, npc_id, data)
+	if style != "" or (p.realm_index >= 1 and npc.realm_index >= 1 and absi(npc.realm_index - p.realm_index) <= max_gap):
 		var spar_reason := GameState.check_spar(npc_id)
 		var chance := -1.0
 		if spar_reason == "":
 			chance = Combat.win_chance(p, data, Mentorship.spar_enemy(npc, data, p))
-		options.append(_entry(spar_label(npc.name, npc_id == p.rival, chance), spar_reason, GameState.spar_with.bind(npc_id)))
+		var spar_text := spar_label(npc.name, npc_id == p.rival, chance)
+		if style != "":
+			spar_text = spar_text.replace("Spar with %s" % npc.name, "Practise %s with %s" % [(data.techniques[style] as TechniqueDef).name, npc.name])
+		options.append(_entry(spar_text, spar_reason, GameState.spar_with.bind(npc_id)))
 	return options
 
 
