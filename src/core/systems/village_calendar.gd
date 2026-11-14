@@ -36,6 +36,7 @@ static func wake_day(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		region_id: String, start: int, span: int, c: CharacterData, flags: Dictionary) -> Dictionary:
 	if span <= 1:
 		return {}
+	var best := {}
 	for e: Dictionary in upcoming(data, npcs, favor, active_events, region_id, start, span, c, flags):
 		var day := int(e["day"])
 		var kind := String(e["kind"])
@@ -46,8 +47,13 @@ static func wake_day(data: GameData, npcs: Dictionary, favor: Dictionary, active
 			continue  # a realm closing or an event ending is nothing to wake for (only openings carry last_day)
 		if kind == "great_beast" and not _beast_matters(data, flags, rid, String(e.get("enemy", "")), day):
 			continue
-		return {"day": day, "kind": kind, "text": String(e["text"])}
-	return {}
+		if kind == "request":
+			day -= 1  # SKIP-002: wake the eve of the due day, so there is still a day to deliver
+			if day <= start:
+				continue
+		if best.is_empty() or day < int(best["day"]):
+			best = {"day": day, "kind": kind, "text": String(e["text"])}
+	return best
 
 
 ## Every dated thing in [start, start + span) days, soonest first.

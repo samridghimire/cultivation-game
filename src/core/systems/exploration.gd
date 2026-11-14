@@ -1061,7 +1061,7 @@ static func _gather_entry_locked(c: CharacterData, data: GameData, entry: Dictio
 ## Rolls GATHER_ROLLS times, plus one more per 5 Fortune above 10.
 ## Returns {item_id: count}.
 @warning_ignore("integer_division")
-static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator, rolled: Array = []) -> Dictionary:
+static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator, rolled: Array = [], done_frac: float = 1.0) -> Dictionary:
 	var found := {}
 	var total := 0.0
 	for entry: Dictionary in table:
@@ -1069,6 +1069,10 @@ static func gather(c: CharacterData, table: Array, rng: RandomNumberGenerator, r
 	if total <= 0.0:
 		return found
 	var rolls := GATHER_ROLLS + maxi(0, (c.attribute("fortune") - 10) / 5)
+	if done_frac < 1.0:  # SKIP-002: a trip cut short rolls pro rata, rounded down, at least one when half was done
+		rolls = int(floor(rolls * done_frac))
+		if done_frac >= 0.5:
+			rolls = maxi(1, rolls)
 	for i in rolls:
 		var roll := rng.randf() * total
 		for entry: Dictionary in table:

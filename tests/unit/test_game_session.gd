@@ -4321,3 +4321,47 @@ func test_wins_by_foe_counts_and_saves() -> void:
 	var back := CharacterData.from_dict(c.to_dict())
 	assert_eq(int(back.wins_by_foe.get("wild_boar", 0)), 2)
 	assert_eq(CharacterData.from_dict({}).wins_by_foe, {})
+
+
+## SKIP-002: a long gather or job wakes for a festival, pro rata; short ones never do.
+func test_long_chores_wake_for_a_festival() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.wake_for_dates = true
+	gs.current_region = "qingshi_village"
+	var table: Array = [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	var posts: Array[String] = []
+	var cb := func(text: String, _cat: String) -> void: posts.append(text)
+	EventBus.message_posted.connect(cb)
+	var day: int = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 4, "end_day": day + 14}]
+	gs.gather(table, 6)
+	assert_eq(clock.total_days, day + 6, "under 7 days is never interrupted")
+	day = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 4, "end_day": day + 14}]
+	var wake := VillageCalendar.wake_day(gs.data, gs.npcs, gs.npc_favor, gs.world_events, "qingshi_village", day, 15, gs.player, gs.world_flags)
+	gs.gather(table, 15)
+	assert_eq(clock.total_days, int(wake["day"]), "the gather ends on the wake day")
+	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You straighten up from the herbs: ")))
+	day = clock.total_days
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": day + 4, "end_day": day + 14}]
+	wake = VillageCalendar.wake_day(gs.data, gs.npcs, gs.npc_favor, gs.world_events, "qingshi_village", day, 30, gs.player, gs.world_flags)
+	gs.work_profession("alchemist", 30)
+	EventBus.message_posted.disconnect(cb)
+	assert_eq(clock.total_days, int(wake["day"]), "the job ends on the wake day")
+	assert_true(posts.any(func(t: String) -> bool: return t.begins_with("You put down your tools: ")))
+
+
+## SKIP-002: fewer days done, fewer rolls (rounded down, at least one past half).
+func test_gather_rolls_scale_with_days_done() -> void:
+	var c := new_character()
+	var table: Array = [{"item": "spirit_herb", "weight": 1, "min": 1, "max": 1}]
+	var full := 0
+	for item in Exploration.gather(c, table, seeded_rng()).values():
+		full += int(item)
+	var part := 0
+	for item in Exploration.gather(c, table, seeded_rng(), [], 0.5).values():
+		part += int(item)
+	assert_eq(part, maxi(1, full / 2))
+	assert_eq(Exploration.gather(c, table, seeded_rng(), [], 0.2).size(), 0, "under half done and rounds to 0 rolls")

@@ -253,6 +253,17 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	_pass_time(days, skip_title)
 
 
+## SKIP-002: a chore of `asked` (>= 7) days that something dated cuts short: `{days, text}` ("You open your eyes: ..."), or {}.
+func _chore_wake(asked: int) -> Dictionary:
+	if asked < 7 or not wake_for_dates or not bool(Settings.get_value("wake_for_events")):
+		return {}
+	var wake := VillageCalendar.wake_day(data, npcs, npc_favor, world_events, current_region, GameClock.total_days, asked, player, world_flags)
+	if wake.is_empty() or int(wake["day"]) - GameClock.total_days >= asked:
+		return {}
+	var wt := String(wake["text"])
+	return {"days": int(wake["day"]) - GameClock.total_days, "text": "You open your eyes: %s." % (wt.substr(0, 1).to_lower() + wt.substr(1)).trim_suffix(".").left(90)}
+
+
 ## WILD-022: hang a great-beast trophy from the pack on the wall of your home in this region (no time passes).
 func hang_trophy(item_id: String) -> void:
 	EventBus.topic = "world"
@@ -517,6 +528,9 @@ func work_profession(prof_id: String, days: int) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
+	var wake := _chore_wake(days)  # SKIP-002
+	if not wake.is_empty():
+		days = int(wake["days"])
 	_start_time_skip()
 	var result := Professions.work(player, data, prof_id, days)
 	var def: ProfessionDef = data.professions[prof_id]
@@ -527,6 +541,8 @@ func work_profession(prof_id: String, days: int) -> void:
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
 			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+	if not wake.is_empty():
+		EventBus.post(String(wake["text"]).replace("You open your eyes", "You put down your tools"))
 	_pass_time(days, "Working as %s" % Text.a(def.name))
 
 
@@ -1416,10 +1432,14 @@ func gather(table: Array, days: int) -> void:
 	EventBus.topic = "trade"
 	if not _can_act():
 		return
+	var wake := _chore_wake(days)  # SKIP-002
+	var asked_days := days
+	if not wake.is_empty():
+		days = int(wake["days"])
 	var season := Calendar.season_of(GameClock.total_days)
 	var rolled: Array = []
 	var base := Exploration.gather_table_for(player, data, table, season)
-	var found := Exploration.gather(player, HerbLore.skill_table(data.herb_lore, base, player.gather_xp), rng, rolled)
+	var found := Exploration.gather(player, HerbLore.skill_table(data.herb_lore, base, player.gather_xp), rng, rolled, float(days) / float(asked_days))
 	HerbLore.bonus_units(data.herb_lore, found, player.gather_xp, rng)
 	Exploration.note_seasonal_gather(player, rolled, season)
 	var kind_today := Weather.of(data, current_region, GameClock.total_days)
@@ -1455,6 +1475,8 @@ func gather(table: Array, days: int) -> void:
 		EventBus.post("You search for %s but find nothing worth taking." % Calendar.format_duration(days))
 	else:
 		EventBus.post("You gather for %s. (%s)" % [Calendar.format_duration(days), ", ".join(notes)], "progress")
+	if not wake.is_empty():
+		EventBus.post(String(wake["text"]).replace("You open your eyes", "You straighten up from the herbs"))
 	for herb_name in first_finds:
 		EventBus.post("First find: %s!" % herb_name, "progress")
 	for item_id in tipped:

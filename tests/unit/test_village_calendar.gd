@@ -477,3 +477,13 @@ func test_wake_day_skips_endings() -> void:
 	var beginning := [{"id": eid, "region": "qingshi_village", "start_day": start + 4, "end_day": start + 9}]
 	w = VillageCalendar.wake_day(data(), {}, {}, beginning, "qingshi_village", start, 12, c, {})
 	assert_true(not w.is_empty() and int(w["day"]) <= start + 4, str(w))
+
+
+## SKIP-002: a request wakes you the day before it is due.
+func test_wake_day_request_eve() -> void:
+	var c := new_character()
+	c.letter_requests.append({"npc_id": "nobody", "item": "spirit_herb", "count": 2, "until": 8, "favor": 1, "effects": {}})
+	var w := VillageCalendar.wake_day(data(), {}, {}, [], "qingshi_village", 0, 9, c, {})
+	assert_eq(int(w.get("day", -1)), 7)
+	c.letter_requests[0]["until"] = 1
+	assert_true(VillageCalendar.wake_day(data(), {}, {}, [], "qingshi_village", 0, 9, c, {}).is_empty(), "eve is today: nothing to wake for")
