@@ -832,10 +832,22 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 				out.append({"kind": "slab", "rect": _road_rect(path_rect, along_x, pos, inset + gutter + row * row_w, l, row_w), "shade": rng.randf() * 2.0 - 1.0, "flag": flag})
 				pos += l
 	elif style == "bog" and str(map.get("water", "clear")) == "murky":
-		pos = inset
+		# GFX-146: a walkway ~58% of the road width, centred, drifting +-3 px; wet mud verges either side with reed tufts;
+		# pilings under the board ends every 36-48 px; missing boards show water with a broken stub.
+		var walk := width * 0.58
+		var margin := (width - walk) * 0.5
+		var drift := minf(3.0, maxf(margin - 1.0, 0.0))
+		var wob_pos: Array[float] = []
+		var wob_val: Array[float] = []
+		var wp := 0.0
+		while wp < len_total + 60.0:
+			wob_pos.append(wp)
+			wob_val.append(rng.randf_range(-drift, drift))
+			wp += 60.0
 		var planks := 0
 		var missing := 0
 		var prev_missing := false
+		pos = inset
 		while pos < len_total - inset - 4.0:
 			var l := minf(6.0 + rng.randf() * 6.0, len_total - inset - pos)
 			var pflag := ""
@@ -848,17 +860,44 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 			elif proll < 0.16:
 				pflag = "dark"
 			prev_missing = pflag == "missing"
-			var side_a := float(rng.randi_range(0, 2))  # each board's ends sit 0-2 px off the line
-			var side_b := float(rng.randi_range(0, 2))
-			out.append({"kind": "plank", "rect": _road_rect(path_rect, along_x, pos, inset + side_a, l - 1.0, width - inset * 2.0 - side_a - side_b), "shade": rng.randf() * 2.0 - 1.0, "flag": pflag})
+			var mid := pos + l * 0.5
+			var wi := mini(int(mid / 60.0), wob_pos.size() - 2)
+			var centre_off := lerpf(wob_val[wi], wob_val[wi + 1], (mid - wob_pos[wi]) / 60.0)
+			var jitter_a := float(rng.randi_range(0, 1))
+			var jitter_b := float(rng.randi_range(0, 1))
+			var across0 := margin + centre_off + jitter_a
+			var board := _road_rect(path_rect, along_x, pos, across0, l - 1.0, walk - jitter_a - jitter_b)
+			out.append({"kind": "plank", "rect": board, "shade": rng.randf() * 2.0 - 1.0, "flag": pflag})
+			if pflag == "missing":  # a broken stub at one end
+				var stub_len := rng.randf_range(2.0, 3.5)
+				var top := rng.randf() < 0.5
+				var sa := across0 if top else across0 + walk - jitter_a - jitter_b - stub_len
+				out.append({"kind": "stub", "rect": _road_rect(path_rect, along_x, pos, sa, l - 1.0, stub_len), "shade": 0.0, "flag": ""})
 			pos += l
-		# GFX-136: reed tufts along both edges of the boardwalk
-		var tuft_at := 14.0 + rng.randf() * 30.0
-		while tuft_at < len_total - 14.0:
+		# wet verges and pilings
+		for side in 2:
+			var v_across := 0.0 if side == 0 else width - margin + drift
+			var v_w := margin - drift if side == 0 else margin - drift
+			if v_w >= 1.0:
+				out.append({"kind": "mud", "rect": _road_rect(path_rect, along_x, 0.0, v_across, len_total, v_w), "shade": -1.0, "flag": ""})
+		var pil_at := 10.0 + rng.randf() * 20.0
+		while pil_at < len_total - 8.0:
+			var wi2 := mini(int(pil_at / 60.0), wob_pos.size() - 2)
+			var co := lerpf(wob_val[wi2], wob_val[wi2 + 1], (pil_at - wob_pos[wi2]) / 60.0)
+			for pside in 2:
+				var pa := margin + co - 2.0 if pside == 0 else margin + co + walk - 3.0
+				out.append({"kind": "piling", "rect": _road_rect(path_rect, along_x, pil_at, pa, 3.0, 5.0), "shade": 0.0, "flag": ""})
+			pil_at += rng.randf_range(36.0, 48.0)
+		var tuft_at := 6.0 + rng.randf() * 10.0
+		while tuft_at < len_total - 8.0:
 			for side in 2:
-				if rng.randf() < 0.55:
-					out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, tuft_at, 0.0 if side == 0 else width - 3.0, 2.0, 3.0), "shade": 1.0 if rng.randf() < 0.5 else -1.0, "flag": ""})
-			tuft_at += 40.0 + rng.randf() * 60.0
+				var tn := rng.randi_range(0, 1) + 1
+				for ti in tn:
+					if margin - drift >= 4.0:
+						var tx := tuft_at + rng.randf() * 18.0
+						var tacross := rng.randf_range(0.5, margin - drift - 3.0) if side == 0 else width - margin + drift + rng.randf_range(0.0, maxf(margin - drift - 3.5, 0.0))
+						out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, tx, tacross, 2.0, 3.0), "shade": 1.0 if rng.randf() < 0.5 else -1.0, "flag": ""})
+			tuft_at += 40.0
 	else:
 		var strip := 3.0
 		# GFX-131: roads that wander: broken edge strips, wobbling ruts, no ruts near a crossing.

@@ -2377,8 +2377,8 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 	var rmap: Dictionary = _region.get("map", {})
 	if str(rmap.get("ground_style", "grass")) == "bog" and str(rmap.get("water", "clear")) == "murky":
-		var bed := rect.grow(-3.0)  # GFX-141: dark water shows in the 1 px gaps between boards
-		draw_rect(bed, Color("141a14"))
+		var bed := rect.grow(-3.0)  # GFX-141: murky water shows in the 1 px gaps between boards
+		draw_rect(bed, _bog_water().darkened(0.3))
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
@@ -2397,13 +2397,19 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
 			"plank":
 				c = Color("7a5a38").lightened(0.06 * shade) if shade >= 0.0 else Color("7a5a38").darkened(-0.1 * shade)
-				if t["flag"] == "missing":  # GFX-136: a rotted-away board shows black water
-					draw_rect(r, Color("141a14"))
+				if t["flag"] == "missing":  # GFX-146: a rotted-away board shows murky water, never black
+					draw_rect(r, _bog_water().darkened(0.3))
 					continue
 				if t["flag"] == "dark":
-					c = c.darkened(0.35)
+					c = c.darkened(0.15)
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
+			"mud":
+				draw_rect(r, base.darkened(0.3))
+			"stub":
+				draw_rect(r, Color("7a5a38").darkened(0.3))
+			"piling":
+				draw_rect(r, Color("2b2118"))
 			"rut", "edge":
 				draw_rect(r, base.darkened(0.45 if t["flag"] == "gutter" else (0.15 if t["flag"] == "slush" else (0.22 if t["kind"] == "rut" else 0.12))))
 			"puddle":
@@ -2431,6 +2437,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				draw_rect(v, base)
 				if snowy:  # a 2-4 px snow bank along the verge
 					draw_rect(Rect2(v.position - Vector2(1, 1), v.size + Vector2(2, 2)).intersection(Rect2(v.position, v.size)), Color(snow, 0.9))
+
+
+## GFX-146: the murky region water colour (boardwalk gaps and missing boards show it, darkened by the caller).
+func _bog_water() -> Color:
+	return Color(String(PlaceLooks.WATER_TINTS.get(String(_region.get("map", {}).get("water", "clear")), "3f7fa8")))
 
 
 func map_grass_color() -> String:

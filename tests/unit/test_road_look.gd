@@ -68,3 +68,25 @@ func test_boardwalk_missing_boards_are_rare_and_never_adjacent() -> void:
 			if i > 0:
 				assert_true(planks[i - 1]["flag"] != "missing", "no two in a row")
 	assert_true(float(missing) <= float(planks.size()) / 12.0, "rare")
+
+
+## GFX-146: the boardwalk is a centred walkway with mud verges, pilings 36-48 px apart and a stub by each missing board.
+func test_boardwalk_walkway_is_narrow_with_pilings() -> void:
+	for rect: Rect2 in [Rect2(0, 470, 1600, 50), Rect2(300, 0, 50, 900)]:
+		var along_x := rect.size.x >= rect.size.y
+		var width := rect.size.y if along_x else rect.size.x
+		var tiles := Scenery.path_tiles(_region("bog", "murky"), rect)
+		var kinds := {}
+		var pil: Array[float] = []
+		for t in tiles:
+			kinds[t["kind"]] = true
+			var r: Rect2 = t["rect"]
+			if t["kind"] == "plank":
+				assert_true((r.size.y if along_x else r.size.x) <= width * 0.6 + 0.01, "board span <= 0.6 x width")
+			if t["kind"] == "piling" and (r.position.y if along_x else r.position.x) < (rect.position.y if along_x else rect.position.x) + width * 0.5:
+				pil.append(r.position.x if along_x else r.position.y)
+		assert_true(kinds.has("mud") and kinds.has("piling") and kinds.has("stub"), "verges, pilings, stubs")
+		assert_true(pil.size() > 5, "pilings")
+		for i in range(1, pil.size()):
+			var gap := pil[i] - pil[i - 1]
+			assert_true(gap >= 35.99 and gap <= 48.01, "piling spacing %f" % gap)
