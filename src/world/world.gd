@@ -800,12 +800,22 @@ func _place_at_spawn_anchor() -> void:
 			return
 
 
-func _build_npcs() -> void:
-	var named_stands := {}
+## SPOT-002: today's settled stands of the hand-placed named people here (id -> position).
+func _named_stands() -> Dictionary:
+	var stands := {}
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
 		if GameState.data.npcs.has(c.id):
-			named_stands[c.id] = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)
-	named_stands = Npcs.settle_named(named_stands, _region)  # SPOT-002
+			stands[c.id] = SectCourt.settle_stand(GameState.npc_spot(c.id)["pos"], _region, true)
+	return Npcs.settle_named(stands, _region)
+
+
+## The settled stand of named person `npc_id` today (NPC nodes walk there when the day turns).
+func named_stand(npc_id: String) -> Vector2:
+	return _named_stands().get(npc_id, GameState.npc_spot(npc_id)["pos"])
+
+
+func _build_npcs() -> void:
+	var named_stands := _named_stands()  # SPOT-002
 	for c in Npcs.in_region(GameState.npcs, GameState.data, GameState.current_region):
 		if not GameState.data.npcs.has(c.id):
 			continue  # Generated NPCs are placed by _build_generated_npcs().
@@ -815,6 +825,7 @@ func _build_npcs() -> void:
 		node.npc_id = c.id
 		node.display_name = "%s (%s)" % [c.name, def["title"]] if def.has("title") else c.name
 		node.position = named_stands[c.id]  # FOLK-017, WU-484, SPOT-002
+		node.stand_for = named_stand  # [REVIEW] the next day's spot is settled the same way
 		node.size = _vec(def.get("size", [30, 30]))
 		node.color = Color(def.get("color", "e6bf99"))
 		add_child(node)

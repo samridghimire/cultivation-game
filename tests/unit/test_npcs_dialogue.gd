@@ -310,3 +310,16 @@ func test_rival_first_meeting_successor_branch_needs_flag() -> void:
 	ctx["flags"] = {"rival_meeting_from": 400}
 	assert_eq(Dialogue.entry_node(dlg, ctx), "successor")
 	assert_true(Dialogue.validate(dlg, data()).is_empty())
+
+
+## [REVIEW] C-363: a timed flag ({"until": day}) gates a choice by ctx "today"; without a day it counts as set (no crash).
+func test_timed_flag_conditions() -> void:
+	var c := CharacterData.new()
+	var flags := {"ma_spar_week": {"until": 10}}
+	var ctx := {"player": c, "npc": null, "data": data(), "flags": flags, "favor": 0, "today": 5}
+	assert_eq(Dialogue.unmet_reason({"flag": "ma_spar_week"}, ctx), "", "set before its end day")
+	ctx["today"] = 10
+	assert_true(Dialogue.unmet_reason({"flag": "ma_spar_week"}, ctx) != "", "expired on its end day")
+	assert_eq(Dialogue.unmet_reason({"not_flag": "ma_spar_week"}, ctx), "", "not_flag passes once expired")
+	ctx.erase("today")
+	assert_eq(Dialogue.unmet_reason({"flag": "ma_spar_week"}, ctx), "", "no day known: counts as set")

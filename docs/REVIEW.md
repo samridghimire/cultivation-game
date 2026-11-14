@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: cede3c0
+Last reviewed commit: 8e0d43c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1939,3 +1939,17 @@ Last reviewed commit: cede3c0
     `shop_stock` with a day; guidance buy hints and merchant lookups still name festival goods out of season. C-362's
     "Show me how you fight." stays listed (disabled, "You already know it.") forever once Iron Fist is known, also for
     players who learned it elsewhere. SPOT-001 had no screenshot check.
+- 2026-11-14 (reviewer): reviewed cede3c0..8e0d43c (GFX-137, SHOP-004 (both landed just before the last review commit but
+  after its range), GFX-139, C-361, GFX-141, SHOP-005, QA-213, LOG-005, GFX-143, GFX-142, C-363, SPOT-002; [PLAN]/[REVIEW]
+  skipped). Main green (4020 -> 4021 tests). No BACKLOG/CHANGELOG edits by workers; no binary assets; no
+  SAVE_VERSION change (SHOP-004's `buy_hints` is an optional save key, sanitised on load, {} for old saves).
+  - Fixed (C-363): `Dialogue._flag_on` called `bool()` on a timed flag Dictionary when ctx has no "today", a runtime
+    error ("Nonexistent 'bool' constructor"). A timed flag now counts as set when the day is unknown. Test added.
+  - Fixed (SPOT-002): only the first placement used `Npcs.settle_named`; when the day turned, `npc.gd` walked named
+    people to the raw `npc_spot` (also skipping WU-484's settle_stand), so the spacing/road/arrival rules held only until
+    the first day passed. world.gd now gives each named NPC node `stand_for` (its settled stand), used on days_advanced.
+  - Fixed (C-361): Mire Serpent text called it "the drake"; two "leave a stone" choices cost 10 stones; wording fixed.
+  - SHOP-004/005, LOG-005, QA-213 (parity test), GFX-137/139/141/142/143 OK.
+  - Notes, not filed: C-361 still has >95% of Core fights at 56% (target <= 40%) and balance.sh --check was not run
+    (QA-218 covers it); LOG-005's HUD fold maps rows by position, so it can pick the wrong HUD row if a dawn line was
+    collapsed into "(x2)" (unlikely). GFX-137/143 and SPOT-002 again landed without screenshot checks.

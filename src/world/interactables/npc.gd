@@ -43,6 +43,8 @@ var _rng := RandomNumberGenerator.new()
 var _phase := 0.0
 ## Where today's spot is (FOLK-017); `home` walks toward it.
 var _walk_to := Vector2.ZERO
+## Set by the world: npc_id -> today's settled stand (Vector2). Unset in tests: the raw Folk spot is used.
+var stand_for: Callable
 var _time := 0.0
 var _wander := Vector2.ZERO
 var _wander_target := Vector2.ZERO
@@ -154,7 +156,8 @@ func _on_day_redraw(_days: int) -> void:
 
 ## FOLK-017: a new day, a new spot (Folk.spot_for): walk there, or jump with reduce_motion.
 func _on_days_advanced(_days: int) -> void:
-	_walk_to = GameState.npc_spot(npc_id)["pos"]
+	# SPOT-002/WU-484: the world settles the raw spot (off gates, roads and the arrival point, apart from others).
+	_walk_to = stand_for.call(npc_id) if stand_for.is_valid() else GameState.npc_spot(npc_id)["pos"]
 	if Settings.get_value("reduce_motion") or not _on_screen:
 		home = _walk_to
 		_walk_to = home

@@ -137,8 +137,8 @@ static func unmet_reason(cond: Dictionary, ctx: Dictionary) -> String:
 ## A timed flag ({"until": day}) only counts while `today` (ctx "today", -1 = unknown) is before it.
 static func _flag_on(flags: Dictionary, key: String, today: int) -> bool:
 	var v: Variant = flags.get(key, false)
-	if v is Dictionary and today >= 0:
-		return Effects.flag_active(flags, key, today)
+	if v is Dictionary:  # [REVIEW] bool() of a Dictionary is a runtime error; an unknown day counts it as set
+		return today < 0 or Effects.flag_active(flags, key, today)
 	return bool(v)
 
 
