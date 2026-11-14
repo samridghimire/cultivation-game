@@ -2407,7 +2407,10 @@ func spar_with(npc_id: String) -> void:
 	var text := "%s %s" % [opening % npc.name, "You win the bout." if won else "They win the bout."]
 	if style != "":
 		var style_name: String = (data.techniques[style] as TechniqueDef).name
-		text = "You trade blows with %s until your %s sits right. (+%d days practice)" % [npc.name, style_name, int(Mentorship.teacher_bout_terms(data)["practice_days"])]
+		if (result["practiced"] as PackedStringArray).is_empty():  # REVIEW: a mastered style gains no practice
+			text = "You trade blows with %s; your %s needs no more polishing." % [npc.name, style_name]
+		else:
+			text = "You trade blows with %s until your %s sits right. (+%d days practice)" % [npc.name, style_name, int(Mentorship.teacher_bout_terms(data)["practice_days"])]
 		for line in result["levels"]:
 			text += " %s." % line
 	elif not (result["practiced"] as PackedStringArray).is_empty():

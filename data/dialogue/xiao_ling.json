@@ -14,7 +14,7 @@
         {"label": "Mock her dreams.", "next": "mocked", "favor": -20, "effects": {"alignment": -10}},
         {"label": "Later, Ling.", "next": "end"}
       ]},
-    "yoke": {"text": "You stand like a reed, {player}. Two full buckets on a yoke since I was seven, and nothing bruises me now. Come by when we know each other better and I will show you how to take the weight.",
+    "yoke": {"text": "You stand like a reed, {player}. Two full buckets on a yoke since I was seven, and nothing bruises me now. Here, I will show you how to take the weight.",
       "choices": [
         {"label": "Carry water with her. (5 days)", "next": "yoke_done", "days": 5, "if": {"min_favor": 40, "not_knows_technique": "stone_skin"}, "effects": {"learn_technique": "stone_skin"}},
         {"label": "Not today.", "next": "greet"}

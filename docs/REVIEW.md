@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: e7caf39
+Last reviewed commit: a7d3c86
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1981,3 +1981,16 @@ Last reviewed commit: e7caf39
   - Notes, not filed: NPCFOE-001 (person foes x1.25, stage floor -1), C-364 and C-365 change combat balance and none ran
     tools/balance.sh --check; QA-219 was filed before NPCFOE-001/C-365 landed, so its refresh should attribute them too.
     SKIP-002's chore wake does not add WU-538's one-time "(turn this off in Settings)" tip (only meditation does).
+- 2026-11-14 (reviewer, 4th run): reviewed e7caf39..a7d3c86 (GFX-151, GUIDE-241, GFX-152, WU-539, C-366, SPAR-001, SKIP-003,
+  GFX-153, GFX-154; [PLAN] skipped). Main green (4104 tests before, +1 after). No BACKLOG/CHANGELOG edits by workers; no
+  binary assets; no SAVE_VERSION change (SKIP-003's `teach_hint_seen_<id>` is a timed world flag).
+  - Fixed (SPAR-001): a teacher bout on an already mastered style still said "(+3 days practice)" though nothing was
+    practised. It now says the style needs no more polishing. Test added.
+  - Fixed (C-366): Xiao Ling's `yoke` node is only reachable at favor 40 but said "Come by when we know each other
+    better"; reworded so she teaches on the spot.
+  - GUIDE-241/SKIP-003 OK (SKIP-003 replaced the weekly slot with a 21-day per-teacher flag; one wake tip now covers
+    meditation and chores, resolving the last review's note). WU-539 OK (`known_tastes` only returns real item ids, so
+    the Likes line can't index a missing item). GFX-151..154: draw-only, all randomness from passed rngs; not rendered.
+  - Notes, not filed: SPAR-001 teacher bouts replace the normal spar with that teacher even for cultivators within the
+    realm gap (only the taught style is practised); a mortal keeps bouting a teacher for +1 favor a week after mastery.
+    WU-539's `likes_line` is a little logic in src/world (harmless).

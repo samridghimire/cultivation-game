@@ -1537,6 +1537,31 @@ func test_teacher_bout_with_hunter_ma() -> void:
 	gs.end_session()
 
 
+## REVIEW (SPAR-001): a teacher bout on a mastered style does not claim practice days.
+func test_teacher_bout_mastered_style_claims_no_practice() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	var max_level: int = (gs.data.techniques["iron_fist"] as TechniqueDef).max_level
+	c.techniques = {"iron_fist": {"level": max_level, "xp": 0.0}}
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	ma.realm_index = 0
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 0
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	gs.spar_with("hunter_ma")
+	var found := false
+	for entry: Dictionary in eb.history:
+		var text := String(entry.get("text", ""))
+		assert_false(text.contains("days practice"), text)
+		found = found or text.contains("needs no more polishing")
+	assert_true(found, "the bout says the style is already polished")
+	gs.end_session()
+
+
 ## RIVAL-016: bouts with the rival are scored; other spars are not.
 func test_spar_rival_keeps_score() -> void:
 	var c := _start()
