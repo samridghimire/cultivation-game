@@ -18,7 +18,7 @@ func test_deterministic_and_inside() -> void:
 
 func test_kinds_by_style() -> void:
 	var rect := Rect2(0, 470, 1600, 60)
-	assert_eq(Scenery.path_tiles(_region("scree"), rect)[0]["kind"], "slab")
+	assert_eq(Scenery.path_tiles(_region("scree"), rect)[0]["kind"], "grit")
 	assert_eq(Scenery.path_tiles(_region("bog", "murky"), rect)[0]["kind"], "plank")
 	var kinds := {}
 	for t in Scenery.path_tiles(_region("bog"), rect):

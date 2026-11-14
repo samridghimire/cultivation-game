@@ -90,3 +90,39 @@ func test_boardwalk_walkway_is_narrow_with_pilings() -> void:
 		for i in range(1, pil.size()):
 			var gap := pil[i] - pil[i - 1]
 			assert_true(gap >= 35.99 and gap <= 48.01, "piling spacing %f" % gap)
+
+
+## GFX-149: a scree road is a wandering grit trail with stepping stones, not a grid of flagstones.
+func test_scree_trail_has_grit_and_irregular_stones() -> void:
+	var rect := Rect2(0, 470, 1600, 60)
+	var tiles := Scenery.path_tiles(_region("scree"), rect)
+	assert_eq(tiles, Scenery.path_tiles(_region("scree"), rect), "deterministic")
+	var grit := 0
+	var polys := 0
+	var offsets := {}
+	var lo := rect.position.y + rect.size.y * 0.15
+	var hi := rect.end.y - rect.size.y * 0.15
+	for t in tiles:
+		var r: Rect2 = t["rect"]
+		match str(t["kind"]):
+			"grit":
+				grit += 1
+			"flag_poly":
+				polys += 1
+				assert_eq((t["points"] as PackedVector2Array).size(), 4)
+			"slab":
+				assert_true(r.size.x <= 18.0 and r.size.y <= 12.0, "stepping stone size %s" % r.size)
+				assert_true(r.position.y >= lo and r.end.y <= hi, "slab inside the central 70%%: %s" % r)
+				offsets[snappedf(r.position.y, 0.5)] = true
+	assert_true(grit > 10, "grit bed")
+	assert_true(polys >= 1, "tilted flagstones")
+	assert_true(offsets.size() > 3, "slabs are not on a grid: %d offsets" % offsets.size())
+
+
+## GFX-149: the market's paved street is unchanged (captured on main before the trail split).
+func test_paved_market_street_unchanged() -> void:
+	var tiles := Scenery.path_tiles(data().regions["fallen_star_market"], Rect2(0, 470, 1600, 60))
+	assert_eq(tiles.size(), 112)
+	assert_eq(tiles[0]["rect"], Rect2(0, 470, 1600, 3))
+	assert_eq(tiles[1]["rect"], Rect2(0, 527, 1600, 3))
+	assert_true((tiles[2]["rect"] as Rect2).is_equal_approx(Rect2(3, 476, 32.98705, 24)), "first slab")

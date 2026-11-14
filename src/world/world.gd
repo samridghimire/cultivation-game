@@ -1226,8 +1226,10 @@ func _draw() -> void:
 			_draw_tiled(path_tile, rect)
 		else:
 			var psc := float(Sprites.scale())
+			var scree_road := str(map.get("ground_style", "grass")) == "scree"  # GFX-149: a mountain trail has no visible road rect
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
-			draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
+			if not scree_road:
+				draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_yard_ground()
 	_draw_market_ground()
@@ -2429,6 +2431,19 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 		var shade: float = t["shade"]
 		var c := base
 		match str(t["kind"]):
+			"grit":
+				var gcol := Color(String(rmap.get("ground", "6b6b6b")))
+				c = Color("dfe6ee") if snowy else gcol.lightened(0.12).lerp(Color("8a7a62"), 0.15)
+				draw_rect(r, c)
+			"flag_poly":
+				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(r.position.x), int(r.position.y)]))
+				var pts: PackedVector2Array = t["points"]
+				draw_colored_polygon(pts, c)
+				for pi in 4:  # a lit top: the lower and right edges get the dark line
+					if pi == 1 or pi == 2:
+						draw_line(pts[pi], pts[(pi + 1) % 4], base.darkened(0.25), 1.0)
+				if snowy:
+					draw_line(pts[0], pts[1], Color(0.93, 0.95, 1.0, 0.85), 2.0)
 			"slab":
 				var tr: Rect2 = t["rect"]
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(tr.position.x), int(tr.position.y)]))
@@ -2437,7 +2452,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				if t["flag"] == "main":
 					c = c.lightened(0.1)  # GFX-126: worn pale street slabs
 				draw_rect(r, c)
-				draw_rect(r, base.darkened(0.2), false, 1.0)
+				if str(rmap.get("ground_style", "")) == "scree":  # GFX-149: a lit top, dark line on the lower and right edges only
+					draw_line(Vector2(r.position.x, r.end.y - 0.5), Vector2(r.end.x, r.end.y - 0.5), base.darkened(0.25), 1.0)
+					draw_line(Vector2(r.end.x - 0.5, r.position.y), Vector2(r.end.x - 0.5, r.end.y), base.darkened(0.25), 1.0)
+				else:
+					draw_rect(r, base.darkened(0.2), false, 1.0)
 				if t["flag"] == "crack":
 					draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), base.darkened(0.4), 1.0)
 			"plank":

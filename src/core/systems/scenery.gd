@@ -789,7 +789,7 @@ static func paving_shade(base: Color, seed: int) -> Color:
 
 
 ## GFX-112: the road surface pieces laid over a path rect, seeded by region id and rect. Each is
-## {kind: slab|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
+## {kind: slab|flag_poly|grit|pebble|plank|rut|edge|puddle|tuft, rect: Rect2, shade: -1..1, flag: crack|gap|""}. Style: scree/paved = irregular
 ## slabs; bog with map.water murky = planks across the path; other bog = a muddy track with puddles; grass/litter = two
 ## worn ruts, a dark edge strip on each side and tufts creeping in. Every rect lies inside `path_rect`; none overlaps a stream crossing (a bridge).
 static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "clear", winter: bool = false) -> Array[Dictionary]:
@@ -809,7 +809,9 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 	var width := path_rect.size.y if along_x else path_rect.size.x
 	var inset := 3.0
 	var pos := 0.0
-	if style == "scree" or style == "paved":
+	if style == "scree":
+		_scree_trail_tiles(out, rng, path_rect, along_x, len_total, width)
+	elif style == "paved":
 		var main_street := map.has("market")  # GFX-126: larger worn slabs between a dark gutter on each edge
 		var gutter := 3.0 if main_street else 0.0
 		var rows := maxi(int(floor((width - inset * 2.0 - gutter * 2.0) / (20.0 if main_street else 14.0))), 1)
@@ -981,6 +983,97 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 		if not hit:
 			kept.append(t)
 	return kept
+
+
+## GFX-149: the tiles of a mountain trail (scree ground): a wandering grit bed 60% of the road width, irregular stepping
+## flagstones in the bed (1-2 abreast, 1 in 6 tilted as a `flag_poly` with `points`, 1 in 8 missing) and loose pebbles off the bed
+## and along both edges. The road rect itself draws nothing. Appends to `out`.
+static func _scree_trail_tiles(out: Array[Dictionary], rng: RandomNumberGenerator, path_rect: Rect2, along_x: bool, len_total: float, width: float) -> void:
+	var bed_w := roundf(width * 0.6)
+	var margin := (width - bed_w) * 0.5
+	var drift := minf(4.0, maxf(margin - 1.0, 0.0))
+	var knots: Array[float] = []
+	var vals: Array[float] = []
+	var kp := 0.0
+	while kp < len_total + 80.0:
+		knots.append(kp)
+		vals.append(rng.randf_range(-drift, drift))
+		kp += rng.randf_range(24.0, 40.0)
+	# the grit bed in 8 px pieces so its edges follow the wander
+	var gp := 0.0
+	while gp < len_total:
+		var gl := minf(8.0, len_total - gp)
+		var off := _trail_offset(knots, vals, gp + gl * 0.5)
+		out.append({"kind": "grit", "rect": _road_rect(path_rect, along_x, gp, margin + off, gl, bed_w), "shade": 0.0, "flag": ""})
+		gp += gl
+	# stepping stones
+	var pos := rng.randf_range(2.0, 8.0)
+	var prev_l := -1
+	var prev_w := -1
+	var count := 0
+	while pos < len_total - 10.0:
+		var lanes := 2 if rng.randf() < 0.3 else 1
+		var step := 0.0
+		var lane_w_total := 0.0
+		var lane_defs: Array[Vector2] = []
+		for ln in lanes:
+			var sl := rng.randi_range(8, 18)
+			var sw := rng.randi_range(6, 12)
+			if lanes == 2:
+				sw = mini(sw, int((bed_w - 6.0) / 2.0))
+			if sl == prev_l and sw == prev_w:
+				sl += 1 if sl < 18 else -1
+			prev_l = sl
+			prev_w = sw
+			lane_defs.append(Vector2(float(sl), float(sw)))
+			lane_w_total += float(sw)
+			step = maxf(step, float(sl))
+		var mid := pos + step * 0.5
+		var centre := margin + _trail_offset(knots, vals, mid) + bed_w * 0.5
+		var gap := 2.0 if lanes == 2 else 0.0
+		var across := centre - (lane_w_total + gap) * 0.5 + rng.randf_range(-1.0, 1.0) * maxf(bed_w - lane_w_total - gap - 4.0, 0.0) * 0.4
+		for ln in lanes:
+			var d: Vector2 = lane_defs[ln]
+			var rr := _road_rect(path_rect, along_x, pos + (step - d.x) * rng.randf(), across, d.x, d.y)
+			across += d.y + gap
+			count += 1
+			var roll := rng.randf()
+			var shade := rng.randf() * 2.0 - 1.0
+			if roll < 1.0 / 8.0:
+				continue  # missing: just grit
+			if roll < 1.0 / 8.0 + 1.0 / 6.0:
+				var pts := PackedVector2Array()
+				var j := 1.5
+				var corners := [rr.position, Vector2(rr.end.x, rr.position.y), rr.end, Vector2(rr.position.x, rr.end.y)]
+				var inward := [Vector2(1, 1), Vector2(-1, 1), Vector2(-1, -1), Vector2(1, -1)]
+				for ci in 4:
+					pts.append(corners[ci] + inward[ci] * rng.randf_range(0.0, j * 2.0))
+				out.append({"kind": "flag_poly", "rect": rr, "points": pts, "shade": shade, "flag": ""})
+			else:
+				out.append({"kind": "slab", "rect": rr, "shade": shade, "flag": ""})
+		pos += step + rng.randf_range(4.0, 14.0)
+	# pebbles: scattered off the bed (about 1 per 120 px^2) and small clusters along both edges every 30-60 px
+	var off_area := maxf(width - bed_w, 0.0) * len_total
+	for i in int(off_area / 120.0):
+		var side := rng.randi() % 2
+		var across := rng.randf_range(0.0, maxf(margin - drift - 2.0, 0.0)) if side == 0 else width - margin + drift + rng.randf_range(0.0, maxf(margin - drift - 2.0, 0.0))
+		out.append({"kind": "pebble", "rect": _road_rect(path_rect, along_x, rng.randf() * maxf(len_total - 2.0, 0.0), across, 2.0, 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": ""})
+	for side in 2:
+		var cp := rng.randf_range(0.0, 30.0)
+		while cp < len_total - 8.0:
+			var base_across := 1.0 if side == 0 else width - 4.0
+			for k in rng.randi_range(2, 4):
+				out.append({"kind": "pebble", "rect": _road_rect(path_rect, along_x, cp + rng.randf_range(0.0, 6.0), base_across + rng.randf_range(0.0, 2.0) * (1.0 if side == 0 else -1.0), 2.0, 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": "edge"})
+			cp += rng.randf_range(30.0, 60.0)
+
+
+## GFX-149: the trail's sideways wander at `p` along the road (linear between the seeded knots).
+static func _trail_offset(knots: Array[float], vals: Array[float], p: float) -> float:
+	var i := 0
+	while i + 2 < knots.size() and knots[i + 1] <= p:
+		i += 1
+	var span := maxf(knots[i + 1] - knots[i], 0.001)
+	return lerpf(vals[i], vals[i + 1], clampf((p - knots[i]) / span, 0.0, 1.0))
 
 
 ## GFX-141: ragged road edges. Small rects (2-6 px deep, 6-20 px long) along both long edges every 10-30 px: a rect inside
