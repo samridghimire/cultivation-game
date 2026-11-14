@@ -1699,7 +1699,6 @@ func _draw_relief(map: Dictionary) -> void:
 	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
 	var gseason := GroundTiles.ground_season(_season, map)
 	var winter := gseason == "Winter"
-	var summer := gseason == "Summer"
 	var snow_col := Color("e8eef4")
 	var shade_col := Color("9fb0c2")
 	for it: Dictionary in _relief:
@@ -1729,13 +1728,20 @@ func _draw_relief(map: Dictionary) -> void:
 						draw_colored_polygon(Scenery.rock_polygon(c + Vector2(0, -rad * 0.35), rad * 0.5, rsd + 1), snow_col)
 					bi += 1
 			"drift":
-				var dr := r
-				if summer:
-					dr = Rect2(r.position + Vector2(r.size.x * 0.25, 0.0), Vector2(r.size.x * 0.5, r.size.y * 0.5))
-				var dpoly := Scenery.ragged_outline(dr, int(it["seed"]), minf(dr.size.y * 0.5, 8.0), 3.0)
-				draw_colored_polygon(dpoly, snow_col)
-				var shade := Scenery.ragged_outline(Rect2(dr.position.x + 3.0, dr.end.y - 4.0, dr.size.x - 6.0, 3.0), int(it["seed"]) + 7, 1.5, 1.0)
-				draw_colored_polygon(shade, Color(shade_col, 0.7))
+				var look := Scenery.drift_look(gseason, int(it["seed"]))
+				if not bool(look["show"]):
+					continue
+				var sc: Vector2 = look["scale"]
+				var dr := Rect2(r.position.x, r.end.y - r.size.y * sc.y, r.size.x * sc.x, r.size.y * sc.y)
+				var dcol: Color = look["color"]
+				dcol.a = float(look["alpha"])
+				if int(look["lumps"]) <= 1:
+					draw_colored_polygon(Scenery.ragged_outline(dr, int(it["seed"]), minf(dr.size.y * 0.5, 8.0), 3.0), dcol)
+					var shade := Scenery.ragged_outline(Rect2(dr.position.x + 3.0, dr.end.y - 4.0, dr.size.x - 6.0, 3.0), int(it["seed"]) + 7, 1.5, 1.0)
+					draw_colored_polygon(shade, Color(shade_col, 0.7))
+				else:
+					for lr in Scenery.drift_lumps(dr, int(look["lumps"]), int(it["seed"])):
+						draw_colored_polygon(Scenery.ragged_outline(lr, int(it["seed"]) + int(lr.position.x), minf(lr.size.y * 0.5, 5.0), 1.5), dcol)
 
 
 ## GFX-145: a rock band: ragged top and bottom edges that taper at both ends, a lit top face over two darker strata
@@ -1972,27 +1978,44 @@ func _draw_crags(map: Dictionary) -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = int(it["seed"])
 		if it["kind"] == "crag":
-			var top_h := r.size.y * 0.45
-			draw_rect(Rect2(r.position.x + px, r.end.y, r.size.x - px * 2.0, px * 3.0), Color(0, 0, 0, 0.25))
-			var body := Scenery.jagged_outline(r, int(it["seed"]), maxi(5, int(r.size.x / 12.0)), minf(px * 4.0, r.size.y * 0.3))
-			draw_colored_polygon(body, rock.darkened(0.45))
-			for c in rng.randi_range(3, 5):
-				var cx := r.position.x + rng.randf_range(0.08, 0.92) * r.size.x
-				draw_line(Vector2(cx, r.position.y + top_h), Vector2(cx + px * 2.0, r.end.y - px * 2.0), rock.darkened(0.65), px)
-			var top := Rect2(r.position.x + px * 2.0, r.position.y, r.size.x - px * 4.0, top_h)
-			draw_rect(top, rock.lightened(0.05))
-			draw_rect(Rect2(top.position, Vector2(top.size.x, px * 2.0)), rock.lightened(0.3))
-			draw_rect(Rect2(top.position.x, top.end.y - px, top.size.x, px), rock.darkened(0.2))
-			draw_polyline(body.slice(1, body.size() - 1), rock.darkened(0.7), px)
+			var outline := Scenery.crag_outline(r, int(it["seed"]))
+			var foot := Scenery.shadow_blob(Vector2(r.get_center().x, r.end.y + 2.0), Vector2(r.size.x * 0.55, 6.0), int(it["seed"]))
+			draw_colored_polygon(foot, Color(0, 0, 0, 0.22))
+			draw_colored_polygon(outline, rock.darkened(0.45))
+			# a lit top-left facet: the upper left part of the silhouette
+			var lit := PackedVector2Array()
+			var mid_x := r.position.x + r.size.x * 0.55
+			lit.append(outline[1])
+			for i in range(2, outline.size() - 2):
+				if outline[i].x <= mid_x:
+					lit.append(outline[i])
+			lit.append(Vector2(mid_x, r.position.y + r.size.y * 0.5))
+			lit.append(Vector2(outline[1].x, r.position.y + r.size.y * 0.55))
+			if lit.size() >= 3:
+				draw_colored_polygon(lit, rock.lightened(0.05))
+			for c in rng.randi_range(1, 2):
+				var cx := r.position.x + rng.randf_range(0.2, 0.8) * r.size.x
+				draw_line(Vector2(cx, r.position.y + r.size.y * 0.3), Vector2(cx + px * 2.0, r.end.y - px * 2.0), rock.darkened(0.65), px)
+			var ring := outline.duplicate()
+			ring.append(outline[0])
+			draw_polyline(ring, rock.darkened(0.7), px)
 			if winter:
-				draw_rect(Rect2(top.position.x, top.position.y - px, top.size.x * 0.8, px * 3.0), Color("e8eef4"))
+				draw_polyline(PackedVector2Array(outline.slice(2, outline.size() - 2)), Color("e8eef4"), px * 2.0)
 		else:
-			var a := 0.95 if winter else 0.55
-			draw_rect(Rect2(r.position.x + px * 3.0, r.position.y, r.size.x - px * 6.0, r.size.y), Color(0.91, 0.94, 0.97, a))
-			draw_rect(Rect2(r.position.x, r.position.y + px * 2.0, r.size.x, r.size.y - px * 4.0), Color(0.91, 0.94, 0.97, a))
-			for k in 3:  # wind streaks
-				var sy := r.position.y + r.size.y * (0.25 + 0.25 * k)
-				draw_line(Vector2(r.position.x + px * 4.0, sy), Vector2(r.position.x + r.size.x * rng.randf_range(0.5, 0.9), sy), Color(0.62, 0.7, 0.8, a * 0.7), px)
+			var look := Scenery.drift_look(GroundTiles.ground_season(_season, map), int(it["seed"]))  # GFX-153: remnants outside winter
+			if not bool(look["show"]):
+				continue
+			var sc: Vector2 = look["scale"]
+			var dr := Rect2(r.position.x, r.end.y - r.size.y * sc.y, r.size.x * sc.x, r.size.y * sc.y)
+			var a := 0.95 if winter else float(look["alpha"]) * 0.8
+			var dcol: Color = look["color"]
+			var parts: Array[Rect2] = Scenery.drift_lumps(dr, int(look["lumps"]), int(it["seed"]))
+			for pr in parts:
+				draw_colored_polygon(Scenery.ragged_outline(pr, int(it["seed"]) + int(pr.position.x), minf(pr.size.y * 0.5, 6.0), 2.0), Color(0.91, 0.94, 0.97, a) if winter else Color(dcol, a))
+			if winter:
+				for k in 3:  # wind streaks
+					var sy := r.position.y + r.size.y * (0.25 + 0.25 * k)
+					draw_line(Vector2(r.position.x + px * 4.0, sy), Vector2(r.position.x + r.size.x * rng.randf_range(0.5, 0.9), sy), Color(0.62, 0.7, 0.8, a * 0.7), px)
 
 
 ## GFX-113: pines leaning out over the top cliffs of a map.high region (Scenery.high_pines).
@@ -2476,7 +2499,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 		match str(t["kind"]):
 			"grit":
 				var gcol := Color(String(rmap.get("ground", "6b6b6b")))
-				c = Color("dfe6ee") if snowy else gcol.lightened(0.12).lerp(Color("8a7a62"), 0.15)
+				c = Color("dfe6ee") if snowy else Scenery.scree_bed_color(gcol)
 				draw_rect(r, c)
 			"flag_poly":
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(r.position.x), int(r.position.y)]))

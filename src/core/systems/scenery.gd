@@ -1641,6 +1641,76 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 	return out
 
 
+## GFX-153: how a snow drift of a ridge region looks in `season`: {show, scale: Vector2, color: Color, alpha, lumps}. Winter keeps the full white
+## drift; spring and autumn leave a smaller, cool grey-blue remnant in 2-3 lumps (hidden in 1 of 2 drifts in spring, 2 of 3 in autumn); summer none.
+static func drift_look(season: String, seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "drift_look"])
+	match season:
+		"Winter":
+			return {"show": true, "scale": Vector2.ONE, "color": Color("e8eef4"), "alpha": 1.0, "lumps": 1}
+		"Summer":
+			return {"show": false, "scale": Vector2.ONE, "color": Color("c9d3dc"), "alpha": 0.0, "lumps": 0}
+		_:
+			var hide_in := 2 if season == "Autumn" else 1
+			var of := 3 if season == "Autumn" else 2
+			return {"show": rng.randi() % of >= hide_in, "scale": Vector2(0.45, 0.6), "color": Color("c9d3dc"), "alpha": 0.85, "lumps": rng.randi_range(2, 3)}
+
+
+## GFX-153: the lumps of a remnant drift as rects along `r` (a slice of its width each, 4-10 px gaps, hugging the foot of the ledge).
+static func drift_lumps(r: Rect2, lumps: int, seed_value: int) -> Array[Rect2]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "drift_lumps"])
+	var out: Array[Rect2] = []
+	var n := maxi(lumps, 1)
+	var gaps := 0.0
+	var gap_list: Array[float] = []
+	for i in n - 1:
+		gap_list.append(rng.randf_range(4.0, 10.0))
+		gaps += gap_list[i]
+	var w := maxf((r.size.x - gaps) / float(n), 4.0)
+	var x := r.position.x
+	for i in n:
+		var h := r.size.y * rng.randf_range(0.7, 1.0)
+		out.append(Rect2(x, r.end.y - h, w, h))
+		x += w + (gap_list[i] if i < n - 1 else 0.0)
+	return out
+
+
+## GFX-153: a crag silhouette for `r`: an uneven stepped top, sides sloping in (the top 6-12 px narrower than the base) and a base on r's
+## bottom edge. Clockwise from the bottom-left; deterministic.
+static func crag_outline(r: Rect2, seed_value: int) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "crag_outline"])
+	var inset := rng.randf_range(6.0, 12.0)
+	var top_x0 := r.position.x + inset
+	var top_x1 := r.end.x - inset
+	var steps := rng.randi_range(3, 5)
+	var out := PackedVector2Array()
+	out.append(Vector2(r.position.x, r.end.y))
+	out.append(Vector2(top_x0 + rng.randf_range(0.0, 2.0), r.position.y + r.size.y * 0.25))
+	for i in steps + 1:
+		var x := lerpf(top_x0, top_x1, float(i) / float(steps))
+		out.append(Vector2(x, r.position.y + rng.randf_range(0.0, minf(10.0, r.size.y * 0.25))))
+	out.append(Vector2(top_x1 - rng.randf_range(0.0, 2.0), r.position.y + r.size.y * 0.25))
+	out.append(Vector2(r.end.x, r.end.y))
+	return out
+
+
+## GFX-153: the bed colour of a scree trail (its grit) and the stone colour that sits on it: on a bed darker than 0.45 luminance the
+## stones are lightened by 0.22 (and lit tops by a further 0.1, see `scree_stone_lit`), else they keep the road colour `base`.
+static func scree_bed_color(ground: Color) -> Color:
+	return ground.lightened(0.12).lerp(Color("8a7a62"), 0.15)
+
+
+static func scree_stone_base(base: Color, ground: Color) -> Color:
+	return base.lightened(0.22) if scree_bed_color(ground).get_luminance() < 0.45 else base
+
+
+static func scree_stone_lit(base: Color, ground: Color) -> Color:
+	return scree_stone_base(base, ground).lightened(0.1) if scree_bed_color(ground).get_luminance() < 0.45 else base.lightened(0.05)
+
+
 ## GFX-150: the heights of a ledge's 3-6 steps along its length as fractions of its full height: always one step at 1.0 and one at
 ## <= 0.6, so the silhouette varies at least 40 %. `rising[i]` is true when step i is higher than the one before it (the lit top facet).
 static func ledge_steps(seed_value: int) -> Dictionary:

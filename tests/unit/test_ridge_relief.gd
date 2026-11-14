@@ -88,3 +88,58 @@ func test_ridge_patches_clear_of_keepouts() -> void:
 		for k in keep:
 			assert_false(k.intersects(box), "patch clear of keepouts")
 	assert_eq(a, Scenery.ridge_patches(_ridge(), keep))
+
+
+## GFX-153: seasonal drifts, crag silhouettes and scree stone contrast.
+func test_drift_look_per_season() -> void:
+	var spring_shown := 0
+	var autumn_shown := 0
+	for sd in 60:
+		assert_false(Scenery.drift_look("Summer", sd)["show"], "summer: no snow")
+		var w := Scenery.drift_look("Winter", sd)
+		assert_true(w["show"] and w["scale"] == Vector2.ONE and w["lumps"] == 1, "winter full drift")
+		for season in ["Spring", "Autumn"]:
+			var d := Scenery.drift_look(season, sd)
+			assert_eq(d, Scenery.drift_look(season, sd), "deterministic")
+			assert_true(d["scale"].x < 0.5 and d["lumps"] >= 2 and d["lumps"] <= 3, "smaller, 2-3 lumps")
+			assert_true((d["color"] as Color) != Color("e8eef4"), "not snow white")
+			if d["show"]:
+				if season == "Spring":
+					spring_shown += 1
+				else:
+					autumn_shown += 1
+	assert_true(spring_shown > 15 and spring_shown < 45, "spring hides about half")
+	assert_true(autumn_shown > 5 and autumn_shown < 35, "autumn hides about two thirds")
+
+
+func test_drift_lumps_have_gaps() -> void:
+	var r := Rect2(100, 100, 60, 12)
+	for sd in 20:
+		var l := Scenery.drift_lumps(r, 3, sd)
+		assert_eq(l.size(), 3, "3 lumps")
+		for i in 2:
+			var gap := l[i + 1].position.x - l[i].end.x
+			assert_true(gap >= 3.99 and gap <= 10.01, "4-10 px gaps")
+
+
+func test_crag_outline_tapers() -> void:
+	var r := Rect2(0, 0, 100, 50)
+	for sd in 20:
+		var o := Scenery.crag_outline(r, sd)
+		assert_true(o.size() >= 8, "uneven top has several points")
+		assert_eq(o, Scenery.crag_outline(r, sd), "deterministic")
+		assert_true(o[1].x >= 6.0 - 0.001 and o[o.size() - 2].x <= 94.001, "sides slope in")
+		var ys := {}
+		for i in range(2, o.size() - 2):
+			ys[snappedf(o[i].y, 0.01)] = true
+		assert_true(ys.size() >= 2, "top varies")
+
+
+func test_scree_stone_contrast() -> void:
+	var ground := Color("4d5568")
+	var base := Color("8a8fa0")
+	var bed := Scenery.scree_bed_color(ground)
+	assert_true(Scenery.scree_stone_base(base, ground).get_luminance() - bed.get_luminance() >= 0.12, "stones read on Myriad's dark bed")
+	assert_true(Scenery.scree_stone_lit(base, ground).get_luminance() > Scenery.scree_stone_base(base, ground).get_luminance(), "lit top lighter")
+	var light := Color("c8c4b8")
+	assert_eq(Scenery.scree_stone_base(light, light), light, "a light bed keeps the old colour")
