@@ -130,3 +130,12 @@ func test_same_omen_two_days_running_is_not_forecast() -> void:
 	assert_false(Almanac.same_omen(fish, _omen("gather_bonus")))
 	assert_false(Almanac.same_omen({}, fish))
 	assert_false(Almanac.same_omen({}, {}))
+
+
+func test_two_omens_of_one_boost_kind_fold_but_never_different_kinds() -> void:
+	var a := {"id": "x1", "boost": {"fishing_mult": 1.2}}
+	var b := {"id": "x2", "boost": {"fishing_mult": 1.5}}
+	var c := {"id": "x3", "boost": {"gather_bonus": 1.2}}
+	assert_true(Almanac.same_omen(a, b))
+	assert_false(Almanac.same_omen(a, c))
+	assert_false(Almanac.same_omen({"id": "p1"}, {"id": "p2"}))

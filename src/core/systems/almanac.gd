@@ -104,9 +104,16 @@ static func eve_of(omen: Dictionary) -> String:
 	return e if e != "" else String(omen.get("name", "")).to_lower()
 
 
-## LOG-008: whether two days carry the same omen (same id): tomorrow's forecast adds nothing to today's line.
+## LOG-008: whether two days carry the same omen or the same kind of boost (two fishing days, two herb days):
+## tomorrow's forecast adds nothing to today's line.
 static func same_omen(a: Dictionary, b: Dictionary) -> bool:
-	return not a.is_empty() and not b.is_empty() and String(a.get("id", "")) == String(b.get("id", "")) and String(a.get("id", "")) != ""
+	if a.is_empty() or b.is_empty():
+		return false
+	var ia := String(a.get("id", ""))
+	if ia != "" and ia == String(b.get("id", "")):
+		return true
+	var ka := boost_key(a)
+	return ka != "" and ka == boost_key(b)
 
 
 ## LOG-003: whether `omen` (on `day`) is worth a log forecast: a fishing omen while a catch task is open, a gathering
