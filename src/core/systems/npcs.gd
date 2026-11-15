@@ -974,8 +974,10 @@ static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: i
 					if String(other.get("next", "")) == node_id and other.has("if"):
 						need = maxi(need, int(other["if"].get("min_favor", 0)))
 			var tech_name: String = data.techniques[tech_id].name
-			result.append({"kind": "technique", "name": tech_name, "need_favor": need, "known": c.techniques.has(tech_id),
-				"text": _teaching_text(tech_name, "favor %d" % need if favor >= need else "favor %d/%d" % [favor, need])})
+			var tech_known := c.techniques.has(tech_id)
+			var tech_ready := not tech_known and favor >= need  # WU-541: the lesson is a dialogue choice
+			result.append({"kind": "technique", "name": tech_name, "need_favor": need, "known": tech_known, "ready": tech_ready,
+				"text": (tech_name + " - ready, ask when you Talk") if tech_ready else _teaching_text(tech_name, "favor %d" % need if favor >= need else "favor %d/%d" % [favor, need])})
 	var tiers: Array = data.family.get("folk_tiers", [])
 	var lessons: Array = Folk.lessons_of(data, npc_id)
 	for i in lessons.size():
@@ -984,15 +986,38 @@ static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: i
 			continue
 		var tier_def: Dictionary = tiers[tier]
 		var lesson_name := _lesson_name(lessons[i].get("effects", {}), data)
+		var lesson_known := c.lessons_taught.has("%s:%d" % [npc_id, i])
+		var lesson_ready := not lesson_known and favor >= int(tier_def.get("min", 0))
 		result.append({"kind": "lesson", "name": lesson_name, "need_favor": int(tier_def.get("min", 0)),
-			"known": c.lessons_taught.has("%s:%d" % [npc_id, i]),
+			"known": lesson_known, "ready": lesson_ready,
 			"practice_only": (lessons[i].get("effects", {}) as Dictionary).keys() == ["practice_days"],
-			"text": _teaching_text(lesson_name + " lesson", String(tier_def.get("name", "")).to_lower())})
+			"text": (lesson_name + " lesson - ready") if lesson_ready else _teaching_text(lesson_name + " lesson", String(tier_def.get("name", "")).to_lower())})
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["need_favor"]) != int(b["need_favor"]):
 			return int(a["need_favor"]) < int(b["need_favor"])
 		return String(a["name"]) < String(b["name"]))
 	return result
+
+
+## WU-541: true when a dialogue technique lesson is ready (favor reached, not yet known): the Talk button gets a marker.
+static func talk_lesson_ready(teachings_list: Array) -> bool:
+	for t: Dictionary in teachings_list:
+		if String(t.get("kind", "")) == "technique" and bool(t.get("ready", false)):
+			return true
+	return false
+
+
+## WU-541: "Likes: A, B, C" from the tastes the player has learned (max 3), or "".
+static func likes_line(flags: Dictionary, data: GameData, id: String) -> String:
+	var names: Array[String] = []
+	var tastes := Family.known_tastes(flags, data, id)
+	for item_id: String in tastes:
+		if int(tastes[item_id]) > 0:
+			names.append(String(data.items[item_id].get("name", item_id)))
+	names.sort()
+	if names.is_empty():
+		return ""
+	return "Likes: " + ", ".join(names.slice(0, 3))
 
 
 static func _teaching_text(label: String, need: String) -> String:

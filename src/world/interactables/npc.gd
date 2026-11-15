@@ -246,15 +246,7 @@ func menu_header() -> Dictionary:
 
 ## WU-539: "Likes: A, B, C" from the tastes the player has learned (max 3), or "".
 static func likes_line(flags: Dictionary, data: GameData, id: String) -> String:
-	var names: Array[String] = []
-	var tastes := Family.known_tastes(flags, data, id)
-	for item_id: String in tastes:
-		if int(tastes[item_id]) > 0:
-			names.append(String(data.items[item_id].get("name", item_id)))
-	names.sort()
-	if names.is_empty():
-		return ""
-	return "Likes: " + ", ".join(names.slice(0, 3))
+	return Npcs.likes_line(flags, data, id)
 
 
 ## WU-537: up to 3 [{text, known}] from Npcs.teachings for the "Teaches:" lines; [] when this villager teaches nothing.
@@ -265,7 +257,7 @@ func menu_teaches() -> Array:
 	for t: Dictionary in Npcs.teachings(npc_id, GameState.player, GameState.data, int(GameState.npc_favor.get(npc_id, 0))):
 		if lines.size() >= 3:
 			break
-		lines.append({"text": String(t["text"]), "known": bool(t["known"])})
+		lines.append({"text": String(t["text"]), "known": bool(t["known"]), "ready": bool(t.get("ready", false))})
 	return lines
 
 
@@ -459,7 +451,8 @@ func get_options() -> Array[Dictionary]:
 	options.append({"label": "Look", "action": _look, "keep_open": true})
 	if GameState.has_dialogue(npc_id):
 		if _has_dialogue_window():
-			options.append({"label": "Talk", "action": GameState.start_dialogue.bind(npc_id)})
+			var talk_ready := GameState.player != null and Npcs.talk_lesson_ready(Npcs.teachings(npc_id, GameState.player, GameState.data, int(GameState.npc_favor.get(npc_id, 0))))
+			options.append({"label": "Talk (lesson ready)" if talk_ready else "Talk", "action": GameState.start_dialogue.bind(npc_id)})
 		else:
 			options.append_array(_inline_dialogue_options())
 	if def.has("deed_context"):

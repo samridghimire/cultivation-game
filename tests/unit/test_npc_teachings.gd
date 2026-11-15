@@ -45,4 +45,32 @@ func test_teaching_text_shows_progress() -> void:
 	var fist := Npcs.teachings("hunter_ma", c, data(), 4).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
 	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 4/15)")
 	fist = Npcs.teachings("hunter_ma", c, data(), 20).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
-	assert_eq(String(fist[0]["text"]), "Iron Fist (favor 15)")
+	assert_eq(String(fist[0]["text"]), "Iron Fist - ready, ask when you Talk")
+
+
+## WU-541: ready lessons read "ready", locked ones keep their favor text, and Talk is marked only for a ready dialogue lesson.
+func test_ready_technique_and_lesson_text() -> void:
+	var c := CharacterData.new()
+	var list := Npcs.teachings("hunter_ma", c, data(), 100)
+	var fist: Dictionary = list.filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")[0]
+	assert_true(bool(fist["ready"]))
+	assert_eq(String(fist["text"]), "Iron Fist - ready, ask when you Talk")
+	assert_true(Npcs.talk_lesson_ready(list))
+	for t in list:
+		if t["kind"] == "lesson" and bool(t["ready"]):
+			assert_true(String(t["text"]).ends_with("lesson - ready"))
+
+
+func test_locked_text_unchanged_and_no_talk_marker() -> void:
+	var c := CharacterData.new()
+	var list := Npcs.teachings("hunter_ma", c, data(), 0)
+	for t in list:
+		assert_false(bool(t["ready"]))
+	assert_eq(String(list[0]["text"]), "Iron Fist (favor 0/15)")
+	assert_false(Npcs.talk_lesson_ready(list))
+	c.techniques["iron_fist"] = 1
+	assert_false(Npcs.talk_lesson_ready(Npcs.teachings("hunter_ma", c, data(), 100)), "known technique is not ready")
+
+
+func test_likes_line_helper() -> void:
+	assert_eq(Npcs.likes_line({}, data(), "hunter_ma"), "")

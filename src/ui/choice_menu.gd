@@ -119,7 +119,7 @@ func _set_teaches(lines: Array) -> void:
 	for line: Dictionary in lines:
 		var known := bool(line.get("known", false))
 		var l := UIStyle.label(("  \u2713 " if known else "  - ") + String(line["text"]), 14,
-			Color(0.55, 0.55, 0.58) if known else Color(0.85, 0.85, 0.9))
+			Color(0.55, 0.55, 0.58) if known else (UIStyle.ACCENT if bool(line.get("ready", false)) else Color(0.85, 0.85, 0.9)))
 		_teach_box.add_child(l)
 
 
