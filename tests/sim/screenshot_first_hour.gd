@@ -13,6 +13,8 @@ extends SceneTree
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-542: add `--knows=<tech_id>` to learn that technique first.
+## WU-543: `--friend=<id> --region=<region>` keeps that region and finds the villager there; `--flag=<key>[=<value>]` sets a world flag
+##   (true, or the int/string value); `--realm=<index>` sets the player's realm (stage 0).
 ## WU-537: `--friend=hunter_ma` opens that named villager instead.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
@@ -767,11 +769,23 @@ func _quarrel_shots(gs: Node, c: CharacterData) -> void:
 func _friend_shots(gs: Node) -> void:
 	shots.append({"name": "friend", "open": func() -> void:
 		hud.get("_banner").visible = false
-		gs.current_region = "qingshi_village"
+		if region_list.is_empty():
+			gs.current_region = "qingshi_village"
 		var want := ""
 		for arg in OS.get_cmdline_user_args():
 			if arg.begins_with("--friend="):
 				want = arg.substr(9)
+			if arg.begins_with("--realm="):  # WU-543: set the realm, stage 0
+				gs.player.realm_index = int(arg.substr(8))
+				gs.player.stage = 0
+			if arg.begins_with("--flag="):  # WU-543: --flag=key (true) or --flag=key=value
+				var kv := arg.substr(7).split("=", false, 1)
+				if kv.size() == 1:
+					gs.world_flags[kv[0]] = true
+				elif kv[1].is_valid_int():
+					gs.world_flags[kv[0]] = int(kv[1])
+				else:
+					gs.world_flags[kv[0]] = kv[1]
 			if arg.begins_with("--knows="):  # WU-542: learn this technique first
 				Techniques.learn(gs.player, gs.data, arg.substr(8))
 		for node in world.find_children("*", "Interactable", true, false):
@@ -789,7 +803,10 @@ func _friend_shots(gs: Node) -> void:
 					if arg.begins_with("--emote="):
 						root.get_node("EventBus").npc_reaction.emit(id, arg.substr(8))
 				return
-		print("friend shot: no generated villager found"), "close": hud.get("_choice_menu").close})
+		if want != "":
+			push_error("friend shot: npc '%s' not found in region %s" % [want, gs.current_region])
+		else:
+			print("friend shot: no generated villager found"), "close": hud.get("_choice_menu").close})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).
