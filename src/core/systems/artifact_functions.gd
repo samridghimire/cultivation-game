@@ -11,6 +11,8 @@ const KNOWN := ["storage", "appraisal", "inner_world", "spirit_garden"]
 
 ## ART-011: how many recent gains the artifact remembers.
 const GAINS_KEPT := 6
+## QA-212: balance sims set this to count every gain by source ((source: String, amount: int) -> void); null in the game.
+static var gain_observer: Callable = Callable()
 const SOURCE_ORDER := ["stage", "realm", "first_win", "discovery", "secret_realm_floor"]
 const SOURCE_TEXT := {
 	"stage": ["a new stage", "new stages", "each new stage"],
@@ -96,6 +98,8 @@ static func grant_progress(c: CharacterData, data: GameData, kind: String, count
 static func record_gain(c: CharacterData, source: String, amount: int, day: int) -> void:
 	if amount <= 0:
 		return
+	if gain_observer.is_valid():
+		gain_observer.call(source, amount)
 	if not c.artifact_gains.is_empty():
 		var last: Dictionary = c.artifact_gains[c.artifact_gains.size() - 1]
 		if int(last.get("day", -1)) == day and String(last.get("source", "")) == source:

@@ -96,6 +96,10 @@ static var recharge_first := false
 static var hint_missions := false
 ## QA-158: never join a sect (the rogue path).
 static var stay_rogue := false
+## QA-212: with artifact_report on, play() unseals each Creation Artifact function the day it is ready (cheapest first, never feeds stones)
+## and artifact_log (per seed: {open: {id: day}, foundation: day, energy: {source: total}}) records when.
+static var artifact_report := false
+static var artifact_log: Array[Dictionary] = []
 ## QA-155: once a month a sect member buys the cheapest body-art manual the treasury sells (keeping the Foundation
 ## pill's claim while it is still to claim) or a merchant here sells for stones, learns it and practises it 7 days a
 ## month. trial_report (implied by body_art) records per seed the day the art was learned and the Core Disciple trial
@@ -168,6 +172,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			sect_entry["paid"] += 1
 	if sect_report:
 		bus.message_posted.connect(on_sect_msg)
+	var art_rec := {"open": {}, "foundation": -1, "energy": {}}
+	if artifact_report:
+		artifact_log.append(art_rec)
+		ArtifactFunctions.gain_observer = func(source: String, amount: int) -> void:
+			var tally: Dictionary = art_rec["energy"]
+			tally[source] = int(tally.get(source, 0)) + amount
 	_talk_to_elder_mo(gs)
 	for chore in CHORES:
 		gs.perform_deed(chore)
@@ -260,8 +270,12 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			sect_entry["months"] += 1
 			if gs.current_region != (gs.data.sects[c.sect["id"]] as SectDef).home_region:
 				sect_entry["away"] += Calendar.DAYS_PER_MONTH
+		if artifact_report:
+			_artifact_month(gs, c, clock.total_days, art_rec)
 		if month_hook.is_valid():
 			month_hook.call(month)
+	if artifact_report:
+		ArtifactFunctions.gain_observer = Callable()
 	if injury_report:
 		bus.message_posted.disconnect(on_msg)
 	if sect_report:
@@ -286,6 +300,22 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	saves.autosave_enabled = autosave_was
 	return out
+
+
+## QA-212: unseal every function that is ready, cheapest first (the day is month-granular), and note the day Foundation is reached.
+static func _artifact_month(gs: Node, c: CharacterData, day: int, rec: Dictionary) -> void:
+	if int(rec["foundation"]) < 0 and c.realm_index >= 2:
+		rec["foundation"] = day
+	while c.alive:
+		var ready := ArtifactFunctions.ready_to_unseal(c, gs.data, gs.world_flags)
+		if ready.is_empty():
+			return
+		ready.sort_custom(func(a: String, b: String) -> bool:
+			return int(ArtifactFunctions.get_def(gs.data, a).get("unlock", {}).get("energy", 0)) < int(ArtifactFunctions.get_def(gs.data, b).get("unlock", {}).get("energy", 0)))
+		gs.unlock_artifact_function(ready[0])
+		if not ArtifactFunctions.is_unlocked(c, ready[0]):
+			return
+		rec["open"][ready[0]] = day
 
 
 ## QA-118: remember the id of a road encounter ("On the road: <text>" in the log) so the sim can list them.

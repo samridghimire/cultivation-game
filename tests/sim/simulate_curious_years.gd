@@ -132,6 +132,8 @@ func _run() -> void:
 			FirstHour.core_report = true  # QA-173
 		elif a == "--repeat-report":
 			_repeat_report = true  # QA-175
+		elif a == "--artifact-report":
+			FirstHour.artifact_report = true  # QA-212
 		elif a == "--season-report":
 			_season_report = true  # QA-214
 		elif a == "--arm-report":
@@ -273,6 +275,8 @@ func _run() -> void:
 		_print_repeat_report(gs)
 	if _season_report:
 		_print_season_report(seeds)
+	if FirstHour.artifact_report:
+		_print_artifact_report(gs.data)
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:
@@ -319,6 +323,44 @@ func _print_foundation_breakthrough(runs: Array[Dictionary]) -> void:
 			if success_day >= 0:
 				stuck.append(success_day - bday)
 	print("  medians: days stuck at the bottleneck %.0f (%d seeds that succeeded), attempts %.0f, share of attempts with a pill %d%% (%d of %d), attempts under 50%%: %d of %d" % [_median(stuck.duplicate()), stuck.size(), _median(attempt_counts.duplicate()), 100 * with_pill / maxi(1, total), with_pill, total, below_half, total])
+
+
+## QA-212: per seed the day each Creation Artifact seal opened ("-" = never), the day Foundation was reached, and energy by source.
+func _print_artifact_report(data: GameData) -> void:
+	var ids: Array[String] = []
+	for def: Dictionary in data.artifact.get("functions", []):
+		ids.append(String(def["id"]))
+	var sources: Array[String] = ["stage", "realm", "first_win", "discovery", "secret_realm_floor"]
+	print("Artifact seals (QA-212): day each seal opened, day Foundation reached, energy by source")
+	print("  seed  %s  foundation  %s" % ["  ".join(ids), "  ".join(sources)])
+	var cols := {}
+	for key in ids + ["foundation"] + sources:
+		cols[key] = []
+	for i in FirstHour.artifact_log.size():
+		var rec: Dictionary = FirstHour.artifact_log[i]
+		var cells: Array[String] = []
+		for id in ids:
+			var d: int = rec["open"].get(id, -1)
+			cells.append(str(d) if d >= 0 else "-")
+			if d >= 0:
+				cols[id].append(d)
+		var fd: int = rec["foundation"]
+		if fd >= 0:
+			cols["foundation"].append(fd)
+		var en: Array[String] = []
+		for src in sources:
+			en.append(str(rec["energy"].get(src, 0)))
+			cols[src].append(int(rec["energy"].get(src, 0)))
+		print("  %4d  %s  %s  %s" % [i + 1, "  ".join(cells), str(fd) if fd >= 0 else "-", "  ".join(en)])
+	var n := FirstHour.artifact_log.size()
+	var meds: Array[String] = []
+	for key in ids + ["foundation"]:
+		meds.append("%s %s (%d/%d seeds)" % [key, "day %.0f" % _median(cols[key].duplicate()) if not cols[key].is_empty() else "-", cols[key].size(), n])
+	print("  medians: %s" % ", ".join(meds))
+	var emeds: Array[String] = []
+	for src in sources:
+		emeds.append("%s %.0f" % [src, _median(cols[src].duplicate())])
+	print("  median energy by source: %s" % ", ".join(emeds))
 
 
 ## QA-175: every encounter met >= 3 times per seed, then median and max count per id over seeds (top 25 by median).
