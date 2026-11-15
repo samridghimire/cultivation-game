@@ -152,3 +152,27 @@ func test_covered_label_slides_sideways_clear_of_building() -> void:  # WU-540
 	var moved := Rect2(person.position + Vector2(res[1]["dx"], res[1]["offset"]), person.size)
 	assert_false(moved.intersects(roof))
 	assert_false(moved.intersects(place_label))
+
+
+func test_separate_crowded_case_has_no_overlaps_and_fixed_stay() -> void:
+	var rects: Array[Rect2] = [Rect2(100, 100, 120, 16), Rect2(110, 104, 100, 16), Rect2(105, 98, 90, 16), Rect2(300, 300, 50, 16)]
+	var fixed: Array[bool] = [true, false, false, false]
+	var res := LabelLayout.separate(rects, fixed)
+	assert_eq(res[0]["dy"], 0.0)
+	assert_eq(res[3]["dy"], 0.0)
+	var shown: Array[Rect2] = []
+	for i in rects.size():
+		if not res[i]["faded"]:
+			shown.append(Rect2(rects[i].position + Vector2(0, res[i]["dy"]), rects[i].size))
+	for i in shown.size():
+		for j in range(i + 1, shown.size()):
+			assert_false(shown[i].intersects(shown[j]))
+
+
+func test_separate_is_deterministic_and_fades_when_stuck() -> void:
+	var rects: Array[Rect2] = [Rect2(0, 0, 100, 16), Rect2(0, -16, 100, 16), Rect2(0, 16, 100, 16), Rect2(0, -32, 100, 16), Rect2(0, 32, 100, 16), Rect2(0, 0, 100, 16)]
+	var fixed: Array[bool] = [true, true, true, true, true, false]
+	var a := LabelLayout.separate(rects, fixed)
+	var b := LabelLayout.separate(rects, fixed)
+	assert_eq(a, b)
+	assert_true(a[5]["faded"])

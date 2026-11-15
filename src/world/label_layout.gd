@@ -153,3 +153,36 @@ static func _hits(rect: Rect2, others: Array[Rect2], skip: int = -1) -> bool:
 		if i != skip and rect.intersects(others[i]):
 			return true
 	return false
+
+
+## WU-545: the last pass over labels already placed. `fixed[i]` marks place labels (they never move); a moving label
+## that overlaps anything placed is nudged up, then down, by its own height (at most two tries), else it is marked faded.
+## Rects are processed in order, so earlier ones win. Returns one {dy: float, faded: bool} per rect.
+static func separate(rects: Array[Rect2], fixed: Array[bool]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var placed: Array[Rect2] = []
+	for i in rects.size():
+		out.append({"dy": 0.0, "faded": false})
+		placed.append(rects[i])
+	# Fixed rects are obstacles for everything; moving ones only for those after them.
+	for i in rects.size():
+		if fixed[i]:
+			continue
+		var r := rects[i]
+		var blockers: Array[Rect2] = []
+		for j in rects.size():
+			if j != i and (fixed[j] or j < i):
+				blockers.append(placed[j])
+		if not _hits(r, blockers):
+			continue
+		var done := false
+		for step in [-1.0, 1.0, -2.0, 2.0]:
+			var moved := Rect2(r.position + Vector2(0, step * r.size.y), r.size)
+			if not _hits(moved, blockers):
+				placed[i] = moved
+				out[i]["dy"] = step * r.size.y
+				done = true
+				break
+		if not done:
+			out[i]["faded"] = true
+	return out

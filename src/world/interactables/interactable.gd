@@ -470,6 +470,31 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		node.label_covered = covered
 		if changed:
 			node._redraw_label()
+	_final_separate(ranked, view)
+
+
+## WU-545: after every other rule, no two shown labels overlap: a place name stays, a villager's or roamer's moves
+## up/down by its height (two tries) or fades to 40% while the player is not near it.
+static func _final_separate(ranked: Array, view: Rect2) -> void:
+	var shown: Array = []
+	for node: Interactable in ranked:
+		if node.label_drawn():
+			shown.append(node)
+	var rects: Array[Rect2] = []
+	var fixed: Array[bool] = []
+	for node: Interactable in shown:
+		rects.append(node.drawn_label_rect(view))
+		fixed.append(not node.is_person())
+	var res := LabelLayout.separate(rects, fixed)
+	for i in shown.size():
+		var node: Interactable = shown[i]
+		var dy: float = res[i]["dy"]
+		if dy != 0.0:
+			node.screen_lift += dy
+			node._redraw_label()
+		if res[i]["faded"]:
+			node.label_covered = true
+			node._redraw_label()
 
 
 ## GFX-073: whether a label's anchor is off screen or under a HUD panel (its label is then not drawn).
