@@ -199,3 +199,17 @@ func test_paved_winter_keeps_the_grid() -> void:
 	assert_true(gap_paved > gap_summer * 0.4, "mortar still reads through the snow")
 	assert_true(paved.get_pixel(5, 20).v < plain.get_pixel(5, 20).v + 0.5)
 	assert_eq(GroundTiles.PAVED_SNOW < GroundTiles.WINTER_SNOW, true)
+
+
+## GFX-158: in a winter market the swept streets stay darker than the snowy earth lots.
+func test_winter_market_streets_darker_than_lots() -> void:
+	assert_eq(GroundTiles.winter_street_amount(true, false, "m", 1, 1), 0.2)
+	assert_eq(GroundTiles.winter_street_amount(true, true, "m", 1, 1), 0.7)
+	var bare := 0
+	for i in 1600:
+		if GroundTiles.winter_street_amount(false, false, "m", (i % 40) * 20, (i / 40) * 20) < 0.5:
+			bare += 1
+	assert_true(bare >= 160 and bare <= 640, "some, not most, of the lots are bare, got %d of 1600" % bare)
+	var zones := [Rect2(0, 24, 96, 24)]
+	var tex := GroundTiles.ground_texture(BASE, "winter_mkt", Vector2i(96, 72), false, "Winter", "paved", zones).get_image()
+	assert_true(tex.get_pixel(48, 36).v < tex.get_pixel(48, 4).v + 0.3, "street centre is not paler than the lot")

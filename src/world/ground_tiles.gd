@@ -111,7 +111,10 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		_apply_clover(img, base, rid, style, life.get("avoid", []))
 		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
 	_apply_style(img, base, rid, style, zones, scree_density)
+	var summer: Image = img.duplicate() if season == "Winter" and style == "paved" and not zones.is_empty() else null
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
+	if summer != null:
+		_winter_streets(img, summer, rid, zones)
 	if lively and season == "Winter":
 		_vary_snow(img, shade_grid)
 	var tex := ImageTexture.create_from_image(img)
@@ -288,12 +291,31 @@ static func _scree_patches(img: Image, base: Color, rid: String) -> void:
 
 ## GFX-054: true when (x, y) (sprite px) lies in one of the paved `zones` (Rect2 in sprite px), whose edge is
 ## roughened by up to 6 px of per-8px-cell jitter so the flagstones fade into the earth in ragged steps.
-static func in_paved_zone(zones: Array, rid: String, x: int, y: int) -> bool:
-	var jitter := float(absi(hash("%s|%d|%d|zone" % [rid, x / 8, y / 8])) % 7)
+static func in_paved_zone(zones: Array, rid: String, x: int, y: int, inset: float = 0.0) -> bool:
+	var jitter := float(absi(hash("%s|%d|%d|zone" % [rid, x / 8, y / 8])) % 7) + inset
 	for z: Rect2 in zones:
 		if z.grow(-jitter).has_point(Vector2(x, y)):
 			return true
 	return false
+
+
+## GFX-158: how far a winter market pixel is tinted toward snow: swept stone stays dark (0.2) with snow only in a 4 px
+## band along the kerbs (0.7); earth lots get a heavy but uneven cover (0.8) with about a quarter bare patches (0.3).
+static func winter_street_amount(paved: bool, in_band: bool, rid: String, x: int, y: int) -> float:
+	if paved:
+		return 0.2 if not in_band else 0.7
+	var jitter := float(absi(hash("%s|%d|%d|slush" % [rid, x, y])) % 100) / 100.0 * 0.2 - 0.1  # ragged patch edges
+	return 0.3 if patch_shade(rid, x, y) + jitter < -0.3 else 0.8
+
+
+## GFX-158: re-tints a paved market's winter ground from its `summer` pixels (streets vs earth lots, see above).
+static func _winter_streets(img: Image, summer: Image, rid: String, zones: Array) -> void:
+	for y in img.get_height():
+		for x in img.get_width():
+			var paved := in_paved_zone(zones, rid, x, y)
+			var band := paved and not in_paved_zone(zones, rid, x, y, 4.0)
+			var a := winter_street_amount(paved, band, rid, x, y)
+			img.set_pixel(x, y, summer.get_pixel(x, y).lerp(SNOW, a))
 
 
 ## GFX-054: packed earth between the streets: the ground colour warmed and darkened with sparse pebbles.

@@ -1419,7 +1419,7 @@ func _draw_market_ground() -> void:
 	var snowy := Scenery.is_snowy(_season)
 	var base := Color(_region.get("map", {}).get("ground", "6b6250"))
 	for r: Rect2 in _market_dress["patches"]:
-		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.85, 0.87, 0.92, 0.6))
+		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.45, 0.42, 0.38, 0.35))  # GFX-158: bare earth showing through the snow
 	for r: Rect2 in _market_dress["cobbles"]:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
 	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
@@ -1434,7 +1434,7 @@ func _draw_market_ground() -> void:
 			draw_rect(sl, road.darkened(0.22), false, 1.0)
 	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
 	if ring.size() >= 3:
-		draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26) if not snowy else Color(0.6, 0.57, 0.6, 0.6))
+		draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26) if not snowy else Color(0.36, 0.33, 0.36, 0.5))  # GFX-158: snow-dusted but darker than the lots
 	for s: Dictionary in _market_dress["scorch"]:
 		for o: PackedVector2Array in s.get("outlines", []):
 			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
@@ -1481,13 +1481,13 @@ func _draw_market_props() -> void:
 func _draw_market_earth() -> void:
 	var snowy := Scenery.is_snowy(_season)
 	for line: PackedVector2Array in _market_dress.get("ruts", []):
-		draw_polyline(line, Color(0.12, 0.09, 0.05, 0.28), 2.0)
+		draw_polyline(line, Color(0.12, 0.09, 0.05, 0.28) if not snowy else Color(0.42, 0.42, 0.46, 0.45), 2.0)  # GFX-158: grey slush in winter
 	for k: Rect2 in _market_dress.get("kerbs", []):
-		draw_rect(k, Color("7e7868"))
-		draw_rect(Rect2(k.position, Vector2(k.size.x, 1)), Color("a29b88"))
-		draw_rect(Rect2(k.position + Vector2(0, k.size.y - 1), Vector2(k.size.x, 1)), Color("4e4a3e"))
+		draw_rect(k, Color("2e2b24"))  # GFX-158: 1 px dark edge, stone fill, 1 px lit top
+		draw_rect(k.grow(-1.0), Color("8a8472"))
+		draw_rect(Rect2(k.position + Vector2(1, 1), Vector2(maxf(k.size.x - 2.0, 1.0), 1)), Color("b4ad98"))
 		if snowy:
-			draw_rect(Rect2(k.position, Vector2(k.size.x, 2)), Color(0.93, 0.95, 1.0, 0.8))
+			draw_rect(Rect2(k.position + Vector2(1, 0), Vector2(maxf(k.size.x - 2.0, 1.0), 2)), Color(0.93, 0.95, 1.0, 0.8))
 	for f: Dictionary in _market_dress.get("loose_flags", []):
 		var fr: Rect2 = f["rect"]
 		var col := Color("8d8774") if not snowy else Color("b8bcc2")
