@@ -1422,6 +1422,26 @@ func _draw_market_ground() -> void:
 		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.45, 0.42, 0.38, 0.35))  # GFX-158: bare earth showing through the snow
 	for r: Rect2 in _market_dress["cobbles"]:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
+	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
+	if ring.size() >= 3:
+		if snowy:  # GFX-162: a snow-dusted ring with a ragged soot rim and flecks, not a flat grey disc
+			draw_colored_polygon(ring, Color(0.86, 0.88, 0.93, 0.8))
+			var closed := ring.duplicate()
+			closed.append(ring[0])
+			draw_polyline(closed, Color(0.12, 0.1, 0.1, 0.55), 3.0)
+			var centre := Vector2.ZERO
+			for pt: Vector2 in ring:
+				centre += pt
+			centre /= float(ring.size())
+			for fi in ring.size() * 3:
+				var hv := hash("%s|soot|%d" % [_region.get("id", ""), fi])
+				var rp := ring[fi % ring.size()].lerp(centre, 0.1 + float(hv % 60) / 100.0)
+				draw_rect(Rect2(rp, Vector2(2, 2)), Color(0.14, 0.12, 0.12, 0.7))
+		else:
+			draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26))
+	for s: Dictionary in _market_dress["scorch"]:
+		for o: PackedVector2Array in s.get("outlines", []):
+			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
 	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
 	if avenue.size.x > 0.0:
 		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))
@@ -1432,12 +1452,6 @@ func _draw_market_ground() -> void:
 			var c := Scenery.paving_shade(road, hash("%s|av|%d" % [_region.get("id", ""), n])).lightened(0.06)
 			draw_rect(sl.grow(-0.5), c if not snowy else c.lerp(Color(0.9, 0.92, 0.97), 0.6))
 			draw_rect(sl, road.darkened(0.22), false, 1.0)
-	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
-	if ring.size() >= 3:
-		draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26) if not snowy else Color(0.36, 0.33, 0.36, 0.5))  # GFX-158: snow-dusted but darker than the lots
-	for s: Dictionary in _market_dress["scorch"]:
-		for o: PackedVector2Array in s.get("outlines", []):
-			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
 	for sh: Rect2 in _market_dress.get("shards", []):
 		draw_rect(sh.grow(2.0), Color(0.6, 0.85, 1.0, 0.18))
 		draw_rect(sh, Color("7d8aa8"))
@@ -2613,7 +2627,18 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				draw_rect(r, base.darkened(0.15))
 			"tuft":
 				var g := Color(map_grass_color())
-				draw_rect(r, g.lightened(0.1) if shade > 0.0 else g)
+				var tc := g.lightened(0.1) if shade > 0.0 else g
+				var tf := str(t["flag"])
+				if tf == "bent" or tf == "seed":  # GFX-162: reed tuft shapes along the marsh road verge
+					var tb := r.position + Vector2(r.size.x * 0.5, r.size.y)
+					draw_line(tb, tb + Vector2(0, -4), tc, 1.0)
+					draw_line(tb + Vector2(-1, 0), tb + Vector2(-2, -3), tc, 1.0)
+					if tf == "bent":
+						draw_line(tb + Vector2(0, -4), tb + Vector2(2, -4), tc, 1.0)
+					else:
+						draw_rect(Rect2(tb + Vector2(-1, -6), Vector2(2, 3)), Color("6b4a2a"))
+				else:
+					draw_rect(r, tc)
 		if snowy and str(t["kind"]) in ["edge", "tuft", "slab"]:
 			var cap := Color(0.93, 0.95, 1.0, 0.8)
 			if t["flag"] == "main" and rect.size.x < rect.size.y:  # GFX-128: no rungs across a north-south street

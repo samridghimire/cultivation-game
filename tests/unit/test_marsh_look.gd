@@ -53,4 +53,4 @@ func test_boardwalk_has_missing_planks_and_reeds() -> void:
 		kinds[str(t["kind"]) + ":" + str(t["flag"])] = true
 	assert_true(kinds.has("plank:missing"), "missing plank")
 	assert_true(kinds.has("plank:dark"), "dark plank")
-	assert_true(kinds.has("tuft:"), "reed tufts")
+	assert_true(kinds.has("tuft:straight") or kinds.has("tuft:bent") or kinds.has("tuft:seed"), "reed tufts")

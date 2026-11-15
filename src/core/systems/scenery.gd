@@ -965,8 +965,9 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 			var co := lerpf(wob_val[wi2], wob_val[wi2 + 1], (pil_at - wob_pos[wi2]) / 60.0)
 			for pside in 2:
 				var pa := margin + co - 2.0 if pside == 0 else margin + co + walk - 3.0
-				out.append({"kind": "piling", "rect": _road_rect(path_rect, along_x, pil_at, pa, 3.0, 5.0), "shade": 0.0, "flag": ""})
-			pil_at += rng.randf_range(36.0, 48.0)
+				var lean := float(rng.randi_range(1, 2)) * (1.0 if rng.randi_range(0, 1) == 0 else -1.0) if rng.randf() < 0.3 else 0.0  # GFX-162: a few lean 1-2 px
+				out.append({"kind": "piling", "rect": _road_rect(path_rect, along_x, pil_at + lean, pa, 3.0, 5.0), "shade": 0.0, "flag": "lean" if lean != 0.0 else ""})
+			pil_at += rng.randf_range(24.0, 60.0)  # GFX-162: uneven spacing
 		var tuft_at := 6.0 + rng.randf() * 10.0
 		while tuft_at < len_total - 8.0:
 			for side in 2:
@@ -975,7 +976,7 @@ static func path_tiles(region: Dictionary, path_rect: Rect2, weather: String = "
 					if margin - drift >= 4.0:
 						var tx := tuft_at + rng.randf() * 18.0
 						var tacross := rng.randf_range(0.5, margin - drift - 3.0) if side == 0 else width - margin + drift + rng.randf_range(0.0, maxf(margin - drift - 3.5, 0.0))
-						out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, tx, tacross, 2.0, 3.0), "shade": 1.0 if rng.randf() < 0.5 else -1.0, "flag": ""})
+						out.append({"kind": "tuft", "rect": _road_rect(path_rect, along_x, tx, tacross, 2.0, 3.0), "shade": 1.0 if rng.randf() < 0.5 else -1.0, "flag": ["straight", "bent", "seed"][rng.randi_range(0, 2)]})  # GFX-162: three tuft shapes
 			tuft_at += 40.0
 	else:
 		var strip := 3.0

@@ -70,7 +70,7 @@ func test_boardwalk_missing_boards_are_rare_and_never_adjacent() -> void:
 	assert_true(float(missing) <= float(planks.size()) / 12.0, "rare")
 
 
-## GFX-146: the boardwalk is a centred walkway with mud verges, pilings 36-48 px apart and a stub by each missing board.
+## GFX-146: the boardwalk is a centred walkway with mud verges, pilings 24-60 px apart (GFX-162: uneven, a few leaning, three reed tuft shapes) and a stub by each missing board.
 func test_boardwalk_walkway_is_narrow_with_pilings() -> void:
 	for rect: Rect2 in [Rect2(0, 470, 1600, 50), Rect2(300, 0, 50, 900)]:
 		var along_x := rect.size.x >= rect.size.y
@@ -87,9 +87,17 @@ func test_boardwalk_walkway_is_narrow_with_pilings() -> void:
 				pil.append(r.position.x if along_x else r.position.y)
 		assert_true(kinds.has("mud") and kinds.has("piling") and kinds.has("stub"), "verges, pilings, stubs")
 		assert_true(pil.size() > 5, "pilings")
+		var gaps := {}
 		for i in range(1, pil.size()):
 			var gap := pil[i] - pil[i - 1]
-			assert_true(gap >= 35.99 and gap <= 48.01, "piling spacing %f" % gap)
+			assert_true(gap >= 19.99 and gap <= 64.01, "piling spacing %f" % gap)
+			gaps[snappedf(gap, 4.0)] = true
+		assert_true(gaps.size() >= 4, "uneven spacing")
+		var shapes := {}
+		for t in tiles:
+			if t["kind"] == "tuft":
+				shapes[t["flag"]] = true
+		assert_eq(shapes.size(), 3, "three tuft shapes")
 
 
 ## GFX-149: a scree road is a wandering grit trail with stepping stones, not a grid of flagstones.
