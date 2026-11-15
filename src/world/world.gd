@@ -1424,22 +1424,26 @@ func _draw_market_ground() -> void:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
 	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
 	if ring.size() >= 3:
-		if snowy:  # GFX-162: a snow-dusted ring with a ragged soot rim and flecks, not a flat grey disc
-			draw_colored_polygon(ring, Color(0.86, 0.88, 0.93, 0.8))
-			var closed := ring.duplicate()
-			closed.append(ring[0])
-			draw_polyline(closed, Color(0.12, 0.1, 0.1, 0.55), 3.0)
+		if snowy:  # GFX-165: a shallow snow bowl: one opaque fill, darker far lip, lit near lip, broken soot rim
 			var centre := Vector2.ZERO
 			for pt: Vector2 in ring:
 				centre += pt
 			centre /= float(ring.size())
-			for fi in ring.size() * 3:
+			var snow := Color(0.82, 0.84, 0.88)
+			draw_colored_polygon(ring, snow.darkened(0.1))
+			var near := PackedVector2Array()
+			for pt: Vector2 in ring:
+				near.append(centre.lerp(pt, 0.88) + Vector2(0, 4))
+			draw_colored_polygon(near, snow.lightened(0.05))
+			for fi in ring.size():  # soot only where the ground shows through (about a third of the rim)
 				var hv := hash("%s|soot|%d" % [_region.get("id", ""), fi])
-				var rp := ring[fi % ring.size()].lerp(centre, 0.1 + float(hv % 60) / 100.0)
-				draw_rect(Rect2(rp, Vector2(2, 2)), Color(0.14, 0.12, 0.12, 0.7))
+				if hv % 3 == 0:
+					var p0 := ring[fi]
+					var p1 := ring[(fi + 1) % ring.size()]
+					draw_line(p0, p1, Color(0.16, 0.13, 0.13), 3.0)
 		else:
 			draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26))
-	for s: Dictionary in _market_dress["scorch"]:
+	for s: Dictionary in ([] if snowy else _market_dress["scorch"]):  # GFX-165: no translucent scorch layers over the snow bowl
 		for o: PackedVector2Array in s.get("outlines", []):
 			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
 	var avenue: Rect2 = _market_dress.get("avenue", Rect2())

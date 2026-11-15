@@ -583,7 +583,11 @@ static func map_ground_color(map: Dictionary) -> Color:
 
 ## A stable 0..1 value from a string seed and index (no rng: the same region always draws the same).
 static func unit_hash(seed_text: String, k: int) -> float:
-	return float(absi(hash(seed_text + ":" + str(k))) % 1000) / 999.0
+	var x: int = hash(seed_text + ":" + str(k))
+	x = (x ^ (x >> 30)) * -4658895280553007687  # splitmix64 finaliser: neighbouring indices disperse (GFX-165)
+	x = (x ^ (x >> 27)) * -7723592293110705685
+	x = x ^ (x >> 31)
+	return float((x >> 3) % 1000) / 999.0
 
 
 ## The backdrop silhouette pieces for a region (GFX-036): irregular widths, heights and gaps,

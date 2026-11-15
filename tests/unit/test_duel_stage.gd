@@ -271,3 +271,18 @@ func test_pine_rows_have_depth_clearings_and_broadleaves() -> void:
 
 func test_no_snow_region_has_no_winter_ground() -> void:
 	assert_eq(GroundTiles.ground_season("Winter", {"no_snow": true}), "")
+
+
+## GFX-165: unit_hash disperses consecutive indices (threshold rolls on k*3+n used to never fire).
+func test_unit_hash_disperses() -> void:
+	var buckets := {}
+	var fired := 0
+	for k in 200:
+		var v := DuelStage.unit_hash("qingshi_village", k)
+		assert_true(v >= 0.0 and v <= 1.0)
+		buckets[int(minf(v, 0.999) * 10.0)] = true
+		if v < 0.3:
+			fired += 1
+	assert_eq(buckets.size(), 10)
+	assert_true(fired >= 40 and fired <= 80, "0.3 threshold fired %d" % fired)
+	assert_eq(DuelStage.unit_hash("a", 5), DuelStage.unit_hash("a", 5))
