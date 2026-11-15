@@ -383,7 +383,23 @@ func has_backdrop() -> bool:
 
 ## Sky gradient (top, horizon) for the season of the current day.
 static func sky_colors(season: String) -> Array:
-	return SKY_BY_SEASON.get(season, SKY_BY_SEASON["summer"])
+	return SKY_BY_SEASON.get(season.to_lower(), SKY_BY_SEASON["summer"])
+
+
+## GFX-161: the ground season ("Spring"/"Autumn"/"Winter"/"Summer", "" in a no_snow region's winter) for today.
+func backdrop_season(map: Dictionary) -> String:
+	return GroundTiles.ground_season(Calendar.season_of(GameClock.total_days), map)
+
+
+## GFX-161: how the backdrop layers change with the season: {far_lerp: share of the far ridge lerped toward the
+## sky haze, snow_caps: draw pale caps on near pieces, ochre: share of hills lerped toward muted ochre}.
+static func season_tint(season: String) -> Dictionary:
+	match season:
+		"Winter":
+			return {"far_lerp": 0.35, "snow_caps": true, "ochre": 0.0}
+		"Autumn":
+			return {"far_lerp": 0.0, "snow_caps": false, "ochre": 0.25}
+	return {"far_lerp": 0.0, "snow_caps": false, "ochre": 0.0}
 
 
 ## True when today's weather (or the pinned screenshot weather) is rain or storm.
@@ -423,7 +439,13 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
 			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var gseason := backdrop_season(map)
+	if season_look.has("ground"):
+		gseason = ""
+	var tint := season_tint(gseason)
+	var snow := Color("eef2f5")
 	var far := far_color(map_ground_color(map), sky)
+	far = far.lerp(haze, float(tint["far_lerp"]))
 	col = col.darkened(0.2)  # the near layer sits darker than the ridge
 	var layers := backdrop_layers(rid, size.x)
 	if look_kind != "":
@@ -446,6 +468,7 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var near_pieces: Array = layers["near"]
 	if kind == "pines":  # the darker front row draws last
 		near_pieces = near_pieces.filter(func(q): return not q.get("dark", false)) + near_pieces.filter(func(q): return q.get("dark", false))
+	var snow_caps: bool = tint["snow_caps"]
 	for s in near_pieces:
 		piece_i += 1
 		var x: float = s["x"]
@@ -456,14 +479,29 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 		match kind:
 			"pines":  # GFX-157: stacked tiers on a trunk; the dark row stands in front
 				var c := col.darkened(0.18) if s.get("dark", false) else col
+				var base_y := horizon
+				if s.get("back", false):
+					c = col.lerp(haze, 0.3)
+					base_y = horizon - 5.0
+				if s.get("broad", false):  # a round broadleaf crown on a trunk
+					var cr := w * 0.3
+					draw_rect(Rect2(x - 1.5, base_y - 10.0, 3.0, 10.0), c.darkened(0.3))
+					draw_circle(Vector2(x, base_y - 10.0 - cr * 0.6), cr, c.lightened(0.04))
+					draw_circle(Vector2(x - cr * 0.7, base_y - 10.0), cr * 0.75, c)
+					draw_circle(Vector2(x + cr * 0.7, base_y - 10.0), cr * 0.75, c)
+					if snow_caps:
+						draw_rect(Rect2(x - cr * 0.6, base_y - 10.0 - cr * 1.6, cr * 1.2, 2.0), snow)
+					continue
 				var tiers: int = s.get("tiers", 2)
 				var th := h / float(tiers)
 				for t in tiers:
-					var ty := horizon - 6.0 - th * 0.55 * t
+					var ty := base_y - 6.0 - th * 0.55 * t
 					var tw := w * (0.5 + 0.5 * float(t + 1) / float(tiers)) * 0.5
 					var tw2 := w * (0.5 + 0.5 * float(tiers - t) / float(tiers)) * 0.5
 					draw_colored_polygon(PackedVector2Array([Vector2(x - tw2, ty), Vector2(x, ty - th * 1.1), Vector2(x + tw2, ty)]), c)
-				draw_rect(Rect2(x - 1.0, horizon - 8.0, 2.0, 8.0), c.darkened(0.3))  # trunk
+					if snow_caps:  # a pale band on the top of each tier
+						draw_colored_polygon(PackedVector2Array([Vector2(x - tw2 * 0.45, ty - th * 0.6), Vector2(x, ty - th * 1.1), Vector2(x + tw2 * 0.45, ty - th * 0.6)]), snow)
+				draw_rect(Rect2(x - 1.0, base_y - 8.0, 2.0, 8.0), c.darkened(0.3))  # trunk
 			"roofs":
 				var wall := 12.0 + h * 0.2
 				draw_rect(Rect2(x, horizon - wall, w, wall), col.lightened(0.14))  # lit wall
@@ -474,6 +512,9 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col.darkened(0.3 if row == 0 else 0.12))  # darker eave band
 				draw_rect(Rect2(x - 9.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
 				draw_rect(Rect2(x + w + 4.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
+				if snow_caps:  # a pale strip along the ridge and the eaves
+					draw_rect(Rect2(x - 2.0, horizon - wall - rows * PIXEL - 2.0, w + 4.0, 3.0), snow)
+					draw_rect(Rect2(x - 6.0, horizon - wall - PIXEL, w + 12.0, 2.0), snow)
 				if piece_i == 2:  # one taller two-tier roof
 					draw_rect(Rect2(x + w * 0.2, horizon - wall - rows * PIXEL - 10.0, w * 0.6, 10.0), col.darkened(0.1))
 					draw_rect(Rect2(x + w * 0.1, horizon - wall - rows * PIXEL - 14.0, w * 0.8, PIXEL), col)
@@ -493,6 +534,9 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			"crags":  # jagged rock
 				draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.5, horizon), Vector2(x - w * 0.2, horizon - h * 0.8),
 					Vector2(x, horizon - h * 0.5), Vector2(x + w * 0.2, horizon - h), Vector2(x + w * 0.5, horizon)]), col)
+				if snow_caps:
+					draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.27, horizon - h * 0.64), Vector2(x - w * 0.2, horizon - h * 0.8),
+						Vector2(x, horizon - h * 0.5), Vector2(x + w * 0.2, horizon - h), Vector2(x + w * 0.27, horizon - h * 0.7), Vector2(x, horizon - h * 0.62)]), snow)
 			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
 				if s.get("tuft", false):  # cattail head
@@ -500,7 +544,16 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				if s.get("tuft", false):
 					draw_rect(Rect2(x - 4.0, horizon - 14.0, 14.0, 14.0), col.lightened(0.15))
 			_:
-				draw_colored_polygon(hill_arc(x, horizon, w, h), col)
+				var hc := col.lerp(Color("a88a52"), float(tint["ochre"]))
+				draw_colored_polygon(hill_arc(x, horizon, w, h), hc)
+				if snow_caps:  # a pale cap on the top ~20% of the dome
+					var arc := hill_arc(x, horizon, w, h)
+					var cap := PackedVector2Array()
+					for pt in arc:
+						if pt.y < horizon - h * 0.8:
+							cap.append(pt)
+					if cap.size() >= 3:
+						draw_colored_polygon(cap, snow)
 
 
 const HAZE := 0.45
@@ -548,12 +601,18 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 		match kind:
 			"pines":
 				piece["w"] = 34.0 * (0.7 + r1 * 0.6)
-				piece["h"] = 50.0 * (0.6 + r2 * 0.8)
+				piece["h"] = 50.0 * (0.5 + r2 * 1.0)
+				if unit_hash(str(k) + rid, 802) < 0.2:  # GFX-161: about 1 in 5 is a broadleaf crown
+					piece["broad"] = true
 				piece["tiers"] = 2 + int(unit_hash(rid, k * 3 + 400) * 1.99)
 				piece["dark"] = unit_hash(rid, k * 3 + 401) < 0.25
 				if piece["dark"]:
 					piece["h"] = float(piece["h"]) * 0.75
 				step = 22.0 + r3 * 34.0
+				if unit_hash(str(k) + rid, 903) < 0.25:  # a clearing: no front piece here
+					x += step
+					k += 1
+					continue
 			"roofs":
 				piece["w"] = 62.0 * (0.7 + r1 * 0.6)
 				piece["h"] = 60.0 * (0.6 + r2 * 0.6)
@@ -571,6 +630,15 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 		out.append(piece)
 		x += step
 		k += 1
+	if kind == "pines":  # GFX-161: a hazy back row behind the front row
+		var bx := 14.0 + unit_hash(rid, 998) * 20.0
+		var bk := 0
+		while bx < width and bk < 40:
+			out.append({"x": bx, "w": 30.0 * (0.8 + unit_hash(rid, 600 + bk) * 0.5), "h": 50.0 * (0.55 + unit_hash(rid, 640 + bk) * 0.2),
+				"tiers": 2, "back": true})
+			bx += 26.0 + unit_hash(rid, 680 + bk) * 30.0
+			bk += 1
+		out.sort_custom(func(a, b): return a.get("back", false) and not b.get("back", false))
 	return out
 
 
@@ -625,14 +693,25 @@ func _draw_ground() -> void:
 	var decor: Dictionary = map.get("decor", {})
 	if decor.has("grass_color"):
 		base = Color(decor["grass_color"])
-	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false)
+	var gseason := "" if season_look.has("ground") else backdrop_season(map)
+	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false, gseason)
 	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
 	for i in 14:  # 2-3 pixel tufts, placed deterministically
 		var tx := float((i * 97 + 31) % int(maxf(size.x, 1.0)))
 		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
-		draw_rect(Rect2(tx, ty, 2.0, 4.0), base.lightened(0.25))
-		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), base.lightened(0.25))
+		var tuft := base.lightened(0.25)
+		if gseason == "Winter":  # sparse dark stalks poking through the snow
+			if i % 2 == 1:
+				continue
+			tuft = base.darkened(0.45)
+			draw_rect(Rect2(tx, ty, 1.0, 4.0), tuft)
+			draw_rect(Rect2(tx + 3.0, ty + 1.0, 1.0, 3.0), tuft)
+			continue
+		if gseason == "Autumn":
+			tuft = base.lerp(Color("b08a3c"), 0.5).lightened(0.15)
+		draw_rect(Rect2(tx, ty, 2.0, 4.0), tuft)
+		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), tuft)
 	for p in backdrop_layers(rid, size.x)["props"]:
 		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
 

@@ -235,3 +235,39 @@ func test_far_ridge_stays_off_the_sky() -> void:
 		for ground in ["4d6b3c", "7a8a6a", "9aa0a8", "c8d0d8"]:
 			var far := DuelStage.far_color(Color(ground), sky)
 			assert_true(absf(far.v - (sky[1] as Color).v) >= 0.12, "%s %s" % [season, ground])
+
+
+func test_season_tint_winter_caps_and_summer_unchanged() -> void:
+	var w := DuelStage.season_tint("Winter")
+	assert_true(bool(w["snow_caps"]))
+	assert_true(float(w["far_lerp"]) > 0.0)
+	var s := DuelStage.season_tint("Summer")
+	assert_true(not bool(s["snow_caps"]) and float(s["far_lerp"]) == 0.0 and float(s["ochre"]) == 0.0)
+	assert_true(float(DuelStage.season_tint("Autumn")["ochre"]) > 0.0)
+
+
+func test_sky_colors_accepts_calendar_casing() -> void:
+	assert_eq(DuelStage.sky_colors("Winter"), DuelStage.sky_colors("winter"))
+	assert_true(DuelStage.sky_colors("Winter") != DuelStage.sky_colors("Summer"))
+
+
+func test_pine_rows_have_depth_clearings_and_broadleaves() -> void:
+	for rid in ["qingshi_village", "azure_peak", "withered_bone_marsh"]:
+		var a := DuelStage.silhouette_shapes(rid, "pines", 1180.0)
+		assert_eq(a, DuelStage.silhouette_shapes(rid, "pines", 1180.0))
+		var back := a.filter(func(p): return p.get("back", false))
+		var front := a.filter(func(p): return not p.get("back", false))
+		assert_true(back.size() > 0, rid + " back row")
+		assert_true(front.size() < 80 and a.size() < 130, "%s front %d total %d" % [rid, front.size(), a.size()])
+	var all: Array = []
+	for rid in ["qingshi_village", "azure_peak", "withered_bone_marsh", "fallen_star_market"]:
+		all.append_array(DuelStage.silhouette_shapes(rid, "pines", 1180.0))
+	var broad := 0
+	for p in all:
+		if bool((p as Dictionary).get("broad", false)):
+			broad += 1
+	assert_true(broad > 0, "no broad in %d pieces" % all.size())
+
+
+func test_no_snow_region_has_no_winter_ground() -> void:
+	assert_eq(GroundTiles.ground_season("Winter", {"no_snow": true}), "")
