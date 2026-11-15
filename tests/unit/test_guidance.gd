@@ -6984,3 +6984,34 @@ func test_next_teacher_hint_never_names_known_or_too_far() -> void:
 	c.lessons_taught["hunter_ma:1"] = 3
 	assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {"hunter_ma": 100}, day).begins_with("Hunter Ma"), false)
 	assert_eq(Guidance.next_teacher_hint(c, npcs, data(), "qingshi_village", {"hunter_ma": 100}, -1), "")
+
+
+## GUIDE-242: the weekly teacher bout is named when it is allowed today.
+func _ma_world() -> Dictionary:
+	var npcs := _style_world()
+	var ma: CharacterData = npcs["hunter_ma"]
+	ma.realm_index = 0
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	return npcs
+
+
+func test_practice_day_hint_shows_when_bout_allowed() -> void:
+	var c := _fresh()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var line := Guidance.practice_day_hint(c, _ma_world(), data(), "qingshi_village", {"hunter_ma": 20}, 100)
+	assert_eq(line, "Hunter Ma will practise Iron Fist with you today (1 day)")
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, _ma_world(), {}, "qingshi_village", 100, {"hunter_ma": 20}), "will practise Iron Fist"))
+
+
+func test_practice_day_hint_hides_on_cooldown_other_region_and_mastered() -> void:
+	var c := _fresh()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var npcs := _ma_world()
+	var d := data()
+	c.npc_action_days["spar:hunter_ma"] = 98
+	assert_eq(Guidance.practice_day_hint(c, npcs, d, "qingshi_village", {"hunter_ma": 20}, 100), "", "cooldown")
+	c.npc_action_days.clear()
+	assert_eq(Guidance.practice_day_hint(c, npcs, d, "withered_bone_marsh", {"hunter_ma": 20}, 100), "", "other region")
+	assert_eq(Guidance.practice_day_hint(c, npcs, d, "qingshi_village", {"hunter_ma": 20}, -1), "", "no day")
+	c.techniques["iron_fist"] = {"level": (d.techniques["iron_fist"] as TechniqueDef).max_level, "xp": 0.0}
+	assert_eq(Guidance.practice_day_hint(c, npcs, d, "qingshi_village", {"hunter_ma": 20}, 100), "", "mastered")

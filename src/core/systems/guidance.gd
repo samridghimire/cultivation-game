@@ -869,6 +869,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(delivery)
 	if c.professions.is_empty():
 		out.append(_workshop_hint(c, data))
+	if today >= 0:
+		var practice_day := practice_day_hint(c, people, data, region_id, favor, today)
+		if practice_day != "":
+			out.append(practice_day)
 	if c.realm_index > NEWCOMER_MAX_REALM:
 		var fighting := fighting_hint(c, data, region_id, people, favor)
 		if fighting != "":
@@ -3746,6 +3750,25 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
 		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
 	return best
+
+
+## GUIDE-242: "<Name> will practise <Style> with you today (N day)" for the first villager in this region whose
+## weekly teacher bout is allowed now (Mentorship.check_spar clear, an unmastered taught style). "" when none.
+static func practice_day_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int) -> String:
+	if region_id == "" or today < 0:
+		return ""
+	var ids: Array = data.npcs.keys()
+	ids.sort()
+	for npc_id: String in ids:
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null or not npc.alive or Npcs.region_of(npc, data) != region_id:
+			continue
+		var style := Mentorship.teacher_bout_style(c, npc_id, data)
+		if style == "" or Mentorship.check_spar(c, npc, int(favor.get(npc_id, 0)), data, today) != "":
+			continue
+		var days := int(Mentorship.teacher_bout_terms(data)["days"])
+		return "%s will practise %s with you today (%d day%s)" % [npc.name, (data.techniques[style] as TechniqueDef).name, days, "" if days == 1 else "s"]
+	return ""
 
 
 const TEACH_HINT_FLAG := "teach_hint_seen_"  # SKIP-003: timed world flag per teacher
