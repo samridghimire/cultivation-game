@@ -6573,7 +6573,7 @@ func test_short_hints_fit_for_a_rogue_and_a_disciple() -> void:
 
 func test_short_hint_rewrites_the_fighting_style_line() -> void:
 	var line := "You know no fighting style. Manual: Iron Fist at the Wandering Merchant teaches Iron Fist for 15 spirit stones."
-	assert_eq(Guidance.short_hint(line), "No fighting style: Iron Fist")
+	assert_eq(Guidance.short_hint(line), "No style: Iron Fist at the merchant")
 	assert_eq(Guidance.short_hint("Short line."), "Short line.")
 	assert_true(Guidance.short_hint("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.").length() <= 42)
 
@@ -7044,3 +7044,28 @@ func test_realm_locked_teacher_clause_and_qi_refining_teacher() -> void:
 	c.realm_index = 1
 	var t := Guidance.style_teacher(c, npcs, d, "azure_peak", {})
 	assert_eq(t.get("npc_id", ""), "disciple_bai")
+
+
+## GUIDE-246: the far-teacher hint reaches the HUD card whole (through short_hint and cap_hint), with a realm clause behind it.
+func test_far_teacher_hint_whole_on_the_card() -> void:
+	var HudScript := preload("res://src/ui/hud.gd")
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var npcs := _style_world()
+	var expect := {
+		"myriad_peaks_ridge": "No fighting style: Hunter Ma, Qingshi (20d)",
+		"azure_peak": "No fighting style: Hunter Ma, Qingshi (10d)",
+		"withered_bone_marsh": "No fighting style: Hunter Ma, Qingshi (9d)",
+	}
+	for region_id: String in expect:
+		var full := Guidance.fighting_hint(c, d, region_id, npcs, {})
+		assert_true(full.contains(" here teaches ") and full.contains("once you reach"), "journal keeps the realm clause: " + full)
+		assert_eq(HudScript.cap_hint(Guidance.short_hint(full, d)), expect[region_id], region_id)
+	var market := HudScript.cap_hint(Guidance.short_hint(Guidance.fighting_hint(c, d, "fallen_star_market", npcs, {}), d))
+	assert_true(market.contains(" at ") and market.contains("Iron Fist"), market)
+	for line: String in ["Hunter Ma in Qingshi Village can teach you Iron Fist (12 days away). Ye Zhuoran here teaches X once you reach Qi Refining."]:
+		assert_false(Guidance.short_hint(line, d).ends_with("can teach you"), line)
+	# A region with a short_name reads short ("Bone Marsh"), not its first word.
+	var far := "Hunter Ma in Withered Bone Marsh can teach you Iron Fist (3 days away)."
+	assert_false(Guidance.short_hint(far, d).contains("Withered,"), Guidance.short_hint(far, d))

@@ -578,14 +578,23 @@ static func short_hint(line: String, data: GameData = null) -> String:
 			return meal_short
 		return "%s: %s -> %s" % [meal.get_string(1), meal.get_string(3), meal.get_string(4)]
 	# GUIDE-245: "Hunter Ma in Qingshi Village can teach you Iron Fist (12 days away)." -> "No fighting style: Hunter Ma, Qingshi"
-	re.compile("^(.+?) in (.+?) can teach you .+? \\(\\d+ days? away\\)\\.$")
+	# GUIDE-246: only the first sentence counts (a realm clause may follow); region by short name, days when they fit.
+	re.compile("^(.+?) in (.+?) can teach you .+? \\((\\d+) days? away\\)\\.")
 	var far_teach := re.search(line)
 	if far_teach != null:
-		var place := (far_teach.get_string(2) as String).split(" ")[0]
+		var place := far_teach.get_string(2)
+		if data != null:
+			for id: String in data.regions:
+				if String(data.regions[id].get("name", "")) == place:
+					place = Places.short_region_name(data, id)
+					break
+		else:
+			place = place.split(" ")[0]
 		for lead in ["No fighting style: ", "No style: "]:
 			var far_named: String = lead + "%s, %s" % [far_teach.get_string(1), place]
+			var days := " (%sd)" % far_teach.get_string(3)  # the days suffix may overrun the cap (the HUD cap is 84)
 			if far_named.length() <= SHORT_HINT_CHARS:
-				return far_named
+				return far_named + days
 	# GUIDE-238: "Hunter Ma can teach you Iron Fist (favor 12/15); Hunter Ma likes Venison." -> "Hunter Ma teaches Iron Fist (favor 12/15)"
 	re.compile("^(.+?) can teach you (.+?)( \\(favor \\d+/\\d+\\))?(?:;.*?)?(?: in .+?)?\\.$")
 	var teach := re.search(line)
@@ -610,6 +619,9 @@ static func short_hint(line: String, data: GameData = null) -> String:
 			var tried := "No fighting style: %s at %s" % [style, where]
 			if tried.length() <= SHORT_HINT_CHARS:
 				return tried
+			var brief := "No style: %s at %s" % [style, where]  # GUIDE-246: say where, even when the long lead will not fit
+			if brief.length() <= SHORT_HINT_CHARS:
+				return brief
 		var plain := "No fighting style: " + style
 		if plain.length() <= SHORT_HINT_CHARS:
 			return plain
