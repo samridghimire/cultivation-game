@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: c9eb41a
+Last reviewed commit: 08a9a38
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -770,7 +770,7 @@ Last reviewed commit: c9eb41a
   - Filed RV-QA-115 (qa, P0): docs/balance_baseline.txt is stale on main (~1000 changed lines on --check), refresh
     it after checking for real regressions.
 - 2026-10-22 (reviewer): reviewed df910b9..147a890 (9b3a988 WU-244, 08645d4 QA-112, 31a00d2 C-165, b714be7 C-166,
-  7301934 WU-243, e5a2b4a GUIDE-066, a6adbaf GUIDE-067, cb62be7 WU-246, 147a890 WU-247; [PLAN] commit skipped). Main green.
+  7301934 WU-243, e5a2b4a GUIDE-066, a6adbaf GUIDE-067, cb62be7 WU-246, 147a890 WU-247; [PLAN] commit skipped). Main green (4150 tests).
   No BACKLOG/CHANGELOG edits by workers; no save changes. Nothing filed.
   - Fixed ([REVIEW] commit): WU-244's ShopScreen.upgrade_tag priced gear with no faction, so at a sect-affiliated
     merchant a Respected+ player who could afford an upgrade only at the discounted price got no "(upgrade)" mark. It
@@ -1451,7 +1451,7 @@ Last reviewed commit: c9eb41a
   - Notes, not filed: sect halls are generic, so an Azure Cloud member takes missions at the "Blood Lotus Reed Hall";
     a per-sect hall would need a design call. GOAL-008's "next one" is still region order, not the soonest weekday.
 - 2026-11-02 (reviewer, 4th run): reviewed 9727a4a..c13642c (WU-437, WU-438, QA-191, GFX-055, FORAGE-004, GUIDE-211,
-  GFX-058, WILD-010, GFX-061, C-284, CAL-005, GFX-062, QA-193 part 1, WILD-011, GFX-065; [PLAN] skipped). Main green.
+  GFX-058, WILD-010, GFX-061, C-284, CAL-005, GFX-062, QA-193 part 1, WILD-011, GFX-065; [PLAN] skipped). Main green (4150 tests).
   No BACKLOG/CHANGELOG edits by workers; no SAVE_VERSION change (arrival_banner_pending is session-only); no binary
   assets (the shop front is a code-drawn PixelPlace template).
   - Fixed (GFX-062): Roamer.pick_spot cut its tries from 60 to 20 and its "farthest from places" fallback ignored the
@@ -2021,3 +2021,19 @@ Last reviewed commit: c9eb41a
     GFX-158/159/161/163: draw-only, randomness from seeded rngs; not rendered by me.
   - Notes, not filed: WU-542's "Taught by X" lines ignore TEACH-004's `taught_by_` flag (moot while each style has one
     teacher). A style learned from a manual still counts as taught by its villager teacher (no `taught_by_` flag).
+- 2026-11-15 (reviewer, 3rd run): reviewed c9eb41a..08a9a38 (GFX-162, C-367, QA-209, C-368, GFX-164, QA-219, GUIDE-244,
+  WU-543, GFX-165, GUIDE-245, C-371, LOG-008 + its "partial" commit cf83131; [PLAN]/[REVIEW] skipped). Main green (4150 tests).
+  No BACKLOG/CHANGELOG edits by workers; no binary assets; no SAVE_VERSION change (C-371's `*_week` flags are plain
+  world flags, copying C-369's Xiao Ling pattern).
+  - Fixed (GFX-164): the new `map.speckle` key was validated but not documented in regions.json `_doc`; added.
+  - Process: cf83131 ("LOG-008 partial", no `[id]` subject, message says "Not landed on main") did land on main; the
+    later [LOG-008] commit builds on it, so the result is coherent. Workers must not push unfinished work to main.
+  - LOG-008 OK (today's omen line is always posted when non-plain, so folding a same-kind forecast loses nothing).
+    GUIDE-245 OK (far fallback lifts the favor slack but `_style_lesson` still skips arts above the player's realm; a
+    manual sold here beats a far teacher). GUIDE-244 OK. C-367/C-371 data OK (all four arts are min_realm qi_refining,
+    gated by `Techniques.can_learn`; the teacher bouts give the "each week" promise substance). GFX-165's splitmix
+    unit_hash is always >= 0 (the final `x ^ (x >> 31)` clears the sign bit). QA-209/WU-543 are tests/sim only.
+    GFX-162/164/165 draw code not rendered by me.
+  - Notes, not filed: GUIDE-245's short form keeps only the first word of the region ("No fighting style: Peddler Hei,
+    Withered", "..., Fallen"); Places.short_region_name would read better. C-371's weekly choice gives +1 favor once
+    ever (permanent flag), like Xiao Ling's.
