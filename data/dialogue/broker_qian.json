@@ -2,12 +2,21 @@
   "id": "broker_qian",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "teach_gold_piercing_finger": {"text": "Qian taps one finger on your wrist, light as a coin. \"One point. All your qi. A lock, a seal, a purse-string, {player}. Again.\"",
+      "choices": [
+        {"label": "Learn the finger-tap. (5 days)", "next": "end", "days": 5, "effects": {"learn_technique": "gold_piercing_finger"}},
+        {"label": "Not today.", "next": "greet"}
+      ]},
+    "teach_hint": {"text": "Qian smiles thinly. \"A lesson has a price, and the price is trust. Bring me a few more honest deals first.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Information is the only treasure that grows when shared, and the price grows with it. What do you want to know?",
       "choices": [
         {"label": "Buy a rumour about Azure Peak. (20 stones)", "next": "peak", "effects": {"items": {"spirit_stone": -20}}, "show_locked": true},
         {"label": "Buy a map to a hidden spirit vein. (120 stones)", "next": "vein", "if": {"not_flag": "qian_vein"}, "effects": {"items": {"spirit_stone": -120}}, "show_locked": true},
         {"label": "Sell him the Ancient Jade Slip. (+600 stones)", "next": "slip", "effects": {"items": {"ancient_jade_slip": -1, "spirit_stone": 600}}, "favor": 10, "show_locked": true},
         {"label": "Ask about the Blood Lotus Sect.", "next": "blood_lotus", "if": {"max_alignment": -100}},
+        {"label": "Ask about the finger he taps on his abacus.", "next": "teach_gold_piercing_finger", "if": {"min_favor": 25, "not_knows_technique": "gold_piercing_finger"}, "show_locked": true, "hide_if": {"knows_technique": "gold_piercing_finger"}},
+        {"label": "Watch him tap the abacus.", "next": "teach_hint", "if": {"max_favor": 24, "not_knows_technique": "gold_piercing_finger"}},
         {"label": "Not today.", "next": "end"}
       ]},
     "peak": {"text": "A cave on the peak holds a dead cultivator's legacy. A stone guardian watches it. Do not go before Foundation Establishment.",

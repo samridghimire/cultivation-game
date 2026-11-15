@@ -74,3 +74,19 @@ func test_locked_text_unchanged_and_no_talk_marker() -> void:
 
 func test_likes_line_helper() -> void:
 	assert_eq(Npcs.likes_line({}, data(), "hunter_ma"), "")
+
+
+## C-367: one named villager in each region outside Qingshi teaches a Qi Refining art for favor 15-30.
+func test_regional_teachers() -> void:
+	var c := CharacterData.new()
+	var want := {"peddler_hei": ["drowned_reed_step", 20], "disciple_bai": ["rippling_moon_sword", 25],
+		"alchemist_ye": ["immovable_mountain_stance", 30], "broker_qian": ["gold_piercing_finger", 25]}
+	var regions: Dictionary = {}
+	for npc_id: String in want:
+		var list := Npcs.teachings(npc_id, c, data(), 0).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
+		assert_eq(list.size(), 1, npc_id)
+		assert_eq(String(list[0]["tech_id"]), String(want[npc_id][0]))
+		assert_eq(int(list[0]["need_favor"]), int(want[npc_id][1]))
+		assert_eq(String(data().techniques[want[npc_id][0]].min_realm), "qi_refining")
+		regions[String(data().npcs[npc_id].region)] = true
+	assert_eq(regions.size(), 4)

@@ -102,7 +102,7 @@ func test_menu_teaches_lines() -> void:
 	assert_eq(texts.size(), lines.size() + 1)
 	menu._set_teaches([{"text": "Iron Fist (favor 40)", "known": true}])
 	assert_true(menu.teaches_texts()[1].contains("✓"))
-	node.npc_id = "broker_qian"
+	node.npc_id = "broker_shen"
 	assert_true(node.menu_teaches().is_empty())
 	menu._set_teaches(node.menu_teaches())
 	assert_true(menu.teaches_texts().is_empty())

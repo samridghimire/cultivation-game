@@ -2,6 +2,13 @@
   "id": "peddler_hei",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "teach_drowned_reed_step": {"text": "Hei squints. \"Reeds do not fight the wind, {player}. Stand in the skiff. No, lower. Let it rock you. There.\"",
+      "choices": [
+        {"label": "Pole the skiff with him. (5 days)", "next": "end", "days": 5, "effects": {"learn_technique": "drowned_reed_step"}},
+        {"label": "Not today.", "next": "greet"}
+      ]},
+    "teach_hint": {"text": "Hei spits over the side. \"Poles do not teach themselves, {player}. Come back when the marsh knows your face.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Fresh herbs, cold iron, or something deader? The marsh gives, and Hei sells. Mind the girl in the back of the skiff; she bites.",
       "choices": [
         {"label": "Who is the girl?", "next": "girl"},
@@ -9,6 +16,8 @@
         {"label": "Ask about the Yin Gathering Altar.", "next": "altar"},
         {"label": "Ask if he needs anything from the bog.", "next": "errand_ask", "if": {"not_flag": "errand_hei_asked"}},
         {"label": "Bring the three Purple Cloud Mushrooms Hei asked for.", "next": "errand_thanks", "if": {"has_items": {"purple_cloud_mushroom": 3}, "flag": "errand_hei_asked", "not_flag": "errand_hei_done"}, "effects": {"items": {"purple_cloud_mushroom": -3, "spirit_stone": 100}, "set_flag": "errand_hei_done"}, "favor": 15},
+        {"label": "Ask how he poles the skiff through the reeds.", "next": "teach_drowned_reed_step", "if": {"min_favor": 20, "not_knows_technique": "drowned_reed_step"}, "show_locked": true, "hide_if": {"knows_technique": "drowned_reed_step"}},
+        {"label": "Watch him pole the skiff.", "next": "teach_hint", "if": {"max_favor": 19, "not_knows_technique": "drowned_reed_step"}},
         {"label": "Leave.", "next": "end"}
       ]},
     "girl": {"text": "A herb-gatherer's daughter from Qingshi, caught in the reeds. The Blood Lotus scouts want her for the pools, a refiner wants her for his puppets. Me, I only want a fair price. Someone with a conscience might want her more.",
