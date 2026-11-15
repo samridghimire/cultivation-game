@@ -59,9 +59,34 @@ func test_practice_action_posts_through_the_fold() -> void:
 	var gs := _gs()
 	Techniques.learn(c, gs.data, "basic_breathing")
 	gs.practice_technique("basic_breathing", 1)
-	assert_false(gs._fold_prev.is_empty())
-	assert_true(String(gs._fold_prev["text"]).begins_with("You practice the"))
+	# LOG-009: a practice without a new tier folds into the month-end line
+	assert_eq(int(gs._practice_days.get("Basic Breathing Method", 0)), 1)
 	gs.end_session()
+
+
+func test_practice_folds_into_month_line() -> void:
+	assert_eq(LogFold.practice_month_line({"Iron Fist": 9}), "This month you practised Iron Fist for 9 days.")
+	assert_eq(LogFold.practice_month_line({"Iron Fist": 9, "Basic Breathing": 3}), "This month you practised Iron Fist for 9 days and Basic Breathing for 3 days.")
+	_start()
+	var gs := _gs()
+	var before := EventBus.history.size()
+	gs._practice_days = {"Iron Fist": 4}
+	gs._practice_month = GameClock.total_days / Calendar.DAYS_PER_MONTH
+	gs._flush_practice_month()  # same month: nothing
+	assert_eq(EventBus.history.size(), before)
+	gs._practice_month -= 1
+	gs._flush_practice_month()
+	assert_eq(String(EventBus.history[-1]["text"]), "This month you practised Iron Fist for 4 days.")
+	assert_true(gs._practice_days.is_empty())
+	gs.end_session()
+
+
+func test_forecast_recent_within_two_days() -> void:
+	var seen := {"fishing_mult": 10}
+	assert_true(Almanac.forecast_recent(seen, "fishing_mult", 12))
+	assert_false(Almanac.forecast_recent(seen, "fishing_mult", 13))
+	assert_false(Almanac.forecast_recent(seen, "gather_bonus", 11))
+	assert_false(Almanac.forecast_recent(seen, "", 11))
 
 
 func test_loved_gift_posts_one_line() -> void:

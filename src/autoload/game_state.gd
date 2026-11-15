@@ -126,6 +126,9 @@ func has_session() -> bool:
 
 
 func start_session(character: CharacterData) -> void:
+	_practice_days = {}  # LOG-009
+	_practice_month = -1
+	_forecast_seen = {}
 	player = character
 	_announced_tier = Alignment.tier_name(player.alignment, data)
 	CreationArtifact.ensure(player, data)
@@ -2971,6 +2974,15 @@ func _post_foldable(days: int, text: String) -> void:
 	_fold_prev = {"text": text, "day": today + days}  # the day this action ends
 
 
+## LOG-009: posts the folded practice line once the calendar month has turned.
+func _flush_practice_month() -> void:
+	if _practice_days.is_empty() or GameClock.total_days / Calendar.DAYS_PER_MONTH <= _practice_month:
+		return
+	EventBus.post(LogFold.practice_month_line(_practice_days))
+	_practice_days = {}
+	_practice_month = -1
+
+
 ## TEACH-003: villagers who taught `tech_id` take pride when it rises above `old_level` (monthly cap, remark on the next talk).
 func _teacher_pride(tech_id: String, old_level: int, post_graduation: bool = true) -> void:
 	var new_level := Techniques.level(player, tech_id)
@@ -3047,7 +3059,12 @@ func practice_technique(tech_id: String, days: int) -> void:
 		return
 	_teacher_pride(tech_id, old_level)
 	var def: TechniqueDef = data.techniques[tech_id]
-	_post_foldable(days, "You practice the %s for %s." % [def.name, Calendar.format_duration(days)])
+	if result["levels_gained"] > 0:  # LOG-009: a new mastery tier keeps its own line
+		_post_foldable(days, "You practice the %s for %s." % [def.name, Calendar.format_duration(days)])
+	else:
+		if _practice_month < 0:
+			_practice_month = GameClock.total_days / Calendar.DAYS_PER_MONTH
+		_practice_days[def.name] = int(_practice_days.get(def.name, 0)) + days
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
@@ -4646,6 +4663,9 @@ func _load_buy_hints(raw: Variant) -> Dictionary:
 
 
 func load_save_dict(d: Dictionary) -> void:
+	_practice_days = {}  # LOG-009
+	_practice_month = -1
+	_forecast_seen = {}
 	player = CharacterData.from_dict(d.get("player", {}))
 	_announced_tier = Alignment.tier_name(player.alignment, data)
 	if not d.get("player", {}).has("known_recipes"):
@@ -4761,6 +4781,7 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	last_digest = {}
 	GameClock.advance(days)
 	_artifact_wakes()
+	_flush_practice_month()
 	_post_season_digest()
 	_record_festival_seen()
 	_post_season_ending()
@@ -4886,6 +4907,11 @@ func _post_season_ending() -> void:
 
 ## CAL-003: once per day reached, tell the player what happens tomorrow (not saved).
 var _last_reminder_day := -1
+## LOG-009: boost kind -> day it was last forecast in the log (not saved).
+var _forecast_seen: Dictionary = {}
+## LOG-009: practice days per style name this calendar month, folded into one line at month end (not saved).
+var _practice_days: Dictionary = {}
+var _practice_month := -1
 
 
 func _post_reminders() -> void:
@@ -4904,6 +4930,12 @@ func _post_reminders() -> void:
 	var tomorrow := today_omen(1)
 	if not Almanac.matters_for_tasks(tomorrow, player, data, today + 1) or Almanac.same_omen(omen, tomorrow):  # LOG-008
 		tomorrow = {}
+	if not tomorrow.is_empty():  # LOG-009: one forecast per boost kind within 2 days
+		var fkey := Almanac.boost_key(tomorrow)
+		if Almanac.forecast_recent(_forecast_seen, fkey, today):
+			tomorrow = {}
+		else:
+			_forecast_seen[fkey] = today
 	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, tomorrow)
 	for e in VillageCalendar.dawn_lines(VillageCalendar.mark_lines(player, today), omen_line, reminders):  # LOG-001
 		EventBus.post(String(e["text"]), String(e["category"]), "", true)

@@ -116,6 +116,11 @@ static func same_omen(a: Dictionary, b: Dictionary) -> bool:
 	return ka != "" and ka == boost_key(b)
 
 
+## LOG-009: whether a forecast of boost kind `key` was already logged within the last 2 days.
+static func forecast_recent(seen: Dictionary, key: String, today: int) -> bool:
+	return key != "" and seen.has(key) and today - int(seen[key]) <= 2
+
+
 ## LOG-003: whether `omen` (on `day`) is worth a log forecast: a fishing omen while a catch task is open, a gathering
 ## omen while a gather task is open. Plain flavour omens stay on the Today card and the journal.
 static func matters_for_tasks(omen: Dictionary, c: CharacterData, data: GameData, day: int) -> bool:

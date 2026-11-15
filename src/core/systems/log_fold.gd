@@ -75,3 +75,11 @@ static func parse_duration(text: String) -> int:
 			return 0
 		i += 2
 	return total if i == words.size() else 0
+
+
+## LOG-009: "This month you practised Iron Fist for 9 days." (several styles joined with "and") from {style name: days}.
+static func practice_month_line(days_by_style: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	for n: String in days_by_style:
+		parts.append("%s for %s" % [n, Calendar.format_duration(int(days_by_style[n]))])
+	return "This month you practised %s." % " and ".join(parts)
