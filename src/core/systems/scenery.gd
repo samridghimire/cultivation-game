@@ -703,6 +703,27 @@ static func rock_polygon(center: Vector2, radius: float, seed: int) -> PackedVec
 	return out
 
 
+## GFX-166: a low irregular stone: the rock_polygon flattened to `flatness` (0.5-0.7) of its height around `center`, so a pebble or
+## boulder reads as a stone lying on the ground, not a ball.
+static func flat_stone(center: Vector2, radius: float, seed: int, flatness: float = 0.6) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for q in rock_polygon(center, radius, seed):
+		out.append(Vector2(q.x, center.y + (q.y - center.y) * flatness))
+	return out
+
+
+## GFX-166: foot stones of a rock step along x in [x0, x1] at height y: [{pos: Vector2, radius: float, seed: int}], 2-4 of them,
+## each inside the span.
+static func ledge_foot_stones(x0: float, x1: float, y: float, seed_value: int) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 7919
+	var out: Array[Dictionary] = []
+	for i in rng.randi_range(2, 4):
+		var r := rng.randf_range(2.0, 4.0)
+		out.append({"pos": Vector2(rng.randf_range(x0 + r, maxf(x1 - r, x0 + r)), y + rng.randf_range(1.0, 4.0)), "radius": r, "seed": rng.randi()})
+	return out
+
+
 ## GFX-145: pebble clusters of a scree map, ~1 per 64x64 px, [{center: Vector2, seed: int, count: int}]. Seeded by the region id;
 ## no centre lies in a `keepouts` rect (paths, places) or within 8 px of the map border. Empty for other ground styles.
 static func scree_clusters(region: Dictionary, keepouts: Array[Rect2]) -> Array[Dictionary]:
@@ -1732,6 +1753,8 @@ static func terrace_end_alpha(x: float, left: float, right: float, ramp: float =
 ## little more for each band down (no fixed brown that reads as wood on slate ground); a grey cast in snow.
 static func terrace_earth(ground: Color, i: int, snowy: bool) -> Color:
 	var c := ground.lerp(Color("8a6a40"), 0.3).darkened(0.1 + 0.04 * float(i))
+	if ground.get_luminance() < 0.4:  # GFX-166: on dark slate the band is a lighter weathered earth, not a dark box
+		c = ground.lerp(Color("8a7a5c"), 0.45).lightened(0.1 - 0.04 * float(i))
 	return c.lerp(Color("8a8f94"), 0.2) if snowy else c
 
 

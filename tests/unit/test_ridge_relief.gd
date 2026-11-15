@@ -172,3 +172,27 @@ func test_speckle_keep_fraction() -> void:
 func test_scree_verge_inside_road() -> void:
 	var r := Rect2(0, 470, 1600, 60)
 	assert_true(r.encloses(Scenery.scree_verge_rect(r)))
+
+
+## GFX-166: flat stones are wider than tall and deterministic; foot stones stay inside the step.
+func test_flat_stone_is_low() -> void:
+	for sd in 20:
+		var poly := Scenery.flat_stone(Vector2(100, 100), 12.0, sd)
+		var bounds := Rect2(poly[0], Vector2.ZERO)
+		for q in poly:
+			bounds = bounds.expand(q)
+		assert_true(bounds.size.y < bounds.size.x * 0.85, "stone %d is flat: %s" % [sd, bounds.size])
+		assert_eq(poly, Scenery.flat_stone(Vector2(100, 100), 12.0, sd))
+
+
+func test_ledge_foot_stones_inside_span() -> void:
+	for sd in 30:
+		var stones := Scenery.ledge_foot_stones(200.0, 300.0, 50.0, sd)
+		assert_true(stones.size() >= 2 and stones.size() <= 4)
+		for st in stones:
+			assert_true(st["pos"].x >= 200.0 and st["pos"].x <= 300.0)
+
+
+func test_terrace_earth_lighter_on_dark_ground() -> void:
+	var slate := Color("2c333c")
+	assert_true(Scenery.terrace_earth(slate, 0, false).get_luminance() > slate.get_luminance())

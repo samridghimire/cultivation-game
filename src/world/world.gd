@@ -1757,18 +1757,19 @@ func _draw_relief(map: Dictionary) -> void:
 					var rad := rng.randf_range(8.0, 16.0)
 					var c := r.position + Vector2(rng.randf_range(rad, maxf(r.size.x - rad, rad)), rng.randf_range(rad, maxf(r.size.y - rad, rad)))
 					var rsd := rng.randi()
-					draw_colored_polygon(Scenery.rock_polygon(c + Vector2(1.0, 2.0), rad, rsd), Color(0, 0, 0, 0.28))
-					var body := Scenery.rock_polygon(c, rad, rsd)
-					draw_colored_polygon(body, rock.darkened(0.25))  # GFX-159: slate boulders, not snowballs
+					draw_colored_polygon(Scenery.flat_stone(c + Vector2(1.0, 3.0), rad, rsd), Color(0, 0, 0, 0.3))
+					var body := Scenery.flat_stone(c, rad, rsd)  # GFX-166: flat irregular slate stones with a dark foot, not balls
+					draw_colored_polygon(Scenery.flat_stone(c + Vector2(0, 2.0), rad, rsd), rock.darkened(0.55))
+					draw_colored_polygon(body, rock.darkened(0.22))
 					var lit := PackedVector2Array()
 					for q in body:
-						lit.append(c + (q - c) * 0.55 + (Vector2(-0.3, -0.3) * rad * 0.35))
+						lit.append(c + (q - c) * 0.6 + Vector2(-0.12, -0.35) * rad * 0.5)
 					draw_colored_polygon(lit, rock.darkened(0.05))
 					var ring := body.duplicate()
 					ring.append(body[0])
-					draw_polyline(ring, rock.darkened(0.4), 1.0)
+					draw_polyline(ring, rock.darkened(0.45), 1.0)
 					if winter:
-						draw_colored_polygon(Scenery.rock_polygon(c + Vector2(0, -rad * 0.35), rad * 0.5, rsd + 1), snow_col)
+						draw_colored_polygon(Scenery.flat_stone(c + Vector2(0, -rad * 0.25), rad * 0.55, rsd + 1), snow_col)
 					bi += 1
 			"drift":
 				var look := Scenery.drift_look(gseason, int(it["seed"]))
@@ -1847,10 +1848,19 @@ func _draw_rock_band(r: Rect2, seed_value: int, rock: Color, winter: bool, px: f
 			var crack := PackedVector2Array()
 			for i in top.size():
 				crack.append(top[i].lerp(bot[i], fracs[s]) + Vector2(0, rng.randf_range(-0.8, 0.8)))
-			draw_polyline(crack, face.darkened(0.55), 1.5)
+			draw_polyline(crack, face.darkened(0.3), 1.0)
 	for c in rng.randi_range(1, 2):  # vertical cracks
 		var i := rng.randi_range(1, maxi(top.size() - 2, 1))
 		draw_line(top[i].lerp(bot[i], 0.2), top[i].lerp(bot[i], 0.8) + Vector2(px, 0), face.darkened(0.5), 1.0)
+	var lit_edge := PackedVector2Array()  # GFX-166: a lit top edge along the whole step, loose stones at the foot
+	for t_pt in top:
+		lit_edge.append(t_pt + Vector2(0, 0.5))
+	draw_polyline(lit_edge, rock.lightened(0.3), 1.5)
+	for fs: Dictionary in Scenery.ledge_foot_stones(r.position.x + r.size.x * 0.1, r.end.x - r.size.x * 0.1, r.end.y, seed_value):
+		var fp: Vector2 = fs["pos"]
+		var fr := float(fs["radius"])
+		draw_colored_polygon(Scenery.flat_stone(fp + Vector2(0, 1.0), fr, int(fs["seed"])), face.darkened(0.4))
+		draw_colored_polygon(Scenery.flat_stone(fp, fr, int(fs["seed"])), rock.darkened(0.12))
 	if winter:
 		var cap := PackedVector2Array()
 		for t_pt in top:
@@ -1965,12 +1975,19 @@ func _draw_terrace_places() -> void:
 			draw_polyline_colors(lip, lip_cols, 2.0)
 			for crop: Dictionary in Scenery.terrace_crops(poly, seed_value + i * 101):
 				var p: Vector2 = crop["pos"]
-				if snowy:
-					draw_rect(Rect2(p.x - 1.0, p.y - 1.0, 4.0, 2.0), Color("e9f1f8"))
+				if snowy:  # GFX-166: only the tinted tufts show through the snow, as small buried humps
+					if bool(crop["tinted"]):
+						draw_rect(Rect2(p.x, p.y - 1.0, 3.0, 2.0), Color("e9f1f8"))
 				else:
 					var col := tint.lerp(plant, 0.25) if bool(crop["tinted"]) else plant.darkened(0.1)
 					draw_rect(Rect2(p.x, p.y - 2.0, 2.0, 3.0), col)
 					draw_rect(Rect2(p.x + 2.0, p.y - 3.0, 2.0, 3.0), col.lightened(0.25))
+			if not snowy:  # GFX-166: a lit top edge on each band so the steps read on a dark slope
+				var lit_cols := PackedColorArray()
+				var lit_top := poly.slice(0, half)
+				for q in lit_top:
+					lit_cols.append(Color(earth.lightened(0.3), 0.8 * Scenery.terrace_end_alpha(q.x, left, right)))
+				draw_polyline_colors(lit_top, lit_cols, 1.5)
 			if snowy:
 				var top_cols := PackedColorArray()
 				var top := poly.slice(0, half)
