@@ -418,3 +418,14 @@ func test_teacher_pride_amounts() -> void:
 	assert_eq(Mentorship.teacher_pride(p[0], d, "nobody", "iron_fist", 1, 2), 0, "not a teacher")
 	assert_true(Mentorship.pride_line("Hunter Ma", "Iron Fist", 3).contains("Iron Fist 3"))
 	assert_true(Mentorship.pride_month_key("a", 0) != Mentorship.pride_month_key("a", 100), "month key changes")
+
+
+## REVIEW: negative teacher_pride / graduation_favor values are rejected (generic >= 0 check).
+func test_teacher_pride_validation_rejects_negatives() -> void:
+	var d := GameData.load_from_dir()
+	assert_eq(Mentorship.validate(d).size(), 0)
+	d.family["mentorship"]["teacher_pride"]["max_per_month"] = -1
+	assert_eq(Mentorship.validate(d).size(), 1)
+	d.family["mentorship"]["teacher_pride"]["max_per_month"] = 4
+	d.family["mentorship"]["teacher_bout"]["graduation_favor"] = -5
+	assert_eq(Mentorship.validate(d).size(), 1)

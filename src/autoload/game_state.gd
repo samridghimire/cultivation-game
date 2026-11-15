@@ -2376,6 +2376,7 @@ func ask_pointers(npc_id: String) -> void:
 		text += " You both know this art; the advice cuts deep."
 	if int(result["levels_gained"]) > 0:
 		text += " %s reaches level %d." % [result["tech_name"], Techniques.level(player, result["tech_id"])]
+		_teacher_pride(result["tech_id"], Techniques.level(player, result["tech_id"]) - int(result["levels_gained"]))  # REVIEW: pointers level styles too
 	EventBus.post(text, "progress")
 	_pass_time(result["days"])
 

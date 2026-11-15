@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: a7d3c86
+Last reviewed commit: bcccaaf
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -1994,3 +1994,18 @@ Last reviewed commit: a7d3c86
   - Notes, not filed: SPAR-001 teacher bouts replace the normal spar with that teacher even for cultivators within the
     realm gap (only the taught style is practised); a mortal keeps bouting a teacher for +1 favor a week after mastery.
     WU-539's `likes_line` is a little logic in src/world (harmless).
+- 2026-11-15 (reviewer): reviewed a7d3c86..bcccaaf (WU-540, GFX-155, GFX-156, WU-541, SPAR-002, TEACH-003, GFX-157, C-369,
+  GFX-160; [PLAN]/[REVIEW] skipped). Main green (4121 tests before). No BACKLOG/CHANGELOG edits by workers; no binary
+  assets; no SAVE_VERSION change (SPAR-002's `teacher_graduated_*` and TEACH-003's `teacher_pride_*` are world flags).
+  - Fixed (TEACH-003): a style levelled by a mentor's pointers (`ask_pointers`) did not make its teacher proud; only
+    practice and spars did. Now it does. Test added.
+  - Checked: negative `graduation_favor`/`teacher_pride.*` are already rejected by the generic >= 0 loop; test added.
+  - Fixed (C-369): Elder Mo promised to sit with you "once a week", but breathing is a method and has no teacher bout
+    (the worker noted this); reworded to "whenever you pass through" so nothing is promised that the game does not do.
+  - SPAR-002 OK (the reviewer's "needs no more polishing" branch was rightly removed: a bout style is never mastered
+    at the start now). WU-541 OK ("ready" only for unknown techniques at their favor gate; likes_line moved to Npcs).
+    WU-540 OK (screen_shift_x is reset each layout pass before the slide is added). GFX-155/156/157/160: draw-only, all
+    randomness from seeded rngs; not rendered by me.
+  - Notes, not filed: a style mastered by solo practice never gets the graduation line (only a bout that masters it
+    does). TEACH-003's monthly `teacher_pride_<npc>_<y>_<m>` counters are never pruned (one per teacher per month in
+    world_flags; small). A teacher remarks on a style even if you learned it from a manual elsewhere.

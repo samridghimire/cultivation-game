@@ -26,7 +26,7 @@
       "choices": [{"label": "Thank you, senior. (Learn Basic Breathing Method)", "next": "greet", "days": 3, "favor": 5, "effects": {"learn_technique": "basic_breathing"}}]},
     "breathing_after": {"text": "Hm. Your shoulders drop when you exhale now, and your qi no longer leaks out through your impatience. Do not mistake that for mastery. It is only the first stair, and I have seen many sit on it for decades.",
       "choices": [{"label": "I will keep climbing, senior.", "next": "greet"}]},
-    "breathing_weekly": {"text": "Hm, you want an old man's company? Come once a week, at dawn, and sit across from me. I will correct your posture and you will pour my tea. A fair trade; I have had worse students.",
+    "breathing_weekly": {"text": "Hm, you want an old man's company? Sit across from me at dawn whenever you pass through. I will correct your posture and you will pour my tea. A fair trade; I have had worse students.",
       "choices": [{"label": "Thank you, senior.", "next": "greet"}]},
     "fighting": {"text": "Breathing keeps you alive; it will not win you a fight. For that you need a style. The Wandering Merchant by the village square sells a crude boxing manual, Iron Fist, for a handful of stones. Ugly, honest, enough for wolves. And if you join the Azure Cloud Sect, save up for Stone Skin; its shop sells it.",
       "choices": [{"label": "I will visit the merchant.", "next": "greet"}]},

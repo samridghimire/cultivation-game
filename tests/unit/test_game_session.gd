@@ -1368,6 +1368,30 @@ func test_ask_pointers() -> void:
 	gs.end_session()
 
 
+## REVIEW: a style levelled by a mentor's pointers makes the villager who taught it proud too (TEACH-003).
+func test_pointers_level_up_earns_teacher_pride() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	c.techniques["iron_fist"]["xp"] = (gs.data.techniques["iron_fist"] as TechniqueDef).xp_to_next(1) - 0.01
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 10
+	var npc := CharacterFactory.create("Elder Lu", gs.data, seeded_rng(9))
+	npc.id = "elder_lu"
+	npc.age_days = 40 * Calendar.DAYS_PER_YEAR
+	npc.realm_index = 2
+	gs.npcs["elder_lu"] = npc
+	gs.npc_favor["elder_lu"] = 25
+	gs.ask_pointers("elder_lu")
+	assert_true(Techniques.level(c, "iron_fist") > 1, "pointers levelled the style")
+	assert_true(int(gs.npc_favor["hunter_ma"]) > 10, "the teacher takes pride")
+	assert_true(gs.world_flags.has(Mentorship.pride_note_key("hunter_ma")))
+	gs.end_session()
+
+
 func test_monthly_letter_and_visit_bonus() -> void:
 	var c := _start()
 	var gs := _game_state()
