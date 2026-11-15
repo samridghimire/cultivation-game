@@ -104,6 +104,11 @@ static func eve_of(omen: Dictionary) -> String:
 	return e if e != "" else String(omen.get("name", "")).to_lower()
 
 
+## LOG-008: whether two days carry the same omen (same id): tomorrow's forecast adds nothing to today's line.
+static func same_omen(a: Dictionary, b: Dictionary) -> bool:
+	return not a.is_empty() and not b.is_empty() and String(a.get("id", "")) == String(b.get("id", "")) and String(a.get("id", "")) != ""
+
+
 ## LOG-003: whether `omen` (on `day`) is worth a log forecast: a fishing omen while a catch task is open, a gathering
 ## omen while a gather task is open. Plain flavour omens stay on the Today card and the journal.
 static func matters_for_tasks(omen: Dictionary, c: CharacterData, data: GameData, day: int) -> bool:

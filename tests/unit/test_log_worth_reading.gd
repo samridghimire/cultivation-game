@@ -122,3 +122,11 @@ func test_eve_texts_validate_and_feed_the_joined_line() -> void:
 	var fish := _omen("fishing_mult")
 	var lines := VillageCalendar.dawn_lines(PackedStringArray(), "", PackedStringArray(["Tomorrow: market day in Fallen Star Market.", "Tomorrow: %s." % Almanac.eve_of(fish)]))
 	assert_true(String(lines[0]["text"]).ends_with(" and %s." % String(fish["eve"])), str(lines))
+
+
+func test_same_omen_two_days_running_is_not_forecast() -> void:
+	var fish := _omen("fishing_mult")
+	assert_true(Almanac.same_omen(fish, fish))
+	assert_false(Almanac.same_omen(fish, _omen("gather_bonus")))
+	assert_false(Almanac.same_omen({}, fish))
+	assert_false(Almanac.same_omen({}, {}))

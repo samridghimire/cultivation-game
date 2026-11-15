@@ -4902,7 +4902,7 @@ func _post_reminders() -> void:
 		omen_line = Almanac.line(omen, Almanac.salt_of(player), today)  # CAL-011
 	# LOG-003: tomorrow's omen only reaches the log when an open season task depends on it (Today and the journal show it anyway).
 	var tomorrow := today_omen(1)
-	if not Almanac.matters_for_tasks(tomorrow, player, data, today + 1):
+	if not Almanac.matters_for_tasks(tomorrow, player, data, today + 1) or Almanac.same_omen(omen, tomorrow):  # LOG-008
 		tomorrow = {}
 	var reminders := VillageCalendar.reminders(data, npcs, npc_favor, world_events, current_region, today, player, world_flags, tomorrow)
 	for e in VillageCalendar.dawn_lines(VillageCalendar.mark_lines(player, today), omen_line, reminders):  # LOG-001
