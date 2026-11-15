@@ -13,6 +13,8 @@
       "choices": [{"label": "...", "next": "greet"}]},
     "teach_hint": {"text": "Qian smiles thinly. \"A lesson has a price, and the price is trust. Bring me a few more honest deals first.\"",
       "choices": [{"label": "...", "next": "greet"}]},
+    "errand_done_thanks": {"text": "Qian does not look up from the abacus. \"Delivered, sealed, unread. Naturally. One bead for your trouble, {player}. Not a gift. A debt I mean to forget.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Information is the only treasure that grows when shared, and the price grows with it. What do you want to know?",
       "choices": [
         {"label": "Buy a rumour about Azure Peak. (20 stones)", "next": "peak", "effects": {"items": {"spirit_stone": -20}}, "show_locked": true},
@@ -24,6 +26,7 @@
         {"label": "Tell him the golden finger has paid for itself.", "next": "qian_after", "if": {"knows_technique": "gold_piercing_finger"}},
         {"label": "Ask if he would drill you on the finger again.", "next": "qian_weekly", "if": {"knows_technique": "gold_piercing_finger", "not_flag": "qian_finger_week"}, "favor": 1, "effects": {"set_flag": "qian_finger_week"}},
         {"label": "Ask if he would drill you on the finger again.", "next": "qian_weekly", "if": {"knows_technique": "gold_piercing_finger", "flag": "qian_finger_week"}},
+        {"label": "Tell him the ledger is delivered.", "next": "errand_done_thanks", "if": {"flag": "qian_errand_done", "not_flag": "qian_errand_thanked"}, "favor": 5, "effects": {"set_flag": "qian_errand_thanked"}},
         {"label": "Not today.", "next": "end"}
       ]},
     "peak": {"text": "A cave on the peak holds a dead cultivator's legacy. A stone guardian watches it. Do not go before Foundation Establishment.",

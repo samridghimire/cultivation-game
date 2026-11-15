@@ -330,7 +330,7 @@ func test_timed_flag_conditions() -> void:
 func test_teachers_last_errand() -> void:
 	var npcs := _npcs()
 	var c := new_character()
-	for row: Array in [["hunter_ma", "iron_fist", "ma_trap_raider", "ma_errand_done", "Tell him the traps are clear."], ["xiao_ling", "stone_skin", "ling_carry_quarry_stone", "ling_errand_done", "Tell her the quarry stone is home."]]:
+	for row: Array in [["hunter_ma", "iron_fist", "ma_trap_raider", "ma_errand_done", "Tell him the traps are clear."], ["xiao_ling", "stone_skin", "ling_carry_quarry_stone", "ling_errand_done", "Tell her the quarry stone is home."], ["peddler_hei", "drowned_reed_step", "hei_pole_cargo", "hei_errand_done", "Tell him the cargo made it through."], ["disciple_bai", "rippling_moon_sword", "bai_clear_terraces", "bai_errand_done", "Tell her the terraces are clear."], ["alchemist_ye", "immovable_mountain_stance", "ye_ledge_ram", "ye_errand_done", "Tell her the ram has left her ledge."], ["broker_qian", "gold_piercing_finger", "qian_carry_ledger", "qian_errand_done", "Tell him the ledger is delivered."]]:
 		var npc_id: String = row[0]
 		var deed: Dictionary = data().deeds[row[2]]
 		var grad := Mentorship.graduation_flag(npc_id, row[1])
@@ -346,4 +346,4 @@ func test_teachers_last_errand() -> void:
 			var v := Dialogue.view(data().dialogues[npc_id], "greet", _ctx(npc_id, c, npcs, flags))
 			return (v["choices"] as Array).map(func(ch: Dictionary) -> String: return String(ch["label"]))
 		assert_false(labels.call({grad: true}).has(row[4]), "no thanks before the errand")
-		assert_true(labels.call({grad: true, row[3]: true}).has(row[4]), "thanks after the errand")
+		assert_true(labels.call({grad: true, row[3]: true}).has(row[4]), "thanks after the errand: " + npc_id)

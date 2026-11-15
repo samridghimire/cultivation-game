@@ -16,6 +16,8 @@
       "choices": [{"label": "...", "next": "greet"}]},
     "teach_hint": {"text": "Bai smiles and sheathes her sword. \"A sword shown to a stranger is only a stick. Walk the terraces with me a while first.\"",
       "choices": [{"label": "...", "next": "greet"}]},
+    "errand_done_thanks": {"text": "Bai bows lower than the sect requires. \"The orchids stand, and no one saw. This pin was lost on the path, {player}. I would not mind if you found it.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Peace, fellow cultivator. I am Bai Qingwu of the Azure Cloud Sect, walking the peak to settle my Dao-heart. The orchid terraces are kind to those who tread softly.",
       "choices": [
         {"label": "Ask how she steadied her Foundation.", "next": "foundation"},
@@ -27,6 +29,7 @@
         {"label": "Tell her the moon-sword has steadied your hand.", "next": "bai_after", "if": {"knows_technique": "rippling_moon_sword"}},
         {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "not_flag": "bai_sword_week"}, "favor": 1, "effects": {"set_flag": "bai_sword_week"}},
         {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "flag": "bai_sword_week"}},
+        {"label": "Tell her the terraces are clear.", "next": "errand_done_thanks", "if": {"flag": "bai_errand_done", "not_flag": "bai_errand_thanked"}, "favor": 5, "effects": {"set_flag": "bai_errand_thanked"}},
         {"label": "Farewell, senior sister.", "next": "end"}
       ]},
     "foundation": {"text": "I did not chase the pill. I chased a clear mind, and the Foundation came as the cold comes down the mountain. Do not hurry the layers; they remember every shortcut.",

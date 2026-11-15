@@ -13,6 +13,8 @@
       "choices": [{"label": "...", "next": "greet"}]},
     "teach_hint": {"text": "Hei spits over the side. \"Poles do not teach themselves, {player}. Come back when the marsh knows your face.\"",
       "choices": [{"label": "...", "next": "greet"}]},
+    "errand_done_thanks": {"text": "Hei grins with every tooth he has left. \"Dry crates, wet puppet. Hee. Keep the whistle, {player}; when you blow it, the reeds will know whose friend you are.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Fresh herbs, cold iron, or something deader? The marsh gives, and Hei sells. Mind the girl in the back of the skiff; she bites.",
       "choices": [
         {"label": "Who is the girl?", "next": "girl"},
@@ -25,6 +27,7 @@
         {"label": "Tell him the reed step has kept your boots dry.", "next": "hei_after", "if": {"knows_technique": "drowned_reed_step"}},
         {"label": "Ask if he would pole the channel with you again.", "next": "hei_weekly", "if": {"knows_technique": "drowned_reed_step", "not_flag": "hei_pole_week"}, "favor": 1, "effects": {"set_flag": "hei_pole_week"}},
         {"label": "Ask if he would pole the channel with you again.", "next": "hei_weekly", "if": {"knows_technique": "drowned_reed_step", "flag": "hei_pole_week"}},
+        {"label": "Tell him the cargo made it through.", "next": "errand_done_thanks", "if": {"flag": "hei_errand_done", "not_flag": "hei_errand_thanked"}, "favor": 5, "effects": {"set_flag": "hei_errand_thanked"}},
         {"label": "Leave.", "next": "end"}
       ]},
     "girl": {"text": "A herb-gatherer's daughter from Qingshi, caught in the reeds. The Blood Lotus scouts want her for the pools, a refiner wants her for his puppets. Me, I only want a fair price. Someone with a conscience might want her more.",

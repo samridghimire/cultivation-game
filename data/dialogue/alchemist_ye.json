@@ -15,6 +15,8 @@
       "choices": [{"label": "...", "next": "greet"}]},
     "teach_hint": {"text": "Ye waves her spoon at the sky. \"Ask me again when you have eaten my soup twice. A rock should know whose ledge it stands on.\"",
       "choices": [{"label": "...", "next": "greet"}]},
+    "errand_done_thanks": {"text": "Ye weighs the spoon in her hand, then tosses it to you. \"A rock thanks nobody. Take it anyway, {player}. It stirred better thunder than the ram ever made.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "A woman in patched green robes squats before a cracked cauldron on a ledge with thunder-clouds below her feet, tasting something off a spoon. 'Don't stand in my light. Or do, I suppose. Have you eaten? I make the best soup in three realms and the worst in two.'",
       "choices": [
         {"label": "Ask what she is brewing.", "next": "brew"},
@@ -29,6 +31,7 @@
         {"label": "Tell her the mountain stance held through the storm.", "next": "ye_after", "if": {"knows_technique": "immovable_mountain_stance"}},
         {"label": "Ask if she would stand the ledge with you again.", "next": "ye_weekly", "if": {"knows_technique": "immovable_mountain_stance", "not_flag": "ye_ledge_week"}, "favor": 1, "effects": {"set_flag": "ye_ledge_week"}},
         {"label": "Ask if she would stand the ledge with you again.", "next": "ye_weekly", "if": {"knows_technique": "immovable_mountain_stance", "flag": "ye_ledge_week"}},
+        {"label": "Tell her the ram has left her ledge.", "next": "errand_done_thanks", "if": {"flag": "ye_errand_done", "not_flag": "ye_errand_thanked"}, "favor": 5, "effects": {"set_flag": "ye_errand_thanked"}},
         {"label": "Leave her to her soup.", "next": "end"}
       ]},
     "brew": {"text": "'Today: nothing fancy, a thunder-tempering draught. Tomorrow: whatever a dying man begs me for. An alchemist's whole career is deciding who to sell the cure to. I decided long ago it would be whoever asks politely.'",
