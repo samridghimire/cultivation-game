@@ -721,17 +721,31 @@ static func short_fight_line(line: String, data: GameData) -> String:
 	return tried if tried.length() <= SHORT_HINT_CHARS else "Hunting: " + foe
 
 
+## GUIDE-247: a short hint that names another region may run this long once it carries the route days.
+const SHORT_FAR_CHARS := 50
+
+## GUIDE-247: "9 days" -> "9d", "1 month" -> "1mo", "" for anything else (the goal line's "· Nd" form).
+static func _short_days(duration: String) -> String:
+	var re := RegEx.new()
+	re.compile("^(\\d+) (day|month|year)s?$")
+	var m := re.search(duration.strip_edges())
+	if m == null:
+		return ""
+	return "%sd" % m.get_string(1) if m.get_string(2) == "day" else ("%smo" % m.get_string(1) if m.get_string(2) == "month" else "%sy" % m.get_string(1))
+
+
 ## GUIDE-222: "Easy fight: Wild Boar, Bone Marsh · 99%" from "Easy fight: Chore for Headman Zhou: Wild Boar in
 ## Withered Bone Marsh (9 days, 99 in 100)". Drops the chore giver, then the region, until it fits; "" when `line` is no fight line.
 static func _short_fight(line: String, data: GameData) -> String:
 	var re := RegEx.new()
-	re.compile("^(Easy fight|Fair fight): (.+) \\((?:.+, )?(\\d+) in 100\\)$")
+	re.compile("^(Easy fight|Fair fight): (.+) \\((?:(.+), )?(\\d+) in 100\\)$")
 	var m := re.search(line)
 	if m == null:
 		return ""
 	var rest := m.get_string(2)
-	var tail := " · %s%%" % m.get_string(3)
+	var tail := " · %s%%" % m.get_string(4)
 	var head := m.get_string(1) + ": "
+	var route := _short_days(m.get_string(3))  # GUIDE-247: how far, in the goal line's "Nd" form
 	var chore := rest.find(": ")
 	var no_chore := rest.substr(chore + 2) if rest.begins_with("Chore for ") and chore > 0 else rest
 	var foe := no_chore
@@ -746,6 +760,10 @@ static func _short_fight(line: String, data: GameData) -> String:
 					where = Places.short_region_name(data, id)
 	var tries: Array[String] = []
 	if where != "":
+		if route != "":
+			var far := head + foe + ", " + where + " · " + route + tail
+			if far.length() <= SHORT_FAR_CHARS:
+				return far
 		tries.append(head + foe + ", " + where + tail)
 	tries.append(head + foe + tail)
 	for t in tries:

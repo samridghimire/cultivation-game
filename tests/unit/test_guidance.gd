@@ -6591,7 +6591,7 @@ func test_short_goal_fits_and_keeps_the_target() -> void:
 
 func test_short_fight_lines() -> void:
 	assert_eq(Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
-	assert_eq(Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+	assert_eq(Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
 
 
 func test_short_hints_fit_in_every_region() -> void:
@@ -6625,7 +6625,7 @@ func test_region_short_name_falls_back_and_validates() -> void:
 
 # GUIDE-223
 func test_short_fight_line_and_hunt_line() -> void:
-	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 99%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
 	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
 	assert_eq(Guidance.short_fight_line("Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)", data()), "Hunting: Blood-Eyed Wolf, Bone Marsh")
 	assert_eq(Guidance.short_fight_line("Rest a while.", data()), "Rest a while.")
@@ -7069,3 +7069,13 @@ func test_far_teacher_hint_whole_on_the_card() -> void:
 	# A region with a short_name reads short ("Bone Marsh"), not its first word.
 	var far := "Hunter Ma in Withered Bone Marsh can teach you Iron Fist (3 days away)."
 	assert_false(Guidance.short_hint(far, d).contains("Withered,"), Guidance.short_hint(far, d))
+
+
+## GUIDE-247: a far fight names its route days, a fight here has none.
+func test_far_easy_fight_carries_route_days() -> void:
+	var far := Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data())
+	assert_true(far.contains("Bone Marsh") and far.contains(" · 9d"), far)
+	var near := Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data())
+	assert_false(near.contains("d ·"), near)
+	assert_eq(Guidance._short_days("1 month"), "1mo")
+	assert_eq(Guidance._short_days("soon"), "")
