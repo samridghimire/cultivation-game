@@ -408,6 +408,22 @@ func test_teacher_bout_needs_the_style() -> void:
 
 
 ## TEACH-003: a taught style's level-up earns that teacher favor; others earn nothing.
+func test_prune_pride_keys_keeps_current_month() -> void:
+	var day := 400
+	var flags := {
+		Mentorship.pride_month_key("a", day): 2,
+		Mentorship.pride_month_key("a", day - 40): 3,
+		Mentorship.pride_month_key("b", day - 400): 1,
+		Mentorship.pride_note_key("a"): "iron_fist",
+		"other": true,
+	}
+	assert_eq(Mentorship.prune_pride_keys(flags, day), 2)
+	assert_eq(flags.size(), 3)
+	assert_true(flags.has(Mentorship.pride_month_key("a", day)))
+	assert_true(Mentorship.pride_applies({}, "a", "x"))
+	assert_false(Mentorship.pride_applies({"taught_by_x": "b"}, "a", "x"))
+
+
 func test_teacher_pride_amounts() -> void:
 	var d := data()
 	var p := _teacher_pair()

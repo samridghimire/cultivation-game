@@ -122,6 +122,29 @@ static func pride_month_key(npc_id: String, total_days: int) -> String:
 	return "teacher_pride_%s_%d_%d" % [npc_id, Calendar.year_of(total_days), Calendar.month_of(total_days)]
 
 
+## TEACH-004: world flag naming the villager a style was learned from.
+static func taught_by_key(tech_id: String) -> String:
+	return "taught_by_" + tech_id
+
+
+## TEACH-004: true when `npc_id` may take pride in / graduate `tech_id` (taught by them, or the source is unknown).
+static func pride_applies(flags: Dictionary, npc_id: String, tech_id: String) -> bool:
+	var key := taught_by_key(tech_id)
+	return not flags.has(key) or String(flags[key]) == npc_id
+
+
+## TEACH-004: erases every monthly pride counter except the current month's; returns how many were removed.
+static func prune_pride_keys(flags: Dictionary, total_days: int) -> int:
+	var suffix := "_%d_%d" % [Calendar.year_of(total_days), Calendar.month_of(total_days)]
+	var doomed: Array = []
+	for key: String in flags:
+		if key.begins_with("teacher_pride_") and not key.begins_with("teacher_pride_note_") and not key.ends_with(suffix):
+			doomed.append(key)
+	for key: String in doomed:
+		flags.erase(key)
+	return doomed.size()
+
+
 ## World-flag key holding the style id whose new level the teacher has yet to remark on.
 static func pride_note_key(npc_id: String) -> String:
 	return "teacher_pride_note_" + npc_id

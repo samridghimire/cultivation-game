@@ -1780,7 +1780,9 @@ func _teach_lessons(npc_id: String) -> void:
 	if due.is_empty():
 		return
 	var lesson: Dictionary = due[0]["lesson"]
+	var known_before: Array = player.techniques.keys()
 	var notes := Effects.apply(player, data, lesson.get("effects", {}), world_flags, current_region, today)
+	_note_taught_by(npc_id, known_before)
 	player.lessons_taught[String(due[0]["key"])] = today
 	_note_teacher_seen(npc_id)
 	EventBus.post("%s: \"%s\"" % [npc.name, Folk.lesson_line(lesson, npc.name, player.name)], "people")
@@ -1955,10 +1957,12 @@ func choose_dialogue(index: int) -> void:
 	if not in_dialogue() or not _can_act():
 		return
 	var npc_id := dialogue_npc
+	var known_before: Array = player.techniques.keys()
 	var result := Dialogue.choose(_current_dialogue(), dialogue_node, index, _dialogue_ctx(npc_id))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
+	_note_taught_by(npc_id, known_before)
 	if result["favor"] != 0 and npc_id != "":
 		var before := _rival_attitude()
 		npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + result["favor"]
@@ -2407,7 +2411,7 @@ func spar_with(npc_id: String) -> void:
 	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days, style)
 	var before := _rival_attitude()
 	for tid: String in levels_before:
-		_teacher_pride(tid, int(levels_before[tid]))
+		_teacher_pride(tid, int(levels_before[tid]), false)
 	if int(result["favor"]) > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
 	var opening := "%s accepts your challenge." if npc_id == player.rival else "You spar with %s."
@@ -2423,11 +2427,9 @@ func spar_with(npc_id: String) -> void:
 		for line in result["levels"]:
 			text += " %s." % line
 	if style != "" and Techniques.is_mastered(player, data, style):
-		var flag := Mentorship.graduation_flag(npc_id, style)
-		if not world_flags.get(flag, false):
-			world_flags[flag] = true
-			text += " " + Mentorship.graduation_line(data, npc_id, npc.name, (data.techniques[style] as TechniqueDef).name)
-			npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(Mentorship.teacher_bout_terms(data)["graduation_favor"]))
+		var grad := _graduate(npc_id, style)
+		if grad != "":
+			text += " " + grad
 	EventBus.post(text, "progress")
 	if npc_id == player.rival:
 		var key := "rival_bouts_won" if won else "rival_bouts_lost"
@@ -2970,18 +2972,25 @@ func _post_foldable(days: int, text: String) -> void:
 
 
 ## TEACH-003: villagers who taught `tech_id` take pride when it rises above `old_level` (monthly cap, remark on the next talk).
-func _teacher_pride(tech_id: String, old_level: int) -> void:
+func _teacher_pride(tech_id: String, old_level: int, post_graduation: bool = true) -> void:
 	var new_level := Techniques.level(player, tech_id)
 	if new_level <= old_level:
 		return
+	var mastered := Techniques.is_mastered(player, data, tech_id)
 	var terms := Mentorship.teacher_pride_terms(data)
 	for npc_id: String in data.npcs:
 		var npc: CharacterData = npcs.get(npc_id)
 		if npc == null or not npc.alive:
 			continue
+		if not Mentorship.pride_applies(world_flags, npc_id, tech_id):
+			continue
 		var gain := Mentorship.teacher_pride(player, data, npc_id, tech_id, old_level, new_level)
 		if gain <= 0 and not Mentorship.taught_styles(npc_id, data).has(tech_id):
 			continue
+		if mastered and post_graduation:
+			var grad := _graduate(npc_id, tech_id)
+			if grad != "":
+				EventBus.post(grad, "progress")
 		var key := Mentorship.pride_month_key(npc_id, GameClock.total_days)
 		var used := int(world_flags.get(key, 0))
 		var grant := clampi(mini(gain, int(terms["max_per_month"]) - used), 0, 100)
@@ -2989,6 +2998,29 @@ func _teacher_pride(tech_id: String, old_level: int) -> void:
 			world_flags[key] = used + grant
 			npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + grant)
 		world_flags[Mentorship.pride_note_key(npc_id)] = tech_id
+
+
+## TEACH-004: a teacher learns you mastered what they taught (once): flag, favor gift and the line; "" if already done.
+func _graduate(npc_id: String, tech_id: String) -> String:
+	var flag := Mentorship.graduation_flag(npc_id, tech_id)
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not npc.alive or world_flags.get(flag, false) or not Mentorship.pride_applies(world_flags, npc_id, tech_id):
+		return ""
+	if not Mentorship.taught_styles(npc_id, data).has(tech_id):
+		return ""
+	world_flags[flag] = true
+	npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(Mentorship.teacher_bout_terms(data)["graduation_favor"]))
+	var tech_name: String = (data.techniques[tech_id] as TechniqueDef).name
+	return "Word reaches %s that you have mastered %s. %s" % [npc.name, tech_name, Mentorship.graduation_line(data, npc_id, npc.name, tech_name)]
+
+
+## TEACH-004: remember who taught each style learned from a villager just now (`known_before` = styles known before).
+func _note_taught_by(npc_id: String, known_before: Array) -> void:
+	if npc_id == "" or player == null:
+		return
+	for tid: String in player.techniques:
+		if not known_before.has(tid) and Mentorship.taught_styles(npc_id, data).has(tid):
+			world_flags[Mentorship.taught_by_key(tid)] = npc_id
 
 
 ## TEACH-003: the teacher remarks once on a style level you gained since you last talked.
@@ -5131,6 +5163,7 @@ func _on_days_advanced(days: int) -> void:
 	var months := player.age_days / Calendar.DAYS_PER_MONTH - age_before / Calendar.DAYS_PER_MONTH
 	if months > 0:
 		Folk.expire_celebrations(world_flags, GameClock.total_days)
+		Mentorship.prune_pride_keys(world_flags, GameClock.total_days)
 	for i in months:
 		EventBus.topic = "sect"
 		_sect_month_end()

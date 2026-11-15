@@ -4489,6 +4489,59 @@ func test_gather_rolls_scale_with_days_done() -> void:
 
 
 ## TEACH-003: levelling a taught style pleases its teacher (monthly cap) who remarks once on the next talk.
+## TEACH-004: mastery by practice graduates the teacher once; a later bout does not repeat it.
+func test_teacher_graduation_by_practice_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	var max_level: int = (gs.data.techniques["iron_fist"] as TechniqueDef).max_level
+	c.techniques = {"iron_fist": {"level": max_level, "xp": 0.0}}
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 10
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	gs._teacher_pride("iron_fist", max_level - 1)
+	gs._teacher_pride("iron_fist", max_level - 1)
+	var words := 0
+	for entry: Dictionary in eb.history:
+		if String(entry.get("text", "")).contains("Word reaches Hunter Ma"):
+			words += 1
+	assert_eq(words, 1, "graduation posted once")
+	var favor := int(gs.npc_favor["hunter_ma"])
+	assert_true(favor >= 15, "graduation favor added")
+	gs.spar_with("hunter_ma")
+	words = 0
+	for entry: Dictionary in eb.history:
+		if String(entry.get("text", "")).contains("Nothing left I can show you"):
+			words += 1
+	assert_eq(words, 1, "a later bout does not repeat the line")
+	gs.end_session()
+
+
+## TEACH-004: a style learned from someone else earns no pride or graduation from a different teacher.
+func test_teacher_pride_needs_taught_by() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.techniques = {"iron_fist": {"level": 3, "xp": 0.0}}
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 10
+	gs.world_flags[Mentorship.taught_by_key("iron_fist")] = "someone_else"
+	gs._teacher_pride("iron_fist", 1)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 10)
+	assert_eq(gs._graduate("hunter_ma", "iron_fist"), "")
+	gs.world_flags[Mentorship.taught_by_key("iron_fist")] = "hunter_ma"
+	gs._teacher_pride("iron_fist", 1)
+	assert_true(int(gs.npc_favor["hunter_ma"]) > 10)
+	gs.end_session()
+
+
 func test_teacher_pride_favor_cap_and_remark() -> void:
 	var c := _start()
 	var gs := _game_state()
