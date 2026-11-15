@@ -231,7 +231,8 @@ func test_where_per_kind() -> void:
 	assert_true(SeasonTasks.where({"kind": "hunt", "target": "mist_fox"}, c, gd, 185).begins_with("in ") or SeasonTasks.where({"kind": "hunt", "target": "mist_fox"}, c, gd, 185) == "at the village hunt")
 	var contest := SeasonTasks.where({"kind": "contest", "target": "dragon_boat_festival"}, c, gd, 95)
 	assert_true(contest.contains("Dragon Boat Festival") and contest.contains("month 5"), contest)
-	assert_eq(SeasonTasks.where({"kind": "sell_wanted", "target": ""}, c, gd, 5), "at a market stall's wanted item")
+	var sw := SeasonTasks.where({"kind": "sell_wanted", "target": ""}, c, gd, 5)
+	assert_true(sw == "" or sw.begins_with("at ") or sw.begins_with("in "), sw)
 	assert_eq(SeasonTasks.where({"kind": "catch", "target": "no_such_fish"}, c, gd, 5), "")
 	assert_eq(SeasonTasks.where({"kind": "hunt", "target": "no_such_beast"}, c, gd, 5), "")
 
@@ -708,3 +709,35 @@ func test_where_names_the_region_for_a_foe_outside_qingshi() -> void:
 			checked += 1
 			assert_true(w.ends_with(")") and w.contains(" in "), w)
 	assert_true(checked > 0, "some foe is met only outside Qingshi")
+
+
+## SEASON-023: every season task reads right once its place is attached, in years 1 and 2.
+func test_season_task_lines_read_right_everywhere() -> void:
+	var gd: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var c := CharacterData.new()
+	for s: String in SeasonTasks.SEASONS:
+		for set: Array in SeasonTasks.sets_of(gd.season_tasks["seasons"][s]):
+			for t: Dictionary in set:
+				for day in range(0, 720, 7):
+					if Calendar.season_of(day).to_lower() != s:
+						continue
+					var w := SeasonTasks.where(t, c, gd, day)
+					if w != "":
+						var ok := false
+						for pre in ["at ", "in ", "by ", "("]:
+							ok = ok or w.begins_with(pre)
+						assert_true(ok, "%s day %d: '%s'" % [t["id"], day, w])
+					var line := SeasonTasks.with_where(String(t["text"]), w)
+					assert_false(line.contains(" at the market at "), line)
+					assert_false(line.contains("  ") or line.contains(".."), line)
+
+
+func test_sell_wanted_names_a_stall_that_wants_something() -> void:
+	var gd: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var found := false
+	for day in range(0, 360):
+		var w := SeasonTasks.where({"kind": "sell_wanted", "target": ""}, CharacterData.new(), gd, day)
+		if w != "":
+			found = true
+			assert_true(w.begins_with("at ") or w.begins_with("in "), w)
+	assert_true(found, "some day a stall wants goods")

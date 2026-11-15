@@ -307,7 +307,7 @@ static func _fish_phrase(data: GameData, region_id: String, weather: String, sea
 	if season != "" and Fishing.is_iced(data, region_id, season):
 		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 			if String(place.get("type", "")) == "fishing":
-				return "ice-fishing at %s" % String(place.get("name", "the pond"))
+				return "ice-fishing at %s" % String(place.get("display_name", "the pond"))
 		return ""
 	if weather != "" and Fishing.extra_draws(data, weather) > 0 and not Fishing.too_wild(weather):
 		for place: Dictionary in data.regions.get(region_id, {}).get("places", []):

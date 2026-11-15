@@ -98,7 +98,7 @@
         [
           {"id": "autumn_roach", "first_year": true, "text": "Land a Maple Roach for the harvest table.", "kind": "catch", "target": "maple_roach", "count": 1},
           {"id": "autumn_fox", "text": "Hunt a Wild Boar that raids the granaries.", "kind": "hunt", "target": "wild_boar", "count": 1},
-          {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 2}
+          {"id": "autumn_market", "text": "Sell 2 of a stall's wanted goods.", "kind": "sell_wanted", "target": "", "count": 2}
         ],
         [
           {"id": "autumn_eel", "text": "Land 2 Marsh Eels for the harvest soup.", "kind": "catch", "target": "marsh_eel", "count": 2},
@@ -108,7 +108,7 @@
         [
           {"id": "autumn_fox_y2", "text": "Hunt the Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},
           {"id": "autumn_dew_y2", "text": "Gather 2 Dew Grass for the harvest wine.", "kind": "gather", "target": "dew_grass", "count": 2},
-          {"id": "autumn_market_y2", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
+          {"id": "autumn_market_y2", "text": "Sell 3 of a stall's wanted goods.", "kind": "sell_wanted", "target": "", "count": 3}
         ]
       ],
       "payout": {"stones": 100, "renown": 2, "favor_all": 1, "item": "moon_cake"}
@@ -123,7 +123,7 @@
         [
           {"id": "winter_carp", "text": "Land 2 Silver Carp for the winter larder.", "kind": "catch", "target": "silver_carp", "count": 2},
           {"id": "winter_iron", "text": "Gather 2 Iron Essence for the village smith.", "kind": "gather", "target": "iron_essence", "count": 2},
-          {"id": "winter_market", "text": "Sell 3 of a stall's wanted goods at the market.", "kind": "sell_wanted", "target": "", "count": 3}
+          {"id": "winter_market", "text": "Sell 3 of a stall's wanted goods.", "kind": "sell_wanted", "target": "", "count": 3}
         ],
         [
           {"id": "winter_wolf_y2", "text": "Hunt the Den Wolf that prowls near the village.", "kind": "hunt", "target": "den_wolf", "count": 1},

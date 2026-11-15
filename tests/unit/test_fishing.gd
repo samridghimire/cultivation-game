@@ -314,8 +314,8 @@ func _ice_data() -> GameData:
 	var data := GameData.new()
 	data.fishing_rules = {"rain_extra_draws": 1}
 	data.regions = {
-		"cold": {"map": {}, "places": [{"type": "fishing", "name": "Bog Pond"}]},
-		"warm": {"map": {"no_snow": true}, "places": [{"type": "fishing", "name": "Lotus Pond"}]},
+		"cold": {"map": {}, "places": [{"type": "fishing", "display_name": "Bog Pond"}]},
+		"warm": {"map": {"no_snow": true}, "places": [{"type": "fishing", "display_name": "Lotus Pond"}]},
 	}
 	return data
 

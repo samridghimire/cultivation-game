@@ -524,7 +524,7 @@ static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int)
 					var table: Array = place.get("catch_table", []) if kind == "catch" else place.get("gather_table", [])
 					for e: Dictionary in table:
 						if String(e.get("item", "")) == target and Exploration.in_season(e, season):
-							return "at %s" % place["display_name"] if rid == REGION else "%s in %s" % [place["display_name"], region["name"]]
+							return "at %s" % place["display_name"] if rid == REGION else "at %s in %s" % [place["display_name"], region["name"]]
 				if kind == "gather":
 					for e: Dictionary in region.get("forage", {}).get("items", []):
 						if String(e.get("item", "")) == target and Exploration.in_season(e, season):
@@ -554,7 +554,11 @@ static func _where(task: Dictionary, c: CharacterData, data: GameData, day: int)
 				if not months.is_empty() and not rnames.is_empty():
 					return "at the %s in %s, month %d" % [ev.get("name", target), ", ".join(rnames), int(months[0])]
 		"sell_wanted":
-			return "at a market stall's wanted item"
+			# SEASON-023: where a stall really wants something today, nearest first ("" when none does).
+			for rid in _regions_nearest(data):
+				for place: Dictionary in data.regions[rid].get("places", []):
+					if not Places.wanted_today(place, day).is_empty():
+						return "at %s" % place["display_name"] if rid == REGION else "in %s" % data.regions[rid]["name"]
 	return ""
 
 
