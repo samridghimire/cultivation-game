@@ -339,6 +339,9 @@ func test_teachers_last_errand() -> void:
 		assert_true(bool(deed.get("once", false)))
 		assert_true(Deeds.check(c, data(), deed, {}, 0) != "", "locked before graduating")
 		assert_eq(Deeds.check(c, data(), deed, {grad: true}, 0), "", "offered after graduating")
+		var ctx_id := String(deed["context"])
+		assert_true(Deeds.available(data(), ctx_id, {grad: true}).has(deed), "listed before it is done")
+		assert_false(Deeds.available(data(), ctx_id, {grad: true, row[3]: true}).has(deed), "gone from the menu once done")
 		var labels := func(flags: Dictionary) -> Array:
 			var v := Dialogue.view(data().dialogues[npc_id], "greet", _ctx(npc_id, c, npcs, flags))
 			return (v["choices"] as Array).map(func(ch: Dictionary) -> String: return String(ch["label"]))

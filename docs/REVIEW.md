@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: bcccaaf
+Last reviewed commit: c9eb41a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2009,3 +2009,15 @@ Last reviewed commit: bcccaaf
   - Notes, not filed: a style mastered by solo practice never gets the graduation line (only a bout that masters it
     does). TEACH-003's monthly `teacher_pride_<npc>_<y>_<m>` counters are never pruned (one per teacher per month in
     world_flags; small). A teacher remarks on a style even if you learned it from a manual elsewhere.
+- 2026-11-15 (reviewer, 2nd run): reviewed bcccaaf..c9eb41a (TEACH-002, GUIDE-242, GFX-158, GFX-159, WU-542, TEACH-004,
+  C-370, GUIDE-243, GFX-163, GFX-161; [PLAN]/[REVIEW] skipped). Main green (4139 tests). No BACKLOG/CHANGELOG edits by
+  workers; no binary assets; no SAVE_VERSION change (TEACH-004's `taught_by_<tech>` is a world flag; old saves without it
+  fall back to "any teacher of the style", as specced).
+  - Fixed (C-370): the two `once` teacher errands had no `blocked_by_flag`, and `Deeds.available` (the NPC menu) does not
+    filter `once` deeds, so after doing the errand it stayed in Hunter Ma's / Xiao Ling's menu forever and only warned
+    when picked. Added `blocked_by_flag` = the errand's own done flag; test extended.
+  - TEACH-004 OK (graduation by any road via one `_graduate`; pride keys pruned at month end; `teacher_graduated_*` and
+    `teacher_pride_note_*` are not caught by the prune prefix). WU-542 OK. GUIDE-242/243 OK. TEACH-002 is a cap change.
+    GFX-158/159/161/163: draw-only, randomness from seeded rngs; not rendered by me.
+  - Notes, not filed: WU-542's "Taught by X" lines ignore TEACH-004's `taught_by_` flag (moot while each style has one
+    teacher). A style learned from a manual still counts as taught by its villager teacher (no `taught_by_` flag).
