@@ -1883,53 +1883,51 @@ func _draw_scree_detail(map: Dictionary) -> void:
 			draw_rect(Rect2(q, Vector2(sz2, sz2 - 0.5)), rock.lightened(0.2) if rng.randf() < 0.5 else rock.darkened(0.35))
 
 
-## GFX-147: "terrace" gather places as stepped hillside bands: each band a ragged strip of soil with crop rows in the place colour,
-## a darker riser under it, snow on the band tops in winter. No straight box border.
+## GFX-147/GFX-160: "terrace" gather places as wide flat hillside bands: soil toned from the region ground, ends fading into the
+## slope, short crop tufts in 2-3 staggered rows (every 3rd in the place colour), snow on the band tops in winter. No dark rim.
 func _draw_terrace_places() -> void:
 	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
 	for place: Dictionary in _region.get("places", []):
 		if String(place.get("type", "")) != "gather" or String(place.get("look", "")) != "terrace":
 			continue
 		var sz := _vec(place.get("size", [130, 80]))
 		var r := Rect2(_vec(place["pos"]) - sz / 2.0, sz)
 		var tint := Color(String(place.get("color", "9aa8d0")))
-		var bands := Scenery.terrace_bands(r, int(r.position.x) * 31 + int(r.position.y) * 17)
+		var seed_value := int(r.position.x) * 31 + int(r.position.y) * 17
+		var bands := Scenery.terrace_bands(r, seed_value)
+		var plant := Scenery.crop_color(String(GroundTiles.ground_season(_season, _region.get("map", {}))))
 		for i in bands.size():
 			var poly := bands[i]
-			var lo: float = poly[0].y
-			var hi: float = poly[0].y
-			var minx: float = poly[0].x
-			var maxx: float = poly[0].x
+			var earth := Scenery.terrace_earth(ground, i, snowy)
+			var left: float = poly[0].x
+			var right: float = poly[poly.size() / 2 - 1].x
+			var colors := PackedColorArray()
 			for q in poly:
-				lo = minf(lo, q.y)
-				hi = maxf(hi, q.y)
-				minx = minf(minx, q.x)
-				maxx = maxf(maxx, q.x)
-			var earth := Color("7a6a4a").lerp(Color("5a4a32"), 0.15 * float(i))
+				colors.append(Color(earth, Scenery.terrace_end_alpha(q.x, left, right)))
+			draw_polygon(poly, colors)
+			var half := poly.size() / 2
+			# a slightly darker earth lip under the band (earth tone, not a dark outline)
+			var lip := PackedVector2Array()
+			var lip_cols := PackedColorArray()
+			for q in range(half, poly.size()):
+				lip.append(poly[q] + Vector2(0, -1.0))
+				lip_cols.append(Color(earth.darkened(0.15), 0.6 * Scenery.terrace_end_alpha(poly[q].x, left, right)))
+			draw_polyline_colors(lip, lip_cols, 2.0)
+			for crop: Dictionary in Scenery.terrace_crops(poly, seed_value + i * 101):
+				var p: Vector2 = crop["pos"]
+				if snowy:
+					draw_rect(Rect2(p.x - 1.0, p.y - 1.0, 4.0, 2.0), Color("e9f1f8"))
+				else:
+					var col := tint.lerp(plant, 0.25) if bool(crop["tinted"]) else plant.darkened(0.1)
+					draw_rect(Rect2(p.x, p.y - 2.0, 2.0, 3.0), col)
+					draw_rect(Rect2(p.x + 2.0, p.y - 3.0, 2.0, 3.0), col.lightened(0.25))
 			if snowy:
-				earth = earth.lerp(Color("8a8f94"), 0.2)
-			var half := poly.size() / 2  # the riser follows the curved downhill edge
-			draw_colored_polygon(poly, earth)
-			# GFX-154: an earthen riser, a 3-4 px darker strip along the lower edge; no outline round the band
-			var edge := PackedVector2Array()
-			for q in range(half + 2, poly.size() - 2):
-				edge.append(poly[q] + Vector2(0, -1.0))
-			draw_polyline(edge, earth.darkened(0.35), 3.5)
-			# the planted top: rows of tufts in the crop colour (snow caps in winter)
-			var plant := tint.lerp(Scenery.crop_color(String(GroundTiles.ground_season(_season, _region.get("map", {})))), 0.35)
-			var y := lo + 5.0
-			while y < hi - 5.0:
-				var x := minx + 8.0 + float(i % 2) * 3.0
-				while x < maxx - 8.0:
-					if snowy:
-						draw_rect(Rect2(x - 1.0, y, 4.0, 2.0), Color("e9f1f8"))
-					else:
-						draw_rect(Rect2(x, y - 2.0, 2.0, 3.0), plant)
-						draw_rect(Rect2(x + 2.0, y - 3.0, 2.0, 3.0), plant.lightened(0.25))
-					x += 7.0
-				y += 5.0
-			if snowy:
-				draw_polyline(poly.slice(0, half), Color(0.95, 0.98, 1.0, 0.9), 2.0)
+				var top_cols := PackedColorArray()
+				var top := poly.slice(0, half)
+				for q in top:
+					top_cols.append(Color(0.95, 0.98, 1.0, 0.9 * Scenery.terrace_end_alpha(q.x, left, right)))
+				draw_polyline_colors(top, top_cols, 2.0)
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).

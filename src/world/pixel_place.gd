@@ -238,7 +238,8 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 	apply_style_rows(c, effective_style(kind, style))
 	if winter and winter_kind(kind):
 		winterize(kind, c)
-	outline(c)
+	if kind != "gather_terrace":  # GFX-160: no dark rim round the terrace's sprigs
+		outline(c)
 	var out: Array[String] = []
 	for row: Array in c:
 		out.append("".join(row))
@@ -702,14 +703,12 @@ static func _gather_frost() -> Array:
 
 ## GFX-102: stepped green bands with stone edges and orchid dots (tinted by the place colour).
 static func _gather_terrace() -> Array:
-	# GFX-147: the stepped bands are drawn as ground by the world (Scenery.terrace_bands); the sprite is only the orchid tufts.
+	# GFX-160: bands and crops are world ground; no outline (see build)
 	var c := canvas(50, 34)
-	blob(c, 25, 18, 4, 2, "s", 1704, 0.1)  # a small soil blob under the tufts
-	for i in 3:
-		var y := 8 + i * 9
-		for x in range(10, 40, 9):
-			rect(c, x + i * 2, y, 2, 2, "r")
-			rect(c, x + i * 2, y, 1, 1, "n")
+	blob(c, 25, 18, 2, 1, "s", 1704, 0.1)  # a tiny soil dab under the sprigs
+	for p: Array in [[14, 9], [33, 12], [22, 19], [39, 24], [11, 27]]:
+		rect(c, p[0], p[1], 2, 2, "r")
+		rect(c, p[0], p[1], 1, 1, "n")
 	return c
 
 

@@ -60,22 +60,15 @@ func test_wisp_puffs_never_thin_bars() -> void:
 			assert_true(p.size.y >= 10.0 and p.size.x >= 16.0, "ellipse at least 10 px tall")
 
 
-func test_terrace_band_outline_is_curved_and_widths_differ() -> void:
+func test_terrace_band_edges_wobble_gently() -> void:
 	var bands := Scenery.terrace_bands(Rect2(100, 200, 130, 100), 5)
-	var widths: Array[float] = []
 	for poly in bands:
 		var half := poly.size() / 2
 		var ys: Array[float] = []
-		var minx := INF
-		var maxx := -INF
-		for q in poly:
-			minx = minf(minx, q.x)
-			maxx = maxf(maxx, q.x)
 		for i in half:
 			ys.append(poly[i].y)
-		assert_true(ys.max() - ys.min() >= 4.0, "upper edge is not axis-aligned")
-		widths.append(maxx - minx)
-	assert_true((widths.max() - widths.min()) / widths.max() >= 0.08, "bands differ in width")
+		var span: float = ys.max() - ys.min()
+		assert_true(span >= 2.0 and span <= 4.0, "upper edge wobbles 2-4 px, near straight")
 
 
 func test_ridge_patches_clear_of_keepouts() -> void:

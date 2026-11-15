@@ -885,7 +885,7 @@ func test_terrace_bands_stack_without_gap() -> void:
 				lo = minf(lo, q.y)
 				hi = maxf(hi, q.y)
 			if prev_bottom > -INF:
-				assert_true(lo <= prev_bottom + 2.0 and prev_bottom - lo <= 5.0, "bands touch or overlap by up to 4 px (no gap)")
+				assert_true(lo <= prev_bottom + 2.0 and prev_bottom - lo <= 6.0, "bands touch or overlap by up to 6 px (no gap)")
 			prev_bottom = hi
 		assert_true(a != Scenery.terrace_bands(r, 10))
 
@@ -969,10 +969,50 @@ func test_terrace_flag_shade_has_four_distinct_tones() -> void:
 	assert_eq(Scenery.terrace_flag_shade(Color("a9a69b"), 3), Scenery.terrace_flag_shade(Color("a9a69b"), 3))
 
 
-func test_terrace_band_ends_are_blunt() -> void:
+func test_terrace_band_ends_keep_thickness() -> void:
 	for sd in 10:
 		for poly in Scenery.terrace_bands(Rect2(0, 0, 130, 100), sd):
 			var half := poly.size() / 2
-			# the end column keeps real thickness (a blunt cap, not a point)
-			assert_true(poly[poly.size() - 1].y - poly[0].y >= 0.0)
-			assert_true(absf((poly[half - 1].y) - poly[half].y) > 0.5, "right end has thickness")
+			assert_true(absf(poly[half - 1].y - poly[half].y) > 2.0, "right end has thickness")
+			assert_true(absf(poly[0].y - poly[poly.size() - 1].y) > 2.0, "left end has thickness")
+
+
+## GFX-160: every band spans the place width (within 2 px each side), ends fade to 0, the middle is opaque.
+func test_terrace_bands_span_full_width_and_fade() -> void:
+	for sd in 10:
+		var r := Rect2(100, 200, 130, 80)
+		for poly in Scenery.terrace_bands(r, sd):
+			var minx := INF
+			var maxx := -INF
+			for q in poly:
+				minx = minf(minx, q.x)
+				maxx = maxf(maxx, q.x)
+			assert_true(absf((maxx - minx) - r.size.x) <= 4.0, "band as wide as the place")
+			assert_eq(Scenery.terrace_end_alpha(minx, minx, maxx), 0.0)
+			assert_eq(Scenery.terrace_end_alpha(maxx, minx, maxx), 0.0)
+			assert_eq(Scenery.terrace_end_alpha((minx + maxx) / 2.0, minx, maxx), 1.0)
+			assert_true(Scenery.terrace_end_alpha(minx + 6.0, minx, maxx) > 0.0 and Scenery.terrace_end_alpha(minx + 6.0, minx, maxx) < 1.0)
+
+
+func test_terrace_earth_follows_ground_and_darkens() -> void:
+	var slate := Color("4a5560")
+	var a := Scenery.terrace_earth(slate, 0, false)
+	assert_true(a != Color("7a6a4a"))
+	assert_true(Scenery.terrace_earth(slate, 2, false).get_luminance() < a.get_luminance())
+	assert_true(Scenery.terrace_earth(Color("6a8a5a"), 0, false) != a, "earth follows the ground colour")
+
+
+func test_terrace_crops_stagger_and_every_third_tinted() -> void:
+	for sd in 8:
+		var poly := Scenery.terrace_bands(Rect2(0, 0, 130, 80), sd)[1]
+		var crops := Scenery.terrace_crops(poly, sd)
+		assert_eq(crops, Scenery.terrace_crops(poly, sd))
+		assert_true(crops.size() >= 10)
+		var tinted := 0
+		var ys := {}
+		for c in crops:
+			if bool(c["tinted"]):
+				tinted += 1
+			ys[snappedf((c["pos"] as Vector2).y, 3.0)] = true
+		assert_true(tinted * 4 >= crops.size() and tinted * 5 <= crops.size() * 2, "about every 3rd tuft is tinted")
+		assert_true(ys.size() >= 2, "more than one row")

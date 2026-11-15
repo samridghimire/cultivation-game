@@ -1670,41 +1670,85 @@ static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: 
 		"look": look, "vertical": vertical}
 
 
-## GFX-147: the bands of a hillside terrace inside `rect`: 3-4 ragged strips stacked top to bottom, each shifted a few px
-## sideways from the one above. GFX-154: each band reaches 2 px into the next so the slope reads as one; ends are blunt and
-## rounded. Bands stay inside `rect`; same seed, same bands. Returned top (highest) to bottom; band `i`'s riser is the gap just below it.
+## GFX-147/GFX-160: the bands of a hillside terrace inside `rect`: 3-4 wide flat strips stacked top to bottom, each spanning the
+## full place width (2 px in from each side) with near-straight edges (a gentle 2-3 px seeded wobble). Neighbouring bands share
+## one boundary curve (the upper band reaches 2 px under it), so the slope has no gaps. Bands stay inside `rect`; same seed,
+## same bands. Returned top (highest) to bottom; points run along the upper edge left to right, then back along the lower edge.
+## Fade the ends into the hillside with `terrace_end_alpha`.
 static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Array]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var n := 3 if rect.size.y < 90.0 else 4
 	var step := rect.size.y / float(n)
+	var left := rect.position.x + 2.0
+	var width := rect.size.x - 4.0
+	var cols := maxi(int(width / 8.0), 4)
+	# n + 1 boundary curves; curve k sits near the top of band k and the bottom of band k - 1
+	var curves: Array[PackedVector2Array] = []
+	for k in n + 1:
+		var amp := rng.randf_range(1.0, 1.5)
+		var phase := rng.randf_range(0.0, TAU)
+		var freq := rng.randf_range(1.0, 2.0)
+		var base := rect.position.y + step * float(k) + 1.0
+		if k == n:
+			base = rect.end.y - 1.0 - 2.0 * amp
+		var pts := PackedVector2Array()
+		for c in cols + 1:
+			var t := float(c) / float(cols)
+			pts.append(Vector2(left + width * t, base + amp * (1.0 + sin(phase + TAU * freq * t)) + rng.randf_range(0.0, 0.4)))
+		curves.append(pts)
 	var out: Array[PackedVector2Array] = []
 	for i in n:
-		var top := rect.position.y + step * float(i) + 1.0
-		var bottom := rect.position.y + step * float(i + 1) + (3.0 if i < n - 1 else -1.0)
-		# GFX-150: every other band is 10-20 % narrower, centred with a small seeded shift
-		var full := rect.size.x - 4.0
-		var width := full * (1.0 - (rng.randf_range(0.10, 0.20) if i % 2 == 1 else rng.randf_range(0.0, 0.03)))
-		var left := rect.position.x + 2.0 + (full - width) * rng.randf_range(0.3, 0.7)
-		var right := left + width
-		# the band follows an arc bulging 6-10 px downhill; the ends taper into the ground
-		var bulge := minf(rng.randf_range(6.0, 10.0), (bottom - top) * 0.35)
-		var h := bottom - bulge - top
-		var cols := maxi(int(width / 8.0), 4)
-		var upper := PackedVector2Array()
-		var lower := PackedVector2Array()
-		for k in cols + 1:
-			var t := float(k) / float(cols)
-			var arc := bulge * sin(PI * t)
-			var e := 1.0 - clampf(minf(t, 1.0 - t) / 0.1, 0.0, 1.0)  # GFX-154: a quarter-round cap, not a point
-			var squeeze := (1.0 - sqrt(maxf(1.0 - e * e, 0.0))) * h * 0.4
-			upper.append(Vector2(lerpf(left, right, t), top + arc + squeeze + rng.randf_range(0.0, 1.5)))
-			lower.append(Vector2(lerpf(left, right, t), top + arc + h - squeeze - rng.randf_range(0.0, 1.0)))
-		var poly := upper.duplicate()
-		for k in range(lower.size() - 1, -1, -1):
-			poly.append(lower[k])
+		var poly := curves[i].duplicate()
+		var drop := 2.0 if i < n - 1 else 0.0
+		for c in range(cols, -1, -1):
+			poly.append(curves[i + 1][c] + Vector2(0, drop))
 		out.append(poly)
 	return out
+
+
+## GFX-160: opacity of a terrace band at `x`: it fades from 0 at either end into the hillside to 1 over `ramp` px.
+static func terrace_end_alpha(x: float, left: float, right: float, ramp: float = 12.0) -> float:
+	return clampf(minf(x - left, right - x) / ramp, 0.0, 1.0)
+
+
+## GFX-160: the soil of band `i` on a hillside whose ground colour is `ground`: the ground warmed toward brown and darkened a
+## little more for each band down (no fixed brown that reads as wood on slate ground); a grey cast in snow.
+static func terrace_earth(ground: Color, i: int, snowy: bool) -> Color:
+	var c := ground.lerp(Color("8a6a40"), 0.3).darkened(0.1 + 0.04 * float(i))
+	return c.lerp(Color("8a8f94"), 0.2) if snowy else c
+
+
+## GFX-160: crop tufts of one band: 2-3 staggered rows of short tufts, as [{pos: Vector2, tinted: bool}]; every 3rd tuft of a
+## row is `tinted` (the place colour), the rest are plain green. Tufts stay `margin` px inside the band's x range and 4 px off its edges.
+static func terrace_crops(poly: PackedVector2Array, seed_value: int, margin: float = 10.0) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var out: Array[Dictionary] = []
+	var half := poly.size() / 2
+	var cols := half - 1
+	var minx: float = poly[0].x + margin
+	var maxx: float = poly[half - 1].x - margin
+	var rows := 2 if _band_height(poly) < 22.0 else 3
+	for r in rows:
+		var x := minx + float(r) * 3.0
+		var n := 0
+		while x < maxx:
+			var t := clampf((x - poly[0].x) / maxf(poly[half - 1].x - poly[0].x, 1.0), 0.0, 1.0)
+			var c := mini(int(t * float(cols)), cols - 1)
+			var f := t * float(cols) - float(c)
+			var up := lerpf(poly[c].y, poly[c + 1].y, f)
+			var lo := lerpf(poly[poly.size() - 1 - c].y, poly[poly.size() - 2 - c].y, f)
+			var y := lerpf(up + 4.0, lo - 4.0, (float(r) + 0.5) / float(rows))
+			out.append({"pos": Vector2(x + rng.randf_range(-1.0, 1.0), y), "tinted": n % 3 == 1})
+			n += 1
+			x += rng.randf_range(8.0, 11.0)
+	return out
+
+
+static func _band_height(poly: PackedVector2Array) -> float:
+	var half := poly.size() / 2
+	return poly[poly.size() - 1 - half / 2].y - poly[half / 2].y
 
 
 ## GFX-153: how a snow drift of a ridge region looks in `season`: {show, scale: Vector2, color: Color, alpha, lumps}. Winter keeps the full white
