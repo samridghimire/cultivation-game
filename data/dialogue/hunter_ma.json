@@ -30,7 +30,7 @@
         {"label": "Train with him. (5 days)", "next": "end", "days": 5, "effects": {"learn_technique": "iron_fist"}},
         {"label": "Not today.", "next": "greet"}
       ]},
-    "spar": {"text": "Again. A fist that lands once is luck. Land it ten times and it is a habit. Rest your arm; the boar will not.",
+    "spar": {"text": "Again. A fist that lands once is luck. Land it ten times and it is a habit. Come back once a week and we will do it again. Rest your arm; the boar will not.",
       "choices": [{"label": "...", "next": "greet"}]},
     "advice": {"text": "Listen for the birds. When they stop all at once, something big is walking. Better to be downwind of it, and better still to be somewhere else.",
       "choices": [{"label": "...", "next": "greet"}]}

@@ -11,6 +11,9 @@
         {"label": "Share a Spirit Herb with her.", "next": "herb", "effects": {"items": {"spirit_herb": -1}}, "favor": 15, "show_locked": true},
         {"label": "Ask how her cultivation is going.", "next": "progress"},
         {"label": "Ask how she carries the well yokes all day.", "next": "yoke", "if": {"min_favor": 40, "not_knows_technique": "stone_skin"}, "show_locked": true, "hide_if": {"knows_technique": "stone_skin"}},
+        {"label": "Tell her the yoke grip has served you well.", "next": "yoke_after", "if": {"knows_technique": "stone_skin"}},
+        {"label": "Ask if she would carry water with you again.", "next": "yoke_weekly", "if": {"knows_technique": "stone_skin", "not_flag": "ling_yoke_week"}, "favor": 1, "effects": {"set_flag": "ling_yoke_week"}},
+        {"label": "Ask if she would carry water with you again.", "next": "yoke_weekly", "if": {"knows_technique": "stone_skin", "flag": "ling_yoke_week"}},
         {"label": "Mock her dreams.", "next": "mocked", "favor": -20, "effects": {"alignment": -10}},
         {"label": "Later, Ling.", "next": "end"}
       ]},
@@ -20,6 +23,10 @@
         {"label": "Not today.", "next": "greet"}
       ]},
     "yoke_done": {"text": "Knees soft, back straight, let the earth hold the weight. There. You are not a reed anymore.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "yoke_after": {"text": "Ha! I saw you at the well yesterday, knees soft, back straight. You carry like a village girl now. Do not tell Elder Mo; he thinks cultivators should not haul water.",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "yoke_weekly": {"text": "Come by the well once a week and we will carry together, you with the heavy bucket this time. Mind you, I will not go easy. Stone is only a grip you keep practising.",
       "choices": [{"label": "...", "next": "greet"}]},
     "together": {"text": "We sat by the Spirit Spring for a month. She chattered the whole time, but your qi feels steadier.",
       "speaker": "",
