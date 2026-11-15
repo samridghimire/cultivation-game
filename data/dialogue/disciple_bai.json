@@ -10,6 +10,10 @@
         {"label": "Practice with her. (6 days)", "next": "end", "days": 6, "effects": {"learn_technique": "rippling_moon_sword"}},
         {"label": "Not today.", "next": "greet"}
       ]},
+    "bai_after": {"text": "Bai lowers her gaze to the pool and smiles. \"I saw the ripple in your wrist, {player}. The moon would know you now. Do not tell my sect elders I said so.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
+    "bai_weekly": {"text": "Bai sheathes her sword with a soft click. \"Come at dawn once a week and we will cut the water together. Mind: the pool forgives, the peak does not.\"",
+      "choices": [{"label": "...", "next": "greet"}]},
     "teach_hint": {"text": "Bai smiles and sheathes her sword. \"A sword shown to a stranger is only a stick. Walk the terraces with me a while first.\"",
       "choices": [{"label": "...", "next": "greet"}]},
     "greet": {"text": "Peace, fellow cultivator. I am Bai Qingwu of the Azure Cloud Sect, walking the peak to settle my Dao-heart. The orchid terraces are kind to those who tread softly.",
@@ -20,6 +24,9 @@
         {"label": "Bring the three Nine-Leaf Soul Grass Bai asked for.", "next": "errand_thanks", "if": {"has_items": {"nine_leaf_soul_grass": 3}, "flag": "errand_bai_asked", "not_flag": "errand_bai_done"}, "effects": {"items": {"nine_leaf_soul_grass": -3, "jade_marrow_pill": 1}, "qi": 2500, "alignment": 10, "set_flag": "errand_bai_done"}, "favor": 15},
         {"label": "Ask what she practices at dawn.", "next": "teach_rippling_moon_sword", "if": {"min_favor": 25, "not_knows_technique": "rippling_moon_sword"}, "show_locked": true, "hide_if": {"knows_technique": "rippling_moon_sword"}},
         {"label": "Watch her practice at dawn.", "next": "teach_hint", "if": {"max_favor": 24, "not_knows_technique": "rippling_moon_sword"}},
+        {"label": "Tell her the moon-sword has steadied your hand.", "next": "bai_after", "if": {"knows_technique": "rippling_moon_sword"}},
+        {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "not_flag": "bai_sword_week"}, "favor": 1, "effects": {"set_flag": "bai_sword_week"}},
+        {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "flag": "bai_sword_week"}},
         {"label": "Farewell, senior sister.", "next": "end"}
       ]},
     "foundation": {"text": "I did not chase the pill. I chased a clear mind, and the Foundation came as the cold comes down the mountain. Do not hurry the layers; they remember every shortcut.",
