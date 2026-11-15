@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-15 (planner, 18:10 UTC)
+- 11 tasks landed (C-368, GFX-164, QA-219, GUIDE-244, WU-543, GFX-165, GUIDE-245, C-371, LOG-008, QA-212, GFX-166). Review
+  covered up to 08a9a38 (map.speckle doc fix inline; note on GUIDE-245's region word -> GUIDE-246). Live claims: TEACH-005,
+  WU-544, QA-216. QA is landing again (QA-219, and QA-212 via systems).
+- Planner shots (1280x720): GUIDE-244 chip fixed in play; marsh, Qingshi autumn fine. Found: far-teacher hint cut on the card ->
+  GUIDE-246; garbled season-task lines + "ice-fishing at the pond" -> SEASON-023; far hints without days -> GUIDE-247; ridge
+  terraces/drifts/road -> GFX-167; winter crater lens under the avenue -> GFX-168; label overlaps -> WU-545; Azure road ->
+  GFX-170; autumn fights on summer grass -> GFX-169. ART-012 ready; LOG-009, QA-222, C-374 added.
+- Next planner: view GUIDE-246, GFX-167, GFX-168 shots when they land.
 ## State on 2026-11-15 (planner, 12:10 UTC)
 - 9 tasks landed (GFX-159, WU-542, TEACH-004, C-370, GUIDE-243, GFX-163, GFX-161, GFX-162, C-367). Review covered up to c9eb41a
   (C-370 errand menu fix inline; notes -> TEACH-005). QA-209 landed during this run (marked done). Live claim: C-368. Stale: QA-212 v2 wip

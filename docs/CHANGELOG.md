@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-15 [GFX-166] Ridge terraces show earth bands, ledges have a lit edge and loose stones, and pebbles are flat stones.
+- 2026-11-15 [QA-212] The curious-years sim reports the day each artifact seal opens and where its energy came from.
+- 2026-11-15 [LOG-008] Tomorrow's omen forecast is skipped when today already brings the same omen.
+- 2026-11-15 [C-371] The regional teachers say goodbye when you master their art and remember the lesson in conversation.
+- 2026-11-15 [GUIDE-245] With no fighting style, the hint names the nearest teacher anywhere and how many days away.
+- 2026-11-15 [GFX-165] The winter crater is one snow bowl, and fight backdrops vary more between pieces.
+- 2026-11-15 [WU-543] The screenshot tool can show regional teachers' cards with flags and realms set.
+- 2026-11-15 [GUIDE-244] The Today chip names the first thing in full in play ("Blank Talisman Paper", "Morning Dew Grass +1").
+- 2026-11-15 [QA-219] First-hour and log-noise balance baseline refreshed.
+- 2026-11-15 [GFX-164] Myriad Peaks Ridge has visible slope bands, lighter speckle and a darker trail edge.
+- 2026-11-15 [C-368] Every Qingshi villager likes something a newcomer can get in spring or summer.
 - 2026-11-15 [QA-209] The screenshot tool can stage fights and encounters in any region.
 - 2026-11-15 [C-367] Marsh, Azure Peak, the ridge and the market each have a villager who teaches a fighting or movement art.
 - 2026-11-15 [GFX-162] The market's crater ring sits under the main street, and marsh pilings and reeds look less regular.
