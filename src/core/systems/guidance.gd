@@ -577,6 +577,15 @@ static func short_hint(line: String, data: GameData = null) -> String:
 		if meal_short.length() <= SHORT_HINT_CHARS:
 			return meal_short
 		return "%s: %s -> %s" % [meal.get_string(1), meal.get_string(3), meal.get_string(4)]
+	# GUIDE-245: "Hunter Ma in Qingshi Village can teach you Iron Fist (12 days away)." -> "No fighting style: Hunter Ma, Qingshi"
+	re.compile("^(.+?) in (.+?) can teach you .+? \\(\\d+ days? away\\)\\.$")
+	var far_teach := re.search(line)
+	if far_teach != null:
+		var place := (far_teach.get_string(2) as String).split(" ")[0]
+		for lead in ["No fighting style: ", "No style: "]:
+			var far_named: String = lead + "%s, %s" % [far_teach.get_string(1), place]
+			if far_named.length() <= SHORT_HINT_CHARS:
+				return far_named
 	# GUIDE-238: "Hunter Ma can teach you Iron Fist (favor 12/15); Hunter Ma likes Venison." -> "Hunter Ma teaches Iron Fist (favor 12/15)"
 	re.compile("^(.+?) can teach you (.+?)( \\(favor \\d+/\\d+\\))?(?:;.*?)?(?: in .+?)?\\.$")
 	var teach := re.search(line)
@@ -3758,7 +3767,23 @@ const STYLE_FAVOR_SLACK := 10
 static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}, today: int = -1) -> Dictionary:
 	if region_id == "" or Techniques.knows_kind(c, data, "combat"):
 		return {}
-	var map := _route_day_map(c, data, region_id, 1)
+	var best := _nearest_style_teacher(c, npcs, data, region_id, favor, _route_day_map(c, data, region_id, 1), false)
+	if best.is_empty():
+		# GUIDE-245: nobody within one route: the nearest teacher at any distance (never a dead-end hint).
+		best = _nearest_style_teacher(c, npcs, data, region_id, favor, _route_day_map(c, data, region_id, -1), true)
+		if best.is_empty():
+			best = _nearest_style_teacher(c, npcs, data, region_id, favor, _route_day_map(c, data, region_id, -1, true), true)
+	if best.is_empty():
+		return {}
+	best.erase("_key")
+	if int(best["favor"]) < int(best["need"]) and not bool(best.get("far", false)):
+		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
+		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
+	return best
+
+
+## The nearest teacher on `map` (see style_teacher). `far` lifts the favor slack: GUIDE-245's fallback names whoever is nearest.
+static func _nearest_style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, map: Dictionary, far: bool) -> Dictionary:
 	var best: Dictionary = {}
 	for npc_id: String in data.npcs:
 		var def: Dictionary = data.npcs[npc_id]
@@ -3770,7 +3795,7 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 			continue
 		var have := int(favor.get(npc_id, 0))
 		# GUIDE-239: a teacher in the current region is named whatever the favor gap; one route away keeps the slack.
-		var slack := 1000000 if at == region_id else STYLE_FAVOR_SLACK
+		var slack := 1000000 if (at == region_id or far) else STYLE_FAVOR_SLACK
 		var lesson := _style_lesson(c, npc, data, data.dialogues[String(def["dialogue"])], have, slack)
 		if lesson.is_empty():
 			continue
@@ -3779,13 +3804,7 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 		if not best.is_empty() and key >= (best["_key"] as Array):
 			continue
 		best = {"npc_id": npc_id, "name": npc.name, "technique": lesson["technique"], "tech_name": data.techniques[lesson["technique"]].name,
-			"need": int(lesson["need"]), "favor": have, "region_id": at, "region_name": Exploration.region_name(data, at), "days": days, "liked": "", "_key": key}
-	if best.is_empty():
-		return {}
-	best.erase("_key")
-	if int(best["favor"]) < int(best["need"]):
-		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
-		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
+			"need": int(lesson["need"]), "favor": have, "region_id": at, "region_name": Exploration.region_name(data, at), "days": days, "liked": "", "far": far, "_key": key}
 	return best
 
 
@@ -3920,12 +3939,36 @@ static func _liked_item(c: CharacterData, data: GameData, npc_id: String, region
 ## GUIDE-238: the no-fighting-style hint: a teacher first (style_teacher), else the manual with any stones gap. "" when a combat technique is known.
 static func fighting_hint(c: CharacterData, data: GameData, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> String:
 	var teacher := style_teacher(c, people, data, region_id, favor)
-	if not teacher.is_empty():
-		return style_teacher_hint(teacher)
+	var locked := _realm_locked_clause(c, people, data, region_id)
+	if not teacher.is_empty() and not (bool(teacher.get("far", false)) and String(first_combat_manual(c, data, region_id).get("merchant", "")) != ""):
+		return style_teacher_hint(teacher) + locked  # a far teacher yields to a manual sold right here
 	var manual := first_combat_hint(c, data, region_id)
 	if manual == "":
 		return ""
-	return manual.trim_suffix(".") + _manual_gap(c, data, region_id) + "."
+	return manual.trim_suffix(".") + _manual_gap(c, data, region_id) + "." + locked
+
+
+## GUIDE-245: " Ye Zhuoran here teaches Immovable Mountain Stance once you reach Qi Refining." for the first villager in
+## `region_id` (by id) who teaches a combat or body art whose realm the player has not reached. "" when none.
+static func _realm_locked_clause(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String) -> String:
+	var ids: Array = data.npcs.keys()
+	ids.sort()
+	for npc_id: String in ids:
+		var npc: CharacterData = npcs.get(npc_id)
+		var def: Dictionary = data.npcs[npc_id]
+		if npc == null or not npc.alive or Npcs.region_of(npc, data) != region_id or not data.dialogues.has(String(def.get("dialogue", ""))):
+			continue
+		var nodes: Dictionary = data.dialogues[String(def["dialogue"])].get("nodes", {})
+		for node_id: String in nodes:
+			for choice: Dictionary in nodes[node_id].get("choices", []):
+				var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
+				if tech_id == "" or not data.techniques.has(tech_id) or c.techniques.has(tech_id):
+					continue
+				var tech: TechniqueDef = data.techniques[tech_id]
+				if (tech.kind != "combat" and tech.kind != "body") or data.realm_index_of(tech.min_realm) <= c.realm_index:
+					continue
+				return " %s here teaches %s once you reach %s." % [npc.name, tech.name, data.realms[data.realm_index_of(tech.min_realm)].name]
+	return ""
 
 
 ## " (N more stones)" when the cheapest manual costs more than the player has, else "".
@@ -3937,6 +3980,8 @@ static func _manual_gap(c: CharacterData, data: GameData, region_id: String) -> 
 
 ## The teacher line for `style_teacher`'s entry: "Hunter Ma can teach you Iron Fist (favor 12/15)." plus what he likes.
 static func style_teacher_hint(t: Dictionary) -> String:
+	if bool(t.get("far", false)):  # GUIDE-245: "Hunter Ma in Qingshi Village can teach you Iron Fist (12 days away)."
+		return "%s in %s can teach you %s (%d day%s away)." % [t["name"], t["region_name"], t["tech_name"], int(t["days"]), "" if int(t["days"]) == 1 else "s"]
 	var line := "%s can teach you %s" % [t["name"], t["tech_name"]]
 	var where := " in %s" % t["region_name"] if int(t["days"]) > 0 else ""
 	if int(t["favor"]) < int(t["need"]):

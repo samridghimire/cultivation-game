@@ -6851,7 +6851,7 @@ func test_style_teacher_one_route_away_needs_favor_within_slack() -> void:
 	var d := data()
 	var npcs := _style_world()
 	npcs["hunter_ma"].home_region = String(d.regions["qingshi_village"]["routes"][0]["to"])
-	assert_true(Guidance.style_teacher(c, npcs, d, "qingshi_village", {"hunter_ma": 2}).is_empty(), "favor far short, one route away")
+	assert_true(bool(Guidance.style_teacher(c, npcs, d, "qingshi_village", {"hunter_ma": 2}).get("far", false)), "favor far short, one route away: only the far fallback names him")
 	var line := Guidance.fighting_hint(c, d, "qingshi_village", npcs, {"hunter_ma": 2})
 	assert_true(line.contains("Wandering Merchant") and line.contains("(10 more stones)"), line)
 
@@ -7015,3 +7015,32 @@ func test_practice_day_hint_hides_on_cooldown_other_region_and_mastered() -> voi
 	assert_eq(Guidance.practice_day_hint(c, npcs, d, "qingshi_village", {"hunter_ma": 20}, -1), "", "no day")
 	c.techniques["iron_fist"] = {"level": (d.techniques["iron_fist"] as TechniqueDef).max_level, "xp": 0.0}
 	assert_eq(Guidance.practice_day_hint(c, npcs, d, "qingshi_village", {"hunter_ma": 20}, 100), "", "mastered")
+
+
+## GUIDE-245: a mortal never meets the bare "You know no fighting style" sentence.
+func test_far_style_teacher_fallback_names_person_and_days() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var npcs := _style_world()
+	for region_id: String in ["myriad_peaks_ridge", "azure_peak", "withered_bone_marsh", "fallen_star_market"]:
+		var line := Guidance.fighting_hint(c, d, region_id, npcs, {})
+		assert_false(line == "You know no fighting style.", region_id)
+		assert_true(line.contains("can teach you") or line.contains(" at the "), region_id + ": " + line)
+	var t := Guidance.style_teacher(c, npcs, d, "azure_peak", {})
+	assert_true(bool(t.get("far", false)), str(t))
+	var line := Guidance.style_teacher_hint(t)
+	assert_true(line.contains(" in ") and line.contains(" days away).") or line.contains(" day away)."), line)
+	assert_true(Guidance.short_hint(line).begins_with("No fighting style: "), Guidance.short_hint(line))
+
+
+func test_realm_locked_teacher_clause_and_qi_refining_teacher() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var d := data()
+	var npcs := _style_world()
+	var line := Guidance.fighting_hint(c, d, "myriad_peaks_ridge", npcs, {})
+	assert_true(line.contains("Ye Zhuoran here teaches Immovable Mountain Stance once you reach Qi Refining."), line)
+	c.realm_index = 1
+	var t := Guidance.style_teacher(c, npcs, d, "azure_peak", {})
+	assert_eq(t.get("npc_id", ""), "disciple_bai")
