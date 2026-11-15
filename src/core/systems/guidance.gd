@@ -916,7 +916,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if c.professions.is_empty():
 		out.append(_workshop_hint(c, data))
 	if today >= 0:
-		var practice_day := practice_day_hint(c, people, data, region_id, favor, today)
+		var practice_day := practice_day_hint(c, people, data, region_id, favor, today, flags)
 		if practice_day != "":
 			out.append(practice_day)
 	if c.realm_index > NEWCOMER_MAX_REALM:
@@ -3810,7 +3810,7 @@ static func _nearest_style_teacher(c: CharacterData, npcs: Dictionary, data: Gam
 
 ## GUIDE-242: "<Name> will practise <Style> with you today (N day)" for the first villager in this region whose
 ## weekly teacher bout is allowed now (Mentorship.check_spar clear, an unmastered taught style). "" when none.
-static func practice_day_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int) -> String:
+static func practice_day_hint(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary, today: int, flags: Dictionary = {}) -> String:
 	if region_id == "" or today < 0:
 		return ""
 	var ids: Array = data.npcs.keys()
@@ -3819,8 +3819,8 @@ static func practice_day_hint(c: CharacterData, npcs: Dictionary, data: GameData
 		var npc: CharacterData = npcs.get(npc_id)
 		if npc == null or not npc.alive or Npcs.region_of(npc, data) != region_id:
 			continue
-		var style := Mentorship.teacher_bout_style(c, npc_id, data)
-		if style == "" or Mentorship.check_spar(c, npc, int(favor.get(npc_id, 0)), data, today) != "":
+		var style := Mentorship.teacher_bout_style(c, npc_id, data, flags)
+		if style == "" or Mentorship.check_spar(c, npc, int(favor.get(npc_id, 0)), data, today, flags) != "":
 			continue
 		var days := int(Mentorship.teacher_bout_terms(data)["days"])
 		return "%s will practise %s with you today (%d day%s)" % [npc.name, (data.techniques[style] as TechniqueDef).name, days, "" if days == 1 else "s"]

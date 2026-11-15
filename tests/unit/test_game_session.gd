@@ -4585,3 +4585,18 @@ func test_teacher_pride_favor_cap_and_remark() -> void:
 	assert_eq(remarks, 1, "one remark per level")
 	assert_true(today >= 0)
 	gs.end_session()
+
+
+## TEACH-005: a villager's lesson claims the style; a manual leaves it self-taught.
+func test_taught_by_villager_or_self() -> void:
+	var gs := _game_state()
+	_start()
+	gs.player.realm_index = 0
+	gs._note_taught_by("hunter_ma", [])
+	assert_false(gs.world_flags.has(Mentorship.taught_by_key("iron_fist")), "nothing learned yet")
+	gs.player.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	gs._note_taught_by("hunter_ma", [])
+	assert_eq(String(gs.world_flags[Mentorship.taught_by_key("iron_fist")]), "hunter_ma")
+	gs.world_flags[Mentorship.taught_by_key("iron_fist")] = Mentorship.SELF_TAUGHT
+	assert_eq(Mentorship.teacher_bout_style(gs.player, "hunter_ma", gs.data, gs.world_flags), "")
+	gs.end_session()

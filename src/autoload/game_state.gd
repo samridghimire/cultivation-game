@@ -2388,7 +2388,7 @@ func ask_pointers(npc_id: String) -> void:
 ## A friendly spar with an NPC within a realm of you (SPAR-001): no stones lost,
 ## no injury, practice for your combat techniques; a win earns a little favor.
 func check_spar(npc_id: String) -> String:
-	return Mentorship.check_spar(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days)
+	return Mentorship.check_spar(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, GameClock.total_days, world_flags)
 
 
 func spar_with(npc_id: String) -> void:
@@ -2401,8 +2401,8 @@ func spar_with(npc_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	var npc: CharacterData = npcs[npc_id]
-	var style := Mentorship.teacher_bout_style(player, npc_id, data)
-	var won := fight_enemy(Mentorship.spar_enemy(npc, data, player))
+	var style := Mentorship.teacher_bout_style(player, npc_id, data, world_flags)
+	var won := fight_enemy(Mentorship.spar_enemy(npc, data, player, world_flags))
 	if not _can_act():
 		return
 	var levels_before: Dictionary = {}

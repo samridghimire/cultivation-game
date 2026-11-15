@@ -469,3 +469,32 @@ func test_bout_status_states() -> void:
 	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 11)["state"], "graduated", "mastered")
 	assert_eq(Mentorship.taught_by_lines(c, "iron_fist", d, flags, 11).size(), 1)
 	assert_true(Mentorship.taught_by_lines(c, "iron_fist", d, flags, 11)[0].begins_with("Taught by Hunter Ma"))
+
+
+## TEACH-005: a style learned from a manual (flag "self") gives no teacher bout, no Taught-by line, no graduation;
+## an old save without the flag behaves as before; with two teachers only the flagged one counts.
+func test_self_taught_style_has_no_teacher() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	c.realm_index = 0
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var flags := {}
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d, flags), "iron_fist", "old save: any teacher")
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "ready")
+	flags[Mentorship.taught_by_key("iron_fist")] = Mentorship.SELF_TAUGHT
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d, flags), "", "no bout")
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "", "no status")
+	assert_eq(Mentorship.taught_by_lines(c, "iron_fist", d, flags, 10).size(), 0, "no Taught-by line")
+	flags[Mentorship.taught_by_key("iron_fist")] = "broker_qian"
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "", "another villager's style")
+	flags[Mentorship.taught_by_key("iron_fist")] = "hunter_ma"
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "ready")
+
+
+## TEACH-005: Effects.apply marks a learned style as self-taught.
+func test_effects_learn_marks_self_taught() -> void:
+	var d := data()
+	var c := CharacterData.new()
+	var flags := {}
+	Effects.apply(c, d, {"learn_technique": "iron_fist"}, flags)
+	assert_eq(String(flags.get(Mentorship.taught_by_key("iron_fist"), "")), Mentorship.SELF_TAUGHT)

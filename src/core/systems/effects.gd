@@ -145,6 +145,8 @@ static func apply(c: CharacterData, data: GameData, effects: Dictionary, flags: 
 		notes.append("Next breakthrough +%d%%" % int(float(effects["breakthrough_bonus"]) * 100))
 	if effects.has("learn_technique") and Techniques.learn(c, data, effects["learn_technique"])["ok"]:
 		notes.append("Learned %s" % data.techniques[effects["learn_technique"]].name)
+		# TEACH-005: any learn path is "self taught" until a villager's lesson claims it (GameState._note_taught_by).
+		flags[Mentorship.taught_by_key(String(effects["learn_technique"]))] = Mentorship.SELF_TAUGHT
 	if effects.has("learn_recipe") and Alchemy.learn(c, data, effects["learn_recipe"]):
 		notes.append("Learned the %s recipe" % data.recipes[effects["learn_recipe"]].get("name", effects["learn_recipe"]))
 	if effects.has("learn_dish") and Cooking.learn(c, data, String(effects["learn_dish"])):

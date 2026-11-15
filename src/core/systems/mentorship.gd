@@ -37,11 +37,12 @@ static func graduation_line(data: GameData, npc_id: String, npc_name: String, te
 
 ## The first technique id `c` knows, has not mastered, and villager `npc_id` teaches (a non-method style), else "".
 ## With every taught style mastered it is "" and the normal spar rules apply (SPAR-002).
-static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData) -> String:
+## TEACH-005: with `flags` given, only styles this villager really taught count (see `pride_applies`).
+static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData, flags: Dictionary = {}) -> String:
 	if _rules(data, "teacher_bout").is_empty() or c == null:
 		return ""
 	for tech_id: String in taught_styles(npc_id, data):
-		if Techniques.knows(c, tech_id) and not Techniques.is_mastered(c, data, tech_id):
+		if Techniques.knows(c, tech_id) and not Techniques.is_mastered(c, data, tech_id) and pride_applies(flags, npc_id, tech_id):
 			return tech_id
 	return ""
 
@@ -55,7 +56,7 @@ static func teacher_bout_cooldown_left(c: CharacterData, npc_id: String, data: G
 ## "" when the villager does not teach the style or the player has not learned it.
 static func bout_status(c: CharacterData, npc_id: String, tech_id: String, data: GameData, flags: Dictionary, today: int) -> Dictionary:
 	var none := {"state": "", "days": 0}
-	if c == null or not taught_styles(npc_id, data).has(tech_id) or not Techniques.knows(c, tech_id):
+	if c == null or not taught_styles(npc_id, data).has(tech_id) or not Techniques.knows(c, tech_id) or not pride_applies(flags, npc_id, tech_id):
 		return none
 	if bool(flags.get(graduation_flag(npc_id, tech_id), false)) or Techniques.is_mastered(c, data, tech_id):
 		return {"state": "graduated", "days": 0}
@@ -123,11 +124,16 @@ static func pride_month_key(npc_id: String, total_days: int) -> String:
 
 
 ## TEACH-004: world flag naming the villager a style was learned from.
+## TEACH-005: its value is SELF_TAUGHT when the style came from a manual, a shop, a sect or any non-villager source.
+const SELF_TAUGHT := "self"
+
+
 static func taught_by_key(tech_id: String) -> String:
 	return "taught_by_" + tech_id
 
 
-## TEACH-004: true when `npc_id` may take pride in / graduate `tech_id` (taught by them, or the source is unknown).
+## TEACH-004: true when `npc_id` may take pride in / graduate `tech_id` (taught by them, or the source is unknown:
+## only saves from before TEACH-005 lack the flag).
 static func pride_applies(flags: Dictionary, npc_id: String, tech_id: String) -> bool:
 	var key := taught_by_key(tech_id)
 	return not flags.has(key) or String(flags[key]) == npc_id
@@ -271,7 +277,7 @@ static func give_pointers(c: CharacterData, npc: CharacterData, favor: int, data
 	return result
 
 
-static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: GameData, today: int) -> String:
+static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: GameData, today: int, flags: Dictionary = {}) -> String:
 	if npc == null or not npc.alive:
 		return "They are not here."
 	var rules := _rules(data, "spar")
@@ -279,7 +285,7 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 		return "Nobody is offering to spar."
 	if npc.age_years() < int(data.family.get("adult_age", 16)):
 		return "%s is too young." % npc.name
-	var teacher_style := teacher_bout_style(c, npc.id, data)
+	var teacher_style := teacher_bout_style(c, npc.id, data, flags)
 	if teacher_style != "":
 		rules = rules.duplicate()
 		var bout := _rules(data, "teacher_bout")
@@ -308,11 +314,11 @@ static func check_spar(c: CharacterData, npc: CharacterData, favor: int, data: G
 
 
 ## The opponent for a friendly bout: no stones taken, no injury, never lethal.
-static func spar_enemy(npc: CharacterData, data: GameData, player: CharacterData = null) -> Dictionary:
+static func spar_enemy(npc: CharacterData, data: GameData, player: CharacterData = null, flags: Dictionary = {}) -> Dictionary:
 	var enemy := Karma.npc_enemy(npc, data, player)
 	enemy["spar"] = true
 	enemy["friendly"] = true
-	if player != null and teacher_bout_style(player, npc.id, data) != "":
+	if player != null and teacher_bout_style(player, npc.id, data, flags) != "":
 		enemy["power_mult"] = float(teacher_bout_terms(data)["power_mult"])
 	return enemy
 
