@@ -405,3 +405,16 @@ func test_teacher_bout_needs_the_style() -> void:
 	other.id = "villager_x"
 	other.age_days = 30 * Calendar.DAYS_PER_YEAR
 	assert_true(Mentorship.check_spar(c, other, 50, d, 100) != "", "unrelated villager refused")
+
+
+## TEACH-003: a taught style's level-up earns that teacher favor; others earn nothing.
+func test_teacher_pride_amounts() -> void:
+	var d := data()
+	var p := _teacher_pair()
+	assert_eq(int(Mentorship.teacher_pride_terms(d)["favor_per_level"]), 2)
+	assert_eq(Mentorship.teacher_pride(p[0], d, "hunter_ma", "iron_fist", 1, 3), 4, "2 levels x 2")
+	assert_eq(Mentorship.teacher_pride(p[0], d, "hunter_ma", "iron_fist", 3, 3), 0, "no level gained")
+	assert_eq(Mentorship.teacher_pride(p[0], d, "hunter_ma", "no_such_style", 1, 2), 0, "untaught style")
+	assert_eq(Mentorship.teacher_pride(p[0], d, "nobody", "iron_fist", 1, 2), 0, "not a teacher")
+	assert_true(Mentorship.pride_line("Hunter Ma", "Iron Fist", 3).contains("Iron Fist 3"))
+	assert_true(Mentorship.pride_month_key("a", 0) != Mentorship.pride_month_key("a", 100), "month key changes")

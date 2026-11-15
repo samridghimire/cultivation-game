@@ -4462,3 +4462,49 @@ func test_gather_rolls_scale_with_days_done() -> void:
 		part += int(item)
 	assert_eq(part, maxi(1, full / 2))
 	assert_eq(Exploration.gather(c, table, seeded_rng(), [], 0.2).size(), 0, "under half done and rounds to 0 rolls")
+
+
+## TEACH-003: levelling a taught style pleases its teacher (monthly cap) who remarks once on the next talk.
+func test_teacher_pride_favor_cap_and_remark() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 0
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
+	ma.id = "hunter_ma"
+	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
+	gs.npcs["hunter_ma"] = ma
+	gs.npc_favor["hunter_ma"] = 10
+	var today: int = _root().get_node("GameClock").total_days
+	gs._teacher_pride("iron_fist", 1)  # no level gained: nothing
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 10)
+	c.techniques["iron_fist"]["level"] = 2
+	gs._teacher_pride("iron_fist", 1)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 12)
+	c.techniques["iron_fist"]["level"] = 6
+	gs._teacher_pride("iron_fist", 2)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 14, "monthly cap of 4 holds")
+	# An untaught style grants nothing.
+	gs.world_flags.erase(Mentorship.pride_note_key("hunter_ma"))
+	c.techniques["stone_skin"] = {"level": 2, "xp": 0.0}
+	gs._teacher_pride("stone_skin", 1)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 14)
+	assert_false(gs.world_flags.has(Mentorship.pride_note_key("hunter_ma")), "no remark for an untaught style")
+	# A dead teacher gets nothing.
+	ma.alive = false
+	gs._teacher_pride("iron_fist", 1)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 14)
+	ma.alive = true
+	gs._teacher_pride("iron_fist", 5)
+	# The remark is posted once.
+	var eb := _root().get_node("EventBus")
+	eb.clear_history()
+	gs._teacher_remarks("hunter_ma")
+	gs._teacher_remarks("hunter_ma")
+	var remarks := 0
+	for entry: Dictionary in eb.history:
+		if String(entry.get("text", "")).contains("eyes your stance"):
+			remarks += 1
+	assert_eq(remarks, 1, "one remark per level")
+	assert_true(today >= 0)
+	gs.end_session()

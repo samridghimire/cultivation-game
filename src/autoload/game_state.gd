@@ -1761,6 +1761,7 @@ func start_dialogue(npc_id: String) -> void:
 	_friend_scene(npc_id)
 	_named_remembers(npc_id)
 	_note_teacher_seen(npc_id)
+	_teacher_remarks(npc_id)
 	_teach_lessons(npc_id)
 	EventBus.dialogue_requested.emit(npc_id)
 
@@ -2399,8 +2400,13 @@ func spar_with(npc_id: String) -> void:
 	var won := fight_enemy(Mentorship.spar_enemy(npc, data, player))
 	if not _can_act():
 		return
+	var levels_before: Dictionary = {}
+	for tid: String in player.techniques:
+		levels_before[tid] = Techniques.level(player, tid)
 	var result := Mentorship.after_spar(player, npc, data, won, GameClock.total_days, style)
 	var before := _rival_attitude()
+	for tid: String in levels_before:
+		_teacher_pride(tid, int(levels_before[tid]))
 	if int(result["favor"]) > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(result["favor"]))
 	var opening := "%s accepts your challenge." if npc_id == player.rival else "You spar with %s."
@@ -2962,15 +2968,51 @@ func _post_foldable(days: int, text: String) -> void:
 	_fold_prev = {"text": text, "day": today + days}  # the day this action ends
 
 
+## TEACH-003: villagers who taught `tech_id` take pride when it rises above `old_level` (monthly cap, remark on the next talk).
+func _teacher_pride(tech_id: String, old_level: int) -> void:
+	var new_level := Techniques.level(player, tech_id)
+	if new_level <= old_level:
+		return
+	var terms := Mentorship.teacher_pride_terms(data)
+	for npc_id: String in data.npcs:
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null or not npc.alive:
+			continue
+		var gain := Mentorship.teacher_pride(player, data, npc_id, tech_id, old_level, new_level)
+		if gain <= 0 and not Mentorship.taught_styles(npc_id, data).has(tech_id):
+			continue
+		var key := Mentorship.pride_month_key(npc_id, GameClock.total_days)
+		var used := int(world_flags.get(key, 0))
+		var grant := clampi(mini(gain, int(terms["max_per_month"]) - used), 0, 100)
+		if grant > 0:
+			world_flags[key] = used + grant
+			npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + grant)
+		world_flags[Mentorship.pride_note_key(npc_id)] = tech_id
+
+
+## TEACH-003: the teacher remarks once on a style level you gained since you last talked.
+func _teacher_remarks(npc_id: String) -> void:
+	var key := Mentorship.pride_note_key(npc_id)
+	if not world_flags.has(key):
+		return
+	var tech_id := String(world_flags[key])
+	world_flags.erase(key)
+	if player == null or not data.techniques.has(tech_id) or not Techniques.knows(player, tech_id):
+		return
+	EventBus.post(Mentorship.pride_line(npcs[npc_id].name, (data.techniques[tech_id] as TechniqueDef).name, Techniques.level(player, tech_id)), "progress")
+
+
 func practice_technique(tech_id: String, days: int) -> void:
 	EventBus.topic = "cultivation"
 	if not _can_act():
 		return
 	_start_time_skip()
+	var old_level := Techniques.level(player, tech_id)
 	var result := Techniques.practice(player, data, tech_id, days, Almanac.practice_mult(today_omen()))
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		return
+	_teacher_pride(tech_id, old_level)
 	var def: TechniqueDef = data.techniques[tech_id]
 	_post_foldable(days, "You practice the %s for %s." % [def.name, Calendar.format_duration(days)])
 	if result["levels_gained"] > 0:

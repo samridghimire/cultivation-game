@@ -40,19 +40,51 @@ static func graduation_line(data: GameData, npc_id: String, npc_name: String, te
 static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData) -> String:
 	if _rules(data, "teacher_bout").is_empty() or c == null:
 		return ""
+	for tech_id: String in taught_styles(npc_id, data):
+		if Techniques.knows(c, tech_id) and not Techniques.is_mastered(c, data, tech_id):
+			return tech_id
+	return ""
+
+
+## Sorted ids of the non-method techniques villager `npc_id` teaches through dialogue choices.
+static func taught_styles(npc_id: String, data: GameData) -> Array:
 	var def: Dictionary = data.npcs.get(npc_id, {})
 	var nodes: Dictionary = data.dialogues.get(String(def.get("dialogue", "")), {}).get("nodes", {})
 	var ids: Array = []
 	for node_id: String in nodes:
 		for choice: Dictionary in nodes[node_id].get("choices", []):
 			var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
-			if tech_id != "" and data.techniques.has(tech_id) and not ids.has(tech_id):
+			if tech_id != "" and data.techniques.has(tech_id) and not (data.techniques[tech_id] as TechniqueDef).is_method() and not ids.has(tech_id):
 				ids.append(tech_id)
 	ids.sort()
-	for tech_id: String in ids:
-		if Techniques.knows(c, tech_id) and not (data.techniques[tech_id] as TechniqueDef).is_method() and not Techniques.is_mastered(c, data, tech_id):
-			return tech_id
-	return ""
+	return ids
+
+
+## TEACH-003: tunables of `mentorship.teacher_pride` {favor_per_level, max_per_month}.
+static func teacher_pride_terms(data: GameData) -> Dictionary:
+	var rules := _rules(data, "teacher_pride")
+	return {"favor_per_level": int(rules.get("favor_per_level", 0)), "max_per_month": int(rules.get("max_per_month", 0))}
+
+
+## Favor a villager grants when `tech_id` rises from `old_level` to `new_level`; 0 when they did not teach it.
+static func teacher_pride(_c: CharacterData, data: GameData, npc_id: String, tech_id: String, old_level: int, new_level: int) -> int:
+	if new_level <= old_level or not taught_styles(npc_id, data).has(tech_id):
+		return 0
+	return (new_level - old_level) * int(teacher_pride_terms(data)["favor_per_level"])
+
+
+## World-flag key counting favor a teacher gave this calendar month.
+static func pride_month_key(npc_id: String, total_days: int) -> String:
+	return "teacher_pride_%s_%d_%d" % [npc_id, Calendar.year_of(total_days), Calendar.month_of(total_days)]
+
+
+## World-flag key holding the style id whose new level the teacher has yet to remark on.
+static func pride_note_key(npc_id: String) -> String:
+	return "teacher_pride_note_" + npc_id
+
+
+static func pride_line(npc_name: String, tech_name: String, level: int) -> String:
+	return "%s eyes your stance. \"%s %d already? Good.\"" % [npc_name, tech_name, level]
 
 
 static func is_senior(c: CharacterData, npc: CharacterData) -> bool:
@@ -270,6 +302,10 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json mentorship.%s.min_favor must be <= 100" % kind)
 		if int(rules.get("same_sect_min_favor", 0)) > int(rules.get("min_favor", 0)):
 			errors.append("family.json mentorship.%s.same_sect_min_favor must be <= min_favor" % kind)
+	if block.has("teacher_pride"):
+		for key: String in ["favor_per_level", "max_per_month"]:
+			if float(block["teacher_pride"].get(key, 0)) != float(int(block["teacher_pride"].get(key, 0))):
+				errors.append("family.json mentorship.teacher_pride.%s must be an integer" % key)
 	if block.has("teacher_bout"):
 		if block["teacher_bout"].has("graduation_favor") and float(block["teacher_bout"]["graduation_favor"]) != float(int(block["teacher_bout"]["graduation_favor"])):
 			errors.append("family.json mentorship.teacher_bout.graduation_favor must be an integer")
