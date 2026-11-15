@@ -2,97 +2,98 @@
 
 First-hour sim: 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   37  161    -    37         0    1     0     0  11.0
+     1   37  171    -    37         0    1     0     0  9.6
         first win day 14 (wild_boar), style bought day -
-     2   14   79    -    14         0    4     0     0  12.8
+     2   14   83    -    14         0    3     0     0  10.1
         first win day 14 (wild_boar), style bought day -
-     3   14  138    -    14         0    1     1     0  10.3
+     3   14  149    -    14         0    1     0     0  9.2
         first win day 14 (wild_boar), style bought day -
-     4   14  172    -    14         0    1     0     0  10.5
+     4   14  169    -    14         0    1     0     0  8.8
         first win day 14 (wild_boar), style bought day -
-     5   14   45  291    14         0    1     0     0  11.1
+     5   14   45    -    14         0    2     0     0  10.2
         first win day 14 (wild_boar), style bought day -
-     6   14  170    -    14         0    2     0     0  9.3
+     6   14  189    -    14         0    2     0     0  9.2
         first win day 14 (wild_boar), style bought day -
-     7   14  107    -    14         0    2     0     0  12.2
+     7   14  118    -    14         0    2     0     0  9.7
         first win day 14 (wild_boar), style bought day -
-     8   14   82    -    14         0    1     1     0  12.3
+     8   14   97    -    14         0    1     1     0  9.7
         first win day 16 (wild_boar), style bought day -
-     9   14  200    -    14         0    2     0     0  10.2
+     9   14  181    -    14         0    2     0     0  9.3
         first win day 14 (wild_boar), style bought day -
-    10   14  107    -    14         0    2     0     0  10.1
+    10   14   96    -    14         0    2     0     0  9.3
         first win day 14 (wild_boar), style bought day -
-Medians (day): QR1 14, QR3 138, QR9 291 (1/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 11.0 log lines/month
+Medians (day): QR1 14, QR3 149, QR9 -1 (0/10 seeds reached it), sect 14; injuries 0; fights won 2, lost 0, fled 0; 9.6 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day -1 (0 seeds)
 Road encounters (QA-118): 0/10 seeds met one; {  }
-Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR5": 2, "QR7": 2, "QR4": 3, "Foundation Establishment, Early": 1, "QR6": 2 }
-Stones at the QR9 bottleneck (QA-146): median 33 (1/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 19, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 11, "withered_bone_marsh": 1 }; taken (times): {  }
-Lines by category: { "warning": 77, "danger": 30, "info": 472, "almanac": 176, "artifact": 95, "world": 169, "progress": 297, "karma": 1 }
+Sect contribution (QA-146): m06 median 0, m12 median 0; stage at m12: { "QR3": 4, "QR6": 1, "QR4": 1, "QR8": 1, "QR5": 2, "QR7": 1 }
+Stones at the QR9 bottleneck (QA-146): median -1 (0/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 16, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 10 }; taken (times): {  }
+Lines by category: { "warning": 49, "danger": 21, "info": 450, "almanac": 175, "world": 153, "progress": 224, "artifact": 67, "karma": 1 }
 
 ## first hour, curious player (seeds 1-10)
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   44  261    -    44         1   38     3     0  74.9
-        first win day 14 (wild_boar), style bought day 27
-     2   14  143  868    14         1   40     6     0  73.2
-        first win day 14 (wild_boar), style bought day 49
-     3   14  217    -    14         0   40     1     0  70.1
-        first win day 14 (wild_boar), style bought day 44
-     4   14  267    -    14         0   39     0     0  65.9
-        first win day 14 (wild_boar), style bought day 44
-     5   14   76  576    14         0   34     1     0  71.5
+     1   46  255    -    46         0   42     1     0  62.0
+        first win day 14 (wild_boar), style bought day 28
+     2   14  167    -    14         0   43     3     0  75.7
+        first win day 14 (wild_boar), style bought day 50
+     3   14  268    -    14         0   44     0     0  75.7
         first win day 14 (wild_boar), style bought day 45
-     6   14  202    -    14         0   39     2     0  76.3
-        first win day 14 (wild_boar), style bought day 44
-     7   14  226    -    14         0   39     3     0  70.1
-        first win day 14 (wild_boar), style bought day 43
-     8   14  147  907    14         0   46     4     0  75.8
-        first win day 48 (mountain_bandit), style bought day 48
-     9   14  316    -    14         0   41     2     0  71.7
-        first win day 14 (wild_boar), style bought day 48
-    10   14  147  887    14         1   42     2     0  75.3
+     4   14  233    -    14         0   35     0     0  58.9
+        first win day 14 (wild_boar), style bought day 45
+     5   14   77  639    14         0   44     0     0  72.4
         first win day 14 (wild_boar), style bought day 46
-Medians (day): QR1 14, QR3 217, QR9 887 (4/10 seeds reached it), sect 14; injuries 0; fights won 40, lost 2, fled 0; 73.2 log lines/month
-First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 45 (10 seeds)
-Sect trials: Inner Disciple median day 699 (6/10 seeds); trials won 7, lost 4; stones at the last month: median 341
-Distinct action kinds per month: 7.2; months after the first with no log lines: 0
-Injury treatments (QA-128): 15, clinic stones 190
-Iron Fist level median (QA-138): m03 2, m06 3, m12 5; first Mist Wolf win: median day 628 (10/10 seeds)
-Spar-hint bouts (QA-138): 5, refusals: []
-Armor shopping (QA-140): armor worn by day 376 median (10/10 seeds); 0 loot sales for 0 stones, 11 trips to a smithy
-Road encounters (QA-118): 8/10 seeds met one; { "road_milestone_carver": 3, "road_star_market_cracked_slate": 1, "road_fallen_rogue": 2, "road_highwayman": 3, "road_talisman_peddler": 1, "road_overturned_cart": 1, "road_caravan_guard": 1, "road_caravan_fire": 2 }
-Sect contribution (QA-146): m06 median 578, m12 median 1804; stage at m12: { "QR6": 2, "QR9": 3, "QR7": 4, "Foundation Establishment, Middle": 1 }
-Stones at the QR9 bottleneck (QA-146): median 188 (1/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 25, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "withered_bone_marsh": 1, "azure_peak": 3 }; taken (times): { "qingshi_village": 62, "misty_forest": 7 }
-Lines by category: { "warning": 240, "danger": 792, "info": 1941, "almanac": 1668, "artifact": 211, "world": 1159, "progress": 2344, "karma": 272, "travel": 64, "normal": 4, "social": 3 }
+     6   14  262    -    14         0   38     2     0  64.4
+        first win day 14 (wild_boar), style bought day 45
+     7   14  220    -    14         0   40     1     0  73.4
+        first win day 14 (wild_boar), style bought day 43
+     8   14  139    -    14         0   35     4     0  64.8
+        first win day 49 (mountain_bandit), style bought day 49
+     9   14  231    -    14         0   44     0     0  62.8
+        first win day 14 (wild_boar), style bought day 49
+    10   14  189    -    14         0   40     3     0  70.7
+        first win day 14 (wild_boar), style bought day 47
+Medians (day): QR1 14, QR3 231, QR9 639 (1/10 seeds reached it), sect 14; injuries 0; fights won 42, lost 1, fled 0; 70.7 log lines/month
+First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 46 (10 seeds)
+Sect trials: Inner Disciple median day 729 (6/10 seeds); trials won 8, lost 1; stones at the last month: median 348
+Distinct action kinds per month: 6.9; months after the first with no log lines: 0
+Injury treatments (QA-128): 7, clinic stones 117
+Iron Fist level median (QA-138): m03 2, m06 3, m12 4; first Mist Wolf win: median day 518 (9/10 seeds)
+Spar-hint bouts (QA-138): 0, refusals: []
+Armor shopping (QA-140): armor worn by day 362 median (10/10 seeds); 0 loot sales for 0 stones, 10 trips to a smithy
+Road encounters (QA-118): 7/10 seeds met one; { "road_rain_shelter": 1, "road_winter_frozen_traveller": 1, "road_woodcutter_warning": 1, "road_wandering_boxer": 2, "road_caravan_fire": 3, "road_lost_child": 1, "road_caravan_guard": 2, "road_highwayman": 1 }
+Sect contribution (QA-146): m06 median 561, m12 median 1575; stage at m12: { "QR6": 3, "QR7": 2, "QR5": 3, "Foundation Establishment, Early": 1, "QR8": 1 }
+Stones at the QR9 bottleneck (QA-146): median 476 (1/10 seeds reached it)
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 23, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "azure_peak": 5, "misty_forest": 21, "withered_bone_marsh": 1 }; taken (times): { "qingshi_village": 60, "misty_forest": 5 }
+Lines by category: { "warning": 184, "danger": 726, "info": 1837, "almanac": 1623, "world": 1100, "progress": 2264, "karma": 265, "artifact": 112, "social": 5, "travel": 51, "normal": 2 }
 
 ## log noise (seeds 1-5, 12 months)
 
 Log noise: 5 seeds, 12 months, curious player
 Posts per month by topic:
-  progress       18.5/month (busiest month in any seed: 97)
-  info           15.3/month (busiest month in any seed: 48)
-  almanac        13.4/month (busiest month in any seed: 47)
-  world           9.1/month (busiest month in any seed: 34)
-  danger          3.9/month (busiest month in any seed: 20)
-  karma           2.4/month (busiest month in any seed: 23)
-  artifact        1.9/month (busiest month in any seed: 21)
-  warning         1.9/month (busiest month in any seed: 9)
-  travel          0.6/month (busiest month in any seed: 9)
+  progress       18.2/month (busiest month in any seed: 99)
+  info           15.4/month (busiest month in any seed: 51)
+  almanac        14.0/month (busiest month in any seed: 48)
+  world           9.7/month (busiest month in any seed: 42)
+  danger          3.9/month (busiest month in any seed: 17)
+  karma           2.5/month (busiest month in any seed: 23)
+  warning         1.7/month (busiest month in any seed: 9)
+  artifact        1.0/month (busiest month in any seed: 13)
+  travel          0.5/month (busiest month in any seed: 5)
   social          0.0/month (busiest month in any seed: 1)
+  normal          0.0/month (busiest month in any seed: 1)
 Most repeated line templates (per month, averaged):
-   1.42  The artifact drinks the change in you (+N energy, N in all).
-   1.10  Tomorrow: the carp will crowd the bank.
+   1.25  Tomorrow: the fish will rise to the bait.
+   1.08  Tomorrow: the carp will crowd the bank.
+   1.00  Tomorrow: the hillsides will be thick with herbs.
    1.00  You practice the Iron Fist for N days.
-   0.92  Tomorrow: the hillsides will be thick with herbs.
-   0.90  Tomorrow: the fish will rise to the bait.
-   0.83  Tomorrow: heavy dew will wake the herbs.
-   0.67  Tomorrow: market day at Travelling Market Stall (new wares each time).
-   0.67  You cultivate for N month and gather N qi (N/N qi to the Nth Layer).
-   0.58  Mission complete: Drive Off the Den Wolves. (+N contribution, +N qi, Azure Cloud Sect reputation +N)
-   0.58  The Den Wolf collapses. (N rounds, N/N hp left; +N Mist Wolf Pelt, +N qi)
+   0.88  Tomorrow: heavy dew will wake the herbs.
+   0.78  Mission complete: Drive Off the Den Wolves. (+N contribution, +N qi, Azure Cloud Sect reputation +N)
+   0.77  The Den Wolf collapses. (N rounds, N/N hp left; +N Mist Wolf Pelt, +N qi)
+   0.77  Tomorrow: market day at Travelling Market Stall (new wares each time).
+   0.63  Almanac: Good for gifts. A small present on a soft day is worth two at the harvest feast.
+   0.58  Tomorrow: the river will run fat with fish.
 
 ## three curious years (seeds 1-10, 36 months)
 
@@ -1635,28 +1636,28 @@ First Core Formation year: 10 seeds, sensed threats: slip away
 Curious practiser: 10 seeds, 12 months
   --practise=false
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
-     1        1        3         5           776   35     3  234
-     2        2        3         5           541   44     2  148
-     3        2        3         4           707   37     6  231
-     4        1        3         4             -   33     3  267
-     5        2        3         5           397   35     3  76
-     6        1        3         5           508   40     1  202
-     7        1        3         4           611   41     2  225
-     8        1        2         4           520   44     2  147
-     9        2        3         4           734   34     3  283
-    10        2        3         4           700   40     1  147
-  Medians: iron_fist level m3 2, m6 3, m12 4; first wolf win day 611 (1 seeds never); fights won 40, lost 3; QR3 day 225 (10/10 reached)
+     1        2        2         4           505   35     3  255
+     2        2        3         5           714   44     1  167
+     3        2        2         4             -   39     1  268
+     4        2        3         5             -   35     0  233
+     5        2        4         5           414   46     1  77
+     6        2        3         5           568   39     0  262
+     7        2        2         4             -   40     0  220
+     8        2        2         4           507   38     2  139
+     9        1        3         4             -   30     5  231
+    10        2        2         4             -   30     6  189
+  Medians: iron_fist level m3 2, m6 3, m12 4; first wolf win day 507 (5 seeds never); fights won 39, lost 1; QR3 day 231 (10/10 reached)
   --practise=true
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
-     1        3        4         5           553   46     1  321
-     2        3        4         4           580   42     3  167
-     3        3        4         5           536   44     4  275
-     4        3        4         5           982   47     1  316
-     5        3        4         5           383   40     0  76
-     6        3        3         4           444   47     2  274
-     7        3        4         5           693   40     1  269
-     8        3        4         5           533   37     3  172
-     9        3        3         4           622   46     2  284
-    10        3        4         5           784   42     1  199
-  Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 580 (0 seeds never); fights won 44, lost 2; QR3 day 274 (10/10 reached)
+     1        3        3         4             -   39     2  325
+     2        3        3         4           689   41     7  153
+     3        3        3         5           553   41     1  259
+     4        3        3         5             -   33     1  329
+     5        3        3         4           513   42     3  77
+     6        3        4         5           484   41     2  323
+     7        3        3         4           685   38     4  264
+     8        3        3         4           406   48     1  164
+     9        3        3         4             -   33     1  350
+    10        3        3         4           725   44     2  236
+  Medians: iron_fist level m3 3, m6 3, m12 4; first wolf win day 553 (3 seeds never); fights won 41, lost 2; QR3 day 264 (10/10 reached)
 
