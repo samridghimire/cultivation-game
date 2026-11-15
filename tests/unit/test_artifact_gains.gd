@@ -24,15 +24,15 @@ func test_record_gain_merges_appends_trims_ignores() -> void:
 
 func test_gain_text() -> void:
 	var d := data()
-	assert_eq(ArtifactFunctions.gain_text(d, {"source": "stage", "amount": 15}), "+15 a new stage")
-	assert_eq(ArtifactFunctions.gain_text(d, {"source": "stage", "amount": 30}), "+30 new stages")
+	assert_eq(ArtifactFunctions.gain_text(d, {"source": "stage", "amount": 20}), "+20 a new stage")
+	assert_eq(ArtifactFunctions.gain_text(d, {"source": "stage", "amount": 40}), "+40 new stages")
 	assert_eq(ArtifactFunctions.gain_text(d, {"source": "stones", "amount": 100}), "+100 spirit stones")
 	assert_eq(ArtifactFunctions.gain_text(d, {"source": "offering", "amount": 12}), "+12 an offering")
 
 
 func test_energy_sources_follow_data() -> void:
 	var d := data()
-	assert_eq(ArtifactFunctions.energy_sources(d)[0], "+15 each new stage")
+	assert_eq(ArtifactFunctions.energy_sources(d)[0], "+20 each new stage")
 	var saved: Variant = d.artifact["energy"]["progress"]["stage"]
 	d.artifact["energy"]["progress"]["stage"] = 20
 	assert_eq(ArtifactFunctions.energy_sources(d)[0], "+20 each new stage")

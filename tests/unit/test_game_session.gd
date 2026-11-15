@@ -4073,10 +4073,10 @@ func test_artifact_drinks_growth_and_hums() -> void:
 	ArtifactFunctions.sync_marks(c)
 	c.stage += 1
 	gs._pass_time(1)
-	assert_eq(c.artifact_energy, before + 15, "a stage up feeds the artifact")
+	assert_eq(c.artifact_energy, before + 20, "a stage up feeds the artifact")
 	c.stage += 1
 	gs._pass_time(0)
-	assert_eq(c.artifact_energy, before + 30)
+	assert_eq(c.artifact_energy, before + 40)
 	# crossing the unseal threshold hums once
 	c.realm_index = gs.data.realm_index_of("qi_refining")
 	ArtifactFunctions.sync_marks(c)

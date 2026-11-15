@@ -65,6 +65,21 @@ func test_unlock_needs_realm_energy_and_flags() -> void:
 	assert_eq(ArtifactFunctions.check_unlock(other, d, "storage", {"found_key": true}), "")
 
 
+## ART-012: unlock.spends=false keeps the energy; the shipped data keeps storage spending and later seals not.
+func test_unlock_spends_false_keeps_energy() -> void:
+	var d := GameData.new()
+	d.realms = data().realms
+	d.artifact = {"functions": [{"id": "storage", "unlock": {"energy": 50, "spends": false}, "storage_slots": 1}]}
+	var c := new_character()
+	c.artifact_energy = 60
+	assert_true(ArtifactFunctions.unlock(c, d, "storage", {})["ok"])
+	assert_eq(c.artifact_energy, 60, "energy kept")
+	assert_eq(ArtifactFunctions.get_def(data(), "storage")["unlock"].get("spends", true), true, "storage spends")
+	assert_eq(ArtifactFunctions.get_def(data(), "appraisal")["unlock"].get("spends", true), false, "appraisal keeps energy")
+	d.artifact["functions"][0]["unlock"]["spends"] = "no"
+	assert_false(ArtifactFunctions.validate(d).is_empty(), "spends must be a bool")
+
+
 func test_storage_moves_items_with_slot_limit() -> void:
 	var c := _qi_refiner()
 	c.add_item("dew_grass", 5)
@@ -151,7 +166,7 @@ func test_game_state_feed_unlock_store_and_keep_through_death() -> void:
 
 
 func test_progress_energy_reads_data_and_caps() -> void:
-	assert_eq(ArtifactFunctions.progress_energy(data(), "stage"), 15)
+	assert_eq(ArtifactFunctions.progress_energy(data(), "stage"), 20)
 	assert_eq(ArtifactFunctions.progress_energy(data(), "realm", 2), 120)
 	assert_eq(ArtifactFunctions.progress_energy(data(), "nope"), 0)
 	var c := new_character()
@@ -173,7 +188,7 @@ func test_drink_progress_reads_marks() -> void:
 	var c := new_character()
 	assert_eq(ArtifactFunctions.drink_progress(c, data()), 0, "first call only records")
 	c.stage += 2
-	assert_eq(ArtifactFunctions.drink_progress(c, data()), 30)
+	assert_eq(ArtifactFunctions.drink_progress(c, data()), 40)
 	assert_eq(ArtifactFunctions.drink_progress(c, data()), 0)
 	c.realm_index += 1
 	c.stage = 0
@@ -187,7 +202,7 @@ func test_ready_to_unseal_needs_energy_and_realm() -> void:
 	c.artifact_energy = _unlock_cost() - 1
 	assert_true(ArtifactFunctions.ready_to_unseal(c, data(), {}).is_empty())
 	c.artifact_energy = _unlock_cost()
-	assert_eq(ArtifactFunctions.ready_to_unseal(c, data(), {}), ["storage"] as Array[String])
+	assert_eq(ArtifactFunctions.ready_to_unseal(c, data(), {}), ["storage", "appraisal"] as Array[String])
 	var mortal := new_character()
 	mortal.artifact_energy = _unlock_cost()
 	assert_true(ArtifactFunctions.ready_to_unseal(mortal, data(), {}).is_empty())

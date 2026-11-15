@@ -304,7 +304,8 @@ static func unlock(c: CharacterData, data: GameData, function_id: String, flags:
 	var reason := check_unlock(c, data, function_id, flags)
 	if reason != "":
 		return {"ok": false, "reason": reason, "energy": 0}
-	var cost := int(get_def(data, function_id).get("unlock", {}).get("energy", 0))
+	var unlock_def: Dictionary = get_def(data, function_id).get("unlock", {})
+	var cost := int(unlock_def.get("energy", 0)) if bool(unlock_def.get("spends", true)) else 0  # ART-012: spends=false keeps the energy
 	c.artifact_energy -= cost
 	c.artifact_functions.append(function_id)
 	return {"ok": true, "reason": "", "energy": cost}
@@ -404,6 +405,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("artifact.json function '%s' needs unknown function '%s'" % [function_id, unlock["function"]])
 		if def.has("flavor") and not (def["flavor"] is String):
 			errors.append("artifact.json function '%s' flavor must be text" % function_id)
+		if unlock.has("spends") and not (unlock["spends"] is bool):
+			errors.append("artifact.json function '%s' unlock.spends must be true or false" % function_id)
 		if int(unlock.get("energy", 0)) < 0:
 			errors.append("artifact.json function '%s' needs energy >= 0" % function_id)
 		if function_id == "storage" and int(def.get("storage_slots", 0)) < 1:
