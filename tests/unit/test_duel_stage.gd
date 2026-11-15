@@ -213,3 +213,25 @@ func test_great_beasts_have_their_own_kind() -> void:
 func test_great_roamer_label() -> void:
 	assert_eq(Roamer.label_for("Cloud Crane", "Deadly", true), "Great Cloud Crane (Deadly)")
 	assert_eq(Roamer.label_for("Wild Boar", "Easy", false), "Wild Boar (Easy)")
+
+
+func test_pines_backdrop_has_varied_tiered_trees() -> void:
+	var near: Array = DuelStage.backdrop_layers("misty_forest", 1280.0)["near"]
+	var heights := {}
+	var gaps := {}
+	for i in near.size():
+		var p: Dictionary = near[i]
+		heights[snappedf(float(p["h"]), 1.0)] = true
+		assert_true(int(p.get("tiers", 0)) >= 2)
+		if i > 0:
+			gaps[snappedf(float(p["x"]) - float(near[i - 1]["x"]), 1.0)] = true
+	assert_true(heights.size() >= 3)
+	assert_true(gaps.size() >= 2)
+
+
+func test_far_ridge_stays_off_the_sky() -> void:
+	for season in DuelStage.SKY_BY_SEASON:
+		var sky: Array = DuelStage.sky_colors(season)
+		for ground in ["4d6b3c", "7a8a6a", "9aa0a8", "c8d0d8"]:
+			var far := DuelStage.far_color(Color(ground), sky)
+			assert_true(absf(far.v - (sky[1] as Color).v) >= 0.12, "%s %s" % [season, ground])

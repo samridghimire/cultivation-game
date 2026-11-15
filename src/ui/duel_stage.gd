@@ -346,7 +346,11 @@ func _draw() -> void:
 			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 			var cx2 := size.x * (0.25 if who == 0 else 0.75) + dx
 			var top := fallen_rect(_body_size(who), Vector2(cx2, base_y), who == 1 and _foe_beast).position.y
-			draw_string(font, Vector2(cx2 - w / 2.0, top - 5.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
+			var plate := Rect2(cx2 - w / 2.0 - 4.0, top - 5.0 - 12.0 - 4.0, w + 8.0, 12.0 + 8.0)
+			var pc: Color = UIStyle.PANEL
+			pc.a = 0.8
+			draw_rect(plate, pc)
+			draw_string(font, Vector2(cx2 - w / 2.0, top - 9.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
 
 
 ## The axis-aligned bounds of a fallen fighter (GFX-036). `tex_size` is the standing body in
@@ -419,7 +423,7 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.3))
 			draw_circle(Vector2.ZERO, c["r"], Color(1, 1, 1, 0.15))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var far := (map_ground_color(map).darkened(0.35)).lerp(haze, 0.55).lerp(haze, 0.4)  # distant ridge, 40% lighter (GFX-107)
+	var far := far_color(map_ground_color(map), sky)
 	col = col.darkened(0.2)  # the near layer sits darker than the ridge
 	var layers := backdrop_layers(rid, size.x)
 	if look_kind != "":
@@ -433,10 +437,16 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(cx - fr, horizon), Vector2(cx - fr * 0.3, horizon - fh * 0.7),
 				Vector2(cx - fr * 0.1, horizon - fh * 0.55), Vector2(cx + fr * 0.05, horizon - fh), Vector2(cx + fr * 0.4, horizon - fh * 0.5),
 				Vector2(cx + fr, horizon)]), far)
-		else:
-			draw_colored_polygon(hill_arc(s["x"], horizon, fr, fh), far)
+		else:  # GFX-157: a ridge line of 2-3 overlapping arcs, not one dome
+			var cx2: float = s["x"]
+			draw_colored_polygon(hill_arc(cx2 - fr * 0.55, horizon, fr * 0.7, fh * 0.7), far.darkened(0.06))
+			draw_colored_polygon(hill_arc(cx2 + fr * 0.6, horizon, fr * 0.6, fh * 0.55), far.darkened(0.06))
+			draw_colored_polygon(hill_arc(cx2, horizon, fr, fh), far)
 	var piece_i := -1
-	for s in layers["near"]:
+	var near_pieces: Array = layers["near"]
+	if kind == "pines":  # the darker front row draws last
+		near_pieces = near_pieces.filter(func(q): return not q.get("dark", false)) + near_pieces.filter(func(q): return q.get("dark", false))
+	for s in near_pieces:
 		piece_i += 1
 		var x: float = s["x"]
 		var w: float = s["w"]
@@ -444,20 +454,24 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 		if kind == "roofs" and x + w + 12.0 > size.x:
 			continue
 		match kind:
-			"pines":
-				for row in int(h / PIXEL):
-					var rw := (float(row) + 1.0) * PIXEL * 0.5 * (w / 34.0)
-					draw_rect(Rect2(x - rw / 2.0, horizon - h + row * PIXEL, rw, PIXEL), col)
-				draw_rect(Rect2(x - 2.0, horizon - 8.0, 4.0, 8.0), col.darkened(0.3))  # trunk
-				draw_rect(Rect2(x - 1.0, horizon - h * 0.5, 1.0, h * 0.5), col.darkened(0.15))  # trunk line
+			"pines":  # GFX-157: stacked tiers on a trunk; the dark row stands in front
+				var c := col.darkened(0.18) if s.get("dark", false) else col
+				var tiers: int = s.get("tiers", 2)
+				var th := h / float(tiers)
+				for t in tiers:
+					var ty := horizon - 6.0 - th * 0.55 * t
+					var tw := w * (0.5 + 0.5 * float(t + 1) / float(tiers)) * 0.5
+					var tw2 := w * (0.5 + 0.5 * float(tiers - t) / float(tiers)) * 0.5
+					draw_colored_polygon(PackedVector2Array([Vector2(x - tw2, ty), Vector2(x, ty - th * 1.1), Vector2(x + tw2, ty)]), c)
+				draw_rect(Rect2(x - 1.0, horizon - 8.0, 2.0, 8.0), c.darkened(0.3))  # trunk
 			"roofs":
 				var wall := 12.0 + h * 0.2
-				draw_rect(Rect2(x, horizon - wall, w, wall), col.darkened(0.15))
+				draw_rect(Rect2(x, horizon - wall, w, wall), col.lightened(0.14))  # lit wall
 				var roof_h := h * 0.45
 				var rows := int(roof_h / PIXEL)
 				for row in rows:  # a trapezoid whose bottom row flares into upturned eaves
 					var inset := float(row) * (w * 0.5 / maxf(rows, 1)) * 0.8
-					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col)
+					draw_rect(Rect2(x - 6.0 + inset, horizon - wall - (row + 1) * PIXEL, w + 12.0 - inset * 2.0, PIXEL), col.darkened(0.3 if row == 0 else 0.12))  # darker eave band
 				draw_rect(Rect2(x - 9.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
 				draw_rect(Rect2(x + w + 4.0, horizon - wall - PIXEL - 3.0, 5.0, 3.0), col)
 				if piece_i == 2:  # one taller two-tier roof
@@ -498,6 +512,18 @@ const PROP_ZONES := [[0.04, 0.12], [0.33, 0.67], [0.88, 0.96]]
 const PIXEL := 4.0
 
 
+## The distant ridge colour (GFX-157): the ground hue, darkened, one haze lerp, and always at least
+## 0.12 apart in value from the sky's horizon colour so it never melts into the sky.
+static func far_color(ground: Color, sky: Array) -> Color:
+	var haze: Color = sky[1]
+	var far := ground.darkened(0.35).lerp(haze, 0.45)
+	var guard := 0
+	while absf(far.v - haze.v) < 0.12 and guard < 20:
+		far = far.darkened(0.08) if far.v <= haze.v else far.lightened(0.08)
+		guard += 1
+	return far
+
+
 static func map_ground_color(map: Dictionary) -> Color:
 	return Color(map.get("ground", "4d6b3c"))
 
@@ -522,7 +548,11 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 		match kind:
 			"pines":
 				piece["w"] = 34.0 * (0.7 + r1 * 0.6)
-				piece["h"] = 50.0 * (0.6 + r2 * 0.6)
+				piece["h"] = 50.0 * (0.6 + r2 * 0.8)
+				piece["tiers"] = 2 + int(unit_hash(rid, k * 3 + 400) * 1.99)
+				piece["dark"] = unit_hash(rid, k * 3 + 401) < 0.25
+				if piece["dark"]:
+					piece["h"] = float(piece["h"]) * 0.75
 				step = 22.0 + r3 * 34.0
 			"roofs":
 				piece["w"] = 62.0 * (0.7 + r1 * 0.6)
