@@ -257,7 +257,16 @@ func menu_teaches() -> Array:
 	for t: Dictionary in Npcs.teachings(npc_id, GameState.player, GameState.data, int(GameState.npc_favor.get(npc_id, 0))):
 		if lines.size() >= 3:
 			break
-		lines.append({"text": String(t["text"]), "known": bool(t["known"]), "ready": bool(t.get("ready", false))})
+		var entry := {"text": String(t["text"]), "known": bool(t["known"]), "ready": bool(t.get("ready", false))}
+		if bool(t["known"]) and String(t.get("kind", "")) == "technique":
+			# WU-542: a learned style shows where its practice bouts stand.
+			var status := Mentorship.bout_status(GameState.player, npc_id, String(t.get("tech_id", "")), GameState.data, GameState.world_flags, GameClock.total_days)
+			var suffix := Mentorship.bout_status_text(status)
+			if suffix != "":
+				entry["text"] = "%s - learned \u00b7 %s" % [String(t["name"]), suffix]
+				entry["ready"] = String(status["state"]) == "ready"
+				entry["known"] = String(status["state"]) != "ready"
+		lines.append(entry)
 	return lines
 
 

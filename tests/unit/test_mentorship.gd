@@ -429,3 +429,27 @@ func test_teacher_pride_validation_rejects_negatives() -> void:
 	d.family["mentorship"]["teacher_pride"]["max_per_month"] = 4
 	d.family["mentorship"]["teacher_bout"]["graduation_favor"] = -5
 	assert_eq(Mentorship.validate(d).size(), 1)
+
+
+## WU-542: bout_status states for a style a villager taught.
+func test_bout_status_states() -> void:
+	var d := data()
+	var c := new_character()
+	var flags: Dictionary = {}
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "", "not learned yet")
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 10)["state"], "ready")
+	assert_eq(Mentorship.bout_status_text({"state": "ready", "days": 0}), "practice day ready")
+	c.npc_action_days["spar:hunter_ma"] = 10
+	var wait := Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 11)
+	assert_eq(wait["state"], "wait")
+	assert_true(int(wait["days"]) > 0)
+	assert_true(Mentorship.bout_status_text(wait).begins_with("next practice in"))
+	assert_eq(Mentorship.bout_status(c, "broker_qian", "iron_fist", d, flags, 11)["state"], "", "not their style")
+	flags[Mentorship.graduation_flag("hunter_ma", "iron_fist")] = true
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 11)["state"], "graduated")
+	flags.clear()
+	c.techniques["iron_fist"]["level"] = (d.techniques["iron_fist"] as TechniqueDef).max_level
+	assert_eq(Mentorship.bout_status(c, "hunter_ma", "iron_fist", d, flags, 11)["state"], "graduated", "mastered")
+	assert_eq(Mentorship.taught_by_lines(c, "iron_fist", d, flags, 11).size(), 1)
+	assert_true(Mentorship.taught_by_lines(c, "iron_fist", d, flags, 11)[0].begins_with("Taught by Hunter Ma"))

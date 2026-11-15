@@ -976,7 +976,7 @@ static func teachings(npc_id: String, c: CharacterData, data: GameData, favor: i
 			var tech_name: String = data.techniques[tech_id].name
 			var tech_known := c.techniques.has(tech_id)
 			var tech_ready := not tech_known and favor >= need  # WU-541: the lesson is a dialogue choice
-			result.append({"kind": "technique", "name": tech_name, "need_favor": need, "known": tech_known, "ready": tech_ready,
+			result.append({"kind": "technique", "tech_id": tech_id, "name": tech_name, "need_favor": need, "known": tech_known, "ready": tech_ready,
 				"text": (tech_name + " - ready, ask when you Talk") if tech_ready else _teaching_text(tech_name, "favor %d" % need if favor >= need else "favor %d/%d" % [favor, need])})
 	var tiers: Array = data.family.get("folk_tiers", [])
 	var lessons: Array = Folk.lessons_of(data, npc_id)

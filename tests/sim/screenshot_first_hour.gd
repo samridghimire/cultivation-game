@@ -12,6 +12,7 @@ extends SceneTree
 ## WU-502: append `-- --terraces=N` (0..3) for the Herb Slope terrace stage.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
+## WU-542: add `--knows=<tech_id>` to learn that technique first.
 ## WU-537: `--friend=hunter_ma` opens that named villager instead.
 ## WU-418: append `-- --friend` for friend.png (a villager menu with the heart row).
 ## WU-414: append `-- --book` for village_book.png.
@@ -771,6 +772,8 @@ func _friend_shots(gs: Node) -> void:
 		for arg in OS.get_cmdline_user_args():
 			if arg.begins_with("--friend="):
 				want = arg.substr(9)
+			if arg.begins_with("--knows="):  # WU-542: learn this technique first
+				Techniques.learn(gs.player, gs.data, arg.substr(8))
 		for node in world.find_children("*", "Interactable", true, false):
 			var id := String(node.get("npc_id") if node.get("npc_id") != null else "")
 			if want != "" and id == want:

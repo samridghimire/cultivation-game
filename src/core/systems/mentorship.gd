@@ -46,6 +46,50 @@ static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData)
 	return ""
 
 
+## Days until the teacher-bout cooldown with `npc_id` ends (0 = ready); the same key and rule `check_spar` uses.
+static func teacher_bout_cooldown_left(c: CharacterData, npc_id: String, data: GameData, today: int) -> int:
+	return cooldown_left(c, "spar:" + npc_id, int(_rules(data, "teacher_bout").get("cooldown_days", 0)), today)
+
+
+## WU-542: where villager `npc_id`'s bouts for style `tech_id` stand: {state: "ready"|"wait"|"graduated"|"", days}.
+## "" when the villager does not teach the style or the player has not learned it.
+static func bout_status(c: CharacterData, npc_id: String, tech_id: String, data: GameData, flags: Dictionary, today: int) -> Dictionary:
+	var none := {"state": "", "days": 0}
+	if c == null or not taught_styles(npc_id, data).has(tech_id) or not Techniques.knows(c, tech_id):
+		return none
+	if bool(flags.get(graduation_flag(npc_id, tech_id), false)) or Techniques.is_mastered(c, data, tech_id):
+		return {"state": "graduated", "days": 0}
+	var left := teacher_bout_cooldown_left(c, npc_id, data, today)
+	if left > 0:
+		return {"state": "wait", "days": left}
+	return {"state": "ready", "days": 0}
+
+
+## WU-542: the suffix a bout state adds to a style line ("practice day ready", "next practice in 3 days", "graduated"); "" for none.
+static func bout_status_text(status: Dictionary) -> String:
+	match String(status.get("state", "")):
+		"ready":
+			return "practice day ready"
+		"wait":
+			var d := int(status.get("days", 0))
+			return "next practice in %d day%s" % [d, "" if d == 1 else "s"]
+		"graduated":
+			return "graduated"
+	return ""
+
+
+## WU-542: "Taught by Hunter Ma · practice day ready" lines for a learned style, one per villager who teaches it.
+static func taught_by_lines(c: CharacterData, tech_id: String, data: GameData, flags: Dictionary, today: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	var ids: Array = data.npcs.keys()
+	ids.sort()
+	for npc_id: String in ids:
+		var text := bout_status_text(bout_status(c, npc_id, tech_id, data, flags, today))
+		if text != "":
+			out.append("Taught by %s \u00b7 %s" % [String(data.npcs[npc_id].get("name", npc_id)), text])
+	return out
+
+
 ## Sorted ids of the non-method techniques villager `npc_id` teaches through dialogue choices.
 static func taught_styles(npc_id: String, data: GameData) -> Array:
 	var def: Dictionary = data.npcs.get(npc_id, {})

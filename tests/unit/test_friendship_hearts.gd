@@ -135,3 +135,20 @@ func test_named_villager_header() -> void:
 	assert_eq(menu.likes_text(), "")
 	menu.free()
 	node.free()
+
+
+## WU-542: after Hunter Ma's lesson the card's Teaches line says the practice day is ready.
+func test_teaches_line_practice_day_ready() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.npc_favor["hunter_ma"] = 100
+	Techniques.learn(gs.player, gs.data, "iron_fist")
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	node.npc_id = "hunter_ma"
+	var found := false
+	for l: Dictionary in node.menu_teaches():
+		if String(l["text"]).contains("practice day ready"):
+			found = true
+			assert_true(bool(l["ready"]))
+	assert_true(found, "practice day ready line")
+	node.free()

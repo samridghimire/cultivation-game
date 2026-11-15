@@ -189,6 +189,10 @@ func _add_entry(tech_id: String) -> void:
 	b.button_pressed = tech_id == _selected
 	b.focus_entered.connect(_select.bind(tech_id))
 	_list.add_child(b)
+	for line in Mentorship.taught_by_lines(p, tech_id, data, GameState.world_flags, GameClock.total_days):
+		var l := UIStyle.label("   " + line, 14, UIStyle.ACCENT if line.ends_with("ready") else Color(0.55, 0.55, 0.58))
+		l.name = "Taught_%s_%d" % [tech_id, _list.get_child_count()]
+		_list.add_child(l)
 
 
 func _select(tech_id: String) -> void:
