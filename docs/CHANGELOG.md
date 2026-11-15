@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-15 [GFX-155] The Fallen Star Market has packed earth between its streets, with loose flags, straw, cart ruts and kerbs.
+- 2026-11-15 [WU-540] Villagers' names no longer sit on place names or buildings, and nobody stands on a hall stair.
+- 2026-11-15 [GFX-154] The Azure Cloud Hall court is a warm grey with varied flags, and herb terraces overlap as one planted slope.
+- 2026-11-15 [GFX-153] Ridge snow drifts follow the season, crags read as rock with snow caps in winter, and stepping stones show on dark trails.
+- 2026-11-15 [SKIP-003] The "turn this off in Settings" tip comes with the first early wake of any kind; the teacher hint rests 21 days after you meet that teacher.
+- 2026-11-15 [SPAR-001] The villager who taught you a fighting style practises it with you once a week, even while you are both mortal.
+- 2026-11-15 [C-366] Xiao Ling teaches Stone Skin once you are friends.
+- 2026-11-15 [WU-539] A named villager's menu shows your favor and hearts, the likes you have learned and how close each lesson is.
+- 2026-11-15 [GFX-152] The marsh's north-south boardwalk is narrow, winter boards sit over dark ice, and the Reed Hall stands on long planks.
 - 2026-11-15 [GUIDE-241] Once you know a fighting style, Next steps now and then names the nearest villager with something new to teach.
 - 2026-11-15 [GFX-151] The Azure Cloud Hall court is worn stone with moss, cracks and a processional strip, reached by a deep stone stair.
 - 2026-11-15 [C-365] Sect hunts now send you after elder jade pythons and poison toads, true Core Formation fights with richer spoils.
