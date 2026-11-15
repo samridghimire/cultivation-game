@@ -30,8 +30,8 @@ func test_every_named_npc_has_a_full_set_of_tastes() -> void:
 		assert_true(has_cheap, "%s likes no cheap village gift" % npc_id)
 
 
-## C-368: a named Qingshi villager's likes include at least one gift a newcomer gets in Qingshi in spring or summer
-## (a Qingshi shop's stock, a forage item or a jetty catch; likes may be item ids or tags); teachers need two.
+## C-368/C-374: in every season a named Qingshi villager's likes include at least one gift a newcomer gets in Qingshi
+## (a Qingshi shop's stock, a forage item or a jetty catch in that season; likes may be item ids or tags); teachers need two.
 func test_qingshi_villagers_have_gifts_within_reach() -> void:
 	var region: Dictionary = {}
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/regions.json"))
@@ -39,40 +39,44 @@ func test_qingshi_villagers_have_gifts_within_reach() -> void:
 	for r: Dictionary in regions:
 		if String(r["id"]) == "qingshi_village":
 			region = r
-	var entries: Array = []  # item ids or tags a newcomer can get
-	for place: Dictionary in region.get("places", []):
-		if place.get("festival_only", "") != "":
-			continue
-		entries.append_array(place.get("stock_tags", []))
-		for e: Dictionary in place.get("rotating_stock", {}).get("pool", []):
-			entries.append(String(e["item"]))
-		for e: Dictionary in place.get("catch_table", []):
-			if String(e["item"]) != "" and not e.has("requires_flag") and (not e.has("seasons") or e["seasons"].has("spring") or e["seasons"].has("summer")):
+	for season: String in ["spring", "summer", "autumn", "winter"]:
+		var entries: Array = []  # item ids or tags a newcomer can get this season
+		for place: Dictionary in region.get("places", []):
+			if place.get("festival_only", "") != "":
+				continue
+			entries.append_array(place.get("stock_tags", []))
+			for e: Dictionary in place.get("rotating_stock", {}).get("pool", []):
 				entries.append(String(e["item"]))
-	for e: Dictionary in region.get("forage", {}).get("items", []):
-		if not e.has("seasons") or e["seasons"].has("spring") or e["seasons"].has("summer"):
-			entries.append(String(e["item"]))
-	var ids: Dictionary = {}
-	for e: String in entries:
-		ids[e] = true
-		for item_id: String in data().items:
-			if (data().items[item_id].get("tags", []) as Array).has(e):
-				ids[item_id] = true
-	for npc_id: String in data().npcs:
-		var def: Dictionary = data().npcs[npc_id]
-		if String(def.get("region", "")) != "qingshi_village":
-			continue
-		var reachable := 0
-		for like: String in def.get("likes", []):
-			var hit: bool = ids.has(like)
-			if not hit:
-				for item_id: String in ids:
-					if data().items.has(item_id) and (data().items[item_id].get("tags", []) as Array).has(like):
-						hit = true
-			if hit:
-				reachable += 1
-		var teaches := not Npcs.teachings(npc_id, CharacterData.new(), data(), 0).is_empty()
-		assert_true(reachable >= (2 if teaches else 1), "%s has %d likes within reach in Qingshi" % [npc_id, reachable])
+			for e: Dictionary in place.get("catch_table", []):
+				if String(e["item"]) != "" and not e.has("requires_flag") and (not e.has("seasons") or e["seasons"].has(season)) and (not e.has("weather") or (region["weather"][season] as Dictionary).has_all(e["weather"])):
+					entries.append(String(e["item"]))
+			for e: Dictionary in place.get("gather_table", []):
+				if String(e["item"]) != "" and (not e.has("seasons") or e["seasons"].has(season)):
+					entries.append(String(e["item"]))
+		for e: Dictionary in region.get("forage", {}).get("items", []):
+			if (not e.has("seasons") or e["seasons"].has(season)) and (not e.has("weather") or (region["weather"][season] as Dictionary).has_all(e["weather"])):
+				entries.append(String(e["item"]))
+		var ids: Dictionary = {}
+		for e: String in entries:
+			ids[e] = true
+			for item_id: String in data().items:
+				if (data().items[item_id].get("tags", []) as Array).has(e):
+					ids[item_id] = true
+		for npc_id: String in data().npcs:
+			var def: Dictionary = data().npcs[npc_id]
+			if String(def.get("region", "")) != "qingshi_village":
+				continue
+			var reachable := 0
+			for like: String in def.get("likes", []):
+				var hit: bool = ids.has(like)
+				if not hit:
+					for item_id: String in ids:
+						if data().items.has(item_id) and (data().items[item_id].get("tags", []) as Array).has(like):
+							hit = true
+				if hit:
+					reachable += 1
+			var teaches := not Npcs.teachings(npc_id, CharacterData.new(), data(), 0).is_empty()
+			assert_true(reachable >= (2 if teaches else 1), "%s has %d likes within reach in Qingshi in %s" % [npc_id, reachable, season])
 
 
 ## C-373: each regional teacher (Peddler Hei, Bai, Ye, Qian) has at least two likes a newcomer can get in their own
