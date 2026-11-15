@@ -1422,6 +1422,16 @@ func _draw_market_ground() -> void:
 		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.45, 0.42, 0.38, 0.35))  # GFX-158: bare earth showing through the snow
 	for r: Rect2 in _market_dress["cobbles"]:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
+	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
+	if avenue.size.x > 0.0:
+		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))
+		draw_rect(avenue, road.darkened(0.12))
+		var n := 0
+		for sl: Rect2 in _market_dress["avenue_slabs"]:
+			n += 1
+			var c := Scenery.paving_shade(road, hash("%s|av|%d" % [_region.get("id", ""), n])).lightened(0.06)
+			draw_rect(sl.grow(-0.5), c if not snowy else c.lerp(Color(0.9, 0.92, 0.97), 0.6))
+			draw_rect(sl, road.darkened(0.22), false, 1.0)
 	var ring: PackedVector2Array = _market_dress.get("ring", PackedVector2Array())
 	if ring.size() >= 3:
 		if snowy:  # GFX-165: a shallow snow bowl: one opaque fill, darker far lip, lit near lip, broken soot rim
@@ -1429,7 +1439,7 @@ func _draw_market_ground() -> void:
 			for pt: Vector2 in ring:
 				centre += pt
 			centre /= float(ring.size())
-			var snow := Color(0.82, 0.84, 0.88)
+			var snow := Color(0.84, 0.84, 0.85)  # GFX-168: neutral snow a shade darker than the ground, no blue tint
 			draw_colored_polygon(ring, snow.darkened(0.1))
 			var near := PackedVector2Array()
 			for pt: Vector2 in ring:
@@ -1441,21 +1451,14 @@ func _draw_market_ground() -> void:
 					var p0 := ring[fi]
 					var p1 := ring[(fi + 1) % ring.size()]
 					draw_line(p0, p1, Color(0.16, 0.13, 0.13), 3.0)
-		else:
-			draw_colored_polygon(ring, Color(0.1, 0.06, 0.04, 0.26))
+		else:  # GFX-168: opaque scorched earth over the avenue's end, with a soot rim
+			draw_colored_polygon(ring, base.darkened(0.3).blend(Color(0.1, 0.06, 0.04, 0.45)))
+			var closed := ring.duplicate()
+			closed.append(ring[0])
+			draw_polyline(closed, Color(0.12, 0.09, 0.08), 3.0)
 	for s: Dictionary in ([] if snowy else _market_dress["scorch"]):  # GFX-165: no translucent scorch layers over the snow bowl
 		for o: PackedVector2Array in s.get("outlines", []):
 			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
-	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
-	if avenue.size.x > 0.0:
-		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))
-		draw_rect(avenue, road.darkened(0.12))
-		var n := 0
-		for sl: Rect2 in _market_dress["avenue_slabs"]:
-			n += 1
-			var c := Scenery.paving_shade(road, hash("%s|av|%d" % [_region.get("id", ""), n])).lightened(0.06)
-			draw_rect(sl.grow(-0.5), c if not snowy else c.lerp(Color(0.9, 0.92, 0.97), 0.6))
-			draw_rect(sl, road.darkened(0.22), false, 1.0)
 	for sh: Rect2 in _market_dress.get("shards", []):
 		draw_rect(sh.grow(2.0), Color(0.6, 0.85, 1.0, 0.18))
 		draw_rect(sh, Color("7d8aa8"))

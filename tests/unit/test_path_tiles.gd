@@ -100,6 +100,11 @@ func test_market_avenue_crater_plaza_and_clusters() -> void:
 	assert_true(av.grow(1.0).intersects(main), "avenue touches the main street")
 	assert_true(d["avenue_slabs"].size() > 20, "paved")
 	assert_true(d["ring"].size() >= 8, "ragged ring")
+	for sl: Rect2 in d["avenue_slabs"]:  # GFX-168: the avenue stops at the crater kerb
+		assert_false(Scenery.slab_in_bowl(d["ring"], sl), "no paving slab inside the bowl")
+	assert_true(Scenery.slab_in_bowl(d["ring"], Rect2(790, 755, 20, 10)), "a slab at the crater centre is inside")
+	assert_false(Scenery.slab_in_bowl(d["ring"], Rect2(0, 0, 10, 10)), "a far slab is outside")
+	assert_false(Scenery.slab_in_bowl(PackedVector2Array(), Rect2(0, 0, 10, 10)), "no ring, nothing inside")
 	assert_true(d["shards"].size() >= 4 and d["shards"].size() <= 6, "4-6 star shards")
 	assert_true(d["fence"].size() >= 1, "rope fence")
 	var near := 0

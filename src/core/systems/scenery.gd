@@ -2466,6 +2466,11 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		var crect := Rect2(cpos - Vector2(float(csz[0]), float(csz[1])) * 0.5, Vector2(float(csz[0]), float(csz[1])))
 		var ring_rect := crect.grow(46.0)
 		out["ring"] = ragged_outline(ring_rect, hash("%s|ring" % region.get("id", "")), minf(ring_rect.size.x, ring_rect.size.y) * 0.5, 5.0)
+		var kept: Array[Rect2] = []  # GFX-168: no paving stone inside the bowl; the avenue stops at its kerb
+		for sl: Rect2 in out["avenue_slabs"]:
+			if not slab_in_bowl(out["ring"], sl):
+				kept.append(sl)
+		out["avenue_slabs"] = kept
 		var inner_solid: Array[Rect2] = []  # every other place; the crater's own rect + label band is the only part kept clear
 		for pl2: Dictionary in region.get("places", []):
 			if pl2 != pl:
@@ -2506,6 +2511,16 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		out["fence"] = fence
 	_market_earth_dress(out, region, roads, solid, lms, size)
 	return out
+
+
+## GFX-168: true when a paving slab touches the crater bowl (any corner or its centre lies inside the ring polygon).
+static func slab_in_bowl(ring: PackedVector2Array, slab: Rect2) -> bool:
+	if ring.size() < 3:
+		return false
+	for pt: Vector2 in [slab.position, Vector2(slab.end.x, slab.position.y), slab.end, Vector2(slab.position.x, slab.end.y), slab.get_center()]:
+		if Geometry2D.is_point_in_polygon(pt, ring):
+			return true
+	return false
 
 
 ## GFX-155: dress the packed earth between a market's streets: "loose_flags" [{rect, tilt}] (1 in 5 cells, a sixth of them
