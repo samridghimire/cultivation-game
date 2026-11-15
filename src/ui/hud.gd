@@ -2036,6 +2036,10 @@ func _show_arrival(region_id: String) -> void:
 	var qi := Exploration.effective_density(data, region_id, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.player)
 	var first_visit := GameState.last_arrival_first_visit
 	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
+	if first_visit:  # WU-544: who teaches here
+		var teach := Npcs.region_teaching_lines(Npcs.region_teachings(GameState.player, data, GameState.npc_favor, region_id))
+		if not teach.is_empty():
+			sub += "\n" + "\n".join(teach)
 	# WU-514: today's line is in the message log and Next steps, not repeated on the banner.
 	var hold := Banner.SLIM_HOLD_SECONDS  # WU-510: a slim banner that leaves the village visible
 	_arrival_title = Exploration.region_name(data, region_id)

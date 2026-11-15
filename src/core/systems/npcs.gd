@@ -153,6 +153,49 @@ static func prune(npcs: Dictionary, keep: Dictionary, min_dead_days: int) -> Arr
 	return pruned
 
 
+## WU-544: named villagers living in `region_id` who teach a technique `c` does not know, sorted by favor needed:
+## [{npc_id, npc_name, tech_id, tech_name, need_favor, realm_name}] (realm_name "" unless `c` is below the art's min_realm).
+static func region_teachings(c: CharacterData, data: GameData, favor: Dictionary, region_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for npc_id: String in data.npcs:
+		var def: Dictionary = data.npcs[npc_id]
+		if String(def.get("region", "")) != region_id:
+			continue
+		for t: Dictionary in teachings(npc_id, c, data, int(favor.get(npc_id, 0))):
+			if String(t.get("kind", "")) != "technique" or bool(t["known"]):
+				continue
+			var tdef: TechniqueDef = data.techniques.get(String(t["tech_id"]))
+			var realm_name := ""
+			if tdef != null:
+				var min_index := data.realm_index_of(tdef.min_realm)
+				if c.realm_index < min_index:
+					realm_name = String(data.realms[min_index].name)
+			result.append({"npc_id": npc_id, "npc_name": String(def.get("name", npc_id)), "tech_id": t["tech_id"],
+				"tech_name": t["name"], "need_favor": t["need_favor"], "realm_name": realm_name})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["need_favor"]) != int(b["need_favor"]):
+			return int(a["need_favor"]) < int(b["need_favor"])
+		return String(a["npc_id"]) < String(b["npc_id"]))
+	return result
+
+
+## WU-544: the arrival-card lines ("Ye Zhuoran teaches Immovable Mountain Stance (favor 30, from Qi Refining)"), at most
+## `max_lines`, the rest folded into "+N more".
+static func region_teaching_lines(entries: Array[Dictionary], max_lines: int = 2) -> PackedStringArray:
+	var lines := PackedStringArray()
+	for i in entries.size():
+		if i >= max_lines:
+			break
+		var e: Dictionary = entries[i]
+		var gate := "favor %d" % int(e["need_favor"])
+		if String(e["realm_name"]) != "":
+			gate += ", from " + String(e["realm_name"])
+		lines.append("%s teaches %s (%s)" % [e["npc_name"], e["tech_name"], gate])
+	if entries.size() > max_lines:
+		lines[lines.size() - 1] += " · +%d more" % (entries.size() - max_lines)
+	return lines
+
+
 static func region_of(c: CharacterData, data: GameData) -> String:
 	if c.home_region != "":
 		return c.home_region

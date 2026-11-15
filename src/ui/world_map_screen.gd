@@ -828,6 +828,12 @@ func _show_details() -> void:
 		var by_path := forage_line(GameState.player, data, _selected, GameState.current_region, GameClock.total_days, GameState.world_flags)
 		if by_path != "":
 			today += ("\n" if today != "" else "") + by_path
+		var teachers := PackedStringArray()
+		for e: Dictionary in Npcs.region_teachings(GameState.player, data, GameState.npc_favor, _selected):
+			if not teachers.has(String(e["npc_name"])):
+				teachers.append(String(e["npc_name"]))
+		if not teachers.is_empty():
+			today += ("\n" if today != "" else "") + "Teaches: " + ", ".join(teachers)
 		var market_day := Places.market_day_line(region, GameClock.total_days)
 		if market_day != "":
 			today += ("\n" if today != "" else "") + market_day

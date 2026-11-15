@@ -90,3 +90,25 @@ func test_regional_teachers() -> void:
 		assert_eq(String(data().techniques[want[npc_id][0]].min_realm), "qi_refining")
 		regions[String(data().npcs[npc_id].region)] = true
 	assert_eq(regions.size(), 4)
+
+
+func test_region_teachings_and_lines() -> void:
+	var d := data()
+	var c := new_character()
+	var entries := Npcs.region_teachings(c, d, {}, "myriad_peaks_ridge")
+	assert_false(entries.is_empty(), "the ridge has a teacher")
+	assert_eq(String(d.npcs[String(entries[0]["npc_id"])].get("region", "")), "myriad_peaks_ridge")
+	assert_true(Npcs.region_teachings(c, d, {}, "no_such_region").is_empty())
+	var lines := Npcs.region_teaching_lines(entries)
+	assert_true(lines[0].contains(String(entries[0]["npc_name"]) + " teaches"), lines[0])
+	assert_true(lines[0].contains("favor"), lines[0])
+	var many: Array[Dictionary] = []
+	for i in 4:
+		many.append({"npc_name": "N%d" % i, "tech_name": "T", "need_favor": i, "realm_name": "Qi Refining" if i == 0 else ""})
+	var folded := Npcs.region_teaching_lines(many)
+	assert_eq(folded.size(), 2)
+	assert_true(folded[0].contains("from Qi Refining"), folded[0])
+	assert_true(folded[1].ends_with("+2 more"), folded[1])
+	c.techniques[String(entries[0]["tech_id"])] = 1
+	for e: Dictionary in Npcs.region_teachings(c, d, {}, "myriad_peaks_ridge"):
+		assert_true(e["tech_id"] != entries[0]["tech_id"], "known arts are not listed")
