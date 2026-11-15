@@ -592,7 +592,7 @@ static func is_clear(pos: Vector2, blocked: Array[Rect2], spots: Array[Vector2])
 
 
 ## GFX-054: how far flagstones reach beyond a street on a `paved` ground.
-const PAVED_REACH := 80.0
+const PAVED_REACH := 36.0
 
 
 ## GFX-054: the areas of a `paved` map that get flagstones (the rest is packed earth), as Rect2 in sprite px
@@ -2283,7 +2283,84 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 			if south_posts.size() >= 2:
 				fence.append({"posts": south_posts})
 		out["fence"] = fence
+	_market_earth_dress(out, region, roads, solid, lms, size)
 	return out
+
+
+## GFX-155: dress the packed earth between a market's streets: "loose_flags" [{rect, tilt}] (1 in 5 cells, a sixth of them
+## tilted), "straw" [Vector2] wisps by stalls, "ruts" [PackedVector2Array] cart ruts that start at the avenue, and "kerbs"
+## [Rect2] larger stones along each street edge. Nothing lies in a street, place or landmark (kerbs sit on the street edge).
+static func _market_earth_dress(out: Dictionary, region: Dictionary, roads: Array[Rect2], solid: Array[Rect2], lms: Array[Rect2], size: Vector2) -> void:
+	var rid := str(region.get("id", ""))
+	var avenue: Rect2 = out["avenue"]
+	var flags: Array[Dictionary] = []
+	var cell := 16.0
+	var cy := 0.0
+	while cy < size.y:
+		var cx := 0.0
+		while cx < size.x:
+			var h := absi(hash("%s|loose|%d|%d" % [rid, int(cx), int(cy)]))
+			if h % 5 == 0:
+				var fr := Rect2(Vector2(cx + 3.0 + float(h / 5 % 5), cy + 3.0 + float(h / 25 % 5)), Vector2(8, 6))
+				if not _market_blocked(fr, roads, solid, lms, PAVED_REACH, size, Rect2()) and not avenue.grow(PAVED_REACH).intersects(fr):
+					flags.append({"rect": fr, "tilt": (h / 125) % 6 == 0})
+			cx += cell
+		cy += cell
+	out["loose_flags"] = flags
+	var straw: Array[Vector2] = []
+	for i in lms.size():
+		if str(region["map"]["landmarks"][i].get("kind", "")) != "stall":
+			continue
+		var lr: Rect2 = lms[i]
+		for n in 3:
+			var h := absi(hash("%s|straw|%d|%d" % [rid, i, n]))
+			var at := Vector2(lr.position.x - 10.0 + float(h % int(lr.size.x + 20.0)), lr.end.y + 3.0 + float(h / 7 % 10))
+			var sr := Rect2(at, Vector2(6, 3))
+			if not _market_blocked(sr, roads, solid, lms, 1.0, size, Rect2()):
+				straw.append(at)
+	out["straw"] = straw
+	var ruts: Array[PackedVector2Array] = []
+	if avenue.size.x > 0.0:
+		for n in 3:
+			var h := absi(hash("%s|rut|%d" % [rid, n]))
+			var dir := -1.0 if n % 2 == 0 else 1.0
+			var y0 := avenue.position.y + 40.0 + float(h % int(maxf(avenue.size.y - 80.0, 1.0)))
+			var pt := Vector2(avenue.position.x if dir < 0.0 else avenue.end.x, y0)
+			var line := PackedVector2Array([pt])
+			for k in 14:
+				pt += Vector2(dir * 9.0, sin(float(k) * 0.7 + float(h % 7)) * 2.0)
+				if _market_blocked(Rect2(pt - Vector2(2, 2), Vector2(4, 4)), roads, solid, lms, 0.0, size, Rect2()) and not avenue.grow(2.0).has_point(pt):
+					break
+				line.append(pt)
+			if line.size() >= 4:
+				ruts.append(line)
+	out["ruts"] = ruts
+	var kerbs: Array[Rect2] = []
+	for r in roads:
+		var zone := r.grow(PAVED_REACH)
+		for side in 2:
+			var along_x := r.size.x > r.size.y
+			var t := zone.position.x if along_x else zone.position.y
+			var tend := zone.end.x if along_x else zone.end.y
+			while t < tend:
+				var fixed := (zone.position.y if side == 0 else zone.end.y - 6.0) if along_x else (zone.position.x if side == 0 else zone.end.x - 6.0)
+				var kr := Rect2(Vector2(t, fixed), Vector2(12, 6)) if along_x else Rect2(Vector2(fixed, t), Vector2(6, 12))
+				var crossing := false
+				for r2 in roads:
+					if r2 != r and r2.grow(PAVED_REACH - 2.0).intersects(kr):
+						crossing = true
+				if not crossing and kr.position.x >= 8.0 and kr.position.y >= 8.0 and kr.end.x <= size.x - 8.0 and kr.end.y <= size.y - 8.0:
+					var blocked := false
+					for k in solid:
+						if k.intersects(kr):
+							blocked = true
+					for k in lms:
+						if k.intersects(kr):
+							blocked = true
+					if not blocked:
+						kerbs.append(kr)
+				t += 13.0
+	out["kerbs"] = kerbs
 
 
 ## GFX-134: staggered pale slab rows over the avenue rect, one slab per row cell (seeded by position only).

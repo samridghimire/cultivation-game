@@ -113,3 +113,29 @@ func test_market_dress_loose_ends() -> void:
 		if first.position.y > cy + 40.0:
 			south += 1
 	assert_true(south >= 1, "south fence run")
+
+
+## GFX-155: earth dressing between the streets is deterministic and keeps off roads, places and the avenue.
+func test_market_earth_dress() -> void:
+	var r: Dictionary = data().regions["fallen_star_market"]
+	var size := Vector2(float(r["map"]["size"][0]), float(r["map"]["size"][1]))
+	var d := Scenery.market_props(r, size)
+	var d2 := Scenery.market_props(r, size)
+	assert_eq((d["loose_flags"] as Array).size(), (d2["loose_flags"] as Array).size(), "deterministic")
+	assert_true((d["loose_flags"] as Array).size() > 40, "loose flags are scattered")
+	var tilted := 0
+	var roads: Array[Rect2] = []
+	for pr in r["map"]["paths"]:
+		roads.append(Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3])))
+	for f: Dictionary in d["loose_flags"]:
+		var fr: Rect2 = f["rect"]
+		if f["tilt"]:
+			tilted += 1
+		assert_false((d["avenue"] as Rect2).intersects(fr), "no loose flag on the avenue")
+		for rd in roads:
+			assert_false(rd.intersects(fr), "no loose flag on a street")
+		for pl: Dictionary in r["places"]:
+			assert_false(Npcs.place_keepout(pl).intersects(fr), "no loose flag on a place")
+	assert_true(tilted > 0 and tilted < (d["loose_flags"] as Array).size() / 2, "some flags tilt")
+	assert_true((d["ruts"] as Array).size() >= 2, "cart ruts join the avenue")
+	assert_true((d["kerbs"] as Array).size() > 10, "streets have kerb stones")

@@ -1457,6 +1457,7 @@ func _draw_market_props() -> void:
 				draw_line(prev.position + Vector2(2, 2), pr.position + Vector2(2, 2), Color("b89a68"), 1.0)
 			draw_rect(pr, Color("5a4228"))
 			draw_rect(Rect2(pr.position, Vector2(pr.size.x, 2)), Color("a07a48"))
+	_draw_market_earth()
 	for p: Dictionary in _market_dress["props"]:
 		var r: Rect2 = p["rect"]
 		draw_rect(Rect2(r.position + Vector2(1, r.size.y - 2), Vector2(r.size.x, 3)), Color(0, 0, 0, 0.25))
@@ -1474,6 +1475,30 @@ func _draw_market_props() -> void:
 				draw_rect(Rect2(r.position + Vector2(3, 0), Vector2(4, 3)), Color("a89868"))
 		if Scenery.is_snowy(_season):
 			draw_rect(Rect2(r.position, Vector2(r.size.x, 2)), Color(0.93, 0.95, 1.0, 0.85))
+
+
+## GFX-155: cart ruts, kerb stones, loose flags and straw wisps on a market's packed earth.
+func _draw_market_earth() -> void:
+	var snowy := Scenery.is_snowy(_season)
+	for line: PackedVector2Array in _market_dress.get("ruts", []):
+		draw_polyline(line, Color(0.12, 0.09, 0.05, 0.28), 2.0)
+	for k: Rect2 in _market_dress.get("kerbs", []):
+		draw_rect(k, Color("7e7868"))
+		draw_rect(Rect2(k.position, Vector2(k.size.x, 1)), Color("a29b88"))
+		draw_rect(Rect2(k.position + Vector2(0, k.size.y - 1), Vector2(k.size.x, 1)), Color("4e4a3e"))
+		if snowy:
+			draw_rect(Rect2(k.position, Vector2(k.size.x, 2)), Color(0.93, 0.95, 1.0, 0.8))
+	for f: Dictionary in _market_dress.get("loose_flags", []):
+		var fr: Rect2 = f["rect"]
+		var col := Color("8d8774") if not snowy else Color("b8bcc2")
+		if f["tilt"]:
+			draw_colored_polygon(PackedVector2Array([fr.position + Vector2(1, 0), fr.position + Vector2(fr.size.x, 2), fr.end - Vector2(1, 0), fr.position + Vector2(0, fr.size.y - 2)]), col)
+		else:
+			draw_rect(fr, col)
+		draw_rect(Rect2(fr.position + Vector2(0, fr.size.y - 1), Vector2(fr.size.x, 1)), Color("4e4a3e"))
+	for s: Vector2 in _market_dress.get("straw", []):
+		draw_line(s, s + Vector2(5, -1), Color("c9b46a"), 1.0)
+		draw_line(s + Vector2(1, 2), s + Vector2(6, 1), Color("b39c52"), 1.0)
 
 
 ## GFX-125: shallow pools of a bog (pale ice with a crack in winter, ripples in rain). Drawn under the landmarks.
