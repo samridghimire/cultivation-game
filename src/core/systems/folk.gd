@@ -734,8 +734,8 @@ static func validate_lessons(data: GameData) -> PackedStringArray:
 	var tier_count: int = data.family.get("folk_tiers", []).size()
 	for npc_id: String in data.npcs:
 		var lessons := lessons_of(data, npc_id)
-		if lessons.size() > 2:
-			errors.append("npc %s: at most 2 lessons" % npc_id)
+		if lessons.size() > 3:
+			errors.append("npc %s: at most 3 lessons" % npc_id)
 		var last := 0
 		for i in lessons.size():
 			var l: Dictionary = lessons[i]

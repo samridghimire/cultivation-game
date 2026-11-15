@@ -47,3 +47,23 @@ func test_taught_today_and_waiting_skips_the_teaching_day() -> void:
 	var next := Folk.lessons_waiting(npcs, d, "qingshi_village", favor, taught, 11)
 	assert_eq(next.size(), 1, "the next lesson the following day")
 	assert_eq(next[0]["key"], "elder_mo:1")
+
+
+func test_third_lesson_slot() -> void:  # TEACH-002
+	var d := data()
+	var original: Variant = d.npcs["hunter_ma"].get("lessons")
+	var fx := {"practice_days": 2}
+	var three: Array = [{"tier": 1, "text": "a", "effects": fx}, {"tier": 2, "text": "b", "effects": fx}, {"tier": 3, "text": "c", "effects": fx}]
+	d.npcs["hunter_ma"]["lessons"] = three
+	assert_eq(Folk.validate_lessons(d).size(), 0, "three ascending lessons validate")
+	var due := Folk.due_lessons(d, "hunter_ma", 3, {"hunter_ma:0": 1, "hunter_ma:1": 2})
+	assert_eq(due.size(), 1)
+	assert_eq(String(due[0]["key"]), "hunter_ma:2", "the third lesson is given at its tier")
+	assert_eq(Folk.due_lessons(d, "hunter_ma", 2, {}).size(), 2, "tier 3 lesson waits")
+	d.npcs["hunter_ma"]["lessons"] = [three[2], three[1], three[0]]
+	assert_true(Folk.validate_lessons(d).size() > 0, "descending tiers fail")
+	d.npcs["hunter_ma"]["lessons"] = three + [{"tier": 3, "text": "d", "effects": fx}]
+	assert_true(Folk.validate_lessons(d).size() > 0, "four lessons fail")
+	d.npcs["hunter_ma"]["lessons"] = original
+	# an old save's keys still match the original two lessons
+	assert_eq(Folk.due_lessons(d, "hunter_ma", 3, {"hunter_ma:0": 5}).size(), 1)
