@@ -1218,10 +1218,7 @@ static func short_today(text: String) -> String:
 	var colon := text.find(": ")
 	if colon < 0:
 		return text
-	var body := text.substr(colon + 2)
-	var comma := body.find(", ")
-	var first := body.substr(0, comma) if comma >= 0 else body
-	return "Today: " + Guidance.short_today_phrase(first.rstrip(".")) + " (J)"
+	return "Today: " + Guidance.short_today_item(text.substr(colon + 2)) + " (J)"
 
 
 ## The text up to the first ". ", plus " (J)" so the player knows the journal has the rest. Unchanged without one.

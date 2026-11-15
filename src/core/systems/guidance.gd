@@ -639,6 +639,37 @@ static func short_today_phrase(text: String) -> String:
 	return drop_trailing_stop_words(m.get_string(1)) + m.get_string(2)
 
 
+## GUIDE-243: the HUD Today chip's text for the body of an arrival line ("Willow Branch and Mugwort by the path, rain."
+## -> "Willow Branch +1"): the first thing's whole name, plus "+N" when the forage phrase names N more.
+static func short_today_item(body: String) -> String:
+	body = body.rstrip(".")
+	var re := RegEx.new()
+	re.compile("^(.+?) by the path(?:,|$)")
+	var m := re.search(body)
+	if m != null:
+		var names := m.get_string(1)
+		var forms: Array = [
+			["^([^,]+), ([^,]+) and (\\d+) more$", 1],
+			["^([^,]+) and (\\d+) more$", 0],
+			["^([^,]+) and ([^,]+)$", 1],
+			["^([^,]+)$", 0],
+		]
+		for form: Array in forms:
+			var f := RegEx.new()
+			f.compile(String(form[0]))
+			var fm := f.search(names)
+			if fm == null:
+				continue
+			var extra := int(form[1])
+			if fm.get_group_count() == 3:
+				extra += int(fm.get_string(3))
+			elif fm.get_group_count() == 2 and String(form[0]).contains("\\d+"):
+				extra += int(fm.get_string(2))
+			return fm.get_string(1) + (" +%d" % extra if extra > 0 else "")
+	var comma := body.find(", ")
+	return short_today_phrase(body.substr(0, comma) if comma >= 0 else body)
+
+
 ## GUIDE-223: the short form of a HUD fight line: "Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)" ->
 ## "Easy fight: Wild Boar, Bone Marsh · 99%"; "Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)" ->
 ## "Hunting: Blood-Eyed Wolf, Bone Marsh". Other lines are returned unchanged.

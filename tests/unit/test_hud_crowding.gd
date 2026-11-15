@@ -217,3 +217,13 @@ func test_capped_hint_tooltip_has_full_text() -> void:
 	assert_eq(label.tooltip_text, "")
 	hud.queue_free()
 	gs.end_session()
+
+
+func test_short_today_keeps_whole_names() -> void:
+	assert_eq(HudScript.short_today("Today in Fallen Star Market: Blank Talisman Paper by the path."), "Today: Blank Talisman Paper (J)")
+	assert_eq(HudScript.short_today("Today in Qingshi Village: Willow Branch and Mugwort by the path."), "Today: Willow Branch +1 (J)")
+	assert_eq(HudScript.short_today("Today in Qingshi Village: Mugwort and Sweet Rice Ball by the path."), "Today: Mugwort +1 (J)")
+	assert_eq(HudScript.short_today("Today in Qingshi Village: Willow Branch, Mugwort and 3 more by the path."), "Today: Willow Branch +4 (J)")
+	assert_eq(HudScript.short_today("Today in Azure Peak: the Cloud Crane roams."), "Today: the Cloud Crane roams (J)")
+	assert_eq(HudScript.short_today("Today in Misty Forest: rain-fish biting."), "Today: rain-fish biting (J)")
+	assert_eq(HudScript.short_today("Today in Misty Forest: Cloud Crane Feather of Dawn by the path."), "Today: Cloud Crane Feather of Dawn (J)")
