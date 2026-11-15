@@ -466,6 +466,9 @@ func get_options() -> Array[Dictionary]:
 			options.append_array(_inline_dialogue_options())
 	if def.has("deed_context"):
 		for deed in Deeds.available(GameState.data, def["deed_context"], GameState.world_flags):
+			var needed_flag := String((deed.get("requires", {}) as Dictionary).get("flag", ""))
+			if needed_flag != "" and not GameState.world_flags.get(needed_flag, false):
+				continue  # C-370: a teacher's last errand stays hidden until its flag is set
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
 	options.append_array(_child_options())
 	options.append_array(_letter_options())

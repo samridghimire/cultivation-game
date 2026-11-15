@@ -146,6 +146,8 @@ func test_every_deed_context_has_a_giver_and_a_moral_choice() -> void:
 		var shift := int(deed.get("effects", {}).get("alignment", 0))
 		if deed.get("requires", {}).has("sect"):
 			continue  # SECT-006: steward chores are sect work, not moral choices
+		if String(deed.get("requires", {}).get("flag", "")).begins_with("teacher_graduated_"):
+			continue  # C-370: a teacher's last errand is a keepsake, not a moral choice
 		if not contexts.has(ctx):
 			contexts[ctx] = {"good": false, "evil": false}
 		if shift > 0:
