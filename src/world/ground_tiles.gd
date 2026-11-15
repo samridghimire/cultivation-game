@@ -111,6 +111,8 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		_apply_clover(img, base, rid, style, life.get("avoid", []))
 		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
 	_apply_style(img, base, rid, style, zones, scree_density)
+	if style == "scree":
+		_scree_slopes(img, base, rid)  # GFX-159
 	var summer: Image = img.duplicate() if season == "Winter" and style == "paved" and not zones.is_empty() else null
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
 	if summer != null:
@@ -266,6 +268,25 @@ static func _vary_snow(img: Image, grid: PackedFloat32Array) -> void:
 			img.set_pixel(x, y, img.get_pixel(x, y).lerp(SNOW, extra * 0.5))
 
 
+## GFX-159: scree slope tone: broad seeded horizontal bands, two slate tones, lighter toward the top of the map.
+static func scree_slope_shade(rid: String, y: int, height: int) -> float:
+	var band := y / 90
+	var wob := float(absi(hash("%s|slope|%d" % [rid, band])) % 101) / 100.0  # 0..1 per band
+	var up := 1.0 - float(y) / float(maxi(height, 1))
+	return (up - 0.5) * 0.26 + (wob - 0.5) * 0.14
+
+
+static func _scree_slopes(img: Image, base: Color, rid: String) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	for y in h:
+		var f := scree_slope_shade(rid, y + int(8.0 * sin(float(y) * 0.05)), h)
+		for x in w:
+			var wobble := (float(absi(hash("%s|sl|%d" % [rid, x / 40])) % 5) - 2.0) * 0.004
+			var c := img.get_pixel(x, y)
+			img.set_pixel(x, y, c.lightened(f + wobble) if f + wobble >= 0.0 else c.darkened(-(f + wobble)))
+
+
 ## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
 static func _scree_patches(img: Image, base: Color, rid: String) -> void:
 	var w := img.get_width()
@@ -363,7 +384,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|scree" % [rid, cx, cy]))
-					for i in roundi((1 + roll % 3) * scree_density):  # GFX-068: half the blobs; GFX-079: map.scree_density
+					for i in roundi((1 + roll % 3) * scree_density * 0.5):  # GFX-159: half the speckle; GFX-068: half the blobs; GFX-079: map.scree_density
 						var r2 := absi(hash("%s|%d|%d|scree|%d" % [rid, cx, cy, i]))
 						var pw := 2 + r2 % 3
 						var ph := 2 + (r2 / 8) % 2

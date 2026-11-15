@@ -136,3 +136,14 @@ func test_scree_stone_contrast() -> void:
 	assert_true(Scenery.scree_stone_lit(base, ground).get_luminance() > Scenery.scree_stone_base(base, ground).get_luminance(), "lit top lighter")
 	var light := Color("c8c4b8")
 	assert_eq(Scenery.scree_stone_base(light, light), light, "a light bed keeps the old colour")
+
+
+func test_scree_slope_shade_lighter_toward_top() -> void:
+	var top := 0.0
+	var bottom := 0.0
+	for y in range(0, 200, 10):
+		top += GroundTiles.scree_slope_shade("myriad_peaks_ridge", y, 1000)
+	for y in range(800, 1000, 10):
+		bottom += GroundTiles.scree_slope_shade("myriad_peaks_ridge", y, 1000)
+	assert_true(top > bottom, "the top of the slope is lighter")
+	assert_true(absf(GroundTiles.scree_slope_shade("x", 500, 1000)) < 0.2, "gentle tone shift")

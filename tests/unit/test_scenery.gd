@@ -438,13 +438,16 @@ func test_scree_density_thins_the_speckle() -> void:
 	var base := Color("5f7a74")
 	var full := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 1.0).get_image()
 	var thin := GroundTiles.ground_texture(base, "dens_t", Vector2i(160, 160), false, "", "scree", [], 0.4).get_image()
+	var plain := Image.create(160, 160, false, Image.FORMAT_RGBA8)
+	plain.fill(base)
+	GroundTiles._scree_slopes(plain, base, "dens_t")  # GFX-159: the slope tone is the reference, not the bare base
 	var diff := 0
 	var diff_thin := 0
 	for y in 160:
 		for x in 160:
-			if full.get_pixel(x, y) != base:
+			if full.get_pixel(x, y) != plain.get_pixel(x, y):
 				diff += 1
-			if thin.get_pixel(x, y) != base:
+			if thin.get_pixel(x, y) != plain.get_pixel(x, y):
 				diff_thin += 1
 	assert_true(diff_thin < diff)
 

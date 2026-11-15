@@ -1741,11 +1741,11 @@ func _draw_relief(map: Dictionary) -> void:
 					var rsd := rng.randi()
 					draw_colored_polygon(Scenery.rock_polygon(c + Vector2(1.0, 2.0), rad, rsd), Color(0, 0, 0, 0.28))
 					var body := Scenery.rock_polygon(c, rad, rsd)
-					draw_colored_polygon(body, rock)
+					draw_colored_polygon(body, rock.darkened(0.25))  # GFX-159: slate boulders, not snowballs
 					var lit := PackedVector2Array()
 					for q in body:
 						lit.append(c + (q - c) * 0.55 + (Vector2(-0.3, -0.3) * rad * 0.35))
-					draw_colored_polygon(lit, rock.lightened(0.25))
+					draw_colored_polygon(lit, rock.darkened(0.05))
 					var ring := body.duplicate()
 					ring.append(body[0])
 					draw_polyline(ring, rock.darkened(0.4), 1.0)
@@ -1860,11 +1860,8 @@ func _draw_scree_detail(map: Dictionary) -> void:
 		var psize := Vector2(float(sz[0]), float(sz[1]))
 		keep.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(8.0))
 	var patch_col := {"lichen": Color("7d8a6c"), "rust": Color("8c6a52"), "shale": Color("565e68")}
-	for pt: Dictionary in Scenery.ridge_patches(_region, keep):  # GFX-150: big soft tonal patches under the speckle
-		var pc: Vector2 = pt["center"]
-		var prect := Rect2(pc - Vector2(float(pt["rx"]), float(pt["ry"])), Vector2(float(pt["rx"]), float(pt["ry"])) * 2.0)
-		draw_colored_polygon(Scenery.ragged_outline(prect, int(pt["seed"]), minf(prect.size.y * 0.5, 30.0), 8.0), Color(patch_col[pt["kind"]], 0.22))
-		draw_colored_polygon(Scenery.ragged_outline(prect.grow(-prect.size.y * 0.22), int(pt["seed"]) + 3, 20.0, 5.0), Color(patch_col[pt["kind"]], 0.16))
+	for pt: Dictionary in Scenery.ridge_patches(_region, keep):  # GFX-159: lichen clumps and shale plates (GFX-150 patches)
+		_draw_ridge_patch(pt, patch_col[pt["kind"]])
 	for b: Dictionary in Scenery.scree_bands(_region):
 		var br: Rect2 = b["rect"]
 		var skip := false
@@ -1874,13 +1871,44 @@ func _draw_scree_detail(map: Dictionary) -> void:
 				break
 		if not skip:
 			draw_colored_polygon(Scenery.ragged_outline(br, int(b["seed"]), 24.0, 8.0), Color(rock.lightened(0.2), 0.07))
-	for c: Dictionary in Scenery.scree_clusters(_region, keep):
+	for c: Dictionary in Scenery.scree_clusters(_region, keep):  # GFX-159: 2-3 px stones, lit top row, dark foot, no near-white
 		var rng := RandomNumberGenerator.new()
 		rng.seed = int(c["seed"])
 		for i in int(c["count"]):
-			var q: Vector2 = (c["center"] as Vector2) + Vector2(rng.randf_range(-9.0, 9.0), rng.randf_range(-6.0, 6.0))
-			var sz2 := rng.randf_range(2.0, 4.0)
-			draw_rect(Rect2(q, Vector2(sz2, sz2 - 0.5)), rock.lightened(0.2) if rng.randf() < 0.5 else rock.darkened(0.35))
+			var q: Vector2 = ((c["center"] as Vector2) + Vector2(rng.randf_range(-9.0, 9.0), rng.randf_range(-6.0, 6.0))).floor()
+			var sw := float(rng.randi_range(2, 3))
+			var tone := rock.darkened(rng.randf_range(0.05, 0.3))
+			draw_rect(Rect2(q + Vector2(0, sw - 1.0), Vector2(sw, 1.0)), tone.darkened(0.45))
+			draw_rect(Rect2(q, Vector2(sw, sw - 1.0)), tone)
+			draw_rect(Rect2(q, Vector2(sw, 1.0)), tone.lightened(0.18))
+
+
+## GFX-159: a ridge patch: lichen = clumps of small greenish spots, rust = soft smudge, shale = angular dark plates with a lit edge.
+func _draw_ridge_patch(pt: Dictionary, col: Color) -> void:
+	var pc: Vector2 = pt["center"]
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(pt["seed"])
+	match String(pt["kind"]):
+		"lichen":
+			for clump in rng.randi_range(3, 5):
+				var cc := pc + Vector2(rng.randf_range(-rx, rx), rng.randf_range(-ry, ry)) * 0.7
+				for k in rng.randi_range(6, 11):
+					var q := (cc + Vector2(rng.randf_range(-10.0, 10.0), rng.randf_range(-6.0, 6.0))).floor()
+					var sz := float(rng.randi_range(1, 2))
+					draw_rect(Rect2(q, Vector2(sz + 1.0, sz)), Color(col.lightened(0.1) if k % 3 == 0 else col, 0.75))
+		"shale":
+			for plate in rng.randi_range(3, 5):
+				var cc := pc + Vector2(rng.randf_range(-rx, rx), rng.randf_range(-ry, ry)) * 0.6
+				var w := rng.randf_range(14.0, 28.0)
+				var h := rng.randf_range(6.0, 11.0)
+				var poly := PackedVector2Array([cc + Vector2(-w * 0.5, h * 0.3), cc + Vector2(-w * 0.3, -h * 0.5), cc + Vector2(w * 0.4, -h * 0.4), cc + Vector2(w * 0.5, h * 0.2), cc + Vector2(w * 0.1, h * 0.5)])
+				draw_colored_polygon(poly, Color(col.darkened(0.1), 0.6))
+				draw_polyline(PackedVector2Array([poly[0], poly[1], poly[2]]), Color(col.lightened(0.35), 0.7), 1.0)
+		_:
+			var prect := Rect2(pc - Vector2(rx, ry), Vector2(rx, ry) * 2.0)
+			draw_colored_polygon(Scenery.ragged_outline(prect.grow(-ry * 0.2), int(pt["seed"]), 14.0, 5.0), Color(col, 0.2))
 
 
 ## GFX-147/GFX-160: "terrace" gather places as wide flat hillside bands: soil toned from the region ground, ends fading into the
