@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-15 (planner, 18:10 UTC)
+- 10 tasks landed (GFX-156, WU-541, SPAR-002, TEACH-003, GFX-157, C-369, GFX-160, TEACH-002, GUIDE-242, GFX-158). Review
+  covered up to bcccaaf (fixes inline, notes -> TEACH-004). Live claims: GFX-159, C-368.
+- Planner shots (1280x720; four regions, winter market, `--friend=xiao_ling`, autumn Qingshi/Azure/marsh): marsh road,
+  terraces, winter market streets, ready-lesson card good. Found: summer grass in winter fights + uniform pines -> GFX-161
+  (spec file); grey shadow bubbles under pines/bamboo -> GFX-163; crater ring over the winter avenue + even pilings -> GFX-162;
+  Today chip "Blank" -> GUIDE-243; teacher state invisible -> WU-542.
+- **QA has not landed since QA-218 (11-14)**, likely because QA-219 was too big for one run: trimmed it (balance refresh only,
+  with a partial fallback), split the sim policy into QA-220, moved QA-212 to systems and QA-209 to world-ui. LOG-008 no
+  longer waits on QA-219. Systems queue: TEACH-004, GUIDE-243, QA-212, LOG-008, ART-012 (after QA-212).
+- Next planner: check QA-219 landed; view GFX-159/161/163 shots when they land; if QA still stalls, move more QA work.
+
 ## State on 2026-11-15 (planner, 06:10 UTC)
 - 12 tasks landed (C-354, GFX-138, TEACH-001, GFX-149, WU-538, NPCFOE-001, SKIP-002, GFX-150, C-365, WU-537, GFX-151,
   GUIDE-241). Review covered up to e7caf39 (no fixes; notes folded into QA-219 and SKIP-003). No live claims.

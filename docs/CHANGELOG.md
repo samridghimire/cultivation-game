@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-15 [GFX-158] In winter the Fallen Star Market keeps its swept streets, with snow banked at the kerbs and bare earth showing in the lots.
+- 2026-11-15 [GUIDE-242] Next steps tells you when your teacher is free to practise with you today.
+- 2026-11-15 [TEACH-002] A villager can now teach up to three lessons.
+- 2026-11-15 [GFX-160] Herb terraces read as planted bands on the hillside instead of stacked trays.
+- 2026-11-15 [C-369] Xiao Ling and Elder Mo remember the lessons they gave you.
+- 2026-11-15 [GFX-157] Fight and encounter backdrops have hazy ridges, tiered pines and lit village walls.
+- 2026-11-15 [TEACH-003] Teachers grow fonder of you as you improve the style they taught you.
+- 2026-11-15 [SPAR-002] Once you master a style your teacher sends you off with a farewell and a parting kindness, and the practice bouts end.
+- 2026-11-15 [WU-541] A lesson you can take today shows as ready on the villager card, and Talk says a lesson is waiting.
+- 2026-11-15 [GFX-156] The marsh road is a raised bed of boards with a muddy verge and puddles, not a wall-to-wall plank floor.
 - 2026-11-15 [GFX-155] The Fallen Star Market has packed earth between its streets, with loose flags, straw, cart ruts and kerbs.
 - 2026-11-15 [WU-540] Villagers' names no longer sit on place names or buildings, and nobody stands on a hall stair.
 - 2026-11-15 [GFX-154] The Azure Cloud Hall court is a warm grey with varied flags, and herb terraces overlap as one planted slope.
