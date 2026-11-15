@@ -1140,9 +1140,9 @@ static func _scree_trail_tiles(out: Array[Dictionary], rng: RandomNumberGenerato
 			var shade := rng.randf() * 2.0 - 1.0
 			if roll < 1.0 / 8.0:
 				continue  # missing: just grit
-			if roll < 1.0 / 8.0 + 1.0 / 6.0:
+			if roll < 1.0 / 8.0 + 0.5:  # GFX-167: half the flags are irregular quads, not rectangles
 				var pts := PackedVector2Array()
-				var j := 1.5
+				var j := 1.4
 				var corners := [rr.position, Vector2(rr.end.x, rr.position.y), rr.end, Vector2(rr.position.x, rr.end.y)]
 				var inward := [Vector2(1, 1), Vector2(-1, 1), Vector2(-1, -1), Vector2(1, -1)]
 				for ci in 4:
@@ -1151,6 +1151,13 @@ static func _scree_trail_tiles(out: Array[Dictionary], rng: RandomNumberGenerato
 			else:
 				out.append({"kind": "slab", "rect": rr, "shade": shade, "flag": ""})
 		pos += step + rng.randf_range(4.0, 14.0)
+	# GFX-167: sparse short wheel ruts along the bed (about one per 70 px), never a regular pattern
+	var rp := rng.randf_range(10.0, 40.0)
+	while rp < len_total - 24.0:
+		var rl := rng.randf_range(10.0, 22.0)
+		var roff := _trail_offset(knots, vals, rp + rl * 0.5)
+		out.append({"kind": "rut", "rect": _road_rect(path_rect, along_x, rp, margin + roff + bed_w * rng.randf_range(0.2, 0.7), rl, 1.0), "shade": 0.0, "flag": "trail"})
+		rp += rl + rng.randf_range(40.0, 110.0)
 	# pebbles: scattered off the bed (about 1 per 120 px^2) and small clusters along both edges every 30-60 px
 	var off_area := maxf(width - bed_w, 0.0) * len_total
 	for i in int(off_area / 120.0):
@@ -1164,6 +1171,42 @@ static func _scree_trail_tiles(out: Array[Dictionary], rng: RandomNumberGenerato
 			for k in rng.randi_range(2, 4):
 				out.append({"kind": "pebble", "rect": _road_rect(path_rect, along_x, cp + rng.randf_range(0.0, 6.0), base_across + rng.randf_range(0.0, 2.0) * (1.0 if side == 0 else -1.0), 2.0, 2.0), "shade": rng.randf() * 2.0 - 1.0, "flag": "edge"})
 			cp += rng.randf_range(30.0, 60.0)
+
+
+## GFX-167: a wobbling polygon for a trail along `path_rect`: the long edges are `inset` px in from the rect's sides plus a smooth
+## seeded wobble of up to `amp` px (samples every 8 px), the ends square. `inset` + `amp` must stay below half the width.
+## Deterministic; inside the rect.
+static func trail_edge_polygon(path_rect: Rect2, seed_value: int, inset: float, amp: float) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "trail_edge"])
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var len_total := path_rect.size.x if along_x else path_rect.size.y
+	var width := path_rect.size.y if along_x else path_rect.size.x
+	var ins := minf(inset, width * 0.4)  # the two edges never cross, so the polygon always triangulates
+	var a := minf(amp, maxf((width * 0.5 - ins) * 0.5 - 0.5, 0.0))
+	var n := maxi(int(len_total / 8.0), 2)
+	var ph1 := rng.randf_range(0.0, TAU)
+	var ph2 := rng.randf_range(0.0, TAU)
+	var lo: Array[Vector2] = []
+	var hi: Array[Vector2] = []
+	for i in n + 1:
+		var p := len_total * float(i) / float(n)
+		var wob_a := (sin(ph1 + p / 23.0) * 0.6 + rng.randf_range(-0.4, 0.4)) * a
+		var wob_b := (sin(ph2 + p / 29.0) * 0.6 + rng.randf_range(-0.4, 0.4)) * a
+		var o1 := ins + a + wob_a
+		var o2 := width - ins - a + wob_b
+		if along_x:
+			lo.append(Vector2(path_rect.position.x + p, path_rect.position.y + o1))
+			hi.append(Vector2(path_rect.position.x + p, path_rect.position.y + o2))
+		else:
+			lo.append(Vector2(path_rect.position.x + o1, path_rect.position.y + p))
+			hi.append(Vector2(path_rect.position.x + o2, path_rect.position.y + p))
+	var out := PackedVector2Array()
+	for q in lo:
+		out.append(q)
+	for i in range(hi.size() - 1, -1, -1):
+		out.append(hi[i])
+	return out
 
 
 ## GFX-149: the trail's sideways wander at `p` along the road (linear between the seeded knots).
@@ -1713,34 +1756,47 @@ static func field_layout(rect: Rect2, seed_value: int, season: String, no_snow: 
 ## same bands. Returned top (highest) to bottom; points run along the upper edge left to right, then back along the lower edge.
 ## Fade the ends into the hillside with `terrace_end_alpha`.
 static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Array]:
+	# GFX-167: each band has its own length (60-100% of the width, 12-px minimum slack kept) and offset, so the ends stagger
+	# and the stack never reads as one rectangle. Top curve left to right, then the bottom curve right to left.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var n := 3 if rect.size.y < 90.0 else 4
+	if rect.size.y >= 70.0 and rng.randi() % 2 == 0:
+		n += 1
 	var step := rect.size.y / float(n)
-	var left := rect.position.x + 2.0
-	var width := rect.size.x - 4.0
-	var cols := maxi(int(width / 8.0), 4)
-	# n + 1 boundary curves; curve k sits near the top of band k and the bottom of band k - 1
-	var curves: Array[PackedVector2Array] = []
-	for k in n + 1:
-		var amp := rng.randf_range(1.0, 1.5)
-		var phase := rng.randf_range(0.0, TAU)
-		var freq := rng.randf_range(1.0, 2.0)
-		var base := rect.position.y + step * float(k) + 1.0
-		if k == n:
-			base = rect.end.y - 1.0 - 2.0 * amp
-		var pts := PackedVector2Array()
-		for c in cols + 1:
-			var t := float(c) / float(cols)
-			pts.append(Vector2(left + width * t, base + amp * (1.0 + sin(phase + TAU * freq * t)) + rng.randf_range(0.0, 0.4)))
-		curves.append(pts)
+	var full := rect.size.x - 4.0
 	var out: Array[PackedVector2Array] = []
 	for i in n:
-		var poly := curves[i].duplicate()
+		var length := full * rng.randf_range(0.6, 1.0)
+		var left := rect.position.x + 2.0 + (full - length) * rng.randf_range(0.0, 1.0)
+		var cols := maxi(int(length / 8.0), 4)
+		var amp_t := rng.randf_range(1.0, 1.5)
+		var amp_b := rng.randf_range(1.0, 1.5)
+		var ph_t := rng.randf_range(0.0, TAU)
+		var ph_b := rng.randf_range(0.0, TAU)
+		var fq_t := rng.randf_range(1.0, 2.0)
+		var fq_b := rng.randf_range(1.0, 2.0)
+		var top_y := rect.position.y + step * float(i) + 1.0
+		var bot_y := rect.position.y + step * float(i + 1) + 1.0
+		if i == n - 1:
+			bot_y = rect.end.y - 1.0 - 2.0 * amp_b
+		var poly := PackedVector2Array()
+		for c in cols + 1:
+			var t := float(c) / float(cols)
+			poly.append(Vector2(left + length * t, top_y + amp_t * (1.0 + sin(ph_t + TAU * fq_t * t)) + rng.randf_range(0.0, 0.4)))
 		var drop := 2.0 if i < n - 1 else 0.0
 		for c in range(cols, -1, -1):
-			poly.append(curves[i + 1][c] + Vector2(0, drop))
+			var t2 := float(c) / float(cols)
+			poly.append(Vector2(left + length * t2, bot_y + amp_b * (1.0 + sin(ph_b + TAU * fq_b * t2)) + rng.randf_range(0.0, 0.4) + drop))
 		out.append(poly)
+	return out
+
+
+## GFX-167: the x extents (left, right) of each band, for tests and the renderer.
+static func terrace_band_spans(bands: Array[PackedVector2Array]) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for poly in bands:
+		out.append(Vector2(poly[0].x, poly[poly.size() / 2 - 1].x))
 	return out
 
 
@@ -1823,6 +1879,24 @@ static func drift_lumps(r: Rect2, lumps: int, seed_value: int) -> Array[Rect2]:
 		var h := r.size.y * rng.randf_range(0.7, 1.0)
 		out.append(Rect2(x, r.end.y - h, w, h))
 		x += w + (gap_list[i] if i < n - 1 else 0.0)
+	return out
+
+
+## GFX-167: a snow drift as a low mound: a flat base on r's bottom edge and a domed, slightly uneven top (no corners), so it
+## blends into the snow instead of reading as a white bar. Points run along the base left to right, then back over the top.
+## Always inside r; deterministic.
+static func drift_mound(r: Rect2, seed_value: int) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "drift_mound"])
+	var n := maxi(int(r.size.x / 8.0), 6)
+	var out := PackedVector2Array()
+	out.append(Vector2(r.position.x, r.end.y))
+	out.append(Vector2(r.end.x, r.end.y))
+	for i in range(n - 1, 0, -1):  # the end points are the base corners already
+		var t := float(i) / float(n)
+		var dome := pow(sin(PI * t), 0.6)
+		var h := r.size.y * dome * rng.randf_range(0.88, 1.0)
+		out.append(Vector2(r.position.x + r.size.x * t, r.end.y - h))
 	return out
 
 

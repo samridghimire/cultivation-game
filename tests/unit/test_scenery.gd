@@ -877,7 +877,7 @@ func test_every_wild_region_has_groves_clear_of_paths_and_places() -> void:
 func test_terrace_bands_stack_without_gap() -> void:
 	for r: Rect2 in [Rect2(100, 200, 130, 80), Rect2(0, 0, 130, 110)]:
 		var a := Scenery.terrace_bands(r, 9)
-		assert_true(a.size() >= 3 and a.size() <= 4, "3-4 bands")
+		assert_true(a.size() >= 3 and a.size() <= 5, "3-5 bands")
 		assert_eq(a, Scenery.terrace_bands(r, 9))
 		var prev_bottom := -INF
 		for poly in a:
@@ -980,21 +980,32 @@ func test_terrace_band_ends_keep_thickness() -> void:
 			assert_true(absf(poly[0].y - poly[poly.size() - 1].y) > 2.0, "left end has thickness")
 
 
-## GFX-160: every band spans the place width (within 2 px each side), ends fade to 0, the middle is opaque.
-func test_terrace_bands_span_full_width_and_fade() -> void:
+## GFX-167: bands have different lengths and offsets (no outer rectangle), stay inside the place; ends fade to 0, middle opaque.
+func test_terrace_bands_vary_in_length_and_fade() -> void:
+	var rects_seen := 0
 	for sd in 10:
 		var r := Rect2(100, 200, 130, 80)
-		for poly in Scenery.terrace_bands(r, sd):
+		var bands := Scenery.terrace_bands(r, sd)
+		var spans := Scenery.terrace_band_spans(bands)
+		var lengths := {}
+		var lefts := {}
+		for sp in spans:
+			assert_true(sp.y - sp.x >= 0.6 * (r.size.x - 4.0) - 1.0, "no band shorter than 60%")
+			lengths[snappedf(sp.y - sp.x, 1.0)] = true
+			lefts[snappedf(sp.x, 1.0)] = true
+		if lengths.size() >= 3 and lefts.size() >= 3:
+			rects_seen += 1
+		for poly in bands:
 			var minx := INF
 			var maxx := -INF
 			for q in poly:
 				minx = minf(minx, q.x)
 				maxx = maxf(maxx, q.x)
-			assert_true(absf((maxx - minx) - r.size.x) <= 4.0, "band as wide as the place")
 			assert_eq(Scenery.terrace_end_alpha(minx, minx, maxx), 0.0)
 			assert_eq(Scenery.terrace_end_alpha(maxx, minx, maxx), 0.0)
 			assert_eq(Scenery.terrace_end_alpha((minx + maxx) / 2.0, minx, maxx), 1.0)
 			assert_true(Scenery.terrace_end_alpha(minx + 6.0, minx, maxx) > 0.0 and Scenery.terrace_end_alpha(minx + 6.0, minx, maxx) < 1.0)
+	assert_true(rects_seen >= 7, "lengths and offsets differ band to band on almost every seed, got %d" % rects_seen)
 
 
 func test_terrace_earth_follows_ground_and_darkens() -> void:

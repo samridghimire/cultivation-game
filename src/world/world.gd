@@ -1743,7 +1743,6 @@ func _draw_relief(map: Dictionary) -> void:
 	var gseason := GroundTiles.ground_season(_season, map)
 	var winter := gseason == "Winter"
 	var snow_col := Color("e8eef4")
-	var shade_col := Color("9fb0c2")
 	for it: Dictionary in _relief:
 		var r: Rect2 = it["rect"]
 		var rng := RandomNumberGenerator.new()
@@ -1779,13 +1778,8 @@ func _draw_relief(map: Dictionary) -> void:
 				var dr := Rect2(r.position.x, r.end.y - r.size.y * sc.y, r.size.x * sc.x, r.size.y * sc.y)
 				var dcol: Color = look["color"]
 				dcol.a = float(look["alpha"])
-				if int(look["lumps"]) <= 1:
-					draw_colored_polygon(Scenery.ragged_outline(dr, int(it["seed"]), minf(dr.size.y * 0.5, 8.0), 3.0), dcol)
-					var shade := Scenery.ragged_outline(Rect2(dr.position.x + 3.0, dr.end.y - 4.0, dr.size.x - 6.0, 3.0), int(it["seed"]) + 7, 1.5, 1.0)
-					draw_colored_polygon(shade, Color(shade_col, 0.7))
-				else:
-					for lr in Scenery.drift_lumps(dr, int(look["lumps"]), int(it["seed"])):
-						draw_colored_polygon(Scenery.ragged_outline(lr, int(it["seed"]) + int(lr.position.x), minf(lr.size.y * 0.5, 5.0), 1.5), dcol)
+				for lr in Scenery.drift_lumps(dr, maxi(int(look["lumps"]), 1), int(it["seed"])):
+					_draw_drift_mound(lr, int(it["seed"]) + int(lr.position.x), dcol, winter)
 
 
 ## GFX-145: a rock band: ragged top and bottom edges that taper at both ends, a lit top face over two darker strata
@@ -1970,9 +1964,9 @@ func _draw_terrace_places() -> void:
 			var lip := PackedVector2Array()
 			var lip_cols := PackedColorArray()
 			for q in range(half, poly.size()):
-				lip.append(poly[q] + Vector2(0, -1.0))
-				lip_cols.append(Color(earth.darkened(0.15), 0.6 * Scenery.terrace_end_alpha(poly[q].x, left, right)))
-			draw_polyline_colors(lip, lip_cols, 2.0)
+				lip.append(poly[q] + Vector2(0, -2.0))
+				lip_cols.append(Color(earth.darkened(0.35), 0.85 * Scenery.terrace_end_alpha(poly[q].x, left, right)))
+			draw_polyline_colors(lip, lip_cols, 4.0)  # GFX-167: the riser under each band's lit top
 			for crop: Dictionary in Scenery.terrace_crops(poly, seed_value + i * 101):
 				var p: Vector2 = crop["pos"]
 				if snowy:  # GFX-166: only the tinted tufts show through the snow, as small buried humps
@@ -2062,6 +2056,17 @@ func _draw_steps(r: Rect2) -> void:
 			ly += 56.0
 
 
+## GFX-167: one drift as a low mound: a soft shadow along the lower edge, a body a shade under the ground snow and a lit crest
+## along the top only (never a flat pure-white bar).
+func _draw_drift_mound(r: Rect2, seed_value: int, col: Color, winter: bool) -> void:
+	var shadow := Scenery.shadow_blob(Vector2(r.get_center().x, r.end.y + 1.0), Vector2(r.size.x * 0.55, maxf(r.size.y * 0.3, 2.5)), seed_value)
+	draw_colored_polygon(shadow, Color(0.35, 0.42, 0.55, 0.28 if winter else 0.18))
+	var body := Scenery.drift_mound(r, seed_value)
+	draw_colored_polygon(body, col.darkened(0.04))
+	var crest := Scenery.drift_mound(Rect2(r.position.x + r.size.x * 0.12, r.position.y, r.size.x * 0.76, r.size.y * 0.7), seed_value + 3)
+	draw_colored_polygon(crest, Color(col.lightened(0.5), col.a * 0.55))
+
+
 ## GFX-123: crags (lit top face over a dark cliff face) and wind-streaked snow drifts of a map.high region.
 func _draw_crags(map: Dictionary) -> void:
 	if _crags.is_empty():
@@ -2107,11 +2112,7 @@ func _draw_crags(map: Dictionary) -> void:
 			var dcol: Color = look["color"]
 			var parts: Array[Rect2] = Scenery.drift_lumps(dr, int(look["lumps"]), int(it["seed"]))
 			for pr in parts:
-				draw_colored_polygon(Scenery.ragged_outline(pr, int(it["seed"]) + int(pr.position.x), minf(pr.size.y * 0.5, 6.0), 2.0), Color(0.91, 0.94, 0.97, a) if winter else Color(dcol, a))
-			if winter:
-				for k in 3:  # wind streaks
-					var sy := r.position.y + r.size.y * (0.25 + 0.25 * k)
-					draw_line(Vector2(r.position.x + px * 4.0, sy), Vector2(r.position.x + r.size.x * rng.randf_range(0.5, 0.9), sy), Color(0.62, 0.7, 0.8, a * 0.7), px)
+				_draw_drift_mound(pr, int(it["seed"]) + int(pr.position.x), Color(0.91, 0.94, 0.97, a) if winter else Color(dcol, a), winter)
 
 
 ## GFX-113: pines leaning out over the top cliffs of a map.high region (Scenery.high_pines).
@@ -2594,21 +2595,24 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 	if str(rmap.get("ground_style", "")) == "scree":  # GFX-164: a darker grit verge (snow banked in winter) with a wobbling edge under the trail bed
 		var gdark := Color(String(rmap.get("ground", "6b6b6b")))
 		var vseed2 := hash("%s|%s|screeverge" % [_region.get("id", ""), rect])
-		var vrect := Scenery.scree_verge_rect(rect)
-		draw_colored_polygon(Scenery.ragged_outline(vrect, vseed2, 3.0, 2.0), Color(0.86, 0.9, 0.95, 0.9) if snowy else gdark.darkened(0.22))
-		if snowy:  # the trodden line: a darker strip through the banks
-			draw_colored_polygon(Scenery.ragged_outline(vrect.grow_individual(0, -5, 0, -5) if rect.size.x >= rect.size.y else vrect.grow_individual(-5, 0, -5, 0), vseed2 + 1, 2.0, 2.0), gdark.lightened(0.05))
+		var verge_pts := Scenery.trail_edge_polygon(rect, vseed2, 1.5, 3.0)  # GFX-167: both verge edges wobble, not a straight band
+		draw_colored_polygon(verge_pts, Color(0.86, 0.9, 0.95, 0.9) if snowy else gdark.darkened(0.22))
+		var bed_pts := Scenery.trail_edge_polygon(rect, vseed2 + 1, 4.0, 2.0)
+		draw_colored_polygon(bed_pts, Color("dfe6ee") if snowy else Scenery.scree_bed_color(gdark))
+		if snowy:  # trampled grey-brown slush along the middle instead of grey blocks
+			var slush := Scenery.trail_edge_polygon(rect, vseed2 + 2, minf(rect.size.y if rect.size.x >= rect.size.y else rect.size.x, 60.0) * 0.33, 2.0)
+			draw_colored_polygon(slush, Color(0.5, 0.47, 0.43, 0.75))
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
 		var c := base
 		match str(t["kind"]):
 			"grit":
-				var gcol := Color(String(rmap.get("ground", "6b6b6b")))
-				c = Color("dfe6ee") if snowy else Scenery.scree_bed_color(gcol)
-				draw_rect(r, c)
+				pass  # GFX-167: the bed is one wobbling polygon drawn before the tiles
 			"flag_poly":
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(r.position.x), int(r.position.y)]))
+				if snowy and str(rmap.get("ground_style", "")) == "scree":
+					c = c.lerp(Color("dfe6ee"), 0.55)  # GFX-167: flags half buried in snow
 				var pts: PackedVector2Array = t["points"]
 				draw_colored_polygon(pts, c)
 				for pi in 4:  # a lit top: the lower and right edges get the dark line
@@ -2623,6 +2627,8 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 					c = base.lightened(0.07)
 				if t["flag"] == "main":
 					c = c.lightened(0.1)  # GFX-126: worn pale street slabs
+				if snowy and str(rmap.get("ground_style", "")) == "scree":
+					c = c.lerp(Color("dfe6ee"), 0.55)  # GFX-167: flags half buried in snow
 				draw_rect(r, c)
 				if str(rmap.get("ground_style", "")) == "scree":  # GFX-149: a lit top, dark line on the lower and right edges only
 					draw_line(Vector2(r.position.x, r.end.y - 0.5), Vector2(r.end.x, r.end.y - 0.5), base.darkened(0.25), 1.0)

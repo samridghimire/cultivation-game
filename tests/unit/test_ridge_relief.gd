@@ -196,3 +196,43 @@ func test_ledge_foot_stones_inside_span() -> void:
 func test_terrace_earth_lighter_on_dark_ground() -> void:
 	var slate := Color("2c333c")
 	assert_true(Scenery.terrace_earth(slate, 0, false).get_luminance() > slate.get_luminance())
+
+
+## GFX-167: a drift is a low mound: base on the bottom edge, domed top inside the rect, tallest near the middle.
+func test_drift_mound_is_a_dome_inside_its_rect() -> void:
+	for sd in 8:
+		var r := Rect2(100, 50, 80, 14)
+		var m := Scenery.drift_mound(r, sd)
+		assert_eq(m, Scenery.drift_mound(r, sd), "deterministic")
+		var top := INF
+		var top_x := 0.0
+		for q in m:
+			assert_true(r.grow(0.01).has_point(q), "inside the rect")
+			if q.y < top:
+				top = q.y
+				top_x = q.x
+		assert_true(top < r.end.y - r.size.y * 0.8, "rises to nearly the full height")
+		assert_true(top_x > r.position.x + r.size.x * 0.25 and top_x < r.end.x - r.size.x * 0.25, "peak near the middle")
+		assert_eq(m[0].y, r.end.y)
+		assert_eq(m[1].y, r.end.y)
+
+
+## GFX-167: the trail edge polygon wobbles on both long edges (not a straight band), stays inside the rect, no corners at the sides.
+func test_trail_edge_polygon_wobbles_inside_the_rect() -> void:
+	for r: Rect2 in [Rect2(0, 380, 1600, 40), Rect2(300, 0, 40, 600)]:
+		var pts := Scenery.trail_edge_polygon(r, 7, 4.0, 3.0)
+		assert_eq(pts, Scenery.trail_edge_polygon(r, 7, 4.0, 3.0))
+		assert_true(pts != Scenery.trail_edge_polygon(r, 8, 4.0, 3.0))
+		var half := pts.size() / 2
+		var along_x := r.size.x >= r.size.y
+		for side in 2:
+			var vals: Array[float] = []
+			for i in half:
+				var q := pts[i + side * half]
+				assert_true(r.grow(0.01).has_point(q), "inside the rect")
+				vals.append(q.y if along_x else q.x)
+			assert_true(vals.max() - vals.min() >= 2.0, "edge wobbles by at least 2 px")
+	var narrow := Scenery.trail_edge_polygon(Rect2(0, 0, 14, 300), 3, 4.0, 2.0)  # GFX-167: narrow roads keep their edges apart
+	var nh := narrow.size() / 2
+	for i in nh:
+		assert_true(narrow[nh + (nh - 1 - i)].x > narrow[i].x + 1.0, "edges never cross")
