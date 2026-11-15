@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Shot pass (QA-209)
+
+`screenshot_screens.gd --fight-region=a,b` now writes combat_report_<id>.png and encounter_<id>.png staged in each region (the report uses a 6-round trace so the duel stage and bars show). Opened at 1280x720 and 1280x800 for withered_bone_marsh, myriad_peaks_ridge, misty_forest, fallen_star_market:
+- Fight backdrops are distinct and read well: marsh = fence-post reeds and a mound with puddle, peaks = grey pines on hazed crags, forest = tiered pines over a hazed ridge, market = roof wall with striped barriers. No clipping at either size.
+- The encounter strip is the same woods strip in every region (the card picks it from the encounter's tags, not the region): the peaks card shows pines, which is right for that encounter.
+- Season card (winter, 1280x720): fits, no clipping. The world behind it is still Qingshi in summer (known: the card shot does not advance the world).
+- Jetty stage 3 (1280x720, Qingshi): the jetty is a few planks at the pond rim and its label crowds the Hooded Stranger label; readable but small. Not fixed.
+- Not re-rendered this run (left for a later QA pass): map.png, Qingshi arrival, shop.png, GFX-111/112 winter edges, marsh encounter strip.
+
 ## State on 2026-11-15 (planner, 18:10 UTC)
 - 10 tasks landed (GFX-156, WU-541, SPAR-002, TEACH-003, GFX-157, C-369, GFX-160, TEACH-002, GUIDE-242, GFX-158). Review
   covered up to bcccaaf (fixes inline, notes -> TEACH-004). Live claims: GFX-159, C-368.

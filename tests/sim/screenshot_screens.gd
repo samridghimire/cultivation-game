@@ -4,6 +4,7 @@ extends SceneTree
 ## xvfb-run -a -s "-screen 0 1280x800x24" tools/godot.sh --path . --rendering-driver opengl3 \
 ##     --resolution 1280x800 -s res://tests/sim/screenshot_screens.gd
 ## PNGs go to user://screenshots/screens/<name>.png (OUT_DIR). Never writes saves.
+## QA-209: `-- --fight-region=<id>[,<id>]` also shoots combat_report_<id> / encounter_<id> staged in those regions.
 ## WU-116: append `-- --first-hour` for a fresh character in Qingshi Village instead (creation,
 ## intro, Elder Mo, the merchant's shop, exploring, a lost fight, the day-1 journal). Check each PNG
 ## at 1280x800 and 1280x720 (--resolution 1280x720).
@@ -4161,6 +4162,7 @@ func _build_shots(gs: Node) -> void:
 	for i in 30:
 		lines.append("Round %d: you strike the Stone Ape for 123. (Stone Ape: 4567 hp)" % i)
 	shots.append({"name": "combat_report", "open": func() -> void: report.show_fight("Stone Ape", false, lines), "close": report.close})
+	_build_fight_region_shots(gs, report, lines)
 	var board: Node = load("res://src/world/interactables/bounty_board.gd").new()
 	board.display_name = "Qingshi Bounty Board"
 	var board_menu: Control = hud.get("_choice_menu")
@@ -4172,6 +4174,42 @@ func _build_shots(gs: Node) -> void:
 	if menu_source != null:
 		var menu: Control = hud.get("_choice_menu")
 		shots.append({"name": "choice_menu", "open": func() -> void: menu.open_for(menu_source), "close": menu.close})
+
+
+## QA-209: `-- --fight-region=a,b` stages the combat report and an encounter card in each region, so
+## DuelStage.backdrop_layers draws that region's ridge/near/props: combat_report_<id>.png, encounter_<id>.png.
+func _build_fight_region_shots(gs: Node, report: Control, _lines: PackedStringArray) -> void:
+	var ids := PackedStringArray()
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--fight-region="):
+			ids = arg.trim_prefix("--fight-region=").split(",", false)
+	var short_lines := PackedStringArray()
+	var trace: Array = []
+	for i in 6:  # a trace gives the fight its duel stage and bars
+		short_lines.append("Round %d: you strike the Stone Ape for 12. (Stone Ape: %d hp)" % [i + 1, 88 - i * 12])
+		trace.append([100 - i * 5, 88 - i * 12])
+	var enc_id := ""
+	for id: String in gs.data.encounters:
+		if gs.data.encounters[id].has("choices"):
+			enc_id = id
+			break
+	for rid: String in ids:
+		if not gs.data.regions.has(rid):
+			push_error("--fight-region: unknown region " + rid)
+			continue
+		var home: String = gs.current_region
+		shots.append({"name": "combat_report_" + rid, "open": func() -> void:
+			gs.current_region = rid
+			report.show_fight("Stone Ape", false, short_lines, "", PackedStringArray(), trace, 100, 100), "close": func() -> void:
+			report.close()
+			gs.current_region = home})
+		if enc_id != "":
+			shots.append({"name": "encounter_" + rid, "open": func() -> void:
+				gs.current_region = rid
+				gs.pending_encounter = enc_id
+				hud.get("_encounter").open(), "close": func() -> void:
+				hud.get("_encounter").close()
+				gs.current_region = home})
 
 
 ## WU-065: the newest menus at UI scale 115% (long names on purpose): a senior
