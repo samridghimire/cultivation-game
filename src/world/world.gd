@@ -2507,11 +2507,14 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 	var rmap: Dictionary = _region.get("map", {})
 	if str(rmap.get("ground_style", "grass")) == "bog" and str(rmap.get("water", "clear")) == "murky":
-		var bed := rect.grow(-3.0)  # GFX-141: murky water shows in the 1 px gaps between boards
-		var vertical := rect.size.x < rect.size.y  # GFX-152: a north-south walkway gets a bed as narrow as the east-west one
-		if vertical:
-			bed = Rect2(rect.position.x + rect.size.x * 0.17, rect.position.y + 3.0, rect.size.x * 0.66, rect.size.y - 6.0)
-		draw_rect(bed, Color("34475a") if snowy else _bog_water().darkened(0.3))  # winter: dark ice, never open water
+		var vseed := hash("%s|%s|bogroad" % [_region.get("id", ""), rect])
+		var vertical := rect.size.x < rect.size.y
+		var bed := Scenery.bog_bed_rect(rect)  # GFX-156: a raised, wobbling bed with mud verges either side, never a full-width floor
+		var verge := Color(0.82, 0.86, 0.9, 0.85) if snowy else base.darkened(0.3)
+		draw_colored_polygon(Scenery.ragged_outline(rect, vseed, 3.0, 2.0), verge)
+		draw_colored_polygon(Scenery.bog_bed_polygon(rect, vseed + 1), Color("34475a") if snowy else _bog_water().darkened(0.3))  # winter: dark ice, never open water
+		for pud: Rect2 in Scenery.bog_puddles(rect, vseed + 2):
+			draw_rect(pud, Color("34475a") if snowy else _bog_water().darkened(0.15))
 		if snowy:
 			var crng := RandomNumberGenerator.new()
 			crng.seed = hash("%s|%s|ice" % [_region.get("id", ""), rect])
@@ -2569,7 +2572,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				if snowy and shade > -0.3:  # GFX-152: a snow cap on most boards
 					draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)) if rect.size.x >= rect.size.y else Rect2(r.position, Vector2(2.0, r.size.y)), Color(0.93, 0.95, 1.0, 0.85))
 			"mud":
-				draw_rect(r, base.darkened(0.3))
+				pass  # GFX-156: the verge is one ragged fill drawn before the tiles
 			"stub":
 				draw_rect(r, Color("7a5a38").darkened(0.3))
 			"piling":

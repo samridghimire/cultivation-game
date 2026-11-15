@@ -737,6 +737,65 @@ static func scree_bands(region: Dictionary) -> Array[Dictionary]:
 	return out
 
 
+## GFX-156: the raised bed of a murky-bog boardwalk: 70% of the road width, centred, along either axis. Boards lie inside it.
+static func bog_bed_rect(path_rect: Rect2) -> Rect2:
+	if path_rect.size.x >= path_rect.size.y:
+		return Rect2(path_rect.position.x + 3.0, path_rect.position.y + path_rect.size.y * 0.15, path_rect.size.x - 6.0, path_rect.size.y * 0.70)
+	return Rect2(path_rect.position.x + path_rect.size.x * 0.15, path_rect.position.y + 3.0, path_rect.size.x * 0.70, path_rect.size.y - 6.0)
+
+
+## GFX-156: the bed outline as a polygon whose long edges wobble 0-2 px outward (never inward, so boards stay inside), sampled every 24 px.
+static func bog_bed_polygon(path_rect: Rect2, seed: int) -> PackedVector2Array:
+	var bed := bog_bed_rect(path_rect)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var length := bed.size.x if along_x else bed.size.y
+	var n := maxi(int(length / 24.0), 1)
+	var side_a := PackedVector2Array()
+	var side_b := PackedVector2Array()
+	for i in n + 1:
+		var t := float(i) / float(n)
+		var wa := rng.randf_range(0.0, 2.0)
+		var wb := rng.randf_range(0.0, 2.0)
+		if along_x:
+			var x := bed.position.x + bed.size.x * t
+			side_a.append(Vector2(x, bed.position.y - wa))
+			side_b.append(Vector2(x, bed.end.y + wb))
+		else:
+			var y := bed.position.y + bed.size.y * t
+			side_a.append(Vector2(bed.position.x - wa, y))
+			side_b.append(Vector2(bed.end.x + wb, y))
+	side_b.reverse()
+	return side_a + side_b
+
+
+## GFX-156: 2-3 small puddle rects on the mud verges of a bog road (outside the bed, inside `path_rect`), seeded.
+static func bog_puddles(path_rect: Rect2, seed: int) -> Array[Rect2]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var bed := bog_bed_rect(path_rect)
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var out: Array[Rect2] = []
+	var count := rng.randi_range(2, 3)
+	for i in count:
+		var upper := rng.randf() < 0.5
+		var w := rng.randf_range(6.0, 12.0)
+		var h := rng.randf_range(2.0, 3.0)
+		var verge_w := (bed.position.y - path_rect.position.y) if along_x else (bed.position.x - path_rect.position.x)
+		if verge_w < h + 5.0:
+			continue
+		var along := rng.randf_range(8.0, (path_rect.size.x if along_x else path_rect.size.y) - w - 8.0)
+		var across := rng.randf_range(1.5, verge_w - h - 3.5)
+		var r: Rect2
+		if along_x:
+			r = Rect2(path_rect.position.x + along, (path_rect.position.y + across) if upper else (bed.end.y + 2.5 + across), w, h)
+		else:
+			r = Rect2((path_rect.position.x + across) if upper else (bed.end.x + 2.5 + across), path_rect.position.y + along, h, w)
+		out.append(r)
+	return out
+
+
 ## GFX-133: a closed, ragged outline for a ground fill: a rounded rect (corner `radius`) whose edge is pushed in or out
 ## along its normal by smoothed seeded noise of up to `amp` px, sampled every 8 px. Never an axis-aligned rectangle; same seed, same shape.
 static func ragged_outline(rect: Rect2, seed: int, radius: float, amp: float) -> PackedVector2Array:

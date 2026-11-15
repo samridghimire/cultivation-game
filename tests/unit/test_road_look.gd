@@ -132,3 +132,16 @@ func test_paved_market_street_unchanged() -> void:
 func test_reed_hall_outline_still_ragged() -> void:
 	var o := SectCourt.reed_hall_outline(Rect2(100, 100, 240, 120))
 	assert_true(o.size() > 8, "ragged outline kept")
+
+
+## GFX-156: boards lie inside the bed for both a horizontal and a vertical bog road; puddles sit on the verges.
+func test_bog_bed_contains_every_board() -> void:
+	for rect: Rect2 in [Rect2(0, 470, 1600, 60), Rect2(700, 0, 60, 900)]:
+		var bed := Scenery.bog_bed_rect(rect)
+		assert_true(rect.encloses(bed), "bed inside the road")
+		for t in Scenery.path_tiles(_region("bog", "murky"), rect):
+			if t["kind"] == "plank":
+				assert_true(bed.grow(0.01).encloses(t["rect"] as Rect2), "board %s inside bed %s" % [t["rect"], bed])
+		for pud in Scenery.bog_puddles(rect, 5):
+			assert_true(rect.encloses(pud) and not bed.intersects(pud), "puddle on the verge")
+		assert_true(Scenery.bog_bed_polygon(rect, 3).size() >= 4, "polygon")
