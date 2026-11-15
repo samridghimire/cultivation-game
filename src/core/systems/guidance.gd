@@ -551,6 +551,12 @@ const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" f
 ## GUIDE-220: `line` squeezed to SHORT_HINT_CHARS keeping the verb and the target: known long forms are
 ## rewritten, others fall back to their first sentence, then a word-boundary cut (never "...").
 static func short_hint(line: String, data: GameData = null) -> String:
+	# GUIDE-244: the arrival line is shortened by the HUD (short_today) with the whole first name; the 42-character cut
+	# below used to run first and left "Today: Blank (J)". Keep the first item whole; "+N" counts extra forage names only.
+	if line.begins_with("Today in "):
+		var colon := line.find(": ")
+		if colon > 0:
+			return line.substr(0, colon + 2) + short_today_item(line.substr(colon + 2))
 	if line.length() <= SHORT_HINT_CHARS:
 		return line
 	var fight := _short_fight(line, data)

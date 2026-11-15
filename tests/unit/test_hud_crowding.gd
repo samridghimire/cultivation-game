@@ -227,3 +227,15 @@ func test_short_today_keeps_whole_names() -> void:
 	assert_eq(HudScript.short_today("Today in Azure Peak: the Cloud Crane roams."), "Today: the Cloud Crane roams (J)")
 	assert_eq(HudScript.short_today("Today in Misty Forest: rain-fish biting."), "Today: rain-fish biting (J)")
 	assert_eq(HudScript.short_today("Today in Misty Forest: Cloud Crane Feather of Dawn by the path."), "Today: Cloud Crane Feather of Dawn (J)")
+
+
+## GUIDE-244: the HUD chip goes through short_hint (42 chars) and then cap_hint; the whole name must survive both.
+func test_today_chip_through_the_hud_path() -> void:
+	var cases := {
+		"Today in Fallen Star Market: Blank Talisman Paper by the path.": "Today: Blank Talisman Paper (J)",
+		"Today in Withered Bone Marsh: Morning Dew Grass and Mugwort by the path, ice-fishing at the pond.": "Today: Morning Dew Grass +1 (J)",
+		"Today in Misty Forest: Morning Dew Grass and Mugwort by the path.": "Today: Morning Dew Grass +1 (J)",
+	}
+	for line: String in cases:
+		assert_eq(HudScript.cap_hint(Guidance.short_hint(line, null)), cases[line])
+		assert_eq(HudScript.cap_hint(line), cases[line])
