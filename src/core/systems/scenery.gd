@@ -1927,6 +1927,41 @@ static func scree_verge_rect(path_rect: Rect2) -> Rect2:
 
 ## GFX-153: the bed colour of a scree trail (its grit) and the stone colour that sits on it: on a bed darker than 0.45 luminance the
 ## stones are lightened by 0.22 (and lit tops by a further 0.1, see `scree_stone_lit`), else they keep the road colour `base`.
+## GFX-170: moss on a stone trail: small irregular patches inside the bed (a path_rect inset 3 px), [{rect: Rect2}]; deterministic.
+static func moss_patches(path_rect: Rect2, seed_value: int) -> Array[Rect2]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "moss"])
+	var out: Array[Rect2] = []
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var length := path_rect.size.x if along_x else path_rect.size.y
+	var width := path_rect.size.y if along_x else path_rect.size.x
+	var p := rng.randf_range(0.0, 20.0)
+	while p < length - 12.0:
+		var l := rng.randf_range(5.0, 14.0)
+		var w := rng.randf_range(2.0, 5.0)
+		var across := rng.randf_range(4.0, maxf(width - 4.0 - w, 4.5))
+		out.append(Rect2(path_rect.position + (Vector2(p, across) if along_x else Vector2(across, p)), Vector2(l, w) if along_x else Vector2(w, l)))
+		p += rng.randf_range(14.0, 40.0)
+	return out
+
+
+## GFX-170: grass tufts along both verges of a trail, just outside its rect (1-3 px), [{pos: Vector2, h: int}]; deterministic.
+static func verge_tufts(path_rect: Rect2, seed_value: int) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "tufts"])
+	var out: Array[Dictionary] = []
+	var along_x := path_rect.size.x >= path_rect.size.y
+	var length := path_rect.size.x if along_x else path_rect.size.y
+	for side in 2:
+		var p := rng.randf_range(0.0, 16.0)
+		while p < length:
+			var off := rng.randf_range(1.0, 3.0)
+			var across := (-off) if side == 0 else ((path_rect.size.y if along_x else path_rect.size.x) + off)
+			out.append({"pos": path_rect.position + (Vector2(p, across) if along_x else Vector2(across, p)), "h": rng.randi_range(2, 4)})
+			p += rng.randf_range(10.0, 34.0)
+	return out
+
+
 static func scree_bed_color(ground: Color) -> Color:
 	return ground.lightened(0.12).lerp(Color("8a7a62"), 0.15)
 

@@ -236,3 +236,17 @@ func test_trail_edge_polygon_wobbles_inside_the_rect() -> void:
 	var nh := narrow.size() / 2
 	for i in nh:
 		assert_true(narrow[nh + (nh - 1 - i)].x > narrow[i].x + 1.0, "edges never cross")
+
+
+func test_moss_patches_and_verge_tufts() -> void:  # GFX-170
+	var r := Rect2(0, 470, 1600, 60)
+	var m := Scenery.moss_patches(r, 5)
+	assert_true(m.size() > 10)
+	assert_eq(m, Scenery.moss_patches(r, 5))
+	for p in m:
+		assert_true(r.encloses(p), "moss stays on the bed")
+	var t := Scenery.verge_tufts(r, 5)
+	assert_true(t.size() > 20)
+	assert_eq(t, Scenery.verge_tufts(r, 5))
+	for d in t:
+		assert_false(r.has_point(d["pos"]), "tufts sit outside the bed")

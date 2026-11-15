@@ -2605,6 +2605,17 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 		if snowy:  # trampled grey-brown slush along the middle instead of grey blocks
 			var slush := Scenery.trail_edge_polygon(rect, vseed2 + 2, minf(rect.size.y if rect.size.x >= rect.size.y else rect.size.x, 60.0) * 0.33, 2.0)
 			draw_colored_polygon(slush, Color(0.5, 0.47, 0.43, 0.75))
+	if bool(rmap.get("moss_path", false)):  # GFX-170: moss on the stones, grass tufts at both edges
+		var mseed := hash("%s|%s|moss" % [_region.get("id", ""), rect])
+		var moss := Color("5f7d52") if not snowy else Color("6f8466")
+		for mr: Rect2 in Scenery.moss_patches(rect, mseed):
+			draw_rect(mr, Color(moss, 0.55 if snowy else 0.7))
+		var tuft := Color(map_grass_color()).darkened(0.1)
+		for tf: Dictionary in Scenery.verge_tufts(rect, mseed):
+			var tp: Vector2 = (tf["pos"] as Vector2).floor()
+			var th: float = float(tf["h"])
+			draw_line(tp, tp + Vector2(0, -th), tuft, 1.0)
+			draw_line(tp + Vector2(1, 0), tp + Vector2(2, -th + 1.0), tuft.lightened(0.12), 1.0)
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
