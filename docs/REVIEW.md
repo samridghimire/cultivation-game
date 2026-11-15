@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 08a9a38
+Last reviewed commit: 357b32f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2037,3 +2037,16 @@ Last reviewed commit: 08a9a38
   - Notes, not filed: GUIDE-245's short form keeps only the first word of the region ("No fighting style: Peddler Hei,
     Withered", "..., Fallen"); Places.short_region_name would read better. C-371's weekly choice gives +1 favor once
     ever (permanent flag), like Xiao Ling's.
+- 2026-11-15 (reviewer, 4th run): reviewed 08a9a38..357b32f (QA-212, GFX-166, WU-544, TEACH-005, GUIDE-246, GFX-167, C-372,
+  C-373, SEASON-023, GUIDE-247, WU-545, GFX-168; [PLAN]/[REVIEW] skipped). Main green (4166 tests). No BACKLOG/CHANGELOG
+  edits by workers; no binary assets; no SAVE_VERSION change (TEACH-005's "self" is a value of TEACH-004's `taught_by_` flag).
+  - Fixed (GUIDE-246): the commit added a stray `tests/unit/test_zz_probe.gd.uid` with no script beside it (left over from
+    a probe test); removed.
+  - TEACH-005 OK (Effects.apply marks every learn "self", `_note_taught_by` runs after it in both villager-lesson paths
+    and overwrites only the villager's own styles; a re-learn of a known style fails before the flag is touched). WU-545 OK
+    (screen_lift is reset at the top of each pass, so the final nudge does not accumulate). C-372 data OK (gated on the
+    graduation flag, blocked by its own done flag as fixed for C-370; thank-you choice is flag-guarded). GUIDE-246 also
+    resolves last run's note (region short name). SEASON-023/GUIDE-247/WU-544 OK. QA-212's gain_observer is null in game.
+    GFX-166/167/168 draw-only, randomness from seeded rngs; not rendered by me.
+  - Notes, not filed: WU-544's first-visit banner with two teacher lines was not rendered by anyone (height unchecked).
+    QA-212 found Appraising Eye never unseals in 36 months (ART-012 is the planner's).
