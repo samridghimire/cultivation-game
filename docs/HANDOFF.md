@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-15 (planner, 12:10 UTC)
+- 9 tasks landed (GFX-159, WU-542, TEACH-004, C-370, GUIDE-243, GFX-163, GFX-161, GFX-162, C-367). Review covered up to c9eb41a
+  (C-370 errand menu fix inline; notes -> TEACH-005). QA-209 landed during this run (marked done). Live claim: C-368. Stale: QA-212 v2 wip
+  and LOG-008 partial (both written into their rows as restart points). (Earlier HANDOFF entries are stamped 18:10/06:10 but
+  were written at 06:10/00:10 UTC; the clock is right from this one.)
+- Planner shots: winter fight/encounter backdrops, tree shadows, marsh and misty forest good. Found: Today chip still cut
+  ("Blank", "Morning Dew") -> GUIDE-244; bare no-style hint outside Qingshi -> GUIDE-245; ridge static ground, flat road, grey
+  rect -> GFX-164 (spec file), ridge terraces/ledges/pebbles -> GFX-166; glassy winter crater + unit_hash -> GFX-165;
+  `--friend=ye_zhuoran --region=myriad_peaks_ridge` renders no card -> WU-543; WU-544 names a region's teachers on arrival.
+- **QA worker**: nothing landed since QA-218 (11-14); the 11:56 QA run claimed world-ui's QA-209 instead of QA-219. QA-219 is
+  now two `--section` runs. If QA still lands nothing next time, tell the owner the QA routine may be failing.
+- Next planner: check GUIDE-244 really fixes the chip in a shot; view GFX-164/165/166 shots when they land.
 ## Shot pass (QA-209)
 
 `screenshot_screens.gd --fight-region=a,b` now writes combat_report_<id>.png and encounter_<id>.png staged in each region (the report uses a 6-round trace so the duel stage and bars show). Opened at 1280x720 and 1280x800 for withered_bone_marsh, myriad_peaks_ridge, misty_forest, fallen_star_market:

@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-15 [QA-209] The screenshot tool can stage fights and encounters in any region.
+- 2026-11-15 [C-367] Marsh, Azure Peak, the ridge and the market each have a villager who teaches a fighting or movement art.
+- 2026-11-15 [GFX-162] The market's crater ring sits under the main street, and marsh pilings and reeds look less regular.
+- 2026-11-15 [GFX-161] Fights and encounters in winter stand in snow and autumn ones under ochre hills; the woods edge has depth.
+- 2026-11-15 [GFX-163] Trees cast flat shadows on the ground instead of grey bubbles.
+- 2026-11-15 [GUIDE-243] The Today chip tries to name the first thing in full, with +N for the rest.
+- 2026-11-15 [C-370] Hunter Ma and Xiao Ling each ask one last errand of a graduated student and give a keepsake for it.
+- 2026-11-15 [TEACH-004] Mastering a style by any means brings your teacher's farewell, and only the villager who taught you takes pride in it.
+- 2026-11-15 [WU-542] The villager card and the Arts screen show who taught each style and when your next practice day is.
+- 2026-11-15 [GFX-159] Myriad Peaks Ridge has banded slate ground with lichen, shale and dark-footed scree instead of flat speckle.
 - 2026-11-15 [GFX-158] In winter the Fallen Star Market keeps its swept streets, with snow banked at the kerbs and bare earth showing in the lots.
 - 2026-11-15 [GUIDE-242] Next steps tells you when your teacher is free to practise with you today.
 - 2026-11-15 [TEACH-002] A villager can now teach up to three lessons.
