@@ -1509,6 +1509,9 @@ static func validate(data: GameData) -> PackedStringArray:
 		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
 		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
 			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
+		var speckle: Variant = region.get("map", {}).get("speckle", 1.0)  # GFX-164
+		if not ((speckle is float or speckle is int) and float(speckle) >= 0.0 and float(speckle) <= 1.0):
+			errors.append("Region '%s' map.speckle must be 0-1" % region["id"])
 		var relief: Variant = region.get("map", {}).get("relief", null)
 		if relief != null:
 			if not relief is Dictionary:
@@ -1818,6 +1821,11 @@ static func crag_outline(r: Rect2, seed_value: int) -> PackedVector2Array:
 	out.append(Vector2(top_x1 - rng.randf_range(0.0, 2.0), r.position.y + r.size.y * 0.25))
 	out.append(Vector2(r.end.x, r.end.y))
 	return out
+
+
+## GFX-164: the darker grit verge of a scree trail: the road rect, 5 px in from its sides, so it shows about 5 px outside the bed.
+static func scree_verge_rect(path_rect: Rect2) -> Rect2:
+	return path_rect.grow(-5.0)
 
 
 ## GFX-153: the bed colour of a scree trail (its grit) and the stone colour that sits on it: on a bed darker than 0.45 luminance the

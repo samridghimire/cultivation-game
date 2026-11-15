@@ -110,7 +110,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		_apply_patches(img, base, shade_grid)
 		_apply_clover(img, base, rid, style, life.get("avoid", []))
 		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
-	_apply_style(img, base, rid, style, zones, scree_density)
+	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)))
 	if style == "scree":
 		_scree_slopes(img, base, rid)  # GFX-159
 	var summer: Image = img.duplicate() if season == "Winter" and style == "paved" and not zones.is_empty() else null
@@ -268,23 +268,37 @@ static func _vary_snow(img: Image, grid: PackedFloat32Array) -> void:
 			img.set_pixel(x, y, img.get_pixel(x, y).lerp(SNOW, extra * 0.5))
 
 
-## GFX-159: scree slope tone: broad seeded horizontal bands, two slate tones, lighter toward the top of the map.
+## GFX-164: whether a speckle blob (hash `r`) survives a map's `speckle` factor (1.0 keeps all, 0.33 about a third).
+static func speckle_keep(r: int, speckle: float) -> bool:
+	var m := ((r * 2654435761) >> 11) & 0xFFFFF  # multiplicative mix so similar hashes disperse
+	return float(m % 100) < speckle * 100.0
+
+
+## GFX-164: the tone level 0..3 of slope band `band`: always differs from the band before it, so every edge shows a step.
+static func scree_band_level(rid: String, band: int) -> int:
+	var level := absi(hash("%s|slope|%d" % [rid, band])) % 4
+	if band > 0 and level == scree_band_level(rid, band - 1):
+		level = (level + 1 + absi(hash("%s|slopeflip|%d" % [rid, band])) % 3) % 4
+	return level
+
+
+## GFX-159/164: scree slope tone: broad seeded horizontal bands (about 110 px), four tone levels 0.09 apart, lighter toward the top.
 static func scree_slope_shade(rid: String, y: int, height: int) -> float:
-	var band := y / 90
-	var wob := float(absi(hash("%s|slope|%d" % [rid, band])) % 101) / 100.0  # 0..1 per band
+	var band := maxi(y, 0) / 110
 	var up := 1.0 - float(y) / float(maxi(height, 1))
-	return (up - 0.5) * 0.26 + (wob - 0.5) * 0.14
+	return (up - 0.5) * 0.12 + (float(scree_band_level(rid, band)) - 1.5) * 0.09
 
 
 static func _scree_slopes(img: Image, base: Color, rid: String) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
-	for y in h:
-		var f := scree_slope_shade(rid, y + int(8.0 * sin(float(y) * 0.05)), h)
-		for x in w:
-			var wobble := (float(absi(hash("%s|sl|%d" % [rid, x / 40])) % 5) - 2.0) * 0.004
+	for x in w:  # GFX-164: the band edges wander with x (never a straight line)
+		var off := int(10.0 * sin(float(x) * 0.021 + 1.3) + 7.0 * sin(float(x) * 0.0063) + 4.0 * sin(float(x) * 0.09))
+		var wobble := (float(absi(hash("%s|sl|%d" % [rid, x / 40])) % 5) - 2.0) * 0.004
+		for y in h:
+			var f := scree_slope_shade(rid, y + off, h) + wobble
 			var c := img.get_pixel(x, y)
-			img.set_pixel(x, y, c.lightened(f + wobble) if f + wobble >= 0.0 else c.darkened(-(f + wobble)))
+			img.set_pixel(x, y, c.lightened(f) if f >= 0.0 else c.darkened(-f))
 
 
 ## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
@@ -355,7 +369,7 @@ const STYLES := PlaceLooks.GROUND_STYLES
 
 ## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes
 ## from hashes of (rid, cell), so the same inputs give the same image.
-static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = [], scree_density: float = 1.0) -> void:
+static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = [], scree_density: float = 1.0, speckle: float = 1.0) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	match style:
@@ -386,11 +400,13 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 					var roll := absi(hash("%s|%d|%d|scree" % [rid, cx, cy]))
 					for i in roundi((1 + roll % 3) * scree_density * 0.5):  # GFX-159: half the speckle; GFX-068: half the blobs; GFX-079: map.scree_density
 						var r2 := absi(hash("%s|%d|%d|scree|%d" % [rid, cx, cy, i]))
+						if not speckle_keep(r2, speckle):
+							continue
 						var pw := 2 + r2 % 3
 						var ph := 2 + (r2 / 8) % 2
 						var px := cx * SIZE + (r2 / 64) % (SIZE - 4)
 						var py := cy * SIZE + (r2 / 1024) % (SIZE - 3)
-						var shade := base.lightened(0.07) if r2 % 2 == 0 else base.darkened(0.1)  # GFX-053: half the contrast
+						var shade := base.lightened(0.07 * minf(speckle + 0.3, 1.0)) if r2 % 2 == 0 else base.darkened(0.1 * minf(speckle + 0.3, 1.0))  # GFX-053: half the contrast; GFX-164: fainter on a sparse map
 						_fill_clipped(img, Rect2i(px, py, pw, ph), shade)
 					if roll % 8 == 0:
 						var cx0 := cx * SIZE + (roll / 4) % (SIZE - 6)

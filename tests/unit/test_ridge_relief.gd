@@ -147,3 +147,28 @@ func test_scree_slope_shade_lighter_toward_top() -> void:
 		bottom += GroundTiles.scree_slope_shade("myriad_peaks_ridge", y, 1000)
 	assert_true(top > bottom, "the top of the slope is lighter")
 	assert_true(absf(GroundTiles.scree_slope_shade("x", 500, 1000)) < 0.2, "gentle tone shift")
+
+
+## GFX-164: neighbouring slope bands always differ in tone level, so each band edge shows a step of at least 0.09.
+func test_scree_band_levels_differ_between_neighbours() -> void:
+	for rid in ["myriad_peaks_ridge", "x", "azure_peak"]:
+		for band in range(1, 12):
+			assert_true(GroundTiles.scree_band_level(rid, band) != GroundTiles.scree_band_level(rid, band - 1), "%s band %d" % [rid, band])
+			var a := GroundTiles.scree_slope_shade(rid, band * 110, 1000)
+			var b := GroundTiles.scree_slope_shade(rid, band * 110 - 1, 1000)
+			assert_true(absf(a - b) >= 0.07, "%s edge %d steps" % [rid, band])
+
+
+## GFX-164: speckle factor 0.33 keeps about a third of the blobs; 1.0 keeps all.
+func test_speckle_keep_fraction() -> void:
+	var kept := 0
+	for i in 1000:
+		assert_true(GroundTiles.speckle_keep(i * 4096 + 7, 1.0))
+		if GroundTiles.speckle_keep(absi(hash("sp|%d" % i)), 0.33):
+			kept += 1
+	assert_true(kept > 250 and kept < 420, "about a third kept: %d" % kept)
+
+
+func test_scree_verge_inside_road() -> void:
+	var r := Rect2(0, 470, 1600, 60)
+	assert_true(r.encloses(Scenery.scree_verge_rect(r)))

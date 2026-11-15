@@ -1201,7 +1201,7 @@ func _ground_life(map: Dictionary, sc: float) -> Dictionary:
 			worn.append(Rect2(e.position / sc, e.size / sc))
 	for r in worn:
 		avoid.append(r)
-	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350"))}
+	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0))}
 
 
 func _draw() -> void:
@@ -1920,9 +1920,12 @@ func _draw_ridge_patch(pt: Dictionary, col: Color) -> void:
 				var poly := PackedVector2Array([cc + Vector2(-w * 0.5, h * 0.3), cc + Vector2(-w * 0.3, -h * 0.5), cc + Vector2(w * 0.4, -h * 0.4), cc + Vector2(w * 0.5, h * 0.2), cc + Vector2(w * 0.1, h * 0.5)])
 				draw_colored_polygon(poly, Color(col.darkened(0.1), 0.6))
 				draw_polyline(PackedVector2Array([poly[0], poly[1], poly[2]]), Color(col.lightened(0.35), 0.7), 1.0)
-		_:
-			var prect := Rect2(pc - Vector2(rx, ry), Vector2(rx, ry) * 2.0)
-			draw_colored_polygon(Scenery.ragged_outline(prect.grow(-ry * 0.2), int(pt["seed"]), 14.0, 5.0), Color(col, 0.2))
+		_:  # GFX-164: rust = 3-6 small irregular reddish-brown spots, never a soft rect
+			for spot in rng.randi_range(3, 6):
+				var cc := pc + Vector2(rng.randf_range(-rx, rx), rng.randf_range(-ry, ry)) * 0.7
+				var sr := rng.randf_range(2.0, 4.5)
+				draw_colored_polygon(Scenery.rock_polygon(cc, sr, rng.randi()), Color(col, 0.85))
+				draw_rect(Rect2(cc + Vector2(-sr * 0.4, -sr * 0.8), Vector2(sr * 0.8, 1.0)), Color(col.lightened(0.2), 0.8))
 
 
 ## GFX-147/GFX-160: "terrace" gather places as wide flat hillside bands: soil toned from the region ground, ends fading into the
@@ -2567,6 +2570,13 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				var b := a + (Vector2(crng.randf_range(-2.0, 2.0), clen) if vertical else Vector2(clen, crng.randf_range(-2.0, 2.0)))
 				draw_line(a, b, Color("b9cde0"), 1.0)
 				cp += crng.randf_range(10.0, 26.0)
+	if str(rmap.get("ground_style", "")) == "scree":  # GFX-164: a darker grit verge (snow banked in winter) with a wobbling edge under the trail bed
+		var gdark := Color(String(rmap.get("ground", "6b6b6b")))
+		var vseed2 := hash("%s|%s|screeverge" % [_region.get("id", ""), rect])
+		var vrect := Scenery.scree_verge_rect(rect)
+		draw_colored_polygon(Scenery.ragged_outline(vrect, vseed2, 3.0, 2.0), Color(0.86, 0.9, 0.95, 0.9) if snowy else gdark.darkened(0.22))
+		if snowy:  # the trodden line: a darker strip through the banks
+			draw_colored_polygon(Scenery.ragged_outline(vrect.grow_individual(0, -5, 0, -5) if rect.size.x >= rect.size.y else vrect.grow_individual(-5, 0, -5, 0), vseed2 + 1, 2.0, 2.0), gdark.lightened(0.05))
 	for t: Dictionary in Scenery.path_tiles(_region, rect, _weather_kind, snowy):
 		var r: Rect2 = t["rect"]
 		var shade: float = t["shade"]
