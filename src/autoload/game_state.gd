@@ -2407,10 +2407,7 @@ func spar_with(npc_id: String) -> void:
 	var text := "%s %s" % [opening % npc.name, "You win the bout." if won else "They win the bout."]
 	if style != "":
 		var style_name: String = (data.techniques[style] as TechniqueDef).name
-		if (result["practiced"] as PackedStringArray).is_empty():  # REVIEW: a mastered style gains no practice
-			text = "You trade blows with %s; your %s needs no more polishing." % [npc.name, style_name]
-		else:
-			text = "You trade blows with %s until your %s sits right. (+%d days practice)" % [npc.name, style_name, int(Mentorship.teacher_bout_terms(data)["practice_days"])]
+		text = "You trade blows with %s until your %s sits right. (+%d days practice)" % [npc.name, style_name, int(Mentorship.teacher_bout_terms(data)["practice_days"])]
 		for line in result["levels"]:
 			text += " %s." % line
 	elif not (result["practiced"] as PackedStringArray).is_empty():
@@ -2418,6 +2415,12 @@ func spar_with(npc_id: String) -> void:
 	if style == "":
 		for line in result["levels"]:
 			text += " %s." % line
+	if style != "" and Techniques.is_mastered(player, data, style):
+		var flag := Mentorship.graduation_flag(npc_id, style)
+		if not world_flags.get(flag, false):
+			world_flags[flag] = true
+			text += " " + Mentorship.graduation_line(data, npc_id, npc.name, (data.techniques[style] as TechniqueDef).name)
+			npc_favor[npc_id] = mini(100, int(npc_favor.get(npc_id, 0)) + int(Mentorship.teacher_bout_terms(data)["graduation_favor"]))
 	EventBus.post(text, "progress")
 	if npc_id == player.rival:
 		var key := "rival_bouts_won" if won else "rival_bouts_lost"

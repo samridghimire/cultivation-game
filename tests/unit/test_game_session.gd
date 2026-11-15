@@ -1537,13 +1537,13 @@ func test_teacher_bout_with_hunter_ma() -> void:
 	gs.end_session()
 
 
-## REVIEW (SPAR-001): a teacher bout on a mastered style does not claim practice days.
-func test_teacher_bout_mastered_style_claims_no_practice() -> void:
+## SPAR-002: the bout that masters the style posts the graduation line and favor once.
+func test_teacher_bout_graduation_once() -> void:
 	var c := _start()
 	var gs := _game_state()
 	c.realm_index = 0
 	var max_level: int = (gs.data.techniques["iron_fist"] as TechniqueDef).max_level
-	c.techniques = {"iron_fist": {"level": max_level, "xp": 0.0}}
+	c.techniques = {"iron_fist": {"level": max_level - 1, "xp": 1.0e9}}
 	var ma := CharacterFactory.create("Hunter Ma", gs.data, seeded_rng(9))
 	ma.id = "hunter_ma"
 	ma.age_days = 44 * Calendar.DAYS_PER_YEAR
@@ -1553,12 +1553,18 @@ func test_teacher_bout_mastered_style_claims_no_practice() -> void:
 	var eb := _root().get_node("EventBus")
 	eb.clear_history()
 	gs.spar_with("hunter_ma")
-	var found := false
+	var graduations := 0
 	for entry: Dictionary in eb.history:
-		var text := String(entry.get("text", ""))
-		assert_false(text.contains("days practice"), text)
-		found = found or text.contains("needs no more polishing")
-	assert_true(found, "the bout says the style is already polished")
+		if String(entry.get("text", "")).contains("Nothing left I can show you"):
+			graduations += 1
+	assert_eq(graduations, 1, "graduation line posted once")
+	assert_true(int(gs.npc_favor["hunter_ma"]) >= 5, "graduation favor added")
+	assert_true(gs.world_flags.get("teacher_graduated_hunter_ma_iron_fist", false))
+	# Mastered now: a mortal pair no longer bouts.
+	var day: int = _root().get_node("GameClock").total_days
+	gs.spar_with("hunter_ma")
+	assert_true(_last_text().contains("need to cultivate"), _last_text())
+	assert_eq(_root().get_node("GameClock").total_days, day, "no time passes")
 	gs.end_session()
 
 

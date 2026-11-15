@@ -362,6 +362,26 @@ func _teacher_pair() -> Array[CharacterData]:
 	return [c, npc]
 
 
+## SPAR-002: a mastered style ends the teacher bout; the normal spar rules apply.
+func test_teacher_bout_ends_when_mastered() -> void:
+	var d := data()
+	var p := _teacher_pair()
+	var c := p[0]
+	c.realm_index = 0
+	var max_level: int = (d.techniques["iron_fist"] as TechniqueDef).max_level
+	c.techniques["iron_fist"] = {"level": max_level - 1, "xp": 0.0}
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d), "iron_fist")
+	c.techniques["iron_fist"] = {"level": max_level, "xp": 0.0}
+	assert_eq(Mentorship.teacher_bout_style(c, "hunter_ma", d), "")
+	assert_true(Mentorship.check_spar(c, p[1], 0, d, 100).contains("cultivate"), "mortal pair refused")
+	c.realm_index = 1
+	p[1].realm_index = 1
+	assert_eq(Mentorship.check_spar(c, p[1], 20, d, 100), "", "cultivators spar normally")
+	assert_true(Mentorship.graduation_line(d, "hunter_ma", "Hunter Ma", "Iron Fist").contains("Nothing left"))
+	assert_true(Mentorship.graduation_line(d, "nobody", "Lin", "Iron Fist").contains("Lin"), "generic line")
+	assert_eq(int(Mentorship.teacher_bout_terms(d)["graduation_favor"]), 5)
+
+
 func test_teacher_bout_needs_the_style() -> void:
 	var d := data()
 	var p := _teacher_pair()

@@ -18,10 +18,25 @@ static func spar_terms(data: GameData) -> Dictionary:
 static func teacher_bout_terms(data: GameData) -> Dictionary:
 	var rules := _rules(data, "teacher_bout")
 	return {"days": int(rules.get("days", 1)), "practice_days": int(rules.get("practice_days", 0)), "cooldown_days": int(rules.get("cooldown_days", 0)),
-		"win_favor": int(rules.get("win_favor", 0)), "min_favor": int(rules.get("min_favor", 0)), "power_mult": float(rules.get("power_mult", 1.0))}
+		"win_favor": int(rules.get("win_favor", 0)), "min_favor": int(rules.get("min_favor", 0)), "power_mult": float(rules.get("power_mult", 1.0)),
+		"graduation_favor": int(rules.get("graduation_favor", 5))}
 
 
-## The technique id `c` knows that villager `npc_id` teaches (a non-method style), else "".
+## World flag set once a teacher has nothing left to show you in a style (SPAR-002).
+static func graduation_flag(npc_id: String, tech_id: String) -> String:
+	return "teacher_graduated_%s_%s" % [npc_id, tech_id]
+
+
+## The teacher's farewell for a mastered style: the npc's own `graduation_line` or a generic one.
+static func graduation_line(data: GameData, npc_id: String, npc_name: String, tech_name: String) -> String:
+	var own := String(data.npcs.get(npc_id, {}).get("graduation_line", ""))
+	if own != "":
+		return own
+	return "%s lowers their hands. \"Nothing left I can show you of %s.\"" % [npc_name, tech_name]
+
+
+## The first technique id `c` knows, has not mastered, and villager `npc_id` teaches (a non-method style), else "".
+## With every taught style mastered it is "" and the normal spar rules apply (SPAR-002).
 static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData) -> String:
 	if _rules(data, "teacher_bout").is_empty() or c == null:
 		return ""
@@ -35,7 +50,7 @@ static func teacher_bout_style(c: CharacterData, npc_id: String, data: GameData)
 				ids.append(tech_id)
 	ids.sort()
 	for tech_id: String in ids:
-		if Techniques.knows(c, tech_id) and not (data.techniques[tech_id] as TechniqueDef).is_method():
+		if Techniques.knows(c, tech_id) and not (data.techniques[tech_id] as TechniqueDef).is_method() and not Techniques.is_mastered(c, data, tech_id):
 			return tech_id
 	return ""
 
@@ -256,6 +271,8 @@ static func validate(data: GameData) -> PackedStringArray:
 		if int(rules.get("same_sect_min_favor", 0)) > int(rules.get("min_favor", 0)):
 			errors.append("family.json mentorship.%s.same_sect_min_favor must be <= min_favor" % kind)
 	if block.has("teacher_bout"):
+		if block["teacher_bout"].has("graduation_favor") and float(block["teacher_bout"]["graduation_favor"]) != float(int(block["teacher_bout"]["graduation_favor"])):
+			errors.append("family.json mentorship.teacher_bout.graduation_favor must be an integer")
 		var days := int(block["teacher_bout"].get("days", 1))
 		if days < 1 or days > 3:
 			errors.append("family.json mentorship.teacher_bout.days must be 1..3")

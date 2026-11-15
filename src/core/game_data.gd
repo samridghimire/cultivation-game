@@ -805,6 +805,8 @@ func _validate_world() -> void:
 			if not (bd is Dictionary) or not (bd.get("month") is int or bd.get("month") is float) or not (bd.get("day") is int or bd.get("day") is float) \
 					or int(bd["month"]) < 1 or int(bd["month"]) > 12 or int(bd["day"]) < 1 or int(bd["day"]) > 30:
 				load_errors.append("NPC '%s' birthday must be {month 1..12, day 1..30}" % npc["id"])
+		if npc.has("graduation_line") and (not npc["graduation_line"] is String or String(npc["graduation_line"]) == "" or String(npc["graduation_line"]).length() > 160):
+			load_errors.append("NPC '%s' graduation_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("birthday_line") and (not npc["birthday_line"] is String or String(npc["birthday_line"]) == "" or String(npc["birthday_line"]).length() > 160):
 			load_errors.append("NPC '%s' birthday_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("player_birthday_line") and (not npc["player_birthday_line"] is String or String(npc["player_birthday_line"]) == "" or String(npc["player_birthday_line"]).length() > 160):
