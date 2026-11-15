@@ -533,6 +533,18 @@ static func tree_shadow(season: String, bare: bool) -> String:
 	return "foot" if bare or season == "Winter" else "round"
 
 
+## GFX-163: width of a tree's ground shadow ellipse by kind (round/willow ~ canopy width, pine ~60%, bamboo ~45%).
+static func shadow_width(kind: String, k: float) -> float:
+	var canopy := 36.0 * k
+	match kind:
+		"pine":
+			return canopy * 0.6
+		"bamboo":
+			return canopy * 0.45
+		_:
+			return canopy
+
+
 ## GFX-117: the ground shadow ellipse under a person's feet, relative to the feet point (`size` = the figure's footprint).
 static func figure_shadow(size: Vector2, snowy: bool) -> Rect2:
 	var w := clampf(size.x * 0.75, 14.0, 40.0) * (1.1 if snowy else 1.0)

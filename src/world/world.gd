@@ -1554,7 +1554,7 @@ func _draw_marsh_decor() -> void:
 	for t: Dictionary in _marsh.get("dead", []):
 		var p: Vector2 = t["pos"]
 		if bool(t["stump"]):
-			draw_circle(p + Vector2(0, 4), 9.0, Color(0, 0, 0, 0.2))
+			_draw_blob_shade(p + Vector2(0, 5), 18.0)
 			draw_rect(Rect2(p + Vector2(-5, -8), Vector2(10, 12)), Color("2a1f16"))
 			draw_rect(Rect2(p + Vector2(-5, -9), Vector2(10, 3)), Color("5a4630"))
 			if winter:
@@ -1562,7 +1562,7 @@ func _draw_marsh_decor() -> void:
 		else:
 			var h: float = t["h"]
 			var lean: float = t["lean"]
-			draw_circle(p + Vector2(0, 4), 10.0, Color(0, 0, 0, 0.2))
+			_draw_blob_shade(p + Vector2(0, 5), 20.0)
 			draw_line(p, p + Vector2(lean, -h), Color("2a1f16"), 3.0)
 			draw_line(p + Vector2(lean * 0.5, -h * 0.5), p + Vector2(lean * 0.5 + 12.0, -h * 0.75), Color("3b3a2c"), 2.0)
 			draw_line(p + Vector2(lean * 0.7, -h * 0.7), p + Vector2(lean * 0.7 - 10.0, -h * 0.9), Color("3b3a2c"), 2.0)
@@ -1589,7 +1589,7 @@ func _draw_marsh_life(map: Dictionary) -> void:
 			draw_circle(pad["pos"] + Vector2(1, -1), pr * 0.45, Color("6fae5a"))
 	for clump: Dictionary in _marsh["reeds"]:
 		var at: Vector2 = clump["pos"]
-		draw_circle(at + Vector2(0, 2), 9.0, Color(0, 0, 0, 0.18))
+		_draw_blob_shade(at + Vector2(0, 3), 18.0)
 		for st: Dictionary in clump["stalks"]:
 			var base := at + Vector2(float(st["dx"]), 0.0)
 			var top := base + Vector2(float(st["dx"]) * 0.15, -float(st["h"]))
@@ -2674,7 +2674,7 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 	if Scenery.tree_shadow(ground_season, bool(look["bare"])) == "foot":
 		_draw_foot_shadow(p, k, ground_season == "Winter")
 	else:
-		draw_circle(p + Vector2(4, 6) * k, 20.0 * k, Color(0, 0, 0, 0.25))
+		_draw_tree_shade(p, k, kind)
 	if look["bare"]:
 		_draw_tree_bare(p, k, c, bool(look["snow"]), kind == "dead")
 		return
@@ -2691,6 +2691,27 @@ func _draw_tree(p: Vector2, k: float, base: Color, kind: String = "round") -> vo
 				draw_line(p + Vector2(sx, -4) * k, p + Vector2(sx * 1.1, -4.0 + len) * k, c.darkened(0.2), 1.0)
 		_:
 			_draw_tree_round(p, k, c, look, seed_value)
+
+
+## GFX-163: a small flat ground-tinted shade ellipse of the given width.
+func _draw_blob_shade(c: Vector2, w: float) -> void:
+	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
+	var pts := PackedVector2Array()
+	for i in 16:
+		var a := TAU * float(i) / 16.0
+		pts.append(c + Vector2(cos(a) * w / 2.0, sin(a) * w * 0.2))
+	draw_colored_polygon(pts, Color(ground.darkened(0.55), 0.22))
+
+
+## GFX-163: a flattened ellipse at the trunk foot, offset for the light, ground darkened (no grey bubble).
+func _draw_tree_shade(p: Vector2, k: float, kind: String) -> void:
+	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
+	var w := Scenery.shadow_width(kind, k)
+	var pts := PackedVector2Array()
+	for i in 20:
+		var a := TAU * float(i) / 20.0
+		pts.append(p + Vector2(4, 15) * k + Vector2(cos(a) * w / 2.0, sin(a) * w * 0.2))
+	draw_colored_polygon(pts, Color(ground.darkened(0.55), 0.22))
 
 
 ## GFX-049: bare trees get a flat ellipse at the trunk foot (ground shade darkened), not a round dark blot.

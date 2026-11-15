@@ -1019,3 +1019,11 @@ func test_terrace_crops_stagger_and_every_third_tinted() -> void:
 			ys[snappedf((c["pos"] as Vector2).y, 3.0)] = true
 		assert_true(tinted * 4 >= crops.size() and tinted * 5 <= crops.size() * 2, "about every 3rd tuft is tinted")
 		assert_true(ys.size() >= 2, "more than one row")
+
+
+func test_shadow_width_by_kind() -> void:
+	var round_w := Scenery.shadow_width("round", 1.0)
+	assert_eq(Scenery.shadow_width("willow", 1.0), round_w)
+	assert_true(Scenery.shadow_width("pine", 1.0) < round_w * 0.7)
+	assert_true(Scenery.shadow_width("bamboo", 1.0) < Scenery.shadow_width("pine", 1.0))
+	assert_eq(Scenery.shadow_width("round", 2.0), round_w * 2.0)
