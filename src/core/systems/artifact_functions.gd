@@ -270,13 +270,14 @@ static func check_unlock(c: CharacterData, data: GameData, function_id: String, 
 	return ""
 
 
-## WU-524: one power's card state: {id, name, state ("open" / "ready" / "sealed"), cost, need}.
+## WU-524: one power's card state: {id, name, state ("open" / "ready" / "sealed"), cost, spends, need}.
+## `spends` (ART-012) is false when unsealing only needs `cost` energy and keeps it.
 ## `need` is what is missing while sealed, without the power's name ("100 energy (you have 0)").
 static func status(c: CharacterData, data: GameData, function_id: String, flags: Dictionary) -> Dictionary:
 	var def := get_def(data, function_id)
 	var unlock: Dictionary = def.get("unlock", {})
 	var out := {"id": function_id, "name": String(def.get("name", function_id)), "state": "sealed",
-			"cost": int(unlock.get("energy", 0)), "need": ""}
+			"cost": int(unlock.get("energy", 0)), "spends": bool(unlock.get("spends", true)), "need": ""}
 	if is_unlocked(c, function_id):
 		out["state"] = "open"
 		return out

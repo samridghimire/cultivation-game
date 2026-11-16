@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 357b32f
+Last reviewed commit: 12d1750
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2050,3 +2050,17 @@ Last reviewed commit: 357b32f
     GFX-166/167/168 draw-only, randomness from seeded rngs; not rendered by me.
   - Notes, not filed: WU-544's first-visit banner with two teacher lines was not rendered by anyone (height unchecked).
     QA-212 found Appraising Eye never unseals in 36 months (ART-012 is the planner's).
+- 2026-11-16 (reviewer): reviewed 357b32f..12d1750 (GFX-170, LOG-009, C-374, GFX-169, ART-012, GFX-171, GUIDE-248,
+  FIGHT-002, GFX-172, WU-546, C-377; [PLAN]/[REVIEW] skipped). Main green (4179 tests). No BACKLOG/CHANGELOG edits by
+  workers; no binary assets; no SAVE_VERSION change (LOG-009's forecast/practice state is session-only and reset on start/load).
+  - Fixed (ART-012): seals with `unlock.spends: false` (Appraising Eye, Inner World, Spirit Garden) still read "Ready: press
+    to unseal (N energy)" on the artifact screen, as if N were spent. `ArtifactFunctions.status` now returns `spends` and
+    the card says "needs N energy, keeps it"; test added.
+  - Fixed (C-377): the Spear Deserter called every player "boy"; now "traveller".
+  - FIGHT-002 OK (loss_advice keeps its sentences through `_odds_kind`; prompt text via a GameState helper). LOG-009 OK
+    (practice is recorded before `_pass_time`, so the month line flushes at the action's end; a practice crossing a month
+    end is reported under the month it started). GUIDE-248 OK (skips forms that already carry days). WU-546 OK (layout test
+    at 1280x720). C-374 data OK. GFX-169..172 draw-only, randomness from passed rngs; not rendered by me.
+  - Notes, not filed: ART-012 and C-377 change balance numbers but neither ran `tools/balance.sh --check` (both list it as
+    a follow-up; C-377 refreshed only the first-fights section). ART-012's Spirit Garden opens the same day as Inner World
+    in most seeds (worker follow-up). Practice without a level-up now posts no log line until the month turns.

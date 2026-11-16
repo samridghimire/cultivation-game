@@ -239,7 +239,10 @@ func _add_card(grid: GridContainer, p: CharacterData, data: GameData, function_i
 				"spirit_garden":
 					action = _show_page.bind(PAGE_GARDEN)
 		"ready":
-			line = "Ready: press to unseal (%d energy)" % int(st["cost"])
+			if bool(st.get("spends", true)):
+				line = "Ready: press to unseal (%d energy)" % int(st["cost"])
+			else:  # ART-012: the seal only needs the energy; it is kept for the next one
+				line = "Ready: press to unseal (needs %d energy, keeps it)" % int(st["cost"])
 			action = GameState.unlock_artifact_function.bind(function_id)
 		_:
 			line = String(st["need"]).capitalize() if String(st["need"]).length() < 2 else String(st["need"]).substr(0, 1).to_upper() + String(st["need"]).substr(1)

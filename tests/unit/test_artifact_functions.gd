@@ -241,6 +241,8 @@ func test_status_states_and_needs() -> void:
 	c.realm_index = d.realm_index_of("foundation_establishment")
 	s = ArtifactFunctions.status(c, d, "spirit_garden", {})
 	assert_eq(s["need"], "unseal Inner World first")
+	assert_true(bool(ArtifactFunctions.status(c, d, "storage", {})["spends"]), "storage spends its energy")
+	assert_false(bool(s["spends"]), "ART-012: the garden keeps its energy, so its card must not read as a cost")
 
 
 func test_artifact_taste_tag_multipliers() -> void:  # ART-013
