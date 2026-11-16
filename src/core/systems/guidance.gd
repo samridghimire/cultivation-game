@@ -5562,7 +5562,21 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		rated += _away_explore_fights(found, c, data, flags, today, region_id, FAIR_FIGHT_MAX_RATED - rated)
 	found.sort_custom(fair_fight_before)
 	prefer_fresh_foe(found, c)
+	_lift_away_fair(found)
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
+
+
+## REVIEW (GUIDE-249): away entries sort after every days-0 home entry, so with 3+ easy home fights the cap dropped them
+## and the HUD never saw one. When the shown slice holds no Fair entry, the first Fair one below it moves to the second slot.
+static func _lift_away_fair(found: Array[Dictionary]) -> void:
+	if found.size() <= FAIR_FIGHTS_MAX or _has_fair_entry(found.slice(0, FAIR_FIGHTS_MAX)):
+		return
+	for i in range(FAIR_FIGHTS_MAX, found.size()):
+		var f := found[i]
+		if float(f["chance"]) < EASY_FIGHT_CHANCE and String(f.get("kind", "")) != "trial":
+			found.remove_at(i)
+			found.insert(1, f)
+			return
 
 
 ## GUIDE-249: true when `found` holds an entry below EASY_FIGHT_CHANCE.
@@ -5585,16 +5599,19 @@ static func _away_explore_fights(found: Array[Dictionary], c: CharacterData, dat
 			return int(a["days"]) < int(b["days"])
 		return String(a["to"]) < String(b["to"]))
 	var rated := 0
+	var kept := 0  # REVIEW: only Fair entries count toward FAIR_FIGHT_EXPLORE_MAX; easy ones skipped used to end the search
 	for route in roads:
 		var where := String(route["to"])
 		var tags: Array = data.regions.get(where, {}).get("encounter_tags", [])
 		for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), where, today):
-			if rated >= budget or rated >= FAIR_FIGHT_EXPLORE_MAX:
+			if rated >= budget or kept >= FAIR_FIGHT_EXPLORE_MAX:
 				return rated
 			var foe: Dictionary = data.enemies[enemy_id]
 			rated += 1
-			if Combat.win_chance(c, data, foe) >= EASY_FIGHT_CHANCE:
+			var chance := Combat.win_chance(c, data, foe)
+			if chance >= EASY_FIGHT_CHANCE or chance < FAIR_FIGHT_MIN_CHANCE:
 				continue
+			kept += 1
 			var short_region := String(data.regions.get(where, {}).get("short_name", _region_name(data, where)))
 			_rate_fight(found, c, data, foe, "explore", "Explore %s: %s" % [_region_name(data, where), foe.get("name", enemy_id)], 0, "%s, %s" % [foe.get("name", enemy_id), short_region], int(route["days"]))
 	return rated

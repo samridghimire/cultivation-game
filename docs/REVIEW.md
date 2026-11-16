@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 12d1750
+Last reviewed commit: 7a646ea
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2064,3 +2064,18 @@ Last reviewed commit: 12d1750
   - Notes, not filed: ART-012 and C-377 change balance numbers but neither ran `tools/balance.sh --check` (both list it as
     a follow-up; C-377 refreshed only the first-fights section). ART-012's Spirit Garden opens the same day as Inner World
     in most seeds (worker follow-up). Practice without a level-up now posts no log line until the month turns.
+- 2026-11-16 (reviewer): reviewed 12d1750..7a646ea (QA-222, WU-547, QA-223, C-376, QA-220, GFX-173, QA-215, WU-548, C-379,
+  GUIDE-249, WU-550, GFX-174; [PLAN]/[REVIEW] commits skipped). Main green before and after. No BACKLOG/CHANGELOG edits
+  by workers, no SAVE_VERSION change, no new binary assets.
+  - Fixed (GUIDE-249): the "next fair fight one road away" never showed. A probe over Qi Refining 0-8 found no away entry
+    in any case: (1) away entries have days > 0, so `fair_fight_before` sorted them after every days-0 home entry and
+    the 3-entry cap cut them whenever home had 3 easy entries (the usual case); (2) easy away fights counted toward
+    FAIR_FIGHT_EXPLORE_MAX, so the search stopped after two foes, usually both easy. The worker's test only asserted
+    `if not away.is_empty()`, so it passed vacuously. Now only kept Fair fights count toward the cap, and `_lift_away_fair`
+    moves a cut Fair entry into the shown slice. Tests added: away entries appear for some stage, and the lift itself.
+    What's left: when home fights use up the FAIR_FIGHT_MAX_RATED budget, the search still finds nothing (some stages).
+  - WU-548 OK (the spar block arrives after `combat_finished`, so the report is visible; teacher bouts use the
+    teacher_bout practice days). WU-547 OK. C-376 data OK (items exist, each encounter shows once via its flag, max_realm
+    qi_refining). GFX-173/174 draw-only plus seeded scenery helpers with tests; I did not render them. QA-215/220/222,
+    C-379, WU-550: sim/screenshot/baseline only.
+  - Not filed: C-376's follow-up about Hunter Ma's spar hint is already filed as SPAR-003.

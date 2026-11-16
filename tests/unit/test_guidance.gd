@@ -7138,3 +7138,31 @@ func test_fair_fights_mortal_without_style_has_no_away_entries() -> void:
 	var c := _fresh()
 	for f in Guidance.fair_fights(c, data(), {}, 10, "qingshi_village"):
 		assert_true(int(f.get("days", 0)) == 0 or f["kind"] != "explore")
+
+
+## REVIEW (GUIDE-249): the away entry must survive the 3-entry cap. Before, it sorted after every days-0 home entry and
+## was cut, and easy away fights used up the 2-fight search, so no Qi Refining fighter ever saw one.
+func test_fair_fights_away_entry_survives_the_cap() -> void:
+	var d := data()
+	var seen := 0
+	for stage in range(0, 9):
+		var c := _fresh()
+		c.realm_index = 1
+		c.stage = stage
+		c.techniques["iron_fist"] = {"level": 3, "xp": 0.0}
+		for f in Guidance.fair_fights(c, d, {}, 10, "qingshi_village"):
+			if f["kind"] == "explore" and int(f.get("days", 0)) > 0:
+				seen += 1
+				assert_true(float(f["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE and float(f["chance"]) < Guidance.EASY_FIGHT_CHANCE)
+	assert_true(seen > 0, "some Qi Refining fighter with only easy home fights is shown a Fair fight one road away")
+
+
+func test_lift_away_fair_moves_a_cut_fair_entry_into_view() -> void:
+	var easy := {"chance": 0.99, "days": 0, "kind": "explore"}
+	var fair := {"chance": 0.8, "days": 3, "kind": "explore"}
+	var found: Array[Dictionary] = [easy.duplicate(), easy.duplicate(), easy.duplicate(), fair]
+	Guidance._lift_away_fair(found)
+	assert_eq(found[1], fair)
+	var already: Array[Dictionary] = [fair, easy.duplicate(), easy.duplicate(), easy.duplicate()]
+	Guidance._lift_away_fair(already)
+	assert_eq(already[0], fair)
