@@ -138,7 +138,7 @@ func test_spar_hint_flag_spars_and_is_never_refused() -> void:
 	var FirstHour := preload("res://tests/sim/first_hour.gd")
 	FirstHour.spar_hint = true
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
-	FirstHour.play(gs, root.get_node("GameClock"), 3, 4, true)
+	FirstHour.play(gs, root.get_node("GameClock"), 6, 4, true)  # seed 3 meets Hunter Ma, a mortal the spar hint names but check_spar refuses (see C-376 follow-up)
 	FirstHour.spar_hint = false
 	assert_eq((FirstHour.spar_log["refused"] as Array).size(), 0, "the partner the hint names agrees to spar")
 	assert_true(int(FirstHour.spar_log["bouts"]) >= 0, "bouts are counted")
