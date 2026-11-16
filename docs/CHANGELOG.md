@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-16 [C-374] Qingshi villagers have gifts you can find in autumn and winter too.
+- 2026-11-16 [LOG-009] Fewer repeated forecasts, and practice folds into one line at month end.
+- 2026-11-16 [GFX-170] Azure Peak has a mossy stone road with grassy verges.
+- 2026-11-16 [GFX-168] The market avenue ends at the crater instead of paving through it.
+- 2026-11-16 [WU-545] Villager and roamer names no longer sit on place names.
+- 2026-11-16 [GUIDE-247] Easy-fight hints for another region say how many days away it is.
+- 2026-11-16 [SEASON-023] Season tasks in the journal read correctly and name a stall that wants goods today.
+- 2026-11-16 [C-373] The regional teachers like gifts you can find in their own region.
+- 2026-11-16 [C-372] The four regional teachers each give a last errand with a keepsake after you master their art.
+- 2026-11-16 [GFX-167] Ridge terraces, snow drifts and the scree trail look less like boxes and bars.
+- 2026-11-16 [GUIDE-246] The far-teacher hint fits on the HUD card and says how many days away the teacher is.
+- 2026-11-16 [TEACH-005] A style learned from a manual or shop no longer counts as taught by a villager.
+- 2026-11-16 [WU-544] Arriving in a new region tells you who teaches there; the world map lists teachers of regions you have seen.
 - 2026-11-15 [GFX-166] Ridge terraces show earth bands, ledges have a lit edge and loose stones, and pebbles are flat stones.
 - 2026-11-15 [QA-212] The curious-years sim reports the day each artifact seal opens and where its energy came from.
 - 2026-11-15 [LOG-008] Tomorrow's omen forecast is skipped when today already brings the same omen.

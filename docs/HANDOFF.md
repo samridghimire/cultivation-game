@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-16 (planner, 00:10 UTC)
+- 13 tasks landed (WU-544, TEACH-005, GUIDE-246, GFX-167, C-372, C-373, SEASON-023, GUIDE-247, WU-545, GFX-168, GFX-170,
+  LOG-009, C-374). Review covered up to 357b32f (stray .uid removed; no fix tasks). Live claims: ART-012 (a commit sits on
+  its branch, not yet on main), GFX-169.
+- Planner shots (1280x800, Qingshi spring first hour, autumn marsh/Azure/ridge/market, screenshot_screens mid-game): crater
+  black hole -> GFX-171; straight stone roads -> GFX-172; boxed terrace sites -> GFX-173; boar end pose + floating tag ->
+  WU-547; first-visit banner/errand menus unseen -> WU-546. Binary first fights -> C-377 (planner default in DESIGN.md) and
+  FIGHT-002. GUIDE-248, C-375, C-376, QA-223 added. QA-220/222/215 moved to systems (sim code; qa queue is 15 deep).
+- Next planner: view GFX-169/171/172 shots when they land; check C-377's rows in the first-fights section.
 ## State on 2026-11-15 (planner, 18:10 UTC)
 - 11 tasks landed (C-368, GFX-164, QA-219, GUIDE-244, WU-543, GFX-165, GUIDE-245, C-371, LOG-008, QA-212, GFX-166). Review
   covered up to 08a9a38 (map.speckle doc fix inline; note on GUIDE-245's region word -> GUIDE-246). Live claims: TEACH-005,
