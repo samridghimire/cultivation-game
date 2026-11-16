@@ -185,6 +185,23 @@ func _add_entry(tech_id: String) -> void:
 	var b := UIStyle.button("%s  %s" % [def.name, suffix], _select.bind(tech_id))
 	b.name = tech_id
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.icon = kind_icon(def)
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # long names wrap instead of being cut
+	b.custom_minimum_size = Vector2(0, 40)
+	var frac := practice_fraction(p, data, tech_id)
+	if frac >= 0.0:
+		var bar := ProgressBar.new()
+		bar.name = "PracticeBar"
+		bar.show_percentage = false
+		bar.max_value = 1.0
+		bar.value = frac
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+		bar.offset_top = -6.0
+		bar.offset_left = 6.0
+		bar.offset_right = -6.0
+		bar.offset_bottom = -3.0
+		b.add_child(bar)
 	b.toggle_mode = true
 	b.button_pressed = tech_id == _selected
 	b.focus_entered.connect(_select.bind(tech_id))
@@ -193,6 +210,70 @@ func _add_entry(tech_id: String) -> void:
 		var l := UIStyle.label("   " + line, 14, UIStyle.ACCENT if line.ends_with("ready") else Color(0.55, 0.55, 0.58))
 		l.name = "Taught_%s_%d" % [tech_id, _list.get_child_count()]
 		_list.add_child(l)
+
+
+## WU-551: share of the practice to the next level done (0..1); -1 when there is no bar (unknown, mastered or capped).
+static func practice_fraction(c: CharacterData, data: GameData, tech_id: String) -> float:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or not Techniques.knows(c, tech_id) or Techniques.level(c, tech_id) >= def.max_level:
+		return -1.0
+	var needed := def.xp_to_next(Techniques.level(c, tech_id))
+	if needed <= 0.0:
+		return -1.0
+	return clampf(float(c.techniques[tech_id]["xp"]) / needed, 0.0, 1.0)
+
+
+## WU-551: icon glyph name per art: method, combat, movement (speed-bonus or speed buff), defense (body / defense bonus).
+static func kind_glyph(def: TechniqueDef) -> String:
+	if def.is_method():
+		return "method"
+	var speedy: bool = float(def.bonuses.get("speed", 0)) > 0.0 or float(def.activation.get("buff", {}).get("speed", 0)) > 0.0
+	if def.kind == "body" or (float(def.bonuses.get("defense", 0)) > 0.0 and not speedy):
+		return "defense"
+	var hits: bool = float(def.bonuses.get("attack", 0)) > 0.0 or float(def.activation.get("buff", {}).get("attack", 0)) > 0.0
+	if speedy and not hits:
+		return "movement"
+	return "combat"
+
+
+static var _icon_cache: Dictionary = {}
+
+
+## A small 16x16 drawn glyph for the art's kind (cached).
+static func kind_icon(def: TechniqueDef) -> Texture2D:
+	var glyph := kind_glyph(def)
+	if _icon_cache.has(glyph):
+		return _icon_cache[glyph]
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var col := Color(0.95, 0.8, 0.4)
+	match glyph:
+		"method":  # a lotus-like diamond of qi
+			for i in 8:
+				for x in range(8 - i, 8 + i):
+					img.set_pixel(x, 2 + i, col)
+					img.set_pixel(x, 13 - i, col)
+		"combat":  # a sword: blade and guard
+			for i in 11:
+				img.set_pixel(3 + i, 12 - i, col)
+				img.set_pixel(4 + i, 12 - i, col)
+			for i in 6:
+				img.set_pixel(2 + i, 9 + (i - 3 if i > 3 else 0), col)
+			img.set_pixel(2, 13, col)
+			img.set_pixel(3, 13, col)
+		"movement":  # speed chevrons
+			for k in 2:
+				for i in 6:
+					var cx := 3 + k * 5 + (3 - absi(i - 3))
+					img.set_pixel(cx, 2 + i * 2, col)
+					img.set_pixel(cx, 3 + i * 2, col)
+		"defense":  # a shield
+			for y in 14:
+				var half := 6 if y < 8 else 6 - (y - 7)
+				for x in range(8 - half, 8 + half):
+					img.set_pixel(x, 1 + y, col)
+	var tex := ImageTexture.create_from_image(img)
+	_icon_cache[glyph] = tex
+	return tex
 
 
 func _select(tech_id: String) -> void:
@@ -240,7 +321,7 @@ func _show_details() -> void:
 		else:
 			var needed := def.xp_to_next(lvl)
 			var have := float(p.techniques[def.id]["xp"])
-			_mastery.text = "Level %d / %d   (%d / %d practice)   ~%.1f per day" % [lvl, def.max_level, int(have), int(needed), Techniques.xp_per_day(p)]
+			_mastery.text = "Level %d / %d   %d / %d practice to Lv %d   ~%.1f per day" % [lvl, def.max_level, int(have), int(needed), lvl + 1, Techniques.xp_per_day(p)]
 			var to_next := Techniques.days_to_next(p, data, def.id)
 			if to_next > 0:
 				_mastery.text += ", %d days to level %d" % [to_next, lvl + 1]

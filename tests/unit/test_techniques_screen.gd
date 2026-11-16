@@ -148,3 +148,18 @@ func test_payoff_line_in_details() -> void:
 	assert_eq(TechniquesScreen.payoff_text(c, data(), "iron_fist", "", 10), "")
 	c.techniques["iron_fist"]["level"] = data().techniques["iron_fist"].max_level
 	assert_eq(TechniquesScreen.payoff_text(c, data(), "iron_fist", "misty_forest", 10), "", "mastered")
+
+
+func test_practice_fraction_and_kind_glyphs() -> void:
+	var c := new_character()
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	assert_eq(TechniquesScreen.practice_fraction(c, data(), "iron_fist"), 0.0)
+	var need: float = data().techniques["iron_fist"].xp_to_next(1)
+	c.techniques["iron_fist"]["xp"] = need / 2.0
+	assert_true(absf(TechniquesScreen.practice_fraction(c, data(), "iron_fist") - 0.5) < 0.001)
+	assert_eq(TechniquesScreen.practice_fraction(c, data(), "basic_breathing"), -1.0, "unknown art has no bar")
+	assert_eq(TechniquesScreen.kind_glyph(data().techniques[data().starter_method]), "method")
+	assert_eq(TechniquesScreen.kind_glyph(data().techniques["iron_fist"]), "combat")
+	assert_eq(TechniquesScreen.kind_glyph(data().techniques["blood_shadow_flight"]), "movement")
+	assert_eq(TechniquesScreen.kind_glyph(data().techniques["bone_armor_scripture"]), "defense")
+	assert_true(TechniquesScreen.kind_icon(data().techniques["iron_fist"]) != null)
