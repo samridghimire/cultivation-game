@@ -5557,9 +5557,63 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			rated += 1
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id))
+	# GUIDE-249: nothing but easy fights here: the next fair fight one road away.
+	if region_id != "" and rated < FAIR_FIGHT_MAX_RATED and not _has_fair_entry(found):
+		rated += _away_explore_fights(found, c, data, flags, today, region_id, FAIR_FIGHT_MAX_RATED - rated)
 	found.sort_custom(fair_fight_before)
 	prefer_fresh_foe(found, c)
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
+
+
+## GUIDE-249: true when `found` holds an entry below EASY_FIGHT_CHANCE.
+static func _has_fair_entry(found: Array[Dictionary]) -> bool:
+	for f in found:
+		if float(f["chance"]) < EASY_FIGHT_CHANCE:
+			return true
+	return false
+
+
+## GUIDE-249: rates up to FAIR_FIGHT_EXPLORE_MAX explore fights of regions one open route away (nearest first),
+## keeping only Fair ones (FAIR_FIGHT_MIN_CHANCE <= chance < EASY_FIGHT_CHANCE). Returns how many were rated (<= `budget`).
+static func _away_explore_fights(found: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, budget: int) -> int:
+	var roads: Array[Dictionary] = []
+	for route: Dictionary in Exploration.routes(c, data, region_id):
+		if bool(route["ok"]):
+			roads.append(route)
+	roads.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["days"]) != int(b["days"]):
+			return int(a["days"]) < int(b["days"])
+		return String(a["to"]) < String(b["to"]))
+	var rated := 0
+	for route in roads:
+		var where := String(route["to"])
+		var tags: Array = data.regions.get(where, {}).get("encounter_tags", [])
+		for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), where, today):
+			if rated >= budget or rated >= FAIR_FIGHT_EXPLORE_MAX:
+				return rated
+			var foe: Dictionary = data.enemies[enemy_id]
+			rated += 1
+			if Combat.win_chance(c, data, foe) >= EASY_FIGHT_CHANCE:
+				continue
+			var short_region := String(data.regions.get(where, {}).get("short_name", _region_name(data, where)))
+			_rate_fight(found, c, data, foe, "explore", "Explore %s: %s" % [_region_name(data, where), foe.get("name", enemy_id)], 0, "%s, %s" % [foe.get("name", enemy_id), short_region], int(route["days"]))
+	return rated
+
+
+## GUIDE-249: the order the HUD line uses: when the first entry is an easy fight and a Fair one lies within
+## FAIR_FIGHT_HUD_DAYS route days, that Fair entry comes first. Returns a new array.
+const FAIR_FIGHT_HUD_DAYS := 3
+static func hud_fight_order(entries: Array) -> Array:
+	var out := entries.duplicate()
+	if out.is_empty() or float(out[0].get("chance", 0.0)) < EASY_FIGHT_CHANCE:
+		return out
+	for i in range(1, out.size()):
+		var f: Dictionary = out[i]
+		if float(f.get("chance", 1.0)) < EASY_FIGHT_CHANCE and int(f.get("days", 0)) <= FAIR_FIGHT_HUD_DAYS and String(f.get("kind", "")) != "trial":
+			out.remove_at(i)
+			out.insert(0, f)
+			break
+	return out
 
 
 ## GUIDE-205: a beast that roams the current region today (walk up to it), else one that roams a region one

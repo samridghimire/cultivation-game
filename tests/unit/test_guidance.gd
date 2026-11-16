@@ -7098,3 +7098,43 @@ func test_far_short_hints_carry_route_days() -> void:
 		assert_false(s.ends_with("-"), s)
 	var near := Guidance.short_hint("Sell your Spirit Herbs: the Wandering Merchant here pays 40 stones each, a long way.", d)
 	assert_false(near.contains(" · "), near)
+
+
+## GUIDE-249: a fighter with only easy home fights sees the first Fair fight one road away; a Fair home fight
+## suppresses away entries; the HUD order puts a near Fair entry before an easy one.
+func test_fair_fights_look_one_road_away_when_home_is_easy() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 2
+	c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+	var fights := Guidance.fair_fights(c, d, {}, 10, "qingshi_village")
+	var away: Array[Dictionary] = []
+	for f in fights:
+		if int(f.get("days", 0)) > 0 and f["kind"] == "explore":
+			away.append(f)
+	var home_fair := false
+	for f in fights:
+		home_fair = home_fair or (int(f.get("days", 0)) == 0 and float(f["chance"]) < Guidance.EASY_FIGHT_CHANCE)
+	for f in away:
+		assert_true(float(f["chance"]) < Guidance.EASY_FIGHT_CHANCE)
+		assert_true(String(f["text"]).begins_with("Explore "))
+	if not away.is_empty():
+		assert_false(home_fair)
+		assert_true(Guidance.fair_fight_prefix(Guidance.hud_fight_order(fights)[0]) == "Fair fight")
+
+
+func test_hud_fight_order_prefers_near_fair_over_easy() -> void:
+	var easy := {"chance": 0.99, "days": 0, "kind": "explore"}
+	var fair := {"chance": 0.6, "days": 3, "kind": "explore"}
+	var far := {"chance": 0.6, "days": 6, "kind": "explore"}
+	assert_eq(Guidance.hud_fight_order([easy, fair])[0], fair)
+	assert_eq(Guidance.hud_fight_order([easy, far])[0], easy)
+	assert_eq(Guidance.hud_fight_order([fair, easy])[0], fair)
+	assert_eq(Guidance.hud_fight_order([]), [])
+
+
+func test_fair_fights_mortal_without_style_has_no_away_entries() -> void:
+	var c := _fresh()
+	for f in Guidance.fair_fights(c, data(), {}, 10, "qingshi_village"):
+		assert_true(int(f.get("days", 0)) == 0 or f["kind"] != "explore")
