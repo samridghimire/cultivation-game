@@ -21,6 +21,17 @@ func test_close_npc_labels_are_lifted_apart() -> void:
 	assert_true(b.label_offset.y < 0.0)
 
 
+func test_labels_on_one_row_keep_a_gap() -> void:
+	var a := _npc("Herb Patch", Vector2(300, 300))
+	var w := a.label_rect().size.x
+	var b := _npc("Herbalist Lan", Vector2(300 + w + 4.0, 300))  # labels a few px apart
+	Interactable.spread_labels([a, b])
+	var ra := a.label_rect()
+	var rb := b.label_rect()
+	var gap := maxf(rb.position.x - ra.end.x, ra.position.x - rb.end.x)
+	assert_true(gap >= Interactable.LABEL_MIN_GAP - 0.01 or absf(ra.position.y - rb.position.y) >= ra.size.y, "labels too close: gap %s" % gap)
+
+
 func test_distant_labels_stay_put() -> void:
 	var a := _npc("Aa", Vector2(100, 100))
 	var b := _npc("Bb", Vector2(600, 400))

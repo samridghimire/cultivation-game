@@ -38,8 +38,8 @@ const LABEL_FONT_SIZE := 14
 const PLACE_NEAR := 220.0
 const PLACE_FAR := 420.0
 const PLACE_FAR_ALPHA := 0.35
-## Ground styles that get a dark plate behind name labels (GFX-052); set by World when a region builds.
-const PLATE_GROUNDS: Array[String] = ["paved", "scree"]
+## WU-549: labels sharing a row keep at least this many px between them.
+const LABEL_MIN_GAP := 12.0
 static var ground_style := "grass"
 ## Draws the name label above every sibling building (WU-278).
 var _label_node: Node2D
@@ -239,12 +239,13 @@ func set_hinted(value: bool) -> void:
 	_redraw_label()
 
 
-## Lifts the labels of `nodes` (in order) until none overlaps an earlier one.
+## Lifts the labels of `nodes` (in order) until none overlaps an earlier one; labels on one row also keep
+## LABEL_MIN_GAP px apart (WU-549), so two names never read as one.
 static func spread_labels(nodes: Array) -> void:
 	var rects: Array[Rect2] = []
 	var anchors: Array[Vector2] = []
 	for node: Interactable in nodes:
-		rects.append(node.label_rect(node.label_text()))
+		rects.append(node.label_rect(node.label_text()).grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0, 0.0))
 		anchors.append(node.position)
 	var shifts := LabelLayout.offsets(rects, anchors)
 	for i in nodes.size():
@@ -636,7 +637,7 @@ func _redraw_label() -> void:
 		_label_node.queue_redraw()
 
 
-## Draws the name label on the label layer (WU-278).
+## Draws the name label on the label layer (WU-278). Plate rule (WU-549): every label gets the soft plate.
 func _draw_label() -> void:
 	var font := ThemeDB.fallback_font
 	var text := label_text()
@@ -662,10 +663,10 @@ func _draw_label() -> void:
 		return
 	var at := Vector2(left, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift)
 	var paint := label_paint(fade, label_color())
-	if PLATE_GROUNDS.has(ground_style):
-		var h := font.get_height(LABEL_FONT_SIZE)
-		var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(3.0)
-		_label_node.draw_rect(plate, Color(0.05, 0.05, 0.07, 0.45 * fade))
+	# WU-549: one rule everywhere: every name gets the soft dark plate, whatever the ground.
+	var h := font.get_height(LABEL_FONT_SIZE)
+	var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(3.0)
+	_label_node.draw_rect(plate, Color(0.05, 0.05, 0.07, 0.4 * fade))
 	# A dark outline first so the name reads on any ground (GFX-015, GFX-052).
 	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 4, paint["outline"])
 	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, paint["fill"])
