@@ -54,3 +54,17 @@ func test_boardwalk_has_missing_planks_and_reeds() -> void:
 	assert_true(kinds.has("plank:missing"), "missing plank")
 	assert_true(kinds.has("plank:dark"), "dark plank")
 	assert_true(kinds.has("tuft:straight") or kinds.has("tuft:bent") or kinds.has("tuft:seed"), "reed tufts")
+
+
+## GFX-177: reed fringes, floating leaves and mist exist, are deterministic and keep off keepouts.
+func test_fringe_leaves_mist() -> void:
+	var keep := Scenery.marsh_keepouts(_bone_marsh())
+	var a := Scenery.marsh_features(hash("withered_bone_marsh|marsh"), Vector2(1600, 1000), keep)
+	var b := Scenery.marsh_features(hash("withered_bone_marsh|marsh"), Vector2(1600, 1000), keep)
+	assert_true(a["fringe"].size() >= a["pools"].size(), "several fringe reeds per pool")
+	assert_eq(a["fringe"].size(), b["fringe"].size(), "deterministic fringe")
+	assert_eq(a["mist"].size(), a["pools"].size(), "one mist wisp per pool")
+	assert_true(a["leaves"].size() >= a["pools"].size() * 2, "leaves on every pool")
+	for f: Dictionary in a["fringe"]:
+		for k in keep:
+			assert_false(k.has_point(f["pos"]), "fringe reed in a keepout")

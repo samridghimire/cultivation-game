@@ -2393,7 +2393,29 @@ static func marsh_features(region_seed: int, size: Vector2, keepouts: Array[Rect
 			continue
 		taken.append(r)
 		bones.append({"pos": at, "angle": rng.randf() * PI, "len": rng.randf_range(7.0, 12.0)})
-	return {"pools": pools, "reeds": reeds, "mud": mud, "bones": bones, "dead": dead}
+	# GFX-177: reed fringes round every pool, floating dead leaves and low mist. A separate rng keeps the features above unchanged.
+	var frng := RandomNumberGenerator.new()
+	frng.seed = region_seed + 177
+	var fringe: Array[Dictionary] = []
+	var leaves: Array[Dictionary] = []
+	var mist: Array[Dictionary] = []
+	for pool: Dictionary in pools:
+		var pc: Vector2 = pool["center"]
+		var ppts: PackedVector2Array = pool["pts"]
+		for i in ppts.size():
+			if frng.randf() < 0.45:
+				continue
+			var at: Vector2 = pc + (ppts[i] - pc) * 1.2
+			if _marsh_hits(Rect2(at - Vector2(4, 8), Vector2(8, 10)), keepouts, [], 0.0):
+				continue
+			fringe.append({"pos": at, "h": frng.randf_range(7.0, 13.0), "lean": frng.randf_range(-3.0, 3.0)})
+		var pr: Rect2 = pool["rect"]
+		for k in frng.randi_range(2, 4):
+			var la := frng.randf() * TAU
+			var lr := frng.randf_range(0.0, 0.55)
+			leaves.append({"pos": pc + Vector2(cos(la) * pr.size.x * 0.4 * lr, sin(la) * pr.size.y * 0.4 * lr), "angle": frng.randf() * PI})
+		mist.append({"pos": pc + Vector2(frng.randf_range(-10.0, 10.0), -pr.size.y * 0.1), "w": pr.size.x * frng.randf_range(0.9, 1.4)})
+	return {"pools": pools, "reeds": reeds, "mud": mud, "bones": bones, "dead": dead, "fringe": fringe, "leaves": leaves, "mist": mist}
 
 ## GFX-135: smoothed seeded radius factor (1.0 +/- amp) of a ragged shoreline at `angle` (radians): 12 control points round the
 ## circle, cosine-interpolated. Same seed, same shape; different seeds differ.

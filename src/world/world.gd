@@ -1583,6 +1583,11 @@ func _draw_marsh_pools() -> void:
 		if winter:
 			for i in range(0, mp.size() - 1, 3):
 				draw_line(mp[i], mp[i + 1], Color(0.94, 0.97, 1.0, 0.8), 1.0)
+	for m: Dictionary in _marsh.get("mud", []):  # GFX-177: a wet sheen on the peat
+		var mr2: Rect2 = m["rect"]
+		var sc := mr2.get_center() + Vector2(-mr2.size.x * 0.12, -mr2.size.y * 0.1)
+		draw_line(sc - Vector2(mr2.size.x * 0.18, 0), sc + Vector2(mr2.size.x * 0.1, -1), Color(0.75, 0.85, 0.85, 0.28 if not winter else 0.5), 1.0)
+		draw_line(sc + Vector2(-mr2.size.x * 0.05, 4), sc + Vector2(mr2.size.x * 0.2, 3), Color(0.75, 0.85, 0.85, 0.18 if not winter else 0.35), 1.0)
 	for pool: Dictionary in _marsh.get("pools", []):
 		var pts: PackedVector2Array = pool["pts"]
 		var c: Vector2 = pool["center"]
@@ -1653,6 +1658,32 @@ func _draw_marsh_life(map: Dictionary) -> void:
 		if lm.get("kind", "") == "pond":
 			var sz := _vec(lm["size"])
 			pads.append_array(Scenery.pond_lilies(Rect2(_vec(lm["pos"]) - sz / 2.0, sz), hash(str(lm["pos"])), 4))
+	var gs := GroundTiles.ground_season(_season, map)
+	var reed_col := Color("6f7f3e")  # GFX-177: green-brown by default, rust in autumn, pale in winter
+	if gs == "Autumn":
+		reed_col = Color("a8683a")
+	elif gs == "Winter":
+		reed_col = Color("9a9a68")
+	for f: Dictionary in _marsh.get("fringe", []):
+		var fb: Vector2 = f["pos"]
+		var fh: float = f["h"]
+		var fl: float = f["lean"]
+		draw_line(fb, fb + Vector2(fl, -fh), reed_col, 1.0)
+		draw_line(fb + Vector2(2, 0), fb + Vector2(2 - fl * 0.5, -fh * 0.7), reed_col.darkened(0.15), 1.0)
+		draw_line(fb + Vector2(-2, 0), fb + Vector2(-2 + fl, -fh * 0.6), reed_col.lightened(0.1), 1.0)
+		if winter:
+			draw_rect(Rect2(fb + Vector2(fl - 1.0, -fh - 1.0), Vector2(3, 2)), Color("f4f8ff"))
+	if not winter:
+		var leaf_col := Color("8a5a2a") if gs == "Autumn" else Color("6a5a30")
+		for lf: Dictionary in _marsh.get("leaves", []):
+			var la: float = lf["angle"]
+			var ld := Vector2(cos(la), sin(la)) * 2.5
+			draw_line(lf["pos"] - ld, lf["pos"] + ld, leaf_col, 2.0)
+		for mw: Dictionary in _marsh.get("mist", []):  # low mist wisps over the water
+			var mp: Vector2 = mw["pos"]
+			var mwid: float = mw["w"]
+			draw_line(mp + Vector2(-mwid * 0.5, 0), mp + Vector2(mwid * 0.3, -1), Color(0.85, 0.9, 0.88, 0.14), 3.0)
+			draw_line(mp + Vector2(-mwid * 0.2, 5), mp + Vector2(mwid * 0.5, 4), Color(0.85, 0.9, 0.88, 0.1), 2.0)
 	if not winter:
 		for pad: Dictionary in pads:
 			var pr: float = pad["r"]
@@ -2755,6 +2786,11 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 					c = c.darkened(0.15)
 				draw_rect(r, c)
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 1.0)) if r.size.x >= r.size.y else Rect2(r.position, Vector2(1.0, r.size.y)), c.lightened(0.15))
+				if posmod(hash(Vector2i(r.position)), 23) == 0:  # GFX-177: a post sunk in mud at intervals
+					var pp := r.position + Vector2(0, r.size.y)
+					draw_rect(Rect2(pp + Vector2(-1, -1), Vector2(5, 3)), Color(0.14, 0.17, 0.1, 0.8))
+					draw_rect(Rect2(pp + Vector2(0, -4), Vector2(3, 6)), Color("3a2a1a"))
+					draw_rect(Rect2(pp + Vector2(0, -4), Vector2(3, 1)), Color("6a5030"))
 				if snowy and shade > -0.3:  # GFX-152: a snow cap on most boards
 					draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)) if rect.size.x >= rect.size.y else Rect2(r.position, Vector2(2.0, r.size.y)), Color(0.93, 0.95, 1.0, 0.85))
 			"mud":
