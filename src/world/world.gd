@@ -2632,8 +2632,30 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 		var vseed2 := hash("%s|%s|screeverge" % [_region.get("id", ""), rect])
 		var verge_pts := Scenery.trail_edge_polygon(rect, vseed2, 1.5, 3.0)  # GFX-167: both verge edges wobble, not a straight band
 		draw_colored_polygon(verge_pts, Color(0.86, 0.9, 0.95, 0.9) if snowy else gdark.darkened(0.22))
-		var bed_pts := Scenery.trail_edge_polygon(rect, vseed2 + 1, 4.0, 2.0)
-		draw_colored_polygon(bed_pts, Color("dfe6ee") if snowy else Scenery.scree_bed_color(gdark))
+		var road := Scenery.stone_road(rect, vseed2 + 1)  # GFX-172: a wandering bed (+-4 px) with irregular flagstones, earth gaps and a verge
+		var bed_col := Color("dfe6ee") if snowy else Scenery.scree_bed_color(gdark)
+		draw_colored_polygon(road["bed"], bed_col.darkened(0.1) if not snowy else bed_col)
+		for st: Dictionary in road["stones"]:
+			var spts: PackedVector2Array = st["poly"]
+			var sh: float = st["shade"]
+			var sc := base.lightened(0.05 * sh) if sh >= 0.0 else base.darkened(-0.07 * sh)
+			if snowy:
+				sc = sc.lerp(Color("dfe6ee"), 0.55)
+			draw_colored_polygon(spts, sc)
+			var ctr := Vector2.ZERO
+			for sp in spts:
+				ctr += sp
+			ctr /= float(spts.size())
+			for si in spts.size():
+				var e0 := spts[si]
+				var e1 := spts[(si + 1) % spts.size()]
+				var em := (e0 + e1) * 0.5 - ctr
+				if em.y + em.x * 0.5 > 0.5:
+					draw_line(e0, e1, base.darkened(0.28), 1.0)
+				elif em.y < -0.5 and snowy:
+					draw_line(e0, e1, Color(0.93, 0.95, 1.0, 0.85), 1.0)
+				elif em.y < -0.5:
+					draw_line(e0, e1, sc.lightened(0.12), 1.0)
 		if snowy:  # trampled grey-brown slush along the middle instead of grey blocks
 			var slush := Scenery.trail_edge_polygon(rect, vseed2 + 2, minf(rect.size.y if rect.size.x >= rect.size.y else rect.size.x, 60.0) * 0.33, 2.0)
 			draw_colored_polygon(slush, Color(0.5, 0.47, 0.43, 0.75))
@@ -2656,6 +2678,7 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 			"grit":
 				pass  # GFX-167: the bed is one wobbling polygon drawn before the tiles
 			"flag_poly":
+				continue  # GFX-172: scree flagstones come from Scenery.stone_road
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(r.position.x), int(r.position.y)]))
 				if snowy and str(rmap.get("ground_style", "")) == "scree":
 					c = c.lerp(Color("dfe6ee"), 0.55)  # GFX-167: flags half buried in snow
@@ -2667,6 +2690,8 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 				if snowy:
 					draw_line(pts[0], pts[1], Color(0.93, 0.95, 1.0, 0.85), 2.0)
 			"slab":
+				if str(rmap.get("ground_style", "")) == "scree":
+					continue  # GFX-172: scree flagstones come from Scenery.stone_road
 				var tr: Rect2 = t["rect"]
 				c = Scenery.paving_shade(base, hash("%s|%d|%d" % [_region.get("id", ""), int(tr.position.x), int(tr.position.y)]))
 				if t["flag"] == "gap":  # GFX-122: a worn, lighter slab, never a dark hole

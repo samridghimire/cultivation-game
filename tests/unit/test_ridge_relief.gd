@@ -250,3 +250,33 @@ func test_moss_patches_and_verge_tufts() -> void:  # GFX-170
 	assert_eq(t, Scenery.verge_tufts(r, 5))
 	for d in t:
 		assert_false(r.has_point(d["pos"]), "tufts sit outside the bed")
+
+
+func test_stone_road_wanders_and_stays_inside() -> void:  # GFX-172
+	var r := Rect2(0, 470, 1600, 60)
+	for sd in [1, 7, 99]:
+		var road := Scenery.stone_road(r, sd)
+		assert_eq(road, Scenery.stone_road(r, sd))
+		var bed: PackedVector2Array = road["bed"]
+		var lo_min := 1e9
+		var lo_max := -1e9
+		for p in bed:
+			assert_true(r.grow(0.01).has_point(p), "bed inside the rect")
+			if p.y < 500.0:
+				lo_min = minf(lo_min, p.y)
+				lo_max = maxf(lo_max, p.y)
+		assert_true(lo_max - lo_min >= 4.0, "top edge wanders at least 4 px (%s)" % (lo_max - lo_min))
+		var stones: Array = road["stones"]
+		assert_true(stones.size() > 40)
+		var sizes := {}
+		for st: Dictionary in stones:
+			var poly: PackedVector2Array = st["poly"]
+			assert_true(poly.size() >= 4 and poly.size() <= 6)
+			sizes[poly.size()] = true
+			for p in poly:
+				assert_true(r.grow(0.01).has_point(p))
+		assert_true(sizes.size() >= 2, "varied side counts")
+	assert_true(Scenery.stone_road(r, 1)["bed"] != Scenery.stone_road(r, 2)["bed"])
+	var v := Scenery.stone_road(Rect2(100, 0, 60, 800), 3)  # a north-south road works too
+	for p in v["bed"]:
+		assert_true(Rect2(100, 0, 60, 800).grow(0.01).has_point(p))

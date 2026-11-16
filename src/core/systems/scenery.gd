@@ -1173,6 +1173,84 @@ static func _scree_trail_tiles(out: Array[Dictionary], rng: RandomNumberGenerato
 			cp += rng.randf_range(30.0, 60.0)
 
 
+## GFX-172: a mountain stone road laid inside `rect`: a bed whose two long edges wander +-`amp` px (smooth seeded knots every ~28 px,
+## `inset` px in from the rect so a verge shows) and irregular 4-6-sided flagstones of varied size in 2-3 staggered courses with earth
+## gaps between them (about 1 in 7 missing). Returns {"bed": PackedVector2Array, "stones": Array[Dictionary{poly, shade}]}.
+## Everything lies inside `rect`; the same seed gives the same road.
+static func stone_road(rect: Rect2, seed_value: int, inset: float = 6.0, amp: float = 4.5) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "stone_road"])
+	var along_x := rect.size.x >= rect.size.y
+	var length := rect.size.x if along_x else rect.size.y
+	var width := rect.size.y if along_x else rect.size.x
+	var ins := minf(inset, width * 0.2)
+	var a := minf(amp, width * 0.15)
+	var knots_lo: Array[float] = []
+	var knots_hi: Array[float] = []
+	for i in int(length / 28.0) + 3:
+		knots_lo.append(rng.randf_range(-1.0, 1.0))
+		knots_hi.append(rng.randf_range(-1.0, 1.0))
+	var edge := func(p: float, hi: bool) -> float:
+		var ks: Array[float] = knots_hi if hi else knots_lo
+		var f := p / 28.0
+		var i0 := int(f)
+		var t := (1.0 - cos((f - float(i0)) * PI)) * 0.5
+		var w := lerpf(ks[i0], ks[i0 + 1], t) * a
+		return (width - ins + w) if hi else (ins + w)
+	var at := func(p: float, o: float) -> Vector2:
+		return rect.position + (Vector2(p, o) if along_x else Vector2(o, p))
+	var lo: Array[Vector2] = []
+	var hi_pts: Array[Vector2] = []
+	var n := maxi(int(length / 6.0), 2)
+	for i in n + 1:
+		var p := length * float(i) / float(n)
+		lo.append(at.call(p, edge.call(p, false)))
+		hi_pts.append(at.call(p, edge.call(p, true)))
+	var bed := PackedVector2Array()
+	for q in lo:
+		bed.append(q)
+	for i in range(hi_pts.size() - 1, -1, -1):
+		bed.append(hi_pts[i])
+	var stones: Array[Dictionary] = []
+	var lanes := 3 if width >= 54.0 else 2
+	var cursors: Array[float] = []
+	for k in lanes:
+		cursors.append(rng.randf_range(2.0, 14.0))
+	while true:
+		var k := 0
+		for j in lanes:
+			if cursors[j] < cursors[k]:
+				k = j
+		if cursors[k] > length - 12.0:
+			break
+		var slen := minf(rng.randf_range(9.0, 20.0), length - 1.0 - cursors[k])
+		if slen < 6.0:
+			cursors[k] = length
+			continue
+		var mid: float = cursors[k] + slen * 0.5
+		var blo: float = edge.call(mid, false) + 1.5
+		var bhi: float = edge.call(mid, true) - 1.5
+		var lane_w := (bhi - blo) / float(lanes)
+		var l0 := blo + lane_w * float(k)
+		var hy := maxf(lane_w * 0.5 - 1.5, 2.0) * rng.randf_range(0.8, 1.0)
+		var hx := slen * 0.5 - 1.0
+		var cy := l0 + lane_w * 0.5 + rng.randf_range(-1.0, 1.0)
+		cursors[k] += slen + rng.randf_range(2.0, 4.0)
+		if rng.randf() < 1.0 / 7.0:
+			continue
+		var sides := rng.randi_range(4, 6)
+		var rot := rng.randf_range(0.0, 0.5)
+		var poly := PackedVector2Array()
+		for si in sides:
+			var ang := rot + TAU * float(si) / float(sides) + rng.randf_range(-0.12, 0.12)
+			var rr := rng.randf_range(0.85, 1.0) * 1.2
+			var dx := clampf(cos(ang) * hx * rr, -hx, hx)
+			var dy := clampf(sin(ang) * hy * rr, -hy, hy)
+			poly.append(at.call(mid + dx, cy + dy))
+		stones.append({"poly": poly, "shade": rng.randf_range(-1.0, 1.0)})
+	return {"bed": bed, "stones": stones}
+
+
 ## GFX-167: a wobbling polygon for a trail along `path_rect`: the long edges are `inset` px in from the rect's sides plus a smooth
 ## seeded wobble of up to `amp` px (samples every 8 px), the ends square. `inset` + `amp` must stay below half the width.
 ## Deterministic; inside the rect.
