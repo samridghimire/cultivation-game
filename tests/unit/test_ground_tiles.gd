@@ -213,3 +213,15 @@ func test_winter_market_streets_darker_than_lots() -> void:
 	var zones := [Rect2(0, 24, 96, 24)]
 	var tex := GroundTiles.ground_texture(BASE, "winter_mkt", Vector2i(96, 72), false, "Winter", "paved", zones).get_image()
 	assert_true(tex.get_pixel(48, 36).v < tex.get_pixel(48, 4).v + 0.3, "street centre is not paler than the lot")
+
+
+## GFX-175: the ridge's scree ground gets alpine detail that differs by season and is deterministic.
+func test_alpine_ground_varies_by_season() -> void:
+	var size := Vector2i(400, 300)
+	var spring := GroundTiles.ground_texture(BASE, "alp_t", size, false, "Spring", "scree").get_image().get_data()
+	var summer := GroundTiles.ground_texture(BASE, "alp_t", size, false, "Summer", "scree").get_image().get_data()
+	var autumn := GroundTiles.ground_texture(BASE, "alp_t", size, false, "Autumn", "scree").get_image().get_data()
+	assert_true(spring != summer and summer != autumn)
+	assert_true(GroundTiles.alpine_blobs("alp_t", "hollow", 5, size) == GroundTiles.alpine_blobs("alp_t", "hollow", 5, size))
+	for b in GroundTiles.alpine_blobs("alp_t", "fan", 20, size):
+		assert_true(b.x < size.x and b.y < size.y)
