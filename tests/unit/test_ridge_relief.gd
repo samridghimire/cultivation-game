@@ -62,13 +62,14 @@ func test_wisp_puffs_never_thin_bars() -> void:
 
 func test_terrace_band_edges_wobble_gently() -> void:
 	var bands := Scenery.terrace_bands(Rect2(100, 200, 130, 100), 5)
+	var bow := Scenery.terrace_bow(Rect2(100, 200, 130, 100), 5)  # GFX-173: plus the contour's gentle bow
 	for poly in bands:
 		var half := poly.size() / 2
 		var ys: Array[float] = []
 		for i in half:
 			ys.append(poly[i].y)
 		var span: float = ys.max() - ys.min()
-		assert_true(span >= 2.0 and span <= 4.0, "upper edge wobbles 2-4 px, near straight")
+		assert_true(span >= 2.0 and span <= 4.0 + bow, "upper edge wobbles 2-4 px, near straight")
 
 
 func test_ridge_patches_clear_of_keepouts() -> void:
@@ -280,3 +281,31 @@ func test_stone_road_wanders_and_stays_inside() -> void:  # GFX-172
 	var v := Scenery.stone_road(Rect2(100, 0, 60, 800), 3)  # a north-south road works too
 	for p in v["bed"]:
 		assert_true(Rect2(100, 0, 60, 800).grow(0.01).has_point(p))
+
+
+## GFX-173: terrace steps bow along a contour; variants by name; lightning and plant colours.
+func test_terrace_steps_follow_a_contour() -> void:
+	var rect := Rect2(100, 200, 130, 80)
+	var bands := Scenery.terrace_bands(rect, 42)
+	assert_true(Scenery.terrace_bow(rect, 42) >= 3.0)
+	for poly in bands:
+		for q in poly:
+			assert_true(rect.grow(0.5).has_point(q), "band point inside rect")
+	var poly := bands[0]
+	var half := poly.size() / 2
+	var mid_y := poly[half / 2].y
+	var end_y := maxf(poly[0].y, poly[half - 1].y)
+	assert_true(end_y > mid_y - 1.0, "ends sag below the middle")
+	assert_eq(Scenery.terrace_bands(rect, 42)[0], bands[0])
+
+
+func test_terrace_variants_and_lightning() -> void:
+	assert_eq(Scenery.terrace_variant("Thunder-Struck Terraces"), "scorched")
+	assert_eq(Scenery.terrace_variant("Cloud-Sea Orchid Terraces"), "orchid")
+	assert_eq(Scenery.terrace_variant("Herb Slope"), "plain")
+	var a := Scenery.lightning_split(Vector2(0, 0), Vector2(0, 60), 3)
+	assert_eq(a, Scenery.lightning_split(Vector2(0, 0), Vector2(0, 60), 3))
+	assert_eq(a[0], Vector2(0, 0))
+	assert_eq(a[a.size() - 1], Vector2(0, 60))
+	var cols := Scenery.terrace_plant_colors("scorched", Color("5a8a3a"), Color("9aa8d0"))
+	assert_true(cols[0].get_luminance() < 0.2)

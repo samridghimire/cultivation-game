@@ -880,6 +880,7 @@ func test_terrace_bands_stack_without_gap() -> void:
 		assert_true(a.size() >= 3 and a.size() <= 5, "3-5 bands")
 		assert_eq(a, Scenery.terrace_bands(r, 9))
 		var prev_bottom := -INF
+		var bow := Scenery.terrace_bow(r, 9)  # GFX-173
 		for poly in a:
 			var lo := INF
 			var hi := -INF
@@ -888,7 +889,7 @@ func test_terrace_bands_stack_without_gap() -> void:
 				lo = minf(lo, q.y)
 				hi = maxf(hi, q.y)
 			if prev_bottom > -INF:
-				assert_true(lo <= prev_bottom + 2.0 and prev_bottom - lo <= 6.0, "bands touch or overlap by up to 6 px (no gap)")
+				assert_true(lo <= prev_bottom + 2.0 + bow and prev_bottom - lo <= 6.0 + bow, "bands touch or overlap by up to 6 px (no gap)")
 			prev_bottom = hi
 		assert_true(a != Scenery.terrace_bands(r, 10))
 

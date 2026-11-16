@@ -1985,9 +1985,13 @@ func _draw_terrace_places() -> void:
 		var seed_value := int(r.position.x) * 31 + int(r.position.y) * 17
 		var bands := Scenery.terrace_bands(r, seed_value)
 		var plant := Scenery.crop_color(String(GroundTiles.ground_season(_season, _region.get("map", {}))))
+		var variant := Scenery.terrace_variant(String(place.get("display_name", "")))
+		var plant_cols := Scenery.terrace_plant_colors(variant, plant, tint)
 		for i in bands.size():
 			var poly := bands[i]
 			var earth := Scenery.terrace_earth(ground, i, snowy)
+			if variant == "scorched" and i == 1:  # GFX-173: one scorched step
+				earth = earth.darkened(0.35)
 			var left: float = poly[0].x
 			var right: float = poly[poly.size() / 2 - 1].x
 			var colors := PackedColorArray()
@@ -2008,9 +2012,13 @@ func _draw_terrace_places() -> void:
 					if bool(crop["tinted"]):
 						draw_rect(Rect2(p.x, p.y - 1.0, 3.0, 2.0), Color("e9f1f8"))
 				else:
-					var col := tint.lerp(plant, 0.25) if bool(crop["tinted"]) else plant.darkened(0.1)
+					var col: Color = plant_cols[0] if bool(crop["tinted"]) else plant_cols[1]
+					if variant == "scorched" and i != 1:
+						col = tint.lerp(plant, 0.25) if bool(crop["tinted"]) else plant.darkened(0.1)
 					draw_rect(Rect2(p.x, p.y - 2.0, 2.0, 3.0), col)
-					draw_rect(Rect2(p.x + 2.0, p.y - 3.0, 2.0, 3.0), col.lightened(0.25))
+					draw_rect(Rect2(p.x + 2.0, p.y - 3.0, 2.0, 3.0), col.lightened(0.25 if variant != "scorched" else 0.1))
+					if variant == "orchid":  # a violet heart in each bloom
+						draw_rect(Rect2(p.x + 2.0, p.y - 3.0, 1.0, 1.0), Color("a678d8"))
 			if not snowy:  # GFX-166: a lit top edge on each band so the steps read on a dark slope
 				var lit_cols := PackedColorArray()
 				var lit_top := poly.slice(0, half)
@@ -2023,6 +2031,18 @@ func _draw_terrace_places() -> void:
 				for q in top:
 					top_cols.append(Color(0.95, 0.98, 1.0, 0.9 * Scenery.terrace_end_alpha(q.x, left, right)))
 				draw_polyline_colors(top, top_cols, 2.0)
+		if variant == "scorched" and bands.size() > 1:  # GFX-173: a lightning split through the steps
+			var b0 := bands[0]
+			var bl := bands[bands.size() - 1]
+			var split := Scenery.lightning_split(b0[b0.size() / 4], bl[bl.size() - 1 - bl.size() / 4], seed_value)
+			draw_polyline(split, Color("1c1a18"), 3.0)
+			draw_polyline(split, Color("f2e48a") if not snowy else Color("dfe8f0"), 1.0)
+		elif variant == "orchid":  # a wisp of mist drifting over the lower steps
+			var mrng := RandomNumberGenerator.new()
+			mrng.seed = seed_value
+			for k in 4:
+				var mc := Vector2(r.position.x + sz.x * (0.2 + 0.2 * float(k)) + mrng.randf_range(-6.0, 6.0), r.end.y - sz.y * 0.3 + mrng.randf_range(-6.0, 6.0))
+				draw_circle(mc, mrng.randf_range(8.0, 13.0), Color(0.92, 0.95, 1.0, 0.16))
 
 
 ## GFX-068: the paved court of each sect hall and the mountain gate (no collision; drawn under the places).

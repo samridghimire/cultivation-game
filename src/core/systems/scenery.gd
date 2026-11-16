@@ -1843,6 +1843,9 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 		n += 1
 	var step := rect.size.y / float(n)
 	var full := rect.size.x - 4.0
+	var bow := terrace_bow(rect, seed_value)
+	var cx := rect.get_center().x
+	var half_w := maxf(rect.size.x / 2.0, 1.0)
 	var out: Array[PackedVector2Array] = []
 	for i in n:
 		var length := full * rng.randf_range(0.6, 1.0)
@@ -1857,17 +1860,61 @@ static func terrace_bands(rect: Rect2, seed_value: int) -> Array[PackedVector2Ar
 		var top_y := rect.position.y + step * float(i) + 1.0
 		var bot_y := rect.position.y + step * float(i + 1) + 1.0
 		if i == n - 1:
-			bot_y = rect.end.y - 1.0 - 2.0 * amp_b
+			bot_y = rect.end.y - 1.0 - 2.0 * amp_b - bow
 		var poly := PackedVector2Array()
 		for c in cols + 1:
 			var t := float(c) / float(cols)
-			poly.append(Vector2(left + length * t, top_y + amp_t * (1.0 + sin(ph_t + TAU * fq_t * t)) + rng.randf_range(0.0, 0.4)))
+			var px := left + length * t
+			var arc := bow * pow((px - cx) / half_w, 2.0)  # GFX-173: every band bows along one contour, ends lower than the middle
+			poly.append(Vector2(px, top_y + arc + amp_t * (1.0 + sin(ph_t + TAU * fq_t * t)) + rng.randf_range(0.0, 0.4)))
 		var drop := 2.0 if i < n - 1 else 0.0
 		for c in range(cols, -1, -1):
 			var t2 := float(c) / float(cols)
-			poly.append(Vector2(left + length * t2, bot_y + amp_b * (1.0 + sin(ph_b + TAU * fq_b * t2)) + rng.randf_range(0.0, 0.4) + drop))
+			var qx := left + length * t2
+			var arc2 := bow * pow((qx - cx) / half_w, 2.0)
+			poly.append(Vector2(qx, bot_y + arc2 + amp_b * (1.0 + sin(ph_b + TAU * fq_b * t2)) + rng.randf_range(0.0, 0.4) + drop))
 		out.append(poly)
 	return out
+
+
+## GFX-173: how far the terrace steps' ends sag below their middles (3-6 px, scaled down for small places); the contour they follow.
+static func terrace_bow(rect: Rect2, seed_value: int) -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 7919
+	return minf(rng.randf_range(3.0, 6.0), rect.size.y / 10.0)
+
+
+## GFX-173: the look of a terrace site by its name: "scorched" (Thunder-Struck), "orchid" (Cloud-Sea Orchid) or "plain".
+static func terrace_variant(place_name: String) -> String:
+	var n := place_name.to_lower()
+	if n.contains("thunder") or n.contains("scorch"):
+		return "scorched"
+	if n.contains("orchid"):
+		return "orchid"
+	return "plain"
+
+
+## GFX-173: a jagged lightning split from the top of the terrace down through its steps: points from `top` (upper edge) to
+## `bottom`, zig-zagging up to 6 px sideways; deterministic per seed.
+static func lightning_split(top: Vector2, bottom: Vector2, seed_value: int) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var pts := PackedVector2Array([top])
+	var segs := 5
+	for i in range(1, segs):
+		var t := float(i) / float(segs)
+		pts.append(top.lerp(bottom, t) + Vector2(rng.randf_range(-6.0, 6.0), 0.0))
+	pts.append(bottom)
+	return pts
+
+
+## GFX-173: plant colours of a terrace variant (`tinted` tufts, plain tufts) given the season crop colour and place tint.
+static func terrace_plant_colors(variant: String, plant: Color, tint: Color) -> Array[Color]:
+	if variant == "scorched":
+		return [Color("2a2622"), Color("3a332c")]
+	if variant == "orchid":
+		return [Color("e8e0f4"), plant.lerp(Color("c9b8e6"), 0.4)]
+	return [tint.lerp(plant, 0.25), plant.darkened(0.1)]
 
 
 ## GFX-167: the x extents (left, right) of each band, for tests and the renderer.
