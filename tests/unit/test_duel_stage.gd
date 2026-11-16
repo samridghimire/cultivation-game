@@ -286,3 +286,20 @@ func test_unit_hash_disperses() -> void:
 	assert_eq(buckets.size(), 10)
 	assert_true(fired >= 40 and fired <= 80, "0.3 threshold fired %d" % fired)
 	assert_eq(DuelStage.unit_hash("a", 5), DuelStage.unit_hash("a", 5))
+
+
+func test_season_grass_four_distinct_colours() -> void:
+	var base := Color("4d6b3c")
+	var seen := {}
+	for season in ["Spring", "Summer", "Autumn", "Winter"]:
+		seen[DuelStage.season_grass(base, season).to_html()] = true
+	assert_eq(seen.size(), 4)
+	assert_true(DuelStage.season_grass(base, "Autumn").r > base.r, "autumn warms the grass")
+
+
+func test_season_specks_autumn_leaves_spring_blossoms() -> void:
+	var a := DuelStage.season_specks("Autumn", "qingshi_village", 1280.0, 160.0)
+	var sp := DuelStage.season_specks("Spring", "qingshi_village", 1280.0, 160.0)
+	assert_true(a.size() > sp.size() and sp.size() > 0)
+	assert_eq(DuelStage.season_specks("Summer", "qingshi_village", 1280.0, 160.0).size(), 0)
+	assert_eq(a, DuelStage.season_specks("Autumn", "qingshi_village", 1280.0, 160.0))

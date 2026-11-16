@@ -402,6 +402,39 @@ static func season_tint(season: String) -> Dictionary:
 	return {"far_lerp": 0.0, "snow_caps": false, "ochre": 0.0}
 
 
+## GFX-169: the grass colour of the fight/encounter ground per season: ochre-olive in autumn, fresher green in spring,
+## snow-grey in winter, `base` otherwise.
+static func season_grass(base: Color, season: String) -> Color:
+	match season:
+		"Autumn":
+			return base.lerp(Color("8a7a3a"), 0.6)
+		"Spring":
+			return base.lerp(Color("6fae4a"), 0.35).lightened(0.06)
+		"Winter":
+			return base.lerp(Color("dfe7ee"), 0.7)
+	return base
+
+
+## GFX-169: seasonal specks on the fight ground as [{x, y, color}] (x in 0..width, y in 0..band): drifts of fallen
+## leaves (red, orange, gold) in autumn, a few blossom specks in spring, nothing else. Seeded, so stable.
+static func season_specks(season: String, rid: String, width: float, band: float) -> Array:
+	var out: Array = []
+	if season != "Autumn" and season != "Spring":
+		return out
+	var leaf_cols := [Color("b83c2a"), Color("d9702a"), Color("e0a83a"), Color("a8481f")]
+	var blossom_cols := [Color("f4efe0"), Color("f0a0b8"), Color("f2d24b")]
+	var n := int(width / 24.0) if season == "Autumn" else int(width / 60.0)
+	for i in n:
+		var cx := unit_hash(rid + season + "x", i) * width
+		var cy := 6.0 + unit_hash(rid + season + "y", i) * maxf(band - 12.0, 1.0)
+		var cluster := 3 if season == "Autumn" else 1
+		for j in cluster:
+			var pal: Array = leaf_cols if season == "Autumn" else blossom_cols
+			out.append({"x": cx + unit_hash(rid + "dx", i * 7 + j) * 14.0 - 7.0, "y": cy + unit_hash(rid + "dy", i * 7 + j) * 6.0 - 3.0,
+				"color": pal[int(unit_hash(rid + "c", i * 7 + j) * 0.999 * pal.size())]})
+	return out
+
+
 ## True when today's weather (or the pinned screenshot weather) is rain or storm.
 func is_raining() -> bool:
 	if GameState.data == null:
@@ -486,6 +519,8 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				if s.get("broad", false):  # a round broadleaf crown on a trunk
 					var cr := w * 0.3
 					draw_rect(Rect2(x - 1.5, base_y - 10.0, 3.0, 10.0), c.darkened(0.3))
+					if gseason == "Autumn":  # turning leaves: a gold-orange crown
+						c = c.lerp(Color("b8662a") if piece_i % 2 == 0 else Color("c89a34"), 0.7)
 					draw_circle(Vector2(x, base_y - 10.0 - cr * 0.6), cr, c.lightened(0.04))
 					draw_circle(Vector2(x - cr * 0.7, base_y - 10.0), cr * 0.75, c)
 					draw_circle(Vector2(x + cr * 0.7, base_y - 10.0), cr * 0.75, c)
@@ -493,6 +528,8 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 						draw_rect(Rect2(x - cr * 0.6, base_y - 10.0 - cr * 1.6, cr * 1.2, 2.0), snow)
 					continue
 				var tiers: int = s.get("tiers", 2)
+				if gseason == "Autumn" and tiers > 1 and piece_i % 3 == 0:
+					tiers -= 1  # thinned, bare-ish top
 				var th := h / float(tiers)
 				for t in tiers:
 					var ty := base_y - 6.0 - th * 0.55 * t
@@ -698,6 +735,8 @@ func _draw_ground() -> void:
 	if decor.has("grass_color"):
 		base = Color(decor["grass_color"])
 	var gseason := "" if season_look.has("ground") else backdrop_season(map)
+	if gseason == "Autumn" or gseason == "Spring":
+		base = season_grass(base, gseason)
 	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false, gseason)
 	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
@@ -716,6 +755,8 @@ func _draw_ground() -> void:
 			tuft = base.lerp(Color("b08a3c"), 0.5).lightened(0.15)
 		draw_rect(Rect2(tx, ty, 2.0, 4.0), tuft)
 		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), tuft)
+	for sp in season_specks(gseason, rid, size.x, GROUND_BAND):
+		draw_rect(Rect2(float(sp["x"]), band.position.y + float(sp["y"]), 3.0, 2.0), sp["color"])
 	for p in backdrop_layers(rid, size.x)["props"]:
 		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
 
