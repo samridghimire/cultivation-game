@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-16 [GUIDE-248] Far hints to buy, sell, gather or finish season tasks say how many days away they are.
+- 2026-11-16 [FIGHT-002] The fight prompt and journal say why a fight is deadly or easy.
+- 2026-11-16 [GFX-171] The Meteor Crater Field is a real bowl with a rim instead of a black hole.
+- 2026-11-16 [GFX-172] Ridge and Azure Peak roads wander and have irregular flagstones.
+- 2026-11-16 [WU-546] The first-visit arrival card wraps between the HUD cards instead of covering them.
+- 2026-11-16 [WU-547] A beaten beast lies on its side where it fell.
+- 2026-11-16 [C-377] Two fair fights near home for early Qi Refining: the Feral Hill Dog and the Spear Deserter.
+- 2026-11-16 [C-376] Eight seasonal happenings for newcomers, from kite day to a snowbound traveller.
+- 2026-11-16 [GFX-169] Autumn fights stand on autumn ground; spring fights have blossoms.
+- 2026-11-16 [ART-012] Creation Artifact seals open over a life: your own progress feeds them, and some seals keep their energy.
+- 2026-11-16 [QA-220] The sims can measure when a newcomer learns a first fighting style.
+- 2026-11-16 [QA-222] Sim reports explain why their days run past their months.
+- 2026-11-16 [QA-223] Balance baseline refreshed after the log and label changes.
 - 2026-11-16 [C-374] Qingshi villagers have gifts you can find in autumn and winter too.
 - 2026-11-16 [LOG-009] Fewer repeated forecasts, and practice folds into one line at month end.
 - 2026-11-16 [GFX-170] Azure Peak has a mossy stone road with grassy verges.
