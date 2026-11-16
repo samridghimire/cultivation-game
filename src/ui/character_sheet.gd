@@ -1,7 +1,7 @@
 class_name CharacterSheet
 extends PanelContainer
 ## Modal character overview: identity and family, sect reputation, attributes, roots and
-## professions, and equipped gear with Unequip buttons. "Train children" opens
+## professions, and a Gear strip whose filled rows unequip. "Train children" opens
 ## the ChildTrainingScreen. Items live in
 ## InventoryScreen. Old saves without a gender get a one-time gender picker here.
 ## The text scrolls (PgUp/PgDn, right stick) so a long sheet still fits a Steam Deck.
@@ -37,6 +37,8 @@ var _recharge: Button
 var _action_row: HFlowContainer
 var _gender_row: HBoxContainer
 var _equip_row: HBoxContainer
+var _gear_box: VBoxContainer
+var _gear_stats: Label
 var _train_children: Button
 var _family_button: Button
 ## Beast whose Release button awaits its confirming second press (FH-015).
@@ -129,6 +131,12 @@ func _build_left_column() -> VBoxContainer:
 	_root_box = VBoxContainer.new()
 	_root_box.add_theme_constant_override("separation", 3)
 	col.add_child(_root_box)
+	col.add_child(UIStyle.label("Gear", 15, UIStyle.ACCENT))
+	_gear_box = VBoxContainer.new()
+	_gear_box.add_theme_constant_override("separation", 3)
+	col.add_child(_gear_box)
+	_gear_stats = UIStyle.label("", 14, Color("bbbbbb"))
+	col.add_child(_gear_stats)
 	return col
 
 
@@ -166,6 +174,61 @@ func _rebuild_left() -> void:
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		line.add_child(value_label)
 		_root_box.add_child(line)
+	_rebuild_gear()
+
+
+## WU-554: one row per equipment slot (icon, name, stats); a filled row is a button that unequips it.
+func _rebuild_gear() -> void:
+	var p := GameState.player
+	var data := GameState.data
+	for child in _gear_box.get_children():
+		_gear_box.remove_child(child)
+		child.queue_free()
+	for slot in Equipment.SLOTS:
+		var item_id := String(p.equipment.get(slot, ""))
+		var b := Button.new()
+		b.name = "gear_" + slot
+		b.flat = true
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.add_theme_font_size_override("font_size", 14)
+		b.custom_minimum_size = Vector2(0, 44)
+		if item_id == "" or not data.items.has(item_id):
+			b.text = "No %s" % slot
+			b.disabled = false
+			b.focus_mode = Control.FOCUS_NONE
+			b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_theme_color_override("font_color", Color("777777"))
+			b.icon = _empty_slot_icon(slot)
+		else:
+			b.text = "%s\n%s" % [data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
+			b.tooltip_text = "Press to unequip"
+			ItemIcon.apply(b, ItemIcon.for_id(data, item_id))
+			b.pressed.connect(func() -> void:
+				Audio.play("press")
+				_unequip(slot))
+		_gear_box.add_child(b)
+	var stats := Combat.stats(p, data)
+	_gear_stats.text = "Attack %d  Defense %d" % [int(stats["attack"]), int(stats["defense"])]
+
+
+## A dim 32x32 outline for an empty slot (weapon: slanted blade, armor: tunic).
+func _empty_slot_icon(slot: String) -> Texture2D:
+	var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	var c := Color(0.45, 0.45, 0.45, 0.7)
+	if slot == "weapon":
+		for i in range(4, 28):
+			img.set_pixel(i, 31 - i, c)
+			img.set_pixel(i, 30 - i, c)
+	else:
+		for y in range(6, 27):
+			img.set_pixel(8, y, c)
+			img.set_pixel(23, y, c)
+		for x in range(8, 24):
+			img.set_pixel(x, 6, c)
+			img.set_pixel(x, 26, c)
+	return ImageTexture.create_from_image(img)
 
 
 ## One row per element, in data order: {id, name, value 0-100}; a missing element is 0.
@@ -306,13 +369,6 @@ func _rebuild() -> void:
 	t += "  Body: %s\n" % body[0]
 	for i in range(1, body.size()):
 		t += "    %s\n" % body[i]
-	t += "\n[color=#%s]Equipment[/color]\n" % accent
-	for slot in Equipment.SLOTS:
-		var item_id := String(p.equipment.get(slot, ""))
-		if item_id == "":
-			t += "  %s: none\n" % slot.capitalize()
-		else:
-			t += "  %s: %s (%s)\n" % [slot.capitalize(), data.items[item_id]["name"], Equipment.describe_stats(data, item_id)]
 	if not p.companions.is_empty():
 		t += "\n[color=#%s]Spirit Beasts[/color]\n" % accent
 		for line in Beasts.describe(p, data):
@@ -612,7 +668,6 @@ static func favor_word(favor: int, data: GameData) -> String:
 	return "friendly" if favor >= 10 else "acquainted"
 
 
-## One Unequip button per filled equipment slot.
 ## "+15% cultivation speed, +10% attack" for a bloodline's bonuses.
 static func bloodline_bonus_text(data: GameData, bloodline_id: String) -> String:
 	var names := {"qi_mult": "cultivation speed", "breakthrough": "breakthrough chance", "max_hp": "health"}
@@ -631,7 +686,7 @@ static func bloodline_bonus_text(data: GameData, bloodline_id: String) -> String
 	return ", ".join(parts)
 
 
-## Unequip buttons for worn gear and "Feed <beast>" for spirit beast companions.
+## "Feed <beast>" and Release buttons for spirit beast companions.
 func _rebuild_equip_row() -> void:
 	for child in _equip_row.get_children():
 		_equip_row.remove_child(child)
@@ -650,13 +705,6 @@ func _rebuild_equip_row() -> void:
 		if _release_confirm == beast_id:
 			release.focus_exited.connect(_release_focus_lost.bind(release).call_deferred)
 		_equip_row.add_child(release)
-	var p := GameState.player
-	for slot in Equipment.SLOTS:
-		var item_id := String(p.equipment.get(slot, ""))
-		if item_id != "":
-			var b := UIStyle.button("Unequip %s" % GameState.data.items[item_id]["name"], _unequip.bind(slot))
-			b.name = "unequip_" + slot
-			_equip_row.add_child(b)
 	_equip_row.visible = _equip_row.get_child_count() > 0
 
 
@@ -691,7 +739,11 @@ func _release_focus_lost(button: Button) -> void:
 func _unequip(slot: String) -> void:
 	GameState.unequip(slot)
 	# The row was rebuilt by player_changed; keep gamepad focus inside the sheet.
-	var target: Button = _equip_row.get_child(0) if _equip_row.get_child_count() > 0 else _default_focus()
+	var target: Button = _default_focus()
+	for b in _gear_box.get_children():
+		if (b as Button).focus_mode != Control.FOCUS_NONE:
+			target = b
+			break
 	target.grab_focus.call_deferred()
 
 

@@ -65,14 +65,17 @@ func test_equipment_button_equips_and_sheet_unequips() -> void:
 	root.add_child(sheet)
 	sheet.open()
 	var text: String = sheet._text.get_parsed_text()
-	assert_true(text.contains("Weapon: %s (" % gs.data.items["iron_sword"]["name"]), text)
-	assert_true(text.contains("Armor: none"), text)
-	var unequip := sheet._equip_row.get_node("unequip_weapon") as Button
-	assert_true(unequip != null and sheet._equip_row.visible)
-	unequip.pressed.emit()
+	var weapon_row := sheet._gear_box.get_node("gear_weapon") as Button
+	assert_true(weapon_row.text.begins_with(gs.data.items["iron_sword"]["name"]), weapon_row.text)
+	assert_true(weapon_row.focus_mode != Control.FOCUS_NONE)
+	var armor_row := sheet._gear_box.get_node("gear_armor") as Button
+	assert_eq(armor_row.text, "No armor")
+	assert_eq(armor_row.focus_mode, Control.FOCUS_NONE)
+	assert_true(sheet._gear_stats.text.begins_with("Attack "))
+	weapon_row.pressed.emit()
 	assert_false(c.equipment.has("weapon"))
 	assert_eq(c.item_count("iron_sword"), 1)
-	assert_true(sheet._text.get_parsed_text().contains("Weapon: none"))
+	assert_eq((sheet._gear_box.get_node("gear_weapon") as Button).text, "No weapon")
 	assert_false(sheet._equip_row.visible, "no gear, no unequip row")
 	sheet.free()
 	gs.end_session()
