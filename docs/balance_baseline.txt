@@ -645,20 +645,26 @@ First-fights truth: 200 fights per row, seed 1. Techniques: iron_fist; weapon ir
 Qi Refining layer 1:
   wild_boar              rated 100% (Weak     ) real 100%
   mist_fox               rated   0% (Deadly   ) real   0%
+  hill_dog               rated  18% (Dangerous) real  20%
   mist_wolf              rated   0% (Deadly   ) real   1%
   mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  15% (Dangerous) real  14%
   iron_back_boar         rated   0% (Deadly   ) real   0%
 Qi Refining layer 2:
   wild_boar              rated 100% (Weak     ) real 100%
   mist_fox               rated   0% (Deadly   ) real   1%
+  hill_dog               rated  46% (Dangerous) real  46%
   mist_wolf              rated   1% (Deadly   ) real   1%
   mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  48% (Dangerous) real  41%
   iron_back_boar         rated   0% (Deadly   ) real   0%
 Qi Refining layer 3:
   wild_boar              rated 100% (Weak     ) real 100%
   mist_fox               rated   0% (Deadly   ) real   1%
+  hill_dog               rated  63% (Risky    ) real  68%
   mist_wolf              rated   3% (Deadly   ) real   6%
   mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  63% (Risky    ) real  66%
   iron_back_boar         rated   0% (Deadly   ) real   0%
 Rows off by more than 15 points: 0
 
