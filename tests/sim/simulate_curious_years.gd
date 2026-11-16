@@ -134,6 +134,8 @@ func _run() -> void:
 			FirstHour.core_report = true  # QA-173
 		elif a == "--chat-teacher":
 			FirstHour.chat_teacher = true  # QA-220
+		elif a == "--heal-injuries":
+			FirstHour.heal_far = true  # QA-165
 		elif a == "--mission-monthly":
 			FirstHour.mission_monthly = true  # QA-174
 		elif a == "--season-tasks":
@@ -289,6 +291,8 @@ func _run() -> void:
 		print("Season tasks (QA-215), %d seeds: %s" % [seeds, str(FirstHour.season_task_log)])
 	if FirstHour.artifact_report:
 		_print_artifact_report(gs.data)
+	if FirstHour.heal_far:
+		print("Heal injuries (QA-165), %d seeds: %s" % [seeds, str(FirstHour.heal_far_log)])
 	if FirstHour.injury_report:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:

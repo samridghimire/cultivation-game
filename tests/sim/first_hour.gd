@@ -73,6 +73,11 @@ static var season_tasks := false
 ## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
 ## and only when its foe is rated Even or better. simulate_curious_years.gd's --mission-monthly; part of the memo key.
 static var mission_monthly := false
+## QA-165: --heal-injuries goes beyond QA-128's treatment: when the injury line's cure is not here, claim a sect treasury
+## item (contribution) or travel to a clinic one route away that the stones cover, treat, and walk home.
+## heal_far_log: {"treated": cures taken, "trips": clinic journeys}. Part of the memo key.
+static var heal_far := false
+static var heal_far_log := {"treated": 0, "trips": 0}
 const SEASON_REACH_DAYS := 3
 static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0}
 static var _teach_rec := {}
@@ -137,7 +142,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, season_tasks, mission_monthly, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -484,6 +489,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_heal_before_fighting(gs, c, log)
 		heal_log["healed"] += int(log["healed"])
 		heal_log["stones"] += maxi(0, stones_before - c.item_count("spirit_stone"))
+	if heal_far and c.alive and not c.injuries.is_empty():
+		_heal_far(gs, c)
 	if village and c.alive:
 		_village_month(gs, c)
 	if follow_defence:
@@ -1735,3 +1742,42 @@ static func _heal_before_fighting(gs: Node, c: CharacterData, log: Dictionary) -
 					break
 		if healed:
 			log["healed"] += 1
+
+
+## QA-165: for each open injury still left after the here-and-now treatment: claim a treasury cure, else go to a clinic
+## one route away when the stones cover it, treat, and walk back.
+static func _heal_far(gs: Node, c: CharacterData) -> void:
+	var data: GameData = gs.data
+	for injury_id: String in c.injuries.keys():
+		if not c.alive or not c.injuries.has(injury_id):
+			continue
+		var claim := Guidance._heal_treasury(c, data, injury_id)
+		if not claim.is_empty():
+			gs.buy_with_contribution(String(claim["item_id"]))
+			if c.item_count(String(claim["item_id"])) > 0:
+				gs.use_item(String(claim["item_id"]))
+				heal_far_log["treated"] += 1
+				continue
+		var cost := Medicine.clinic_cost(c, data, injury_id)
+		if cost > c.item_count("spirit_stone"):
+			continue
+		var home: String = gs.current_region
+		var target := ""
+		for rid: String in data.regions:
+			if rid == home or Guidance.route_days(c, data, home, rid) <= 0 or Guidance.first_hop(c, data, home, rid) != rid:
+				continue
+			for p: Dictionary in data.regions[rid].get("places", []):
+				if String(p.get("type", "")) == "clinic":
+					target = rid
+			if target != "":
+				break
+		if target == "":
+			continue
+		gs.travel(target)
+		if gs.current_region != target:
+			continue
+		heal_far_log["trips"] += 1
+		gs.visit_clinic(injury_id)
+		if not c.injuries.has(injury_id):
+			heal_far_log["treated"] += 1
+		gs.travel(home)
