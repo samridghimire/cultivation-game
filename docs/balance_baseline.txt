@@ -1673,10 +1673,13 @@ Sim days vs months (QA-222): every `day` figure (Foundation day, seal days, atte
 ## first style with --chat-teacher (QA-220, seeds 1-10)
 Regenerate: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- 10 12 --curious --chat-teacher
 and ... -s res://tests/sim/simulate_curious_years.gd -- 10 36 --chat-teacher (both print a "Chat teacher (QA-220)" line).
-Policy: chat once a day with the villager Guidance.style_teacher names when standing in their region (plus one liked gift);
+Policy (QA-224): a named villager cannot be chatted with (Family.check_chat refuses; the old policy never gained favor and every seed bought
+the manual ~day 45). Now, while Guidance.style_teacher names a teacher within 3 route days, the player does not buy the manual, travels
+there, gives every liked item held (or buys one with 5 spare stones), asks for the lesson once favor reaches its need, and walks home;
 once a style is known, take the weekly teacher bout Mentorship.teacher_bout_style names. Days are the clock's.
-12 months and 36 months give the same line:
-  first style: median day 45 (10/10 seeds; lesson 0, manual 10), bouts 0, mastered: median day - (0 seeds)
+12 months: first style: median day 104 (10/10 seeds; lesson 10, manual 0), bouts 109, mastered: median day - (0 seeds)
+36 months: first style: median day 104 (10/10 seeds; lesson 10, manual 0), bouts 374, mastered: median day - (0 seeds)
+(old, QA-220: median day 45, manual 10, bouts 0.) A lesson costs ~60 days more than the manual: favor 15 by gifts only.
 ## first fights, rated vs real (starter character, Qi Refining layers 1-7)
 
 First-fights truth: 200 fights per row, seed 1. Techniques: iron_fist; weapon iron_sword, armor -.

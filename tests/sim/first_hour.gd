@@ -1118,7 +1118,7 @@ static func _learn_fighting_style(gs: Node, c: CharacterData, done: Dictionary, 
 	if not c.alive:
 		return
 	if not done.has("style_month"):
-		var manual := cheapest_combat_manual(gs, c)
+		var manual := cheapest_combat_manual(gs, c) if not teacher_reachable(gs, c) else ""  # QA-224
 		if manual != "" and not done.get("saving", false) and c.item_count("spirit_stone") >= int(gs.data.items[manual].get("price", 0)):
 			gs.buy_item(manual)
 			gs.use_item(manual)
@@ -1151,23 +1151,13 @@ static func _follow_spar_hint(gs: Node, c: CharacterData, today: int) -> void:
 			return
 
 
-## QA-220: one week of the --chat-teacher policy (see chat_teacher). Records the first style's day and source, the weekly bout
-## and the day it is mastered in _teach_rec.
+## QA-220/QA-224: one week of the --chat-teacher policy (see chat_teacher). Records the first style's day and source, the weekly
+## bout and the day it is mastered in _teach_rec. A named villager cannot be "chatted" with (Family.check_chat sends the player to
+## the dialogue), so favor comes from gifts: the teacher Guidance.style_teacher names, within TEACHER_REACH_DAYS, is visited, given
+## every liked item held (or bought here when the purse allows), and asked for the lesson once favor reaches its need.
 static func _chat_teacher_week(gs: Node, c: CharacterData) -> void:
-	var week_end: int = _day(gs) + 7
 	if not Techniques.knows_kind(c, gs.data, "combat"):
-		var teacher := Guidance.style_teacher(c, gs.npcs, gs.data, gs.current_region, gs.npc_favor, _day(gs))
-		if not teacher.is_empty() and String(teacher.get("region_id", "")) == gs.current_region:
-			var npc_id := String(teacher["npc_id"])
-			var liked := String(teacher.get("liked", ""))
-			if liked != "" and c.item_count(liked) > 0:
-				gs.give_gift(npc_id, liked)
-			while c.alive and _day(gs) < week_end and not Techniques.knows_kind(c, gs.data, "combat"):
-				var day_before: int = _day(gs)
-				gs.chat(npc_id)
-				if _day(gs) == day_before:
-					break  # the chat was refused (nothing passed)
-				_teach_rec["chats"] += 1
+		_visit_style_teacher(gs, c)
 	else:
 		for npc_id: String in gs.npcs:
 			if Mentorship.teacher_bout_style(c, npc_id, gs.data, gs.world_flags) != "" and gs.check_spar(npc_id) == "":
@@ -1175,6 +1165,75 @@ static func _chat_teacher_week(gs: Node, c: CharacterData) -> void:
 				_teach_rec["bouts"] += 1
 				break
 	_note_teacher_style(gs, c)
+
+
+## True while a teacher's lesson is within reach, so the policy keeps its stones off the manual (QA-224).
+static func teacher_reachable(gs: Node, c: CharacterData) -> bool:
+	if not chat_teacher or Techniques.knows_kind(c, gs.data, "combat"):
+		return false
+	var teacher := Guidance.style_teacher(c, gs.npcs, gs.data, gs.current_region, gs.npc_favor, _day(gs))
+	return not teacher.is_empty() and not bool(teacher.get("far", false)) and int(teacher.get("days", 99)) <= TEACHER_REACH_DAYS
+
+
+const TEACHER_REACH_DAYS := 3
+
+
+static func _visit_style_teacher(gs: Node, c: CharacterData) -> void:
+	var teacher := Guidance.style_teacher(c, gs.npcs, gs.data, gs.current_region, gs.npc_favor, _day(gs))
+	if teacher.is_empty() or bool(teacher.get("far", false)) or int(teacher["days"]) > TEACHER_REACH_DAYS:
+		return
+	var home: String = gs.current_region
+	if gs.current_region != String(teacher["region_id"]) and not _go_to(gs, c, String(teacher["region_id"])):
+		return
+	var npc_id := String(teacher["npc_id"])
+	for day in 7:
+		if not c.alive or Techniques.knows_kind(c, gs.data, "combat"):
+			break
+		if int(gs.npc_favor.get(npc_id, 0)) >= int(teacher["need"]):
+			_ask_lesson(gs, npc_id)
+			break
+		var gave := false
+		for liked: String in gs.data.npcs[npc_id].get("likes", []):
+			if not gs.data.items.has(liked):
+				continue
+			if c.item_count(liked) == 0 and c.item_count("spirit_stone") >= int(gs.data.items[liked].get("price", 0)) + SPARE_STONES:
+				gs.buy_item(liked)
+			while c.item_count(liked) > 0 and int(gs.npc_favor.get(npc_id, 0)) < int(teacher["need"]):
+				var before := int(gs.npc_favor.get(npc_id, 0))
+				gs.give_gift(npc_id, liked)
+				if int(gs.npc_favor.get(npc_id, 0)) == before and c.item_count(liked) > 0:
+					break
+				gave = true
+				_teach_rec["chats"] += 1
+		if not gave:
+			break
+	if c.alive and gs.current_region != home:
+		_go_to(gs, c, home)
+
+
+const SPARE_STONES := 5
+
+
+## Opens the teacher's dialogue and takes the "Show me ..." choice, then whatever choice follows, until a style is learned.
+static func _ask_lesson(gs: Node, npc_id: String) -> void:
+	gs.start_dialogue(npc_id)
+	for step in 3:
+		if not gs.in_dialogue():
+			return
+		var pick := -1
+		for choice: Dictionary in gs.dialogue_view().get("choices", []):
+			if choice.get("disabled", false):
+				continue
+			if pick < 0 and not String(choice["label"]).begins_with("Later"):
+				pick = int(choice["index"])
+			if String(choice["label"]).begins_with("Show me"):
+				pick = int(choice["index"])
+				break
+		if pick < 0:
+			break
+		gs.choose_dialogue(pick)
+	if gs.in_dialogue():
+		gs.end_dialogue()
 
 
 ## QA-215: see season_tasks. Does each open task that can be reached, then returns to the region it started in.
