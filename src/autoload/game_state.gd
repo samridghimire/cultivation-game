@@ -1178,6 +1178,23 @@ func _explore_fight(enemy_id: String) -> bool:
 	return won
 
 
+## FIGHT-002: the description under "Fight it" on the threat prompt: "Why: <reason>" when the odds are poor (< 35%)
+## or great (>= 90%), then the final-death warning for a lethal foe.
+func threat_fight_description(enemy_id: String) -> String:
+	var enemy: Dictionary = data.enemies[enemy_id]
+	var parts: PackedStringArray = []
+	var chance := Combat.win_chance(player, data, enemy)
+	if chance < 0.35 or chance >= 0.9:
+		var why := Combat.odds_reason(player, data, enemy)
+		if why != "":
+			parts.append("Why: " + why)
+	if bool(enemy.get("lethal", false)):
+		var warn := Warnings.final_death_warning(player)
+		if warn != "":
+			parts.append(warn)
+	return " ".join(parts)
+
+
 ## Answer a sensed threat: fight it, or slip away (one day).
 func face_threat(fight_it: bool) -> void:
 	if pending_threat == "" or not _can_act():

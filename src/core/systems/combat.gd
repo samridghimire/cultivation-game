@@ -359,24 +359,58 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 	return {"notes": notes, "died": false, "cause": "", "days": 1, "injury": injury}
 
 
+## FIGHT-002: "far", "hits", "scratch" or "" - the biggest gap between the player and `enemy`.
+static func _odds_kind(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+	var p := stats(c, data)
+	var e := enemy_stats(enemy, data)
+	var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
+	var enemy_stage := int(enemy.get("stage", 0))
+	if enemy_realm > c.realm_index or (enemy_realm == c.realm_index and enemy_stage >= c.stage + 3):
+		return "far"
+	if base_damage(e["attack"], p["defense"]) >= 0.25 * p["max_hp"]:
+		return "hits"
+	if base_damage(p["attack"], e["defense"]) < 0.1 * e["max_hp"]:
+		return "scratch"
+	return ""
+
+
+## FIGHT-002: a short clause (<= 48 chars, no foe name) on why the odds are what they are: "Far above you (Qi Refining,
+## 6th Layer)", "It hits harder than you can take", "You barely scratch it", "Well below you" (a Weak foe whose realm is
+## below yours), or "" when none applies.
+static func odds_reason(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+	var kind := _odds_kind(c, data, enemy)
+	if kind == "far":
+		var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
+		var label: String = data.realms[enemy_realm].stage_label(int(enemy.get("stage", 0)))
+		var text := "Far above you (%s)" % label
+		if text.length() > 48:
+			text = "Far above you (%s)" % data.realms[enemy_realm].name
+		return text
+	if kind == "hits":
+		return "It hits harder than you can take"
+	if kind == "scratch":
+		return "You barely scratch it"
+	var enemy_realm2 := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
+	if enemy_realm2 < c.realm_index and win_chance(c, data, enemy) >= 0.9:
+		return "Well below you"
+	return ""
+
+
 ## One or two sentences on why a fight was lost ("" after a victory, draw or
 ## escape): the biggest gap between the two sides, plus a nudge toward unreadied
 ## combat talismans the player carries.
 static func loss_advice(c: CharacterData, data: GameData, enemy: Dictionary, result: Dictionary) -> String:
 	if result.get("victory", false) or result.get("draw", false) or result.get("escaped", false):
 		return ""
-	var p := stats(c, data)
-	var e := enemy_stats(enemy, data)
 	var foe := foe_name(enemy)
 	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
-	var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
-	var enemy_stage := int(enemy.get("stage", 0))
 	var advice: String
-	if enemy_realm > c.realm_index or (enemy_realm == c.realm_index and enemy_stage >= c.stage + 3):
+	var kind := _odds_kind(c, data, enemy)
+	if kind == "far":
 		advice = "%s is far above you; grow stronger before facing it again." % foe_cap
-	elif base_damage(e["attack"], p["defense"]) >= 0.25 * p["max_hp"]:
+	elif kind == "hits":
 		advice = "%s hits too hard for your defense: armor or a defense technique (Stone Skin) would help." % foe_cap
-	elif base_damage(p["attack"], e["defense"]) < 0.1 * e["max_hp"]:
+	elif kind == "scratch":
 		advice = "You barely scratch %s: a better weapon or training your attack technique would help." % foe
 	else:
 		advice = "%s was the stronger fighter today; practice your techniques and come back." % foe_cap

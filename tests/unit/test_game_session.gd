@@ -961,6 +961,12 @@ func test_life_stats_track_actions() -> void:
 	assert_eq(LifeStats.get_stat(c, "fights_won"), 1)
 	gs.pending_threat = "wild_boar"
 	gs.face_threat(false)
+	# FIGHT-002: a hopeless foe gets a "Why:" line on the threat prompt; an even one does not.
+	var hard: Dictionary = gs.data.enemies["wild_boar"].duplicate(true)
+	hard["id"] = "t_hard"
+	hard["realm"] = "foundation_establishment"
+	gs.data.enemies["t_hard"] = hard
+	assert_true(gs.threat_fight_description("t_hard").begins_with("Why: Far above you"))
 	assert_eq(LifeStats.get_stat(c, "threats_fled"), 1)
 	for i in 24:
 		if Cultivation.can_attempt_breakthrough(c, gs.data):

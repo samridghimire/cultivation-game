@@ -6135,7 +6135,8 @@ static func outlook_text(outlook: Dictionary) -> String:
 		var foes := PackedStringArray()
 		var evade := false
 		for foe: Dictionary in outlook.get("foes", []):
-			foes.append("%s (%s)" % [foe["name"], foe["danger"]])
+			var why := String(foe.get("reason", ""))
+			foes.append("%s (%s)" % [foe["name"], foe["danger"]] + (" (%s)" % why if foe["danger"] == "Deadly" and why != "" else ""))
 			if foe["danger"] == "Deadly" and bool(foe.get("lethal", false)):
 				evade = true
 		var line := "Fights %d%%" % fight

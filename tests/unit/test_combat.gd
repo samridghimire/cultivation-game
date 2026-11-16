@@ -208,6 +208,23 @@ func test_loss_advice_branches() -> void:
 		assert_eq(Combat.loss_advice(c, d, even, r), "")
 
 
+func test_odds_reason_branches() -> void:
+	var c := new_character()
+	c.realm_index = 1
+	c.stage = 0
+	var d := data()
+	var far := Combat.odds_reason(c, d, _foe("qi_refining", 5, 0, 0, 0))
+	assert_eq(far, "Far above you (Qi Refining, 6th Layer)")
+	assert_true(far.length() <= 48)
+	var p := Combat.stats(c, d)
+	assert_eq(Combat.odds_reason(c, d, _foe("qi_refining", 0, 0, p["max_hp"] * 4, 0)), "It hits harder than you can take")
+	assert_eq(Combat.odds_reason(c, d, _foe("qi_refining", 0, 100000, -1000, 100000)), "You barely scratch it")
+	assert_eq(Combat.odds_reason(c, d, _foe("qi_refining", 0, -1000, -1000, 0)), "")
+	var weak := _foe("mortal", 0, -1000, -1000, 0)
+	assert_eq(Combat.odds_reason(c, d, weak), "Well below you")
+	assert_eq(Combat.odds_reason(new_character(), d, weak), "")
+
+
 func test_loss_advice_nudges_unreadied_talismans() -> void:
 	var c := new_character()
 	var lost := {"victory": false, "draw": false, "escaped": false}

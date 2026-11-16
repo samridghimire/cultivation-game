@@ -22,7 +22,7 @@ func menu_options() -> Array[Dictionary]:
 		"label": "Fight it (%s, %d%% to win)" % [UIStyle.fight_label(GameState.player, GameState.data, enemy, false), pct],
 		"action": GameState.face_threat.bind(true),
 		# ENC-009 also senses non-lethal foes: losing those costs no life, so no final-death warning.
-		"description": Warnings.final_death_warning(GameState.player) if bool(enemy.get("lethal", false)) else "",
+		"description": GameState.threat_fight_description(_enemy_id),
 	})
 	return options
 
