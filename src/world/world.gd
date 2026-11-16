@@ -1422,6 +1422,24 @@ func _draw_market_ground() -> void:
 		draw_rect(r, base.lightened(0.1).blend(Color(0.55, 0.45, 0.3, 0.5)) if not snowy else Color(0.45, 0.42, 0.38, 0.35))  # GFX-158: bare earth showing through the snow
 	for r: Rect2 in _market_dress["cobbles"]:
 		draw_rect(r, base.darkened(0.2) if not snowy else Color(0.8, 0.83, 0.9, 0.7))
+	var paveb := Color(_region.get("map", {}).get("path_color", "9c917a"))
+	var fl_i := 0
+	for fr: Rect2 in (_market_dress.get("courts", []) as Array) + (_market_dress.get("lanes", []) as Array):  # GFX-174: flagstone courts and cobbled lanes
+		fl_i += 1
+		var fcol := paveb.darkened(0.05) if not snowy else Color(0.8, 0.82, 0.88)
+		draw_rect(fr, fcol)
+		var fh := hash("%s|court|%d" % [_region.get("id", ""), fl_i])
+		var cy := fr.position.y + 5.0
+		var row := 0
+		while cy < fr.end.y - 2.0:  # joints: a staggered brick bond of flagstones
+			draw_rect(Rect2(fr.position.x, cy, fr.size.x, 1), fcol.darkened(0.2))
+			var cx := fr.position.x + float((fh >> (row % 8)) % 9) + (5.0 if row % 2 == 1 else 0.0)
+			while cx < fr.end.x - 2.0:
+				draw_rect(Rect2(cx, cy, 1, minf(10.0, fr.end.y - cy)), fcol.darkened(0.2))
+				cx += 12.0 + float((fh + row) % 5)
+			cy += 10.0
+			row += 1
+		draw_rect(fr, fcol.darkened(0.3), false, 1.0)
 	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
 	if avenue.size.x > 0.0:
 		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))

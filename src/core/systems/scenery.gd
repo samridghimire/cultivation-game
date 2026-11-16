@@ -2508,7 +2508,7 @@ static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
 
 
 ## GFX-126: a market's street dressing. Returns {"props": [{kind: barrel|crate|sack, rect}], "patches": [Rect2] packed earth,
-## "cobbles": [Rect2] small dark block cobbles, "scorch": [{center, radius}] around gather places with look crater}.
+## "cobbles": [Rect2] small dark block cobbles, "courts"/"lanes": [Rect2] flagstone floors (GFX-174), "scorch": [{center, radius}] around gather places with look crater}.
 ## Seeded; nothing lies inside a road, place (with its label band) or landmark rect, except scorch (ground tint only).
 static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
@@ -2571,17 +2571,72 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 					clash = true
 			if not clash:
 				props.append({"kind": kinds[rng.randi() % 3], "rect": rect})
-	var patches: Array[Rect2] = []
-	for i in 40:
+	# GFX-174: flagstone courts under the big halls and short cobbled lanes joining each stall to a street (all draw-only)
+	var courts: Array[Rect2] = []
+	for pl: Dictionary in region.get("places", []):
+		if not (str(pl.get("type", "")) in ["auction", "sect_hall", "workshop", "clinic"]):
+			continue
+		var k := Npcs.place_keepout(pl)
+		var cr := Rect2(k.position - Vector2(14, 8), k.size + Vector2(28, 30))
+		courts.append(cr.intersection(Rect2(Vector2(10, 10), size - Vector2(20, 20))))
+	var crater_bounds: Array[Rect2] = []
+	for pl: Dictionary in region.get("places", []):
+		if str(pl.get("look", "")) == "crater":
+			var cc := Vector2(float(pl["pos"][0]), float(pl["pos"][1]))
+			var cs: Array = pl.get("size", [100, 100])
+			crater_bounds.append(Rect2(cc - Vector2(float(cs[0]), float(cs[1])) * 0.5, Vector2(float(cs[0]), float(cs[1]))).grow(52.0))
+	var lanes: Array[Rect2] = []
+	for i in lms.size():
+		if str(map["landmarks"][i].get("kind", "")) != "stall":
+			continue
+		var lr: Rect2 = lms[i]
+		var best := Rect2()
+		var best_len := 1e9
+		for rd in roads:
+			var lane := Rect2()
+			if rd.size.x > rd.size.y:  # a vertical lane to a horizontal street
+				var lx := lr.get_center().x - 6.0
+				if lr.end.y <= rd.position.y:
+					lane = Rect2(lx, lr.end.y, 12.0, rd.position.y - lr.end.y)
+				elif lr.position.y >= rd.end.y:
+					lane = Rect2(lx, rd.end.y, 12.0, lr.position.y - rd.end.y)
+			else:  # a horizontal lane to a vertical street
+				var ly := lr.get_center().y - 6.0
+				if lr.end.x <= rd.position.x:
+					lane = Rect2(lr.end.x, ly, rd.position.x - lr.end.x, 12.0)
+				elif lr.position.x >= rd.end.x:
+					lane = Rect2(rd.end.x, ly, lr.position.x - rd.end.x, 12.0)
+			var ln := maxf(lane.size.x, lane.size.y)
+			if ln > 0.0 and ln < best_len:
+				best = lane
+				best_len = ln
+		if best.size.x > 0.0 and best_len <= 150.0 and best_len >= 10.0:
+			var lane_solid: Array[Rect2] = []  # places only (no label band: a lane may pass a name, it is floor)
+			for pl: Dictionary in region.get("places", []):
+				lane_solid.append(Npcs.place_keepout(pl).grow(2.0))
+			var bad := _market_blocked(best, [] as Array[Rect2], lane_solid, lms, 1.0, size, lr)
+			for cb in crater_bounds:
+				if cb.intersects(best):
+					bad = true
+			if not avenue.intersects(best) and not bad:
+				lanes.append(best)
+	var floors: Array[Rect2] = courts + lanes
+	var patches: Array[Rect2] = []  # packed earth only toward the region edges and round the crater rim
+	for i in 200:
 		var pr := Rect2(rng.randf_range(20.0, size.x - 60.0), rng.randf_range(20.0, size.y - 40.0), rng.randf_range(24.0, 44.0), rng.randf_range(12.0, 22.0))
-		if patches.size() < 8 and not _market_blocked(pr, roads, solid, lms, 6.0, size, Rect2()) and not avenue.intersects(pr):
+		var edge_d := minf(minf(pr.position.x, size.x - pr.end.x), minf(pr.position.y, size.y - pr.end.y))
+		var rimmed := false
+		for cb in crater_bounds:
+			if cb.grow(36.0).intersects(pr):
+				rimmed = true
+		if patches.size() < 8 and (edge_d < 150.0 or rimmed) and not _market_blocked(pr, roads, solid, lms, 6.0, size, Rect2()) and not avenue.intersects(pr) and not _hits_any(floors, pr):
 			patches.append(pr)
 	var cobbles: Array[Rect2] = []
 	for i in 600:
 		var cr := Rect2(rng.randf_range(10.0, size.x - 16.0), rng.randf_range(10.0, size.y - 14.0), 5.0, 4.0)
-		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()) and not avenue.intersects(cr):
+		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()) and not avenue.intersects(cr) and not _hits_any(floors, cr):
 			cobbles.append(cr)
-	var out := {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch, "avenue": avenue, "avenue_slabs": _avenue_slabs(avenue), "ring": PackedVector2Array(), "shards": [] as Array[Rect2], "fence": [] as Array[Dictionary]}
+	var out := {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch, "avenue": avenue, "avenue_slabs": _avenue_slabs(avenue), "ring": PackedVector2Array(), "shards": [] as Array[Rect2], "fence": [] as Array[Dictionary], "courts": courts, "lanes": lanes}
 	var arng := RandomNumberGenerator.new()
 	arng.seed = hash("%s|avenue" % region.get("id", ""))
 	# GFX-134: clusters of crates, barrels and sacks along the avenue (appended to props so they draw and test alike)
@@ -3100,6 +3155,13 @@ static func _arrival_points(region: Dictionary) -> Array[Vector2]:
 	if region.has("spawn"):
 		out.append(Vector2(float(region["spawn"][0]), float(region["spawn"][1])))
 	return out
+
+
+static func _hits_any(rects: Array[Rect2], r: Rect2) -> bool:
+	for q in rects:
+		if q.grow(2.0).intersects(r):
+			return true
+	return false
 
 
 static func _market_blocked(rect: Rect2, roads: Array[Rect2], solid: Array[Rect2], lms: Array[Rect2], gap: float, size: Vector2, own: Rect2) -> bool:

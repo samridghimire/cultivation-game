@@ -139,3 +139,27 @@ func test_market_earth_dress() -> void:
 	assert_true(tilted > 0 and tilted < (d["loose_flags"] as Array).size() / 2, "some flags tilt")
 	assert_true((d["ruts"] as Array).size() >= 2, "cart ruts join the avenue")
 	assert_true((d["kerbs"] as Array).size() > 10, "streets have kerb stones")
+
+
+## GFX-174: flagstone courts and cobbled lanes stay inside the region, off the crater bowl and clear of the avenue; packed earth hugs edges.
+func test_market_courts_and_lanes() -> void:
+	var r: Dictionary = data().regions["fallen_star_market"]
+	var size := Vector2(float(r["map"]["size"][0]), float(r["map"]["size"][1]))
+	var d := Scenery.market_props(r, size)
+	assert_true((d["courts"] as Array).size() >= 4, "a court per hall")
+	assert_true((d["lanes"] as Array).size() >= 1, "lanes join stalls to the streets")
+	var crater := Rect2()
+	for pl: Dictionary in r["places"]:
+		if str(pl.get("look", "")) == "crater":
+			var cs: Array = pl["size"]
+			crater = Rect2(Vector2(float(pl["pos"][0]) - float(cs[0]) * 0.5, float(pl["pos"][1]) - float(cs[1]) * 0.5), Vector2(float(cs[0]), float(cs[1])))
+	var bounds := Rect2(Vector2.ZERO, size)
+	for key in ["courts", "lanes"]:
+		for fr: Rect2 in d[key]:
+			assert_true(bounds.encloses(fr), "%s inside the region" % key)
+	for fr: Rect2 in d["lanes"]:
+		assert_false(crater.intersects(fr), "lane avoids the crater")
+		assert_false((d["avenue"] as Rect2).intersects(fr), "lane avoids the avenue")
+	for pt: Rect2 in d["patches"]:
+		for fr: Rect2 in (d["courts"] as Array) + (d["lanes"] as Array):
+			assert_false(fr.intersects(pt), "earth never under paving")

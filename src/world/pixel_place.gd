@@ -655,17 +655,20 @@ static func _gather_rubble() -> Array:
 
 ## GFX-102: a scorched ring round a cracked black rock with ember glints.
 static func _gather_crater() -> Array:
+	# GFX-174: matches the world bowl (GFX-171): a raised pale rim, brown slope, umber floor, cracks and a small glow
 	var c := canvas(50, 34)
-	blob(c, 25, 21, 24, 12, "k", 1358)
-	blob(c, 25, 20, 20, 10, "T", 1359)
-	ell(c, 25, 20, 14, 7, "k")
-	ell(c, 25, 18, 9, 6, "S")
-	rect(c, 21, 15, 9, 6, "k")
-	rect(c, 25, 15, 1, 6, "T")
-	rect(c, 23, 18, 4, 1, "T")
-	for p: Array in [[10, 20], [38, 22], [27, 26], [17, 13]]:
-		rect(c, p[0], p[1], 2, 2, "f")
-		rect(c, p[0], p[1], 1, 1, "g")
+	blob(c, 25, 21, 24, 12, "s", 1358)
+	blob(c, 25, 21, 21, 10, "W", 1359)
+	blob(c, 26, 22, 17, 8, "t", 1360)
+	blob(c, 26, 22, 12, 6, "e", 1361)
+	blob(c, 26, 22, 8, 4, "T", 1362)
+	for p: Array in [[26, 22, 9, -4], [26, 22, -9, -3], [26, 22, 3, 5], [26, 22, -4, 5]]:
+		rect(c, p[0], p[1], 1, 1, "k")
+		rect(c, p[0] + p[2] / 2, p[1] + p[3] / 2, 1, 1, "k")
+	rect(c, 25, 21, 3, 2, "f")
+	rect(c, 26, 21, 1, 1, "g")
+	for p: Array in [[8, 17], [41, 20], [30, 31], [14, 27]]:
+		rect(c, p[0], p[1], 2, 1, "w")
 	return c
 
 
