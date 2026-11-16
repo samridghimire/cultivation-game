@@ -498,3 +498,35 @@ func test_effects_learn_marks_self_taught() -> void:
 	var flags := {}
 	Effects.apply(c, d, {"learn_technique": "iron_fist"}, flags)
 	assert_eq(String(flags.get(Mentorship.taught_by_key("iron_fist"), "")), Mentorship.SELF_TAUGHT)
+
+
+## SPAR-003: the spar hint reads the same world flags as the spar action.
+func _mortal_spar_setup(taught_by: String) -> Dictionary:
+	var c := new_character()
+	c.realm_index = 0
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var npc := new_character(78)
+	npc.id = "hunter_ma"
+	npc.name = "Hunter Ma"
+	npc.realm_index = 0
+	npc.age_days = 40 * Calendar.DAYS_PER_YEAR
+	npc.home_region = "qingshi_village"
+	LifeStats.add(c, "encounters")
+	LifeStats.add(c, "realm_floors_cleared")
+	var flags := {Mentorship.taught_by_key("iron_fist"): taught_by}
+	return {"c": c, "people": {"hunter_ma": npc}, "favor": {"hunter_ma": 60}, "flags": flags, "npc": npc}
+
+
+func _spar_hint_names(s: Dictionary) -> bool:
+	var lines := Guidance.hints(s["c"], data(), 1.0, 99, s["people"], s["flags"], "qingshi_village", 400, s["favor"])
+	return _any_contains(lines, "Hunter Ma")
+
+
+func test_spar_hint_follows_self_taught_flag() -> void:
+	var s := _mortal_spar_setup(Mentorship.SELF_TAUGHT)
+	var refusal := Mentorship.check_spar(s["c"], s["npc"], 60, data(), 400, s["flags"])
+	assert_true(_spar_hint_names(s) == (refusal == ""), "hint and action agree (self-taught)")
+	assert_false(_spar_hint_names(s), "self-taught: no hint for the villager")
+	s = _mortal_spar_setup("hunter_ma")
+	var ok := Mentorship.check_spar(s["c"], s["npc"], 60, data(), 400, s["flags"])
+	assert_true(_spar_hint_names(s) == (ok == ""), "hint and action agree (taught)")

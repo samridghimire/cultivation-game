@@ -925,10 +925,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var sell := _sell_hint(c, data, region_id, flags)
 	if sell != "":
 		out.append(sell)
-	var pointers := _pointers_hint(c, data, people, favor, region_id, today)
+	var pointers := _pointers_hint(c, data, people, favor, region_id, today, flags)
 	if pointers != "":
 		out.append(pointers)
-	var untried := _untried_hint(c, data, today, people, favor, region_id)
+	var untried := _untried_hint(c, data, today, people, favor, region_id, flags)
 	if untried != "":
 		out.append(untried)
 	var herb := herb_here_hint(c, data, region_id, today)
@@ -2164,8 +2164,8 @@ const CRAFT_HINT_MAX_RANK := 2
 ## used, judged from the life record. Not for Mortals or the first six months.
 ## The profession and sect nudges already exist as their own hints, so they are
 ## not repeated here.
-static func _untried_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
-	var feature := _untried_feature_hint(c, data, today, people, favor, region_id)
+static func _untried_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "", flags: Dictionary = {}) -> String:
+	var feature := _untried_feature_hint(c, data, today, people, favor, region_id, flags)
 	if feature != "":
 		return feature
 	if today < UNEXPLORED_MIN_DAYS or region_id == "":
@@ -2215,7 +2215,7 @@ static func _secret_realm_line(c: CharacterData, data: GameData, def: Dictionary
 	return "%s is open in %s (%s away): delve for treasure (entry %d%s)." % [name, Exploration.region_name(data, String(def.get("region", ""))), Calendar.format_duration(trip), stones, cost]
 
 
-static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "") -> String:
+static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, people: Dictionary = {}, favor: Dictionary = {}, region_id: String = "", flags: Dictionary = {}) -> String:
 	if c.realm_index < 1 or today < UNTRIED_MIN_DAYS:
 		return ""
 	if LifeStats.get_stat(c, "encounters") == 0:
@@ -2243,7 +2243,7 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 				if line != "":
 					return line
 	if not _has_sparred(c):
-		var partner := _region_people(c, data, people, favor, region_id, today, "spar")
+		var partner := _region_people(c, data, people, favor, region_id, today, "spar", flags)
 		if not partner.is_empty():
 			var npc: CharacterData = partner[0]
 			var style := _best_unmastered_combat(c, data)
@@ -2464,13 +2464,13 @@ static func _has_sparred(c: CharacterData) -> bool:
 
 ## NPCs in `region_id` who pass Mentorship.check_pointers ("pointers") or
 ## check_spar ("spar") right now, highest favor first (then id).
-static func _region_people(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int, kind: String) -> Array[CharacterData]:
+static func _region_people(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int, kind: String, flags: Dictionary = {}) -> Array[CharacterData]:
 	var out: Array[CharacterData] = []
 	if region_id == "" or today < 0 or people.is_empty():
 		return out
 	for npc in Npcs.in_region(people, data, region_id):
 		var f := int(favor.get(npc.id, 0))
-		var reason := Mentorship.check_pointers(c, npc, f, data, today) if kind == "pointers" else Mentorship.check_spar(c, npc, f, data, today)
+		var reason := Mentorship.check_pointers(c, npc, f, data, today, region_id, flags) if kind == "pointers" else Mentorship.check_spar(c, npc, f, data, today, flags)
 		if reason == "":
 			out.append(npc)
 	out.sort_custom(func(a: CharacterData, b: CharacterData) -> bool:
@@ -2481,8 +2481,8 @@ static func _region_people(c: CharacterData, data: GameData, people: Dictionary,
 
 
 ## "<Name> (<realm>) here could point out flaws in your <Tech>." (GUIDE-012).
-static func _pointers_hint(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int) -> String:
-	var mentors := _region_people(c, data, people, favor, region_id, today, "pointers")
+static func _pointers_hint(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	var mentors := _region_people(c, data, people, favor, region_id, today, "pointers", flags)
 	if mentors.is_empty():
 		return ""
 	var npc: CharacterData = mentors[0]
@@ -5191,7 +5191,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_festival_entries(out, data, today, region_id, events, flags)
 	_opportunity_entries(out, c, data, flags, today, region_id)
 	_fair_fight_entries(out, fights, c, data, region_id, today, flags)
-	for npc in _region_people(c, data, people, favor, region_id, today, "pointers").slice(0, POINTER_JOURNAL_MAX):
+	for npc in _region_people(c, data, people, favor, region_id, today, "pointers", flags).slice(0, POINTER_JOURNAL_MAX):
 		_add(out, "Opportunities", "Ask %s for pointers (%s)" % [npc.name, _region_name(data, region_id)], "normal")
 	for line in Letters.request_lines(c, data, people, today):
 		_add(out, "Errands", line, "normal")
@@ -5537,7 +5537,7 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 		var rival: CharacterData = people.get(c.rival)
 		if rival != null and rival.alive and region_id != "" and Npcs.region_of(rival, data) == region_id \
 				and Rivals.attitude(c, rival, int(favor.get(rival.id, 0)), data) != "bitter" \
-				and Mentorship.check_spar(c, rival, int(favor.get(rival.id, 0)), data, today) == "":
+				and Mentorship.check_spar(c, rival, int(favor.get(rival.id, 0)), data, today, flags) == "":
 			rated += 1
 			_rate_fight(found, c, data, Mentorship.spar_enemy(rival, data, c), "rival", "Challenge %s" % rival.name, 0, "Spar %s" % rival.name)
 	var roaming: Dictionary = {}
