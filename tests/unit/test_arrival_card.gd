@@ -178,8 +178,8 @@ func test_arrival_banner_slim_and_dismisses() -> void:
 	banner.announce("Misty Forest", "Qi x1.05 · Danger: Safe\nToday: Mugwort by the path", UIStyle.ACCENT, Banner.SLIM_HOLD_SECONDS, false, null, true)
 	assert_true(banner.visible)
 	assert_true(banner.slim_showing)
-	assert_false(banner.subtitle_text().contains("\n"), "one line")
-	assert_true(banner.ribbon_size().y < 100.0, "slim ribbon is short")
+	assert_true(banner.subtitle_text().split("\n").size() <= 2, "WU-546: short lines stay on their own line, nothing wraps further")
+	assert_true(banner.ribbon_size().y < 140.0, "slim ribbon is short")
 	var ev := InputEventAction.new()
 	ev.action = "interact"
 	ev.pressed = true

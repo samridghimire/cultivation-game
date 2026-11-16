@@ -8,6 +8,10 @@ const HOLD_SECONDS := 1.6
 const QUEUED_HOLD_SECONDS := 1.0
 ## Widest the ribbon grows (the 960 px column minus its padding).
 const MAX_TEXT_WIDTH := 920.0
+## WU-546: the slim (arrival) banner sits between the status card (right edge ~332 px) and the Next-steps card (left ~925 px).
+const SLIM_LEFT := 0.265
+const SLIM_RIGHT := 0.718
+const SLIM_TEXT_WIDTH := 540.0
 const FADE_SECONDS := 0.6
 const MAX_QUEUE := 4
 
@@ -115,6 +119,11 @@ func ribbon_size() -> Vector2:
 	return _ribbon.size
 
 
+## WU-546: the ribbon's on-screen rectangle (test hook).
+func ribbon_rect() -> Rect2:
+	return _ribbon.get_global_rect()
+
+
 func portrait_shown() -> bool:
 	return _portrait.visible
 
@@ -205,16 +214,34 @@ func _drop_oldest() -> void:
 	_queue.remove_at(0)
 
 
+## WU-546: `text` with each over-long line broken at spaces so it fits `width` px at `font_size`.
+static func wrap_lines(text: String, font: Font, font_size: int, width: float) -> String:
+	var out: Array[String] = []
+	for line in text.split("\n"):
+		var cur := ""
+		for word in line.split(" "):
+			var trial := word if cur == "" else cur + " " + word
+			if cur != "" and font.get_string_size(trial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > width:
+				out.append(cur)
+				cur = word
+			else:
+				cur = trial
+		out.append(cur)
+	return "\n".join(out)
+
+
 func _play(title: String, subtitle: String, color: Color, hold: float, portrait: Texture2D = null, slim: bool = false, sub_color: Color = Color(0, 0, 0, 0)) -> void:
 	_current = [title, subtitle, color, hold, portrait, slim, sub_color]
 	slim_showing = slim
 	_holder.anchor_top = 0.02 if slim else 0.03
-	_holder.anchor_bottom = 0.09 if slim else 0.2
+	_holder.anchor_bottom = 0.2  # WU-546: a slim banner with teacher lines grows down (the ribbon shrinks to its text)
+	_holder.anchor_left = SLIM_LEFT if slim else 0.125  # WU-546: slim stays clear of the status and Next-steps cards
+	_holder.anchor_right = SLIM_RIGHT if slim else 0.875
 	_title.add_theme_font_size_override("font_size", 28 if slim else 44)
 	_title.add_theme_constant_override("outline_size", 5 if slim else 8)
 	_subtitle.add_theme_font_size_override("font_size", 18 if slim else 20)
-	if slim:
-		subtitle = subtitle.replace("\n", " · ")
+	if slim:  # WU-546: wrap by hand so the ribbon is sized at once (an autowrap label has no height until laid out)
+		subtitle = wrap_lines(subtitle, _subtitle.get_theme_font("font"), 18, SLIM_TEXT_WIDTH - 12.0)
 	_portrait.set_portrait(portrait)
 	_played_msec = Time.get_ticks_msec()
 	if _tween != null:
@@ -230,8 +257,8 @@ func _play(title: String, subtitle: String, color: Color, hold: float, portrait:
 	var widest := 0.0
 	var font := _subtitle.get_theme_font("font")
 	for line in subtitle.split("\n"):
-		widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
-	_subtitle.custom_minimum_size.x = minf(widest + 12.0, MAX_TEXT_WIDTH)
+		widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 18 if slim else 20).x)
+	_subtitle.custom_minimum_size.x = minf(widest + 12.0, SLIM_TEXT_WIDTH if slim else MAX_TEXT_WIDTH)
 	_ribbon.reset_size()
 	_flash.color = Color(color, 0.0 if slim else 0.35)
 	modulate.a = 1.0

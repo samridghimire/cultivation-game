@@ -13,6 +13,7 @@ extends SceneTree
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-542: add `--knows=<tech_id>` to learn that technique first.
+## WU-546: add `--first-visit` (with --region=) to show the first-visit arrival banner with the region's teacher lines.
 ## WU-543: `--friend=<id> --region=<region>` keeps that region and finds the villager there; `--flag=<key>[=<value>]` sets a world flag
 ##   (true, or the int/string value); `--realm=<index>` sets the player's realm (stage 0).
 ## WU-537: `--friend=hunter_ma` opens that named villager instead.
@@ -197,7 +198,8 @@ func _start() -> void:
 				_rebuild_world(gs, id)
 				if OS.get_cmdline_user_args().has("--edge"):  # GFX-110: stand at the bottom path end
 					_teleport_player(Vector2(float(world.map_size.x) - 40.0 if gs.data.regions[id]["map"]["paths"].size() < 2 else 800.0, world.map_size.y - 20.0))
-				root.get_node("EventBus").clear_history(), "close": func() -> void: pass})  # QA-203: no previous region's log lines
+				root.get_node("EventBus").clear_history()
+				_first_visit_card(gs, id), "close": func() -> void: pass})  # QA-203: no previous region's log lines
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return
@@ -326,7 +328,7 @@ func _start() -> void:
 		return
 	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
 	if region_list.size() == 1:
-		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void: pass, "close": func() -> void: pass})
+		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void: _first_visit_card(gs, region_list[0]), "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:
@@ -765,6 +767,17 @@ func _quarrel_shots(gs: Node, c: CharacterData) -> void:
 		root.get_node("EventBus").quarrel_requested.emit(a.id), "close": hud.get("_quarrel").close})
 
 
+## WU-546: `--first-visit` makes the region's arrival a real first visit and shows the arrival banner with its teacher lines.
+func _first_visit_card(gs: Node, id: String) -> void:
+	if not OS.get_cmdline_user_args().has("--first-visit"):
+		return
+	gs.player.visited_regions.erase(id)
+	gs.last_arrival_first_visit = Exploration.visit(gs.player, id)
+	var banner: Control = hud.get("_banner")
+	banner.visible = true
+	hud.call("_show_arrival", id)
+
+
 ## WU-418: a generated Qingshi villager at favor 65 (Close friend); their menu shows the tier and hearts.
 func _friend_shots(gs: Node) -> void:
 	shots.append({"name": "friend", "open": func() -> void:
@@ -866,7 +879,7 @@ func _process(_d: float) -> bool:
 		frames = 0
 		return false
 	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
-	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]):  # QA-182: queued notices covered the modals
+	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]) and not (OS.get_cmdline_user_args().has("--first-visit") and String(shot["name"]).begins_with("region_")):  # QA-182: queued notices covered the modals
 		if banner_wait_start < 0:
 			banner_wait_start = Time.get_ticks_msec()
 		if Time.get_ticks_msec() - banner_wait_start < BANNER_WAIT_MSEC:
