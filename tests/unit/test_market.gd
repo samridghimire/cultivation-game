@@ -148,6 +148,18 @@ func test_market_courts_and_lanes() -> void:
 	var d := Scenery.market_props(r, size)
 	assert_true((d["courts"] as Array).size() >= 4, "a court per hall")
 	assert_true((d["lanes"] as Array).size() >= 1, "lanes join stalls to the streets")
+	var stalls := 0  # GFX-176: every stall has a lane touching it
+	for lm: Dictionary in r["map"]["landmarks"]:
+		if str(lm.get("kind", "")) != "stall":
+			continue
+		stalls += 1
+		var sr := Rect2(Vector2(float(lm["pos"][0]) - float(lm["size"][0]) * 0.5, float(lm["pos"][1]) - float(lm["size"][1]) * 0.5), Vector2(float(lm["size"][0]), float(lm["size"][1])))
+		var joined := false
+		for ln: Rect2 in d["lanes"]:
+			if ln.grow(1.0).intersects(sr):
+				joined = true
+		assert_true(joined, "stall at %s has a lane" % str(lm["pos"]))
+	assert_true(stalls >= 4, "the market has its stalls")
 	var crater := Rect2()
 	for pl: Dictionary in r["places"]:
 		if str(pl.get("look", "")) == "crater":

@@ -2646,13 +2646,16 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 			var cs: Array = pl.get("size", [100, 100])
 			crater_bounds.append(Rect2(cc - Vector2(float(cs[0]), float(cs[1])) * 0.5, Vector2(float(cs[0]), float(cs[1]))).grow(52.0))
 	var lanes: Array[Rect2] = []
+	var lane_targets: Array[Rect2] = roads + courts  # GFX-176: a stall may also join a court or a building's front
+	for pl: Dictionary in region.get("places", []):
+		lane_targets.append(Npcs.place_keepout(pl))
 	for i in lms.size():
 		if str(map["landmarks"][i].get("kind", "")) != "stall":
 			continue
 		var lr: Rect2 = lms[i]
 		var best := Rect2()
 		var best_len := 1e9
-		for rd in roads:
+		for rd in lane_targets:
 			var lane := Rect2()
 			if rd.size.x > rd.size.y:  # a vertical lane to a horizontal street
 				var lx := lr.get_center().x - 6.0
@@ -2670,10 +2673,10 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 			if ln > 0.0 and ln < best_len:
 				best = lane
 				best_len = ln
-		if best.size.x > 0.0 and best_len <= 150.0 and best_len >= 10.0:
+		if best.size.x > 0.0 and best_len <= 260.0 and best_len >= 10.0:  # GFX-176: every stall reaches its nearest street or court
 			var lane_solid: Array[Rect2] = []  # places only (no label band: a lane may pass a name, it is floor)
 			for pl: Dictionary in region.get("places", []):
-				lane_solid.append(Npcs.place_keepout(pl).grow(2.0))
+				lane_solid.append(Npcs.place_keepout(pl).grow(-1.0))  # GFX-176: a lane may end right at a building front
 			var bad := _market_blocked(best, [] as Array[Rect2], lane_solid, lms, 1.0, size, lr)
 			for cb in crater_bounds:
 				if cb.intersects(best):
