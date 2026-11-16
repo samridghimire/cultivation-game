@@ -374,3 +374,49 @@ func test_gfx073_label_slides_off_panel_and_inside_view() -> void:
 	assert_true(view.encloses(after), "label inside the screen")
 	assert_false(panel[0].intersects(after), "label clear of the panel")
 	n.free()
+
+
+## WU-555: a person who wanders onto a place's label re-lays their label clear of it.
+func test_moved_person_label_steps_aside() -> void:
+	var place := _place("Herb Patch", Vector2(400, 300))
+	var npc := _npc("Herbalist Lan", Vector2(400, 360))
+	var all := [place, npc]
+	Interactable.clear_person_labels(all)
+	Interactable.spread_labels(all)
+	Interactable.sync_person_labels(all)
+	var pr := place.label_rect()
+	# Walk 60 px up toward the place label (bob-free anchor), then tick until eased.
+	npc.position = Vector2(400, 310)
+	for i in 40:
+		npc.person_label_tick(0.1, npc.position)
+	assert_false(npc.label_rect().intersects(pr), "label still on the place name")
+	assert_true(npc.label_offset.y <= 0.0, "label dropped onto the head")
+
+
+func test_person_label_ignores_small_moves() -> void:
+	var place := _place("Herb Patch", Vector2(400, 300))
+	var npc := _npc("Herbalist Lan", Vector2(400, 360))
+	var all := [place, npc]
+	Interactable.clear_person_labels(all)
+	Interactable.sync_person_labels(all)
+	var before := npc.label_offset
+	npc.position += Vector2(0, -4)  # under RELAYOUT_MOVE
+	npc.person_label_tick(1.0, npc.position)
+	assert_eq(npc.label_offset, before)
+	assert_eq(npc._label_anchor, Vector2(400, 360))
+
+
+func test_relayout_person_clears_with_gap() -> void:
+	var place: Array[Rect2] = [Rect2(100, 100, 80, 16)]
+	var off := Interactable.relayout_person(Rect2(120, 100, 80, 16), place)
+	var moved := Rect2(Rect2(120, 100, 80, 16).position + off, Vector2(80, 16))
+	assert_false(moved.grow(Interactable.LABEL_MIN_GAP / 2.0 - 0.1).intersects(place[0]) and off.y == 0.0)
+	assert_false(moved.intersects(place[0]))
+
+
+func _place(label: String, pos: Vector2) -> Interactable:
+	var n := Interactable.new()
+	n.display_name = label
+	n.position = pos
+	n.size = Vector2(28, 28)
+	return n

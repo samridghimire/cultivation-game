@@ -835,6 +835,7 @@ func _build_npcs() -> void:
 	Interactable.clear_person_labels(all)  # WU-511
 	Interactable.spread_labels(all)
 	Interactable.clamp_labels(all, Rect2(Vector2.ZERO, map_size))
+	Interactable.sync_person_labels(all)  # WU-555
 
 
 ## Puts the gold marker on the places the HUD's first hint names (WU-280).

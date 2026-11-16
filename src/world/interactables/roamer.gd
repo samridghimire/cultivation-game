@@ -129,6 +129,7 @@ func get_options() -> Array[Dictionary]:
 
 func _physics_process(delta: float) -> void:
 	_wander(delta)
+	person_label_tick(delta, position)  # WU-555
 	if _fading:
 		_alpha = maxf(0.0, _alpha - delta / FADE_SECONDS)
 		modulate.a = _alpha

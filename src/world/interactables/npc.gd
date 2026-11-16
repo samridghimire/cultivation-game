@@ -181,6 +181,7 @@ func breathe(delta: float) -> void:
 		_wander_target = Vector2.ZERO if _wander_target != Vector2.ZERO and _rng.randf() < 0.5 else Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(3.0, WANDER_RADIUS)
 	_wander = _wander.move_toward(_wander_target, WALK_SPEED * delta)
 	position = home + _wander + Vector2(0, sin(_time * 2.0 + _phase) * BOB_AMPLITUDE)
+	person_label_tick(delta, home + _wander)  # WU-555
 	var to_target := _wander_target - _wander
 	var dir := "down"
 	var frame := 0

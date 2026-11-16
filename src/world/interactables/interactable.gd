@@ -40,6 +40,15 @@ const PLACE_FAR := 420.0
 const PLACE_FAR_ALPHA := 0.35
 ## WU-549: labels sharing a row keep at least this many px between them.
 const LABEL_MIN_GAP := 12.0
+## WU-555: a person re-lays their label against the fixed place labels once they have moved this far, at most this often.
+const RELAYOUT_MOVE := 6.0
+const RELAYOUT_EVERY := 0.2
+const RELAYOUT_EASE := 0.15
+var _place_rects: Array[Rect2] = []
+var _label_avoid := Vector2.ZERO
+var _label_target := Vector2.ZERO
+var _label_anchor := Vector2.INF
+var _relayout_wait := 0.0
 static var ground_style := "grass"
 ## Draws the name label above every sibling building (WU-278).
 var _label_node: Node2D
@@ -263,7 +272,45 @@ static func clear_person_labels(nodes: Array) -> void:
 			places.append(node.label_rect(node.label_text()))
 	for node: Interactable in nodes:
 		if node.is_person() and node.label_text() != "":
-			node.label_offset += LabelLayout.person_offset(node.label_rect(node.label_text()), node.position.y + node.size.y / 2.0, places)
+			var avoid := LabelLayout.person_offset(node.label_rect(node.label_text()), node.position.y + node.size.y / 2.0, places)
+			node.label_offset += avoid
+			node._place_rects = places
+			node._label_avoid = avoid
+			node._label_anchor = node.position
+			node._label_target = node.label_offset
+
+
+## WU-555: call once after spread/clamp so a person's eased target starts at the laid-out offset.
+static func sync_person_labels(nodes: Array) -> void:
+	for node: Interactable in nodes:
+		if node.is_person():
+			node._label_target = node.label_offset
+
+
+## WU-555: the label offset a person needs at `anchor` (their home + wander, no bob) to clear `place_rects`, given
+## `base`, the offset they would have with no place in the way. Pure: also the unit-test entry point.
+static func relayout_person(label_at_base: Rect2, place_rects: Array[Rect2]) -> Vector2:
+	return LabelLayout.person_offset(label_at_base.grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0, 0.0), 0.0, place_rects)
+
+
+## WU-555: called by a moving person every physics frame with their bob-free position. Re-lays the label when they
+## have moved RELAYOUT_MOVE px since it was last placed (at most every RELAYOUT_EVERY s) and eases it there.
+func person_label_tick(delta: float, anchor: Vector2) -> void:
+	if _place_rects.is_empty():
+		return
+	_relayout_wait -= delta
+	if _relayout_wait <= 0.0 and _label_anchor.is_finite() and anchor.distance_to(_label_anchor) > RELAYOUT_MOVE:
+		_relayout_wait = RELAYOUT_EVERY
+		_label_anchor = anchor
+		var base := _label_target - _label_avoid
+		var rect := label_rect(label_text())
+		rect.position += base - label_offset + (anchor - position)
+		_label_avoid = relayout_person(rect, _place_rects)
+		_label_avoid.y = minf(_label_avoid.y, 0.0)
+		_label_target = base + _label_avoid
+	if label_offset != _label_target:
+		label_offset = _label_target if MotionFx.reduced() else label_offset.move_toward(_label_target, maxf(0.5, label_offset.distance_to(_label_target) * minf(1.0, delta / RELAYOUT_EASE)))
+		_redraw_label()
 
 
 ## WU-511: whether this is a person or creature (NPC, roamer) rather than a place.
