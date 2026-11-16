@@ -2,6 +2,9 @@ extends RefCounted
 ## QA-016: a scripted newcomer in Qingshi Village, shared by the sim
 ## (tests/sim/simulate_first_hour.gd) and its guards (tests/unit/test_first_hour.gd).
 ## Plays through the same GameState calls the menus use.
+## QA-222: one sim "month" is 30 days of cultivation PLUS the days its other actions take (travel, work, missions, crafting,
+## waiting, retreats), measured at ~60 clock days per month for a curious seed. So every `day` figure the sims print (Foundation day,
+## seal days, breakthrough days) is the game clock's `total_days`, and a 36-month run ends near day 2000, not 1080.
 
 const CHORES: Array[String] = ["chore_gather_herbs", "chore_widow_roof", "chore_drive_off_boar"]
 const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json

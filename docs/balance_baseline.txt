@@ -1667,3 +1667,5 @@ Curious practiser: 10 seeds, 12 months
     10        3        3         4           725   44     2  236
   Medians: iron_fist level m3 3, m6 3, m12 4; first wolf win day 553 (3 seeds never); fights won 41, lost 2; QR3 day 264 (10/10 reached)
 
+
+Sim days vs months (QA-222): every `day` figure (Foundation day, seal days, attempt days) is the game clock's total_days. One sim month is 30 days of cultivation plus the days its actions take (travel, work, missions, waiting); seed 1 of the curious policy averages ~60 clock days per month (month deltas 27-85), so 36 months end near day 2000-2170 and Foundation at median day 1793 is month ~30, not a bug.

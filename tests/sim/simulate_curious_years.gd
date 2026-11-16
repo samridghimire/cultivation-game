@@ -5,6 +5,7 @@ extends SceneTree
 ## QA-076: `--wait-for-pill=N` makes the player wait up to N days at the Foundation bottleneck, earning, to afford the pill.
 ## QA-096: `--trace=<seed>` runs only that seed and prints one line per month (realm, qi, breakthrough chance, stones, lives, injuries,
 ## log lines) plus the HUD hints and goals at the end; the default output is unchanged.
+## QA-222: `day` columns are the game clock's days; a sim month is 30 cultivation days plus its actions' days (~60 clock days, see first_hour.gd).
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N] [--trace=<seed>]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
