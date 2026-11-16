@@ -1452,17 +1452,49 @@ func _draw_market_ground() -> void:
 					var p1 := ring[(fi + 1) % ring.size()]
 					draw_line(p0, p1, Color(0.16, 0.13, 0.13), 3.0)
 		else:  # GFX-168: opaque scorched earth over the avenue's end, with a soot rim
-			draw_colored_polygon(ring, base.darkened(0.3).blend(Color(0.1, 0.06, 0.04, 0.45)))
-			var closed := ring.duplicate()
-			closed.append(ring[0])
-			draw_polyline(closed, Color(0.12, 0.09, 0.08), 3.0)
+			var cc := Vector2.ZERO  # GFX-171: raised rim, brown slope rings, umber floor, cracks, small glow
+			for pt: Vector2 in ring:
+				cc += pt
+			cc /= float(ring.size())
+			var rad := minf(ring_bounds_size(ring).x, ring_bounds_size(ring).y) * 0.5
+			var rid := hash("%s|rings" % _region.get("id", ""))
+			var rings := Scenery.crater_rings(rad, rid, base)
+			for rg: Dictionary in rings:
+				var poly := PackedVector2Array()
+				for pt: Vector2 in ring:
+					poly.append(cc + (pt - cc) * float(rg["frac"]) + (rg["shift"] as Vector2))
+				draw_colored_polygon(poly, rg["color"])
+			var lip := PackedVector2Array()  # lit upper-left lip over the rim, shadow lower-right inside
+			for pt: Vector2 in ring:
+				lip.append(pt)
+			lip.append(ring[0])
+			draw_polyline(lip, base.lightened(0.3), 2.0)
+			var floor_col: Color = rings[rings.size() - 1]["color"]
+			for k in 7:
+				var a := TAU * (float(k) + float(rid % 5) * 0.1) / 7.0
+				var d := Vector2(cos(a), sin(a))
+				draw_line(cc + d * rad * 0.22, cc + d * rad * (0.62 + 0.1 * float((rid >> k) % 3)), floor_col.darkened(0.2), 1.0)
+			draw_circle(cc, 7.0, Color(0.9, 0.45, 0.15, 0.35))
+			draw_circle(cc, 3.5, Color(1.0, 0.7, 0.3, 0.8))
 	for s: Dictionary in ([] if snowy else _market_dress["scorch"]):  # GFX-165: no translucent scorch layers over the snow bowl
 		for o: PackedVector2Array in s.get("outlines", []):
 			draw_colored_polygon(o, Color(0.08, 0.05, 0.04, 0.12))
-	for sh: Rect2 in _market_dress.get("shards", []):
-		draw_rect(sh.grow(2.0), Color(0.6, 0.85, 1.0, 0.18))
-		draw_rect(sh, Color("7d8aa8"))
-		draw_rect(Rect2(sh.position + Vector2(1, 1), Vector2(2, 2)), Color("d6ecff"))
+	for fl: Rect2 in _market_dress.get("rim_flags", []):  # GFX-171: loose flags round the rim
+		var fc := Color(_region.get("map", {}).get("path_color", "9c917a")).darkened(0.1)
+		draw_rect(fl, fc if not snowy else fc.lerp(Color(0.9, 0.92, 0.97), 0.55))
+		draw_rect(fl, fc.darkened(0.3), false, 1.0)
+	for sh: Rect2 in _market_dress.get("shards", []):  # GFX-171: star-iron shards: grey-blue with a 1px glint
+		draw_rect(sh, Color("6b7890"))
+		draw_rect(Rect2(sh.position + Vector2(1, 1), Vector2(1, 1)), Color("d6ecff"))
+
+
+func ring_bounds_size(poly: PackedVector2Array) -> Vector2:
+	var lo := poly[0]
+	var hi := poly[0]
+	for pt: Vector2 in poly:
+		lo = lo.min(pt)
+		hi = hi.max(pt)
+	return hi - lo
 
 
 ## GFX-126: barrels, crates and sacks beside the stalls.

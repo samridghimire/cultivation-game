@@ -1038,3 +1038,15 @@ func test_shadow_width_by_kind() -> void:
 	assert_true(Scenery.shadow_width("pine", 1.0) < round_w * 0.7)
 	assert_true(Scenery.shadow_width("bamboo", 1.0) < Scenery.shadow_width("pine", 1.0))
 	assert_eq(Scenery.shadow_width("round", 2.0), round_w * 2.0)
+
+
+func test_crater_rings_shrink_stay_light_and_are_deterministic() -> void:
+	var ground := Color("6b6250")
+	var rings := Scenery.crater_rings(70.0, 123, ground)
+	assert_true(rings.size() >= 4, "at least four rings")
+	var limit := ground.darkened(Scenery.CRATER_FLOOR_DARKEN).get_luminance()
+	for i in rings.size():
+		assert_true((rings[i]["color"] as Color).get_luminance() >= limit - 0.0001, "ring %d not darker than the floor limit" % i)
+		if i > 0:
+			assert_true(float(rings[i]["frac"]) < float(rings[i - 1]["frac"]), "rings shrink inward")
+	assert_eq(rings, Scenery.crater_rings(70.0, 123, ground), "same seed, same rings")

@@ -2524,6 +2524,15 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 				continue
 			shards.append(sr)
 		out["shards"] = shards
+		var rim_flags: Array[Rect2] = []  # GFX-171: a ring path of loose flags just outside the rim, joining the avenue's end
+		for i in 22:
+			var fa := TAU * (float(i) + arng.randf_range(-0.2, 0.2)) / 22.0
+			var fat := cpos + Vector2(cos(fa) * (ring_rect.size.x * 0.5 + 9.0), sin(fa) * (ring_rect.size.y * 0.5 + 9.0))
+			var fr := Rect2((fat - Vector2(5, 4)).round(), Vector2(arng.randi_range(8, 11), arng.randi_range(6, 8)))
+			if _market_blocked(fr, roads, inner_solid, lms, 1.0, size, Rect2()):
+				continue
+			rim_flags.append(fr)
+		out["rim_flags"] = rim_flags
 		var fence: Array[Dictionary] = []
 		for sx: float in [-1.0, 1.0]:
 			var fx: float = cpos.x + sx * (ring_rect.size.x * 0.5 + 6.0)
@@ -2545,6 +2554,31 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 				fence.append({"posts": south_posts})
 		out["fence"] = fence
 	_market_earth_dress(out, region, roads, solid, lms, size)
+	return out
+
+
+## GFX-171: the nested rings of a meteor crater, outermost first: [{frac, color, shift}]. `frac` scales the bowl outline about
+## its centre (strictly shrinking inward), `shift` nudges that ring toward the lower right (so the upper-left lip reads lit),
+## `color` is derived from the ground colour and never darker than ground.darkened(CRATER_FLOOR_DARKEN). Deterministic per seed.
+const CRATER_FLOOR_DARKEN := 0.55
+
+static func crater_rings(radius: float, seed: int, ground: Color = Color("6b6250")) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var limit := ground.darkened(CRATER_FLOOR_DARKEN)
+	var tones: Array[float] = [-0.14, 0.12, 0.26, 0.4, 0.5]  # rim lightens, then darker slopes, floor at 0.5
+	var out: Array[Dictionary] = []
+	var fracs: Array[float] = [1.0, 0.9, 0.74, 0.58, 0.4]
+	for i in fracs.size():
+		var f: float = fracs[i] - rng.randf_range(0.0, 0.03) * float(i)
+		var col: Color
+		if i == 0:
+			col = ground.lightened(0.12).blend(Color(0.55, 0.45, 0.3, 0.35))
+		else:
+			col = ground.darkened(tones[i]).blend(Color(0.2, 0.12, 0.08, 0.12))
+		if col.get_luminance() < limit.get_luminance():
+			col = limit
+		out.append({"frac": f, "color": col, "shift": Vector2(1.0, 1.0) * radius * 0.04 * float(i)})
 	return out
 
 
