@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-16 [SEASON-024] The season-task sim plays more like a player, and a test checks every year-1 season task has a place within reach.
+- 2026-11-16 [WU-553] A villager you spar with appears on the duel stage in their own clothes and colours.
+- 2026-11-16 [QA-165] The sim can treat its injuries (`--heal-injuries`); healing costs the far-qi rogue about 140 days but half its lead survives.
+- 2026-11-16 [GUIDE-250] The fair fight one road away still shows when fights at home use up the hint's budget.
+- 2026-11-16 [WU-551] Techniques show a kind icon and a practice bar, and the detail pane says how much practice the next level needs.
+- 2026-11-16 [WU-554] The character sheet shows your gear as a strip of icons and stats; press a slot to take it off.
+- 2026-11-16 [SPAR-003] The spar hint no longer names a villager who would refuse to spar.
+- 2026-11-16 [C-375] Maple Carp at the Qingshi jetty in autumn, a gift Xiao Ling likes that needs no rain.
+- 2026-11-16 [WU-552] Encounter cards have real titles, and river encounters draw a riverbank.
+- 2026-11-16 [QA-174] The sect sim can take one board mission a month (`--mission-monthly`).
+- 2026-11-16 [C-378] The Feral Hill Dog drops a Hill Dog Fang, used for a Fang Hunting Knife and liked by Hunter Ma.
+- 2026-11-16 [GFX-175] Myriad Peaks Ridge has damp hollows, scree, lichen and grass between its rocks, changing with the season.
 - 2026-11-16 [GFX-173] Terrace gather sites on the ridge and Azure Peak follow the hill as bowed steps, with lightning-scorched and misty variants.
 - 2026-11-16 [QA-215] The curious-years sim can do the elder's season tasks (`--season-tasks`); shots can centre on a villager or place (`--focus=`).
 - 2026-11-16 [WU-548] A friendly spar plays on the duel stage with HP bars and ends with a result block; the loser kneels.
