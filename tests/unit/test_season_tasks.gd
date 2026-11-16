@@ -741,3 +741,43 @@ func test_sell_wanted_names_a_stall_that_wants_something() -> void:
 			found = true
 			assert_true(w.begins_with("at ") or w.begins_with("in "), w)
 	assert_true(found, "some day a stall wants goods")
+
+
+## SEASON-024: tasks of the year-1 sets that a stage-0 Qi Refining character cannot find a place for within
+## SEASON_REACH route days of Qingshi on the first day of the season (content: C-382 empties this list).
+const KNOWN_UNREACHABLE: Array[String] = []
+const SEASON_REACH := 6
+
+
+## The route days to the nearest region whose name `where` text mentions (0 when it names none: Qingshi itself).
+func _where_days(c: CharacterData, gd: GameData, text: String) -> int:
+	var best := -1
+	for rid: String in gd.regions:
+		if text.find(String(gd.regions[rid]["name"])) < 0:
+			continue
+		var d := 0 if rid == SeasonTasks.REGION else Guidance.route_days(c, gd, SeasonTasks.REGION, rid)
+		if d >= 0 and (best < 0 or d < best):
+			best = d
+	return best if best >= 0 else (0 if text.find(" in ") < 0 else -1)
+
+
+func test_year_one_tasks_have_a_place_within_reach() -> void:
+	var gd: GameData = _gs().data
+	var c := CharacterData.new()
+	var unreachable: Array[String] = []
+	for season_start in [0, 90, 180, 270]:
+		for t: Dictionary in SeasonTasks.tasks_for(gd, season_start):
+			# a market's wanted good rotates daily: the best day of the season's first month counts
+			var span := 30 if String(t["kind"]) == "sell_wanted" else 1
+			var best := -1
+			for d: int in range(season_start, season_start + span):
+				var text := SeasonTasks.where(t, c, gd, d)
+				var days := _where_days(c, gd, text) if text != "" else -1
+				if days >= 0 and (best < 0 or days < best):
+					best = days
+			if best < 0 or best > SEASON_REACH:
+				unreachable.append(String(t["id"]))
+	for id in unreachable:
+		assert_true(KNOWN_UNREACHABLE.has(id), "year-1 task %s has no place within %d route days" % [id, SEASON_REACH])
+	for id in KNOWN_UNREACHABLE:
+		assert_true(unreachable.has(id), "%s is listed as unreachable but now has a place; remove it" % id)

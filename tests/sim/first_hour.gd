@@ -67,7 +67,7 @@ static var spar_log := {"bouts": 0, "refused": []}
 static var chat_teacher := false
 ## QA-215: once a month the curious player does the elder's open season tasks that SeasonTasks places within SEASON_REACH_DAYS
 ## of where they stand (catch/gather at a place's table, hunt the village hunt's quarry or a site that can bring the foe up
-## (only when the fight is rated 50%+), enter the festival contest, sell a wanted good held), then walks home.
+## (only when the fight is rated 40%+, SEASON-024), enter the festival contest, sell a wanted good held), then walks home.
 ## simulate_curious_years.gd's --season-tasks turns it on (part of the memo key). season_task_log counts what was done.
 static var season_tasks := false
 ## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
@@ -79,7 +79,7 @@ static var mission_monthly := false
 static var heal_far := false
 static var heal_far_log := {"treated": 0, "trips": 0}
 const SEASON_REACH_DAYS := 3
-static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0}
+static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0, "bought": 0}
 static var _teach_rec := {}
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
@@ -504,6 +504,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		if not c.alive:
 			return kinds
 		_follow_spar_hint(gs, c, today + week * 7)
+		if season_tasks and c.alive:
+			_season_festival_watch(gs, c)
 		if chat_teacher and c.alive:
 			_chat_teacher_week(gs, c)
 		if not c.alive:
@@ -1272,6 +1274,27 @@ static func _season_task_month(gs: Node, c: CharacterData) -> void:
 		_go_to(gs, c, home)
 
 
+## SEASON-024: a player watches the calendar: when an open contest task's festival is on in reach and its days are not
+## over before the walk there ends, go now and enter (then walk home).
+static func _season_festival_watch(gs: Node, c: CharacterData) -> void:
+	var home: String = gs.current_region
+	var today := _day(gs)
+	if bool(c.season_tasks.get("done", false)) and String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today):
+		return
+	for t: Dictionary in SeasonTasks.tasks_for(gs.data, today):
+		if String(t["kind"]) != "contest" or _season_task_left(gs, c, t) <= 0:
+			continue
+		for rid in _near_regions(gs, c):
+			var inst := WorldEvents.instance_in(gs.world_events, String(t["target"]), rid)
+			if inst.is_empty():
+				continue
+			var walk := 0 if rid == gs.current_region else Guidance.route_days(c, gs.data, gs.current_region, rid)
+			if walk >= 0 and today + walk < int(inst.get("end_day", 0)):
+				_season_contest(gs, c, t)
+	if c.alive and gs.current_region != home:
+		_go_to(gs, c, home)
+
+
 static func _season_task_left(gs: Node, c: CharacterData, t: Dictionary) -> int:
 	var st: Dictionary = c.season_tasks
 	if String(st.get("season_key", "")) != SeasonTasks.season_key(_day(gs)):
@@ -1328,7 +1351,7 @@ static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
 static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	var target := String(t["target"])
 	var enemy: Dictionary = gs.data.enemies.get(target, {})
-	if enemy.is_empty() or Combat.win_chance(c, gs.data, enemy) < 0.5:
+	if enemy.is_empty() or Combat.win_chance(c, gs.data, enemy) < 0.4:
 		return
 	var season := Calendar.season_of(_day(gs)).to_lower()
 	for rid in _near_regions(gs, c):
@@ -1376,7 +1399,9 @@ static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	for rid in _near_regions(gs, c):
 		for place: Dictionary in gs.data.regions[rid].get("places", []):
 			var w := Places.wanted_today(place, _day(gs))
-			if w.is_empty() or c.item_count(String(w["item"])) <= 0:
+			if w.is_empty():
+				continue
+			if c.item_count(String(w["item"])) <= 0 and not _season_buy_wanted(gs, c, String(w["item"]), maxi(1, _season_task_left(gs, c, t))):
 				continue
 			if not _go_to(gs, c, rid):
 				return
@@ -1386,6 +1411,32 @@ static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
 			gs.shop_name = ""
 			season_task_log["sold"] += before - _season_task_left(gs, c, t)
 			return
+
+
+## SEASON-024: buy `count` of `item_id` in the nearest merchant within reach that sells it and that we can afford
+## (the policy then walks to the stall). Returns whether we now hold at least one.
+static func _season_buy_wanted(gs: Node, c: CharacterData, item_id: String, count: int) -> bool:
+	var item: Dictionary = gs.data.items.get(item_id, {})
+	if item.is_empty():
+		return false
+	var home: String = gs.current_region
+	for rid in _near_regions(gs, c):
+		for p: Dictionary in gs.data.regions[rid].get("places", []):
+			if String(p.get("type", "")) != "merchant" or not Items.merchant_sells(gs.data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
+				continue
+			var price := Guidance.merchant_price(c, gs.data, rid, item_id)
+			if price <= 0 or price * count > c.item_count("spirit_stone"):
+				continue
+			if not _go_to(gs, c, rid):
+				return false
+			gs.shop_name = String(p.get("display_name", ""))
+			gs.buy_item(item_id, "", count)
+			gs.shop_name = ""
+			season_task_log["bought"] += c.item_count(item_id)
+			return c.item_count(item_id) > 0
+	if c.alive and gs.current_region != home:
+		_go_to(gs, c, home)
+	return false
 
 
 ## QA-220: first combat style known (and how) and the day it is mastered, from the clock.
