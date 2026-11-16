@@ -83,8 +83,9 @@ const SCENE_TITLES := {"trail": "On the road", "woods": "In the woods", "reeds":
 ## Window title: "Discovery: <name>" for a region discovery, "Hidden path: <name>" for a deeper path,
 ## "A request for the renowned: <name>" for an encounter gated by renown; otherwise the encounter's `name`,
 ## else a scene title, led by the season for a seasonal one ("Spring, on the road"). `settlement` = the
-## region has no wild look (no scene then reads "In the village").
-static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false, settlement: bool = false) -> String:
+## region has no wild look (no scene then reads "In the village"). `look` = the scene actually drawn
+## (PlaceLooks.scene_look); an encounter without its own scene is titled by it, so the title matches the picture.
+static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false, settlement: bool = false, look: String = "") -> String:
 	var renowned := encounter.has("min_renown")
 	var name := String(encounter.get("name", String(encounter.get("id", "")).capitalize()))
 	if discovery:
@@ -96,6 +97,8 @@ static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = 
 	if encounter.has("name"):
 		return name
 	var scene := String(encounter.get("scene", ""))
+	if scene == "":
+		scene = look
 	var base := String(SCENE_TITLES.get(scene, "In the village" if settlement else "On the road"))
 	var seasons: Array = encounter.get("seasons", [])
 	if not seasons.is_empty():
@@ -112,9 +115,10 @@ func open() -> void:
 	var enc: Dictionary = GameState.data.encounters.get(GameState.pending_encounter, {})
 	var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
 	var wild: String = String((region.get("map", {}) as Dictionary).get("wild_look", ""))
-	_scene.show_encounter(enc, PlaceLooks.scene_look(String(enc.get("scene", "")), GameState.last_explore_look, wild))
+	var look := PlaceLooks.scene_look(String(enc.get("scene", "")), GameState.last_explore_look, wild)
+	_scene.show_encounter(enc, look)
 	_scene.set_choice_count(choices.size())
-	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path, wild == "")
+	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path, wild == "", look)
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
 		_choices.remove_child(child)

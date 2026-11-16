@@ -75,6 +75,8 @@ func test_discovery_title_and_log_line() -> void:
 	assert_eq(EncounterWindow.title_for({"id": "x", "scene": "trail", "seasons": ["spring"]}, false), "Spring, on the road")
 	assert_eq(EncounterWindow.title_for({"id": "x", "scene": "reeds"}, false), "In the reeds")
 	assert_eq(EncounterWindow.title_for({"id": "x", "scene": "river"}, false), "At the water")
+	assert_eq(EncounterWindow.title_for({"id": "x"}, false, false, false, "reeds"), "In the reeds", "no own scene: the drawn look")
+	assert_eq(EncounterWindow.title_for({"id": "x", "scene": "cave"}, false, false, false, "reeds"), "In a cave", "own scene wins")
 	assert_eq(EncounterWindow.title_for({"id": "x_y", "name": "Deep Pine"}, false, true), "Hidden path: Deep Pine")
 	gs.pending_encounter = ""
 	gs.explore(["test_tag"])

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7a646ea
+Last reviewed commit: 400c61c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2079,3 +2079,17 @@ Last reviewed commit: 7a646ea
     qi_refining). GFX-173/174 draw-only plus seeded scenery helpers with tests; I did not render them. QA-215/220/222,
     C-379, WU-550: sim/screenshot/baseline only.
   - Not filed: C-376's follow-up about Hunter Ma's spar hint is already filed as SPAR-003.
+- 2026-11-16 (reviewer): reviewed 7a646ea..400c61c (ART-015, QA-224, WU-549, GFX-175, C-378, QA-174, WU-552, C-375,
+  SPAR-003, WU-554, WU-551, GUIDE-250, QA-165; [PLAN]/[REVIEW] skipped). Main green (4202 tests). No BACKLOG/CHANGELOG
+  edits by workers, no SAVE_VERSION change, no new binary assets.
+  - Fixed (WU-552): the card title used only the encounter's own `scene`, so the 95 encounters without one were titled
+    "On the road" even when the duel stage drew reeds, a cave or the woods from the explore place / region look.
+    `title_for` now takes the drawn look (PlaceLooks.scene_look) as the fallback; test added.
+  - SPAR-003 OK (probed: the taught case shows the hint, the self-taught case refuses; the test is not vacuous).
+    GUIDE-250 OK (win_chance is cached, so the larger away reserve costs little on HUD refreshes). ART-015 OK (month
+    energy at month end, Foundation+, capped at max_energy, recorded as a gain; validation covers the realm key).
+    WU-554 OK (filled gear rows focusable for the gamepad, empty ones not; focus returns into the gear box after
+    unequip). WU-551 OK. C-375/C-378 data OK (fang drops, starter knife recipe, likes). GFX-175/WU-549 draw/layout only,
+    not rendered by me. QA-165/174/224: sim policies only.
+  - Notes, not filed: ART-015 changes balance numbers and did not run `tools/balance.sh --check` (worker follow-up);
+    nor did C-378 (a new starter weapon, attack 4 + speed 1).
