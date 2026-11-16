@@ -41,6 +41,9 @@ extends SceneTree
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
 ##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
+## WU-550: `--threat=<enemy_id>[,<id>...]` stages the sensed-foe prompt (threat_<id>.png; `--realm=<index>` sets the realm first);
+##   `--encounter=<id>[,<id>...]` opens that encounter card (encounter_<id>.png) on the first day of its season (its `seasons`),
+##   honouring its `scene`; `--encounter=seasons` renders the eight C-376 season encounters.
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -174,6 +177,49 @@ func _start() -> void:
 	var special := false
 	if OS.get_cmdline_user_args().has("--arrival-card"):  # GFX-065: the new-game region card, before it fades
 		shots.append({"name": "arrival_card", "open": func() -> void: pass, "close": func() -> void: pass})
+		return
+	var threat_ids: Array[String] = []  # WU-550
+	var enc_ids: Array[String] = []
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--realm="):
+			gs.player.realm_index = int(a.substr(8))
+			gs.player.stage = 0
+		if a.begins_with("--threat="):
+			for id in a.substr(9).split(",", false):
+				threat_ids.append(id)
+		if a.begins_with("--encounter="):
+			for id in a.substr(12).split(",", false):
+				if id == "seasons":
+					enc_ids.append_array(["village_spring_kite_day", "road_spring_swollen_ford", "village_summer_firefly_night", "village_summer_hailstorm", "village_autumn_persimmon_harvest", "wild_autumn_migrating_geese", "forest_winter_frozen_pond", "road_winter_snowbound_traveller"])
+				else:
+					enc_ids.append(id)
+	for id in threat_ids:
+		if not gs.data.enemies.has(id):
+			push_warning("--threat: unknown enemy %s" % id)
+			continue
+		shots.append({"name": "threat_" + id, "open": func() -> void:
+			hud.get("_banner").visible = false
+			gs.pending_threat = id
+			hud.call("_on_threat_sensed", id)
+			var menu_buttons: Node = hud.get("_choice_menu").get("_buttons")  # focus "Fight it" so its Why: line shows
+			if menu_buttons.get_child_count() > 1:
+				menu_buttons.get_child(1).call_deferred("grab_focus"), "close": func() -> void:
+				gs.pending_threat = ""
+				hud.get("_choice_menu").close()})
+	for id in enc_ids:
+		if not gs.data.encounters.has(id):
+			push_warning("--encounter: unknown encounter %s" % id)
+			continue
+		shots.append({"name": "encounter_" + id, "open": func() -> void:
+			hud.get("_banner").visible = false
+			var seasons: Array = gs.data.encounters[id].get("seasons", [])
+			if not seasons.is_empty():
+				var sidx := ["spring", "summer", "autumn", "winter"].find(String(seasons[0]))
+				root.get_node("GameClock").total_days = maxi(sidx, 0) * 3 * Calendar.DAYS_PER_MONTH
+			gs.pending_encounter = id
+			gs.pending_cast = Folk.pick(gs.data.encounters[id], gs.npcs, gs.data, gs.player, gs.current_region, gs.npc_favor, gs.rng)  # fills {villager}
+			hud.call("_on_encounter_choice_requested", id), "close": hud.get("_encounter").close})
+	if not threat_ids.is_empty() or not enc_ids.is_empty():
 		return
 	if OS.get_cmdline_user_args().has("--road-card"):  # WU-452: the road card mid-fill; with --road-encounter, then the encounter after it
 		var card_script: GDScript = load("res://src/ui/road_card.gd")  # loaded late: it needs the autoloads
