@@ -7,6 +7,7 @@ extends Control
 const WorldScript := preload("res://src/world/world.gd")
 const LUNGE := 24.0
 const LUNGE_SECONDS := 0.12
+const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
 const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("c4702c"),
@@ -313,6 +314,14 @@ func _rimmed(tex: Texture2D, rim: Color) -> Texture2D:
 	return _rim_cache[key]
 
 
+## WU-553: the world figure's look (robe, hair, sash, accessories) of the NPC `id` fighting as the foe,
+## or {} for a beast or a nameless foe.
+static func person_look(id: String) -> Dictionary:
+	if id == "" or GameState.npcs == null or GameState.data == null or not GameState.npcs.has(id):
+		return {}
+	return NPC_SCRIPT.look_of(id, FOE_ROBE)
+
+
 ## The generated pixel texture for a fighter without a mapped sprite; the walk frame alternates while lunging.
 func _pixel_texture(who: int) -> Texture2D:
 	var step := 0
@@ -322,6 +331,8 @@ func _pixel_texture(who: int) -> Texture2D:
 		var fur := fur_for(_foe_id)
 		return _rimmed(PixelFigure.beast_frame(fur, step % 2, beast_kind(_foe_id)), fur.lightened(RIM_LIGHTEN))
 	var look := {"robe": FOE_ROBE, "sash": FOE_SASH}
+	if who == 1 and person_look(_foe_id).size() > 0:
+		look = person_look(_foe_id)
 	if who == 0:
 		look = {"robe": PlayerLook.ROGUE_ROBE, "sash": PlayerLook.SASH_COLORS["neutral"]}
 		if GameState.player != null and GameState.data != null:

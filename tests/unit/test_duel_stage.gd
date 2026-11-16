@@ -303,3 +303,18 @@ func test_season_specks_autumn_leaves_spring_blossoms() -> void:
 	assert_true(a.size() > sp.size() and sp.size() > 0)
 	assert_eq(DuelStage.season_specks("Summer", "qingshi_village", 1280.0, 160.0).size(), 0)
 	assert_eq(a, DuelStage.season_specks("Autumn", "qingshi_village", 1280.0, 160.0))
+
+
+## WU-553: a person foe is drawn from their own look; a beast or a nameless foe stays generic.
+func test_person_foe_has_own_look() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Tester", gs.data, seeded_rng(1)))
+	var a := Npcs.spawn(gs.npcs, gs.data, seeded_rng(5), {"age_years": 30, "region": "qingshi_village", "realm": "mortal", "gender": "male"})
+	var b := Npcs.spawn(gs.npcs, gs.data, seeded_rng(6), {"age_years": 70, "region": "qingshi_village", "realm": "mortal", "gender": "female"})
+	var la := DuelStage.person_look(a.id)
+	var lb := DuelStage.person_look(b.id)
+	assert_false(la.is_empty())
+	assert_false(lb.is_empty())
+	assert_true(la["style"] != lb["style"] or la["hair"] != lb["hair"] or la["robe"] != lb["robe"])
+	assert_true(DuelStage.person_look("wolf").is_empty())
+	assert_true(DuelStage.person_look("").is_empty())

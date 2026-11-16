@@ -11,6 +11,7 @@ extends SceneTree
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
 ## WU-502: append `-- --terraces=N` (0..3) for the Herb Slope terrace stage.
 ## WU-482: append `-- --birthday=<npc_id>` to put the clock on that villager's birthday (cake marker over their head).
+## WU-553: add `-- --spar=<npc_id>` for spar_<id>.png (a friendly spar with that NPC, favor raised; finished report with the duel stage).
 ## WU-486: add `-- --emote=love` (or happy, sweat) to --friend for a bubble over the friend.
 ## WU-542: add `--knows=<tech_id>` to learn that technique first.
 ## WU-546: add `--first-visit` (with --region=) to show the first-visit arrival banner with the region's teacher lines.
@@ -272,6 +273,9 @@ func _start() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a == "--friend" or a.begins_with("--friend="):  # WU-537: --friend=<npc_id> opens that named villager's menu
 			friend_arg = true
+	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
+		if a.begins_with("--spar="):
+			_spar_shots(gs, a.substr(7))
 	if friend_arg:  # WU-418: a Qingshi villager at favor 65 and their menu
 		_friend_shots(gs)
 		special = true
@@ -886,6 +890,22 @@ func _friend_shots(gs: Node) -> void:
 			push_error("friend shot: npc '%s' not found in region %s" % [want, gs.current_region])
 		else:
 			print("friend shot: no generated villager found"), "close": hud.get("_choice_menu").close})
+
+
+## WU-553: a friendly spar with NPC `npc_id` (favor raised); shoots the finished report as spar_<id>.png.
+func _spar_shots(gs: Node, npc_id: String) -> void:
+	shots.append({"name": "spar_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		gs.npc_favor[npc_id] = 30
+		gs.player.realm_index = maxi(1, maxi(gs.player.realm_index, gs.npcs[npc_id].realm_index - 1))
+		for tid: String in Mentorship.taught_styles(npc_id, gs.data):  # a villager spars as a teacher: learn their style
+			Techniques.learn(gs.player, gs.data, tid)
+		var why: String = gs.check_spar(npc_id)
+		if why != "":
+			push_error("spar shot: " + why)
+		gs.spar_with(npc_id)
+		var rep: Control = hud.get("_combat_report")
+		rep.call("skip"), "close": func() -> void: hud.get("_combat_report").call("close")})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).
