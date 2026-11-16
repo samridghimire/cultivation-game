@@ -70,6 +70,9 @@ static var chat_teacher := false
 ## (only when the fight is rated 50%+), enter the festival contest, sell a wanted good held), then walks home.
 ## simulate_curious_years.gd's --season-tasks turns it on (part of the memo key). season_task_log counts what was done.
 static var season_tasks := false
+## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
+## and only when its foe is rated Even or better. simulate_curious_years.gd's --mission-monthly; part of the memo key.
+static var mission_monthly := false
 const SEASON_REACH_DAYS := 3
 static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0}
 static var _teach_rec := {}
@@ -134,7 +137,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, season_tasks, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, season_tasks, mission_monthly, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -544,7 +547,9 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	for f: Dictionary in fair:
 		var k := String(f.get("kind", ""))
 		done["fair_log"]["by_kind"][k] = int(done["fair_log"]["by_kind"].get(k, 0)) + 1
-	if not c.is_rogue() and c.alive:
+	if not c.is_rogue() and c.alive and mission_monthly and int(c.sect.get("rank", 0)) <= 1:
+		_take_monthly_mission(gs, c, done, kinds, fair, today)
+	elif not c.is_rogue() and c.alive:
 		if chase_best_mission:
 			# QA-134: the hint names the best-paying mission ("The best pays N contribution"); take it, up to 3 a month.
 			for _i in 3:
@@ -1542,6 +1547,16 @@ static func encounter_choice(c: CharacterData, data: GameData, encounter: Dictio
 		if not choice["fight"] or choice["chance"] < 0.0 or choice["chance"] >= 0.5:
 			return int(choice["index"])
 	return 0
+
+
+## QA-174: one mission this month, only where the board is (Sects.board_reason) and only if rated Even or better.
+static func _take_monthly_mission(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, fair: Array[Dictionary], today: int) -> void:
+	var best := Guidance.best_mission(c, gs.data, gs.world_flags)
+	if best == "" or Sects.check_mission(c, gs.data, best, gs.world_flags, gs.current_region) != "":
+		return
+	if _mission_odds(gs, c, best) < Guidance.FAIR_FIGHT_MIN_CHANCE or not _mission_is_sane(gs, c, best, done, today):
+		return
+	_take_one_mission(gs, c, done, kinds, fair, best, today)
 
 
 ## Takes one mission and logs its outcome. Missions need no travel (Sects.check_mission has no place rule).

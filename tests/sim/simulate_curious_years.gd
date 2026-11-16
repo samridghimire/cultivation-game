@@ -134,6 +134,8 @@ func _run() -> void:
 			FirstHour.core_report = true  # QA-173
 		elif a == "--chat-teacher":
 			FirstHour.chat_teacher = true  # QA-220
+		elif a == "--mission-monthly":
+			FirstHour.mission_monthly = true  # QA-174
 		elif a == "--season-tasks":
 			FirstHour.season_tasks = true  # QA-215
 		elif a == "--repeat-report":
