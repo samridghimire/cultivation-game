@@ -6,6 +6,7 @@ extends SceneTree
 ## QA-096: `--trace=<seed>` runs only that seed and prints one line per month (realm, qi, breakthrough chance, stones, lives, injuries,
 ## log lines) plus the HUD hints and goals at the end; the default output is unchanged.
 ## QA-222: `day` columns are the game clock's days; a sim month is 30 cultivation days plus its actions' days (~60 clock days, see first_hour.gd).
+## QA-215: `--season-tasks` also does the elder's open season tasks (see first_hour.gd season_tasks); pair with `--season-report`.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N] [--trace=<seed>]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
@@ -133,6 +134,8 @@ func _run() -> void:
 			FirstHour.core_report = true  # QA-173
 		elif a == "--chat-teacher":
 			FirstHour.chat_teacher = true  # QA-220
+		elif a == "--season-tasks":
+			FirstHour.season_tasks = true  # QA-215
 		elif a == "--repeat-report":
 			_repeat_report = true  # QA-175
 		elif a == "--artifact-report":
@@ -280,6 +283,8 @@ func _run() -> void:
 		_print_repeat_report(gs)
 	if _season_report:
 		_print_season_report(seeds)
+	if FirstHour.season_tasks:
+		print("Season tasks (QA-215), %d seeds: %s" % [seeds, str(FirstHour.season_task_log)])
 	if FirstHour.artifact_report:
 		_print_artifact_report(gs.data)
 	if FirstHour.injury_report:

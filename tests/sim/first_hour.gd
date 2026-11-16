@@ -65,6 +65,13 @@ static var spar_log := {"bouts": 0, "refused": []}
 ## names. simulate_first_hour.gd / simulate_curious_years.gd's --chat-teacher turn it on. out["teacher"] per seed:
 ## {style_day, source ("lesson" / "manual" / ""), bouts, mastered_day, chats}; days are the clock's (-1 = never).
 static var chat_teacher := false
+## QA-215: once a month the curious player does the elder's open season tasks that SeasonTasks places within SEASON_REACH_DAYS
+## of where they stand (catch/gather at a place's table, hunt the village hunt's quarry or a site that can bring the foe up
+## (only when the fight is rated 50%+), enter the festival contest, sell a wanted good held), then walks home.
+## simulate_curious_years.gd's --season-tasks turns it on (part of the memo key). season_task_log counts what was done.
+static var season_tasks := false
+const SEASON_REACH_DAYS := 3
+static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0}
 static var _teach_rec := {}
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
@@ -127,7 +134,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, season_tasks, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -480,6 +487,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		_follow_defence_hint(gs, c)
 	if practise_hint:
 		_follow_practice_hint(gs, c)
+	if season_tasks and c.alive:
+		_season_task_month(gs, c)
 	var detour_home := _bitter_detour(gs, c)
 	for week in 3:
 		if not c.alive:
@@ -1166,6 +1175,146 @@ static func _chat_teacher_week(gs: Node, c: CharacterData) -> void:
 				_teach_rec["bouts"] += 1
 				break
 	_note_teacher_style(gs, c)
+
+
+## QA-215: see season_tasks. Does each open task that can be reached, then returns to the region it started in.
+static func _season_task_month(gs: Node, c: CharacterData) -> void:
+	var home: String = gs.current_region
+	var today := _day(gs)
+	for t: Dictionary in SeasonTasks.tasks_for(gs.data, today):
+		if not c.alive:
+			return
+		if bool(c.season_tasks.get("done", false)) and String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today):
+			break
+		if _season_task_left(gs, c, t) <= 0:
+			continue
+		match String(t["kind"]):
+			"catch", "gather":
+				_season_gather(gs, c, t)
+			"hunt":
+				_season_hunt(gs, c, t)
+			"contest":
+				_season_contest(gs, c, t)
+			"sell_wanted":
+				_season_sell(gs, c, t)
+	if c.alive and gs.current_region != home:
+		_go_to(gs, c, home)
+
+
+static func _season_task_left(gs: Node, c: CharacterData, t: Dictionary) -> int:
+	var st: Dictionary = c.season_tasks
+	if String(st.get("season_key", "")) != SeasonTasks.season_key(_day(gs)):
+		return int(t["count"])
+	return int(t["count"]) - int((st.get("progress", {}) as Dictionary).get(String(t["id"]), 0))
+
+
+## Region ids within SEASON_REACH_DAYS of here (here first), nearest first.
+static func _near_regions(gs: Node, c: CharacterData) -> Array[String]:
+	var found: Array = []
+	for rid: String in gs.data.regions:
+		var d := 0 if rid == gs.current_region else Guidance.route_days(c, gs.data, gs.current_region, rid)
+		if d >= 0 and d <= SEASON_REACH_DAYS:
+			found.append([d, rid])
+	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var out: Array[String] = []
+	for f: Array in found:
+		out.append(String(f[1]))
+	return out
+
+
+static func _go_to(gs: Node, c: CharacterData, rid: String) -> bool:
+	if gs.current_region != rid and c.alive:
+		gs.travel(rid)
+	return c.alive and gs.current_region == rid
+
+
+static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
+	var kind := String(t["kind"])
+	var season := Calendar.season_of(_day(gs))
+	for rid in _near_regions(gs, c):
+		for place: Dictionary in gs.data.regions[rid].get("places", []):
+			var table: Array = place.get("catch_table", []) if kind == "catch" else place.get("gather_table", [])
+			var hit := false
+			for e: Dictionary in table:
+				if String(e.get("item", "")) == String(t["target"]) and Exploration.in_season(e, season.to_lower()):
+					hit = true
+			if not hit or not _go_to(gs, c, rid):
+				continue
+			season_task_log["trips"] += 1
+			for trip in 6:
+				if not c.alive or _season_task_left(gs, c, t) <= 0:
+					return
+				var days := int(place.get("gather_days", 2))
+				if kind == "catch":
+					gs.fish(table, days, String(place.get("display_name", "")))
+					season_task_log["catch_days"] += days
+				else:
+					gs.gather(table, days)
+					season_task_log["gather_days"] += days
+			return
+
+
+static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
+	var target := String(t["target"])
+	var enemy: Dictionary = gs.data.enemies.get(target, {})
+	if enemy.is_empty() or Combat.win_chance(c, gs.data, enemy) < 0.5:
+		return
+	var season := Calendar.season_of(_day(gs)).to_lower()
+	for rid in _near_regions(gs, c):
+		var quarry := VillageHunt.quarry(gs.data, rid, _day(gs))
+		var by_hunt := quarry == target
+		var sites := Exploration.sites_with_foe(c, gs.data, rid, target, season, _day(gs))
+		if not by_hunt and sites.is_empty():
+			continue
+		if not _go_to(gs, c, rid):
+			return
+		season_task_log["trips"] += 1
+		if by_hunt and gs.village_hunt_quarry() == target:
+			gs.join_village_hunt()
+			season_task_log["hunts"] += 1
+			if _season_task_left(gs, c, t) <= 0 or not c.alive:
+				return
+		if sites.is_empty():
+			return
+		for round in 3:
+			if not c.alive or _season_task_left(gs, c, t) <= 0:
+				return
+			_explore(gs)
+			season_task_log["hunts"] += 1
+			if gs.pending_encounter != "":
+				gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
+			if gs.pending_threat != "":
+				gs.face_threat(false)
+		return
+
+
+static func _season_contest(gs: Node, c: CharacterData, t: Dictionary) -> void:
+	var event_id := String(t["target"])
+	for rid in _near_regions(gs, c):
+		if WorldEvents.instance_in(gs.world_events, event_id, rid).is_empty():
+			continue
+		if not _go_to(gs, c, rid):
+			return
+		if gs.check_festival_contest(event_id) == "":
+			gs.festival_contest(event_id)
+			season_task_log["contests"] += 1
+		return
+
+
+static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
+	for rid in _near_regions(gs, c):
+		for place: Dictionary in gs.data.regions[rid].get("places", []):
+			var w := Places.wanted_today(place, _day(gs))
+			if w.is_empty() or c.item_count(String(w["item"])) <= 0:
+				continue
+			if not _go_to(gs, c, rid):
+				return
+			gs.shop_name = String(place.get("display_name", ""))
+			var before := _season_task_left(gs, c, t)
+			gs.sell_item(String(w["item"]), mini(c.item_count(String(w["item"])), maxi(1, before)))
+			gs.shop_name = ""
+			season_task_log["sold"] += before - _season_task_left(gs, c, t)
+			return
 
 
 ## QA-220: first combat style known (and how) and the day it is mastered, from the clock.

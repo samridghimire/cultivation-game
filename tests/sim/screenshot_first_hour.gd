@@ -39,6 +39,8 @@ extends SceneTree
 ## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
 ## QA-198: `-- --festival` (festival_qingshi), `--contest` (contest_card), `--practice` (practice_menu), `--regular` (shop_regular), `--journal` (journal_today); one flag per run.
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
+## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
+##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
 ## PNGs go to user://screenshots/first_hour/<name>.png. Never writes saves.
 ## (The mid-game sibling is screenshot_screens.gd.)
 
@@ -326,9 +328,11 @@ func _start() -> void:
 					world.get_node("Player").position = node.position + Vector2(0, 50), "close": func() -> void: pass})
 	if special:
 		return
-	shots.append({"name": "hud_arrival", "open": func() -> void: pass, "close": func() -> void: pass})
+	shots.append({"name": "hud_arrival", "open": func() -> void: _focus_on(), "close": func() -> void: pass})
 	if region_list.size() == 1:
-		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void: _first_visit_card(gs, region_list[0]), "close": func() -> void: pass})
+		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
+			_first_visit_card(gs, region_list[0])
+			_focus_on(), "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
 	var villager := _generated_villager()
 	if villager != null:
@@ -453,6 +457,22 @@ func _free_spot_near(want: Vector2) -> Vector2:
 			if figures.all(func(f: Vector2) -> bool: return f.distance_to(p) >= 40.0):
 				return p
 	return want
+
+
+## QA-215: `--focus=<id>`: the player (and camera) moves beside the matching villager or place; prints a note when none matches.
+func _focus_on() -> void:
+	var want := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--focus="):
+			want = arg.substr(8)
+	if want == "":
+		return
+	for node in world.find_children("*", "Interactable", true, false):
+		var slug := str((node as Node).get("display_name")).to_lower().replace(" ", "_").replace("-", "_").replace("'", "")
+		if str(node.get("npc_id")) == want or slug == want:
+			_teleport_player((node as Node2D).position + Vector2(0, 90))
+			return
+	print("focus: nothing named %s here" % want)
 
 
 func _teleport_player(pos: Vector2) -> void:
