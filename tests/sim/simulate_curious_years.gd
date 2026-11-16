@@ -803,16 +803,34 @@ func _print_season_report(seeds: int) -> void:
 			keys[k] = true
 	var ordered: Array = keys.keys()
 	ordered.sort()
+	var why_counts := {}
+	var finished := 0
+	var y1_done := 0
+	var total := 0
 	print("Season sets finished per season (QA-214), %d seeds:" % seeds)
 	for k: String in ordered:
 		var done := 0
 		var blockers := {}
-		for rec: Dictionary in _season_log:
+		var lines: PackedStringArray = []
+		for i in _season_log.size():
+			var rec: Dictionary = _season_log[i]
 			if not rec.has(k):
 				continue
 			if String(rec[k]) == "":
 				done += 1
 			else:
+				var seed_why: PackedStringArray = []
 				for id: String in String(rec[k]).split(","):
 					blockers[id] = int(blockers.get(id, 0)) + 1
+					var why := String(FirstHour.season_why.get("%d|%s|%s" % [i + 1, k, id], "not tried"))
+					why_counts[why] = int(why_counts.get(why, 0)) + 1  # SEASON-025
+					seed_why.append("%s: %s" % [id, why])
+				lines.append("    seed %d: %s" % [i + 1, "; ".join(seed_why)])
+		finished += done
+		if k.begins_with("1-"):
+			y1_done += done
+		total += 0 if keys.is_empty() else _season_log.filter(func(r: Dictionary) -> bool: return r.has(k)).size()
 		print("  %-14s %d of %d finished; unfinished tasks: %s" % [k, done, seeds, str(blockers) if not blockers.is_empty() else "-"])
+		for line in lines:
+			print(line)
+	print("Season cells finished: %d of %d (year 1: %d of %d). Failure reasons (SEASON-025): %s" % [finished, total, y1_done, 4 * seeds, str(why_counts)])

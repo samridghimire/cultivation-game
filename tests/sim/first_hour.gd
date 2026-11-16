@@ -83,8 +83,14 @@ const STEWARD_LAST_DAYS := 10
 ## heal_far_log: {"treated": cures taken, "trips": clinic journeys}. Part of the memo key.
 static var heal_far := false
 static var heal_far_log := {"treated": 0, "trips": 0}
-const SEASON_REACH_DAYS := 3
-static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0, "bought": 0}
+## SEASON-025: matches SeasonTasks' audit (every year-1 task has a place within 6 route days).
+const SEASON_REACH_DAYS := 6
+## SEASON-025: why each season task last failed, keyed "<seed>|<season key>|<task id>" (read by simulate_curious_years.gd's report).
+static var season_why := {}
+static var season_seed := 0
+## SEASON-025: the longest the policy waits at a closed stall for its market day.
+const SEASON_STALL_WAIT_DAYS := 16
+static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0, "bought": 0, "stall_waits": 0}
 static var _teach_rec := {}
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
@@ -155,6 +161,7 @@ static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, cur
 
 
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
+	season_seed = seed_value
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -1363,6 +1370,10 @@ static func _season_festival_watch(gs: Node, c: CharacterData) -> void:
 		_go_to(gs, c, home)
 
 
+static func _season_why(gs: Node, t: Dictionary, reason: String) -> void:
+	season_why["%d|%s|%s" % [season_seed, SeasonTasks.season_key(_day(gs)), String(t["id"])]] = reason
+
+
 static func _season_task_left(gs: Node, c: CharacterData, t: Dictionary) -> int:
 	var st: Dictionary = c.season_tasks
 	if String(st.get("season_key", "")) != SeasonTasks.season_key(_day(gs)):
@@ -1393,16 +1404,21 @@ static func _go_to(gs: Node, c: CharacterData, rid: String) -> bool:
 static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	var kind := String(t["kind"])
 	var season := Calendar.season_of(_day(gs))
+	var why := "no place in reach"
 	for rid in _near_regions(gs, c):
 		for place: Dictionary in gs.data.regions[rid].get("places", []):
 			var table: Array = place.get("catch_table", []) if kind == "catch" else place.get("gather_table", [])
 			var hit := false
 			for e: Dictionary in table:
-				if String(e.get("item", "")) == String(t["target"]) and Exploration.in_season(e, season.to_lower()):
-					hit = true
+				if String(e.get("item", "")) == String(t["target"]):
+					if Exploration.in_season(e, season.to_lower()):
+						hit = true
+					elif why == "no place in reach":
+						why = "out of season"
 			if not hit or not _go_to(gs, c, rid):
 				continue
 			season_task_log["trips"] += 1
+			_season_why(gs, t, "too few lucky days")
 			for trip in 6:
 				if not c.alive or _season_task_left(gs, c, t) <= 0:
 					return
@@ -1414,13 +1430,16 @@ static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
 					gs.gather(table, days)
 					season_task_log["gather_days"] += days
 			return
+	_season_why(gs, t, why)
 
 
 static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	var target := String(t["target"])
 	var enemy: Dictionary = gs.data.enemies.get(target, {})
 	if enemy.is_empty() or Combat.win_chance(c, gs.data, enemy) < 0.4:
+		_season_why(gs, t, "hunt odds under 40%")
 		return
+	_season_why(gs, t, "no place in reach")
 	var season := Calendar.season_of(_day(gs)).to_lower()
 	for rid in _near_regions(gs, c):
 		var quarry := VillageHunt.quarry(gs.data, rid, _day(gs))
@@ -1430,6 +1449,7 @@ static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 			continue
 		if not _go_to(gs, c, rid):
 			return
+		_season_why(gs, t, "foe did not show")
 		season_task_log["trips"] += 1
 		if by_hunt and gs.village_hunt_quarry() == target:
 			gs.join_village_hunt()
@@ -1452,11 +1472,13 @@ static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 
 static func _season_contest(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	var event_id := String(t["target"])
+	_season_why(gs, t, "out of season")
 	for rid in _near_regions(gs, c):
 		if WorldEvents.instance_in(gs.world_events, event_id, rid).is_empty():
 			continue
 		if not _go_to(gs, c, rid):
 			return
+		_season_why(gs, t, "lost the contest")
 		if gs.check_festival_contest(event_id) == "":
 			gs.festival_contest(event_id)
 			season_task_log["contests"] += 1
@@ -1464,12 +1486,21 @@ static func _season_contest(gs: Node, c: CharacterData, t: Dictionary) -> void:
 
 
 static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
+	var why := "no place in reach"
+	var waiting := {}  # nearest closed stall that wants goods: {rid, place, wait}
 	for rid in _near_regions(gs, c):
 		for place: Dictionary in gs.data.regions[rid].get("places", []):
+			if not place.has("wanted"):
+				continue
 			var w := Places.wanted_today(place, _day(gs))
 			if w.is_empty():
+				var wait := Places.days_until_open(place, _day(gs))
+				if wait > 0 and (waiting.is_empty() or wait < int(waiting["wait"])):
+					waiting = {"rid": rid, "place": place, "wait": wait}
+				why = "stall closed"
 				continue
 			if c.item_count(String(w["item"])) <= 0 and not _season_buy_wanted(gs, c, String(w["item"]), maxi(1, _season_task_left(gs, c, t))):
+				why = "could not afford"
 				continue
 			if not _go_to(gs, c, rid):
 				return
@@ -1478,7 +1509,19 @@ static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
 			gs.sell_item(String(w["item"]), mini(c.item_count(String(w["item"])), maxi(1, before)))
 			gs.shop_name = ""
 			season_task_log["sold"] += before - _season_task_left(gs, c, t)
+			_season_why(gs, t, "" if _season_task_left(gs, c, t) <= 0 else "too few wanted goods")
 			return
+	_season_why(gs, t, why)
+	# SEASON-025: nothing is wanted today: wait at the nearest stall for its open day, then sell what we can afford.
+	if not waiting.is_empty() and int(waiting["wait"]) <= SEASON_STALL_WAIT_DAYS and _go_to(gs, c, String(waiting["rid"])):
+		season_task_log["stall_waits"] += 1
+		var left_days := int(waiting["wait"])
+		while left_days > 0 and c.alive:
+			var step := mini(left_days, 5)
+			gs.cultivate(step)
+			left_days -= step
+		if c.alive and not Places.wanted_today(waiting["place"], _day(gs)).is_empty():
+			_season_sell(gs, c, t)
 
 
 ## SEASON-024: buy `count` of `item_id` in the nearest merchant within reach that sells it and that we can afford
