@@ -4257,7 +4257,9 @@ func _build_deck_shots(gs: Node) -> void:
 	var lines := PackedStringArray(["Round 1: you trade palm strikes with Elder Murong Zhongshan-Baiyun.", "Round 2: the elder holds back and nods."])
 	shots.append({"name": "deck_spar_report", "open": func() -> void:
 		scale_up.call()
-		report.show_fight(senior.name, true, lines, "", PackedStringArray(), [], 0, 0, true), "close": func() -> void:
+		report.show_fight(senior.name, true, lines, "", PackedStringArray(), [[40, 30], [40, 22]], 40, 30, true)  # WU-548: bars and a result block
+		report.show_spar_result(Mentorship.spar_result_lines(senior.name, true, PackedStringArray(["Iron Fist"]), 3, 2))
+		report.skip(), "close": func() -> void:
 		report.close()
 		scale_back.call()})
 

@@ -2446,11 +2446,16 @@ func spar_with(npc_id: String) -> void:
 	if style == "":
 		for line in result["levels"]:
 			text += " %s." % line
+	var grad_line := ""
 	if style != "" and Techniques.is_mastered(player, data, style):
 		var grad := _graduate(npc_id, style)
 		if grad != "":
 			text += " " + grad
+			grad_line = grad
 	EventBus.post(text, "progress")
+	var spar_terms_days := int(Mentorship.teacher_bout_terms(data)["practice_days"]) if style != "" else int(Mentorship.spar_terms(data)["practice_days"])
+	var bout_levels: PackedStringArray = result["levels"]
+	EventBus.spar_resolved.emit(Mentorship.spar_result_lines(npc.name, won, result["practiced"], spar_terms_days, int(result["favor"]), bout_levels, grad_line))
 	if npc_id == player.rival:
 		var key := "rival_bouts_won" if won else "rival_bouts_lost"
 		LifeStats.add(player, key)

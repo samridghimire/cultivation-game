@@ -51,6 +51,8 @@ signal forage_changed
 signal combat_started(enemy: Dictionary)
 ## A fight ended (GameState.fight). `log` is the full blow-by-blow.
 signal combat_finished(enemy_name: String, victory: bool, log: PackedStringArray)
+## WU-548: what a friendly spar changed (verdict, practice, favor), sent after the bout so its report can show a result block.
+signal spar_resolved(lines: PackedStringArray)
 ## The player wants to attempt a breakthrough that brings a Heavenly
 ## Tribulation: show GameState.tribulation_preview() and let them confirm.
 signal tribulation_prepare_requested

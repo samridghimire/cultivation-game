@@ -352,6 +352,21 @@ static func after_spar(c: CharacterData, npc: CharacterData, data: GameData, won
 	return {"favor": int(rules.get("win_favor", 0)) if won else 0, "practiced": practiced, "levels": levels, "days": int(terms["days"])}
 
 
+## WU-548: the result block of a friendly spar's report: the verdict, then what changed. `practiced` are technique names that
+## gained `practice_days` practice, `favor` the favor gained, `levels` / `graduation` the level-up and graduation lines (may be "").
+static func spar_result_lines(npc_name: String, won: bool, practiced: PackedStringArray, practice_days: int, favor: int, levels: PackedStringArray = PackedStringArray(), graduation: String = "") -> PackedStringArray:
+	var out := PackedStringArray(["You held your own." if won else "%s got the better of you." % npc_name])
+	for tech_name: String in practiced:
+		out.append("%s: +%d practice" % [tech_name, practice_days])
+	for line: String in levels:
+		out.append(line + ".")
+	if favor > 0:
+		out.append("%s thinks better of you (+%d favor)." % [npc_name, favor])
+	if graduation != "":
+		out.append(graduation)
+	return out
+
+
 ## Favor `npc` needs to teach or spar with `c`: `same_sect_min_favor` for a fellow sect member.
 static func _min_favor(c: CharacterData, npc: CharacterData, rules: Dictionary) -> int:
 	var base := int(rules.get("min_favor", 0))

@@ -19,6 +19,8 @@ var _names: HBoxContainer
 var _you_name: Label
 var _foe_name: Label
 var _friendly: bool = false
+## WU-548: the friendly spar's result block (verdict, practice, favor), shown under the log.
+var _spar_lines: PackedStringArray = PackedStringArray()
 var _timer: Timer
 
 # Playback state (WU-036): lines revealed so far and what to show once done.
@@ -180,6 +182,7 @@ func show_fight(enemy_name: String, victory: bool, lines: PackedStringArray, adv
 	_companion.visible = companion_name != ""
 	_log.clear()
 	_noted = false
+	_spar_lines = PackedStringArray()
 	_collapsed = not summary.is_empty() and not lines.is_empty()
 	_blows_button.visible = false
 	var shown_rows := (summary.size() + 1) if _collapsed else lines.size()
@@ -320,10 +323,31 @@ func show_every_blow() -> void:
 	_close_button.grab_focus.call_deferred()
 
 
+## WU-548: the result block of a friendly spar; appended at once if the report has already finished, else when it does.
+func show_spar_result(lines: PackedStringArray) -> void:
+	if not _friendly or not visible:
+		return
+	_spar_lines = lines
+	if _noted:
+		_append_spar_result()
+
+
+func _append_spar_result() -> void:
+	if _spar_lines.is_empty():
+		return
+	var rows: Array[String] = []
+	for i in _spar_lines.size():
+		rows.append(("[b]%s[/b]" if i == 0 else "%s") % _spar_lines[i])
+	_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.ACCENT.to_html(false), "\n".join(rows)])
+	_log.custom_minimum_size.y = minf(_log.custom_minimum_size.y + 22.0 * _spar_lines.size(), log_room(get_viewport_rect().size.y if is_inside_tree() else 800.0))
+	_spar_lines = PackedStringArray()
+
+
 func _append_endnotes() -> void:
 	if _noted:
 		return
 	_noted = true
+	_append_spar_result()
 	if not _victory and _advice != "":
 		_log.append_text("[color=#%s]%s[/color]\n" % [UIStyle.CATEGORY_COLORS["warning"].to_html(false), _advice])
 	if _victory and not _spoils.is_empty():

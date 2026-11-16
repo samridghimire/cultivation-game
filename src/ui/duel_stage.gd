@@ -57,6 +57,7 @@ var _shake: Array[float] = [0.0, 0.0]
 var _flash: Array[float] = [0.0, 0.0]
 var _alpha: Array[float] = [1.0, 1.0]
 var _tilt: Array[float] = [0.0, 0.0]
+var _kneel: Array[bool] = [false, false]  # WU-548: the loser of a friendly bout kneels
 var _dark: Array[float] = [0.0, 0.0]  # 0..1 darkening of a fallen fighter
 var _tween: Tween
 var _stage_shake_start := -1.0  # ticks (s) when the heavy-hit shake began
@@ -201,6 +202,7 @@ func reset_pose() -> void:
 	_alpha = [1.0, 1.0]
 	_tilt = [0.0, 0.0]
 	_dark = [0.0, 0.0]
+	_kneel = [false, false]
 	_stage_shake_start = -1.0
 	queue_redraw()
 
@@ -251,6 +253,8 @@ func show_end_pose(victory: bool, friendly: bool) -> void:
 		var loser := 1 if victory else 0
 		_dark[loser] = FALLEN_DARKEN
 		_tilt[loser] = toppled_tilt(loser == 1 and _foe_beast)
+	else:  # WU-548: both stand, the one who lost the bout kneels; no "Defeated" tag
+		_kneel[1 if victory else 0] = true
 	queue_redraw()
 
 
@@ -258,6 +262,11 @@ func show_end_pose(victory: bool, friendly: bool) -> void:
 ## silhouette and its light rim stay readable instead of smearing.
 static func toppled_tilt(_beast: bool) -> float:
 	return PI / 2.0
+
+
+## WU-548: true when fighter `who` kneels after losing a friendly bout (for tests).
+func is_kneeling(who: int) -> bool:
+	return _kneel[who]
 
 
 ## True when fighter `who` (0 player, 1 foe) is lying defeated, for the "Defeated" tag and tests.
@@ -849,6 +858,8 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		draw_set_transform_matrix(Transform2D(rot, pivot) * Transform2D(0.0, Vector2(0.0, body.y / 2.0)))
 	elif on_back:  # on its side: squashed flat, feet on the ground, legs stuck out stiff
 		draw_set_transform(pos, 0.0, Vector2(1.0, BEAST_LIE_SCALE))
+	elif _kneel[who]:  # a kneeling bow: shorter, a little forward
+		draw_set_transform(pos + Vector2(8.0 if who == 0 else -8.0, 0.0), 0.12 * (1.0 if who == 0 else -1.0), Vector2(1.0, 0.8))
 	else:
 		draw_set_transform(pos, 0.0, Vector2.ONE)
 	var generated := tex == null

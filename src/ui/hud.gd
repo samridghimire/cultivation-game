@@ -336,6 +336,7 @@ func _ready() -> void:
 	EventBus.player_respawned.connect(_on_player_respawned)
 	EventBus.combat_started.connect(_on_combat_started)
 	EventBus.combat_finished.connect(_on_combat_finished)
+	EventBus.spar_resolved.connect(_on_spar_resolved)  # WU-548
 	GameState.combat_report_shown = true  # LOG-003
 	EventBus.tribulation_prepare_requested.connect(_on_tribulation_prepare)
 	EventBus.breakthrough_prepare_requested.connect(_on_breakthrough_prepare)
@@ -1518,6 +1519,11 @@ func _on_combat_finished(enemy_name: String, victory: bool, lines: PackedStringA
 	_fight_rating = ""
 	_fight_enemy = {}
 	_update_modal()
+
+
+## WU-548: the friendly spar's result block goes under the report.
+func _on_spar_resolved(lines: PackedStringArray) -> void:
+	_combat_report.show_spar_result(lines)
 
 
 ## A breakthrough would bring a Heavenly Tribulation: warn before attempting.
