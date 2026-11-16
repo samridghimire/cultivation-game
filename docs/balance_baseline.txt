@@ -1359,12 +1359,12 @@ Best gathering anywhere for this realm: myriad_peaks_ridge at 5.6 stones/week (a
 ## fishing (Novice/Angler/Old Hand, 100 trips per cell)
 
 Stones per fishing day (trip = 2 days, 100 trips per cell, ordinary casts, storm days lost)
-  qingshi_village        Novice   jetty 0: 1.43/day avg (Spr 1.91, Sum 1.35, Aut 1.10, Win 1.36), rare in 55% of trips
-  qingshi_village        Angler   jetty 0: 1.71/day avg (Spr 2.33, Sum 1.57, Aut 1.30, Win 1.64), rare in 64% of trips
-  qingshi_village        Old Hand jetty 0: 2.04/day avg (Spr 2.55, Sum 1.88, Aut 1.65, Win 2.08), rare in 72% of trips
-  qingshi_village        Novice   jetty 3: 1.90/day avg (Spr 2.53, Sum 1.82, Aut 1.44, Win 1.79), rare in 62% of trips
-  qingshi_village        Angler   jetty 3: 2.47/day avg (Spr 3.31, Sum 2.35, Aut 1.83, Win 2.38), rare in 70% of trips
-  qingshi_village        Old Hand jetty 3: 2.98/day avg (Spr 3.80, Sum 2.65, Aut 2.45, Win 3.02), rare in 79% of trips
+  qingshi_village        Novice   jetty 0: 1.49/day avg (Spr 1.91, Sum 1.35, Aut 1.33, Win 1.36), rare in 58% of trips
+  qingshi_village        Angler   jetty 0: 1.79/day avg (Spr 2.33, Sum 1.57, Aut 1.60, Win 1.64), rare in 66% of trips
+  qingshi_village        Old Hand jetty 0: 2.19/day avg (Spr 2.55, Sum 1.88, Aut 2.23, Win 2.08), rare in 74% of trips
+  qingshi_village        Novice   jetty 3: 1.93/day avg (Spr 2.53, Sum 1.82, Aut 1.55, Win 1.79), rare in 64% of trips
+  qingshi_village        Angler   jetty 3: 2.52/day avg (Spr 3.31, Sum 2.35, Aut 2.06, Win 2.38), rare in 72% of trips
+  qingshi_village        Old Hand jetty 3: 3.12/day avg (Spr 3.80, Sum 2.65, Aut 3.00, Win 3.02), rare in 81% of trips
   gathering in qingshi_village: 2.26 stones/day at the best gather place (Mortal)
   misty_forest           Novice   jetty 0: 1.50/day avg (Spr 1.49, Sum 1.64, Aut 1.83, Win 1.02), rare in 56% of trips
   misty_forest           Angler   jetty 0: 1.83/day avg (Spr 1.79, Sum 1.96, Aut 2.28, Win 1.30), rare in 64% of trips
