@@ -35,10 +35,13 @@ static func texture(kind: String, size: Vector2, tint: Color = Color("3f7fa8"), 
 			_cache[pkey] = ImageTexture.create_from_image(pond_image(px, tint, frozen, water, int(shape.get("seed", 0))))
 		return _cache[pkey]
 	if kind == "stream" and not shape.is_empty():
-		var skey := "stream2|%s|%s|%s|%s" % [px, frozen, dashes, shape_key]
+		# GFX-178: `size` already includes STREAM_AMP either side; the straight base is the nominal thickness.
+		var skey := "stream3|%s|%s|%s|%s|%s" % [px, frozen, dashes, shape_key, Sprites.scale()]
 		if not _cache.has(skey):
-			var base: Image = (frozen_stream(px) if frozen else _stream_texture(px, dashes)).get_image()
-			_cache[skey] = ImageTexture.create_from_image(meander(base, shape))
+			var amp := ceili(Scenery.STREAM_AMP / float(Sprites.scale()))
+			var nominal := Vector2i(px.x, maxi(3, px.y - amp * 2)) if px.x >= px.y else Vector2i(maxi(3, px.x - amp * 2), px.y)
+			var base: Image = (frozen_stream(nominal) if frozen else _stream_texture(nominal, dashes)).get_image()
+			_cache[skey] = ImageTexture.create_from_image(meander(base, shape, frozen))
 		return _cache[skey]
 	if frozen and kind == "stream":
 		return frozen_stream(px)
@@ -55,11 +58,11 @@ static func _stream_texture(px: Vector2i, dashes: bool) -> ImageTexture:
 	return PixelPlace.from_rows(_rows_of(_stream(px.x, px.y, dashes)), Color("3f7fa8"))
 
 
-## GFX-135: a stream bent into a meander: the water is cropped to leave STREAM_AMP either side, then each column
-## (row for a vertical stream) is shifted sideways by Scenery.stream_offset, 0 near path crossings so bridges still meet it.
-## `shape` = {seed, spans, origin (world coordinate of the first pixel along the stream)}; the tint of unshifted
-## stream rows is the caller's.
-static func meander(src: Image, shape: Dictionary) -> Image:
+## GFX-178: a stream bent into a real meander. `src` is the straight stream at its nominal thickness; the result is
+## STREAM_AMP wider either side. Each column (row for a vertical stream) takes the cross-section of `src` squeezed to
+## Scenery.stream_width and centred at Scenery.stream_offset (0 near bridges, places and spots), then gets pebbles, riffles
+## and (shape.reeds, an html colour) reed tufts. `shape` = {seed, spans, origin (world coordinate of the first pixel along the stream), reeds}.
+static func meander(src: Image, shape: Dictionary, frozen: bool = false) -> Image:
 	var w := src.get_width()
 	var h := src.get_height()
 	var horizontal := w >= h
@@ -67,24 +70,69 @@ static func meander(src: Image, shape: Dictionary) -> Image:
 	var length := w if horizontal else h
 	var sc := float(Sprites.scale())
 	var amp := ceili(Scenery.STREAM_AMP / sc)
-	if thick < amp * 2 + 8:
-		return src
-	var out := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var tout := thick + amp * 2
+	var out := Image.create(length if horizontal else tout, tout if horizontal else length, false, Image.FORMAT_RGBA8)
 	var spans: Array[Vector2] = []
 	for sp in shape.get("spans", []):
 		spans.append(sp)
+	var seed := int(shape.get("seed", 0))
+	var origin := float(shape.get("origin", 0.0))
+	var centres: Array[float] = []
+	var halves: Array[float] = []
 	for a in length:
-		var off := roundi(Scenery.stream_offset(float(shape.get("origin", 0.0)) + float(a) * sc, int(shape.get("seed", 0)), spans) / sc)
-		for c in thick:
-			var sc_i := c - off
-			if sc_i < amp or sc_i >= thick - amp:
+		var world_a := origin + float(a) * sc
+		var centre := float(tout) / 2.0 + Scenery.stream_offset(world_a, seed, spans) / sc
+		var half := Scenery.stream_width(world_a, seed, spans) / sc / 2.0
+		centres.append(centre)
+		halves.append(half)
+		for c in tout:
+			var t := (float(c) + 0.5 - centre) / (half * 2.0) + 0.5
+			if t < 0.0 or t >= 1.0:
 				continue
-			var col := src.get_pixel(a, sc_i) if horizontal else src.get_pixel(sc_i, a)
+			var si := clampi(int(t * float(thick)), 0, thick - 1)
+			var col := src.get_pixel(a, si) if horizontal else src.get_pixel(si, a)
 			if horizontal:
 				out.set_pixel(a, c, col)
 			else:
 				out.set_pixel(c, a, col)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var reed_col := Color(String(shape.get("reeds", "")), 1.0) if String(shape.get("reeds", "")) != "" else Color(0, 0, 0, 0)
+	var n := 0
+	var a2 := rng.randi_range(6, 20)
+	while a2 < length - 4:
+		var world_a := origin + float(a2) * sc
+		var safe := true
+		for sp in spans:
+			if world_a > sp.x - 30.0 and world_a < sp.y + 30.0:
+				safe = false
+		if safe:
+			var side := -1.0 if n % 2 == 0 else 1.0
+			var edge := centres[a2] + side * halves[a2]
+			var kind := n % 4
+			if kind == 0:  # a pebble on the bank
+				var cc := int(edge + side * 2.0)
+				_put(out, horizontal, a2, cc, Color("8f8a80") if not frozen else Color("c9d6e0"))
+				_put(out, horizontal, a2 + 1, cc, Color("6e6a62") if not frozen else Color("a9bccb"))
+			elif kind == 1 and not frozen:  # a riffle: a short white dash in the water
+				var cc2 := int(centres[a2] + rng.randf_range(-0.4, 0.4) * halves[a2])
+				for i in 5:
+					_put(out, horizontal, a2 + i, cc2, Color(1, 1, 1, 0.8))
+			elif kind == 2 and reed_col.a > 0.0 and not frozen:  # reed tuft on the bank
+				var cc3 := int(edge + side * 2.0)
+				for i in 3:
+					for j in 3:
+						_put(out, horizontal, a2 + i, cc3 + int(side) * j, reed_col if (i + j) % 2 == 0 else reed_col.darkened(0.25))
+			n += 1
+		a2 += rng.randi_range(22, 44)
 	return out
+
+
+static func _put(img: Image, horizontal: bool, a: int, c: int, col: Color) -> void:
+	var x := a if horizontal else c
+	var y := c if horizontal else a
+	if x >= 0 and y >= 0 and x < img.get_width() and y < img.get_height():
+		img.set_pixel(x, y, col)
 
 
 ## GFX-135: a pond as an image: ragged mask (Scenery.pond_edge), a muddy/sandy bank band with a darker wet edge, lighter shallows,

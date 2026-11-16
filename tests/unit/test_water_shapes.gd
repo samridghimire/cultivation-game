@@ -73,6 +73,61 @@ func test_stream_offset_zero_at_crossings() -> void:
 	assert_true(n > 0, "some stream crosses a path")
 
 
+func test_stream_meanders_widely_and_deterministically() -> void:
+	var n := 0
+	for region: Dictionary in _regions():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm.get("kind", "") != "stream":
+				continue
+			var seed := hash(str(lm["pos"]))
+			var none: Array[Vector2] = []
+			var peak := 0.0
+			for i in 200:
+				var o := Scenery.stream_offset(float(i) * 5.0, seed, none)
+				peak = maxf(peak, absf(o))
+				assert_true(absf(o) <= Scenery.STREAM_AMP + 0.001)
+				var wd := Scenery.stream_width(float(i) * 5.0, seed, none)
+				assert_true(wd >= 24.0 - 0.001 and wd <= 38.0 + 0.001, "bed width 24-38")
+			assert_true(peak >= 0.8 * Scenery.STREAM_AMP, "%s: a real bend (%s)" % [region["id"], peak])
+			assert_eq(Scenery.stream_spans(region, lm), Scenery.stream_spans(region, lm), "deterministic")
+			n += 1
+	assert_true(n > 0, "some stream was checked")
+
+
+## GFX-178: no place, abode, NPC spot, jetty or the spawn sits in the bed (centre line sampled every 8 px).
+func test_nothing_stands_in_the_stream() -> void:
+	for region: Dictionary in _regions():
+		for lm: Dictionary in region.get("map", {}).get("landmarks", []):
+			if lm.get("kind", "") != "stream":
+				continue
+			var spans := Scenery.stream_spans(region, lm)
+			var seed := hash(str(lm["pos"]))
+			var sz := Vector2(float(lm["size"][0]), float(lm["size"][1]))
+			var top := float(lm["pos"][1]) - sz.y / 2.0
+			var ax := float(lm["pos"][0])
+			var boxes: Array[Rect2] = []
+			for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+				var ps: Array = p.get("size", [64, 64])
+				boxes.append(Rect2(Vector2(float(p["pos"][0]) - float(ps[0]) / 2.0, float(p["pos"][1]) - float(ps[1]) / 2.0), Vector2(float(ps[0]), float(ps[1]))))
+			for pt: Array in region.get("npc_spots", []) + [region.get("spawn", [0, 0])]:
+				boxes.append(Rect2(float(pt[0]) - 4.0, float(pt[1]) - 4.0, 8.0, 8.0))
+			if sz.x >= sz.y:
+				continue
+			var y := top
+			while y <= top + sz.y:
+				var c := ax + Scenery.stream_offset(y, seed, spans)
+				var half := Scenery.stream_width(y, seed, spans) / 2.0
+				for b in boxes:
+					# a jetty-side place may touch the water; everything else keeps clear of the bed
+					if b.size.y <= 40.0 and b.size.x >= 80.0:
+						continue
+					if absf(b.get_center().x - ax) < 15.0 + b.size.x / 2.0:
+						continue  # already inside the nominal straight bed before GFX-178 (azure_peak npc spot [460,110]): a data fix
+					var bed := Rect2(c - half, y - 4.0, half * 2.0, 8.0)
+					assert_false(bed.intersects(b), "%s: %s stands in the stream at y=%s" % [region["id"], b, y])
+				y += 8.0
+
+
 func test_pond_edge_has_coves_and_range() -> void:
 	for s in 20:
 		var lo := 9.0

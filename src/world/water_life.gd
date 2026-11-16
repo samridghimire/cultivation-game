@@ -115,7 +115,7 @@ func _draw() -> void:
 	for si in _streams.size():
 		var s := _streams[si]
 		_draw_stream_banks(s, _stream_shapes[si])
-		_draw_flow(s, dash)
+		_draw_flow(s, dash, _stream_shapes[si])
 	var a := shimmer_alpha(_clock)
 	for p in _ponds:
 		var c := p.get_center()
@@ -143,51 +143,53 @@ func _draw() -> void:
 		draw_polyline(pts, Color(1, 1, 1, 0.55 * (1.0 - t)), 1.0)
 
 
-## GFX-135: the two banks follow the same meander as the stream texture (Scenery.stream_offset), straight at bridges.
+## GFX-178: the two banks follow the meander and the breathing width of the stream texture, straight at bridges.
 func _draw_stream_banks(s: Rect2, shape: Dictionary) -> void:
 	var bank := Color("6a5236")
 	var horizontal := s.size.x >= s.size.y
 	var length := s.size.x if horizontal else s.size.y
-	var width := s.size.y if horizontal else s.size.x
+	var mid := s.get_center().y if horizontal else s.get_center().x
 	var spans: Array[Vector2] = []
 	for sp in shape["spans"]:
 		spans.append(sp)
-	var inset := Scenery.STREAM_AMP
 	var lo := PackedVector2Array()
 	var hi := PackedVector2Array()
 	var a := 0.0
 	while a <= length + 0.01:
 		var world_a := (s.position.x if horizontal else s.position.y) + a
-		var off := Scenery.stream_offset(world_a, int(shape["seed"]), spans)
-		var p_lo := Vector2(world_a, s.position.y + inset + off - 1.0) if horizontal else Vector2(s.position.x + inset + off - 1.0, world_a)
-		var p_hi := Vector2(world_a, s.position.y + width - inset + off + 1.0) if horizontal else Vector2(s.position.x + width - inset + off + 1.0, world_a)
-		lo.append(p_lo)
-		hi.append(p_hi)
+		var c := mid + Scenery.stream_offset(world_a, int(shape["seed"]), spans)
+		var half := Scenery.stream_width(world_a, int(shape["seed"]), spans) / 2.0
+		lo.append(Vector2(world_a, c - half + 1.0) if horizontal else Vector2(c - half + 1.0, world_a))
+		hi.append(Vector2(world_a, c + half - 1.0) if horizontal else Vector2(c + half - 1.0, world_a))
 		a += 4.0
 	if lo.size() >= 2:
 		draw_polyline(lo, bank, 2.0)
 		draw_polyline(hi, bank, 2.0)
 
 
-func _draw_flow(s: Rect2, col: Color) -> void:
+func _draw_flow(s: Rect2, col: Color, shape: Dictionary) -> void:
 	var horizontal := s.size.x >= s.size.y
 	var length := s.size.x if horizontal else s.size.y
-	var width := s.size.y if horizontal else s.size.x
-	var row := 6.0
+	var mid := s.get_center().y if horizontal else s.get_center().x
+	var spans: Array[Vector2] = []
+	for sp in shape["spans"]:
+		spans.append(sp)
+	var base := s.position.x if horizontal else s.position.y
 	var n := 0
-	while row < width - 5.0:
+	for lane in 4:
+		var frac := (float(lane) + 0.5) / 4.0 - 0.5  # -0.375..0.375 of the bed width
 		var start := fposmod(flow_offset + float(n * 7), DASH_LEN + DASH_GAP) - (DASH_LEN + DASH_GAP)
 		var pos := start
 		while pos < length:
 			var a := maxf(pos, 0.0)
 			var b := minf(pos + DASH_LEN, length)
 			if b > a:
-				var seg := Rect2(s.position.x + a, s.position.y + row, b - a, 1.0) if horizontal \
-					else Rect2(s.position.x + row, s.position.y + a, 1.0, b - a)
+				var wa := base + (a + b) / 2.0
+				var c := mid + Scenery.stream_offset(wa, int(shape["seed"]), spans) + frac * (Scenery.stream_width(wa, int(shape["seed"]), spans) - 6.0)
+				var seg := Rect2(base + a, c, b - a, 1.0) if horizontal else Rect2(c, base + a, 1.0, b - a)
 				if not _on_path(seg):
 					draw_rect(seg, col)
 			pos += DASH_LEN + DASH_GAP
-		row += ROW_GAP
 		n += 1
 
 

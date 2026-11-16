@@ -334,6 +334,8 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 		var rect := Rect2(Vector2(float(pos[0]), float(pos[1])) - size / 2.0, size)
 		if lm.get("kind", "") == "jetty":
 			rect = jetty_layout(region, lm)["rect"]
+		elif lm.get("kind", "") == "stream":  # GFX-178: the bed swings STREAM_AMP either side of the axis
+			rect = rect.grow_individual(STREAM_AMP, 0.0, STREAM_AMP, 0.0) if size.x < size.y else rect.grow_individual(0.0, STREAM_AMP, 0.0, STREAM_AMP)
 		out.append(rect)
 	return out
 
@@ -2461,26 +2463,42 @@ static func pond_water_contains(lm: Dictionary, p: Vector2) -> bool:
 	return nrm.length() < edge
 
 
-## GFX-135: amplitude (px) of a stream's meander.
-const STREAM_AMP := 4.0
+## GFX-178: amplitude (px) of a stream's meander (the bed swings this far either side of its axis).
+const STREAM_AMP := 40.0
+## GFX-178: distance (px) over which the meander eases in beyond the 24 px kept straight at a crossing or a place.
+const STREAM_EASE := 60.0
 
 
-## GFX-135: sideways offset (px, |x| <= STREAM_AMP) of a stream at world coordinate `along` its length: a seeded sine
-## (wavelength 120-200 px) that is exactly 0 within 24 px of any `spans` entry (x = start, y = end along the same axis;
-## the path crossings, where a bridge must meet the water).
+## GFX-178: sideways offset (px, |x| <= STREAM_AMP) of a stream at world coordinate `along` its length: a seeded sine
+## (wavelength 320-520 px) plus a smaller seeded harmonic, exactly 0 within 24 px of any `spans` entry (x = start, y = end
+## along the same axis: path crossings, and places, jetties and spots near the axis) and easing in over the next STREAM_EASE px.
 static func stream_offset(along: float, seed: int, spans: Array[Vector2]) -> float:
 	var near := INF
 	for sp in spans:
 		near = minf(near, maxf(0.0, maxf(sp.x - along, along - sp.y)))
 	if near <= 24.0:
 		return 0.0
-	var ease_in := clampf((near - 24.0) / 24.0, 0.0, 1.0)
-	var wave := 120.0 + float(absi(seed) % 81)
+	var ease_in := clampf((near - 24.0) / STREAM_EASE, 0.0, 1.0)
+	var wave := 320.0 + float(absi(seed) % 201)
 	var phase := float(absi(seed / 7) % 628) / 100.0
-	return sin(TAU * along / wave + phase) * STREAM_AMP * ease_in
+	var phase2 := float(absi(seed / 11) % 628) / 100.0
+	var v := sin(TAU * along / wave + phase) * 0.85 + sin(TAU * along / (wave * 0.41) + phase2) * 0.15
+	return clampf(v * 1.15, -1.0, 1.0) * STREAM_AMP * ease_in
 
 
-## GFX-135: the stretches along a stream landmark's axis where a path crosses it (for stream_offset).
+## GFX-178: the bed's width (px, 24-38) at `along`: breathes on a seeded wave, a steady 30 right at a bridge or place.
+static func stream_width(along: float, seed: int, spans: Array[Vector2]) -> float:
+	var near := INF
+	for sp in spans:
+		near = minf(near, maxf(0.0, maxf(sp.x - along, along - sp.y)))
+	var ease_in := clampf((near - 24.0) / STREAM_EASE, 0.0, 1.0)
+	var wave := 170.0 + float(absi(seed) % 130)
+	var phase := float(absi(seed / 5) % 628) / 100.0
+	return lerpf(30.0, 31.0 + sin(TAU * along / wave + phase) * 7.0, ease_in)
+
+
+## GFX-135/178: the stretches along a stream landmark's axis where a path crosses it, or where a place, abode, jetty,
+## other landmark, NPC spot, spawn or the arrival point lies within STREAM_AMP + 16 px of the axis (for stream_offset).
 static func stream_spans(region: Dictionary, lm: Dictionary) -> Array[Vector2]:
 	var size := Vector2(float(lm["size"][0]), float(lm["size"][1]))
 	var r := Rect2(Vector2(float(lm["pos"][0]), float(lm["pos"][1])) - size / 2.0, size)
@@ -2491,8 +2509,28 @@ static func stream_spans(region: Dictionary, lm: Dictionary) -> Array[Vector2]:
 		if pth.intersects(r):
 			var ix := pth.intersection(r)
 			out.append(Vector2(ix.position.x, ix.end.x) if horizontal else Vector2(ix.position.y, ix.end.y))
+	var reach := r.grow(STREAM_AMP + 16.0)
+	var boxes: Array[Rect2] = []
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		var psz: Array = p.get("size", [64, 64])
+		var pc := Vector2(float(p["pos"][0]), float(p["pos"][1]))
+		boxes.append(Rect2(pc - Vector2(float(psz[0]), float(psz[1])) / 2.0, Vector2(float(psz[0]), float(psz[1]))))
+	for o: Dictionary in region.get("map", {}).get("landmarks", []):
+		var kind := String(o.get("kind", ""))
+		if kind == "stream" or kind == "clouds":
+			continue
+		var osz := Vector2(float(o["size"][0]), float(o["size"][1]))
+		var orect := Rect2(Vector2(float(o["pos"][0]), float(o["pos"][1])) - osz / 2.0, osz)
+		boxes.append(jetty_layout(region, o)["rect"] if kind == "jetty" else orect)
+	var pts: Array = region.get("npc_spots", []).duplicate()
+	if region.has("spawn"):
+		pts.append(region["spawn"])
+	for pt: Array in pts:
+		boxes.append(Rect2(float(pt[0]) - 8.0, float(pt[1]) - 8.0, 16.0, 16.0))
+	for b in boxes:
+		if b.intersects(reach):
+			out.append(Vector2(b.position.x, b.end.x) if horizontal else Vector2(b.position.y, b.end.y))
 	return out
-
 
 
 ## GFX-125: `count` lily pads (centre and radius) scattered inside `rect`'s ellipse; seeded.

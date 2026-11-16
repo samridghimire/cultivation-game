@@ -2290,9 +2290,12 @@ func _draw_landmark(lm: Dictionary) -> void:
 		if lm["kind"] == "pond":
 			shape = {"seed": hash(str(lm["pos"]))}  # GFX-135: a ragged, per-pond shoreline
 		elif lm["kind"] == "stream":
-			var sz2 := Vector2(PixelLandmark.pixel_size("stream", size)) * float(Sprites.scale())
 			var horizontal := size.x >= size.y
-			shape = {"seed": hash(str(lm["pos"])), "spans": Scenery.stream_spans(_region, lm), "origin": (r.get_center().x - sz2.x / 2.0) if horizontal else (r.end.y - sz2.y)}
+			var sz2 := Vector2(PixelLandmark.pixel_size("stream", size)) * float(Sprites.scale())
+			var reeds := "" if Scenery.is_snowy(_season) else ("9a6a2a" if _season == "Autumn" else "4f7a3a")
+			shape = {"seed": hash(str(lm["pos"])), "spans": Scenery.stream_spans(_region, lm), "origin": (r.get_center().x - sz2.x / 2.0) if horizontal else (r.end.y - sz2.y), "reeds": reeds}
+			# GFX-178: the texture holds the whole swing of the bed, STREAM_AMP either side of the landmark rect.
+			size = size + (Vector2(0.0, Scenery.STREAM_AMP * 2.0) if horizontal else Vector2(Scenery.STREAM_AMP * 2.0, 0.0))
 		var ptex := PixelLandmark.texture(str(lm["kind"]), size, water, frozen, MotionFx.reduced(), String(_region.get("map", {}).get("building_style", "thatch")), String(_region.get("map", {}).get("water", "clear")), shape)
 		var px := Vector2(ptex.get_size()) * float(Sprites.scale())
 		if lm["kind"] == "house":
