@@ -1677,3 +1677,92 @@ Policy: chat once a day with the villager Guidance.style_teacher names when stan
 once a style is known, take the weekly teacher bout Mentorship.teacher_bout_style names. Days are the clock's.
 12 months and 36 months give the same line:
   first style: median day 45 (10/10 seeds; lesson 0, manual 10), bouts 0, mastered: median day - (0 seeds)
+## first fights, rated vs real (starter character, Qi Refining layers 1-7)
+
+First-fights truth: 200 fights per row, seed 1. Techniques: iron_fist; weapon iron_sword, armor -.
+Qi Refining layer 1:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated  72% (Even     ) real  72%
+  mist_fox               rated   0% (Deadly   ) real   0%
+  hill_dog               rated  18% (Dangerous) real  20%
+  mist_wolf              rated   0% (Deadly   ) real   1%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  15% (Dangerous) real  14%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+  fog_antler_stag        rated   0% (Deadly   ) real   1%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   0% (Deadly   ) real   0%
+Qi Refining layer 2:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated  94% (Weak     ) real  88%
+  mist_fox               rated   0% (Deadly   ) real   1%
+  hill_dog               rated  46% (Dangerous) real  46%
+  mist_wolf              rated   1% (Deadly   ) real   1%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  48% (Dangerous) real  41%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+  fog_antler_stag        rated   4% (Deadly   ) real   9%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   0% (Deadly   ) real   0%
+Qi Refining layer 3:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated 100% (Weak     ) real  99%
+  mist_fox               rated   0% (Deadly   ) real   1%
+  hill_dog               rated  63% (Risky    ) real  68%
+  mist_wolf              rated   3% (Deadly   ) real   6%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  63% (Risky    ) real  66%
+  iron_back_boar         rated   0% (Deadly   ) real   0%
+  fog_antler_stag        rated  23% (Dangerous) real  30%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   0% (Deadly   ) real   0%
+Qi Refining layer 4:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated  98% (Weak     ) real 100%
+  mist_fox               rated   4% (Deadly   ) real   5%
+  hill_dog               rated  79% (Even     ) real  88%
+  mist_wolf              rated  13% (Deadly   ) real  16%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  82% (Even     ) real  85%
+  iron_back_boar         rated   0% (Deadly   ) real   1%
+  fog_antler_stag        rated  40% (Dangerous) real  48%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   0% (Deadly   ) real   0%
+Qi Refining layer 5:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated 100% (Weak     ) real 100%
+  mist_fox               rated  13% (Deadly   ) real  14%
+  hill_dog               rated  95% (Weak     ) real  95%
+  mist_wolf              rated  30% (Dangerous) real  34%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated  97% (Weak     ) real  97%
+  iron_back_boar         rated   2% (Deadly   ) real   2%
+  fog_antler_stag        rated  68% (Risky    ) real  67%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   0% (Deadly   ) real   0%
+Qi Refining layer 6:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated 100% (Weak     ) real 100%
+  mist_fox               rated  30% (Dangerous) real  33%
+  hill_dog               rated 100% (Weak     ) real 100%
+  mist_wolf              rated  53% (Risky    ) real  58%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated 100% (Weak     ) real 100%
+  iron_back_boar         rated  13% (Deadly   ) real   8%
+  fog_antler_stag        rated  90% (Weak     ) real  86%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   1% (Deadly   ) real   0%
+Qi Refining layer 7:
+  wild_boar              rated 100% (Weak     ) real 100%
+  drunk_bully_disciple   rated 100% (Weak     ) real 100%
+  mist_fox               rated  38% (Dangerous) real  50%
+  hill_dog               rated 100% (Weak     ) real 100%
+  mist_wolf              rated  64% (Risky    ) real  70%
+  mountain_bandit        rated 100% (Weak     ) real 100%
+  road_deserter          rated 100% (Weak     ) real 100%
+  iron_back_boar         rated  17% (Dangerous) real  18%
+  fog_antler_stag        rated  96% (Weak     ) real  93%
+  rogue_cultivator       rated   0% (Deadly   ) real   0%
+  mist_python            rated   3% (Deadly   ) real   2%
+Rows off by more than 15 points: 0
+

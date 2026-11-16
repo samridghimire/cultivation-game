@@ -1,7 +1,7 @@
 extends SceneTree
 ## QA-085: does the rated win % of a first-region foe match the real win rate? A new character
 ## after the curious policy's first steps (Elder Mo, the chores, qi items, the cheapest combat
-## manual, starter gear) at Qi Refining layers 1-3 fights every foe the start region and its
+## manual, starter gear) at Qi Refining layers 1-7 fights every foe the start region and its
 ## neighbours' exploration can throw at it (at any of those layers) 200 times through Combat.resolve (the call GameState.fight_enemy
 ## makes; no ally strike, full HP) and prints it next to Combat.win_chance (the rating).
 ## "(!)" marks rows where rated and real differ by more than 15 points.
@@ -10,7 +10,7 @@ extends SceneTree
 ## its shot read "Weak" over a defeat; real boar fights are in the table below.)
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
-const LAYERS: Array[int] = [1, 2, 3]
+const LAYERS: Array[int] = [1, 2, 3, 4, 5, 6, 7]
 const GAP := 0.15
 
 
