@@ -130,6 +130,8 @@ func _run() -> void:
 			FirstHour.injury_report = true  # QA-163
 		elif a == "--sect-report":
 			FirstHour.sect_report = true  # QA-162
+		elif a == "--activity-report":
+			FirstHour.activity_report = true  # QA-171
 		elif a == "--core-report":
 			FirstHour.core_report = true  # QA-173
 		elif a == "--chat-teacher":
@@ -301,6 +303,8 @@ func _run() -> void:
 		_print_injury_report(seeds)
 	if FirstHour.sect_report:
 		_print_sect_report()
+	if FirstHour.activity_report:
+		_print_activity_report()
 	if FirstHour.body_art or FirstHour.trial_report:
 		_print_body_art(seeds)
 	if FirstHour.sect_method:
@@ -549,6 +553,37 @@ func _print_sect_report() -> void:
 		months += int(e["paid"]) + int(e["skipped"])
 	print("  total: %d members; days away median %.0f; stipends paid %d, skipped %d over %d sect months; missions median %.0f; lectures median %.0f" % [members, _median(away), paid, skipped, months, _median(missions), _median(lectures)])
 	print("  QA-227: chores done %d; months short %d; Inner Disciple day median %s (%d seeds); Foundation day median %s (%d seeds)" % [chores, short_months, ("%.0f" % _median(inner_days)) if not inner_days.is_empty() else "-", inner_days.size(), ("%.0f" % _median(found_days)) if not found_days.is_empty() else "-", found_days.size()])
+
+
+## QA-171: per seed the days per activity until Foundation (or the whole run if it never came), then medians.
+func _print_activity_report() -> void:
+	print("Activity days until Foundation (QA-171): seed, sect, Foundation day, days per activity, qi per meditation day")
+	var kinds := {}
+	var qi_rates: Array = []
+	var per_kind := {}
+	var found: Array = []
+	for e: Dictionary in FirstHour.activity_log:
+		var days: Dictionary = e["days"] if not e["found"] else e["foundation_days"]
+		var parts: Array[String] = []
+		var keys: Array = days.keys()
+		keys.sort()
+		for k: String in keys:
+			parts.append("%s %d" % [k, days[k]])
+			kinds[k] = true
+		var rate := float(e["med_qi"]) / maxf(1.0, float(e["med_days"]))
+		qi_rates.append(rate)
+		if e["found"]:
+			found.append(int(e["foundation_day"]))
+		print("  seed %2d %-12s found %s | %s | qi/med-day %.1f" % [e["seed"], e["sect"], str(e.get("foundation_day", "-")), ", ".join(parts), rate])
+		for k: String in kinds:
+			if not per_kind.has(k):
+				per_kind[k] = []
+		for k: String in per_kind:
+			per_kind[k].append(int(days.get(k, 0)))
+	var med: Array[String] = []
+	for k: String in per_kind:
+		med.append("%s %.0f" % [k, _median(per_kind[k])])
+	print("  medians: %s; qi per meditation day %.1f; Foundation day median %s (%d seeds)" % [", ".join(med), _median(qi_rates), ("%.0f" % _median(found)) if not found.is_empty() else "-", found.size()])
 
 
 ## QA-163: every injury taken, per seed: id, day, region, days it lasted, whether it was treated early, the qi-days

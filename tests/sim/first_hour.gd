@@ -55,6 +55,10 @@ static var sect_report := false
 ## QA-173: read by simulate_curious_years.gd's --core-report (the attempt log already records every Core try); part of the memo key.
 static var core_report := false
 static var sect_log: Array[Dictionary] = []
+## QA-171: with activity_report on, play() logs per seed the days spent per activity (read off the call stack of every
+## clock advance) until Foundation, and the qi gained per meditation day. Part of the memo key.
+static var activity_report := false
+static var activity_log: Array[Dictionary] = []
 ## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
 ## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
@@ -153,7 +157,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -210,6 +214,13 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			sect_entry["paid"] += 1
 	if sect_report:
 		bus.message_posted.connect(on_sect_msg)
+	var act := {"seed": seed_value, "days": {}, "foundation_days": {}, "med_qi": 0.0, "med_days": 0, "found": false}
+	var on_days := func(days: int) -> void:
+		var kind := _activity_of(get_stack())
+		var tally: Dictionary = act["days"]
+		tally[kind] = int(tally.get(kind, 0)) + days
+	if activity_report:
+		clock.days_advanced.connect(on_days)
 	var art_rec := {"open": {}, "foundation": -1, "energy": {}}
 	if artifact_report:
 		artifact_log.append(art_rec)
@@ -228,9 +239,14 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		var qi_density := SPRING_DENSITY
 		if far_qi:
 			qi_density = _move_for_qi(gs, c, clock, month, qi_density, out)
+		var qi_before := c.qi
+		var realm_before_med := c.realm_index
 		gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
 		if not c.alive:
 			break
+		if activity_report and not act["found"] and c.realm_index == realm_before_med:
+			act["med_qi"] += maxf(0.0, c.qi - qi_before)  # a month that ends below its start (injury, pill) gathered nothing we can read
+			act["med_days"] += Calendar.DAYS_PER_MONTH
 		var broke := false
 		# QA-066: log every breakthrough attempt (and the first day each realm's bottleneck was seen, month-granular).
 		if Cultivation.is_at_bottleneck(c, gs.data) and not out["bottleneck_day"].has(c.realm_index):
@@ -311,12 +327,20 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				sect_entry["foundation_day"] = clock.total_days  # QA-227
 			if gs.current_region != (gs.data.sects[c.sect["id"]] as SectDef).home_region:
 				sect_entry["away"] += Calendar.DAYS_PER_MONTH
+		if activity_report and not act["found"] and c.realm_index >= 2:
+			act["found"] = true
+			act["foundation_days"] = (act["days"] as Dictionary).duplicate()
+			act["foundation_day"] = clock.total_days
 		if artifact_report:
 			_artifact_month(gs, c, clock.total_days, art_rec)
 		if month_hook.is_valid():
 			month_hook.call(month)
 	if artifact_report:
 		ArtifactFunctions.gain_observer = Callable()
+	if activity_report:
+		clock.days_advanced.disconnect(on_days)
+		act["sect"] = "rogue" if c.is_rogue() else String(c.sect["id"])
+		activity_log.append(act)
 	if injury_report:
 		bus.message_posted.disconnect(on_msg)
 	if sect_report:
@@ -343,6 +367,27 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	out["fights_fled"] = LifeStats.get_stat(c, "threats_fled")
 	saves.autosave_enabled = autosave_was
 	return out
+
+
+## QA-171: name the activity behind a clock advance from the stack (frame 0 is the signal handler, 1 GameClock.advance,
+## 2 GameState._pass_time, 3 the GameState action that spent the days).
+static func _activity_of(stack: Array) -> String:
+	if stack.size() < 4:
+		return "other"
+	var fn := String(stack[3].get("function", ""))
+	if fn == "cultivate" or fn == "cultivate_in_seclusion":
+		return "meditation"
+	if fn == "travel":
+		return "travel"
+	if fn.contains("mission"):
+		return "missions"
+	if fn.contains("lecture"):
+		return "lectures"
+	if fn.contains("fight") or fn.contains("combat") or fn.contains("explore") or fn.contains("hunt") or fn.contains("spar") or fn.contains("bounty"):
+		return "fights"
+	if fn.contains("work") or fn.contains("craft") or fn.contains("brew") or fn.contains("forge") or fn.contains("deed") or fn.contains("chore") or fn.contains("steward") or fn.contains("gather") or fn.contains("harvest") or fn.contains("fish") or fn.contains("tend") or fn.contains("mine"):
+		return "work"
+	return "other:" + fn
 
 
 ## QA-212: unseal every function that is ready, cheapest first (the day is month-granular), and note the day Foundation is reached.
