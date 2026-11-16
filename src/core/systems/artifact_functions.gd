@@ -20,6 +20,7 @@ const SOURCE_TEXT := {
 	"first_win": ["first win over a foe", "first wins over foes", "each first win over a foe"],
 	"discovery": ["a discovery", "discoveries", "each discovery"],
 	"secret_realm_floor": ["a secret realm floor", "secret realm floors", "each secret realm floor"],
+	"month_cultivated": ["a month of cultivation", "months of cultivation", ""],
 	"stones": ["spirit stones", "spirit stones", ""],
 	"offering": ["an offering", "offerings", ""],
 }
@@ -81,6 +82,25 @@ static func feed_choices(c: CharacterData, data: GameData) -> Array[Dictionary]:
 ## ART-009: energy one `kind` of progress gives (data energy.progress; 0 if absent).
 static func progress_energy(data: GameData, kind: String, count: int = 1) -> int:
 	return int(data.artifact.get("energy", {}).get("progress", {}).get(kind, 0)) * count
+
+
+## ART-015: energy the artifact drinks at each month end from a cultivator of `min_realm` or higher (0 = off or below it).
+static func month_energy(c: CharacterData, data: GameData) -> int:
+	var progress: Dictionary = data.artifact.get("energy", {}).get("progress", {})
+	var value := int(progress.get("month_cultivated", 0))
+	if value <= 0:
+		return 0
+	var need := data.realm_index_of(String(progress.get("month_cultivated_min_realm", "")))
+	return value if c.realm_index >= maxi(need, 0) else 0
+
+
+## ART-015: one month end feeds the artifact month_energy(). Returns energy gained.
+static func drink_month(c: CharacterData, data: GameData, day: int = -1) -> int:
+	var gained := clampi(month_energy(c, data), 0, maxi(int(data.artifact.get("energy", {}).get("max_energy", 0)) - c.artifact_energy, 0))
+	c.artifact_energy += gained
+	if day >= 0:
+		record_gain(c, "month_cultivated", gained, day)
+	return gained
 
 
 ## ART-009: the artifact drinks `count` of `kind` progress, capped at max_energy.

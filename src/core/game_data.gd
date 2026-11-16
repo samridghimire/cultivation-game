@@ -1086,7 +1086,10 @@ func _validate_artifact() -> void:
 		load_errors.append("artifact.json energy.progress must be an object")
 		return
 	for kind in progress:
-		if not ["stage", "realm", "first_win", "discovery", "secret_realm_floor"].has(String(kind)):
+		if kind == "month_cultivated_min_realm":
+			if realm_index_of(String(progress[kind])) < 0:
+				load_errors.append("artifact.json energy.progress month_cultivated_min_realm '%s' is not a realm" % progress[kind])
+		elif not ["stage", "realm", "first_win", "discovery", "secret_realm_floor", "month_cultivated"].has(String(kind)):
 			load_errors.append("artifact.json energy.progress has unknown key '%s'" % kind)
 		elif not (progress[kind] is int or progress[kind] is float) or int(progress[kind]) < 0 or float(progress[kind]) != floorf(float(progress[kind])):
 			load_errors.append("artifact.json energy.progress '%s' must be a non-negative integer" % kind)

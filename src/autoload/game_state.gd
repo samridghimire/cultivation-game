@@ -5225,6 +5225,7 @@ func _on_days_advanced(days: int) -> void:
 		_world_events_month()
 		_sect_factions_month()
 		_commissions_month()
+		_artifact_wakes(ArtifactFunctions.drink_month(player, data, GameClock.total_days))  # ART-015
 	EventBus.topic = "world"
 	_expire_world_events()
 	if not player.commissions.is_empty():

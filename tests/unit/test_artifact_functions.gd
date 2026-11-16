@@ -331,3 +331,28 @@ func test_energy_line_crossing() -> void:
 	assert_eq(ArtifactFunctions.energy_line(0, 10, -1, 100), "")
 	assert_eq(ArtifactFunctions.energy_line(20, 27, 90, 100), "", "crossed twice within 30 days: silent")
 	assert_eq(ArtifactFunctions.energy_line(20, 27, 60, 100) != "", true)
+
+
+func test_month_energy_by_realm() -> void:
+	var c := new_character()
+	assert_eq(ArtifactFunctions.month_energy(c, data()), 0, "below the min realm")
+	c.realm_index = data().realm_index_of("foundation_establishment")
+	assert_eq(ArtifactFunctions.month_energy(c, data()), 5)
+	var d := GameData.load_from_dir()
+	d.artifact = {"energy": {"progress": {}}}
+	assert_eq(ArtifactFunctions.month_energy(c, d), 0, "missing key is off")
+	c.artifact_energy = 0
+	assert_eq(ArtifactFunctions.drink_month(c, data(), 3), 5)
+	assert_eq(c.artifact_energy, 5)
+
+
+func test_validation_rejects_bad_month_realm() -> void:
+	var d := GameData.load_from_dir()
+	d.artifact["energy"]["progress"]["month_cultivated_min_realm"] = "nope"
+	d.load_errors.clear()
+	d._validate_artifact()
+	var found := false
+	for e: String in d.load_errors:
+		if e.contains("month_cultivated_min_realm"):
+			found = true
+	assert_true(found)

@@ -340,7 +340,7 @@ func _print_artifact_report(data: GameData) -> void:
 	var ids: Array[String] = []
 	for def: Dictionary in data.artifact.get("functions", []):
 		ids.append(String(def["id"]))
-	var sources: Array[String] = ["stage", "realm", "first_win", "discovery", "secret_realm_floor"]
+	var sources: Array[String] = ["stage", "realm", "first_win", "discovery", "secret_realm_floor", "month_cultivated"]
 	print("Artifact seals (QA-212): day each seal opened, day Foundation reached, energy by source")
 	print("  seed  %s  foundation  %s" % ["  ".join(ids), "  ".join(sources)])
 	var cols := {}

@@ -4606,3 +4606,18 @@ func test_taught_by_villager_or_self() -> void:
 	gs.world_flags[Mentorship.taught_by_key("iron_fist")] = Mentorship.SELF_TAUGHT
 	assert_eq(Mentorship.teacher_bout_style(gs.player, "hunter_ma", gs.data, gs.world_flags), "")
 	gs.end_session()
+
+
+func test_artifact_drinks_cultivated_months() -> void:
+	var gs := _game_state()
+	var c := _start()
+	c.realm_index = gs.data.realm_index_of("foundation_establishment")
+	ArtifactFunctions.sync_marks(c)
+	var before := c.artifact_energy
+	gs._pass_time(65)
+	assert_eq(c.artifact_energy, before + 10, "two month ends feed 5 each")
+	c.realm_index = 0
+	ArtifactFunctions.sync_marks(c)
+	before = c.artifact_energy
+	gs._pass_time(65)
+	assert_eq(c.artifact_energy, before, "a mortal gets none")
