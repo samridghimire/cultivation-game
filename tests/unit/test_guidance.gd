@@ -7166,3 +7166,43 @@ func test_lift_away_fair_moves_a_cut_fair_entry_into_view() -> void:
 	var already: Array[Dictionary] = [fair, easy.duplicate(), easy.duplicate(), easy.duplicate()]
 	Guidance._lift_away_fair(already)
 	assert_eq(already[0], fair)
+
+
+## GUIDE-250: a Fair foe one road away is found whatever home cost.
+func test_away_fair_fight_found_at_every_stage_that_has_one() -> void:
+	var d := data()
+	var hits := 0
+	for stage in range(0, 9):
+		var c := _fresh()
+		c.realm_index = 1  # Qi Refining has no eligible foe one road away; Foundation does
+		c.stage = stage
+		c.techniques["iron_fist"] = {"level": 1, "xp": 0.0}
+		c.inventory = {"iron_sword": 1}
+		c.equipment["weapon"] = "iron_sword"
+		var today := 10
+		var scan := false
+		for route: Dictionary in Exploration.routes(c, d, "qingshi_village"):
+			if not bool(route["ok"]):
+				continue
+			var where := String(route["to"])
+			var tags: Array = d.regions.get(where, {}).get("encounter_tags", [])
+			for id in Exploration.eligible_fights(c, d, tags, {}, Calendar.season_of(today), where, today):
+				var ch := Combat.win_chance(c, d, d.enemies[id])
+				if ch >= Guidance.FAIR_FIGHT_MIN_CHANCE and ch < Guidance.EASY_FIGHT_CHANCE:
+					scan = true
+		if not scan:
+			continue
+		hits += 1
+		var fights := Guidance.fair_fights(c, d, {}, today, "qingshi_village")
+		var away := fights.filter(func(f: Dictionary) -> bool: return int(f.get("days", 0)) > 0 and float(f["chance"]) < Guidance.EASY_FIGHT_CHANCE)
+		var home_fair := fights.filter(func(f: Dictionary) -> bool: return float(f["chance"]) < Guidance.EASY_FIGHT_CHANCE)
+		assert_true(not away.is_empty() or not home_fair.is_empty(), "stage %d lists a fair fight" % stage)
+	assert_true(hits > 0, "some stage has a fair foe one road away")
+
+
+func test_away_search_keeps_a_reserve_budget() -> void:
+	assert_true(Guidance.FAIR_FIGHT_AWAY_RESERVE > 0)
+	var found: Array[Dictionary] = []
+	var c := _fresh()
+	var rated := Guidance._away_explore_fights(found, c, data(), {}, 10, "qingshi_village", Guidance.FAIR_FIGHT_AWAY_RESERVE)
+	assert_true(rated <= Guidance.FAIR_FIGHT_AWAY_RESERVE)

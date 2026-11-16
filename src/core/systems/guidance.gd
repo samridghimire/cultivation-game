@@ -18,6 +18,8 @@ const BETTER_QI_RATIO := 1.5
 const FAR_QI_LEAD_DAYS := 30
 const FAIR_FIGHTS_MAX := 3
 const FAIR_FIGHT_MAX_RATED := 8
+## GUIDE-250: ratings the away search may always spend when home has no Fair entry (each rating is 40 simulated fights).
+const FAIR_FIGHT_AWAY_RESERVE := 8
 const FAIR_FIGHT_EXPLORE_MAX := 2
 const OUTGROWN_RATED_MAX := 4  # foes rated per region by outgrown_hint (hints() runs every HUD refresh)
 const OUTGROWN_SURE_CHANCE := 0.95
@@ -5558,8 +5560,8 @@ static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, tod
 			explore_rated += 1
 			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id))
 	# GUIDE-249: nothing but easy fights here: the next fair fight one road away.
-	if region_id != "" and rated < FAIR_FIGHT_MAX_RATED and not _has_fair_entry(found):
-		rated += _away_explore_fights(found, c, data, flags, today, region_id, FAIR_FIGHT_MAX_RATED - rated)
+	if region_id != "" and not _has_fair_entry(found):
+		rated += _away_explore_fights(found, c, data, flags, today, region_id, maxi(FAIR_FIGHT_MAX_RATED - rated, FAIR_FIGHT_AWAY_RESERVE))
 	found.sort_custom(fair_fight_before)
 	prefer_fresh_foe(found, c)
 	_lift_away_fair(found)
@@ -5607,6 +5609,10 @@ static func _away_explore_fights(found: Array[Dictionary], c: CharacterData, dat
 			if rated >= budget or kept >= FAIR_FIGHT_EXPLORE_MAX:
 				return rated
 			var foe: Dictionary = data.enemies[enemy_id]
+			# GUIDE-250: hopeless foes are skipped by a cheap stat check, without using budget. (Foes of a lower realm are
+			# NOT skipped: a Foundation player still finds a 40% Qi Refining wolf, so the spec's "always Easy" does not hold.)
+			if Combat.odds_kind(c, data, foe) == "far":
+				continue
 			rated += 1
 			var chance := Combat.win_chance(c, data, foe)
 			if chance >= EASY_FIGHT_CHANCE or chance < FAIR_FIGHT_MIN_CHANCE:

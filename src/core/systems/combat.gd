@@ -360,7 +360,7 @@ static func _outcome(c: CharacterData, data: GameData, enemy: Dictionary, enemy_
 
 
 ## FIGHT-002: "far", "hits", "scratch" or "" - the biggest gap between the player and `enemy`.
-static func _odds_kind(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
+static func odds_kind(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
 	var p := stats(c, data)
 	var e := enemy_stats(enemy, data)
 	var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
@@ -378,7 +378,7 @@ static func _odds_kind(c: CharacterData, data: GameData, enemy: Dictionary) -> S
 ## 6th Layer)", "It hits harder than you can take", "You barely scratch it", "Well below you" (a Weak foe whose realm is
 ## below yours), or "" when none applies.
 static func odds_reason(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
-	var kind := _odds_kind(c, data, enemy)
+	var kind := odds_kind(c, data, enemy)
 	if kind == "far":
 		var enemy_realm := maxi(0, data.realm_index_of(enemy.get("realm", "mortal")))
 		var label: String = data.realms[enemy_realm].stage_label(int(enemy.get("stage", 0)))
@@ -405,7 +405,7 @@ static func loss_advice(c: CharacterData, data: GameData, enemy: Dictionary, res
 	var foe := foe_name(enemy)
 	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
 	var advice: String
-	var kind := _odds_kind(c, data, enemy)
+	var kind := odds_kind(c, data, enemy)
 	if kind == "far":
 		advice = "%s is far above you; grow stronger before facing it again." % foe_cap
 	elif kind == "hits":
