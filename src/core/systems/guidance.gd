@@ -551,6 +551,48 @@ const SHORT_HINT_CHARS := 42  ## GUIDE-220: a short hint plus the HUD's " (J)" f
 ## GUIDE-220: `line` squeezed to SHORT_HINT_CHARS keeping the verb and the target: known long forms are
 ## rewritten, others fall back to their first sentence, then a word-boundary cut (never "...").
 static func short_hint(line: String, data: GameData = null) -> String:
+	return _with_route_days(line, _short_hint_base(line, data), data)
+
+
+## GUIDE-248: a short form of a long line that names another region and its route ("in Withered Bone Marsh (9 days"
+## / "(1 month and 3 days") ends with " · 9d" (the goal line's form). Forms that already carry days, lines about the
+## current region and lines without a route are unchanged. Over SHORT_FAR_CHARS the region word goes first, then the days.
+static func _with_route_days(line: String, short: String, data: GameData) -> String:
+	var re := RegEx.new()
+	re.compile(" in ([A-Z][^()]*?) \\((\\d+ (?:day|month|year)s?)")
+	var m := re.search(line)
+	if m == null or short == line:
+		return short
+	var days := _short_days(m.get_string(2))
+	if days == "":
+		return short
+	var done := RegEx.new()
+	done.compile("( · |\\()\\d+(d|mo|y)\\b")
+	if done.search(short) != null:
+		return short
+	var full := m.get_string(1)
+	var region_short := full
+	if data != null:
+		for id: String in data.regions:
+			if String(data.regions[id].get("name", "")) == full:
+				region_short = Places.short_region_name(data, id)
+				break
+	var open := short.rfind(" (")  # a cut can leave "(7" of the route clause: drop the fragment
+	if open > 0 and short.find(")", open) < 0:
+		short = short.substr(0, open)
+	var with_days := short + " · " + days
+	if with_days.length() <= SHORT_FAR_CHARS:
+		return with_days
+	for word in [", " + region_short, " in " + region_short, ", " + full, " in " + full]:
+		var at := short.find(word)
+		if at > 0:
+			var bare := short.substr(0, at) + short.substr(at + word.length()) + " · " + days
+			if bare.length() <= SHORT_FAR_CHARS:
+				return bare
+	return short
+
+
+static func _short_hint_base(line: String, data: GameData = null) -> String:
 	# GUIDE-244: the arrival line is shortened by the HUD (short_today) with the whole first name; the 42-character cut
 	# below used to run first and left "Today: Blank (J)". Keep the first item whole; "+N" counts extra forage names only.
 	if line.begins_with("Today in "):

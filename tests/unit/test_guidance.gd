@@ -7079,3 +7079,22 @@ func test_far_easy_fight_carries_route_days() -> void:
 	assert_false(near.contains("d ·"), near)
 	assert_eq(Guidance._short_days("1 month"), "1mo")
 	assert_eq(Guidance._short_days("soon"), "")
+
+
+## GUIDE-248: every far short hint ends with its route days; the current region's has none; the cap holds.
+func test_far_short_hints_carry_route_days() -> void:
+	var d := data()
+	var lines: Array[String] = [
+		"Sell your Spirit Herbs: the Wandering Merchant in Withered Bone Marsh (9 days) pays 40 stones each.",
+		"Your Qi Pill recipe needs Mugwort: the Herbalist in Withered Bone Marsh (9 days) sells them for 4 stones each.",
+		"Gather Moonleaf at Mist Ridge in Withered Bone Marsh (9 days, by way of Qingshi Village) for the elder's task.",
+		"Short on stones: sell goods at the Wandering Merchant in Withered Bone Marsh (1 month and 3 days).",
+	]
+	for line in lines:
+		var s := Guidance.short_hint(line, d)
+		assert_true(s.length() <= Guidance.SHORT_FAR_CHARS, s)
+		assert_true(s.ends_with("d") or s.ends_with("mo"), s)
+		assert_true(s.contains(" · "), s)
+		assert_false(s.ends_with("-"), s)
+	var near := Guidance.short_hint("Sell your Spirit Herbs: the Wandering Merchant here pays 40 stones each, a long way.", d)
+	assert_false(near.contains(" · "), near)
