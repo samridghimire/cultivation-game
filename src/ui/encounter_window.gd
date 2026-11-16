@@ -75,18 +75,32 @@ static func tags_footer(help_key: String) -> String:
 	return "Tags in [brackets] show what a choice checks or costs. " + tail
 
 
-## Window title: "Encounter", "Discovery: <name>" for a region discovery, "Hidden path: <name>"
-## for a deeper path, or "A request for the renowned: <name>" for an encounter gated by renown.
-static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false) -> String:
+## WU-552: the title of an ordinary encounter card by scene.
+const SCENE_TITLES := {"trail": "On the road", "woods": "In the woods", "reeds": "In the reeds", "ruins": "Among the ruins",
+	"ridge": "On the ridge", "cave": "In a cave", "village": "In the village", "river": "At the water"}
+
+
+## Window title: "Discovery: <name>" for a region discovery, "Hidden path: <name>" for a deeper path,
+## "A request for the renowned: <name>" for an encounter gated by renown; otherwise the encounter's `name`,
+## else a scene title, led by the season for a seasonal one ("Spring, on the road"). `settlement` = the
+## region has no wild look (no scene then reads "In the village").
+static func title_for(encounter: Dictionary, discovery: bool, deep_path: bool = false, settlement: bool = false) -> String:
 	var renowned := encounter.has("min_renown")
-	if not discovery and not deep_path and not renowned:
-		return "Encounter"
 	var name := String(encounter.get("name", String(encounter.get("id", "")).capitalize()))
 	if discovery:
 		return "Discovery: " + name
 	if deep_path:
 		return "Hidden path: " + name
-	return "A request for the renowned: " + name
+	if renowned:
+		return "A request for the renowned: " + name
+	if encounter.has("name"):
+		return name
+	var scene := String(encounter.get("scene", ""))
+	var base := String(SCENE_TITLES.get(scene, "In the village" if settlement else "On the road"))
+	var seasons: Array = encounter.get("seasons", [])
+	if not seasons.is_empty():
+		return String(seasons[0]).capitalize() + ", " + base.substr(0, 1).to_lower() + base.substr(1)
+	return base
 
 
 ## Shows the pending encounter (or closes if there is none).
@@ -100,7 +114,7 @@ func open() -> void:
 	var wild: String = String((region.get("map", {}) as Dictionary).get("wild_look", ""))
 	_scene.show_encounter(enc, PlaceLooks.scene_look(String(enc.get("scene", "")), GameState.last_explore_look, wild))
 	_scene.set_choice_count(choices.size())
-	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path)
+	_title.text = title_for(enc, GameState.last_explore_discovery, GameState.last_explore_deep_path, wild == "")
 	_text.text = GameState.rival_text(String(GameState.data.encounters.get(GameState.pending_encounter, {}).get("text", "")))
 	for child in _choices.get_children():
 		_choices.remove_child(child)

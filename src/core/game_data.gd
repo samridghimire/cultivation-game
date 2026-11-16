@@ -295,8 +295,8 @@ func _load(dir: String) -> void:
 	encounter_sense_below_chance = float(encounter_file.get("sense_below_chance", 0.2))
 	for encounter in encounter_file.get("encounters", []):
 		encounters[encounter["id"]] = encounter
-		if encounter.has("scene") and not (encounter["scene"] is String and (PlaceLooks.EXPLORE_LOOKS.has(String(encounter["scene"])) or encounter["scene"] == PlaceLooks.VILLAGE_SCENE)):
-			load_errors.append("encounter %s: scene %s is not one of %s or village" % [encounter["id"], encounter["scene"], PlaceLooks.EXPLORE_LOOKS])
+		if encounter.has("scene") and not (encounter["scene"] is String and (PlaceLooks.EXPLORE_LOOKS.has(String(encounter["scene"])) or PlaceLooks.ENCOUNTER_SCENES.has(String(encounter["scene"])) or encounter["scene"] == PlaceLooks.VILLAGE_SCENE)):
+			load_errors.append("encounter %s: scene %s is not one of %s, %s or village" % [encounter["id"], encounter["scene"], PlaceLooks.EXPLORE_LOOKS, PlaceLooks.ENCOUNTER_SCENES])
 		if encounter.has("figure") and not (encounter["figure"] is String and String(encounter["figure"]) in ENCOUNTER_FIGURES):
 			load_errors.append("encounter %s: figure %s is not one of %s" % [encounter["id"], encounter["figure"], ENCOUNTER_FIGURES])
 

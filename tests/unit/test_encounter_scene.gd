@@ -92,3 +92,13 @@ func test_scene_data_is_valid() -> void:
 	assert_eq(String(data.encounters["misty_forest_hidden_valley"].get("scene", "")), "woods")
 	assert_eq(String(data.regions["withered_bone_marsh"]["map"].get("wild_look", "")), "reeds")
 	assert_false(data.regions["qingshi_village"]["map"].has("wild_look"))
+
+
+func test_river_scene() -> void:
+	assert_eq(EncounterScene.backdrop_for_look("river"), "river")
+	assert_eq(PlaceLooks.scene_look("river", "cave", "ridge"), "river")
+	assert_false(PlaceLooks.ENCOUNTER_SCENES.has("lake"))
+	var data := data()
+	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
+	assert_eq(String(data.encounters["road_spring_swollen_ford"].get("scene", "")), "river")
+	assert_true(DuelStage.river_water_color("Spring") != DuelStage.river_water_color("Summer"))

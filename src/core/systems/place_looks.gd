@@ -9,6 +9,8 @@ const HAIR := {"dark": Color("2a2018"), "grey": Color("b8b8b8")}
 const STYLES := ["bun", "long", "hood"]
 const KINDS := ["figure", "camp"]
 ## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
+## WU-552: backdrops only an encounter can ask for (not an explore place's look).
+const ENCOUNTER_SCENES := ["river"]
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 ## WU-506: the scene an encounter happens in: its own `scene`, else the explore place's look, else the region's
 ## `map.wild_look`, else "village". Unknown values are skipped. Pure.
@@ -17,7 +19,7 @@ const VILLAGE_SCENE := "village"
 
 static func scene_look(enc_scene: String, explore_look: String, wild_look: String) -> String:
 	for candidate: String in [enc_scene, explore_look, wild_look]:
-		if EXPLORE_LOOKS.has(candidate) or candidate == VILLAGE_SCENE:
+		if EXPLORE_LOOKS.has(candidate) or ENCOUNTER_SCENES.has(candidate) or candidate == VILLAGE_SCENE:
 			return candidate
 	return VILLAGE_SCENE
 

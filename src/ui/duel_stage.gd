@@ -610,6 +610,11 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 				if snow_caps:
 					draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.27, horizon - h * 0.64), Vector2(x - w * 0.2, horizon - h * 0.8),
 						Vector2(x, horizon - h * 0.5), Vector2(x + w * 0.2, horizon - h), Vector2(x + w * 0.27, horizon - h * 0.7), Vector2(x, horizon - h * 0.62)]), snow)
+			"river":  # WU-552: the far bank, a low grassy rise with the odd round tree
+				draw_rect(Rect2(x, horizon - 8.0, w, 8.0), col.lerp(Color("5f7a40"), 0.4))
+				if piece_i % 3 == 0:
+					draw_rect(Rect2(x + w * 0.5 - 1.0, horizon - 20.0, 3.0, 14.0), col.darkened(0.3))
+					draw_circle(Vector2(x + w * 0.5, horizon - 24.0), 9.0, col.lerp(Color("4a6a38"), 0.5))
 			"reeds":
 				draw_rect(Rect2(x, horizon - h, 2.0, h), col)
 				if s.get("tuft", false):  # cattail head
@@ -793,8 +798,61 @@ func _draw_ground() -> void:
 		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), tuft)
 	for sp in season_specks(gseason, rid, size.x, GROUND_BAND):
 		draw_rect(Rect2(float(sp["x"]), band.position.y + float(sp["y"]), 3.0, 2.0), sp["color"])
+	if look_kind == "river":
+		_draw_river(band, rid, gseason)
+		return
 	for p in backdrop_layers(rid, size.x)["props"]:
 		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
+
+
+## WU-552: the water of a river encounter: a band across the top of the ground strip (season-tinted), a muddy near bank
+## below it, reeds and a mooring post as props. Deterministic per region.
+static func river_water_color(season: String) -> Color:
+	match season:
+		"Spring":
+			return Color("8a6a46")  # snowmelt: brown and churning
+		"Autumn":
+			return Color("6f7c80")
+		"Winter":
+			return Color("9fb6c4")
+		_:
+			return Color("3f7fa8")
+
+
+func _draw_river(band: Rect2, rid: String, season: String) -> void:
+	var water := river_water_color(season)
+	var top := band.position.y + 2.0
+	var wh := 24.0
+	draw_rect(Rect2(0.0, top, size.x, wh), water)
+	draw_rect(Rect2(0.0, top + wh, size.x, 5.0), Color("5c4a36"))  # the wet mud edge of the near bank
+	for i in 22:
+		var rx := unit_hash(rid + "rv", i) * size.x
+		var ry := top + 3.0 + unit_hash(rid + "rw", i) * (wh - 8.0)
+		var rl := 14.0 + unit_hash(rid + "rl", i) * 18.0
+		var foam := water.lightened(0.3 if season != "Spring" else 0.4)
+		draw_rect(Rect2(rx, ry, rl, 2.0), foam)
+		if season == "Spring":  # churning: a second broken streak
+			draw_rect(Rect2(rx + rl * 0.5, ry + 5.0, rl * 0.6, 2.0), water.darkened(0.25))
+	if season == "Winter":  # ice grows in from both banks
+		draw_rect(Rect2(0.0, top, size.x, 4.0), Color("e4eef4"))
+		draw_rect(Rect2(0.0, top + wh - 4.0, size.x, 4.0), Color("e4eef4"))
+		for i in 6:
+			draw_rect(Rect2(unit_hash(rid + "ice", i) * size.x, top + 8.0, 36.0, 8.0), Color("d3e2ec"))
+	for i in 10:  # stones and pebbles on the near bank
+		var px := unit_hash(rid + "st", i) * size.x
+		var py := top + wh + 8.0 + unit_hash(rid + "sy", i) * (band.size.y - wh - 16.0)
+		draw_rect(Rect2(px, py, 6.0, 3.0), Color("8a8780") if i % 2 == 0 else Color("6b645a"))
+	var wood := Color("6b4a2e")
+	var post_x := size.x * (0.46 + unit_hash(rid + "post", 0) * 0.08)  # a mooring post between the fighters
+	draw_rect(Rect2(post_x, top + wh - 22.0, 5.0, 28.0), wood)
+	draw_rect(Rect2(post_x - 1.0, top + wh - 24.0, 7.0, 3.0), wood.lightened(0.2))
+	var reed := Color("6e7a3a") if season != "Winter" else Color("8a7a5a")
+	for cx: float in [size.x * 0.08, size.x * 0.92]:  # reed clumps at both ends
+		for j in 5:
+			var hh := 14.0 + unit_hash(rid + "rd", j + int(cx)) * 12.0
+			draw_rect(Rect2(cx + j * 4.0 - 8.0, top + wh - hh + 4.0, 2.0, hh), reed)
+			if j % 2 == 0:
+				draw_rect(Rect2(cx + j * 4.0 - 9.0, top + wh - hh, 4.0, 5.0), reed.darkened(0.35))
 
 
 func _draw_prop(kind: String, at: Vector2, ground: Color) -> void:

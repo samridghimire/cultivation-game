@@ -73,7 +73,7 @@ static func tokens_for(enc: Dictionary) -> Array:
 
 ## WU-501: the backdrop kind for an explore place's PlaceLooks look ("" = keep the region's own backdrop,
 ## e.g. in a settlement or for an unknown look). Pure.
-const LOOK_BACKDROPS := {"cave": "cave", "woods": "pines", "ruins": "ruins", "reeds": "reeds", "ridge": "crags", "trail": "hills", "village": "roofs"}
+const LOOK_BACKDROPS := {"cave": "cave", "woods": "pines", "ruins": "ruins", "reeds": "reeds", "ridge": "crags", "trail": "hills", "village": "roofs", "river": "river"}
 
 
 static func backdrop_for_look(look: String) -> String:
