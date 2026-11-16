@@ -50,7 +50,7 @@ func test_beast_materials_are_dropped_and_bought() -> void:
 			if (recipe.get("ingredients", {}) as Dictionary).has(id):
 				used = true
 		assert_true(used, "%s is an ingredient of no recipe" % id)
-	assert_eq(count, 9)
+	assert_eq(count, 10)
 
 
 ## GUIDE-115: sell-all keeps herbs that feed cultivation; harmful pills keep today's behaviour.
