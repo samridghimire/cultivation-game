@@ -18,6 +18,9 @@ const STAGE_HEIGHT := 182.0
 const GROUND_BAND := 56.0
 ## Fighters stand this far above the stage bottom, mid-grass (GFX-036).
 const FEET_INSET := 34.0
+## A fallen beast lies on its side: its body squashed to this fraction of its standing height (WU-547).
+const BEAST_LIE_SCALE := 0.55
+const TAG_GAP := 5.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
@@ -341,16 +344,39 @@ func _draw() -> void:
 	_draw_floaters(base_y, dx)
 	for who in 2:
 		if is_fallen(who):
-			var font := ThemeDB.fallback_font
-			var text := "Defeated"
-			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-			var cx2 := size.x * (0.25 if who == 0 else 0.75) + dx
-			var top := fallen_rect(_body_size(who), Vector2(cx2, base_y), who == 1 and _foe_beast).position.y
-			var plate := Rect2(cx2 - w / 2.0 - 4.0, top - 5.0 - 12.0 - 4.0, w + 8.0, 12.0 + 8.0)
+			var cx0 := size.x * (0.25 if who == 0 else 0.75) + dx
+			_draw_dust(Vector2(cx0, base_y), who)
+			var plate := defeated_tag_rect(who)
 			var pc: Color = UIStyle.PANEL
 			pc.a = 0.8
 			draw_rect(plate, pc)
-			draw_string(font, Vector2(cx2 - w / 2.0, top - 9.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
+			var font := ThemeDB.fallback_font
+			draw_string(font, Vector2(plate.position.x + 4.0, plate.end.y - 8.0), "Defeated", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
+
+
+## The ground point of fighter `who` (0 player, 1 foe) as drawn, for the tag and tests.
+func _feet_of(who: int) -> Vector2:
+	return Vector2(size.x * (0.25 if who == 0 else 0.75) + _stage_offset().x, size.y - FEET_INSET + _stage_offset().y)
+
+
+## The bounds of the lying body of fighter `who`.
+func fallen_body_rect(who: int) -> Rect2:
+	return fallen_rect(_body_size(who), _feet_of(who), who == 1 and _foe_beast)
+
+
+## The "Defeated" plate: centred on the lying body, its bottom TAG_GAP above the body's top (WU-547).
+func defeated_tag_rect(who: int) -> Rect2:
+	var w := ThemeDB.fallback_font.get_string_size("Defeated", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 8.0
+	var body := fallen_body_rect(who)
+	return Rect2(body.get_center().x - w / 2.0, body.position.y - TAG_GAP - 20.0, w, 20.0)
+
+
+## A small puff of dust where a fighter fell: three fading grey blobs on the ground by the body.
+func _draw_dust(feet: Vector2, who: int) -> void:
+	var half := fallen_body_rect(who).size.x / 2.0
+	for i in 3:
+		var x := feet.x + (-1.0 if i == 1 else 1.0) * (half + 4.0 + float(i) * 5.0)
+		draw_circle(Vector2(x, feet.y - 3.0 - float(i) * 3.0), 5.0 - float(i), Color(0.78, 0.72, 0.62, 0.35 - 0.08 * float(i)))
 
 
 ## The axis-aligned bounds of a fallen fighter (GFX-036). `tex_size` is the standing body in
@@ -358,7 +384,8 @@ func _draw() -> void:
 ## the ground); a person is rotated 90 degrees about the body centre and dropped to the ground.
 static func fallen_rect(tex_size: Vector2, feet: Vector2, beast: bool) -> Rect2:
 	if beast:
-		return Rect2(feet.x - tex_size.x / 2.0, feet.y - tex_size.y, tex_size.x, tex_size.y)
+		var h := tex_size.y * BEAST_LIE_SCALE
+		return Rect2(feet.x - tex_size.x / 2.0, feet.y - h, tex_size.x, h)
 	return Rect2(feet.x - tex_size.y / 2.0, feet.y - tex_size.x, tex_size.y, tex_size.x)
 
 
@@ -820,8 +847,8 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		var rot := _tilt[who] * (-1.0 if who == 1 else 1.0)
 		var pivot := pos + Vector2(0.0, -body.x / 2.0)
 		draw_set_transform_matrix(Transform2D(rot, pivot) * Transform2D(0.0, Vector2(0.0, body.y / 2.0)))
-	elif on_back:
-		draw_set_transform(pos + Vector2(0.0, -body.y), 0.0, Vector2(1.0, -1.0))
+	elif on_back:  # on its side: squashed flat, feet on the ground, legs stuck out stiff
+		draw_set_transform(pos, 0.0, Vector2(1.0, BEAST_LIE_SCALE))
 	else:
 		draw_set_transform(pos, 0.0, Vector2.ONE)
 	var generated := tex == null
@@ -839,6 +866,12 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		_draw_beast(tint)
 	else:
 		_draw_person(who, tint)
+	if on_back:  # four stiff legs poking out along the ground
+		draw_set_transform(pos, 0.0, Vector2.ONE)
+		var lc := _tinted(DEFAULT_FUR.darkened(0.35), tint)
+		var half := body.x / 2.0
+		for lx in [-0.3, -0.1, 0.12, 0.32]:
+			draw_rect(Rect2(half * float(lx) * 2.0 - 2.0, -5.0, 4.0, 10.0 * BEAST_LIE_SCALE + 3.0), lc)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

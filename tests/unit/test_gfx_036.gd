@@ -44,3 +44,21 @@ func test_backdrop_layers_gfx107() -> void:
 		for p in a["props"]:
 			var f: float = float(p["x"]) / 620.0
 			assert_true(not (f >= 0.15 and f <= 0.30) and not (f >= 0.70 and f <= 0.85), "prop clear of feet " + rid)
+
+
+## WU-547: the Defeated tag sits just above the lying body, centred on it, for beast and person.
+func test_defeated_tag_hugs_the_body_wu547() -> void:
+	var stage := DuelStage.new()
+	stage.size = Vector2(620, 182)
+	(Engine.get_main_loop() as SceneTree).root.add_child(stage)
+	stage.setup("wild_boar", ["beast"])
+	stage.show_end_pose(true, false)
+	var body := stage.fallen_body_rect(1)
+	var tag := stage.defeated_tag_rect(1)
+	assert_true(body.position.y - tag.end.y <= 8.0 and body.position.y - tag.end.y >= 0.0, "beast tag bottom near body top")
+	assert_true(absf(tag.get_center().x - body.get_center().x) < 1.0, "centred")
+	stage.show_end_pose(false, false)
+	body = stage.fallen_body_rect(0)
+	tag = stage.defeated_tag_rect(0)
+	assert_true(body.position.y - tag.end.y <= 8.0, "player tag near body")
+	stage.queue_free()
