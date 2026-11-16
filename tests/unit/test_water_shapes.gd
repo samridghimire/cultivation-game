@@ -121,8 +121,6 @@ func test_nothing_stands_in_the_stream() -> void:
 					# a jetty-side place may touch the water; everything else keeps clear of the bed
 					if b.size.y <= 40.0 and b.size.x >= 80.0:
 						continue
-					if absf(b.get_center().x - ax) < 15.0 + b.size.x / 2.0:
-						continue  # already inside the nominal straight bed before GFX-178 (azure_peak npc spot [460,110]): a data fix
 					var bed := Rect2(c - half, y - 4.0, half * 2.0, 8.0)
 					assert_false(bed.intersects(b), "%s: %s stands in the stream at y=%s" % [region["id"], b, y])
 				y += 8.0

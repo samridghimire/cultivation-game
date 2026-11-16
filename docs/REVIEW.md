@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 400c61c
+Last reviewed commit: b0ace62
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2093,3 +2093,17 @@ Last reviewed commit: 400c61c
     not rendered by me. QA-165/174/224: sim policies only.
   - Notes, not filed: ART-015 changes balance numbers and did not run `tools/balance.sh --check` (worker follow-up);
     nor did C-378 (a new starter weapon, attack 4 + speed 1).
+- 2026-11-16 (reviewer): reviewed 400c61c..b0ace62 (WU-553, SEASON-024, GFX-177, QA-227, SEASON-025, GFX-178, WU-555;
+  [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change,
+  no new binary assets.
+  - Fixed (GFX-178): the Azure Peak NPC spot [460,110] stood in the stream bed (axis x=470), and the worker's
+    "nothing stands in the stream" test skipped every box near the axis to let it pass. Moved the spot to [540,110]
+    and dropped the exemption, so the test now also covers spots inside the old straight bed.
+  - GFX-178 otherwise OK: streams are not solid, so growing their landmark rect by STREAM_AMP only widens decor keepouts.
+    Latent: a horizontal stream's grown texture would be bottom-aligned (`r.end.y - px.y` in `_draw_landmark`) while
+    WaterLife centres the banks on the rect, so they would drift 40 px apart. Today both streams are vertical, and the
+    test skips horizontal ones. Not filed.
+  - WU-555 OK (the re-layout uses the bob-free anchor; the HUD-panel slide uses `screen_lift`, so the two don't fight).
+    WU-553 OK (`person_look` runs twice per foe draw, including a Folk.celebrants lookup; cheap enough for a duel).
+    GFX-177 draw-only plus seeded marsh data on its own rng (existing features unchanged), with a test. SEASON-024/025 and
+    QA-227: sim policies and a reach audit only. I did not render GFX-177/178 or WU-555.
