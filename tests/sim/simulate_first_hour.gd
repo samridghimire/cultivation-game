@@ -242,6 +242,8 @@ func _run() -> void:
 	FirstHour.far_qi_log = {"moved": 0, "month": [], "road_days": []}
 	FirstHour.spar_hint = curious and not args.has("--no-spar-hint")  # QA-138
 	FirstHour.spar_log = {"bouts": 0, "refused": []}
+	FirstHour.chat_teacher = curious and args.has("--chat-teacher")  # QA-220
+	var teacher_runs: Array = []
 	FirstHour.bounty_log = {"offered": {}, "taken": {}}
 	var contrib6: Array = []  # QA-146
 	var contrib12: Array = []
@@ -255,7 +257,7 @@ func _run() -> void:
 			only_seed = int(a.substr(7))
 		elif a.begins_with("--qi-pill-cap="):
 			FirstHour.qi_pill_cap = int(a.substr(14))  # QA-150
-		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--sect-method" and a != "--rogue" and a != "--rating-check":
+		elif a != "--curious" and a != "--trace" and a != "--zero" and a != "--forced" and a != "--no-trial" and a != "--no-heal" and a != "--no-spar-hint" and a != "--chat-teacher" and a != "--blind-missions" and a != "--one-mission" and a != "--long-hints" and a != "--buy-qi" and a != "--spend-contribution" and a != "--no-armor" and a != "--far-qi" and a != "--injury-origins" and a != "--odds-bands" and a != "--deaths" and a != "--recharge" and a != "--hint-missions" and a != "--sect-method" and a != "--rogue" and a != "--rating-check":
 			nums.append(int(a))
 	var seeds := nums[0] if nums.size() > 0 else 30
 	var months := nums[1] if nums.size() > 1 else 12
@@ -432,6 +434,7 @@ func _run() -> void:
 			if month == 2 or month == 5 or month == 11:
 				iron_levels[month + 1].append(Techniques.level(gs.player, "iron_fist"))  # QA-138
 		var r: Dictionary = FirstHour.play(gs, clock, s, months, curious, hook)
+		teacher_runs.append({"teacher": r.get("teacher", {}).duplicate()})
 		if injury_origins:
 			root.get_node("EventBus").message_posted.disconnect(on_message)
 			slow_days.append(slowed["days"])
@@ -529,6 +532,8 @@ func _run() -> void:
 		for k: int in kinds_all:
 			sum += k
 		print("Distinct action kinds per month: %.1f; months after the first with no log lines: %d" % [float(sum) / maxi(1, kinds_all.size()), zero_months])
+	if FirstHour.chat_teacher:
+		print("Chat teacher (QA-220): %s" % FirstHour.teacher_summary(teacher_runs))
 	if curious:
 		print("Injury treatments (QA-128): %d, clinic stones %d%s" % [FirstHour.heal_log["healed"], FirstHour.heal_log["stones"], "" if FirstHour.heal_injuries else " (--no-heal)"])
 	if curious:

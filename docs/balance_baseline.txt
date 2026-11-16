@@ -1667,3 +1667,13 @@ Curious practiser: 10 seeds, 12 months
     10        3        3         4             -   38     0  265
   Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 608 (2 seeds never); fights won 39, lost 1; QR3 day 266 (10/10 reached)
 
+
+Sim days vs months (QA-222): every `day` figure (Foundation day, seal days, attempt days) is the game clock's total_days. One sim month is 30 days of cultivation plus the days its actions take (travel, work, missions, waiting); seed 1 of the curious policy averages ~60 clock days per month (month deltas 27-85), so 36 months end near day 2000-2170 and Foundation at median day 1793 is month ~30, not a bug.
+
+## first style with --chat-teacher (QA-220, seeds 1-10)
+Regenerate: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- 10 12 --curious --chat-teacher
+and ... -s res://tests/sim/simulate_curious_years.gd -- 10 36 --chat-teacher (both print a "Chat teacher (QA-220)" line).
+Policy: chat once a day with the villager Guidance.style_teacher names when standing in their region (plus one liked gift);
+once a style is known, take the weekly teacher bout Mentorship.teacher_bout_style names. Days are the clock's.
+12 months and 36 months give the same line:
+  first style: median day 45 (10/10 seeds; lesson 0, manual 10), bouts 0, mastered: median day - (0 seeds)

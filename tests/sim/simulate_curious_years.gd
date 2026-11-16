@@ -131,6 +131,8 @@ func _run() -> void:
 			FirstHour.sect_report = true  # QA-162
 		elif a == "--core-report":
 			FirstHour.core_report = true  # QA-173
+		elif a == "--chat-teacher":
+			FirstHour.chat_teacher = true  # QA-220
 		elif a == "--repeat-report":
 			_repeat_report = true  # QA-175
 		elif a == "--artifact-report":
@@ -270,6 +272,8 @@ func _run() -> void:
 		_print_arm_report(runs, months)
 	if FirstHour.core_report:
 		_print_core_report(runs)
+	if FirstHour.chat_teacher:
+		print("Chat teacher (QA-220), %d seeds: %s" % [seeds, FirstHour.teacher_summary(runs)])
 	if FirstHour.village:
 		print("Village (QA-181), %d seeds: %s" % [seeds, str(FirstHour.village_log)])
 	if _repeat_report:

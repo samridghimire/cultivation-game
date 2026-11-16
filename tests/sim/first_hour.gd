@@ -60,6 +60,12 @@ static var sect_log: Array[Dictionary] = []
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
 static var spar_hint := false
 static var spar_log := {"bouts": 0, "refused": []}
+## QA-220: the curious player chats once a day with the villager Guidance.style_teacher names when standing in their region
+## (and gives one liked item when held); once a style is known, takes the weekly teacher bout Mentorship.teacher_bout_style
+## names. simulate_first_hour.gd / simulate_curious_years.gd's --chat-teacher turn it on. out["teacher"] per seed:
+## {style_day, source ("lesson" / "manual" / ""), bouts, mastered_day, chats}; days are the clock's (-1 = never).
+static var chat_teacher := false
+static var _teach_rec := {}
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
 static var min_mission_odds := 0.4
@@ -121,7 +127,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, village, spar_hint, chat_teacher, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -142,6 +148,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	bus.clear_history()
 	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1, "month_days": []}
 	bounty_log["seen"] = {}
+	_teach_rec = {"style_day": -1, "source": "", "bouts": 0, "mastered_day": -1, "chats": 0}
+	out["teacher"] = _teach_rec
 	far_qi_day = -1
 	var done := {"no_help": no_help}
 	# QA-063: remember the foe of the first real (non-spar) win; the day comes from the fights_won stat.
@@ -243,6 +251,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			_note_first_win(out, c, clock, fight)
 		if curious:
 			kinds = _curious_month(gs, c, done, clock.total_days)
+			_note_teacher_style(gs, c)
 			if done.has("style_month") and out["first_style_day"] < 0:
 				out["first_style_day"] = clock.total_days
 			_note_first_win(out, c, clock, fight)
@@ -476,6 +485,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 		if not c.alive:
 			return kinds
 		_follow_spar_hint(gs, c, today + week * 7)
+		if chat_teacher and c.alive:
+			_chat_teacher_week(gs, c)
 		if not c.alive:
 			return kinds
 		var seen := _explore_watched(gs, c, today)
@@ -1129,6 +1140,72 @@ static func _follow_spar_hint(gs: Node, c: CharacterData, today: int) -> void:
 			else:
 				spar_log["refused"].append(reason)
 			return
+
+
+## QA-220: one week of the --chat-teacher policy (see chat_teacher). Records the first style's day and source, the weekly bout
+## and the day it is mastered in _teach_rec.
+static func _chat_teacher_week(gs: Node, c: CharacterData) -> void:
+	var week_end: int = _day(gs) + 7
+	if not Techniques.knows_kind(c, gs.data, "combat"):
+		var teacher := Guidance.style_teacher(c, gs.npcs, gs.data, gs.current_region, gs.npc_favor, _day(gs))
+		if not teacher.is_empty() and String(teacher.get("region_id", "")) == gs.current_region:
+			var npc_id := String(teacher["npc_id"])
+			var liked := String(teacher.get("liked", ""))
+			if liked != "" and c.item_count(liked) > 0:
+				gs.give_gift(npc_id, liked)
+			while c.alive and _day(gs) < week_end and not Techniques.knows_kind(c, gs.data, "combat"):
+				var day_before: int = _day(gs)
+				gs.chat(npc_id)
+				if _day(gs) == day_before:
+					break  # the chat was refused (nothing passed)
+				_teach_rec["chats"] += 1
+	else:
+		for npc_id: String in gs.npcs:
+			if Mentorship.teacher_bout_style(c, npc_id, gs.data, gs.world_flags) != "" and gs.check_spar(npc_id) == "":
+				gs.spar_with(npc_id)
+				_teach_rec["bouts"] += 1
+				break
+	_note_teacher_style(gs, c)
+
+
+## QA-220: first combat style known (and how) and the day it is mastered, from the clock.
+static func _day(gs: Node) -> int:
+	return int(gs.get_node("/root/GameClock").total_days)
+
+
+static func _note_teacher_style(gs: Node, c: CharacterData) -> void:
+	if not c.alive or _teach_rec.is_empty():
+		return
+	for tech_id: String in c.techniques:
+		if (gs.data.techniques[tech_id] as TechniqueDef).kind != "combat":
+			continue
+		if int(_teach_rec["style_day"]) < 0:
+			_teach_rec["style_day"] = _day(gs)
+			_teach_rec["source"] = "lesson" if String(gs.world_flags.get(Mentorship.taught_by_key(tech_id), "self")) not in ["", "self"] else "manual"
+		if int(_teach_rec["mastered_day"]) < 0 and Techniques.is_mastered(c, gs.data, tech_id):
+			_teach_rec["mastered_day"] = _day(gs)
+		break
+
+
+## QA-220: median first-style day, source split, bouts and median mastery day over `runs`.
+static func teacher_summary(runs: Array) -> String:
+	var days: Array = []
+	var masters: Array = []
+	var sources := {"lesson": 0, "manual": 0, "": 0}
+	var bouts := 0
+	for r: Dictionary in runs:
+		var t: Dictionary = r.get("teacher", {})
+		if t.is_empty():
+			continue
+		if int(t["style_day"]) >= 0:
+			days.append(int(t["style_day"]))
+		if int(t["mastered_day"]) >= 0:
+			masters.append(int(t["mastered_day"]))
+		sources[String(t["source"])] += 1
+		bouts += int(t["bouts"])
+	days.sort()
+	masters.sort()
+	return "first style: median day %s (%d/%d seeds; lesson %d, manual %d), bouts %d, mastered: median day %s (%d seeds)" % [str(days[days.size() / 2]) if not days.is_empty() else "-", days.size(), runs.size(), sources["lesson"], sources["manual"], bouts, str(masters[masters.size() / 2]) if not masters.is_empty() else "-", masters.size()]
 
 
 ## QA-123: while Guidance.practice_hint speaks, practise its style until the next level (at most 60 days a month).
