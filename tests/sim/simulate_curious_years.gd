@@ -138,6 +138,10 @@ func _run() -> void:
 			FirstHour.heal_far = true  # QA-165
 		elif a == "--mission-monthly":
 			FirstHour.mission_monthly = true  # QA-174
+		elif a == "--steward-chores":
+			FirstHour.steward_chores = true  # QA-227
+		elif a.begins_with("--steward-days="):
+			FirstHour.steward_max_days = int(a.get_slice("=", 1))  # QA-227
 		elif a == "--season-tasks":
 			FirstHour.season_tasks = true  # QA-215
 		elif a == "--repeat-report":
@@ -518,6 +522,10 @@ func _print_sect_report() -> void:
 	var missions: Array = []
 	var lectures: Array = []
 	var members := 0
+	var inner_days: Array = []
+	var found_days: Array = []
+	var chores := 0
+	var short_months := 0
 	for e: Dictionary in FirstHour.sect_log:
 		print("  seed %2d joined d%-5d months %2d away %4d paid %2d skipped %2d missions %3d lectures %2d" % [e["seed"], e["joined"], e["months"], e["away"], e["paid"], e["skipped"], e["missions"], e["lectures"]])
 		if int(e["joined"]) >= 0:
@@ -525,6 +533,13 @@ func _print_sect_report() -> void:
 			away.append(int(e["away"]))
 			missions.append(int(e["missions"]))
 			lectures.append(int(e["lectures"]))
+		print("    chores %d; Inner Disciple day %s; Foundation day %s" % [e["chores"], str(e["rank1_day"]) if int(e["rank1_day"]) >= 0 else "-", str(e["foundation_day"]) if int(e["foundation_day"]) >= 0 else "-"])  # QA-227
+		chores += int(e["chores"])
+		short_months += (e["short"] as Array).size()
+		if int(e["rank1_day"]) >= 0:
+			inner_days.append(int(e["rank1_day"]))
+		if int(e["foundation_day"]) >= 0:
+			found_days.append(int(e["foundation_day"]))
 		print("    sim ran %d days = %d sect months closed" % [int(e.get("end_day", 0)) - maxi(0, int(e["joined"])), int(e["paid"]) + int(e["skipped"])])
 		print("    sect missions done at rank 0/1/2: %d/%d/%d" % [e.get("missions_rank0", 0), e.get("missions_rank1", 0), e.get("missions_rank2", 0)])
 		for sh: Array in e["short"]:
@@ -533,6 +548,7 @@ func _print_sect_report() -> void:
 		paid += int(e["paid"])
 		months += int(e["paid"]) + int(e["skipped"])
 	print("  total: %d members; days away median %.0f; stipends paid %d, skipped %d over %d sect months; missions median %.0f; lectures median %.0f" % [members, _median(away), paid, skipped, months, _median(missions), _median(lectures)])
+	print("  QA-227: chores done %d; months short %d; Inner Disciple day median %s (%d seeds); Foundation day median %s (%d seeds)" % [chores, short_months, ("%.0f" % _median(inner_days)) if not inner_days.is_empty() else "-", inner_days.size(), ("%.0f" % _median(found_days)) if not found_days.is_empty() else "-", found_days.size()])
 
 
 ## QA-163: every injury taken, per seed: id, day, region, days it lasted, whether it was treated early, the qi-days

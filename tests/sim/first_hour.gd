@@ -73,6 +73,11 @@ static var season_tasks := false
 ## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
 ## and only when its foe is rated Even or better. simulate_curious_years.gd's --mission-monthly; part of the memo key.
 static var mission_monthly := false
+## QA-227: a sect member does the steward chore the duty hint names when the month's duty is unmet and <= 10 days remain
+## (walking to the hall when it is <= 3 route days away). simulate_curious_years.gd's --steward-chores; part of the memo key.
+static var steward_chores := false
+static var steward_max_days := 3  # --steward-days=N
+const STEWARD_LAST_DAYS := 10
 ## QA-165: --heal-injuries goes beyond QA-128's treatment: when the injury line's cure is not here, claim a sect treasury
 ## item (contribution) or travel to a clinic one route away that the stones cover, treat, and walk home.
 ## heal_far_log: {"treated": cures taken, "trips": clinic journeys}. Part of the memo key.
@@ -142,7 +147,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -184,7 +189,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
 	if injury_report:
 		bus.message_posted.connect(on_msg)
-	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "short": [], "earned": []}
+	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "chores": 0, "foundation_day": -1, "rank1_day": -1, "short": [], "earned": []}
 	var on_sect_msg := func(text: String, _category: String) -> void:
 		if text.contains("this month's stipend is withheld"):
 			sect_entry["skipped"] += 1
@@ -295,6 +300,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			if sect_entry["joined"] < 0:
 				sect_entry["joined"] = clock.total_days
 			sect_entry["months"] += 1
+			if c.realm_index >= 2 and int(sect_entry["foundation_day"]) < 0:
+				sect_entry["foundation_day"] = clock.total_days  # QA-227
 			if gs.current_region != (gs.data.sects[c.sect["id"]] as SectDef).home_region:
 				sect_entry["away"] += Calendar.DAYS_PER_MONTH
 		if artifact_report:
@@ -309,6 +316,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		bus.message_posted.disconnect(on_sect_msg)
 		sect_entry["missions"] = LifeStats.get_stat(c, "missions_done")
 		sect_entry["lectures"] = LifeStats.get_stat(c, "lectures_attended")
+		sect_entry["chores"] = int(done.get("chores", 0))
+		sect_entry["rank1_day"] = int(out["rank_day"])
 		sect_entry["end_day"] = clock.total_days
 		sect_log.append(sect_entry)
 	bus.combat_started.disconnect(on_start)
@@ -574,6 +583,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 					continue
 				_take_one_mission(gs, c, done, kinds, fair, mission_id, today)
 				break
+	if steward_chores and c.alive and not c.is_rogue():
+		_do_steward_chores(gs, c, done, kinds, today)
 	_attempt_open_trial(gs, c, done, kinds)
 	_take_listed_deed(gs, c, done, fair, kinds, today)
 	_take_listed_bounty(gs, c, done, fair, kinds)
@@ -601,6 +612,63 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	if c.alive:
 		_everything_month(gs, c, kinds, today, bool(done.get("no_help", false)))
 	return kinds
+
+
+## QA-227: the steward chore the duty hint names: while this month's duty is unmet and <= STEWARD_LAST_DAYS remain, do the
+## best-paying chore of the home hall's steward (same deed the steward menu runs), walking there first when the hall is
+## <= steward_max_days route days away. sect_log counts them via done["chores"] (read by play's report).
+static func _do_steward_chores(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, today: int) -> void:
+	var duty := Sects.monthly_duty(c, gs.data)
+	if duty <= 0 or Sects.duty_progress(c) >= duty or bool(c.sect.get("duty_grace", false)) or Sects.duty_days_left(c) > STEWARD_LAST_DAYS:
+		return
+	var sect: SectDef = gs.data.sects[c.sect["id"]]
+	var hall := sect.home_region
+	var start: String = gs.current_region
+	if start != hall:
+		var d := Guidance.route_days(c, gs.data, start, hall)
+		if d <= 0 or d > steward_max_days:
+			return
+		_walk_to(gs, c, hall)
+	if c.alive and gs.current_region == hall:
+		var progressed := true
+		while progressed and c.alive and Sects.duty_progress(c) < duty:
+			progressed = false
+			var best := {}
+			var best_rate := 0.0
+			for place: Dictionary in gs.data.regions.get(hall, {}).get("places", []):
+				var ctx := String(place.get("deed_context", ""))
+				if String(place.get("type", "")) != "deed_giver" or ctx == "":
+					continue
+				for opt: Dictionary in Deeds.options(c, gs.data, ctx, gs.world_flags, today):
+					var deed: Dictionary = opt["deed"]
+					var gain := int(deed.get("effects", {}).get("contribution", 0))
+					if opt["disabled"] or not deed.get("requires", {}).has("sect") or gain <= 0:
+						continue
+					var rate := float(gain) / float(maxi(1, int(deed.get("days", 1))))
+					if rate > best_rate:
+						best_rate = rate
+						best = deed
+			if best.is_empty():
+				break
+			gs.perform_deed(String(best["id"]))
+			done["chores"] = int(done.get("chores", 0)) + 1
+			kinds["deed"] = true
+			progressed = true
+	if c.alive and gs.current_region != start:
+		_walk_to(gs, c, start)
+
+
+static func _walk_to(gs: Node, c: CharacterData, target: String) -> void:
+	for _hop in 8:
+		if gs.current_region == target or not c.alive:
+			return
+		var before: String = gs.current_region
+		var next := Guidance.first_hop(c, gs.data, before, target)
+		if next == "":
+			return
+		gs.travel(next)
+		if gs.current_region == before:
+			return
 
 
 ## QA-136: when the hint says "The trial for <rank> is open" and its odds are >= TRIAL_MIN_ODDS, walk to a sect hall
