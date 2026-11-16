@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-16 [GFX-173] Terrace gather sites on the ridge and Azure Peak follow the hill as bowed steps, with lightning-scorched and misty variants.
+- 2026-11-16 [QA-215] The curious-years sim can do the elder's season tasks (`--season-tasks`); shots can centre on a villager or place (`--focus=`).
+- 2026-11-16 [WU-548] A friendly spar plays on the duel stage with HP bars and ends with a result block; the loser kneels.
+- 2026-11-16 [C-379] The first-fights sim now rates Qi Refining layers 1-7; the middle layers have fair foes in the Misty Forest.
+- 2026-11-16 [GUIDE-249] When home holds only easy fights, Next steps points to a fair fight one road away.
+- 2026-11-16 [WU-550] Screenshot flags for the sensed-foe prompt and for season encounters.
+- 2026-11-16 [GFX-174] The Fallen Star Market reads as a city: flagstone courts, cobbled stall lanes, packed earth only at the edges.
+- 2026-11-16 [ART-015] The artifact gains a little energy each month from Foundation on, and the Spirit Garden now opens well after the Inner World.
+- 2026-11-16 [QA-224] The chat-teacher sim travels, gifts and asks its teacher for the lesson instead of buying a manual.
+- 2026-11-16 [WU-549] Map names no longer touch: every label gets the soft plate and a minimum gap.
 - 2026-11-16 [GUIDE-248] Far hints to buy, sell, gather or finish season tasks say how many days away they are.
 - 2026-11-16 [FIGHT-002] The fight prompt and journal say why a fight is deadly or easy.
 - 2026-11-16 [GFX-171] The Meteor Crater Field is a real bowl with a rim instead of a black hole.
