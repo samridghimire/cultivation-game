@@ -1051,3 +1051,21 @@ func test_crater_rings_shrink_stay_light_and_are_deterministic() -> void:
 		if i > 0:
 			assert_true(float(rings[i]["frac"]) < float(rings[i - 1]["frac"]), "rings shrink inward")
 	assert_eq(rings, Scenery.crater_rings(70.0, 123, ground), "same seed, same rings")
+
+
+func test_round_tree_layout_has_trunk_lobes_and_is_seeded() -> void:  # GFX-183
+	var shapes := {}
+	for s in range(0, 400, 7):
+		var lay := Scenery.round_tree_layout(s)
+		assert_eq(lay, Scenery.round_tree_layout(s), "same seed, same tree")
+		assert_true(float(lay["scale"]) >= 0.85 and float(lay["scale"]) <= 1.15, "size +-15%")
+		assert_true(absf(float(lay["lean"])) <= 1.0, "lean within 1 px")
+		assert_true(int(lay["trunk_w"]) >= 3 and int(lay["trunk_w"]) <= 5, "trunk 3-5 px wide")
+		assert_true(int(lay["trunk_h"]) >= 6 and int(lay["trunk_h"]) <= 10, "trunk 6-10 px tall")
+		var lobes: Array = lay["lobes"]
+		assert_true(lobes.size() >= 3 and lobes.size() <= 5, "3-5 lobes")
+		for lobe: Dictionary in lobes:
+			var lc: Vector2 = lobe["c"]
+			assert_true(lc.y + float(lobe["r"]) + 1.5 <= float(lay["base_y"]) + 0.01, "the lobe's underside stays above the trunk's visible part")
+		shapes[lobes.size()] = true
+	assert_true(shapes.size() >= 2, "trees differ in lobe count")

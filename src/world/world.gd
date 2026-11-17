@@ -2981,7 +2981,7 @@ func _draw_blob_shade(c: Vector2, w: float) -> void:
 ## GFX-163: a flattened ellipse at the trunk foot, offset for the light, ground darkened (no grey bubble).
 func _draw_tree_shade(p: Vector2, k: float, kind: String) -> void:
 	var ground := Color(String(_region.get("map", {}).get("ground", "4d6b3c")))
-	var w := Scenery.shadow_width(kind, k)
+	var w := Scenery.shadow_width(kind, k) * (0.7 if kind == "round" else 1.0)  # GFX-183: follows the trunk
 	var pts := PackedVector2Array()
 	for i in 20:
 		var a := TAU * float(i) / 20.0
@@ -3003,15 +3003,31 @@ func _draw_foot_shadow(p: Vector2, k: float, snow: bool = false) -> void:
 
 
 func _draw_tree_round(p: Vector2, k: float, c: Color, look: Dictionary, seed_value: int) -> void:
-	draw_rect(Rect2(p + Vector2(-3, 2) * k, Vector2(6, 14) * k), Color("4a3524"))
-	draw_circle(p + Vector2(0, -6) * k, 18.0 * k, c)
-	draw_circle(p + Vector2(-8, -2) * k, 12.0 * k, c.darkened(0.15))
-	draw_circle(p + Vector2(6, -14) * k, 9.0 * k, c.lightened(0.15))
+	var lay := Scenery.round_tree_layout(seed_value)  # GFX-183: trunk, 3-5 lobes, lit rim, seeded size/lean
+	var q: float = k * float(lay["scale"])
+	var lean: float = float(lay["lean"])
+	var tw: float = float(lay["trunk_w"])
+	var th: float = float(lay["trunk_h"])
+	var bark := Color("4a3524")
+	var foot := p + Vector2(lean * 0.5, 16.0 * q)
+	draw_rect(Rect2(foot + Vector2(-tw / 2.0, -th * q), Vector2(tw, th * q)), bark)
+	draw_rect(Rect2(foot + Vector2(-tw / 2.0, -th * q), Vector2(maxf(1.0, tw * 0.4), th * q)), bark.lightened(0.18))
+	var lobes: Array = lay["lobes"]
+	for lobe: Dictionary in lobes:  # the dark underside first
+		var lc: Vector2 = lobe["c"]
+		draw_circle(p + (lc + Vector2(lean, 1.5)) * q, float(lobe["r"]) * q, c.darkened(0.3))
+	for i in lobes.size():
+		var lobe: Dictionary = lobes[i]
+		var lc: Vector2 = lobe["c"]
+		draw_circle(p + (lc + Vector2(lean, 0.0)) * q, float(lobe["r"]) * q, c.darkened(0.12 * float(i % 2)))
+	for lobe: Dictionary in lobes:  # a lit top-left rim
+		var lc: Vector2 = lobe["c"]
+		draw_arc(p + (lc + Vector2(lean, 0.0)) * q, float(lobe["r"]) * q - 1.0, PI * 1.05, PI * 1.6, 8, c.lightened(0.25), 2.0)
 	for i in int(look["blossoms"]):
 		var o := Vector2(fposmod(seed_value * (i + 3), 29.0) - 14.0, fposmod(seed_value * (i + 5), 25.0) - 22.0)
 		draw_rect(Rect2(p + o * k, Vector2(3, 3)), Color("f6c6dc"))
-	for i in int(look["leaves"]):
-		var o := Vector2(fposmod(seed_value * (i + 2), 37.0) - 18.0, 8.0 + fposmod(seed_value * (i + 7), 9.0))
+	for i in int(look["leaves"]):  # fallen leaves on the ground under the tree
+		var o := Vector2(fposmod(seed_value * (i + 2), 37.0) - 18.0, 15.0 + fposmod(seed_value * (i + 7), 6.0))
 		draw_rect(Rect2(p + o * k, Vector2(3, 2)), c.darkened(0.1))
 
 

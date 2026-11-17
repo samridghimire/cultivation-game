@@ -547,6 +547,28 @@ static func shadow_width(kind: String, k: float) -> float:
 			return canopy
 
 
+## GFX-183: seeded layout of a broadleaf tree, relative to the trunk anchor (y 16 = the foot).
+## Returns {scale 0.85..1.15, lean -1..1 px, trunk_w 3..5, trunk_h 6..10, base_y (canopy underside y),
+## lobes [{c: Vector2, r: float}] (3..5 overlapping lobes, all above base_y + 2)}.
+static func round_tree_layout(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = absi(seed_value) + 1
+	var trunk_h := rng.randi_range(6, 10)
+	var base_y := 16.0 - float(trunk_h) + 2.0
+	var n := rng.randi_range(3, 5)
+	var lobes: Array = []
+	for i in n:
+		var t := float(i) / float(n - 1)
+		var r := rng.randf_range(8.0, 12.0)
+		var x := lerpf(-11.0, 11.0, t) + rng.randf_range(-2.0, 2.0)
+		var lift := (1.0 - absf(t - 0.5) * 2.0) * 9.0  # the middle lobes sit higher
+		lobes.append({"c": Vector2(x, base_y - r - 2.0 - lift - rng.randf_range(0.0, 3.0)), "r": r})
+	return {
+		"scale": rng.randf_range(0.85, 1.15), "lean": rng.randf_range(-1.0, 1.0),
+		"trunk_w": rng.randi_range(3, 5), "trunk_h": trunk_h, "base_y": base_y, "lobes": lobes,
+	}
+
+
 ## GFX-117: the ground shadow ellipse under a person's feet, relative to the feet point (`size` = the figure's footprint).
 static func figure_shadow(size: Vector2, snowy: bool) -> Rect2:
 	var w := clampf(size.x * 0.75, 14.0, 40.0) * (1.1 if snowy else 1.0)
