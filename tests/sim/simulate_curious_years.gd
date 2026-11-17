@@ -497,12 +497,12 @@ func _print_pacing_summary(runs: Array[Dictionary], months: int) -> void:
 
 ## QA-155: per seed the day the body art was learned and the Core Disciple trial odds the first month a trial was open.
 func _print_body_art(seeds: int) -> void:
-	print("Body art / trial (QA-155): seed, art learned day, trial first open month, odds then")
+	print("Body art / trial (QA-155): seed, art learned day, trial first open clock month (day / 30, not the sim month), odds then")
 	var odds: Array = []
 	var learned := 0
 	for sd in range(1, seeds + 1):
 		var l: Dictionary = FirstHour.body_art_log.get(sd, {"learned": -1, "odds": -1.0, "month": -1})
-		print("  seed %2d art d%d trial m%d odds %.0f" % [sd, int(l["learned"]), int(l["month"]), 100.0 * float(l["odds"])])
+		print("  seed %2d art d%d trial clock-m%d odds %.0f" % [sd, int(l["learned"]), int(l["month"]), 100.0 * float(l["odds"])])
 		if int(l["learned"]) >= 0:
 			learned += 1
 		if float(l["odds"]) >= 0.0:
