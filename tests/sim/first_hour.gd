@@ -570,6 +570,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			return kinds
 		_follow_spar_hint(gs, c, today + week * 7)
 		if season_tasks and c.alive:
+			if week > 0:
+				_season_task_month(gs, c)  # SEASON-026: the pass runs weekly
 			_season_festival_watch(gs, c)
 		if chat_teacher and c.alive:
 			_chat_teacher_week(gs, c)
@@ -583,6 +585,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 			gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
 		if gs.pending_threat != "":
 			gs.face_threat(false)
+	if season_tasks and c.alive:
+		_season_task_month(gs, c)  # SEASON-026: the fourth weekly pass
 	if detour_home != "" and c.alive:
 		gs.travel(detour_home)
 	if not c.alive:
@@ -1421,6 +1425,7 @@ static func _season_task_month(gs: Node, c: CharacterData) -> void:
 			break
 		if _season_task_left(gs, c, t) <= 0:
 			continue
+		_season_tries = 0
 		match String(t["kind"]):
 			"catch", "gather":
 				_season_gather(gs, c, t)
@@ -1453,6 +1458,17 @@ static func _season_festival_watch(gs: Node, c: CharacterData) -> void:
 				_season_contest(gs, c, t)
 	if c.alive and gs.current_region != home:
 		_go_to(gs, c, home)
+
+
+## SEASON-026: places tried for the current task this week; a failed try moves on to the next place until SEASON_PLACES_PER_WEEK.
+static var _season_tries := 0
+const SEASON_PLACES_PER_WEEK := 2
+
+
+## Counts a try; true when another place may be tried (the task is still open and the week's budget is not spent).
+static func _season_more(gs: Node, c: CharacterData, t: Dictionary) -> bool:
+	_season_tries += 1
+	return c.alive and _season_tries < SEASON_PLACES_PER_WEEK and _season_task_left(gs, c, t) > 0
 
 
 static func _season_why(gs: Node, t: Dictionary, reason: String) -> void:
@@ -1514,7 +1530,8 @@ static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
 				else:
 					gs.gather(table, days)
 					season_task_log["gather_days"] += days
-			return
+			if not _season_more(gs, c, t):
+				return
 	_season_why(gs, t, why)
 
 
@@ -1542,6 +1559,8 @@ static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 			if _season_task_left(gs, c, t) <= 0 or not c.alive:
 				return
 		if sites.is_empty():
+			if _season_more(gs, c, t):
+				continue
 			return
 		for round in 3:
 			if not c.alive or _season_task_left(gs, c, t) <= 0:
@@ -1552,7 +1571,8 @@ static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 				gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
 			if gs.pending_threat != "":
 				gs.face_threat(false)
-		return
+		if not _season_more(gs, c, t):
+			return
 
 
 static func _season_contest(gs: Node, c: CharacterData, t: Dictionary) -> void:
@@ -1567,7 +1587,8 @@ static func _season_contest(gs: Node, c: CharacterData, t: Dictionary) -> void:
 		if gs.check_festival_contest(event_id) == "":
 			gs.festival_contest(event_id)
 			season_task_log["contests"] += 1
-		return
+		if not _season_more(gs, c, t):
+			return
 
 
 static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
@@ -1595,7 +1616,9 @@ static func _season_sell(gs: Node, c: CharacterData, t: Dictionary) -> void:
 			gs.shop_name = ""
 			season_task_log["sold"] += before - _season_task_left(gs, c, t)
 			_season_why(gs, t, "" if _season_task_left(gs, c, t) <= 0 else "too few wanted goods")
-			return
+			if not _season_more(gs, c, t):
+				return
+			continue
 	_season_why(gs, t, why)
 	# SEASON-025: nothing is wanted today: wait at the nearest stall for its open day, then sell what we can afford.
 	if not waiting.is_empty() and int(waiting["wait"]) <= SEASON_STALL_WAIT_DAYS and _go_to(gs, c, String(waiting["rid"])):
