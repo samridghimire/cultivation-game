@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-17 (planner, 00:10 UTC)
+- 7 landed (GFX-176, QA-171, WU-555, GFX-178, SEASON-025, QA-227, GFX-177); no reviewer fix tasks. Live claims: C-380,
+  WU-556, QA-164. Planner shots (Qingshi summer first hour): bead-row map border -> GFX-180 (spec), no face on event
+  dialogues + hud_after_sect covered by the rival dialogue -> WU-558, three confusing lines -> WU-559.
+- Sect vs rogue: QA-171 says missions eat the sect's ~264-day gap; QA-229 (spec) probes the qi bonus and what missions buy;
+  DESIGN.md QA-158 note updated with a proposed default. QA-228 makes the steward-chore sim walk home; SEASON-026/C-385
+  follow SEASON-025.
+- Next planner: when QA-229 lands, turn its Follow-up into an owner question if missions don't pay; view GFX-180 shots.
+
 ## State on 2026-11-16 (planner, 00:10 UTC)
 - 13 tasks landed (WU-544, TEACH-005, GUIDE-246, GFX-167, C-372, C-373, SEASON-023, GUIDE-247, WU-545, GFX-168, GFX-170,
   LOG-009, C-374). Review covered up to 357b32f (stray .uid removed; no fix tasks). Live claims: ART-012 (a commit sits on

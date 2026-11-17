@@ -2,6 +2,13 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-16 [GFX-176] Every stall in the Fallen Star Market has a cobbled lane to a street or court.
+- 2026-11-16 [QA-171] The sim reports days per activity until Foundation: sect missions explain why a far-qi sect member is slower than a rogue.
+- 2026-11-16 [WU-555] Names of wandering villagers and roamers step aside from place names as they move.
+- 2026-11-16 [GFX-178] Streams in the forest, on Azure Peak and the ridge wander with pebbles, riffles and reeds.
+- 2026-11-16 [SEASON-025] The season-task sim waits for a wanted stall's market day and reports why tasks fail.
+- 2026-11-16 [QA-227] The sim can do the steward's chores and reports Inner Disciple and Foundation days per seed.
+- 2026-11-16 [GFX-177] The Withered Bone Marsh gets reed fringes, floating leaves, mist and wet peat, changing by season.
 - 2026-11-16 [SEASON-024] The season-task sim plays more like a player, and a test checks every year-1 season task has a place within reach.
 - 2026-11-16 [WU-553] A villager you spar with appears on the duel stage in their own clothes and colours.
 - 2026-11-16 [QA-165] The sim can treat its injuries (`--heal-injuries`); healing costs the far-qi rogue about 140 days but half its lead survives.
