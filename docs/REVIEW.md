@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 373d051
+Last reviewed commit: 9aea535
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2136,3 +2136,23 @@ Last reviewed commit: 373d051
     WU-560 is an empty shot-pass commit. QA-124/QA-229: sim only.
   - Planner notes from worker follow-ups: QA-226 measured a 160-210 ms cold fair_fights call for a Foundation player
     (first HUD refresh hitch); QA-229 asks an owner question about early sect members never reaching the far qi spot.
+- 2026-11-17 (reviewer): reviewed 373d051..9aea535 (QA-228, GFX-184, QA-230, WU-557, GFX-182, PERF-008, GFX-185, GFX-186,
+  C-381, C-384, GUIDE-254, GUIDE-253; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION
+  change, no new binary assets.
+  - Fixed (GFX-186): its rebase dropped all of GFX-185 (Scenery.dirt_road, World._draw_dirt_road, the rut skip in the
+    ground pass and the dirt-road test), so the dirt roads never shipped. Re-applied 11e2d56 unchanged; rendered
+    misty_forest: wobbling road, ruts, tufts and the new canopy masses all draw. Workers: after a rebase conflict, check
+    `git show --stat` of your commit for deletions you did not intend.
+  - GFX-186 otherwise OK: canopy_masses validated (0-20) and documented; the _lattice bit mix changes every grass/litter
+    ground look (intended, draw-only). PERF-008 OK: the per-cell jitter grid is tested pixel-for-pixel against the hash.
+  - GUIDE-254 OK: the errand clause needs today >= 0 and Deeds.check passing, tested done/held-item/no-day. Latent: the
+    "Help X <verb>" rewrite only reads well for "check ..." names; it's the only favor deed today. Not filed.
+  - C-381 OK (non-lethal stage-5 forest foe, the drop feeds a starter recipe; the baseline was refreshed). C-384 test only.
+  - GFX-184 OK: draw-only puddles on a local seeded rng, none on paving, places or snow. WU-557 swaps lambdas for methods
+    (tween killed on exit). GFX-182 trunks stay in the outer prop zones (tested). QA-228/230: sim only.
+  - GUIDE-253 OK: every far market within the hop limit is scored by qi_total minus the round trip's meditation, and the
+    GUIDE-251 margin still guards the local pill; tested with a better pill two routes away. Its follow-up (pill qi per
+    stone is flat, so no far pill clears 1.25x) is a content question for the planner.
+  - Planner note: the screenshot scripts persist Settings to user://settings.cfg; after a shot run this container had
+    `hud_hints=0`, which made test_hud_layout fail ("_guide_panel visible") until the file was deleted. Agents who shoot
+    and then test can hit a false red; the shot scripts should restore settings, or HUD tests should pin hud_hints.
