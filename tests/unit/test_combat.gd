@@ -448,3 +448,18 @@ func test_resolve_reports_best_blow_and_summary_is_deterministic() -> void:
 	var b := Combat.resolve(c, data(), enemy, seeded_rng())
 	assert_eq(a["best_blow"], b["best_blow"])
 	assert_eq(Combat.summary(a, "the bandit", 0.95), Combat.summary(b, "the bandit", 0.95))
+
+
+## QA-226: C-377 meant the hill dog as a fair fight for Qi Refining 2-3 (a starter with a style) and Deadly on layer 1.
+func test_hill_dog_odds_follow_the_stage() -> void:
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
+	var dog: Dictionary = data().enemies["hill_dog"]
+	c.stage = 0
+	assert_true(Combat.win_chance(c, data(), dog) < 0.35, "layer 1 should be a bad fight")
+	c.stage = 3
+	assert_gt(Combat.win_chance(c, data(), dog), 0.35, "layer 4 should be fair")
+	assert_eq(Combat.odds_reason(c, data(), dog), "")
+	var boar: Dictionary = data().enemies["wild_boar"]
+	assert_eq(Combat.odds_reason(c, data(), boar), "Well below you")
