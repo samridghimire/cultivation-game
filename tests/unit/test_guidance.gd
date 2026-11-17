@@ -1513,8 +1513,8 @@ func test_practice_payoff_ignores_injuries() -> void:
 	assert_eq(hurt, healthy, "same payoff injured or not")
 	# A fighter who already wins the foe once healed gets no payoff for it.
 	var strong := _fresh()
-	strong.realm_index = 1
-	strong.stage = 8
+	strong.realm_index = 2
+	strong.stage = 0
 	strong.techniques = {"iron_fist": {"level": 1, "xp": 0.0}}
 	var plain := Guidance.practice_hint(strong, data(), "misty_forest", 10)
 	Injuries.inflict(strong, data(), "broken_bones")
