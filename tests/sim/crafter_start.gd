@@ -13,12 +13,16 @@ extends SceneTree
 ## neighbouring region that does, gathers enough for the order there and walks back (--walk; off by default, it lowers the crafter's stones).
 ## QA-130: --ledger prints, per seed and as medians, where the stones went and came from (buys and sales by item id and region,
 ## commission pay, odd-job pay) and how many crafted goods are still held at the end.
+## QA-124: --buy-travel: when the buy hint names a market in another region and the crafter can pay, it walks there, buys and walks back;
+## --region=<id> starts the crafter in another region (needs the sim's gather/market there); trips are counted in the report.
 ## QA-107: --orders prints every commission (roll day, item, count, reward, days allowed, whether each ingredient
 ## was available nearby at roll time) with its fate and why the sim did not fill it.
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const CHECKPOINTS: Array[int] = [30, 90, 120, 180, 365]
-const REGION := "qingshi_village"
+var REGION := "qingshi_village"  ## QA-124: --region=<id> starts the crafter elsewhere
+var _buy_travel := false  ## QA-124 (--buy-travel)
+var _buy_trips := 0  ## QA-124: walks to a far market this life
 var _prof := "alchemist"  ## QA-109: --prof=<id>
 const STUCK_WEEK_DAYS := 7
 
@@ -73,7 +77,10 @@ func _run() -> void:
 	_follow_walk = args.has("--walk")
 	_ledger_mode = args.has("--ledger")
 	_buy_any = args.has("--buy-any")
+	_buy_travel = args.has("--buy-travel")
 	for a in args:
+		if String(a).begins_with("--region="):
+			REGION = String(a).substr(9)
 		if String(a).begins_with("--prof="):
 			_prof = String(a).substr(7)
 	var nums: Array = []
@@ -86,7 +93,7 @@ func _run() -> void:
 	_clock = root.get_node("GameClock")
 	print("Crafter start: new %s in Qingshi Village, %d seeds, %d days" % [_prof, seeds, days])
 	print("  seed  d30  d90 d180  crafted  comm(got/del)  rank  renown  gather% craft% meditate%  stuck-wk (faded)  curious(d30/d90/d180)  realm d90 | d180 | d365 (curious)  cult-hint-steps")
-	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": [], "trips": []}
+	var cols := {"d30": [], "d90": [], "r120": [], "d180": [], "crafted": [], "got": [], "delivered": [], "rank": [], "renown": [], "gather": [], "craft": [], "meditate": [], "stuck": [], "faded": [], "c30": [], "c90": [], "c180": [], "d365": [], "hint": [], "post": [], "stuck_post": [], "rank_gap": [], "trips": [], "buy_trips": []}
 	var ledger_rows: Array = []
 	for s in range(1, seeds + 1):
 		var base: Dictionary = FirstHour.play(_gs, _clock, s, maxi(6, days / 30), true)
@@ -105,6 +112,7 @@ func _run() -> void:
 		if int(r["crafted"]) == 0:
 			print("    QA-122: seed %d never crafted: started with %d stones, cheapest in-rank recipe needs %d (paper at shop price plus its own stones)" % [s, r["start_stones"], r["cheapest"]])
 		cols["trips"].append(r["trips"])
+		cols["buy_trips"].append(r["buy_trips"])
 		cols["gather"].append(100.0 * r["gather_days"] / total)
 		cols["craft"].append(100.0 * r["craft_days"] / total)
 		cols["meditate"].append(100.0 * r["meditate_days"] / total)
@@ -125,6 +133,8 @@ func _run() -> void:
 	for n: int in cols["crafted"]:
 		never += 1 if n == 0 else 0
 	print("  QA-111: order walks %s; trips to a neighbouring region per seed: median %d, max %d" % ["followed" if _follow_walk else "off", _median(cols["trips"]), cols["trips"].max()])
+	if _buy_travel:
+		print("  QA-124: buy trips to a far market per seed: median %d, max %d" % [_median(cols["buy_trips"]), cols["buy_trips"].max()])
 	print("  QA-117: buy hint %s; seeds that never crafted: %d of %d" % ["followed" if _follow_buy else "ignored", never, seeds])
 	if _ledger_mode:
 		_print_ledger_medians(ledger_rows)
@@ -157,6 +167,10 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	var start: int = _clock.total_days
 	var start_stones := c.item_count("spirit_stone")
 	_trips = 0
+	_buy_trips = 0
+	if _gs.current_region != REGION:
+		_gs.current_region = REGION
+		Exploration.visit(c, REGION)
 	_ledger.clear()
 	var out := {"start_stones": start_stones, "cheapest": _cheapest_craft_cost(c), "d30": 0, "d90": 0, "d120": 0, "d180": 0, "crafted": 0, "got": 0, "delivered": 0, "rank": 0, "renown": 0, "gather_days": 0, "craft_days": 0, "meditate_days": 0, "stuck": 0, "faded": 0, "d365": 0, "realm90": "-", "realm120": "-", "realm180": "-", "realm365": "-", "cult_hint": 0, "crafted_post": 0, "stuck_post": 0}
 	var checkpoints := CHECKPOINTS.duplicate()
@@ -199,6 +213,7 @@ func _crafter(seed_value: int, days: int) -> Dictionary:
 	out["rank"] = Professions.rank_of(c, _prof)
 	out["renown"] = Renown.value(c, REGION)
 	out["trips"] = _trips
+	out["buy_trips"] = _buy_trips
 	out["ledger"] = _ledger.duplicate()
 	out["held"] = _held_goods(c)
 	if _orders_mode:
@@ -429,12 +444,19 @@ func _buy_for_hint(c: CharacterData) -> void:
 			if int(recipe.get("min_rank", 0)) > Professions.rank_of(c, prof_id):
 				continue
 			var need := {}
+			var market := ""  ## QA-124: the far region that sells the paper ("" = this one)
 			for ing: String in recipe["ingredients"]:
 				var short: int = int(recipe["ingredients"][ing]) - c.item_count(ing)
 				if ing != "spirit_stone" and short > 0:
 					if Guidance.merchant_selling(_gs.data, REGION, ing) == "":
-						need.clear()
-						break
+						if not _buy_travel:
+							need.clear()
+							break
+						var far := Guidance.nearest_selling(c, _gs.data, REGION, func(r: String) -> String: return Guidance.merchant_selling(_gs.data, r, ing))
+						if far.is_empty() or (market != "" and market != String(far["region_id"])):
+							need.clear()
+							break
+						market = String(far["region_id"])
 					need[ing] = short
 			if need.is_empty():
 				continue
@@ -443,10 +465,17 @@ func _buy_for_hint(c: CharacterData) -> void:
 				cost += Reputation.buy_price(c, _gs.data, ing, "", _gs.buy_multiplier()) * int(need[ing])
 			if c.item_count("spirit_stone") < cost:
 				continue
+			if market != "":
+				_gs.travel(market)
+				if _gs.current_region != market:
+					return
+				_buy_trips += 1
 			for ing: String in need:
 				var stones := c.item_count("spirit_stone")
 				_gs.buy_item(ing, "", need[ing])
 				_note("bought", ing, c.item_count("spirit_stone") - stones)
+			if market != "":
+				_gs.travel(REGION)
 			return
 
 
