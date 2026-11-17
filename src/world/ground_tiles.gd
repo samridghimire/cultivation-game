@@ -121,7 +121,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)))
 	if style == "scree":
 		_scree_slopes(img, base, rid)  # GFX-159
-		_alpine_life(img, rid, season)  # GFX-175
+		_alpine_life(img, rid, season, bool(life.get("alpine_meadow", false)))  # GFX-175, GFX-187
 	var summer: Image = img.duplicate() if season == "Winter" and style == "paved" and not zones.is_empty() else null
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
 	if summer != null:
@@ -401,8 +401,11 @@ static func _meadow_life(img: Image, base: Color, rid: String, season: String, a
 static func alpine_blobs(rid: String, kind: String, count: int, size_px: Vector2i) -> Array[Vector3]:
 	var out: Array[Vector3] = []
 	for i in count:
-		var r := absi(hash("%s|alp|%s|%d" % [rid, kind, i]))
-		out.append(Vector3(float(r % maxi(size_px.x, 1)), float((r / 4096) % maxi(size_px.y, 1)), 10.0 + float((r / 64) % 22)))
+		# GFX-187: three separate hashes (one hash's neighbouring ids gave neighbouring x, which stacked blobs into a smear)
+		var rx := absi(hash("%s|alp|%s|%d|x" % [rid, kind, i]))
+		var ry := absi(hash("%s|alp|%s|%d|y" % [rid, kind, i]))
+		var rs := absi(hash("%s|alp|%s|%d|s" % [rid, kind, i]))
+		out.append(Vector3(float(rx % maxi(size_px.x, 1)), float(ry % maxi(size_px.y, 1)), 10.0 + float(rs % 22)))
 	return out
 
 
@@ -419,7 +422,7 @@ static func _blend_blob(img: Image, b: Vector3, squash: float, tint: Color, stre
 				img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, strength * (1.0 - d / edge) * 0.8 + strength * 0.2))
 
 
-static func _alpine_life(img: Image, rid: String, season: String) -> void:
+static func _alpine_life(img: Image, rid: String, season: String, meadow: bool = false) -> void:
 	var size_px := Vector2i(img.get_width(), img.get_height())
 	var area := float(size_px.x * size_px.y) / 1000000.0
 	var n := maxi(4, int(area * 14.0))
@@ -436,6 +439,8 @@ static func _alpine_life(img: Image, rid: String, season: String) -> void:
 		var y := int(b.y)
 		for o in [Vector2i(0, 0), Vector2i(-1, -1), Vector2i(1, -2), Vector2i(0, -2)]:
 			_set_clipped(img, x + o.x, y + o.y, grass.darkened(0.12 * float(o.y == 0)))
+	if meadow:
+		_alpine_meadow(img, rid, season, n)
 	match season:
 		"Spring":
 			for b in alpine_blobs(rid, "snow", maxi(3, n / 2), size_px):
@@ -443,6 +448,28 @@ static func _alpine_life(img: Image, rid: String, season: String) -> void:
 		"Summer":
 			for b in alpine_blobs(rid, "flower", n * 6, size_px):
 				_set_clipped(img, int(b.x), int(b.y), FLOWER_COLORS[int(b.z) % FLOWER_COLORS.size()])
+
+
+## GFX-187: a grassy mountain slope (map.alpine_meadow): moss mats, brown pine-needle drifts and short
+## grass, plus white mountain flowers in spring and a pale frost on the stone in winter.
+static func _alpine_meadow(img: Image, rid: String, season: String, n: int) -> void:
+	var size_px := Vector2i(img.get_width(), img.get_height())
+	for b in alpine_blobs(rid, "moss", n * 2, size_px):
+		_blend_blob(img, Vector3(b.x, b.y, b.z * 1.3), 0.6, Color("4f7a4a"), 0.55)
+	for b in alpine_blobs(rid, "needles", n, size_px):
+		_blend_blob(img, Vector3(b.x, b.y, b.z * 0.8), 0.7, Color("7a5f3a"), 0.45)
+	for b in alpine_blobs(rid, "blade", n * 10, size_px):
+		var x := int(b.x)
+		var y := int(b.y)
+		_set_clipped(img, x, y, Color("5f8c4e"))
+		_set_clipped(img, x, y - 1, Color("78a35c"))
+	if season == "Spring":
+		for b in alpine_blobs(rid, "bloom", n * 10, size_px):
+			_set_clipped(img, int(b.x), int(b.y), Color("f6f8ff"))
+			_set_clipped(img, int(b.x) + 1, int(b.y), Color("dfe8f7"))
+	elif season == "Winter":
+		for b in alpine_blobs(rid, "frost", n, size_px):
+			_blend_blob(img, Vector3(b.x, b.y, b.z * 1.2), 0.5, Color("d6e4ee"), 0.6)
 
 
 static func _scree_slopes(img: Image, base: Color, rid: String) -> void:

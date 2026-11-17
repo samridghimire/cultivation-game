@@ -257,3 +257,25 @@ func test_paved_zone_grid_matches_per_pixel_hash() -> void:
 		for x in 70:
 			for inset in [0.0, 4.0]:
 				assert_true(GroundTiles.in_paved_zone(zones, "zg", x, y, inset) == GroundTiles.in_paved_zone_grid(zones, grid, cols, x, y, inset), "zone differs at %d,%d" % [x, y])
+
+
+## GFX-187: an alpine meadow ground differs from plain scree, by season, and is deterministic.
+func test_alpine_meadow_ground() -> void:
+	var size := Vector2i(400, 300)
+	var life := {"alpine_meadow": true}
+	for season in ["Spring", "Summer", "Winter"]:
+		var plain := GroundTiles.ground_texture(BASE, "alm_t", size, false, season, "scree").get_image().get_data()
+		var meadow := GroundTiles.ground_texture(BASE, "alm_t", size, false, season, "scree", [], 1.0, life).get_image().get_data()
+		assert_true(plain != meadow, "meadow differs from scree in " + season)
+	var s := GroundTiles.ground_texture(BASE, "alm_t", size, false, "Spring", "scree", [], 1.0, life).get_image().get_data()
+	var u := GroundTiles.ground_texture(BASE, "alm_t", size, false, "Summer", "scree", [], 1.0, life).get_image().get_data()
+	assert_true(s != u)
+
+
+## GFX-187: neighbouring alpine blobs are spread out (they once stacked into one dark smear).
+func test_alpine_blobs_are_spread() -> void:
+	var size := Vector2i(800, 500)
+	var blobs := GroundTiles.alpine_blobs("azure_peak", "hollow", 6, size)
+	for i in blobs.size():
+		for j in range(i + 1, blobs.size()):
+			assert_true(Vector2(blobs[i].x, blobs[i].y).distance_to(Vector2(blobs[j].x, blobs[j].y)) > 20.0, "blobs %d and %d overlap" % [i, j])

@@ -1217,7 +1217,7 @@ func _ground_life(map: Dictionary, sc: float) -> Dictionary:
 			worn.append(Rect2(e.position / sc, e.size / sc))
 	for r in worn:
 		avoid.append(r)
-	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0))}
+	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0)), "alpine_meadow": bool(map.get("alpine_meadow", false))}
 
 
 func _draw() -> void:
