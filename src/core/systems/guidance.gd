@@ -6201,12 +6201,19 @@ static func _milestone_entries(out: Array[Dictionary], c: CharacterData, data: G
 		_add(out, "Milestones", "%s%s: %s" % [String(def.get("name", def["id"])), "" if count == "" else " (%s)" % count, String(def.get("description", ""))], "dim")
 
 
+## WU-559: "Mostly quiet" from 50%, "Sometimes quiet" from 20%, else "Rarely quiet".
+static func quiet_word(percent: int) -> String:
+	if percent >= 50:
+		return "Mostly quiet"
+	return "Sometimes quiet" if percent >= 20 else "Rarely quiet"
+
+
 ## One line describing an Exploration.outlook(): "Mostly quiet 60%. Fights 25%: Mist Wolf (Even). Fortunes 10%."
 static func outlook_text(outlook: Dictionary) -> String:
 	var parts := PackedStringArray()
 	var quiet := roundi(float(outlook.get("other", 0.0)) * 100)
 	if quiet > 0:
-		parts.append("%s %d%%." % ["Mostly quiet" if quiet >= 50 else "Often quiet", quiet])
+		parts.append("%s %d%%." % [quiet_word(quiet), quiet])
 	var fight := roundi(float(outlook.get("fight", 0.0)) * 100)
 	if fight > 0:
 		var foes := PackedStringArray()

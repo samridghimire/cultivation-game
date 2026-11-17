@@ -96,3 +96,9 @@ func test_preview_counts_hunts() -> void:  # REVIEW: a hunt of 2 is not "a Wild 
 	gd.season_tasks = saved
 	assert_true(line.contains("2 Wild Boars"), line)
 	assert_false(line.contains("a Wild Boar"), line)
+
+
+func test_with_where_drops_event_already_named() -> void:
+	var t := SeasonTasks.with_where("Race in the Dragon Boat Festival.", "at the Dragon Boat Festival in Qingshi Village, month 5")
+	assert_eq(t, "Race in the Dragon Boat Festival in Qingshi Village, month 5.")
+	assert_eq(SeasonTasks.with_where("Race.", "at the Fair in Qingshi Village, month 5"), "Race at the Fair in Qingshi Village, month 5.")

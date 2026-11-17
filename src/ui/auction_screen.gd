@@ -234,7 +234,7 @@ func _show_details() -> void:
 		lines.append_array(InventoryScreen.describe_talisman(GameState.player, data, item_id))
 	lines.append("%s lot of %d. Opening bid: %d spirit stones." % [String(lot.get("rarity", "common")).capitalize(), int(lot.get("count", 1)), int(lot["base_price"])])
 	if int(item.get("price", 0)) > 0:
-		lines.append("Market price: %d spirit stones each" % int(item["price"]))
+		lines.append("Shops ask about %d spirit stones each" % int(item["price"]))
 	_effects.text = "\n".join(lines)
 	_bid_label.text = "Your bid: %d" % _amount
 	var reason := GameState.check_bid(_house_id, _selected, _amount)

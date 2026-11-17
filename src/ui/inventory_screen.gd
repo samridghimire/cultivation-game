@@ -261,7 +261,7 @@ func _show_details() -> void:
 	_description.text = String(item.get("description", ""))
 	var lines := describe_effects(item.get("effects", {}), data)
 	if int(item.get("price", 0)) > 0:
-		lines.append("Market price: %d spirit stones" % int(item["price"]))
+		lines.append("Shops ask about %d spirit stones" % int(item["price"]))
 	var equippable := _selected != "" and Equipment.is_equipment(data, _selected)
 	if _selected != "":
 		var worth := qi_worth_line(GameState.player, data, _selected, GameState.current_region, GameState.world_flags)
@@ -348,7 +348,7 @@ static func use_lines(data: GameData, item_id: String, region_id: String) -> Arr
 		var shown: Array[String] = []
 		for b in buyers.slice(0, 2):
 			shown.append("%s (%s)" % [b["place_name"], b["region_name"]])
-		var text := "Sells for %d each at %s" % [Items.sell_price(data, item_id, GameState.price_season()), " and ".join(shown)]
+		var text := "They pay %d each at %s" % [Items.sell_price(data, item_id, GameState.price_season()), " and ".join(shown)]
 		if buyers.size() > 2:
 			text += " and %d more" % (buyers.size() - 2)
 		lines.append(text)

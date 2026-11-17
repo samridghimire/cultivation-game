@@ -488,6 +488,12 @@ static func with_where(text: String, where: String) -> String:
 		return text
 	if where.begins_with("("):
 		return "%s %s" % [text, where]
+	# WU-559: a label that already names the event ("Race in the Dragon Boat Festival") needs only the place.
+	if where.begins_with("at the "):
+		var rest := where.substr(7)
+		var cut := rest.find(" in ")
+		if cut > 0 and text.contains(rest.substr(0, cut)):
+			where = rest.substr(cut + 1)
 	return "%s %s." % [text.trim_suffix("."), where]
 
 

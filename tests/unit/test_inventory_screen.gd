@@ -171,7 +171,7 @@ func test_category_tabs_filter_list_and_focus_first() -> void:
 func test_use_lines_show_buyers_and_recipes() -> void:
 	var lines := InventoryScreen.use_lines(data(), "boar_hide", "qingshi_village")
 	var text := "\n".join(lines)
-	assert_true(text.contains("Sells for"), text)
+	assert_true(text.contains("They pay"), text)
 	assert_true(text.contains("Wandering Merchant (Qingshi Village)"), text)
 	assert_true(text.contains("Used in: Boar Hide Jerkin"), text)
 
@@ -237,3 +237,8 @@ func test_qi_worth_line_says_when_qi_will_not_fit() -> void:
 	assert_true(line.begins_with("Only %d of its 7000 qi fit before your breakthrough (about " % roundi(room)), line)
 	c.qi += room
 	assert_eq(InventoryScreen.qi_worth_line(c, data, "big_pill", "qingshi_village", {}), "None of its 7000 qi fits before your breakthrough")
+
+
+func test_price_wording_says_shops_ask() -> void:
+	var text := "\n".join(InventoryScreen.use_lines(data(), "boar_hide", "qingshi_village"))
+	assert_true(text.contains("They pay") and not text.contains("Sells for"), text)

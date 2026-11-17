@@ -860,3 +860,10 @@ func test_sect_only_encounters_skip_rogues() -> void:
 	assert_true(ids.has("village_sect_farmer_dispute"))
 	for e: Dictionary in data().encounters.values():
 		assert_false(e.get("rogue_only", false) and e.get("sect_only", false), e["id"])
+
+
+func test_quiet_word_tiers() -> void:
+	assert_eq(Guidance.quiet_word(50), "Mostly quiet")
+	assert_eq(Guidance.quiet_word(49), "Sometimes quiet")
+	assert_eq(Guidance.quiet_word(20), "Sometimes quiet")
+	assert_eq(Guidance.quiet_word(13), "Rarely quiet")
