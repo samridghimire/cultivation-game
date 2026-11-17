@@ -57,3 +57,23 @@ func test_cliff_props_have_height_jitter() -> void:
 	assert_false(props.is_empty())
 	for it: Dictionary in props:
 		assert_true(float(it["h"]) >= 0.65 and float(it["h"]) <= 1.0)
+
+
+func test_hedge_blobs_and_variants() -> void:
+	var data := GameData.load_from_dir()
+	var region: Dictionary = data.regions["qingshi_village"]
+	var size := Vector2(float(region["map"]["size"][0]), float(region["map"]["size"][1]))
+	var seen := {}
+	for it: Dictionary in Scenery.edge_props(region, size):
+		var r: Rect2 = it["rect"]
+		var seed_value: int = it["seed"]
+		seen[Scenery.hedge_variant(seed_value)] = true
+		assert_eq(Scenery.hedge_variant(seed_value), Scenery.hedge_variant(seed_value))
+		var blobs := Scenery.hedge_blobs(r, seed_value, int(it["side"]))
+		assert_true(blobs.size() >= 2 and blobs.size() <= 4)
+		var radii := {}
+		for b: Dictionary in blobs:
+			assert_true(r.grow(8.0).has_point(b["pos"]), "blob outside rect+8")
+			radii[snappedf(float(b["radius"]), 0.01)] = true
+		assert_true(radii.size() > 1, "blob radii all equal")
+	assert_true(seen.size() >= 3, "hedge variants: %s" % str(seen.keys()))

@@ -1738,14 +1738,7 @@ func _draw_edge() -> void:
 		var c := r.get_center()
 		match it["kind"]:
 			"hedge":
-				var g := Color("3f7a35").darkened(rng.randf_range(0.0, 0.25))
-				draw_circle(c + Vector2(px, px * 2.0), minf(r.size.x, r.size.y) * 0.6, g.darkened(0.5))
-				draw_circle(c, minf(r.size.x, r.size.y) * 0.6, g)
-				draw_circle(c + Vector2(-px * 2.0, -px * 2.0), minf(r.size.x, r.size.y) * 0.3, g.lightened(0.25))
-				if rng.randf() < 0.3:
-					draw_rect(Rect2(c + Vector2(px, 0), Vector2(px, px)), Color("e8a0b8"))
-				if winter:
-					draw_rect(Rect2(c + Vector2(-px * 3.0, -px * 4.0), Vector2(px * 6.0, px * 2.0)), Color("e8eef4"))
+				_draw_hedge_prop(it, rng, winter)
 			"treeline":
 				var rad := minf(r.size.x, r.size.y) * 0.5 + px * 2.0
 				var leaf := Color("2c5a3a").darkened(rng.randf_range(0.0, 0.3))
@@ -1775,6 +1768,46 @@ func _draw_edge() -> void:
 					draw_line(Vector2(x, y + px * 6.0), Vector2(x + rng.randf_range(-px, px), y - px * 4.0), stalk, px)
 					if n == 0:
 						draw_rect(Rect2(x - px * 0.5, y - px * 7.0, px, px * 3.0), Color("5a3a22"))
+
+
+## GFX-180: one hedge prop as layered woodland: darker back blobs toward the map edge, lighter front blobs, and now and then a
+## small tree, a flowering shrub or a rock at the foot. At most ~6 draw calls per blob group.
+func _draw_hedge_prop(it: Dictionary, rng: RandomNumberGenerator, winter: bool) -> void:
+	var px := float(Sprites.scale())
+	var r: Rect2 = it["rect"]
+	var side: int = it["side"]
+	var seed_value: int = it["seed"]
+	var decor: Dictionary = _region.get("map", {}).get("decor", {})
+	var base := Color(str(decor.get("tree_color", "2e5a2a")))
+	var look := Scenery.tree_look(_season, seed_value, base, "round", false)
+	var leaf: Color = base.lightened(0.12) if bool(look["bare"]) else look["canopy"]
+	leaf = leaf.darkened(rng.randf_range(0.0, 0.18))
+	var variant := Scenery.hedge_variant(seed_value)
+	var blobs := Scenery.hedge_blobs(r, seed_value, side)
+	for b in blobs:
+		if int(b["layer"]) == 0:
+			draw_circle(b["pos"], float(b["radius"]), leaf.darkened(0.35))
+	for b in blobs:
+		if int(b["layer"]) == 1:
+			var p: Vector2 = b["pos"]
+			var rad: float = b["radius"]
+			draw_circle(p + Vector2(px, px * 2.0), rad, leaf.darkened(0.5))
+			draw_circle(p, rad, leaf)
+			draw_circle(p + Vector2(-px * 2.0, -px * 2.0), rad * 0.5, leaf.lightened(0.22))
+			if winter:
+				draw_rect(Rect2(p + Vector2(-px * 3.0, -rad * 0.8), Vector2(px * 6.0, px * 2.0)), Color("e8eef4"))
+	var foot: Vector2 = blobs[blobs.size() - 1]["pos"]
+	match variant:
+		"tree":
+			_draw_tree(r.get_center() - Vector2(0, 6.0 * px) if side != 1 else r.get_center() + Vector2(0, 2.0 * px), 0.8, base, "round")
+		"flower":
+			var gs := GroundTiles.ground_season(_season, _region.get("map", {}))
+			if gs == "Spring" or gs == "Summer":
+				for n in 4:
+					var o := Vector2(rng.randf_range(-8.0, 8.0), rng.randf_range(-6.0, 6.0))
+					draw_rect(Rect2(foot + o, Vector2(px, px)), Color("e8a0b8") if n % 2 == 0 else Color("f4f0e6"))
+		"rock":
+			draw_colored_polygon(Scenery.flat_stone(foot + Vector2(0, 4.0 * px), 5.0 * px, seed_value), _rock_color())
 
 
 ## GFX-111: the region's rock colour (decor.rock_color).

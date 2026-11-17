@@ -677,6 +677,39 @@ static func edge_props(region: Dictionary, size: Vector2) -> Array[Dictionary]:
 	return out
 
 
+## GFX-180: which kind of hedge prop a seed makes: "plain", "tree" (a small tree over the hedge), "flower" (a flowering shrub) or "rock".
+static func hedge_variant(seed_value: int) -> String:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 17
+	var f := rng.randf()
+	if f < 0.2:
+		return "tree"
+	if f < 0.37:
+		return "flower" if rng.randf() < 0.65 else "rock"
+	return "plain"
+
+
+## GFX-180: the foliage blobs of one hedge prop, back row first: [{pos: Vector2, radius: float, layer: int}] (layer 0 back, 1 front).
+## 2-4 blobs per prop with varied radii (0.45-0.85 x the short side); back blobs sit toward the map edge, front blobs
+## 0..EDGE_INSIDE*0.5 px inward so the inner silhouette undulates. Every centre lies inside rect.grow(8).
+static func hedge_blobs(rect: Rect2, seed_value: int, side: int) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var inward := [Vector2(0, 1), Vector2(0, -1), Vector2(1, 0), Vector2(-1, 0)][side] as Vector2
+	var along := Vector2(1, 0) if side < 2 else Vector2(0, 1)
+	var length := rect.size.x if side < 2 else rect.size.y
+	var short := minf(rect.size.x, rect.size.y)
+	var c := rect.get_center()
+	var out: Array[Dictionary] = []
+	var count := rng.randi_range(2, 4)
+	for i in count:
+		var layer := 0 if i < count / 2 else 1
+		var u := (float(i) + 0.5) / float(count) - 0.5 + rng.randf_range(-0.12, 0.12)
+		var off := -rng.randf_range(3.0, 6.0) if layer == 0 else rng.randf_range(0.0, EDGE_INSIDE * 0.5)
+		out.append({"pos": c + along * u * length + inward * off, "radius": short * rng.randf_range(0.45, 0.85), "layer": layer})
+	return out
+
+
 ## GFX-111: a rock silhouette for `rect`: [bottom-left, jagged top points..., bottom-right], deterministic from `seed`.
 ## The top points run left to right across the rect, each lifted 0..`jitter` px below the top edge; every point lies inside rect.grow(jitter).
 static func jagged_outline(rect: Rect2, seed: int, points: int, jitter: float) -> PackedVector2Array:
