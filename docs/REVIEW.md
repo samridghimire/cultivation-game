@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b0ace62
+Last reviewed commit: 6a674ed
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2107,3 +2107,17 @@ Last reviewed commit: b0ace62
     WU-553 OK (`person_look` runs twice per foe draw, including a Folk.celebrants lookup; cheap enough for a duel).
     GFX-177 draw-only plus seeded marsh data on its own rng (existing features unchanged), with a test. SEASON-024/025 and
     QA-227: sim policies and a reach audit only. I did not render GFX-177/178 or WU-555.
+- 2026-11-17 (reviewer): reviewed b0ace62..6a674ed (QA-171, GFX-176, WU-556, QA-164, QA-169, GFX-180, WU-558, C-383,
+  SEASON-026; [PLAN]/[REVIEW] skipped). QA-171 and GFX-176 landed under the last review's [REVIEW] commit but after its
+  range, so they are covered here. Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change, no new
+  binary assets.
+  - Fixed (C-383): the stilt-house fisherwoman "calls you a good lad" whatever the player's gender; reworded.
+  - C-383 otherwise OK: the -3 stone choice is gated by Exploration.check_choice (Effects.check), every encounter is
+    once-only via its flag and capped at Qi Refining. No balance check run (worker follow-up; QA-225 covers drift).
+  - WU-556 OK: buy_refusal uses the same unit price as max_quantity, so the hint matches the greyed button; manual
+    descriptions dropped "Teaches X" only where describe_effects/compare_text still say it.
+  - WU-558 OK: every dialogue opens through hud._on_dialogue_requested, which resets set_portrait, so an NPC's face
+    can't leak into a later event dialogue. GFX-176 (lanes may end at building fronts; keepout shrunk by 1 px) and
+    GFX-180 (hedge blobs/variants, pure + tested) are draw-only; I did not render them.
+  - QA-164/169/171, SEASON-026: sim only, base output unchanged per their notes. QA-164's finding (the qi-pill hint
+    never points away while any local pill exists) is a GUIDE question the planner can pick up from its Follow-ups.
