@@ -222,9 +222,9 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 		"fishing":
 			c = _jetty()
 		"explore_woods":
-			c = _woods()
+			c = _winter_woods() if winter else _woods()
 		"explore_woods_herbs":
-			c = _woods(true)
+			c = _winter_woods(true) if winter else _woods(true)
 		"explore_ruins":
 			c = _ruins()
 		"explore_reeds":
@@ -251,25 +251,17 @@ static func winter_kind(kind: String) -> bool:
 	return kind in ["explore_woods", "explore_woods_herbs", "gather", "gather_terrace", "gather_bog"]
 
 
-## GFX-114: the crown colour of a woods site in winter: 25% darker and greyer.
+## GFX-114, GFX-189: the crown colour of a woods site in winter: greyer, never darker than the region's own pines.
 static func winter_crown(c: Color) -> Color:
 	var grey := Color(c.get_luminance(), c.get_luminance(), c.get_luminance())
-	return c.lerp(grey, 0.25).darkened(0.25)
+	return c.lerp(grey, 0.25).lightened(0.05)
 
 
 ## GFX-114: winter edits on template rows. Woods: a 2 px snow cap on top of every crown column with a pale underside
 ## pixel. Gather beds: living greens (v, r, h) become dormant brown stubs ("t", "e") with snow pixels ("n").
 static func winterize(kind: String, c: Array) -> void:
 	if kind.begins_with("explore_woods"):
-		for x in c[0].size():
-			for y in c.size():
-				var ch: String = c[y][x]
-				if ch == "r" or ch == "R" or ch == "h":
-					for dy in 3:
-						if y + dy < c.size() and ["r", "R", "h"].has(c[y + dy][x]):
-							c[y + dy][x] = "n" if dy < 2 else "b"
-					break
-		return
+		return  # GFX-189: the winter grove is its own template (_winter_woods)
 	for y in c.size():
 		for x in c[y].size():
 			match c[y][x]:
@@ -807,6 +799,53 @@ static func _woods(herbs: bool = false) -> Array:
 	crown(c, 27, 7, 7, 5)
 	crown(c, 19, 22, 7, 6)
 	crown(c, 36, 22, 7, 6)
+	if herbs:
+		for p: Array in [[22, 31], [32, 33], [21, 35], [33, 29]]:
+			rect(c, p[0], p[1], 1, 3, "v")
+			rect(c, p[0] - 1, p[1], 3, 1, "g")
+	return c
+
+
+## GFX-189: a snowy pine: three tiers in `r` (right edge `R`), each with a 2 px snow cap, on a short trunk.
+static func snow_pine(c: Array, cx: int, base_y: int) -> void:
+	rect(c, cx - 1, base_y - 4, 3, 5, "t")
+	for tier in 3:
+		var top := base_y - 22 + tier * 6
+		var half := 4 + tier * 3
+		for i in 8:
+			var w := mini(half, 1 + i * half / 8)
+			rect(c, cx - w, top + i, 2 * w + 1, 1, "n" if i < 2 else "r")
+			if i >= 2:
+				rect(c, cx + w, top + i, 1, 1, "R")
+
+
+## GFX-189: a bare broadleaf: a trunk forking into branches, snow resting on the upper forks.
+static func bare_tree(c: Array, cx: int, base_y: int, h: int) -> void:
+	rect(c, cx - 1, base_y - h / 2, 3, h / 2 + 1, "t")
+	for dir: int in [-1, 1]:
+		for i in h / 2:
+			var x := cx + dir * (1 + i * 2 / 3)
+			var y := base_y - h / 2 - i
+			rect(c, x, y, 1, 2, "t")
+			if i == h / 2 - 1 or i == h / 4:
+				rect(c, x - 1, y - 1, 3, 1, "n")
+	rect(c, cx, base_y - h / 2 - 3, 1, 4, "T")
+	rect(c, cx - 1, base_y - h / 2 - 4, 3, 1, "n")
+
+
+## GFX-189: the woods site in winter: snowy pines at both ends, bare broadleaf trees between, the path kept with snow edges.
+static func _winter_woods(herbs: bool = false) -> Array:
+	var c := canvas(54, 38)
+	rect(c, 26, 10, 4, 16, "d")
+	rect(c, 24, 25, 8, 13, "e")
+	rect(c, 26, 18, 4, 8, "e")
+	for x: int in [23, 32]:
+		rect(c, x, 27, 1, 10, "n")
+	bare_tree(c, 27, 17, 14)
+	bare_tree(c, 19, 30, 14)
+	bare_tree(c, 36, 30, 14)
+	snow_pine(c, 11, 36)
+	snow_pine(c, 43, 36)
 	if herbs:
 		for p: Array in [[22, 31], [32, 33], [21, 35], [33, 29]]:
 			rect(c, p[0], p[1], 1, 3, "v")

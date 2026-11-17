@@ -351,7 +351,30 @@ func test_winter_look() -> void:
 	assert_true(PixelPlace.rows("gather") != PixelPlace.rows("gather", true, false, false, "thatch", true), "dormant herb bed")
 	assert_eq(PixelPlace.rows("explore_ruins"), PixelPlace.rows("explore_ruins", true, false, false, "thatch", true))
 	assert_false(PixelPlace.winter_kind("gather_frost"))
-	assert_true(PixelPlace.winter_crown(Color("2e7a2a")).get_luminance() < Color("2e7a2a").get_luminance())
+	assert_true(PixelPlace.winter_crown(Color("2e7a2a")).get_luminance() >= Color("2e7a2a").get_luminance() * 0.9, "GFX-189: no darker than the region's pines")
+
+
+## GFX-189: the winter woods is a grove no darker than the region's winter pines; summer is untouched.
+func test_winter_woods_grove() -> void:
+	var tree := Color("183427")
+	var crown := PixelPlace.winter_crown(tree)
+	var rows := PixelPlace.rows("explore_woods", true, false, false, "thatch", true)
+	var img := PixelPlace.from_rows(rows, crown).get_image()
+	var floor_lum := tree.get_luminance() * 0.9
+	var skip: Array[Color] = [PixelPlace.OUTLINE, PixelPlace.COLORS["d"], PixelPlace.COLORS["t"], PixelPlace.COLORS["T"], PixelPlace.COLORS["e"], crown.darkened(0.3)]
+	var skip_rgb: Array[Vector3] = []
+	for sc in skip:  # RGBA8 quantises the palette, so compare with a small tolerance
+		skip_rgb.append(Vector3(sc.r, sc.g, sc.b))
+	for y in img.get_height():
+		for x in img.get_width():
+			var px := img.get_pixel(x, y)
+			var near := false
+			for sv in skip_rgb:
+				near = near or Vector3(px.r, px.g, px.b).distance_to(sv) < 0.01
+			if px.a > 0.0 and not near:
+				assert_true(px.get_luminance() >= floor_lum, "pixel %d,%d not darker than the winter pines" % [x, y])
+	assert_eq(rows.size(), PixelPlace.rows("explore_woods").size())
+	assert_eq(PixelPlace.rows("explore_woods"), PixelPlace.rows("explore_woods", true, false, false, "thatch", false), "summer unchanged")
 
 
 ## GFX-114 (review): places switch to their winter look when the season turns while the player stays in the region.
