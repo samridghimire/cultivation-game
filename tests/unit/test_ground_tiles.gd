@@ -225,3 +225,24 @@ func test_alpine_ground_varies_by_season() -> void:
 	assert_true(GroundTiles.alpine_blobs("alp_t", "hollow", 5, size) == GroundTiles.alpine_blobs("alp_t", "hollow", 5, size))
 	for b in GroundTiles.alpine_blobs("alp_t", "fan", 20, size):
 		assert_true(b.x < size.x and b.y < size.y)
+
+
+## GFX-181: meadow blobs are deterministic and avoid rects; autumn grass has more rust/straw than summer.
+func test_meadow_blobs_and_autumn_rust() -> void:
+	var size := Vector2i(400, 300)
+	var avoid: Array = [Rect2(50, 50, 200, 150)]
+	var a := GroundTiles.meadow_blobs("mdw_t", "lone", 200, size, avoid)
+	assert_true(a == GroundTiles.meadow_blobs("mdw_t", "lone", 200, size, avoid))
+	assert_true(a.size() > 20)
+	for b in a:
+		assert_false(avoid[0].has_point(Vector2(b.x, b.y)), "blob inside avoid rect")
+	var rust := func(season: String) -> int:
+		var img := GroundTiles.ground_texture(BASE, "mdw_t", size, false, season, "grass", [], 1.0, {"avoid": avoid}).get_image()
+		var n := 0
+		for y in size.y:
+			for x in size.x:
+				var c := img.get_pixel(x, y)
+				if c.r > c.g + 0.05 and c.r > 0.5:
+					n += 1
+		return n
+	assert_true(rust.call("Autumn") > rust.call("Summer"), "autumn has more rust pixels")

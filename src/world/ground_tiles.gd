@@ -104,12 +104,15 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
 	var lively := LIVELY_STYLES.has(style)
+	var dry_tips: Array[Vector2i] = []
 	var shade_grid: PackedFloat32Array = PackedFloat32Array()
 	if lively:
 		shade_grid = shade_grid_for(rid, size_px)
 		_apply_patches(img, base, shade_grid)
 		_apply_clover(img, base, rid, style, life.get("avoid", []))
 		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
+		if style == "grass":
+			dry_tips = _meadow_life(img, base, rid, season, life.get("avoid", []), life.get("worn", []))  # GFX-181
 	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)))
 	if style == "scree":
 		_scree_slopes(img, base, rid)  # GFX-159
@@ -120,6 +123,9 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		_winter_streets(img, summer, rid, zones)
 	if lively and season == "Winter":
 		_vary_snow(img, shade_grid)
+		for t in dry_tips:  # GFX-181: dry stalks poke through the snow
+			_set_clipped(img, t.x, t.y, Color("b59a62"))
+			_set_clipped(img, t.x, t.y + 1, Color("8a7447"))
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
@@ -254,8 +260,17 @@ static func _apply_worn(img: Image, rid: String, worn: Array, path_color: Color,
 			for x in range(x0, x1):
 				var d := Vector2((x - c.x) / (rc.size.x * 0.5), (y - c.y) / (rc.size.y * 0.5)).length()
 				d += grid[y * w + x] * 0.18
+				if d > 0.75 and d < 1.25:  # GFX-181: ragged lobes near the rim
+					d += (float(absi(hash("%s|wr|%d|%d" % [rid, x / 4, y / 4])) % 100) / 100.0 - 0.5) * 0.3
 				if d < 1.0:
-					img.set_pixel(x, y, img.get_pixel(x, y).lerp(path_color, 0.35 * smoothstep(1.0, 0.5, d)))
+					var col := img.get_pixel(x, y).lerp(path_color, 0.35 * smoothstep(1.0, 0.5, d))
+					if d < 0.8 and absi(hash("%s|wp|%d|%d" % [rid, x, y])) % 70 == 0:  # pebble
+						var pc := path_color.darkened(0.25) if (x + y) % 2 == 0 else path_color.lightened(0.2)
+						col = pc
+						img.set_pixel(x, y, col)
+						_set_clipped(img, x + 1, y, pc.darkened(0.1))
+						continue
+					img.set_pixel(x, y, col)
 
 
 ## GFX-130: winter snow 0.75..1.0 by patch shade, so it is not one flat sheet (the base pass already put 0.7 on).
@@ -288,6 +303,85 @@ static func scree_slope_shade(rid: String, y: int, height: int) -> float:
 	var band := maxi(y, 0) / 110
 	var up := 1.0 - float(y) / float(maxi(height, 1))
 	return (up - 0.5) * 0.12 + (float(scree_band_level(rid, band)) - 1.5) * 0.09
+
+
+## GFX-181: pure hashed blob centres (x, y, size) for the meadow, never inside an `avoid` rect.
+static func meadow_blobs(rid: String, kind: String, count: int, size_px: Vector2i, avoid: Array) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for i in count:
+		var r := absi(hash("%s|mdw|%s|%d" % [rid, kind, i]))
+		var b := Vector3(float(r % maxi(size_px.x, 1)), float((r / 4096) % maxi(size_px.y, 1)), 10.0 + float((r / 64) % 22))
+		if not _in_rects(avoid, b.x, b.y):
+			out.append(b)
+	return out
+
+
+static func _in_rects(rects: Array, x: float, y: float) -> bool:
+	for a: Rect2 in rects:
+		if a.has_point(Vector2(x, y)):
+			return true
+	return false
+
+
+static func _tuft(img: Image, x: int, y: int, height: int, base: Color, tip: Color) -> void:
+	for k in height:
+		var c := base.darkened(0.18).lerp(tip, float(k) / maxf(height - 1, 1.0))
+		_set_clipped(img, x, y - k, c)
+		if k >= 1 and height >= 3:
+			_set_clipped(img, x + (1 if k % 2 == 0 else -1), y - k, c.darkened(0.06))
+
+
+## GFX-181: tuft clumps, lone tufts and a season detail on the village meadow. Returns the dry-tip pixels
+## that winter re-draws over its snow.
+static func _meadow_life(img: Image, base: Color, rid: String, season: String, avoid: Array, worn: Array) -> Array[Vector2i]:
+	var size_px := Vector2i(img.get_width(), img.get_height())
+	var area := float(size_px.x * size_px.y) / 1000000.0
+	var tips: Array[Vector2i] = []
+	var tip_col := base.lightened(0.12)
+	if season == "Autumn":
+		tip_col = Color("a8602f")
+	var alt_tip := Color("c9a55a")
+	var clumps := meadow_blobs(rid, "clump", maxi(3, int(area * 10.0)), size_px, avoid)
+	for ci in clumps.size():
+		var b := clumps[ci]
+		var r := absi(hash("%s|mdw|c|%d" % [rid, ci]))
+		var n := 4 + r % 6
+		var decorated := r % 3 == 0
+		for j in n:
+			var rj := absi(hash("%s|mdw|t|%d|%d" % [rid, ci, j]))
+			var x := int(b.x) + int(rj % 29) - 14
+			var y := int(b.y) + int((rj / 64) % 29) - 14
+			if _in_rects(avoid, x, y):
+				continue
+			var tc := alt_tip if season == "Autumn" and j % 2 == 0 else tip_col
+			_tuft(img, x, y, 3 + (rj / 4096) % 3, base, tc)
+			if season == "Winter" and j % 2 == 0:
+				tips.append(Vector2i(x, y - 3))
+			if decorated and j == 0:
+				if season == "Spring":
+					_set_clipped(img, x + 2, y - 1, Color("f4efe0") if r % 2 == 0 else Color("f2e68a"))
+				elif season == "Summer":
+					_set_clipped(img, x + 2, y - 1, FLOWER_COLORS[(r / 8) % FLOWER_COLORS.size()])
+	for b in meadow_blobs(rid, "lone", int(area * 60.0), size_px, avoid):
+		_tuft(img, int(b.x), int(b.y), 2 + int(b.z) % 2, base, tip_col)
+	if season == "Autumn":
+		var leaves := [Color("b0442a"), Color("c9742f"), Color("d99a3a")]
+		for b in meadow_blobs(rid, "leaf", int(area * 40.0), size_px, avoid):
+			var lc: Color = leaves[int(b.z) % leaves.size()]
+			_set_clipped(img, int(b.x), int(b.y), lc)
+			_set_clipped(img, int(b.x) + 1, int(b.y), lc.darkened(0.12))
+	# tuft fringe just outside each worn yard's rim
+	for wi in worn.size():
+		var rc: Rect2 = worn[wi]
+		var c := rc.get_center()
+		for k in 6:
+			var rk := absi(hash("%s|mdw|f|%d|%d" % [rid, wi, k]))
+			var ang := float(rk % 628) / 100.0
+			var x := int(c.x + cos(ang) * rc.size.x * 0.5 * 1.04)
+			var y := int(c.y + sin(ang) * rc.size.y * 0.5 * 1.04)
+			if not _in_rects(avoid, x, y):
+				_tuft(img, x, y, 3, base, tip_col)
+	return tips
 
 
 ## GFX-175: alpine variety on a scree ground: darker damp hollows, pale scree fans, lichen patches and hardy
