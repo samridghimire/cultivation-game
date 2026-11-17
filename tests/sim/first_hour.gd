@@ -82,8 +82,8 @@ static var season_tasks := false
 ## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
 ## and only when its foe is rated Even or better. simulate_curious_years.gd's --mission-monthly; part of the memo key.
 static var mission_monthly := false
-## QA-227: a sect member does the steward chore the duty hint names when the month's duty is unmet and <= 10 days remain
-## (walking to the hall when it is <= 3 route days away). simulate_curious_years.gd's --steward-chores; part of the memo key.
+## QA-227: a sect member does the steward chore the duty hint names when the month's duty is unmet and remain
+## (walking to the hall when it is <= 3 route days away); QA-228 also walks home at month start when the duty is projected short. simulate_curious_years.gd's --steward-chores; part of the memo key.
 static var steward_chores := false
 static var steward_max_days := 3  # --steward-days=N
 const STEWARD_LAST_DAYS := 10
@@ -209,7 +209,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
 	if injury_report:
 		bus.message_posted.connect(on_msg)
-	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "chores": 0, "foundation_day": -1, "rank1_day": -1, "short": [], "earned": []}
+	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "chores": 0, "chore_days": 0, "chore_walk_days": 0, "chore_trips": 0, "foundation_day": -1, "rank1_day": -1, "short": [], "earned": []}
 	var on_sect_msg := func(text: String, _category: String) -> void:
 		if text.contains("this month's stipend is withheld"):
 			sect_entry["skipped"] += 1
@@ -248,6 +248,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		var qi_density := SPRING_DENSITY
 		if far_qi:
 			qi_density = _move_for_qi(gs, c, clock, month, qi_density, out)
+		var kinds_pre := {}
 		var qi_before := c.qi
 		var realm_before_med := c.realm_index
 		var probe_ok := qi_probe and month < 6 and c.injuries.is_empty() and not Cultivation.is_at_bottleneck(c, gs.data)
@@ -260,6 +261,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			probe_used = gs._cultivation_density(qi_density, Calendar.DAYS_PER_MONTH)
 			probe_ok = Cultivation.days_to_bottleneck(c, gs.data, probe_used) > Calendar.DAYS_PER_MONTH
 			probe_expected = Cultivation.qi_per_day(c, gs.data, qi_density * gs.region_qi_density(Calendar.DAYS_PER_MONTH) * Sects.cultivation_bonus(c, gs.data))
+		_walk_home_for_duty(gs, c, done, kinds_pre, clock.total_days)
 		gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
 		if probe_ok and c.alive and c.stage == probe_stage and c.realm_index == realm_before_med and clock.total_days > probe_day:
 			qi_probe_log.append({"seed": seed_value, "month": month + 1, "region": probe_region, "sect": not c.is_rogue(), "asked": qi_density, "used": probe_used, "bonus": Sects.cultivation_bonus(c, gs.data), "days": clock.total_days - probe_day, "measured": (c.qi - qi_before) / float(clock.total_days - probe_day), "expected": probe_expected})
@@ -369,6 +371,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		sect_entry["missions"] = LifeStats.get_stat(c, "missions_done")
 		sect_entry["lectures"] = LifeStats.get_stat(c, "lectures_attended")
 		sect_entry["chores"] = int(done.get("chores", 0))
+		sect_entry["chore_days"] = int(done.get("chore_days", 0))  # QA-228
+		sect_entry["chore_walk_days"] = int(done.get("chore_walk_days", 0))
+		sect_entry["chore_trips"] = int(done.get("chore_trips", 0))
 		sect_entry["rank1_day"] = int(out["rank_day"])
 		sect_entry["end_day"] = clock.total_days
 		sect_log.append(sect_entry)
@@ -696,7 +701,7 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 ## <= steward_max_days route days away. sect_log counts them via done["chores"] (read by play's report).
 static func _do_steward_chores(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, today: int) -> void:
 	var duty := Sects.monthly_duty(c, gs.data)
-	if duty <= 0 or Sects.duty_progress(c) >= duty or bool(c.sect.get("duty_grace", false)) or Sects.duty_days_left(c) > STEWARD_LAST_DAYS:
+	if duty <= 0 or Sects.duty_progress(c) >= duty or bool(c.sect.get("duty_grace", false)):
 		return
 	var sect: SectDef = gs.data.sects[c.sect["id"]]
 	var hall := sect.home_region
@@ -707,32 +712,78 @@ static func _do_steward_chores(gs: Node, c: CharacterData, done: Dictionary, kin
 			return
 		_walk_to(gs, c, hall)
 	if c.alive and gs.current_region == hall:
-		var progressed := true
-		while progressed and c.alive and Sects.duty_progress(c) < duty:
-			progressed = false
-			var best := {}
-			var best_rate := 0.0
-			for place: Dictionary in gs.data.regions.get(hall, {}).get("places", []):
-				var ctx := String(place.get("deed_context", ""))
-				if String(place.get("type", "")) != "deed_giver" or ctx == "":
-					continue
-				for opt: Dictionary in Deeds.options(c, gs.data, ctx, gs.world_flags, today):
-					var deed: Dictionary = opt["deed"]
-					var gain := int(deed.get("effects", {}).get("contribution", 0))
-					if opt["disabled"] or not deed.get("requires", {}).has("sect") or gain <= 0:
-						continue
-					var rate := float(gain) / float(maxi(1, int(deed.get("days", 1))))
-					if rate > best_rate:
-						best_rate = rate
-						best = deed
-			if best.is_empty():
-				break
-			gs.perform_deed(String(best["id"]))
-			done["chores"] = int(done.get("chores", 0)) + 1
-			kinds["deed"] = true
-			progressed = true
+		_run_chores(gs, c, duty, done, kinds, today)
 	if c.alive and gs.current_region != start:
 		_walk_to(gs, c, start)
+
+
+## QA-228: do the steward's best-paying chore until this month's duty is met (or the sect month ends); done["chore_days"] counts the days.
+static func _run_chores(gs: Node, c: CharacterData, duty: int, done: Dictionary, kinds: Dictionary, today: int) -> void:
+	var hall := (gs.data.sects[c.sect["id"]] as SectDef).home_region
+	var month_idx := c.age_days / Calendar.DAYS_PER_MONTH
+	var progressed := true
+	while progressed and c.alive and Sects.duty_progress(c) < duty and c.age_days / Calendar.DAYS_PER_MONTH == month_idx:
+		progressed = false
+		var best := {}
+		var best_rate := 0.0
+		for place: Dictionary in gs.data.regions.get(hall, {}).get("places", []):
+			var ctx := String(place.get("deed_context", ""))
+			if String(place.get("type", "")) != "deed_giver" or ctx == "":
+				continue
+			for opt: Dictionary in Deeds.options(c, gs.data, ctx, gs.world_flags, today):
+				var deed: Dictionary = opt["deed"]
+				var gain := int(deed.get("effects", {}).get("contribution", 0))
+				if opt["disabled"] or not deed.get("requires", {}).has("sect") or gain <= 0:
+					continue
+				var rate := float(gain) / float(maxi(1, int(deed.get("days", 1))))
+				if rate > best_rate:
+					best_rate = rate
+					best = deed
+		if best.is_empty():
+			break
+		var before := c.age_days
+		gs.perform_deed(String(best["id"]))
+		done["chore_days"] = int(done.get("chore_days", 0)) + (c.age_days - before)
+		done["chores"] = int(done.get("chores", 0)) + 1
+		kinds["deed"] = true
+		progressed = true
+
+
+## QA-228: at the start of a sect month, when the duty is projected short (earned so far + the smallest mission on the board,
+## if --mission-monthly is on, < the rank's duty), walk to the home hall, do chores until the duty is met or the month ends, and
+## walk back to where the member stood. done["chore_walk_days"] counts the days spent walking, done["chore_trips"] the trips.
+static func _walk_home_for_duty(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, today: int) -> void:
+	if not steward_chores or not c.alive or c.is_rogue():
+		return
+	var duty := Sects.monthly_duty(c, gs.data)
+	if duty <= 0 or bool(c.sect.get("duty_grace", false)):
+		return
+	var projected := Sects.duty_progress(c)
+	if mission_monthly and int(c.sect.get("rank", 0)) <= 1:
+		var least := 0
+		for id: String in Sects.available_missions(c, gs.data, gs.world_flags):
+			if Sects.check_mission(c, gs.data, id, gs.world_flags) == "":
+				var gain := int(gs.data.sect_missions[id].get("contribution", 0))
+				least = gain if least == 0 else mini(least, gain)
+		projected += least
+	if projected >= duty:
+		return
+	var hall := (gs.data.sects[c.sect["id"]] as SectDef).home_region
+	var start: String = gs.current_region
+	if start != hall:
+		var d := Guidance.route_days(c, gs.data, start, hall)
+		if d <= 0:
+			return
+		var before := c.age_days
+		_walk_to(gs, c, hall)
+		done["chore_walk_days"] = int(done.get("chore_walk_days", 0)) + (c.age_days - before)
+	if c.alive and gs.current_region == hall:
+		done["chore_trips"] = int(done.get("chore_trips", 0)) + 1
+		_run_chores(gs, c, duty, done, kinds, today)
+	if c.alive and gs.current_region != start:
+		var before2 := c.age_days
+		_walk_to(gs, c, start)
+		done["chore_walk_days"] = int(done.get("chore_walk_days", 0)) + (c.age_days - before2)
 
 
 static func _walk_to(gs: Node, c: CharacterData, target: String) -> void:

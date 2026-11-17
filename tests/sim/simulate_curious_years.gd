@@ -553,6 +553,8 @@ func _print_sect_report() -> void:
 	var inner_days: Array = []
 	var found_days: Array = []
 	var chores := 0
+	var walk_days := 0
+	var chore_days := 0
 	var short_months := 0
 	for e: Dictionary in FirstHour.sect_log:
 		print("  seed %2d joined d%-5d months %2d away %4d paid %2d skipped %2d missions %3d lectures %2d" % [e["seed"], e["joined"], e["months"], e["away"], e["paid"], e["skipped"], e["missions"], e["lectures"]])
@@ -563,6 +565,9 @@ func _print_sect_report() -> void:
 			lectures.append(int(e["lectures"]))
 		print("    chores %d; Inner Disciple day %s; Foundation day %s" % [e["chores"], str(e["rank1_day"]) if int(e["rank1_day"]) >= 0 else "-", str(e["foundation_day"]) if int(e["foundation_day"]) >= 0 else "-"])  # QA-227
 		chores += int(e["chores"])
+		walk_days += int(e["chore_walk_days"])
+		chore_days += int(e["chore_days"])
+		print("    QA-228: chore trips %d, walking %d days, chores %d days" % [e["chore_trips"], e["chore_walk_days"], e["chore_days"]])
 		short_months += (e["short"] as Array).size()
 		if int(e["rank1_day"]) >= 0:
 			inner_days.append(int(e["rank1_day"]))
@@ -576,6 +581,7 @@ func _print_sect_report() -> void:
 		paid += int(e["paid"])
 		months += int(e["paid"]) + int(e["skipped"])
 	print("  total: %d members; days away median %.0f; stipends paid %d, skipped %d over %d sect months; missions median %.0f; lectures median %.0f" % [members, _median(away), paid, skipped, months, _median(missions), _median(lectures)])
+	print("  QA-228: months duty met %d of %d; walking %d days, chores %d days" % [months - short_months, months, walk_days, chore_days])
 	print("  QA-227: chores done %d; months short %d; Inner Disciple day median %s (%d seeds); Foundation day median %s (%d seeds)" % [chores, short_months, ("%.0f" % _median(inner_days)) if not inner_days.is_empty() else "-", inner_days.size(), ("%.0f" % _median(found_days)) if not found_days.is_empty() else "-", found_days.size()])
 
 
