@@ -1244,7 +1244,10 @@ func _draw() -> void:
 			var psc := float(Sprites.scale())
 			var scree_road := str(map.get("ground_style", "grass")) == "scree"  # GFX-149: a mountain trail has no visible road rect
 			var ptex := GroundTiles.path_texture(path_color, rid, Vector2i(ceili(rect.size.x / psc), ceili(rect.size.y / psc)), GroundTiles.ground_season(_season, map), str(map.get("ground_style", "grass")))
-			if not scree_road:
+			var dirt_style := str(map.get("ground_style", "grass")) in ["grass", "litter"]
+			if dirt_style:
+				_draw_dirt_road(rect, path_color, ptex, GroundTiles.ground_season(_season, map) == "Winter")  # GFX-185
+			elif not scree_road:
 				draw_texture_rect(ptex, Rect2(rect.position, Vector2(ptex.get_size()) * psc), false)
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_yard_ground()
@@ -2756,6 +2759,45 @@ func _draw_jetty_vertical(r: Rect2, toward: int, winter: bool) -> void:
 
 ## Planks across a stream where `crossing` (its overlap with `path_rect`) is, laid along the path's direction.
 ## GFX-112: the road surface (ruts, slabs, planks, puddles, tufts) over one path rect.
+## GFX-185: the walked dirt road: wandering verge and bed (the path texture mapped onto the bed), broken ruts, verge tufts.
+func _draw_dirt_road(rect: Rect2, base: Color, ptex: Texture2D, snowy: bool) -> void:
+	var rmap: Dictionary = _region.get("map", {})
+	var straight: Array[Rect2] = []
+	for lm: Dictionary in rmap.get("landmarks", []):
+		if str(lm.get("kind", "")) == "stream":
+			var sz: Array = lm["size"]
+			var c: Array = lm["pos"]
+			straight.append(Rect2(float(c[0]) - float(sz[0]) * 0.5, float(c[1]) - float(sz[1]) * 0.5, float(sz[0]), float(sz[1])))
+	for pl: Dictionary in _region.get("places", []):
+		var psz: Array = pl.get("size", [64, 64])
+		var pc := Vector2(float(pl["pos"][0]), float(pl["pos"][1]))
+		straight.append(Rect2(pc - Vector2(float(psz[0]), float(psz[1])) / 2.0, Vector2(float(psz[0]), float(psz[1]))))
+	var joins: Array[Rect2] = []
+	for r in rmap.get("paths", []):
+		joins.append(Rect2(r[0], r[1], r[2], r[3]))
+	var dseed := hash("%s|%s|dirtroad" % [_region.get("id", ""), rect])
+	var road := Scenery.dirt_road(rect, dseed, 3.5, straight, Rect2(Vector2.ZERO, map_size), joins)
+	var grass := Color(map_grass_color())
+	draw_colored_polygon(road["verge"], base.darkened(0.15).lerp(grass, 0.25))
+	var bed: PackedVector2Array = road["bed"]
+	var uvs := PackedVector2Array()
+	for q in bed:
+		uvs.append((q - rect.position) / rect.size)
+	draw_colored_polygon(bed, Color.WHITE, uvs, ptex)
+	var rut_col := base.darkened(0.2)
+	if snowy:
+		draw_colored_polygon(bed, Color(0.9, 0.93, 0.97, 0.45))
+		rut_col = Color(0.5, 0.47, 0.43, 0.8)
+	for rut: PackedVector2Array in road["ruts"]:
+		draw_polyline(rut, rut_col, 1.0)
+	var tuft := grass.darkened(0.1)
+	for tf: Dictionary in road["tufts"]:
+		var tp: Vector2 = (tf["pos"] as Vector2).floor()
+		var th: float = float(tf["h"])
+		draw_line(tp, tp + Vector2(0, -th), tuft, 1.0)
+		draw_line(tp + Vector2(1, 0), tp + Vector2(2, -th + 1.0), tuft.lightened(0.12), 1.0)
+
+
 func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 	var rmap: Dictionary = _region.get("map", {})
 	if str(rmap.get("ground_style", "grass")) == "bog" and str(rmap.get("water", "clear")) == "murky":
@@ -2883,6 +2925,8 @@ func _draw_road(rect: Rect2, base: Color, snowy: bool) -> void:
 			"piling":
 				draw_rect(r, Color("2b2118"))
 			"rut", "edge":
+				if str(rmap.get("ground_style", "grass")) in ["grass", "litter"]:
+					continue  # GFX-185: Scenery.dirt_road draws the ruts and verge
 				draw_rect(r, base.darkened(0.45 if t["flag"] == "gutter" else (0.15 if t["flag"] == "slush" else (0.22 if t["kind"] == "rut" else 0.12))))
 			"puddle":
 				draw_rect(r, Color(0.5, 0.6, 0.7, 0.7) if t["flag"] == "sky" else Color(0.2, 0.26, 0.3, 0.8))

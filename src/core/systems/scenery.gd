@@ -1339,6 +1339,106 @@ static func stone_road(rect: Rect2, seed_value: int, inset: float = 6.0, amp: fl
 	return {"bed": bed, "stones": stones}
 
 
+## GFX-185: a walked dirt road over `rect`: a wandering `verge` (the rect grown 2 px), a `bed` inside it, broken `ruts`
+## (polylines at ~30% / 70% of the width, none under 24 px) and `tufts` ({pos, h}) on the verges and, on side lanes
+## (width < 24), down the middle. `straight` rects (bridges, places; plus `bounds`, the map edge, when it has an area)
+## keep both edges unwobbled within 10 px; `joins` (other path rects) make an end that meets one fan out 3 px.
+static func dirt_road(rect: Rect2, seed_value: int, amp: float = 3.5, straight: Array[Rect2] = [], bounds: Rect2 = Rect2(), joins: Array[Rect2] = []) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_value, "dirt_road"])
+	var along_x := rect.size.x >= rect.size.y
+	var length := rect.size.x if along_x else rect.size.y
+	var width := rect.size.y if along_x else rect.size.x
+	var a := minf(amp, width * 0.2)
+	var nk := int(length / 26.0) + 3
+	var knots: Array[float] = []
+	for i in nk * 4:
+		knots.append(rng.randf_range(-1.0, 1.0))
+	var wob := func(pp: float, k: int) -> float:
+		var f := pp / 26.0
+		var i0 := int(f)
+		var t := (1.0 - cos((f - float(i0)) * PI)) * 0.5
+		return lerpf(knots[k * nk + i0], knots[k * nk + i0 + 1], t)
+	var at := func(pp: float, o: float) -> Vector2:
+		return rect.position + (Vector2(pp, o) if along_x else Vector2(o, pp))
+	var calm := func(pp: float) -> bool:
+		for o: float in [0.0, width]:
+			var q: Vector2 = at.call(pp, o)
+			for sr in straight:
+				if sr.grow(10.0).has_point(q):
+					return true
+			if bounds.has_area():
+				if q.x - bounds.position.x < 10.0 or bounds.end.x - q.x < 10.0 or q.y - bounds.position.y < 10.0 or bounds.end.y - q.y < 10.0:
+					return true
+		return false
+	var fan := func(pp: float) -> float:
+		var out := 0.0
+		for end_p: float in [0.0, length]:
+			var d := absf(pp - end_p)
+			if d >= 10.0:
+				continue
+			var q: Vector2 = at.call(end_p, width * 0.5) + (Vector2(-3.0 if end_p == 0.0 else 3.0, 0.0) if along_x else Vector2(0.0, -3.0 if end_p == 0.0 else 3.0))
+			for jr in joins:
+				if jr != rect and jr.grow(2.0).has_point(q):
+					out = maxf(out, 3.0 * (1.0 - d / 10.0))
+		return out
+	var n := maxi(int(length / 6.0), 2)
+	var v_lo: Array[Vector2] = []
+	var v_hi: Array[Vector2] = []
+	var b_lo: Array[Vector2] = []
+	var b_hi: Array[Vector2] = []
+	var tufts: Array[Dictionary] = []
+	var next_tuft := [rng.randf_range(0.0, 18.0), rng.randf_range(0.0, 18.0)]
+	var ruts: Array[PackedVector2Array] = []
+	for i in n + 1:
+		var pp := length * float(i) / float(n)
+		var still: bool = calm.call(pp)
+		var fn: float = fan.call(pp)
+		var w0: float = 0.0 if still else float(wob.call(pp, 0)) * a
+		var w1: float = 0.0 if still else float(wob.call(pp, 1)) * a
+		var w2: float = 0.0 if still else float(wob.call(pp, 2)) * a * 0.5
+		var w3: float = 0.0 if still else float(wob.call(pp, 3)) * a * 0.5
+		v_lo.append(at.call(pp, -2.0 - fn + w0))
+		v_hi.append(at.call(pp, width + 2.0 + fn + w1))
+		b_lo.append(at.call(pp, 2.0 - fn * 0.5 + w2 if still else maxf(2.0 - fn * 0.5 + w2, 1.0)))
+		b_hi.append(at.call(pp, width - 2.0 + fn * 0.5 + w3 if still else minf(width - 2.0 + fn * 0.5 + w3, width - 1.0)))
+		for s in 2:
+			while next_tuft[s] <= pp and next_tuft[s] < length:
+				var edge_o: float = (-2.0 + w0) if s == 0 else (width + 2.0 + w1)
+				var off := rng.randf_range(0.0, 2.0) * (-1.0 if s == 0 else 1.0)
+				tufts.append({"pos": at.call(next_tuft[s], edge_o + off), "h": rng.randi_range(2, 4)})
+				next_tuft[s] += rng.randf_range(12.0, 24.0)
+	if width < 24.0:  # a lane: a sparse strip of grass down the middle
+		var cp := rng.randf_range(20.0, 60.0)
+		while cp < length - 12.0:
+			tufts.append({"pos": at.call(cp, width * 0.5 + rng.randf_range(-1.0, 1.0)), "h": rng.randi_range(2, 3)})
+			cp += rng.randf_range(40.0, 110.0)
+	elif width >= 24.0:
+		for frac: float in [0.3, 0.7]:
+			var cur := rng.randf_range(0.0, 40.0)
+			while cur < length - 10.0:
+				var seg_len := rng.randf_range(40.0, 120.0)
+				var end_p := minf(cur + seg_len, length)
+				var pts := PackedVector2Array()
+				var q := cur
+				while q <= end_p:
+					pts.append(at.call(q, width * frac + rng.randf_range(-1.0, 1.0)))
+					q += 8.0
+				if pts.size() >= 2:
+					ruts.append(pts)
+				cur = end_p + rng.randf_range(40.0, 120.0)
+	var verge := PackedVector2Array()
+	var bed := PackedVector2Array()
+	for q in v_lo:
+		verge.append(q)
+	for q in b_lo:
+		bed.append(q)
+	for i in range(v_hi.size() - 1, -1, -1):
+		verge.append(v_hi[i])
+		bed.append(b_hi[i])
+	return {"bed": bed, "verge": verge, "ruts": ruts, "tufts": tufts}
+
+
 ## GFX-167: a wobbling polygon for a trail along `path_rect`: the long edges are `inset` px in from the rect's sides plus a smooth
 ## seeded wobble of up to `amp` px (samples every 8 px), the ends square. `inset` + `amp` must stay below half the width.
 ## Deterministic; inside the rect.
