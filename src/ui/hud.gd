@@ -1577,15 +1577,15 @@ func _on_cast_requested(table: Array, days: int, place_name: String) -> void:
 
 
 ## Talking to an NPC (usually from its choice menu) opens the conversation.
-func _on_dialogue_requested(_npc_id: String) -> void:
+func _on_dialogue_requested(npc_id: String) -> void:
 	_choice_menu.close()
 	_close_screens()
 	var portrait: Texture2D = null
-	if is_instance_valid(_last_source) and _last_source.has_method("portrait_texture"):
+	if npc_id != "" and is_instance_valid(_last_source) and _last_source.has_method("portrait_texture"):  # WU-558: an event has no source
 		portrait = _last_source.portrait_texture()
 	_dialogue.set_portrait(portrait)
 	var header: Dictionary = {}
-	if is_instance_valid(_last_source) and _last_source.has_method("menu_header"):
+	if npc_id != "" and is_instance_valid(_last_source) and _last_source.has_method("menu_header"):
 		header = _last_source.menu_header()
 	_dialogue.set_header(header)
 	_dialogue.open()

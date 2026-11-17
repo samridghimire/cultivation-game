@@ -42,6 +42,7 @@ extends SceneTree
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
 ##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
+## WU-558: `--dialogue=<id>[,<id>...]` opens a story-event dialogue (dialogue_<id>.png), e.g. rival_first_meeting.
 ## WU-550: `--threat=<enemy_id>[,<id>...]` stages the sensed-foe prompt (threat_<id>.png; `--realm=<index>` sets the realm first);
 ##   `--encounter=<id>[,<id>...]` opens that encounter card (encounter_<id>.png) on the first day of its season (its `seasons`),
 ##   honouring its `scene`; `--encounter=seasons` renders the eight C-376 season encounters.
@@ -194,6 +195,18 @@ func _start() -> void:
 					enc_ids.append_array(["village_spring_kite_day", "road_spring_swollen_ford", "village_summer_firefly_night", "village_summer_hailstorm", "village_autumn_persimmon_harvest", "wild_autumn_migrating_geese", "forest_winter_frozen_pond", "road_winter_snowbound_traveller"])
 				else:
 					enc_ids.append(id)
+	for a in OS.get_cmdline_user_args():  # WU-558: `--dialogue=<id>[,<id>...]` opens an event dialogue (dialogue_<id>.png)
+		if a.begins_with("--dialogue="):
+			for id in a.substr(11).split(",", false):
+				if not gs.data.dialogues.has(id):
+					push_warning("--dialogue: unknown dialogue %s" % id)
+					continue
+				shots.append({"name": "dialogue_" + id, "open": func() -> void:
+					hud.get("_banner").visible = false
+					if gs.player.rival == "" and not gs.npcs.is_empty():
+						gs.player.rival = String(gs.npcs.keys()[0])
+					gs.world_flags.erase("rival_meeting_from")
+					gs.start_event(id), "close": func() -> void: gs.end_dialogue()})
 	for id in threat_ids:
 		if not gs.data.enemies.has(id):
 			push_warning("--threat: unknown enemy %s" % id)
@@ -427,6 +440,9 @@ func _start() -> void:
 			gs.join_sect("azure_cloud_sect")
 			assert(c.sect.get("id", "") == "azure_cloud_sect", "join_sect did not make the player a member")
 			hud.get("_banner").visible = false
+			if gs.in_dialogue():  # WU-558: the rival's first meeting must not cover the HUD
+				gs.end_dialogue()
+			hud.get("_dialogue").close()
 			root.get_node("EventBus").player_changed.emit(), "close": func() -> void:
 				c.sect = sect_saved[0]
 				c.realm_index = sect_saved[1]

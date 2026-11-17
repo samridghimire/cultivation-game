@@ -13,6 +13,8 @@ var _speaker: Label
 var _text: Label
 var _choices: VBoxContainer
 var _portrait: PortraitBox
+## True when the talked-to world source gave a face; otherwise each node's speaker is resolved (WU-558).
+var _source_has_portrait := false
 var _friend_row: HBoxContainer
 var _friend_hearts: TextureRect
 var _friend_label: Label
@@ -71,6 +73,11 @@ static func choice_label(choice: Dictionary) -> String:
 
 ## Shows the speaker's portrait left of the text; null hides the column and gives the text its width back.
 func set_portrait(tex: Texture2D) -> void:
+	_source_has_portrait = tex != null
+	_apply_portrait(tex)
+
+
+func _apply_portrait(tex: Texture2D) -> void:
 	_portrait.set_portrait(tex)
 	_text.custom_minimum_size.x = TEXT_WIDTH - (PortraitBox.COLUMN_WIDTH if tex != null else 0)
 
@@ -99,6 +106,8 @@ func open() -> void:
 		close()
 		return
 	_speaker.text = view["speaker"]
+	if not _source_has_portrait:
+		_apply_portrait(SpeakerPortrait.texture_for(String(view["speaker"])))
 	_text.text = view["text"]
 	for child in _choices.get_children():
 		_choices.remove_child(child)
