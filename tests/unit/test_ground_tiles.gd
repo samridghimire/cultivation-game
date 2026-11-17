@@ -246,3 +246,14 @@ func test_meadow_blobs_and_autumn_rust() -> void:
 					n += 1
 		return n
 	assert_true(rust.call("Autumn") > rust.call("Summer"), "autumn has more rust pixels")
+
+
+## PERF-008: the cached zone jitter answers exactly as the per-pixel hash does (70x50 is not a multiple of 8).
+func test_paved_zone_grid_matches_per_pixel_hash() -> void:
+	var zones: Array = [Rect2(0, 16, 70, 24), Rect2(30, 0, 24, 50)]
+	var grid := GroundTiles.zone_jitter_grid("zg", 70, 50)
+	var cols := ceili(70.0 / 8.0)
+	for y in 50:
+		for x in 70:
+			for inset in [0.0, 4.0]:
+				assert_true(GroundTiles.in_paved_zone(zones, "zg", x, y, inset) == GroundTiles.in_paved_zone_grid(zones, grid, cols, x, y, inset), "zone differs at %d,%d" % [x, y])

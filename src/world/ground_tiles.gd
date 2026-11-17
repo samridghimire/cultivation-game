@@ -8,6 +8,11 @@ const SIZE := 16
 static var _cache: Dictionary = {}
 
 
+## PERF-008: forget every generated texture (the load-time script times cold builds).
+static func clear_cache() -> void:
+	_cache.clear()
+
+
 ## A deterministic seamless tile: `base` speckled with darker and lighter pixels. Ground
 ## tiles get a few two-pixel grass blades, path tiles darker pebbles.
 static func make_tile(base: Color, seed_text: String, kind: String) -> ImageTexture:
@@ -479,22 +484,49 @@ static func in_paved_zone(zones: Array, rid: String, x: int, y: int, inset: floa
 	return false
 
 
+## PERF-008: the per-8x8-cell jitter `in_paved_zone` hashes for every pixel, computed once per cell
+## (row-major, `ceil(w / 8)` columns). `in_paved_zone_grid` reads it and answers exactly as `in_paved_zone` does.
+static func zone_jitter_grid(rid: String, w: int, h: int) -> PackedFloat32Array:
+	var cols := ceili(float(w) / 8.0)
+	var rows := ceili(float(h) / 8.0)
+	var grid := PackedFloat32Array()
+	grid.resize(cols * rows)
+	for cy in rows:
+		for cx in cols:
+			grid[cy * cols + cx] = float(absi(hash("%s|%d|%d|zone" % [rid, cx, cy])) % 7)
+	return grid
+
+
+static func in_paved_zone_grid(zones: Array, grid: PackedFloat32Array, cols: int, x: int, y: int, inset: float = 0.0) -> bool:
+	var jitter := grid[(y / 8) * cols + x / 8] + inset
+	for z: Rect2 in zones:
+		if z.grow(-jitter).has_point(Vector2(x, y)):
+			return true
+	return false
+
+
 ## GFX-158: how far a winter market pixel is tinted toward snow: swept stone stays dark (0.2) with snow only in a 4 px
 ## band along the kerbs (0.7); earth lots get a heavy but uneven cover (0.8) with about a quarter bare patches (0.3).
-static func winter_street_amount(paved: bool, in_band: bool, rid: String, x: int, y: int) -> float:
+## PERF-008: `shade` is the pixel's `patch_shade` (a `shade_grid_for` entry), or NAN to compute it here.
+static func winter_street_amount(paved: bool, in_band: bool, rid: String, x: int, y: int, shade: float = NAN) -> float:
 	if paved:
 		return 0.2 if not in_band else 0.7
 	var jitter := float(absi(hash("%s|%d|%d|slush" % [rid, x, y])) % 100) / 100.0 * 0.2 - 0.1  # ragged patch edges
-	return 0.3 if patch_shade(rid, x, y) + jitter < -0.3 else 0.8
+	if is_nan(shade):
+		shade = patch_shade(rid, x, y)
+	return 0.3 if shade + jitter < -0.3 else 0.8
 
 
 ## GFX-158: re-tints a paved market's winter ground from its `summer` pixels (streets vs earth lots, see above).
 static func _winter_streets(img: Image, summer: Image, rid: String, zones: Array) -> void:
+	var cols := ceili(float(img.get_width()) / 8.0)
+	var jit := zone_jitter_grid(rid, img.get_width(), img.get_height())
+	var shades := shade_grid_for(rid, Vector2i(img.get_width(), img.get_height()))
 	for y in img.get_height():
 		for x in img.get_width():
-			var paved := in_paved_zone(zones, rid, x, y)
-			var band := paved and not in_paved_zone(zones, rid, x, y, 4.0)
-			var a := winter_street_amount(paved, band, rid, x, y)
+			var paved := in_paved_zone_grid(zones, jit, cols, x, y)
+			var band := paved and not in_paved_zone_grid(zones, jit, cols, x, y, 4.0)
+			var a := winter_street_amount(paved, band, rid, x, y, shades[y * img.get_width() + x])
 			img.set_pixel(x, y, summer.get_pixel(x, y).lerp(SNOW, a))
 
 
@@ -521,11 +553,14 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 		"paved":
 			# 16 px flagstones in offset rows, a 1 px darker mortar line, +-4% brightness per stone.
 			var mortar := base.darkened(0.3)
+			var jit := zone_jitter_grid(rid, w, h)
+			var jcols := ceili(float(w) / 8.0)
+			var stones := {}
 			for y in h:
 				var row := y / SIZE
 				var shift := 8 if row % 2 == 1 else 0
 				for x in w:
-					if not zones.is_empty() and not in_paved_zone(zones, rid, x, y):
+					if not zones.is_empty() and not in_paved_zone_grid(zones, jit, jcols, x, y):
 						img.set_pixel(x, y, _earth_pixel(base, rid, x, y))
 						continue
 					var col := (x + shift) / SIZE
@@ -533,8 +568,11 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 					if edge:
 						img.set_pixel(x, y, mortar)
 					else:
-						var v := variant_for(rid, col, row)
-						var f := (float(absi(hash("%s|%d|%d|stone" % [rid, col, row])) % 81) - 40.0) / 1000.0
+						var skey := row * 4096 + col  # PERF-008: a stone's variant and tone are hashed once, not per pixel
+						if not stones.has(skey):
+							stones[skey] = [variant_for(rid, col, row), (float(absi(hash("%s|%d|%d|stone" % [rid, col, row])) % 81) - 40.0) / 1000.0]
+						var v: int = stones[skey][0]
+						var f: float = stones[skey][1]
 						var c := base.lightened(f) if f >= 0.0 else base.darkened(-f)
 						if (x * 7 + y * 13 + v) % 11 == 0:
 							c = c.darkened(0.06)
