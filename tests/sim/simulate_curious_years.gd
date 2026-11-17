@@ -127,6 +127,16 @@ func _run() -> void:
 			FirstHour.buy_qi_travel = true
 		elif a == "--body-art":
 			FirstHour.body_art = true  # QA-155
+		elif a == "--shop-armor":
+			FirstHour.shop_armor = true  # QA-169: buy the armor the thin-defence line names
+			FirstHour.trial_report = true
+		elif a == "--practise":
+			FirstHour.practise_hint = true  # QA-169: practise the combat style the hint names
+			FirstHour.trial_report = true
+		elif a == "--trial-combo":
+			FirstHour.body_art = true  # QA-169: body art + armor + practised style
+			FirstHour.shop_armor = true
+			FirstHour.practise_hint = true
 		elif a == "--trial-report":
 			FirstHour.trial_report = true  # QA-155
 		elif a == "--injury-report":
@@ -494,6 +504,11 @@ func _print_body_art(seeds: int) -> void:
 		if float(l["odds"]) >= 0.0:
 			odds.append(float(l["odds"]))
 	print("  art learned in %d/%d seeds; trial opened in %d; median odds %.0f in 100" % [learned, seeds, odds.size(), 100.0 * _median(odds.duplicate())])
+	var low := 0
+	for o: float in odds:
+		if o < 0.28:
+			low += 1
+	print("  QA-169: %d seeds under 28 in 100; armor trips %d, practised style on: %s" % [low, FirstHour.armor_log["trips"], str(FirstHour.practise_hint)])
 
 
 ## QA-161: one line per arm: stones at m12/m36, qi pills bought, fights lost, artifact lives, final deaths.
