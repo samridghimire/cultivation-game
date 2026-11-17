@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9aea535
+Last reviewed commit: 2c9b885
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2156,3 +2156,16 @@ Last reviewed commit: 9aea535
   - Planner note: the screenshot scripts persist Settings to user://settings.cfg; after a shot run this container had
     `hud_hints=0`, which made test_hud_layout fail ("_guide_panel visible") until the file was deleted. Agents who shoot
     and then test can hit a false red; the shot scripts should restore settings, or HUD tests should pin hud_hints.
+- 2026-11-17 (reviewer): reviewed 9aea535..2c9b885 (WU-561, GFX-188, QA-231, GFX-189, GUIDE-252, GFX-187, WU-563, QA-232,
+  QA-177; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change, no new
+  binary assets. GFX-185's dirt roads are still present after GFX-187/188. Nothing fixed, nothing filed.
+  - GUIDE-252 OK: quiet resolve skips only string/trace building; no rng draw sits inside a skipped branch, so results
+    are identical (tested: victory, rounds and the next rng draw match). The pre-computed stats are duplicated before
+    form scaling, so they are not mutated across samples. Foundation cold fair_fights are still ~40 ms (worker follow-up).
+  - WU-561 OK: the shadow and dust follow `_offset`; the mirror cache is keyed by the `_rimmed` cached texture, so it
+    stays bounded. Size classes use enemies.json `realm` (every beast has it). The "toad_small" keyword matches no enemy
+    (dead, harmless).
+  - WU-563 OK: the on-back transform maps the body to [feet - 0.8h, feet]; people no longer get fall dust (only beasts,
+    per spec). QA-232 OK: Settings.persist=false in both shot scripts, which closes my last run's hud_hints note.
+  - GFX-187/188/189 draw-only (alpine_meadow documented in regions.json `_doc`; draw-only flag, no validation needed);
+    I did not render them. QA-231/QA-177: sim only.
