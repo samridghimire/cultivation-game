@@ -34,6 +34,8 @@ const SEASON_ENDING_DAYS := 3  ## SEASON-003: days before a season ends that its
 const SEASON_ENDING_MAX := 5
 const TODAY_MAX := 8  ## TODAY-001
 const CHORE_REGION := "qingshi_village"
+## GUIDE-251: a far market's pills must beat the local ones by this factor after paying for the round trip in meditation qi.
+const FAR_PILL_MARGIN := 1.25
 const QI_BUY_KEEP := 20  ## Stones the qi-pill hint leaves for the clinic (GUIDE-126).
 const HEADLINE_CHARS := 120  ## The HUD shows this many characters of a hint (HUD.HINT_MAX_CHARS, WU-305).
 ## GUIDE-054: game days a Mortal crafter plays before hearing where to begin cultivating.
@@ -2745,6 +2747,8 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 		return {}
 	best["count"] = count
 	best["days"] = maxi(1, ceili(float(best["qi"]) / rate))
+	best["qi_per_stone"] = float(best["qi"]) / float(best["price"])  # GUIDE-251
+	best["qi_total"] = float(best["qi"]) * count
 	best.erase("qi")
 	return best
 
@@ -2753,13 +2757,17 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 ## gains `region_id`, `region_name` and `where` (" in <Region> (<days>...)") for a far one; meditation days stay those of `region_id`.
 static func qi_pill_offer_near(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	var here := qi_pill_offer(c, data, region_id, flags)
-	if not here.is_empty():
-		return here
 	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
 		return "x" if r != region_id and not qi_pill_offer(c, data, r, flags, region_id).is_empty() else "")
 	if far.is_empty():
-		return {}
+		return here
 	var offer := qi_pill_offer(c, data, String(far["region_id"]), flags, region_id)
+	if not here.is_empty():
+		# GUIDE-251: the far market wins only when its extra qi pays for the round trip's lost meditation, with a margin.
+		var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
+		var trip_cost := 2.0 * float(far["days"]) * rate
+		if float(offer["qi_total"]) - trip_cost < float(here["qi_total"]) * FAR_PILL_MARGIN:
+			return here
 	offer["region_id"] = far["region_id"]
 	offer["where"] = _far_where(c, data, region_id, far)
 	return offer

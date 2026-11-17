@@ -7206,3 +7206,62 @@ func test_away_search_keeps_a_reserve_budget() -> void:
 	var c := _fresh()
 	var rated := Guidance._away_explore_fights(found, c, data(), {}, 10, "qingshi_village", Guidance.FAIR_FIGHT_AWAY_RESERVE)
 	assert_true(rated <= Guidance.FAIR_FIGHT_AWAY_RESERVE)
+
+
+## GUIDE-251: runs `f(home, neighbour, data)` with every region's places swapped for one pill merchant per entry of `stock`
+## ({region_id: [item ids]}; fixture pills `fixture_poor_pill` 10 stones/20 qi, `fixture_good_pill` 10 stones/100 qi), then restores the world.
+func _with_pill_world(stock: Dictionary, f: Callable) -> void:
+	var d := data()
+	var saved: Dictionary = {}
+	for region_id: String in d.regions:
+		saved[region_id] = d.regions[region_id]["places"]
+		var places: Array = []
+		if stock.has(region_id):
+			places.append({"type": "merchant", "display_name": "Fixture Seller", "pos": [100, 100], "size": [40, 40], "color": "ffffff", "stock_tags": stock[region_id]})
+		d.regions[region_id]["places"] = places
+	for id: String in ["fixture_poor_pill", "fixture_good_pill", "fixture_fair_pill"]:
+		var pill: Dictionary = d.items["qi_gathering_pill"].duplicate(true)
+		pill["id"] = id
+		pill["name"] = id
+		pill["price"] = 10
+		pill["effects"] = {"qi": {"fixture_poor_pill": 20, "fixture_good_pill": 100, "fixture_fair_pill": 90}[id]}
+		d.items[id] = pill
+	f.call(d)
+	d.items.erase("fixture_poor_pill")
+	d.items.erase("fixture_good_pill")
+	d.items.erase("fixture_fair_pill")
+	for region_id: String in saved:
+		d.regions[region_id]["places"] = saved[region_id]
+
+
+func _first_neighbour(d: GameData, region_id: String) -> String:
+	return String(d.regions[region_id]["routes"][0]["to"])
+
+
+func test_qi_pill_offer_near_prefers_a_far_pill_when_the_trip_pays() -> void:
+	var home := "qingshi_village"
+	var d0 := data()
+	var far_id := _first_neighbour(d0, home)
+	_with_pill_world({home: ["fixture_poor_pill"], far_id: ["fixture_good_pill"]}, func(d: GameData) -> void:
+		var rich := Guidance.qi_pill_offer_near(_qr(2, 100), d, home)
+		assert_eq(String(rich.get("item_id", "")), "fixture_good_pill", "plenty of stones: the far pill")
+		assert_eq(String(rich.get("region_id", "")), far_id)
+		assert_false(rich.has("qi_total") and float(rich["qi_total"]) <= 0.0))
+
+
+func test_qi_pill_offer_near_keeps_a_local_pill_when_the_far_gain_is_small() -> void:
+	var home := "qingshi_village"
+	var far_id := _first_neighbour(data(), home)
+	_with_pill_world({home: ["fixture_fair_pill"], far_id: ["fixture_good_pill"]}, func(d: GameData) -> void:
+		# 100 vs 90 qi per 10 stones: under the 1.25 margin even before the trip costs anything.
+		var offer := Guidance.qi_pill_offer_near(_qr(2, 100), d, home)
+		assert_eq(String(offer.get("item_id", "")), "fixture_fair_pill")
+		assert_false(offer.has("region_id")))
+
+
+func test_qi_pill_offer_near_without_a_local_pill_still_goes_far() -> void:
+	var home := "qingshi_village"
+	var far_id := _first_neighbour(data(), home)
+	_with_pill_world({far_id: ["fixture_poor_pill"]}, func(d: GameData) -> void:
+		var offer := Guidance.qi_pill_offer_near(_qr(2, 31), d, home)
+		assert_eq(String(offer.get("region_id", "")), far_id))
