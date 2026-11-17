@@ -118,3 +118,40 @@ func test_regional_teachers_have_gifts_within_reach() -> void:
 			if hit:
 				reachable += 1
 		assert_true(reachable >= 2, "%s has %d likes within reach in %s" % [pair[0], reachable, pair[1]])
+
+
+## C-384: table-driven over the four away-from-home teachers and all four seasons: each has >= 2 distinct likes a newcomer
+## can get in their own region that season (shop stock tag, rotating pool, catch or gather table without a flag gate, forage).
+func test_regional_teachers_have_gifts_in_every_season() -> void:
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/regions.json"))
+	var regions: Array = raw["regions"] if raw is Dictionary and raw.has("regions") else raw
+	var table: Array = [["peddler_hei", "withered_bone_marsh"], ["disciple_bai", "azure_peak"], ["alchemist_ye", "myriad_peaks_ridge"], ["broker_qian", "fallen_star_market"]]
+	for pair: Array in table:
+		var region: Dictionary = {}
+		for r: Dictionary in regions:
+			if String(r["id"]) == String(pair[1]):
+				region = r
+		for season: String in ["spring", "summer", "autumn", "winter"]:
+			var entries: Array = []
+			for place: Dictionary in region.get("places", []):
+				if place.get("festival_only", "") != "":
+					continue
+				entries.append_array(place.get("stock_tags", []))
+				for e: Dictionary in place.get("rotating_stock", {}).get("pool", []):
+					entries.append(String(e["item"]))
+				for table_key: String in ["catch_table", "gather_table"]:
+					for e: Dictionary in place.get(table_key, []):
+						if String(e["item"]) != "" and not e.has("requires_flag") and (not e.has("seasons") or e["seasons"].has(season)):
+							entries.append(String(e["item"]))
+			for e: Dictionary in region.get("forage", {}).get("items", []):
+				if not e.has("seasons") or e["seasons"].has(season):
+					entries.append(String(e["item"]))
+			var reachable := 0
+			for like: String in data().npcs[pair[0]].get("likes", []):
+				var hit: bool = entries.has(like)
+				for item_id: String in data().items:
+					if entries.has(item_id) and (item_id == like or (data().items[item_id].get("tags", []) as Array).has(like)):
+						hit = true
+				if hit:
+					reachable += 1
+			assert_true(reachable >= 2, "%s has %d likes within reach in %s in %s" % [pair[0], reachable, pair[1], season])
