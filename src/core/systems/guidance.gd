@@ -2757,20 +2757,41 @@ static func qi_pill_offer(c: CharacterData, data: GameData, region_id: String, f
 ## gains `region_id`, `region_name` and `where` (" in <Region> (<days>...)") for a far one; meditation days stay those of `region_id`.
 static func qi_pill_offer_near(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> Dictionary:
 	var here := qi_pill_offer(c, data, region_id, flags)
-	var far := nearest_selling(c, data, region_id, func(r: String) -> String:
+	var far_list := best_selling_within(c, data, region_id, func(r: String) -> String:
 		return "x" if r != region_id and not qi_pill_offer(c, data, r, flags, region_id).is_empty() else "")
-	if far.is_empty():
+	if far_list.is_empty():
 		return here
-	var offer := qi_pill_offer(c, data, String(far["region_id"]), flags, region_id)
-	if not here.is_empty():
-		# GUIDE-251: the far market wins only when its extra qi pays for the round trip's lost meditation, with a margin.
-		var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
-		var trip_cost := 2.0 * float(far["days"]) * rate
-		if float(offer["qi_total"]) - trip_cost < float(here["qi_total"]) * FAR_PILL_MARGIN:
-			return here
+	# GUIDE-253: every market in reach competes; the best qi after the round trip's lost meditation wins.
+	var rate := Cultivation.qi_per_day(c, data, float(best_qi_in_region(c, data, region_id, flags)["density"]))
+	var offer := {}
+	var far := {}
+	var best_net := -INF
+	for cand: Dictionary in far_list:
+		var o := qi_pill_offer(c, data, String(cand["region_id"]), flags, region_id)
+		var net := float(o["qi_total"]) - 2.0 * float(cand["days"]) * rate
+		if net > best_net:
+			best_net = net
+			offer = o
+			far = cand
+	# GUIDE-251: the far market wins only when its net qi beats the local pill by a margin.
+	if not here.is_empty() and best_net < float(here["qi_total"]) * FAR_PILL_MARGIN:
+		return here
 	offer["region_id"] = far["region_id"]
 	offer["where"] = _far_where(c, data, region_id, far)
 	return offer
+
+
+## GUIDE-253: every region within `max_hops` routes (`region_id` included) where `pick.call(region_id) -> String` is non-empty,
+## nearest first, each {region_id, region_name, days, result} like `nearest_selling`.
+static func best_selling_within(c: CharacterData, data: GameData, region_id: String, pick: Callable, max_hops: int = NEAREST_HOPS) -> Array[Dictionary]:
+	var map := _route_day_map(c, data, region_id, max_hops)
+	var best_days: Dictionary = map["days"]
+	var out: Array[Dictionary] = []
+	for r: String in map["order"]:
+		var result: String = pick.call(r)
+		if result != "":
+			out.append({"region_id": r, "region_name": Exploration.region_name(data, r), "days": int(best_days[r]), "result": result})
+	return out
 
 
 ## GUIDE-131: the qi `count` of `item_id` can add before the realm's bottleneck stops qi.

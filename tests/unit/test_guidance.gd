@@ -7280,3 +7280,22 @@ func test_qi_pill_offer_near_without_a_local_pill_still_goes_far() -> void:
 	_with_pill_world({far_id: ["fixture_poor_pill"]}, func(d: GameData) -> void:
 		var offer := Guidance.qi_pill_offer_near(_qr(2, 31), d, home)
 		assert_eq(String(offer.get("region_id", "")), far_id))
+
+
+func test_qi_pill_offer_near_weighs_a_pill_two_routes_away() -> void:
+	var home := "qingshi_village"
+	var d0 := data()
+	var one := _first_neighbour(d0, home)
+	var two := ""
+	for route: Dictionary in d0.regions[one]["routes"]:
+		if String(route["to"]) != home:
+			two = String(route["to"])
+			break
+	assert_true(two != "", "a region two routes away exists")
+	_with_pill_world({one: ["fixture_fair_pill"], two: ["fixture_good_pill"]}, func(d: GameData) -> void:
+		var list := Guidance.best_selling_within(_qr(2, 500), d, home, func(r: String) -> String: return "x" if r == one or r == two else "")
+		assert_true(list.size() >= 1)
+		assert_true(int(list[0]["days"]) <= int(list[list.size() - 1]["days"]), "nearest first")
+		var offer := Guidance.qi_pill_offer_near(_qr(2, 500), d, home)
+		assert_eq(String(offer.get("item_id", "")), "fixture_good_pill")
+		assert_eq(String(offer.get("region_id", "")), two))
