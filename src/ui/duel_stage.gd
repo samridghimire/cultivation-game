@@ -536,9 +536,7 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 	var far := far_color(map_ground_color(map), sky)
 	far = far.lerp(haze, float(tint["far_lerp"]))
 	col = col.darkened(0.2)  # the near layer sits darker than the ridge
-	var layers := backdrop_layers(rid, size.x)
-	if look_kind != "":
-		layers["near"] = silhouette_shapes(rid + look_kind, kind, size.x)
+	var layers := backdrop_layers(rid, size.x, look_kind)
 	var crags := rid in PEAK_REGIONS
 	for s in layers["far"]:
 		var fr := 60.0 + float(s["h"]) * 0.6
@@ -657,7 +655,10 @@ func _draw_backdrop(map: Dictionary, rid: String) -> void:
 const HAZE := 0.45
 const PEAK_REGIONS := ["azure_peak", "myriad_peaks_ridge"]
 ## Foreground prop kinds on the ground strip by backdrop kind (GFX-107).
-const PROP_KINDS := {"roofs": ["fence", "lantern"], "pines": ["stump", "ferns"], "reeds": ["deadtree", "pool"], "hills": ["rocks", "stump"]}
+const PROP_KINDS := {"roofs": ["fence", "lantern"], "pines": ["stump", "ferns"], "reeds": ["deadtree", "pool"], "hills": ["rocks", "stump"],
+	"cave": ["rocks", "pool"], "ruins": ["rocks", "fence"], "crags": ["rocks", "rocks"], "river": ["pool", "rocks"]}
+## GFX-182: leaf-litter colour of a woods floor by ground season ("" = no snow, read as summer).
+const LITTER_COLORS := {"Spring": "7a9a48", "Summer": "5f7a34", "Autumn": "b8662a", "Winter": "8a7a5a", "": "5f7a34"}
 ## Fractions of the stage width where a prop centre may sit: clear of the fighters' feet (15-30% and 70-85%, plus margin).
 const PROP_ZONES := [[0.04, 0.12], [0.33, 0.67], [0.88, 0.96]]
 const PIXEL := 4.0
@@ -746,13 +747,14 @@ static func silhouette_shapes(rid: String, kind: String, width: float) -> Array:
 
 ## The layered backdrop for a region (GFX-107): {far: ridge pieces, near: silhouette pieces, props: [{kind, x, y}]}.
 ## Deterministic per region id; no prop centre lies inside a fighter's foot zone.
-static func backdrop_layers(rid: String, width: float) -> Dictionary:
-	var kind := silhouette_for(rid)
+static func backdrop_layers(rid: String, width: float, kind_override: String = "") -> Dictionary:
+	var kind := kind_override if kind_override != "" else silhouette_for(rid)
 	var kinds: Array = PROP_KINDS.get(kind, PROP_KINDS["hills"])
-	if rid in PEAK_REGIONS:
-		kinds = ["rocks", "rocks"]
-	elif rid == "fallen_star_market":
-		kinds = ["awning", "fence"]
+	if kind_override == "":
+		if rid in PEAK_REGIONS:
+			kinds = ["rocks", "rocks"]
+		elif rid == "fallen_star_market":
+			kinds = ["awning", "fence"]
 	var props: Array = []
 	var count := 2 + int(unit_hash(rid, 700) * 2.99)
 	for i in count:
@@ -760,7 +762,30 @@ static func backdrop_layers(rid: String, width: float) -> Dictionary:
 		var t := unit_hash(rid, 710 + i)
 		props.append({"kind": kinds[i % kinds.size()], "x": width * lerpf(float(zone[0]), float(zone[1]), t),
 			"y": 8.0 + unit_hash(rid, 720 + i) * 18.0})
-	return {"far": silhouette_shapes(rid + "_far", "hills", width), "near": silhouette_shapes(rid, kind, width), "props": props}
+	var near_seed := rid + kind_override if kind_override != "" else rid
+	return {"far": silhouette_shapes(rid + "_far", "hills", width), "near": silhouette_shapes(near_seed, kind, width), "props": props}
+
+
+## GFX-182: 2-3 tall foreground trunks of a woods scene, {x, w}: centres in the outer prop zones (never a foot zone).
+static func foreground_trunks(rid: String, width: float) -> Array:
+	var out: Array = []
+	var n := 2 + int(unit_hash(rid, 760) * 1.99)
+	for i in n:
+		var zone: Array = PROP_ZONES[0] if i % 2 == 0 else PROP_ZONES[2]
+		var t := unit_hash(rid, 770 + i)
+		out.append({"x": width * lerpf(float(zone[0]), float(zone[1]), t), "w": 14.0 + unit_hash(rid, 780 + i) * 8.0})
+	return out
+
+
+func _draw_trunks(band: Rect2, rid: String, col: Color) -> void:
+	var dark := col.darkened(0.45)
+	for tr in foreground_trunks(rid, size.x):
+		var x: float = tr["x"]
+		var w: float = tr["w"]
+		draw_rect(Rect2(x - w * 0.5, -4.0, w, band.end.y + 4.0), dark)
+		draw_rect(Rect2(x - w * 0.5, -4.0, 3.0, band.end.y + 4.0), dark.lightened(0.18))  # sun-side edge
+		draw_rect(Rect2(x + w * 0.5 - 4.0, -4.0, 4.0, band.end.y + 4.0), dark.darkened(0.25))
+		draw_rect(Rect2(x - w * 0.5 - 4.0, band.position.y + 2.0, w + 8.0, 6.0), dark)  # root flare
 
 
 static func size_hills_step(r: float) -> float:
@@ -798,10 +823,15 @@ func _draw_ground() -> void:
 	var gseason := "" if season_look.has("ground") else backdrop_season(map)
 	if gseason == "Autumn" or gseason == "Spring":
 		base = season_grass(base, gseason)
+	var woods := look_kind == "pines"
+	if woods:  # GFX-182: leaf litter, not meadow
+		base = base.lerp(Color(String(LITTER_COLORS.get(gseason, "5f7a34"))), 0.3)
 	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false, gseason)
 	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
-	for i in 14:  # 2-3 pixel tufts, placed deterministically
+	if woods:
+		_draw_litter(band, rid, base, gseason)
+	for i in 0 if woods else 14:  # 2-3 pixel tufts, placed deterministically
 		var tx := float((i * 97 + 31) % int(maxf(size.x, 1.0)))
 		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
 		var tuft := base.lightened(0.25)
@@ -816,13 +846,31 @@ func _draw_ground() -> void:
 			tuft = base.lerp(Color("b08a3c"), 0.5).lightened(0.15)
 		draw_rect(Rect2(tx, ty, 2.0, 4.0), tuft)
 		draw_rect(Rect2(tx + 4.0, ty + 2.0, 2.0, 3.0), tuft)
-	for sp in season_specks(gseason, rid, size.x, GROUND_BAND):
-		draw_rect(Rect2(float(sp["x"]), band.position.y + float(sp["y"]), 3.0, 2.0), sp["color"])
+	if not woods:
+		for sp in season_specks(gseason, rid, size.x, GROUND_BAND):
+			draw_rect(Rect2(float(sp["x"]), band.position.y + float(sp["y"]), 3.0, 2.0), sp["color"])
 	if look_kind == "river":
 		_draw_river(band, rid, gseason)
 		return
-	for p in backdrop_layers(rid, size.x)["props"]:
+	for p in backdrop_layers(rid, size.x, look_kind)["props"]:
 		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
+	if woods:
+		_draw_trunks(band, rid, Color(map.get("ground", "4d6b3c")))
+
+
+## GFX-182: 2 px leaves on a woods floor, and a few snow patches in winter. Deterministic per region.
+func _draw_litter(band: Rect2, rid: String, base: Color, season: String) -> void:
+	var leaf := Color(String(LITTER_COLORS.get(season, "5f7a34")))
+	for i in 46:
+		var lx := unit_hash(rid + "lt", i * 2) * size.x
+		var ly := band.position.y + 4.0 + unit_hash(rid + "lt", i * 2 + 1) * (GROUND_BAND - 8.0)
+		var c := leaf.lightened(0.15) if i % 3 == 0 else (leaf.darkened(0.2) if i % 3 == 1 else base.darkened(0.15))
+		draw_rect(Rect2(lx, ly, 2.0, 2.0), c)
+	if season == "Winter":
+		for i in 4:
+			var px := unit_hash(rid + "sn", i * 2) * size.x
+			var py := band.position.y + 8.0 + unit_hash(rid + "sn", i * 2 + 1) * (GROUND_BAND - 22.0)
+			draw_rect(Rect2(px, py, 30.0 + 14.0 * float(i % 2), 7.0), Color("eef2f5"))
 
 
 ## WU-552: the water of a river encounter: a band across the top of the ground strip (season-tinted), a muddy near bank

@@ -46,6 +46,25 @@ func test_backdrop_layers_gfx107() -> void:
 			assert_true(not (f >= 0.15 and f <= 0.30) and not (f >= 0.70 and f <= 0.85), "prop clear of feet " + rid)
 
 
+## GFX-182: a woods override drops the village props and keeps every prop and trunk out of the foot zones.
+func test_backdrop_override_gfx182() -> void:
+	var a := DuelStage.backdrop_layers("qingshi_village", 620.0, "pines")
+	for p in a["props"]:
+		assert_true(String(p["kind"]) != "fence" and String(p["kind"]) != "lantern", "no village prop in the woods")
+		var f: float = float(p["x"]) / 620.0
+		assert_true(not (f >= 0.15 and f <= 0.30) and not (f >= 0.70 and f <= 0.85), "prop clear of feet")
+	for kind in ["cave", "ruins", "crags", "reeds", "hills", "river", "pines"]:
+		var b := DuelStage.backdrop_layers("qingshi_village", 620.0, kind)
+		assert_true(b["near"].size() > 0 and b["props"].size() >= 2, "layers " + kind)
+		assert_eq(b, DuelStage.backdrop_layers("qingshi_village", 620.0, kind), "deterministic " + kind)
+	for rid in ["qingshi_village", "misty_forest"]:
+		var trunks := DuelStage.foreground_trunks(rid, 620.0)
+		assert_true(trunks.size() >= 2 and trunks.size() <= 3, "2-3 trunks")
+		for tr in trunks:
+			var f2: float = float(tr["x"]) / 620.0
+			assert_true(not (f2 >= 0.15 and f2 <= 0.85), "trunk at the stage edge")
+
+
 ## WU-547: the Defeated tag sits just above the lying body, centred on it, for beast and person.
 func test_defeated_tag_hugs_the_body_wu547() -> void:
 	var stage := DuelStage.new()
