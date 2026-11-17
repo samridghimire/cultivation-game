@@ -1574,6 +1574,27 @@ func test_fair_fight_prefix() -> void:
 	assert_eq(Guidance.fair_fight_prefix({}), "Fair fight")
 
 
+func test_fair_fights_cold_cost_is_bounded() -> void:
+	# GUIDE-252: counters, not wall-clock. A cold fair_fights runs quiet simulations with stats computed once per rating.
+	var c := _fighter()
+	Combat._chance_cache.clear()
+	var before: int = Combat._sim_count
+	Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
+	var sims: int = Combat._sim_count - before
+	assert_true(sims <= Guidance.FAIR_FIGHT_MAX_RATED + Guidance.FAIR_FIGHT_AWAY_RESERVE, "cold sims bounded: %d" % sims)
+	# Quiet resolve consumes the rng exactly like a logged one.
+	var e: Dictionary = data().enemies.values()[0]
+	var r1 := RandomNumberGenerator.new()
+	r1.seed = 7
+	var r2 := RandomNumberGenerator.new()
+	r2.seed = 7
+	var loud := Combat.resolve(c, data(), e, r1)
+	var quiet := Combat.resolve(c, data(), e, r2, [], -1, true)
+	assert_eq(loud["victory"], quiet["victory"])
+	assert_eq(loud["rounds"], quiet["rounds"])
+	assert_eq(r1.randi(), r2.randi())
+
+
 func test_fair_fights_are_even_or_better_sorted_and_capped() -> void:
 	var c := _fighter()
 	var fights := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")

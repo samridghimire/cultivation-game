@@ -148,9 +148,9 @@ static func blow_phrase(damage: int, max_hp: int) -> String:
 ## talismans (CombatTalismans) strike first, shield the player, or turn a
 ## defeat into an escape. Does not modify `c`.
 ## `allies`: [{name, damage}] opening blows from grateful NPCs (RIV-001f).
-static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator, allies: Array = [], start_hp: int = -1) -> Dictionary:
-	var p := stats(c, data)
-	var e := enemy_stats(enemy, data)
+static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: RandomNumberGenerator, allies: Array = [], start_hp: int = -1, quiet: bool = false, pre_p: Dictionary = {}, pre_e: Dictionary = {}) -> Dictionary:
+	var p := stats(c, data) if pre_p.is_empty() else pre_p.duplicate()
+	var e := enemy_stats(enemy, data) if pre_e.is_empty() else pre_e.duplicate()
 	var foe := foe_name(enemy)
 	var foe_cap := foe.left(1).to_upper() + foe.substr(1)
 	var player_hp: int = p["max_hp"] if start_hp < 0 else clampi(start_hp, 1, p["max_hp"])
@@ -164,11 +164,14 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	var enemy_form := roll_form(data, rng)
 	p["attack"] = maxi(1, roundi(p["attack"] * player_form))
 	e["attack"] = maxi(1, roundi(e["attack"] * enemy_form))
-	lines.append("You face %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [foe, player_hp, p["attack"], enemy_hp, e["attack"]])
+	if not quiet:
+		lines.append("You face %s. (You: %d hp, %d atk. Foe: %d hp, %d atk.)" % [foe, player_hp, p["attack"], enemy_hp, e["attack"]])
 	if player_form - enemy_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
-		lines.append("Your qi flows smoothly today; %s seems off balance." % foe)
+		if not quiet:
+			lines.append("Your qi flows smoothly today; %s seems off balance." % foe)
 	elif enemy_form - player_form >= data.combat_form_spread and data.combat_form_spread > 0.0:
-		lines.append("Your qi feels sluggish, and %s fights with fury." % foe)
+		if not quiet:
+			lines.append("Your qi feels sluggish, and %s fights with fury." % foe)
 	var used: Array[String] = []
 	var shield := 0
 	# A friendly spar is free (RV-014): no readied talisman is burnt in it.
@@ -177,26 +180,29 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 	for item_id in (no_talismans if friendly else CombatTalismans.available(c, data, "shield")):
 		used.append(item_id)
 		shield += CombatTalismans.amount(data, item_id)
-		lines.append("You burn %s: a barrier of qi surrounds you. (%d shield)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id)])
-		while trace.size() < lines.size():
+		if not quiet:
+			lines.append("You burn %s: a barrier of qi surrounds you. (%d shield)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id)])
+		while not quiet and trace.size() < lines.size():
 			trace.append([player_hp, maxi(enemy_hp, 0)])
 	for item_id in (no_talismans if friendly else CombatTalismans.available(c, data, "strike")):
 		if enemy_hp <= 0:
 			break
 		used.append(item_id)
 		enemy_hp -= CombatTalismans.amount(data, item_id)
-		lines.append("You hurl %s for %d. (%s: %d hp)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
-		while trace.size() < lines.size():
+		if not quiet:
+			lines.append("You hurl %s for %d. (%s: %d hp)" % [Text.a(_item_name(data, item_id)), CombatTalismans.amount(data, item_id), foe_cap, maxi(enemy_hp, 0)])
+		while not quiet and trace.size() < lines.size():
 			trace.append([player_hp, maxi(enemy_hp, 0)])
 	# Grateful allies (RIV-001f, Karma.ally_strike) open with their own blows.
 	for ally: Dictionary in allies:
 		if enemy_hp <= 0:
 			break
 		enemy_hp -= int(ally["damage"])
-		lines.append("%s, who owes you a debt, strikes %s for %d. (%s: %d hp)" % [ally["name"], foe, int(ally["damage"]), foe_cap, maxi(enemy_hp, 0)])
-		while trace.size() < lines.size():
+		if not quiet:
+			lines.append("%s, who owes you a debt, strikes %s for %d. (%s: %d hp)" % [ally["name"], foe, int(ally["damage"]), foe_cap, maxi(enemy_hp, 0)])
+		while not quiet and trace.size() < lines.size():
 			trace.append([player_hp, maxi(enemy_hp, 0)])
-	while trace.size() < lines.size():
+	while not quiet and trace.size() < lines.size():
 		trace.append([player_hp, maxi(enemy_hp, 0)])
 	var rounds := 0
 	var best_blow := {"damage": 0, "word": ""}
@@ -210,45 +216,57 @@ static func resolve(c: CharacterData, data: GameData, enemy: Dictionary, rng: Ra
 			var hit := _strike(atk, def, rng)
 			if player_turn:
 				enemy_hp -= hit["damage"]
-				if not hit["dodged"] and int(hit["damage"]) > int(best_blow["damage"]):
+				if not quiet and not hit["dodged"] and int(hit["damage"]) > int(best_blow["damage"]):
 					best_blow = {"damage": int(hit["damage"]), "word": blow_phrase(int(hit["damage"]), int(e["max_hp"])).trim_prefix(": ")}
 				if hit["dodged"]:
-					lines.append("%s evades your strike." % foe_cap)
+					if not quiet:
+						lines.append("%s evades your strike." % foe_cap)
 				else:
 					var move := "" if player_moves.is_empty() else " with " + player_moves[(rounds - 1) % player_moves.size()]
-					lines.append("You strike%s%s%s for %d. (%s: %d hp)" % [move, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(e["max_hp"])), hit["damage"], foe_cap, maxi(enemy_hp, 0)])
+					if not quiet:
+						lines.append("You strike%s%s%s for %d. (%s: %d hp)" % [move, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(e["max_hp"])), hit["damage"], foe_cap, maxi(enemy_hp, 0)])
 			else:
 				var absorbed := mini(shield, int(hit["damage"]))
 				shield -= absorbed
 				player_hp -= int(hit["damage"]) - absorbed
 				if absorbed > 0 and absorbed == int(hit["damage"]):
-					lines.append("Your barrier absorbs %s's attack. (%d shield left)" % [foe, shield])
+					if not quiet:
+						lines.append("Your barrier absorbs %s's attack. (%d shield left)" % [foe, shield])
 				elif hit["dodged"]:
-					lines.append("You evade %s's attack." % foe)
+					if not quiet:
+						lines.append("You evade %s's attack." % foe)
 				else:
 					if enemy_moves.is_empty():
-						lines.append("%s hits you%s%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
+						if not quiet:
+							lines.append("%s hits you%s%s for %d. (You: %d hp)" % [foe_cap, " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
 					else:
-						lines.append("%s attacks with %s%s%s for %d. (You: %d hp)" % [foe_cap, enemy_moves[(rounds - 1) % enemy_moves.size()], " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
-			trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
+						if not quiet:
+							lines.append("%s attacks with %s%s%s for %d. (You: %d hp)" % [foe_cap, enemy_moves[(rounds - 1) % enemy_moves.size()], " critically" if hit["crit"] else "", blow_phrase(int(hit["damage"]), int(p["max_hp"])), hit["damage"], maxi(player_hp, 0)])
+			if not quiet:
+				trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	var victory := enemy_hp <= 0
 	var draw := not victory and player_hp > 0
 	var escapes: Array[String] = no_talismans if friendly else CombatTalismans.available(c, data, "escape")
 	var escaped := not victory and not draw and not escapes.is_empty()
 	if victory:
 		if bool(enemy.get("spar", false)) or (bool(enemy.get("proper_name", false)) and not bool(enemy.get("lethal", false))):
-			lines.append("%s yields." % foe_cap)
+			if not quiet:
+				lines.append("%s yields." % foe_cap)
 		else:
-			lines.append("%s collapses." % foe_cap)
+			if not quiet:
+				lines.append("%s collapses." % foe_cap)
 	elif draw:
-		lines.append("Neither side can finish the fight. You disengage.")
+		if not quiet:
+			lines.append("Neither side can finish the fight. You disengage.")
 	elif escaped:
 		used.append(escapes[0])
 		player_hp = 1
-		lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
+		if not quiet:
+			lines.append("On the brink of death you burn %s and flee from %s!" % [Text.a(_item_name(data, escapes[0])), foe])
 	else:
-		lines.append("You fall." if bool(enemy.get("lethal", false)) else "You are beaten down.")
-	while trace.size() < lines.size():
+		if not quiet:
+			lines.append("You fall." if bool(enemy.get("lethal", false)) else "You are beaten down.")
+	while not quiet and trace.size() < lines.size():
 		trace.append([maxi(player_hp, 0), maxi(enemy_hp, 0)])
 	return {
 		"victory": victory,
@@ -468,8 +486,10 @@ static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samp
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	var wins := 0
+	var pre_p := stats(c, data)
+	var pre_e := enemy_stats(enemy, data)
 	for i in samples:
-		if resolve(c, data, enemy, rng)["victory"]:
+		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:
 			wins += 1
 	_sim_count += 1
 	var chance := float(wins) / samples
