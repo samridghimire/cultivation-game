@@ -1425,11 +1425,37 @@ func _draw_yard_props() -> void:
 				if not snowy:
 					for k in 3:
 						draw_rect(Rect2(r.position.x + 6.0 + k * 11.0, r.position.y + 4.0, 7, 9), Color("e8e4d8") if k != 1 else Color("9ab0c8"))
+			"drying_rack":  # GFX-188: chillies and millet in autumn, laundry otherwise, bare in winter
+				draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(2, r.size.y - 2)), Color("5a3a24"))
+				draw_rect(Rect2(r.end - Vector2(2, r.size.y - 2), Vector2(2, r.size.y - 2)), Color("5a3a24"))
+				draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 2)), Color("7a5430"))
+				draw_rect(Rect2(r.position + Vector2(2, 9), Vector2(r.size.x - 4, 2)), Color("7a5430"))
+				if not snowy:
+					for k in 5:
+						var kx := r.position.x + 4.0 + k * 6.0
+						if _season == "Autumn":
+							draw_rect(Rect2(kx, r.position.y + 4.0, 3, 5), Color("c83a22") if k % 2 else Color("d9a83a"))
+							draw_rect(Rect2(kx, r.position.y + 11.0, 4, 4), Color("d9aa3a"))
+						else:
+							draw_rect(Rect2(kx, r.position.y + 4.0, 5, 7), Color("e8e4d8") if k % 2 else Color("9ab0c8"))
+			"cat":  # GFX-188: a cat asleep on the step
+				draw_rect(Rect2(r.position + Vector2(1, 3), Vector2(9, 5)), Color("c98a4a"))
+				draw_rect(Rect2(r.position + Vector2(7, 1), Vector2(4, 4)), Color("c98a4a"))
+				draw_rect(Rect2(r.position + Vector2(7, 0), Vector2(1, 2)), Color("8a5a2a"))
+				draw_rect(Rect2(r.position + Vector2(10, 0), Vector2(1, 2)), Color("8a5a2a"))
+				draw_rect(Rect2(r.position + Vector2(0, 5), Vector2(3, 2)), Color("8a5a2a"))
+			"hens":  # GFX-188: two hens pecking by the door
+				for h in 2:
+					var hp := r.position + Vector2(h * 11.0, 2.0)
+					draw_rect(Rect2(hp + Vector2(0, 2), Vector2(7, 5)), Color("e8dcc4") if h == 0 else Color("a8602a"))
+					draw_rect(Rect2(hp + Vector2(5, 0), Vector2(3, 3)), Color("e8dcc4") if h == 0 else Color("a8602a"))
+					draw_rect(Rect2(hp + Vector2(7, 1), Vector2(2, 1)), Color("d9a83a"))
+					draw_rect(Rect2(hp + Vector2(5, -1), Vector2(2, 1)), Color("c83a22"))
 			_:
 				draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 4)), Color("a07a48"))
 				draw_rect(Rect2(r.position + Vector2(2, 6), Vector2(2, 4)), Color("5a4228"))
 				draw_rect(Rect2(r.end - Vector2(4, 4), Vector2(2, 4)), Color("5a4228"))
-		if snowy and str(p["kind"]) != "washing_line":
+		if snowy and str(p["kind"]) in ["woodpile", "water_jar", "veg_row", "bench"]:
 			draw_rect(Rect2(r.position, Vector2(r.size.x, 2)), Color(0.93, 0.95, 1.0, 0.85))
 
 

@@ -3287,7 +3287,7 @@ const YARD_PATH_W := 11.0
 const YARD_PATH_MAX := 260.0
 const YARD_PATH_FALLBACK := 520.0  # GFX-138: a house that finds no short path may take a longer one round a field
 const YARD_PATH_MAX_PLACE := 420.0  # GFX-132: temple, workshop, clinic, sect hall may sit further from a road
-const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10)}
+const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10), "drying_rack": Vector2(34, 18), "cat": Vector2(12, 8), "hens": Vector2(22, 10)}
 
 
 ## GFX-127: the lived-in dressing of a village (regions with `map.yards`): {"footpaths": [{rect, door}] (door = index of the

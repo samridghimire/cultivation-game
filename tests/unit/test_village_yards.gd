@@ -141,3 +141,22 @@ func test_all_qingshi_houses_have_a_footpath() -> void:
 			houses += 1
 	for i in houses:
 		assert_true(doors.has(i), "house %d has a footpath" % i)
+
+
+## GFX-188: doorstep details are a known kind, at most 2 per house, and never on a door or footpath.
+func test_doorstep_details_known_kinds_and_capped() -> void:
+	var r := _region()
+	var y := Scenery.village_yards(r, _size(r))
+	var lms := Scenery.landmark_rects(r)
+	for kind in ["drying_rack", "cat", "hens"]:
+		assert_true(Scenery.YARD_PROP_SIZES.has(kind), "%s is a yard prop" % kind)
+	for p: Dictionary in y["props"]:
+		assert_true(Scenery.YARD_PROP_SIZES.has(str(p["kind"])), "known kind")
+		for f: Dictionary in y["footpaths"]:
+			assert_false((f["rect"] as Rect2).intersects(p["rect"]), "no prop on a footpath")
+	for lm in lms:
+		var n := 0
+		for p: Dictionary in y["props"]:
+			if (lm.grow(60.0)).intersects(p["rect"]) and (p["rect"] as Rect2).get_center().distance_to(lm.get_center()) < lm.size.x + 70.0:
+				n += 1
+		assert_true(n <= 4, "a house is not crowded")
