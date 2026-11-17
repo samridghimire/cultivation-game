@@ -157,6 +157,15 @@ var _death_screen: Control
 
 
 ## [REVIEW] LOG-003: once this HUD is gone no combat report opens, so the log keeps the mission fight intro again.
+var _hint_row: HBoxContainer
+
+
+## WU-557: the hint row follows the hint label's visibility; guarded because both die on exit.
+func _sync_hint_row() -> void:
+	if is_instance_valid(_hint_row) and is_instance_valid(_hint):
+		_hint_row.visible = _hint.visible
+
+
 func _exit_tree() -> void:
 	GameState.combat_report_shown = false
 
@@ -639,7 +648,8 @@ func _build_guide_panel() -> void:
 	_hint_icons.add_child(_hint_badge)
 	_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint_row.add_child(_hint)
-	_hint.visibility_changed.connect(func() -> void: hint_row.visible = _hint.visible)
+	_hint_row = hint_row
+	_hint.visibility_changed.connect(_sync_hint_row)  # WU-557: a method, not a lambda (its freed capture logged errors on exit)
 	add_child(panel)
 	_key_bar = UIStyle.label("", 12, Color(0.7, 0.7, 0.7, 0.85))
 	_key_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

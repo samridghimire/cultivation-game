@@ -60,7 +60,5 @@ static func show_bubble(above: Node2D, height: float, text: String, reduce_motio
 		panel.scale = Vector2(0.6, 0.6)
 		panel.create_tween().tween_property(panel, "scale", Vector2.ONE, 0.15)
 	var timer := above.get_tree().create_timer(SHOW_SECONDS)
-	timer.timeout.connect(func() -> void:
-		if is_instance_valid(panel):
-			panel.queue_free())
+	timer.timeout.connect(panel.queue_free)  # WU-557: a method callable drops with the panel; a lambda capture logged "freed" errors
 	return panel

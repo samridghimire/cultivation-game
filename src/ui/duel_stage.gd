@@ -229,7 +229,16 @@ func blow(side: int, crit: bool = false, heavy: bool = false) -> void:
 	_tween.tween_method(_set_shake.bind(struck), 6.0 if crit else 3.0, 0.0, LUNGE_SECONDS * 2.0)
 	if heavy:
 		_stage_shake_start = Time.get_ticks_msec() / 1000.0
-		_tween.tween_method(func(_v: float) -> void: queue_redraw(), 0.0, 1.0, STAGE_SHAKE_SECONDS)
+		_tween.tween_method(_redraw_tick, 0.0, 1.0, STAGE_SHAKE_SECONDS)  # WU-557: a method, not a lambda (a freed capture logged errors)
+
+
+func _redraw_tick(_v: float) -> void:
+	queue_redraw()
+
+
+func _exit_tree() -> void:
+	if _tween != null:
+		_tween.kill()
 
 
 func _set_offset(v: float, who: int) -> void:
