@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-17 [QA-228] The sim's sect member can walk home for the steward's chores; it does not raise the duty share and costs ~330 days to Foundation.
+- 2026-11-17 [QA-229] The sim measures qi per meditation day: the sect bonus works; early sect members just stay at Qingshi's weak spot.
+- 2026-11-17 [QA-226] Tests pin the hill dog's odds by stage and the "Well below you" reason.
+- 2026-11-17 [C-380] Hunter Ma asks for help with his snare line on day one, so his Iron Fist lesson can come within the first month.
+- 2026-11-17 [GFX-183] Village trees have a trunk, layered lit leaves, a shadow that follows the trunk and fallen leaves in autumn.
+- 2026-11-17 [WU-560] A shot pass of the shop, character sheet, speaker portraits, woodland edge and ridge scree found no layout defects.
+- 2026-11-17 [GUIDE-251] The qi-pill hint names a better pill one road away when the trip pays for itself.
+- 2026-11-17 [GFX-181] The village meadow has grass tufts and season flowers or leaves, and the worn yards have ragged edges.
+- 2026-11-17 [WU-559] Explore odds say "Mostly/Sometimes/Rarely quiet", and price lines in the bag and auction read naturally.
 - 2026-11-17 [GFX-179] Crags, ledges and boulders on the ridge sit on a fan of scree with a shadow at their foot.
 - 2026-11-17 [QA-124] The crafter sim can walk to the far market the buy hint names; a talisman master in Misty Forest only crafts that way.
 - 2026-11-17 [SEASON-026] The season-task sim tries every week and a second place, finishing 4 of 24 year-1 sets instead of 1.
