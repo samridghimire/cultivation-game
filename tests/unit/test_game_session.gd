@@ -4641,3 +4641,22 @@ func test_hunter_ma_snare_errand_reaches_lesson_favor() -> void:
 	gs.give_gift("hunter_ma", "venison")
 	gs.give_gift("hunter_ma", "venison")
 	assert_true(int(gs.npc_favor["hunter_ma"]) >= 15, "errand + two liked gifts: %d" % int(gs.npc_favor["hunter_ma"]))
+
+
+## C-386: every first-hour teacher has a once-only favor errand open to a newcomer.
+func test_teacher_favor_errands_raise_favor_once() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(5))
+	var errands: Dictionary = {"ling_water_rounds": "xiao_ling", "hei_bail_skiff": "peddler_hei", "bai_sweep_terraces": "disciple_bai", "ye_tend_drying_rack": "alchemist_ye", "qian_count_stock": "broker_qian"}
+	for deed_id: String in errands:
+		var npc_id: String = errands[deed_id]
+		var deed: Dictionary = gs.data.deeds[deed_id]
+		assert_eq(Deeds.check(c, gs.data, deed, gs.world_flags, GameClock.total_days), "", "%s open to a newcomer" % deed_id)
+		assert_true(Deeds.available(gs.data, String(gs.data.npcs[npc_id]["deed_context"]), gs.world_flags).has(deed), "%s listed" % deed_id)
+		gs.npc_favor[npc_id] = 0
+		gs.perform_deed(deed_id)
+		var gained: int = int(gs.npc_favor[npc_id])
+		assert_true(gained >= 10 and gained <= 12, "%s favor %d" % [deed_id, gained])
+		gs.perform_deed(deed_id)
+		assert_eq(int(gs.npc_favor[npc_id]), gained, "%s once only" % deed_id)
