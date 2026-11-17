@@ -64,6 +64,7 @@ var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
 var _water_life: WaterLife
+var _rain_puddles: RainPuddles  ## GFX-184
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
 var _tracks: Array[Dictionary] = []  ## WU-450: a great beast's trail of prints
@@ -161,6 +162,7 @@ func _on_days_advanced(_days: int) -> void:
 	var season := Calendar.season_of(GameClock.total_days)
 	var weather := _weather_today()
 	if season == _season and weather == _weather_kind:
+		_refresh_puddles()  # GFX-184: yesterday's rain may have just dried
 		return
 	_season = season
 	_weather_kind = weather
@@ -284,11 +286,24 @@ func _refresh_village_life() -> void:
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
 	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced(), _season)
+	_refresh_puddles()
 	if _critters == null:
 		_critters = CritterLayer.new()
 		_critters.name = "Critters"
 		add_child(_critters)
 	_critters.setup(_region, _season, GameClock.total_days, bool(Settings.get_value("ambient_effects")), MotionFx.reduced())
+
+
+## GFX-184: puddles and wet ground for today's weather (and yesterday's rain).
+func _refresh_puddles() -> void:
+	if _rain_puddles == null:
+		_rain_puddles = RainPuddles.new()
+		_rain_puddles.name = "RainPuddles"
+		add_child(_rain_puddles)
+		move_child(_rain_puddles, 1)  # GFX-184: with the ground, under the figures
+	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
+	var yesterday := "clear" if _forced_weather != "" else Weather.of(GameState.data, GameState.current_region, GameClock.total_days - 1)
+	_rain_puddles.setup(_region, map_size, GameClock.total_days, _weather_kind, yesterday, snowy, _yards, MotionFx.reduced())
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
