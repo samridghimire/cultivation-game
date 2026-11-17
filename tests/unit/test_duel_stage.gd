@@ -353,3 +353,13 @@ func test_shadow_follows_fallen_body() -> void:
 		var body := st.fallen_body_rect(1)
 		assert_true(absf(sh.get_center().x - body.get_center().x) <= 6.0, "beast=%s" % beast)
 	st.free()
+
+
+## QA-232: a stage drawn before its first layout (zero width) must not build a 0px ground texture.
+func test_zero_width_stage_draws_without_error() -> void:
+	var st := DuelStage.new()
+	st.size = Vector2.ZERO
+	(Engine.get_main_loop() as SceneTree).root.add_child(st)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(st.is_inside_tree())
+	st.queue_free()

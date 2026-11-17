@@ -877,6 +877,8 @@ static func cloud_shapes(rid: String, width: float, sky_h: float) -> Array:
 
 ## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).
 func _draw_ground() -> void:
+	if size.x < 3.0:  # QA-232: drawn before the first layout, no ground texture to build yet
+		return
 	var band := Rect2(0.0, size.y - GROUND_BAND, size.x, GROUND_BAND)
 	var rid := GameState.current_region
 	if GameState.data == null or not GameState.data.regions.has(rid):

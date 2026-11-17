@@ -160,6 +160,7 @@ var opened := false
 
 
 func _start() -> void:
+	root.get_node("Settings").set("persist", false)  # QA-232: a shot run never touches user://settings.cfg
 	started = true
 	var gs: Node = root.get_node("GameState")
 	if OS.get_cmdline_user_args().has("--workshop-shot"):
@@ -4282,7 +4283,7 @@ func _build_letter_shots(gs: Node) -> void:
 		if gs.npcs[npc_id].name.begins_with("Elder Murong"):
 			break
 	if friend_id != "":
-		c.letter_requests.append({"npc_id": friend_id, "item": "spirit_stone", "count": 5, "until": today + 9, "favor": 10, "effects": []})
+		c.letter_requests.append({"npc_id": friend_id, "item": "spirit_stone", "count": 5, "until": today + 9, "favor": 10, "effects": {}})
 	var sheet: Control = hud.get("_screens")["toggle_character_sheet"]
 	shots.append({"name": "people_list_request", "open": func() -> void:
 		sheet.open()

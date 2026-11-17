@@ -42,6 +42,8 @@ const DEFAULTS := {
 }
 
 var path := DEFAULT_PATH
+## False while a screenshot/sim script runs: values change in memory but never reach disk (QA-232).
+var persist := true
 var _values: Dictionary = DEFAULTS.duplicate()
 
 
@@ -103,6 +105,8 @@ func load_settings() -> void:
 
 
 func save_settings() -> void:
+	if not persist:
+		return
 	var cfg := ConfigFile.new()
 	for key in _values:
 		cfg.set_value(SECTION, key, _values[key])

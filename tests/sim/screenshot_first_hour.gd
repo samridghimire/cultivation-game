@@ -70,6 +70,7 @@ func _drop_start_line() -> void:
 
 
 func _start() -> void:
+	root.get_node("Settings").set("persist", false)  # QA-232: a shot run never touches user://settings.cfg
 	started = true
 	var gs: Node = root.get_node("GameState")
 	var rng := RandomNumberGenerator.new()

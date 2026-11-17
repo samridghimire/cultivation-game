@@ -106,3 +106,13 @@ func test_wake_for_events_default_and_persistence() -> void:
 	assert_true(t.get_value("wake_for_events") == false)
 	t.free()
 	_cleanup(s)
+
+
+## QA-232: with persist off, set_value changes memory but never writes the file.
+func test_persist_off_does_not_write() -> void:
+	var s := _fresh()
+	s.persist = false
+	s.set_value("music_volume", 0.1)
+	assert_almost_eq(s.get_value("music_volume"), 0.1)
+	assert_false(FileAccess.file_exists(s.path), "no file written while persist is off")
+	_cleanup(s)
