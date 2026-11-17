@@ -324,29 +324,3 @@ func test_outcrop_fans_sit_at_the_foot() -> void:
 		assert_true(peb.size() > 10, "pebbles")
 		for p in peb:
 			assert_true(p.y >= (fans[i]["origin"] as Vector2).y, "fans spread downhill")
-
-
-func test_dirt_road_wanders_has_ruts_and_stays_calm_at_bridges() -> void:  # GFX-185
-	var r := Rect2(0, 470, 1600, 40)
-	var road := Scenery.dirt_road(r, 4)
-	assert_eq(road, Scenery.dirt_road(r, 4))
-	var verge: PackedVector2Array = road["verge"]
-	var vb := Rect2(verge[0], Vector2.ZERO)
-	for p in verge:
-		vb = vb.expand(p)
-	var dev := 0.0
-	for p in road["bed"]:
-		assert_true(vb.grow(0.01).has_point(p), "bed inside verge bbox")
-		if p.y < 490.0:
-			dev = maxf(dev, absf(p.y - 472.0))
-	assert_true(dev >= 1.0, "bed edge is not straight")
-	assert_true((road["ruts"] as Array).size() >= 4, "ruts on a wide road")
-	assert_true((road["tufts"] as Array).size() > 40)
-	var lane := Scenery.dirt_road(Rect2(300, 520, 16, 200), 9)
-	assert_eq((lane["ruts"] as Array).size(), 0)
-	assert_true((lane["tufts"] as Array).size() > 5)
-	var bridge: Array[Rect2] = [Rect2(700, 440, 60, 100)]
-	var calm := Scenery.dirt_road(r, 4, 3.5, bridge)
-	for p: Vector2 in calm["verge"]:
-		if bridge[0].grow(10.0).has_point(p) and p.x > 650.0:
-			assert_true(is_equal_approx(p.y, 468.0) or is_equal_approx(p.y, 512.0), "straight near a bridge (%s)" % p)

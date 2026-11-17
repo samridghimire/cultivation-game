@@ -140,8 +140,14 @@ const LIVELY_STYLES := ["grass", "litter", "bog"]  ## GFX-130: the styles that g
 const PATCH_CELLS := [96, 40]
 
 
+## GFX-186: String.hash barely moves when only the last digit (cy) changes, so the noise had no vertical variation
+## and showed as straight full-height tint bands; an integer mix (avalanche) spreads the bits first.
 static func _lattice(rid: String, octave: int, cx: int, cy: int) -> float:
-	return float(absi(hash("%s|patch%d|%d|%d" % [rid, octave, cx, cy])) % 2001) / 1000.0 - 1.0
+	var h := absi(hash("%s|patch%d|%d|%d" % [rid, octave, cx, cy])) & 0x7fffffff
+	h = ((h >> 16) ^ h) * 0x45d9f3b & 0x7fffffff
+	h = ((h >> 16) ^ h) * 0x45d9f3b & 0x7fffffff
+	h = (h >> 16) ^ h
+	return float(h % 2001) / 1000.0 - 1.0
 
 
 ## GFX-130: low-frequency value noise in -1..1 (two octaves, ~96 px and ~40 px cells, smoothstep between lattice values).

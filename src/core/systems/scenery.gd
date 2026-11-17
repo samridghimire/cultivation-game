@@ -20,7 +20,7 @@ const TREE_KINDS: PackedStringArray = ["round", "pine", "willow", "dead", "bambo
 const MAX_CLUSTERS := 12
 const CLUSTER_RADIUS := 60.0
 ## Decor keys beyond DEFAULTS' counts and colours.
-const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "groves", "undergrowth_kinds", "rock_clusters", "edge_belt"]
+const EXTRA_KEYS: PackedStringArray = ["tree_kinds", "blossoms", "clusters", "groves", "undergrowth_kinds", "rock_clusters", "edge_belt", "canopy_masses"]
 ## map.decor.undergrowth_kinds (GFX-144): weights for what grows under groves (filler kinds; logs always come on top).
 const UNDERGROWTH_KINDS: PackedStringArray = ["fern", "bush", "mushroom", "reed", "stone"]
 const DEFAULT_UNDERGROWTH := {"fern": 6.0, "bush": 4.0}
@@ -28,6 +28,11 @@ const DEFAULT_UNDERGROWTH := {"fern": 6.0, "bush": 4.0}
 const MAX_GROVES := 10
 const GROVE_RADIUS := 95.0
 const GROVE_GAP := 40.0
+## map.decor.canopy_masses (GFX-186): big clumps of 6-14 overlapping trees that read as one dark canopy; they ride on top of
+## the tree budget and keep apart from groves and each other. Items carry "canopy": index and the "grove" keys, so the
+## groves' undergrowth grows round them; the world draws one merged shadow per mass.
+const MAX_CANOPY_MASSES := 20
+const CANOPY_RADIUS := 85.0
 ## map.decor.rock_clusters (GFX-053): boulder groups of 3-6 rocks in 2-3 sizes, seeded before the scatter.
 const MAX_ROCK_CLUSTERS := 12
 const ROCK_CLUSTER_RADIUS := 45.0
@@ -86,6 +91,8 @@ static func place(region: Dictionary, rng: RandomNumberGenerator) -> Array[Dicti
 			var grove_centres: Array[Vector2] = []
 			for g in clampi(int(cfg.get("groves", 0)), 0, MAX_GROVES):
 				budget -= _place_grove(out, cfg, color, budget, size, blocked, spots, rng, grove_centres, g)
+			for m in clampi(int(cfg.get("canopy_masses", 0)), 0, MAX_CANOPY_MASSES):
+				_place_canopy_mass(out, cfg, color, size, blocked, spots, rng, grove_centres, m)
 			for c in clampi(int(cfg.get("clusters", 0)), 0, MAX_CLUSTERS):
 				budget -= _place_clump(out, cfg, color, budget, size, blocked, spots, rng)
 		if kind == "rock":
@@ -208,6 +215,44 @@ static func _place_grove(out: Array[Dictionary], cfg: Dictionary, color: Color, 
 				item["grove"] = index
 				item["grove_centre"] = centre
 				item["grove_radius"] = radius
+				out.append(item)
+				placed += 1
+				break
+	return placed
+
+
+## GFX-186: one canopy mass of 6-14 trees (radius CANOPY_RADIUS, the tallest near the middle). Needs a clear centre that is
+## GROVE_GAP + both radii from every earlier grove/mass centre; items get "canopy" and the grove keys (index 100 + m).
+static func _place_canopy_mass(out: Array[Dictionary], cfg: Dictionary, color: Color, size: Vector2, blocked: Array[Rect2],
+		spots: Array[Vector2], rng: RandomNumberGenerator, centres: Array[Vector2], index: int) -> int:
+	var want := rng.randi_range(6, 14)
+	var centre := Vector2.ZERO
+	var found := false
+	for attempt in TRIES * 4:
+		centre = Vector2(rng.randf_range(EDGE + CANOPY_RADIUS, size.x - EDGE - CANOPY_RADIUS), rng.randf_range(EDGE + CANOPY_RADIUS, size.y - EDGE - CANOPY_RADIUS))
+		var apart := true
+		for other in centres:
+			if other.distance_to(centre) < GROVE_RADIUS + CANOPY_RADIUS + GROVE_GAP:
+				apart = false
+				break
+		if apart and is_clear(centre, blocked, spots):
+			found = true
+			break
+	if not found:
+		return 0
+	centres.append(centre)
+	var placed := 0
+	for i in want:
+		for attempt in TRIES:
+			var d := 0.0 if i == 0 else sqrt(rng.randf()) * CANOPY_RADIUS
+			var pos := centre + Vector2.from_angle(rng.randf_range(0.0, TAU)) * d
+			if pos.x > EDGE and pos.y > EDGE and pos.x < size.x - EDGE and pos.y < size.y - EDGE and is_clear(pos, blocked, spots):
+				var item := _decor_item("tree", pos, color, cfg, rng)
+				item["scale"] = lerpf(1.45, 0.9, d / CANOPY_RADIUS) * rng.randf_range(0.94, 1.06)
+				item["canopy"] = index
+				item["grove"] = 100 + index
+				item["grove_centre"] = centre
+				item["grove_radius"] = CANOPY_RADIUS
 				out.append(item)
 				placed += 1
 				break
@@ -1339,106 +1384,6 @@ static func stone_road(rect: Rect2, seed_value: int, inset: float = 6.0, amp: fl
 	return {"bed": bed, "stones": stones}
 
 
-## GFX-185: a walked dirt road over `rect`: a wandering `verge` (the rect grown 2 px), a `bed` inside it, broken `ruts`
-## (polylines at ~30% / 70% of the width, none under 24 px) and `tufts` ({pos, h}) on the verges and, on side lanes
-## (width < 24), down the middle. `straight` rects (bridges, places; plus `bounds`, the map edge, when it has an area)
-## keep both edges unwobbled within 10 px; `joins` (other path rects) make an end that meets one fan out 3 px.
-static func dirt_road(rect: Rect2, seed_value: int, amp: float = 3.5, straight: Array[Rect2] = [], bounds: Rect2 = Rect2(), joins: Array[Rect2] = []) -> Dictionary:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([seed_value, "dirt_road"])
-	var along_x := rect.size.x >= rect.size.y
-	var length := rect.size.x if along_x else rect.size.y
-	var width := rect.size.y if along_x else rect.size.x
-	var a := minf(amp, width * 0.2)
-	var nk := int(length / 26.0) + 3
-	var knots: Array[float] = []
-	for i in nk * 4:
-		knots.append(rng.randf_range(-1.0, 1.0))
-	var wob := func(pp: float, k: int) -> float:
-		var f := pp / 26.0
-		var i0 := int(f)
-		var t := (1.0 - cos((f - float(i0)) * PI)) * 0.5
-		return lerpf(knots[k * nk + i0], knots[k * nk + i0 + 1], t)
-	var at := func(pp: float, o: float) -> Vector2:
-		return rect.position + (Vector2(pp, o) if along_x else Vector2(o, pp))
-	var calm := func(pp: float) -> bool:
-		for o: float in [0.0, width]:
-			var q: Vector2 = at.call(pp, o)
-			for sr in straight:
-				if sr.grow(10.0).has_point(q):
-					return true
-			if bounds.has_area():
-				if q.x - bounds.position.x < 10.0 or bounds.end.x - q.x < 10.0 or q.y - bounds.position.y < 10.0 or bounds.end.y - q.y < 10.0:
-					return true
-		return false
-	var fan := func(pp: float) -> float:
-		var out := 0.0
-		for end_p: float in [0.0, length]:
-			var d := absf(pp - end_p)
-			if d >= 10.0:
-				continue
-			var q: Vector2 = at.call(end_p, width * 0.5) + (Vector2(-3.0 if end_p == 0.0 else 3.0, 0.0) if along_x else Vector2(0.0, -3.0 if end_p == 0.0 else 3.0))
-			for jr in joins:
-				if jr != rect and jr.grow(2.0).has_point(q):
-					out = maxf(out, 3.0 * (1.0 - d / 10.0))
-		return out
-	var n := maxi(int(length / 6.0), 2)
-	var v_lo: Array[Vector2] = []
-	var v_hi: Array[Vector2] = []
-	var b_lo: Array[Vector2] = []
-	var b_hi: Array[Vector2] = []
-	var tufts: Array[Dictionary] = []
-	var next_tuft := [rng.randf_range(0.0, 18.0), rng.randf_range(0.0, 18.0)]
-	var ruts: Array[PackedVector2Array] = []
-	for i in n + 1:
-		var pp := length * float(i) / float(n)
-		var still: bool = calm.call(pp)
-		var fn: float = fan.call(pp)
-		var w0: float = 0.0 if still else float(wob.call(pp, 0)) * a
-		var w1: float = 0.0 if still else float(wob.call(pp, 1)) * a
-		var w2: float = 0.0 if still else float(wob.call(pp, 2)) * a * 0.5
-		var w3: float = 0.0 if still else float(wob.call(pp, 3)) * a * 0.5
-		v_lo.append(at.call(pp, -2.0 - fn + w0))
-		v_hi.append(at.call(pp, width + 2.0 + fn + w1))
-		b_lo.append(at.call(pp, 2.0 - fn * 0.5 + w2 if still else maxf(2.0 - fn * 0.5 + w2, 1.0)))
-		b_hi.append(at.call(pp, width - 2.0 + fn * 0.5 + w3 if still else minf(width - 2.0 + fn * 0.5 + w3, width - 1.0)))
-		for s in 2:
-			while next_tuft[s] <= pp and next_tuft[s] < length:
-				var edge_o: float = (-2.0 + w0) if s == 0 else (width + 2.0 + w1)
-				var off := rng.randf_range(0.0, 2.0) * (-1.0 if s == 0 else 1.0)
-				tufts.append({"pos": at.call(next_tuft[s], edge_o + off), "h": rng.randi_range(2, 4)})
-				next_tuft[s] += rng.randf_range(12.0, 24.0)
-	if width < 24.0:  # a lane: a sparse strip of grass down the middle
-		var cp := rng.randf_range(20.0, 60.0)
-		while cp < length - 12.0:
-			tufts.append({"pos": at.call(cp, width * 0.5 + rng.randf_range(-1.0, 1.0)), "h": rng.randi_range(2, 3)})
-			cp += rng.randf_range(40.0, 110.0)
-	elif width >= 24.0:
-		for frac: float in [0.3, 0.7]:
-			var cur := rng.randf_range(0.0, 40.0)
-			while cur < length - 10.0:
-				var seg_len := rng.randf_range(40.0, 120.0)
-				var end_p := minf(cur + seg_len, length)
-				var pts := PackedVector2Array()
-				var q := cur
-				while q <= end_p:
-					pts.append(at.call(q, width * frac + rng.randf_range(-1.0, 1.0)))
-					q += 8.0
-				if pts.size() >= 2:
-					ruts.append(pts)
-				cur = end_p + rng.randf_range(40.0, 120.0)
-	var verge := PackedVector2Array()
-	var bed := PackedVector2Array()
-	for q in v_lo:
-		verge.append(q)
-	for q in b_lo:
-		bed.append(q)
-	for i in range(v_hi.size() - 1, -1, -1):
-		verge.append(v_hi[i])
-		bed.append(b_hi[i])
-	return {"bed": bed, "verge": verge, "ruts": ruts, "tufts": tufts}
-
-
 ## GFX-167: a wobbling polygon for a trail along `path_rect`: the long edges are `inset` px in from the rect's sides plus a smooth
 ## seeded wobble of up to `amp` px (samples every 8 px), the ends square. `inset` + `amp` must stay below half the width.
 ## Deterministic; inside the rect.
@@ -1885,6 +1830,9 @@ static func validate(data: GameData) -> PackedStringArray:
 			elif key == "edge_belt":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_EDGE_BELT:
 					errors.append("Region '%s' map.decor.edge_belt must be 0-%d" % [region["id"], MAX_EDGE_BELT])
+			elif key == "canopy_masses":
+				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_CANOPY_MASSES:
+					errors.append("Region '%s' map.decor.canopy_masses must be 0-%d" % [region["id"], MAX_CANOPY_MASSES])
 			elif key == "rock_clusters":
 				if not (decor[key] is float or decor[key] is int) or int(decor[key]) < 0 or int(decor[key]) > MAX_ROCK_CLUSTERS:
 					errors.append("Region '%s' map.decor.rock_clusters must be 0-%d" % [region["id"], MAX_ROCK_CLUSTERS])

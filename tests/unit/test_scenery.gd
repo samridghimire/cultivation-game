@@ -1069,3 +1069,47 @@ func test_round_tree_layout_has_trunk_lobes_and_is_seeded() -> void:  # GFX-183
 			assert_true(lc.y + float(lobe["r"]) + 1.5 <= float(lay["base_y"]) + 0.01, "the lobe's underside stays above the trunk's visible part")
 		shapes[lobes.size()] = true
 	assert_true(shapes.size() >= 2, "trees differ in lobe count")
+
+
+func _canopy_layout(region: Dictionary, seed_value: int) -> Array[Dictionary]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	return Scenery.place(region, rng)
+
+
+func test_misty_forest_canopy_masses_are_deterministic_and_clear() -> void:  # GFX-186
+	var data := GameData.load_from_dir()
+	var region: Dictionary = data.regions["misty_forest"]
+	assert_eq(int(region["map"]["decor"]["canopy_masses"]), 6)
+	var a := _canopy_layout(region, 7)
+	assert_eq(a, _canopy_layout(region, 7), "same seed, same layout")
+	var masses := {}
+	var foot: Array[Rect2] = []
+	for r in region.get("places", []) + region.get("abodes", []):
+		var sz: Array = r.get("size", [64, 64])
+		var c: Array = r["pos"]
+		foot.append(Rect2(float(c[0]) - float(sz[0]) / 2.0, float(c[1]) - float(sz[1]) / 2.0, float(sz[0]), float(sz[1])).grow(24.0))
+	for p in region["map"]["paths"]:
+		foot.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
+	for d in a:
+		if not d.has("canopy"):
+			continue
+		masses[d["canopy"]] = true
+		assert_true(d.has("grove") and d.has("grove_centre"), "undergrowth hooks")
+		for r in foot:
+			assert_false(r.has_point(d["pos"]), "canopy tree at %s inside %s" % [d["pos"], r])
+	assert_gt(masses.size(), 3, "most of the six masses find room")
+	assert_gt(Scenery.undergrowth(region, a).size(), 0)
+
+
+func test_canopy_masses_only_where_asked_and_validated() -> void:  # GFX-186
+	var data := GameData.load_from_dir()
+	for id in data.regions:
+		if id == "misty_forest":
+			continue
+		assert_false(data.regions[id]["map"].get("decor", {}).has("canopy_masses"), id)
+	var bad := GameData.new()
+	bad.regions = {"x": {"id": "x", "map": {"size": [800, 600], "decor": {"canopy_masses": 21}}}}
+	var errs := Scenery.validate(bad)
+	assert_eq(errs.size(), 1)
+	assert_true("canopy_masses" in errs[0])
