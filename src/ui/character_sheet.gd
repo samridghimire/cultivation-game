@@ -285,19 +285,23 @@ func close() -> void:
 	closed.emit()
 
 
+## WU-556: "Son of the Lin family" (by gender); "" when nothing is known.
+static func identity_line(p: CharacterData) -> String:
+	var kin := {"male": "son", "female": "daughter"}.get(p.gender, "child") as String
+	if p.surname != "":
+		return "%s of the %s family" % [kin.capitalize(), p.surname]
+	return p.gender.capitalize()
+
+
 func _rebuild() -> void:
 	var p := GameState.player
 	var data := GameState.data
 	var accent := UIStyle.ACCENT.to_html(false)
 	_rebuild_left()
 	var t := ""
-	var identity: Array[String] = []
-	if p.gender != "":
-		identity.append(p.gender.capitalize())
-	if p.surname != "":
-		identity.append("of the %s family" % p.surname)
-	if not identity.is_empty():
-		t += "%s\n" % " ".join(identity)
+	var identity := identity_line(p)
+	if identity != "":
+		t += "%s\n" % identity
 	var bloodline := Bloodlines.describe(p, data)
 	if bloodline != "":
 		t += "Bloodline: %s\n" % bloodline

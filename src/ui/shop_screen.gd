@@ -25,6 +25,7 @@ var _effects: Label
 var _compare: Label
 var _wanted: Label
 var _recharge_warn: Label
+var _trade_hint: Label
 var _quantity_label: Label
 var _trade_button: Button
 var _hint_label: Label
@@ -170,6 +171,8 @@ func _init() -> void:
 	_trade_button.name = "Trade"
 	_trade_button.gui_input.connect(_on_item_input)
 	details.add_child(_trade_button)
+	_trade_hint = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["warning"]))
+	details.add_child(_trade_hint)
 	_hint_label = UIStyle.label("", 14, Color(0.6, 0.6, 0.6))
 	details.add_child(_hint_label)
 	_refresh_hint()
@@ -489,6 +492,16 @@ static func recharge_warning(c: CharacterData, data: GameData, price: int) -> St
 	return "This leaves %d stones; recharging your Creation Artifact costs %d." % [stones - price, cost]
 
 
+## WU-556: why a greyed Buy button is greyed ("" when the player can buy one).
+static func buy_refusal(c: CharacterData, data: GameData, item_id: String, unit: int) -> String:
+	if unit <= 0:
+		return "That is not for sale."
+	var stones := c.item_count("spirit_stone")
+	if stones < unit:
+		return "Need %d spirit stones (you have %d)" % [unit, stones]
+	return ""
+
+
 ## "Equipped: Iron Sword (+5 attack)" for whatever `c` wears in the item's slot.
 static func compare_text(c: CharacterData, data: GameData, item_id: String) -> String:
 	var blocked := Items.realm_block(c, data, item_id)
@@ -742,6 +755,10 @@ func _show_details() -> void:
 	_trend_line.text = trend_text(Items.season_trend(data, _selected, GameState.price_season()), GameState.price_season())
 	_trend_line.visible = _trend_line.text != ""
 	var lines := Items.describe_effects(item.get("effects", {}), data)
+	if manual_technique(data, _selected) != "":
+		for i in range(lines.size() - 1, -1, -1):  # compare_text says it once
+			if lines[i].begins_with("Teaches the technique:"):
+				lines.remove_at(i)
 	if Equipment.is_equipment(data, _selected):
 		lines.insert(0, Equipment.describe_stats(data, _selected))
 	var worth := buy_worth_line(p, data, _selected, GameState.current_region, GameState.world_flags, _selling)
@@ -770,7 +787,13 @@ func _show_details() -> void:
 		total = unit * (_quantity - bonus) + unit_price(p, data, _selected, true, _faction, 1.0, GameState.price_season(), float(want["mult"])) * bonus
 	_trade_button.text = "%s %d for %d spirit stones" % ["Sell" if _selling else "Buy", _quantity, total]
 	_trade_button.disabled = most < 1
-	_trade_button.tooltip_text = "You cannot afford it." if most < 1 and not _selling else ""
+	_trade_button.tooltip_text = ""
+	if most < 1 and not _selling:
+		_trade_button.tooltip_text = buy_refusal(p, data, _selected, unit)
+		_trade_hint.text = _trade_button.tooltip_text
+	else:
+		_trade_hint.text = ""
+	_trade_hint.visible = _trade_hint.text != ""
 
 
 func _trade() -> void:
