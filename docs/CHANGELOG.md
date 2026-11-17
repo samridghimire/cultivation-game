@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-17 [WU-561] Fight stage: a beaten foe's shadow lies under it, and beasts are drawn at a sensible size.
+- 2026-11-17 [GUIDE-253] The qi-pill hint weighs every market within reach, minus the trip's lost meditation.
+- 2026-11-17 [GUIDE-254] The "no fighting style" hint tells you about the teacher's errand that earns his favor fast.
+- 2026-11-17 [C-384] The teachers away from Qingshi like gifts you can buy or gather nearby in every season.
+- 2026-11-17 [C-381] A second 5th-layer foe in Misty Forest, the Quill-Back Porcupine, whose quills make a starter jerkin.
+- 2026-11-17 [GFX-186] Misty Forest reads as a forest: canopy masses with undergrowth, and the odd vertical tint bands are gone.
+- 2026-11-17 [GFX-185] Dirt roads wander, with broken wheel ruts and grass tufts at the verge, and side lanes fan into them.
+- 2026-11-17 [PERF-008] A region load timing script; the paved market in winter loads over 3x faster.
+- 2026-11-17 [GFX-182] Encounters in the woods look like woods: tall trunks at the edges and leaf litter, no village fence.
+- 2026-11-17 [WU-557] A screenshot pass of the river encounters, rain and spars; screenshot tweens no longer leak.
+- 2026-11-17 [QA-230] Investigated why one simulated life reaches the Core Disciple trial late: bad luck, not a rule problem.
+- 2026-11-17 [GFX-184] On rainy days the ground looks wet: puddles with ripples on paths and yards, and some are still there the next day.
 - 2026-11-17 [QA-228] The sim's sect member can walk home for the steward's chores; it does not raise the duty share and costs ~330 days to Foundation.
 - 2026-11-17 [QA-229] The sim measures qi per meditation day: the sect bonus works; early sect members just stay at Qingshi's weak spot.
 - 2026-11-17 [QA-226] Tests pin the hill dog's odds by stage and the "Well below you" reason.
