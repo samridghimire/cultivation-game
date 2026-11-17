@@ -7,6 +7,7 @@ extends SceneTree
 ## log lines) plus the HUD hints and goals at the end; the default output is unchanged.
 ## QA-222: `day` columns are the game clock's days; a sim month is 30 cultivation days plus its actions' days (~60 clock days, see first_hour.gd).
 ## QA-215: `--season-tasks` also does the elder's open season tasks (see first_hour.gd season_tasks); pair with `--season-report`.
+## QA-177: the `--repeat-report` table prints raw text templates, so `{villager}`/`{rival}` appear unfilled there; `--trace=<seed>` shows the filled names.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_curious_years.gd -- [seeds] [months] [--wait-for-pill=N] [--trace=<seed>]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
