@@ -1432,6 +1432,7 @@ static func _visit_style_teacher(gs: Node, c: CharacterData) -> void:
 	if gs.current_region != String(teacher["region_id"]) and not _go_to(gs, c, String(teacher["region_id"])):
 		return
 	var npc_id := String(teacher["npc_id"])
+	_take_favor_errands(gs, c, npc_id)  # QA-231
 	for day in 7:
 		if not c.alive or Techniques.knows_kind(c, gs.data, "combat"):
 			break
@@ -1458,6 +1459,20 @@ static func _visit_style_teacher(gs: Node, c: CharacterData) -> void:
 
 
 const SPARE_STONES := 5
+
+
+## QA-231: before gifting, takes every available deed of the teacher's errand context whose `favor` names him (C-380's snare line).
+static func _take_favor_errands(gs: Node, c: CharacterData, npc_id: String) -> void:
+	var context := String(gs.data.npcs[npc_id].get("deed_context", ""))
+	if context == "":
+		return
+	for deed: Dictionary in Deeds.available(gs.data, context, gs.world_flags):
+		if not c.alive or not (deed.get("favor", {}) as Dictionary).has(npc_id):
+			continue
+		if Deeds.check(c, gs.data, deed, gs.world_flags, _day(gs)) != "":
+			continue
+		gs.perform_deed(String(deed["id"]))
+		_teach_rec["errands"] = int(_teach_rec.get("errands", 0)) + 1
 
 
 ## Opens the teacher's dialogue and takes the "Show me ..." choice, then whatever choice follows, until a style is learned.
