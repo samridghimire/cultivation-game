@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 6a674ed
+Last reviewed commit: 373d051
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2121,3 +2121,18 @@ Last reviewed commit: 6a674ed
     GFX-180 (hedge blobs/variants, pure + tested) are draw-only; I did not render them.
   - QA-164/169/171, SEASON-026: sim only, base output unchanged per their notes. QA-164's finding (the qi-pill hint
     never points away while any local pill exists) is a GUIDE question the planner can pick up from its Follow-ups.
+- 2026-11-17 (reviewer): reviewed 6a674ed..373d051 (QA-124, GFX-179, WU-559, GFX-181, GUIDE-251, WU-560, GFX-183, C-380,
+  QA-226, QA-229; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change,
+  no new binary assets. Nothing fixed, nothing filed.
+  - C-380 OK: deed `favor` is applied only after Deeds.perform succeeds (so not on a lost fight or a refused repeat),
+    clamped like every other favor change, validated in GameData (unknown npc, result <= 140 chars), and the once-only
+    errand is tested through GameState. The balance baseline was refreshed in a separate commit.
+  - GUIDE-251 OK: the far pill must beat local qi_total by 1.25x after a round trip priced in home meditation qi; tests
+    cover far-wins, local-kept and no-local. Latent: nearest_selling picks the *nearest* region with any pill, so a better
+    pill two roads away is never weighed; and the far search now runs even when a local pill exists (cheap per the
+    hop limit). Not filed; the worker's follow-up (sim buyer still never travels) is for the planner.
+  - WU-559 OK (with_where only trims when the label already names the event; tested both ways). QA-226 test pins the
+    hill-dog odds by stage. GFX-179/181/183 are draw-only plus pure seeded helpers with tests; I did not render them.
+    WU-560 is an empty shot-pass commit. QA-124/QA-229: sim only.
+  - Planner notes from worker follow-ups: QA-226 measured a 160-210 ms cold fair_fights call for a Foundation player
+    (first HUD refresh hitch); QA-229 asks an owner question about early sect members never reaching the far qi spot.
