@@ -59,6 +59,11 @@ static var sect_log: Array[Dictionary] = []
 ## clock advance) until Foundation, and the qi gained per meditation day. Part of the memo key.
 static var activity_report := false
 static var activity_log: Array[Dictionary] = []
+## QA-229: with qi_probe on, play() logs for each meditation month in the first 6 that starts away from the bottleneck, uninjured
+## and ends in the same stage: region, density asked, density the game used, sect bonus, measured vs expected qi per day.
+## Part of the memo key.
+static var qi_probe := false
+static var qi_probe_log: Array[Dictionary] = []
 ## QA-138: a curious player takes the bout the spar hint names ("<Name> (<realm>) here would spar with you"), once a
 ## week while the hint speaks; simulate_first_hour.gd's --no-spar-hint turns it off. spar_log["bouts"] counts them,
 ## ["refused"] collects check_spar's text when the named partner refuses (a hint bug).
@@ -161,7 +166,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -245,7 +250,19 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			qi_density = _move_for_qi(gs, c, clock, month, qi_density, out)
 		var qi_before := c.qi
 		var realm_before_med := c.realm_index
+		var probe_ok := qi_probe and month < 6 and c.injuries.is_empty() and not Cultivation.is_at_bottleneck(c, gs.data)
+		var probe_stage := c.stage
+		var probe_day: int = clock.total_days
+		var probe_region: String = gs.current_region
+		var probe_expected := 0.0
+		var probe_used := 0.0
+		if probe_ok:
+			probe_used = gs._cultivation_density(qi_density, Calendar.DAYS_PER_MONTH)
+			probe_ok = Cultivation.days_to_bottleneck(c, gs.data, probe_used) > Calendar.DAYS_PER_MONTH
+			probe_expected = Cultivation.qi_per_day(c, gs.data, qi_density * gs.region_qi_density(Calendar.DAYS_PER_MONTH) * Sects.cultivation_bonus(c, gs.data))
 		gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
+		if probe_ok and c.alive and c.stage == probe_stage and c.realm_index == realm_before_med and clock.total_days > probe_day:
+			qi_probe_log.append({"seed": seed_value, "month": month + 1, "region": probe_region, "sect": not c.is_rogue(), "asked": qi_density, "used": probe_used, "bonus": Sects.cultivation_bonus(c, gs.data), "days": clock.total_days - probe_day, "measured": (c.qi - qi_before) / float(clock.total_days - probe_day), "expected": probe_expected})
 		if not c.alive:
 			break
 		if activity_report and not act["found"] and c.realm_index == realm_before_med:

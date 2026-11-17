@@ -145,6 +145,8 @@ func _run() -> void:
 			FirstHour.sect_report = true  # QA-162
 		elif a == "--activity-report":
 			FirstHour.activity_report = true  # QA-171
+		elif a == "--qi-probe":
+			FirstHour.qi_probe = true  # QA-229
 		elif a == "--core-report":
 			FirstHour.core_report = true  # QA-173
 		elif a == "--chat-teacher":
@@ -318,6 +320,8 @@ func _run() -> void:
 		_print_sect_report()
 	if FirstHour.activity_report:
 		_print_activity_report()
+	if FirstHour.qi_probe:
+		_print_qi_probe()
 	if FirstHour.body_art or FirstHour.trial_report:
 		_print_body_art(seeds)
 	if FirstHour.sect_method:
@@ -576,6 +580,22 @@ func _print_sect_report() -> void:
 
 
 ## QA-171: per seed the days per activity until Foundation (or the whole run if it never came), then medians.
+## QA-229: per probed meditation month: does the measured qi per day match what Cultivation.qi_per_day says with the
+## sect bonus and the weather included?
+func _print_qi_probe() -> void:
+	print("Qi probe (QA-229): seed, month, region, sect?, spot density, density used, sect bonus, days, qi/day measured, qi/day expected")
+	var worst := 0.0
+	var sum_m := 0.0
+	var sum_e := 0.0
+	for r: Dictionary in FirstHour.qi_probe_log:
+		print("  seed %d m%d %s sect=%s asked %.2f used %.3f bonus %.2f days %d measured %.2f expected %.2f" % [r["seed"], r["month"], r["region"], str(r["sect"]), r["asked"], r["used"], r["bonus"], r["days"], r["measured"], r["expected"]])
+		sum_m += float(r["measured"])
+		sum_e += float(r["expected"])
+		if float(r["expected"]) > 0.0:
+			worst = maxf(worst, absf(float(r["measured"]) / float(r["expected"]) - 1.0))
+	print("Qi probe: %d months, mean measured %.2f vs expected %.2f, worst deviation %.1f%%" % [FirstHour.qi_probe_log.size(), sum_m / maxf(1.0, FirstHour.qi_probe_log.size()), sum_e / maxf(1.0, FirstHour.qi_probe_log.size()), worst * 100.0])
+
+
 func _print_activity_report() -> void:
 	print("Activity days until Foundation (QA-171): seed, sect, Foundation day, days per activity, qi per meditation day")
 	var kinds := {}
