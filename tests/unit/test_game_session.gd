@@ -4621,3 +4621,23 @@ func test_artifact_drinks_cultivated_months() -> void:
 	before = c.artifact_energy
 	gs._pass_time(65)
 	assert_eq(c.artifact_energy, before, "a mortal gets none")
+
+
+## C-380: Hunter Ma's snare-line errand is open on day 0 and, with two liked gifts, reaches the favor his free lesson needs.
+func test_hunter_ma_snare_errand_reaches_lesson_favor() -> void:
+	var c := _start()
+	var gs := _game_state()
+	Npcs.ensure_all(gs.npcs, gs.data, seeded_rng(5))
+	var deed: Dictionary = gs.data.deeds["ma_snare_line"]
+	assert_eq(Deeds.check(c, gs.data, deed, gs.world_flags, GameClock.total_days), "", "open to a newcomer")
+	assert_true(Deeds.available(gs.data, String(gs.data.npcs["hunter_ma"]["deed_context"]), gs.world_flags).has(deed))
+	gs.npc_favor["hunter_ma"] = 0
+	gs.perform_deed("ma_snare_line")
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 12)
+	assert_true(bool(gs.world_flags.get("ma_snare_done", false)))
+	gs.perform_deed("ma_snare_line")
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 12, "once only")
+	c.add_item("venison", 4)
+	gs.give_gift("hunter_ma", "venison")
+	gs.give_gift("hunter_ma", "venison")
+	assert_true(int(gs.npc_favor["hunter_ma"]) >= 15, "errand + two liked gifts: %d" % int(gs.npc_favor["hunter_ma"]))

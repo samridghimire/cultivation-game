@@ -444,6 +444,13 @@ func _validate() -> void:
 	for realm in realms:
 		if realm.description.strip_edges() == "":
 			load_errors.append("Realm '%s' has no description" % realm.id)
+	for deed_id: String in deeds:  # C-380: favor {npc: int}, result <= 140 chars
+		var deed: Dictionary = deeds[deed_id]
+		for npc_id: String in (deed.get("favor", {}) as Dictionary):
+			if not npcs.has(npc_id):
+				load_errors.append("Deed '%s': favor names unknown npc '%s'" % [deed_id, npc_id])
+		if String(deed.get("result", "")).length() > 140:
+			load_errors.append("Deed '%s': result is over 140 characters" % deed_id)
 	load_errors.append_array(Tribulation.validate(self))
 	load_errors.append_array(HeartVision.validate(self))
 	load_errors.append_array(Dao.validate(self))

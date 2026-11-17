@@ -641,15 +641,34 @@ func perform_deed(deed_id: String) -> void:
 		EventBus.post(result["reason"], "warning")
 		return
 	LifeStats.add(player, "deeds_done")
+	var favor_notes := _deed_favor(deed)
+	if not favor_notes.is_empty():
+		result["notes"].append_array(favor_notes)
 	if float((deed.get("effects", {}) as Dictionary).get("alignment", 0)) > 0.0:
 		_gain_renown("righteous_deed")
 	EventBus.post("%s. (%s)" % [deed["name"], ", ".join(result["notes"])], "karma")
+	if String(deed.get("result", "")) != "":
+		EventBus.post(String(deed["result"]), "world")
 	var deed_alignment := float((deed.get("effects", {}) as Dictionary).get("alignment", 0))
 	if deed_alignment > 0.0:
 		_artifact_whisper("first_righteous_deed")
 	elif deed_alignment < 0.0:
 		_artifact_whisper("first_demonic_act")
 	_pass_time(result["days"])
+
+
+## C-380: a deed's `favor` {npc_id: delta} changes named villagers' favor; the notes say whom.
+func _deed_favor(deed: Dictionary) -> PackedStringArray:
+	var notes: PackedStringArray = []
+	var favor: Dictionary = deed.get("favor", {})
+	for npc_id: String in favor:
+		var npc: CharacterData = npcs.get(npc_id)
+		if npc == null:
+			continue
+		var delta := int(favor[npc_id])
+		npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + delta, -100, 100)
+		notes.append("%s thinks %s of you" % [npc.name, "better" if delta > 0 else "worse"])
+	return notes
 
 
 ## Buys one item; `faction` is the sect the merchant belongs to (prices follow reputation).
