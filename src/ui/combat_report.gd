@@ -355,12 +355,13 @@ func _append_endnotes() -> void:
 
 
 func _finish() -> void:
+	var was_playing := playing
 	playing = false
 	_timer.stop()
 	_skip_button.visible = false
 	_close_button.disabled = false
 	if _stage.visible:
-		_stage.show_end_pose(_victory, _friendly)
+		_stage.show_end_pose(_victory, _friendly, was_playing)
 	_append_endnotes()
 	_show_devour(_victory)
 	_close_button.grab_focus.call_deferred()

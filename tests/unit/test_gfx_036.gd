@@ -81,3 +81,23 @@ func test_defeated_tag_hugs_the_body_wu547() -> void:
 	tag = stage.defeated_tag_rect(0)
 	assert_true(body.position.y - tag.end.y <= 8.0, "player tag near body")
 	stage.queue_free()
+
+
+## WU-563: a beaten beast rolls onto its back: 0.8x its height, resting on the feet line, with the shadow and plate in place.
+func test_fallen_beast_on_its_back_wu563() -> void:
+	var stage := DuelStage.new()
+	stage.size = Vector2(620, 182)
+	(Engine.get_main_loop() as SceneTree).root.add_child(stage)
+	stage.setup("wild_boar", ["beast"])
+	stage.show_end_pose(true, false)
+	var body := stage.fallen_body_rect(1)
+	var stand := stage._body_size(1)
+	assert_true(Rect2(Vector2.ZERO, stage.size).encloses(body), "body inside the stage")
+	assert_true(absf(body.end.y - stage._feet_of(1).y) <= 2.0, "bottom on the feet line")
+	assert_true(body.size.y >= stand.y * 0.7 and body.size.y <= stand.y * 0.85, "height 0.7-0.85x standing")
+	var sh := stage.shadow_rect(1)
+	assert_true(body.position.x <= sh.get_center().x and sh.get_center().x <= body.end.x, "shadow under body")
+	assert_false(stage.defeated_tag_rect(1).intersects(body), "plate clear of the body")
+	assert_true(stage._dark[1] < DuelStage.FALLEN_DARKEN, "beast darkens less than a person")
+	assert_true(stage._dust_start < 0.0, "no dust when not animated")
+	stage.queue_free()

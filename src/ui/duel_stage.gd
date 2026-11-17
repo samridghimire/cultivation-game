@@ -24,7 +24,10 @@ const BEAST_SIZE_LARGE := 1.3
 ## Fighters stand this far above the stage bottom, mid-grass (GFX-036).
 const FEET_INSET := 34.0
 ## A fallen beast lies on its side: its body squashed to this fraction of its standing height (WU-547).
-const BEAST_LIE_SCALE := 0.55
+const BEAST_LIE_SCALE := 0.8  # WU-563: a beaten beast lies on its back, flipped, at 0.8 of its standing height
+const BEAST_FALLEN_DARKEN := 0.18
+const DUST_SECONDS := 0.5
+const DUST_SPECKS := 6
 const TAG_GAP := 5.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
@@ -64,6 +67,7 @@ var _flash: Array[float] = [0.0, 0.0]
 var _alpha: Array[float] = [1.0, 1.0]
 var _tilt: Array[float] = [0.0, 0.0]
 var _kneel: Array[bool] = [false, false]  # WU-548: the loser of a friendly bout kneels
+var _dust_start := -1.0  # WU-563: when the fall dust puffed (seconds), -1 for none
 var _dark: Array[float] = [0.0, 0.0]  # 0..1 darkening of a fallen fighter
 var _tween: Tween
 var _stage_shake_start := -1.0  # ticks (s) when the heavy-hit shake began
@@ -212,6 +216,7 @@ func reset_pose() -> void:
 	_alpha = [1.0, 1.0]
 	_tilt = [0.0, 0.0]
 	_dark = [0.0, 0.0]
+	_dust_start = -1.0
 	_kneel = [false, false]
 	_stage_shake_start = -1.0
 	queue_redraw()
@@ -266,11 +271,16 @@ func _set_shake(v: float, who: int) -> void:
 
 
 ## The end pose: the loser lies on its side at full alpha, darkened 30%; on a friendly spar both stand.
-func show_end_pose(victory: bool, friendly: bool) -> void:
+func show_end_pose(victory: bool, friendly: bool, animate: bool = false) -> void:
 	reset_pose()
 	if not friendly:
 		var loser := 1 if victory else 0
-		_dark[loser] = FALLEN_DARKEN
+		_dark[loser] = BEAST_FALLEN_DARKEN if (loser == 1 and _foe_beast) else FALLEN_DARKEN
+		if animate and is_inside_tree() and not MotionFx.reduced():
+			_dust_start = Time.get_ticks_msec() / 1000.0
+			var t := create_tween()
+			t.tween_method(func(_v: float) -> void: queue_redraw(), 0.0, 1.0, DUST_SECONDS)
+			t.finished.connect(func() -> void: _dust_start = -1.0; queue_redraw())
 		_tilt[loser] = toppled_tilt(loser == 1 and _foe_beast)
 	else:  # WU-548: both stand, the one who lost the bout kneels; no "Defeated" tag
 		_kneel[1 if victory else 0] = true
@@ -447,12 +457,26 @@ func defeated_tag_rect(who: int) -> Rect2:
 	return Rect2(body.get_center().x - w / 2.0, body.position.y - TAG_GAP - 20.0, w, 20.0)
 
 
-## A small puff of dust where a fighter fell: three fading grey blobs on the ground by the body.
-func _draw_dust(feet: Vector2, who: int) -> void:
-	var half := fallen_body_rect(who).size.x / 2.0
-	for i in 3:
-		var x := feet.x + (-1.0 if i == 1 else 1.0) * (half + 4.0 + float(i) * 5.0)
-		draw_circle(Vector2(x, feet.y - 3.0 - float(i) * 3.0), 5.0 - float(i), Color(0.78, 0.72, 0.62, 0.35 - 0.08 * float(i)))
+## WU-563: on the first frames of a beast's fall, a few specks of lightened ground drift up from under the body.
+func _draw_dust(_feet: Vector2, who: int) -> void:
+	if _dust_start < 0.0 or not (who == 1 and _foe_beast):
+		return
+	var t := clampf((Time.get_ticks_msec() / 1000.0 - _dust_start) / DUST_SECONDS, 0.0, 1.0)
+	var body := fallen_body_rect(who)
+	var col := Color(_ground_base().lightened(0.3), 0.6 * (1.0 - t))
+	for i in DUST_SPECKS:
+		var x := body.position.x + body.size.x * (0.1 + 0.8 * unit_hash("dust", i))
+		var rise := 6.0 + 4.0 * unit_hash("dustr", i)
+		draw_rect(Rect2(x, body.end.y - 3.0 - rise * t, 3.0, 3.0), col)
+
+
+func _ground_base() -> Color:
+	if season_look.has("ground"):
+		return Color(season_look["ground"])
+	var rid := GameState.current_region
+	if GameState.data != null and GameState.data.regions.has(rid):
+		return map_ground_color(GameState.data.regions[rid].get("map", {}))
+	return Color("33402a")
 
 
 ## The axis-aligned bounds of a fallen fighter (GFX-036). `tex_size` is the standing body in
@@ -1059,7 +1083,7 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		var pivot := pos + Vector2(0.0, -body.x / 2.0)
 		draw_set_transform_matrix(Transform2D(rot, pivot) * Transform2D(0.0, Vector2(0.0, body.y / 2.0)))
 	elif on_back:  # on its side: squashed flat, feet on the ground, legs stuck out stiff
-		draw_set_transform(pos, 0.0, Vector2(1.0, BEAST_LIE_SCALE))
+		draw_set_transform(pos + Vector2(0.0, -body.y * BEAST_LIE_SCALE), 0.0, Vector2(1.0, -BEAST_LIE_SCALE))
 	elif _kneel[who]:  # a kneeling bow: shorter, a little forward
 		draw_set_transform(pos + Vector2(8.0 if who == 0 else -8.0, 0.0), 0.12 * (1.0 if who == 0 else -1.0), Vector2(1.0, 0.8))
 	else:
@@ -1078,12 +1102,6 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		_draw_beast(tint)
 	else:
 		_draw_person(who, tint)
-	if on_back:  # four stiff legs poking out along the ground
-		draw_set_transform(pos, 0.0, Vector2.ONE)
-		var lc := _tinted(DEFAULT_FUR.darkened(0.35), tint)
-		var half := body.x / 2.0
-		for lx in [-0.3, -0.1, 0.12, 0.32]:
-			draw_rect(Rect2(half * float(lx) * 2.0 - 2.0, -5.0, 4.0, 10.0 * BEAST_LIE_SCALE + 3.0), lc)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
