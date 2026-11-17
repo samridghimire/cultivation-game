@@ -230,6 +230,7 @@ func _run() -> void:
 	FirstHour.armor_log = {"day": -1, "sold": 0, "stones_from_sales": 0, "trips": 0}
 	FirstHour.buy_qi = curious and args.has("--buy-qi")  # QA-144
 	FirstHour.qi_log = {"bought": 0, "stones": 0, "used": 0, "qi": 0}
+	FirstHour.qi_trips = 0  # QA-164
 	FirstHour.spend_contribution = curious and args.has("--spend-contribution")  # QA-148
 	FirstHour.qi_pill_cap = -1  # QA-150
 	FirstHour.contribution_log = {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}

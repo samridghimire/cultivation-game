@@ -122,6 +122,9 @@ func _run() -> void:
 			FirstHour.tend = true  # QA-184
 		elif a == "--buy-qi":
 			FirstHour.buy_qi = true  # QA-161
+		elif a == "--buy-qi-travel":
+			FirstHour.buy_qi = true  # QA-164
+			FirstHour.buy_qi_travel = true
 		elif a == "--body-art":
 			FirstHour.body_art = true  # QA-155
 		elif a == "--trial-report":
@@ -514,6 +517,8 @@ func _print_arm_report(runs: Array[Dictionary], months: int) -> void:
 		lives += int(r.get("recharges", 0))
 	var ql: Dictionary = FirstHour.qi_log
 	print("Arm report (QA-161): stones median m12 %.0f, m36 %.0f; qi pills bought %d for %d stones (used %d, +%d qi); fights lost %d; artifact lives bought %d; final deaths %d" % [_median(s12.duplicate()), _median(s36.duplicate()), ql["bought"], ql["stones"], ql["used"], ql["qi"], lost, lives, finals])
+	if FirstHour.buy_qi_travel:
+		print("  QA-164: %d trips to the pill the hint names" % FirstHour.qi_trips)
 
 
 ## QA-162: per seed what the sect member did with the sect (see FirstHour.sect_report), then medians.

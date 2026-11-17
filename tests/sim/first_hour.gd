@@ -107,6 +107,10 @@ static var chase_best_mission := true
 ## stone the current region's merchant sells, and use the pills (not at a bottleneck); simulate_first_hour.gd's
 ## --buy-qi sets it. qi_log counts "bought", "stones" spent, pills "used" and "qi" gained from them.
 static var buy_qi := false
+## QA-164: with buy_qi, when this region's merchants sell nothing worth buying, follow the qi-pill hint
+## (Guidance.qi_pill_offer_near) to the region it names, buy there and walk home. `--buy-qi-travel` sets it.
+static var buy_qi_travel := false
+static var qi_trips := 0
 ## QA-140: follow the "Sell your ..." / armor hints: sell loot to the named merchant, walk to the smithy, buy and
 ## wear the armor, walk home. simulate_first_hour.gd turns it on for --curious (`--no-armor` restores the old policy of never selling or buying armor).
 static var shop_armor := false
@@ -157,7 +161,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -982,12 +986,47 @@ static func _tend_field(gs: Node, c: CharacterData, field: Dictionary, key: Stri
 
 ## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.
 static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
+	if _buy_qi_here(gs, c) or not buy_qi_travel or not c.alive:
+		return
+	var offer := Guidance.qi_pill_offer_near(c, gs.data, gs.current_region, gs.world_flags)
+	if offer.is_empty() or not offer.has("region_id") or String(offer["region_id"]) == gs.current_region:
+		return
+	var home: String = gs.current_region
+	var target := String(offer["region_id"])
+	for hop in 12:
+		if gs.current_region == target or not c.alive:
+			break
+		var next := Guidance.first_hop(c, gs.data, gs.current_region, target)
+		if next == "":
+			break
+		var before: String = gs.current_region
+		gs.travel(next)
+		if gs.current_region == before:
+			break
+	if gs.current_region != target:
+		return
+	qi_trips += 1
+	_buy_qi_here(gs, c)
+	for hop in 12:
+		if gs.current_region == home or not c.alive:
+			break
+		var back := Guidance.first_hop(c, gs.data, gs.current_region, home)
+		if back == "":
+			break
+		var before2: String = gs.current_region
+		gs.travel(back)
+		if gs.current_region == before2:
+			break
+
+
+## QA-144: buys and uses pills from the current region's merchants; true if any were bought.
+static func _buy_qi_here(gs: Node, c: CharacterData) -> bool:
 	var reserve := 0
 	if Guidance._pill_goal_applies(c, gs.data):
 		reserve = Guidance.next_realm_pill_price(c, gs.data)
 	var spare := c.item_count("spirit_stone") - reserve - 20
 	if spare <= 0:
-		return
+		return false
 	# Qi stops at the bottleneck, so only pills that fit in the room left are worth buying.
 	var realm: RealmDef = gs.data.realms[c.realm_index]
 	var room := realm.qi_required(realm.stage_count() - 1) - c.qi
@@ -1009,7 +1048,7 @@ static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
 				best_id = item_id
 				best_price = price
 	if best_id == "" or best_price > spare:
-		return
+		return false
 	var count := mini(spare / best_price, int(room / float(gs.data.items[best_id]["effects"]["qi"])))
 	var stones_before := c.item_count("spirit_stone")
 	var had := c.item_count(best_id)
@@ -1025,6 +1064,7 @@ static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
 		if c.item_count(best_id) < had + bought - i:
 			qi_log["used"] += 1
 			qi_log["qi"] += maxi(0, c.qi - qi_before)
+	return bought > 0
 
 
 ## QA-148: see spend_contribution.
