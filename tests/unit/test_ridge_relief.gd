@@ -309,3 +309,18 @@ func test_terrace_variants_and_lightning() -> void:
 	assert_eq(a[a.size() - 1], Vector2(0, 60))
 	var cols := Scenery.terrace_plant_colors("scorched", Color("5a8a3a"), Color("9aa8d0"))
 	assert_true(cols[0].get_luminance() < 0.2)
+
+
+## GFX-179: every outcrop gets a scree fan within 24 px of its base, deterministic, pebbles below the origin.
+func test_outcrop_fans_sit_at_the_foot() -> void:
+	var anchors: Array[Rect2] = [Rect2(100, 100, 120, 60), Rect2(500, 300, 40, 30), Rect2(900, 700, 90, 50)]
+	var fans := Scenery.outcrop_fans("ridge_t", anchors)
+	assert_eq(fans.size(), 3, "one fan per outcrop")
+	assert_eq(fans, Scenery.outcrop_fans("ridge_t", anchors), "deterministic")
+	for i in 3:
+		var base := Vector2(anchors[i].get_center().x, anchors[i].end.y)
+		assert_true((fans[i]["origin"] as Vector2).distance_to(base) <= 24.0, "fan within 24 px of the base")
+		var peb := Scenery.fan_pebbles(fans[i])
+		assert_true(peb.size() > 10, "pebbles")
+		for p in peb:
+			assert_true(p.y >= (fans[i]["origin"] as Vector2).y, "fans spread downhill")

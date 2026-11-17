@@ -320,8 +320,7 @@ static func _alpine_life(img: Image, rid: String, season: String) -> void:
 	var n := maxi(4, int(area * 14.0))
 	for b in alpine_blobs(rid, "hollow", n, size_px):
 		_blend_blob(img, b, 0.6, Color("3a4450"), 0.5)
-	for b in alpine_blobs(rid, "fan", n, size_px):
-		_blend_blob(img, Vector3(b.x, b.y, b.z * 1.3), 0.45, Color("a9aeb2"), 0.45)
+	# GFX-179: scree fans are drawn at each outcrop's foot by world.gd, no random fans in the ground
 	for b in alpine_blobs(rid, "lichen", n * 2, size_px):
 		_blend_blob(img, Vector3(b.x, b.y, b.z * 0.5), 0.7, Color("8d9a5a"), 0.5)
 	var grass := Color("6b8248")

@@ -1235,6 +1235,7 @@ func _draw() -> void:
 	_draw_yard_ground()
 	_draw_market_ground()
 	_draw_scree_detail(map)
+	_draw_outcrop_scree(map)
 	_draw_relief(map)
 	_draw_crags(map)
 	_draw_sect_courts()
@@ -2021,6 +2022,36 @@ func _draw_scree_detail(map: Dictionary) -> void:
 			draw_rect(Rect2(q + Vector2(0, sw - 1.0), Vector2(sw, 1.0)), tone.darkened(0.45))
 			draw_rect(Rect2(q, Vector2(sw, sw - 1.0)), tone)
 			draw_rect(Rect2(q, Vector2(sw, 1.0)), tone.lightened(0.18))
+
+
+## GFX-179: a fan of grey scree below each crag, rock ledge and boulder cluster (lighter at the tip) with a short contact
+## shadow at the foot; snow-covered in winter. Drawn under the rocks.
+func _draw_outcrop_scree(map: Dictionary) -> void:
+	if str(map.get("ground_style", "")) != "scree":
+		return
+	var anchors: Array[Rect2] = []
+	for it: Dictionary in _crags:
+		if it["kind"] == "crag":
+			anchors.append(it["rect"])
+	for it: Dictionary in _relief:
+		if it["kind"] == "ledge" or it["kind"] == "boulders":
+			anchors.append(it["rect"])
+	if anchors.is_empty():
+		return
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	var winter := GroundTiles.ground_season(_season, map) == "Winter"
+	for fan: Dictionary in Scenery.outcrop_fans(GameState.current_region, anchors):
+		var length := float(fan["length"])
+		var o: Vector2 = fan["origin"]
+		for pb: Vector3 in Scenery.fan_pebbles(fan):
+			var tip := clampf((pb.y - o.y) / maxf(length, 1.0), 0.0, 1.0)
+			var tone := rock.darkened(0.25 - 0.3 * tip)
+			if winter:
+				tone = tone.lerp(Color("e8eef4"), 0.75)
+			var q := Vector2(pb.x, pb.y).floor()
+			draw_rect(Rect2(q, Vector2(pb.z, maxf(pb.z - 1.0, 1.0))), tone)
+		var foot := Scenery.shadow_blob(Vector2(o.x, o.y + 1.0), Vector2(float(fan["spread"]) * 0.7, 4.0), int(fan["seed"]))
+		draw_colored_polygon(foot, Color(0, 0, 0, 0.2))
 
 
 ## GFX-159: a ridge patch: lichen = clumps of small greenish spots, rust = soft smudge, shale = angular dark plates with a lit edge.

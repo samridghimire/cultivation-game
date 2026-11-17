@@ -789,6 +789,37 @@ static func scree_clusters(region: Dictionary, keepouts: Array[Rect2]) -> Array[
 	return out
 
 
+## GFX-179: one scree fan at the foot of each outcrop (crag, ledge, boulder cluster): `anchors` are their rects. Returns
+## [{origin: Vector2, base: Vector2, length: float, spread: float, seed: int}]; `origin` is within 24 px of the rect's
+## bottom centre `base`, and the fan spreads downhill (+y) from it. Seeded by the region id and the anchor order.
+static func outcrop_fans(region_id: String, anchors: Array[Rect2]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in anchors.size():
+		var r := anchors[i]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("%s|outcrop_fan|%d" % [region_id, i])
+		var base := Vector2(r.get_center().x, r.end.y)
+		var origin := base + Vector2(rng.randf_range(-0.2, 0.2) * minf(r.size.x, 100.0), rng.randf_range(-4.0, 4.0))
+		out.append({"origin": origin, "base": base, "length": rng.randf_range(26.0, 44.0) + minf(r.size.x, 140.0) * 0.12, "spread": minf(r.size.x, 140.0) * 0.5 + rng.randf_range(10.0, 20.0), "seed": rng.randi()})
+	return out
+
+
+## GFX-179: the pebbles of a fan, [Vector3(x, y, size)] in a wedge that widens downhill from `origin`; `size` 1-3 px, the
+## last 40% of them (the tip) are the lightest. Deterministic from the fan's seed.
+static func fan_pebbles(fan: Dictionary) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(fan["seed"])
+	var o: Vector2 = fan["origin"]
+	var length := float(fan["length"])
+	var spread := float(fan["spread"])
+	for i in int(length * 0.9):
+		var t := sqrt(rng.randf())
+		var half := spread * (0.25 + 0.75 * t)
+		out.append(Vector3(o.x + rng.randf_range(-half, half) * (1.0 - t * 0.35), o.y + 2.0 + t * length, float(rng.randi_range(1, 3))))
+	return out
+
+
 ## GFX-145: 2-4 faint lighter slope bands across a scree map, [{rect: Rect2, seed: int}], seeded by the region id.
 static func scree_bands(region: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
