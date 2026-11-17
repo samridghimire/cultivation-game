@@ -6809,6 +6809,21 @@ func test_style_teacher_in_region_names_favor_and_liked_item() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, npcs, {}, "qingshi_village", 10, {"hunter_ma": 12}), "can teach you Iron Fist"))
 
 
+func test_style_teacher_names_the_snare_errand() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var npcs := _style_world()
+	var t := Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, 10, {})
+	assert_eq(t.get("close", ""), "help with his snare line (2 days, +12 favor)")
+	t = Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, 10, {"ma_snare_done": true})
+	assert_false(String(t.get("close", "")).contains("snare"), "done: falls back")
+	c.inventory = {"venison": 1}
+	t = Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, 10, {"ma_snare_done": true})
+	assert_true(String(t["close"]).contains("Venison"), t["close"])
+	t = Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, -1, {})
+	assert_false(String(t.get("close", "")).contains("snare"), "no day: no errand")
+
+
 func test_style_teacher_ready_has_no_favor_clause() -> void:
 	var c := _fresh()
 	c.techniques = {}

@@ -996,7 +996,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		if practice_day != "":
 			out.append(practice_day)
 	if c.realm_index > NEWCOMER_MAX_REALM:
-		var fighting := fighting_hint(c, data, region_id, people, favor)
+		var fighting := fighting_hint(c, data, region_id, people, favor, flags, today)
 		if fighting != "":
 			out.append(fighting)
 		elif c.techniques.is_empty():
@@ -3846,7 +3846,7 @@ static func _scan_first_combat_manual(c: CharacterData, data: GameData, region_i
 ## technique, tech_name, need, favor, region_id, region_name, days, liked}; `liked` is the first liked item
 ## the player holds or the merchant here sells ("" if none). `favor` is GameState.npc_favor.
 const STYLE_FAVOR_SLACK := 10
-static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}, today: int = -1) -> Dictionary:
+static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, region_id: String, favor: Dictionary = {}, today: int = -1, flags: Dictionary = {}) -> Dictionary:
 	if region_id == "" or Techniques.knows_kind(c, data, "combat"):
 		return {}
 	var best := _nearest_style_teacher(c, npcs, data, region_id, favor, _route_day_map(c, data, region_id, 1), false)
@@ -3860,7 +3860,9 @@ static func style_teacher(c: CharacterData, npcs: Dictionary, data: GameData, re
 	best.erase("_key")
 	if int(best["favor"]) < int(best["need"]) and not bool(best.get("far", false)):
 		best["liked"] = _liked_item(c, data, String(best["npc_id"]), region_id)
-		best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
+		best["close"] = _errand_clause(c, data, String(best["npc_id"]), flags, today)
+		if best["close"] == "":
+			best["close"] = _close_clause(c, data, String(best["npc_id"]), region_id, today)
 	return best
 
 
@@ -3949,6 +3951,33 @@ static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData
 	return line
 
 
+## GUIDE-254: "help with his snare line (2 days, +12 favor)" for an available deed whose `favor` names `npc_id`
+## (the NPC's own deed_context; not done, not blocked, requirements met), else "". Needs `today` >= 0.
+static func _errand_clause(c: CharacterData, data: GameData, npc_id: String, flags: Dictionary, today: int) -> String:
+	var context := String(data.npcs.get(npc_id, {}).get("deed_context", ""))
+	if context == "" or today < 0:
+		return ""
+	var npc_name := String(data.npcs[npc_id].get("name", ""))
+	for deed: Dictionary in Deeds.available(data, context, flags):
+		var gain := int(deed.get("favor", {}).get(npc_id, 0))
+		if gain <= 0 or Deeds.check(c, data, deed, flags, today) != "":
+			continue
+		var name := String(deed.get("name", ""))
+		for lead in ["Help %s with " % npc_name, "Help %s " % npc_name]:
+			if name.begins_with(lead):
+				name = name.trim_prefix(lead)
+				break
+		name = name.trim_prefix("check ")
+		var his := "her" if String(data.npcs[npc_id].get("gender", "")) == "female" else ("his" if String(data.npcs[npc_id].get("gender", "")) == "male" else "their")
+		name = name.replace(npc_name + "'s", his).replace(npc_name, "them" if his == "their" else ("her" if his == "her" else "him"))
+		var days := int(deed.get("days", 0))
+		var clause := "help with %s (%d day%s, +%d favor)" % [name.substr(0, 1).to_lower() + name.substr(1), days, "" if days == 1 else "s", gain]
+		if clause.length() > 46:
+			clause = "an errand for %s, +%d favor" % ["her" if his == "her" else ("him" if his == "his" else "them"), gain]
+		return clause
+	return ""
+
+
 ## GUIDE-239: one clause on how to close a favor gap with `npc_id`: a liked item held, one sold here, one a foe
 ## here drops, else "talk with him daily" (pronoun from the NPC's gender).
 static func _close_clause(c: CharacterData, data: GameData, npc_id: String, region_id: String, today: int) -> String:
@@ -4019,8 +4048,8 @@ static func _liked_item(c: CharacterData, data: GameData, npc_id: String, region
 
 
 ## GUIDE-238: the no-fighting-style hint: a teacher first (style_teacher), else the manual with any stones gap. "" when a combat technique is known.
-static func fighting_hint(c: CharacterData, data: GameData, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> String:
-	var teacher := style_teacher(c, people, data, region_id, favor)
+static func fighting_hint(c: CharacterData, data: GameData, region_id: String, people: Dictionary = {}, favor: Dictionary = {}, flags: Dictionary = {}, today: int = -1) -> String:
+	var teacher := style_teacher(c, people, data, region_id, favor, today, flags)
 	var locked := _realm_locked_clause(c, people, data, region_id)
 	if not teacher.is_empty() and not (bool(teacher.get("far", false)) and String(first_combat_manual(c, data, region_id).get("merchant", "")) != ""):
 		return style_teacher_hint(teacher) + locked  # a far teacher yields to a manual sold right here
@@ -4299,7 +4328,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 				var stall_when := String(offer.get("when", ""))
 				var at := String(offer.get("where", "here"))
 				out.append("Buy %s with spare stones: the %s %s sells them for %d stones%s, about %s of meditation each." % [Items.item_plural(data, String(offer["item_id"]), 2), offer["merchant"], at, offer["price"], (" (" + stall_when.trim_prefix(", ") + ")") if stall_when != "" else "", Calendar.format_duration(int(offer["days"]))])
-	var fighting := fighting_hint(c, data, region_id, people, favor)
+	var fighting := fighting_hint(c, data, region_id, people, favor, flags, today)
 	if fighting != "":
 		out.append(fighting)
 	var practise := practice_hint(c, data, region_id, today, flags)
