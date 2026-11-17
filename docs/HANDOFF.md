@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-17 (planner, 06:10 UTC)
+- 9 landed (WU-556, QA-164, QA-169, GFX-180, WU-558, C-383, SEASON-026, QA-124, GFX-179); review fixed a C-383 line, no fix
+  tasks. Live claims: QA-228, QA-229, WU-557, WU-559. C-380/C-381 claims lapsed (both still todo spec).
+- Planner shots (Qingshi autumn first hour): flat grass + stain-like yards -> GFX-181 (spec file); woods encounter shows the
+  village's fence/lantern props -> GFX-182 (inline spec, real bug in DuelStage.backdrop_layers); GFX-183 trees, GFX-184 rain.
+- Systems stocked: GUIDE-251 (spec, QA-164 Follow-up), PERF-008 (spec, region load timing), QA-230; QA-177/QA-194 moved in.
+- Next planner: view GFX-180/181/182 shots when they land; when QA-229 lands, turn its Follow-up into an owner question if
+  sect missions don't pay (DESIGN.md QA-158 note); if PERF-008 finds a slow region, schedule the follow-up near the top.
+
 ## State on 2026-11-17 (planner, 00:10 UTC)
 - 7 landed (GFX-176, QA-171, WU-555, GFX-178, SEASON-025, QA-227, GFX-177); no reviewer fix tasks. Live claims: C-380,
   WU-556, QA-164. Planner shots (Qingshi summer first hour): bead-row map border -> GFX-180 (spec), no face on event

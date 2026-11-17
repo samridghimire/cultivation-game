@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-17 [GFX-179] Crags, ledges and boulders on the ridge sit on a fan of scree with a shadow at their foot.
+- 2026-11-17 [QA-124] The crafter sim can walk to the far market the buy hint names; a talisman master in Misty Forest only crafts that way.
+- 2026-11-17 [SEASON-026] The season-task sim tries every week and a second place, finishing 4 of 24 year-1 sets instead of 1.
+- 2026-11-17 [C-383] Nine once-only season encounters fill the forest, mountain, marsh and village gaps for newcomers.
+- 2026-11-17 [WU-558] Story dialogues show the speaker's face, such as your rival's at your first meeting.
+- 2026-11-17 [GFX-180] The village's map border is a layered woodland edge of shrubs, small trees and rocks that changes with the season.
+- 2026-11-17 [QA-169] The sim measures a combined trial preparation: a body art lifts the weakest seeds, armor and practice add a little more.
+- 2026-11-17 [QA-164] The sim's qi-pill buyer can travel for the hinted pill; it never does, because the hint only looks away when nothing is sold locally.
+- 2026-11-17 [WU-556] Shops say once what a manual teaches and why Buy is greyed; the character sheet says "Son/Daughter of the ... family".
 - 2026-11-16 [GFX-176] Every stall in the Fallen Star Market has a cobbled lane to a street or court.
 - 2026-11-16 [QA-171] The sim reports days per activity until Foundation: sect missions explain why a far-qi sect member is slower than a rogue.
 - 2026-11-16 [WU-555] Names of wandering villagers and roamers step aside from place names as they move.
