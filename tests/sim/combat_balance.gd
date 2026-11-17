@@ -318,14 +318,38 @@ static func _add_bounty_foes(data: GameData, out: Array[Dictionary]) -> void:
 			out.append({"enemy": String(b["enemy"]), "source": "bounty " + id, "realm_index": maxi(0, data.realm_index_of(String(b.get("min_realm", "mortal")))), "stage": int(b.get("min_stage", 0)), "forced": false, "optional": true})
 
 
+## QA-194: the lowest realm at which a region's own fights (encounters sharing one
+## of its tags that carry an enemy) appear; 0 (Mortal) when it has none.
+static func region_entry_realm(data: GameData, region_id: String) -> int:
+	var tags: Array = data.regions.get(region_id, {}).get("encounter_tags", [])
+	var best := -1
+	for enc_id: String in data.encounters:
+		var enc: Dictionary = data.encounters[enc_id]
+		var has_foe: bool = enc.has("enemy")
+		for choice: Dictionary in enc.get("choices", []):
+			has_foe = has_foe or choice.has("enemy")
+		if not has_foe:
+			continue
+		var shared := false
+		for t: Variant in enc.get("tags", []):
+			shared = shared or tags.has(t)
+		if not shared:
+			continue
+		var idx := maxi(0, data.realm_index_of(String(enc.get("min_realm", "mortal"))))
+		best = idx if best < 0 else mini(best, idx)
+	return maxi(best, 0)
+
+
 ## QA-193: region roamers (WILD-001) and great beasts (WILD-006). They are seen on
 ## the map and can be avoided or fled, so they are evadable and optional.
 static func _add_roamers(data: GameData, out: Array[Dictionary]) -> void:
 	for region_id: String in data.regions:
 		var roamers: Dictionary = data.regions[region_id].get("roamers", {})
+		var entry := region_entry_realm(data, region_id)
 		for e: Dictionary in roamers.get("enemies", []):
 			if data.enemies.has(String(e.get("enemy", ""))):
-				out.append({"enemy": String(e["enemy"]), "source": "roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(e.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})
+				# QA-194: no min_realm means "seen from the region's entry realm", not Mortal.
+				out.append({"enemy": String(e["enemy"]), "source": "roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(e["min_realm"]))) if e.has("min_realm") else entry, "stage": 0, "forced": false, "optional": true})
 		var great: Dictionary = roamers.get("great", {})
 		if data.enemies.has(String(great.get("enemy", ""))):
 			out.append({"enemy": String(great["enemy"]), "source": "great roamer " + region_id, "realm_index": maxi(0, data.realm_index_of(String(great.get("min_realm", "mortal")))), "stage": 0, "forced": false, "optional": true})

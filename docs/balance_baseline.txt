@@ -921,27 +921,11 @@ Combat balance, 200 fights per cell. Typical player: attributes 10, Iron Fist + 
 Where each enemy first appears (typical player entering the realm / at its peak / entering with talismans; bare player entering):
   Mortal    bog_king_toad          great roamer withered_bone_m evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Mortal    cloud_crane            great roamer azure_peak      evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    den_wolf               roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    den_wolf               roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    den_wolf               roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    fog_antler_stag        roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    fog_antler_stag        roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    fog_antler_stag        roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    grave_guardian_ape     roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    iron_back_boar         roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    mist_fox               roamer azure_peak            evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    mist_fox               roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    mist_python            roamer misty_forest          evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    mist_python            roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    moss_back_ape          roamer myriad_peaks_ridge    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
-  Mortal    moss_back_ape          roamer withered_bone_marsh   evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Mortal    mountain_bandit        choice city_cornered_merchan forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission collect_a_debt       forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    mountain_bandit        mission press_gang_bandits   forced                   entry 100%  peak 100%  talisman 100%  bare  30%  veteran on appearance 100%  TRIVIAL
   Mortal    old_tusker_boar        great roamer misty_forest    evadable                 entry   0%  peak   0%  talisman   0%  bare   0%  veteran on appearance   0%  UNBEATABLE (lethal: a Deadly foe is sensed and evaded)
   Mortal    wild_boar              encounter village_boar       forced                   entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
-  Mortal    wild_boar              roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
-  Mortal    wild_boar              roamer withered_bone_marsh   evadable                 entry 100%  peak 100%  talisman 100%  bare  96%  veteran on appearance 100%  TRIVIAL
   Qi Refini azure_cloud_raider     mission answer_blood_lotus_c forced                   entry  93%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini azure_crane            bounty azure_crane_bounty    evadable                 entry   1%  peak  90%  talisman  12%  bare   0%  veteran on appearance   3%  HARD
   Qi Refini azure_crane            encounter mountain_azure_cra evadable                 entry  53%  peak  90%  talisman  89%  bare   0%  veteran on appearance  68%  OK
@@ -957,12 +941,19 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini cloud_crane_mate       great roamer return azure_pe evadable                 entry   1%  peak  93%  talisman  13%  bare   0%  veteran on appearance   7%  HARD
   Qi Refini den_wolf               choice forest_hunters_wolf_d forced                   entry 100%  peak 100%  talisman 100%  bare  95%  veteran on appearance 100%  TRIVIAL
   Qi Refini den_wolf               mission drive_off_den_wolves forced                   entry 100%  peak 100%  talisman 100%  bare  95%  veteran on appearance 100%  TRIVIAL
+  Qi Refini den_wolf               roamer azure_peak            evadable                 entry 100%  peak 100%  talisman 100%  bare  95%  veteran on appearance 100%  TRIVIAL
+  Qi Refini den_wolf               roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare  95%  veteran on appearance 100%  TRIVIAL
+  Qi Refini den_wolf               roamer myriad_peaks_ridge    evadable                 entry 100%  peak 100%  talisman 100%  bare  95%  veteran on appearance 100%  TRIVIAL
   Qi Refini drunk_bully_disciple   bounty drunk_bully_bounty    evadable                 entry 100%  peak 100%  talisman 100%  bare  24%  veteran on appearance 100%  TRIVIAL
   Qi Refini drunk_bully_disciple   encounter village_drunk_bull forced                   entry 100%  peak 100%  talisman 100%  bare  92%  veteran on appearance 100%  TRIVIAL
   Qi Refini fog_antler_stag        bounty fog_antler_stag_bount evadable                 entry 100%  peak 100%  talisman 100%  bare  21%  veteran on appearance 100%  TRIVIAL
   Qi Refini fog_antler_stag        encounter forest_fog_antler_ forced                   entry 100%  peak 100%  talisman 100%  bare  21%  veteran on appearance 100%  TRIVIAL
   Qi Refini fog_antler_stag        mission drive_off_fog_antler forced                   entry 100%  peak 100%  talisman 100%  bare  21%  veteran on appearance 100%  TRIVIAL
+  Qi Refini fog_antler_stag        roamer azure_peak            evadable                 entry  97%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini fog_antler_stag        roamer misty_forest          evadable                 entry  97%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
+  Qi Refini fog_antler_stag        roamer myriad_peaks_ridge    evadable                 entry  97%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini garden_poacher         realm verdant_remnant floor  forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Qi Refini grave_guardian_ape     roamer withered_bone_marsh   evadable                 entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini grave_guardian_ape     trial fist_saint_grave stage forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini grotto_hermit_guest    realm peach_blossom_grotto f forced                   entry  56%  peak 100%  talisman  98%  bare   0%  veteran on appearance  76%  OK
   Qi Refini hill_dog               encounter forest_hill_dogs   forced                   entry 100%  peak 100%  talisman 100%  bare   1%  veteran on appearance 100%  TRIVIAL
@@ -970,19 +961,26 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini iron_back_boar         bounty iron_back_boar_bounty evadable                 entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
   Qi Refini iron_back_boar         defence beast_tide           forced                   entry  90%  peak  76%  talisman 100%  bare   0%  veteran on appearance  96%  OK
   Qi Refini iron_back_boar         encounter village_iron_back_ forced                   entry  69%  peak 100%  talisman 100%  bare   0%  veteran on appearance  88%  OK
+  Qi Refini iron_back_boar         roamer myriad_peaks_ridge    evadable                 entry  22%  peak 100%  talisman  80%  bare   0%  veteran on appearance  45%  HARD
   Qi Refini marsh_corpse_puppet    bounty marsh_corpse_puppet_b evadable                 entry  71%  peak  98%  talisman  96%  bare   0%  veteran on appearance  88%  OK
   Qi Refini marsh_corpse_puppet    encounter marsh_corpse_puppe evadable                 entry  48%  peak  98%  talisman  93%  bare   0%  veteran on appearance  72%  HARD
   Qi Refini mist_fox               choice forest_charcoal_burne forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_fox               encounter forest_mist_fox    forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_fox               realm peach_blossom_grotto f forced                   entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_fox               roamer azure_peak            evadable                 entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
+  Qi Refini mist_fox               roamer misty_forest          evadable                 entry  64%  peak 100%  talisman  98%  bare   0%  veteran on appearance  93%  OK
   Qi Refini mist_python            bounty mist_python_bounty    evadable                 entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini mist_python            encounter forest_mist_python forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
+  Qi Refini mist_python            roamer misty_forest          evadable                 entry   4%  peak 100%  talisman  47%  bare   0%  veteran on appearance  14%  HARD
+  Qi Refini mist_python            roamer withered_bone_marsh   evadable                 entry   4%  peak 100%  talisman  47%  bare   0%  veteran on appearance  14%  HARD
   Qi Refini mist_wolf              encounter forest_wolf        evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini mist_wolf              encounter tide_wolf_pack     evadable                 entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini mist_wolf              mission cull_mist_wolves     forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini mist_wolf              mission patrol_misty_peaks   forced                   entry  94%  peak 100%  talisman 100%  bare   0%  veteran on appearance 100%  OK
   Qi Refini mist_wolf              realm verdant_remnant floor  forced                   entry  80%  peak 100%  talisman 100%  bare   0%  veteran on appearance  99%  OK
   Qi Refini moss_back_ape          realm verdant_remnant floor  forced                   entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
+  Qi Refini moss_back_ape          roamer myriad_peaks_ridge    evadable                 entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
+  Qi Refini moss_back_ape          roamer withered_bone_marsh   evadable                 entry  48%  peak 100%  talisman  96%  bare   0%  veteran on appearance  77%  HARD
   Qi Refini mountain_bandit        choice wild_wounded_disciple forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter city_alley_thugs   forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Qi Refini mountain_bandit        encounter village_bandit     forced                   entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
@@ -1009,6 +1007,8 @@ Where each enemy first appears (typical player entering the realm / at its peak 
   Qi Refini wandering_boxer        choice road_wandering_boxer/ forced                   entry  70%  peak 100%  talisman  99%  bare   0%  veteran on appearance  86%  OK
   Qi Refini well_bandit            choice road_highwayman/Refus forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
   Qi Refini well_bandit            trial village_founder_well s forced                   entry  81%  peak 100%  talisman 100%  bare   0%  veteran on appearance  92%  OK
+  Qi Refini wild_boar              roamer misty_forest          evadable                 entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
+  Qi Refini wild_boar              roamer withered_bone_marsh   evadable                 entry 100%  peak 100%  talisman 100%  bare 100%  veteran on appearance 100%  TRIVIAL
   Foundatio azure_cloud_enforcer   choice road_token_patrol/Bru forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   encounter city_righteous_enf forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
   Foundatio azure_cloud_enforcer   mission ambush_azure_patrol  forced                   entry  59%  peak  78%  talisman  98%  bare   0%  veteran on appearance 100%  OK
