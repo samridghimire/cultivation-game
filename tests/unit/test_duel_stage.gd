@@ -318,3 +318,38 @@ func test_person_foe_has_own_look() -> void:
 	assert_true(la["style"] != lb["style"] or la["hair"] != lb["hair"] or la["robe"] != lb["robe"])
 	assert_true(DuelStage.person_look("wolf").is_empty())
 	assert_true(DuelStage.person_look("").is_empty())
+
+
+## WU-561: the ground scatter has 8-14 marks, none near a fighter's feet, and is deterministic.
+func test_stage_scatter_clear_of_feet() -> void:
+	for rid in ["qingshi_village", "misty_forest", "withered_bone_marsh"]:
+		for w in [620.0, 1000.0]:
+			var a := DuelStage.stage_scatter(rid, w)
+			assert_true(a.size() >= 8 and a.size() <= 14, "count %d" % a.size())
+			assert_eq(a, DuelStage.stage_scatter(rid, w))
+			for t in a:
+				assert_true(absf(float(t["x"]) - w * 0.25) >= DuelStage.SCATTER_CLEAR)
+				assert_true(absf(float(t["x"]) - w * 0.75) >= DuelStage.SCATTER_CLEAR)
+
+
+## WU-561: beasts scale by size class; a boar is medium, a Foundation beast large, a fox small.
+func test_beast_size_classes() -> void:
+	assert_eq(DuelStage.beast_size_mult("wild_boar", "mortal"), 1.0)
+	assert_eq(DuelStage.beast_size_mult("mist_fox", "qi_refining"), 0.8)
+	assert_eq(DuelStage.beast_size_mult("iron_horn_rhino", "foundation_establishment"), 1.3)
+	assert_true(DuelStage.beast_zoom("wild_boar", "mortal") > 3.0)
+
+
+## WU-561: a defeated fighter's shadow sits under the lying body, person or beast.
+func test_shadow_follows_fallen_body() -> void:
+	var st := DuelStage.new()
+	st.size = Vector2(620, 200)
+	for beast in [false, true]:
+		st.setup("wild_boar" if beast else "", ["beast"] if beast else [])
+		st._offset[1] = 50.0  # knocked back
+		st._dark[1] = 0.5
+		st._tilt[1] = 1.5
+		var sh := st.shadow_rect(1)
+		var body := st.fallen_body_rect(1)
+		assert_true(absf(sh.get_center().x - body.get_center().x) <= 6.0, "beast=%s" % beast)
+	st.free()

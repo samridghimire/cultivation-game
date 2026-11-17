@@ -17,6 +17,10 @@ const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 const STAGE_HEIGHT := 182.0
 const GROUND_BAND := 56.0
+const SCATTER_CLEAR := 80.0
+const BEAST_BASE_ZOOM := 4.5
+const BEAST_SIZE_SMALL := 0.8
+const BEAST_SIZE_LARGE := 1.3
 ## Fighters stand this far above the stage bottom, mid-grass (GFX-036).
 const FEET_INSET := 34.0
 ## A fallen beast lies on its side: its body squashed to this fraction of its standing height (WU-547).
@@ -47,6 +51,7 @@ const SKY_BY_SEASON := {
 }
 
 var _foe_beast: bool = false
+var _foe_zoom: float = 3.0  # WU-561: drawn pixels per texture pixel of a generated beast
 ## WU-501: a backdrop kind that replaces the region's own near layer (pines, reeds, cave, ruins, crags, hills); "" = the region's.
 var look_kind: String = ""
 ## WU-501: {ground: hex, sky: [top hex, horizon hex]} that replaces the region's ground and the clock's sky (the season card); {} = none.
@@ -187,6 +192,10 @@ func _draw_floaters(base_y: float, dx: float) -> void:
 func setup(enemy_id: String, tags: Array) -> void:
 	_foe_beast = tags.has("beast")
 	_foe_id = enemy_id
+	var realm := ""
+	if GameState.data != null and GameState.data.enemies.has(enemy_id):
+		realm = String((GameState.data.enemies[enemy_id] as Dictionary).get("realm", ""))
+	_foe_zoom = beast_zoom(enemy_id, realm)
 	_foe_texture = null
 	clear_floaters()
 	if enemy_id != "":
@@ -297,6 +306,23 @@ static func fur_for(enemy_id: String) -> Color:
 	return DEFAULT_FUR
 
 
+## WU-561: a generated beast's size class from its id and realm (there is no size field in enemies.json):
+## small = fox, dog, porcupine, toad, python-less little things; large = Foundation Establishment and above
+## (rhino, bear king, roc...); everything else is medium. Multiplier of the person's height.
+static func beast_size_mult(enemy_id: String, realm: String) -> float:
+	for kw in ["fox", "dog", "porcupine", "toad_small"]:
+		if enemy_id.contains(kw) and realm in ["", "mortal", "qi_refining"]:
+			return BEAST_SIZE_SMALL
+	if realm in ["", "mortal", "qi_refining"]:
+		return 1.0
+	return BEAST_SIZE_LARGE
+
+
+## Pixels per texture pixel for a generated beast: a medium one (a boar) is as tall as the standing person.
+static func beast_zoom(enemy_id: String, realm: String) -> float:
+	return BEAST_BASE_ZOOM * beast_size_mult(enemy_id, realm)
+
+
 ## The beast silhouette kind for an enemy id ("" = the plain body).
 static func beast_kind(enemy_id: String) -> String:
 	for pair: Array in BEAST_KEYWORDS:
@@ -306,6 +332,17 @@ static func beast_kind(enemy_id: String) -> String:
 
 
 var _rim_cache: Dictionary = {}
+var _mirror_cache: Dictionary = {}
+
+
+## `tex` flipped left-right (cached).
+func _mirrored(tex: Texture2D) -> Texture2D:
+	var id := tex.get_instance_id()
+	if not _mirror_cache.has(id):
+		var img := tex.get_image().duplicate() as Image
+		img.flip_x()
+		_mirror_cache[id] = ImageTexture.create_from_image(img)
+	return _mirror_cache[id]
 
 
 ## `tex` with its top-edge outline pixels lightened to `rim`, so a dark fighter reads on the dark panel.
@@ -364,17 +401,16 @@ func _draw() -> void:
 	var base_y := size.y - FEET_INSET + _stage_offset().y
 	var dx := _stage_offset().x
 	for who in 2:
-		var cx := size.x * (0.25 if who == 0 else 0.75) + dx + _offset[who]
-		draw_set_transform(Vector2(cx, base_y), 0.0, Vector2(1.0, 0.28))
-		draw_circle(Vector2.ZERO, 30.0, Color(0, 0, 0, 0.35 * _alpha[who]))
+		var sh := shadow_rect(who)
+		draw_set_transform(Vector2(sh.get_center().x, base_y), 0.0, Vector2(1.0, 0.28))
+		draw_circle(Vector2.ZERO, sh.size.x / 2.0, Color(0, 0, 0, 0.35 * _alpha[who]))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
 	_draw_floaters(base_y, dx)
 	for who in 2:
 		if is_fallen(who):
-			var cx0 := size.x * (0.25 if who == 0 else 0.75) + dx
-			_draw_dust(Vector2(cx0, base_y), who)
+			_draw_dust(_feet_of(who), who)
 			var plate := defeated_tag_rect(who)
 			var pc: Color = UIStyle.PANEL
 			pc.a = 0.8
@@ -383,9 +419,20 @@ func _draw() -> void:
 			draw_string(font, Vector2(plate.position.x + 4.0, plate.end.y - 8.0), "Defeated", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("e8d9b0"))
 
 
+## WU-561: the ground shadow of fighter `who` as a rect (x = its extent): under the body where it stands, and
+## under the lying body once defeated, so it never stays behind as an empty oval.
+func shadow_rect(who: int) -> Rect2:
+	var cx := size.x * (0.25 if who == 0 else 0.75) + _stage_offset().x + _offset[who]
+	var by := size.y - FEET_INSET + _stage_offset().y
+	if is_fallen(who):
+		var r := fallen_rect(_body_size(who), Vector2(cx, by), who == 1 and _foe_beast)
+		return Rect2(r.position.x, by - 2.0, r.size.x, 4.0)
+	return Rect2(cx - 30.0, by - 2.0, 60.0, 4.0)
+
+
 ## The ground point of fighter `who` (0 player, 1 foe) as drawn, for the tag and tests.
 func _feet_of(who: int) -> Vector2:
-	return Vector2(size.x * (0.25 if who == 0 else 0.75) + _stage_offset().x, size.y - FEET_INSET + _stage_offset().y)
+	return Vector2(size.x * (0.25 if who == 0 else 0.75) + _stage_offset().x + _offset[who], size.y - FEET_INSET + _stage_offset().y)
 
 
 ## The bounds of the lying body of fighter `who`.
@@ -423,7 +470,7 @@ func _body_size(who: int) -> Vector2:
 	var tex: Texture2D = _foe_texture if who == 1 else Sprites.texture("player_right")
 	if tex == null:
 		tex = _pixel_texture(who)
-		return Vector2(tex.get_size()) * 3.0
+		return Vector2(tex.get_size()) * (_foe_zoom if who == 1 and _foe_beast else 3.0)
 	return Vector2(tex.get_size()) * float(Sprites.scale()) * 2.0
 
 
@@ -831,6 +878,19 @@ func _draw_ground() -> void:
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)
 	if woods:
 		_draw_litter(band, rid, base, gseason)
+	else:
+		for t in stage_scatter(rid, size.x):  # WU-561: tufts and pebbles on the flat band
+			var tc := base.lightened(0.22) if t["pebble"] == false else base.darkened(0.2).lerp(Color("9a9486"), 0.5)
+			if gseason == "Autumn" and t["pebble"] == false:
+				tc = base.lerp(Color("b08a3c"), 0.5).lightened(0.1)
+			elif gseason == "Winter":
+				tc = Color("eef2f5") if t["pebble"] == false else base.darkened(0.3)
+			var tp := Vector2(t["x"], band.position.y + float(t["y"]))
+			if t["pebble"]:
+				draw_rect(Rect2(tp, Vector2(4.0, 3.0)), tc)
+			else:
+				draw_rect(Rect2(tp, Vector2(2.0, 4.0)), tc)
+				draw_rect(Rect2(tp + Vector2(3.0, 1.0), Vector2(2.0, 3.0)), tc)
 	for i in 0 if woods else 14:  # 2-3 pixel tufts, placed deterministically
 		var tx := float((i * 97 + 31) % int(maxf(size.x, 1.0)))
 		var ty := band.position.y + 6.0 + float((i * 53) % int(GROUND_BAND - 10.0))
@@ -856,6 +916,22 @@ func _draw_ground() -> void:
 		_draw_prop(String(p["kind"]), Vector2(p["x"], band.position.y + float(p["y"])), base)
 	if woods:
 		_draw_trunks(band, rid, Color(map.get("ground", "4d6b3c")))
+
+
+## WU-561: 8-14 seeded tufts/pebbles for the stage ground, as {x, y (in the band), pebble}. Never within
+## SCATTER_CLEAR px of either fighter's feet. Deterministic per region.
+static func stage_scatter(rid: String, width: float) -> Array:
+	var out: Array = []
+	var n := 8 + int(unit_hash(rid + "sc", 99) * 7.0)
+	for i in n * 4:
+		if out.size() >= n:
+			break
+		var x := 4.0 + unit_hash(rid + "sc", i * 3) * (width - 12.0)
+		var y := 6.0 + unit_hash(rid + "sc", i * 3 + 1) * (GROUND_BAND - 14.0)
+		if absf(x - width * 0.25) < SCATTER_CLEAR or absf(x - width * 0.75) < SCATTER_CLEAR:
+			continue
+		out.append({"x": x, "y": y, "pebble": unit_hash(rid + "sc", i * 3 + 2) < 0.35})
+	return out
 
 
 ## GFX-182: 2 px leaves on a woods floor, and a few snow patches in winter. Deterministic per region.
@@ -992,13 +1068,12 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 	if generated:
 		tex = _pixel_texture(who)
 	if tex != null:
-		var z := 3.0 if generated else float(Sprites.scale()) * 2.0
+		var z := (_foe_zoom if who == 1 and _foe_beast else 3.0) if generated else float(Sprites.scale()) * 2.0
 		var w := tex.get_width() * z
 		var h := tex.get_height() * z
-		if generated and who == 1:  # the foe faces left: a negative width mirrors the texture
-			draw_texture_rect(tex, Rect2(Vector2(w / 2.0, -h), Vector2(-w, h)), false, tint)
-		else:
-			draw_texture_rect(tex, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false, tint)
+		if generated and who == 1:  # the foe faces left: a mirrored copy (WU-561: a negative-width rect drew a lying body off its spot)
+			tex = _mirrored(tex)
+		draw_texture_rect(tex, Rect2(Vector2(-w / 2.0, -h), Vector2(w, h)), false, tint)
 	elif who == 1 and _foe_beast:
 		_draw_beast(tint)
 	else:
