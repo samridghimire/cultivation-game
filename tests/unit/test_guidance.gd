@@ -808,7 +808,6 @@ func test_first_goals_village_life() -> void:
 	assert_true(Guidance.first_goals(c, data(), {})[2]["done"])
 	c.catch_log = {"carp": 1}
 	assert_true(Guidance.first_goals(c, data(), {})[3]["done"])
-	c.catch_log = {}
 	LifeStats.add(c, "harvests", 2)
 	assert_true(Guidance.first_goals(c, data(), {})[3]["done"], "a harvest counts")
 	c.cooked_meals = {"x": 1}
@@ -7527,3 +7526,29 @@ func test_goal_way_fight_unchanged_when_in_goal_region_or_goal_done() -> void:
 	vet.realm_index = 2
 	for f: Dictionary in Guidance.fair_fights(vet, data(), {}, vet.age_days, "fallen_star_market"):
 		assert_false("on the way to" in String(f["text"]))
+
+
+func test_goal_target_follows_the_first_unfinished_goal() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_eq(Guidance.goal_target(c, d, {}), {"npc": "elder_mo"})
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_eq(Guidance.goal_target(c, d, flags), {})  # "Learn your first technique" has no target
+
+
+func test_goal_target_names_a_place_and_the_style_teacher() -> void:
+	var d := data()
+	var c := _fresh()
+	c.techniques = {"x": {"level": 1, "xp": 0.0}}
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	# Pick-by-the-path has no target; once foraged the fish/field row names a place.
+	LifeStats.add(c, "foraged", 1)
+	var t := Guidance.goal_target(c, d, flags)
+	assert_true(t.has("place") and String(t["place"]) != "", "fish row names a place: %s" % t)
+
+
+func test_goal_target_is_empty_once_all_goals_are_done() -> void:
+	var d := data()
+	var c := _fresh()
+	c.realm_index = 2
+	assert_eq(Guidance.goal_target(c, d, {Guidance.ELDER_MO_FLAG: true}), {})

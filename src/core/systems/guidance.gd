@@ -4457,6 +4457,31 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	return out
 
 
+## WU-567: who or where the first unfinished first goal points at: {"npc": id} or {"place": display name}, `{}` when
+## it has no target or the ladder is done. The fighting-style row names the teacher `style_teacher` finds (needs `npcs`).
+static func goal_target(c: CharacterData, data: GameData, flags: Dictionary, npcs: Dictionary = {}, region_id: String = "", favor: Dictionary = {}) -> Dictionary:
+	var goals := first_goals(c, data, flags)
+	for i in goals.size():
+		if bool(goals[i]["done"]):
+			continue
+		match i:
+			0:
+				return {"npc": "elder_mo"}
+			3:
+				var fish := _first_place_of_type(data, data.start_region, "fishing")
+				var field := _first_place_of_type(data, data.start_region, "field_plot")
+				return {"place": fish if fish != "" else field} if (fish != "" or field != "") else {}
+			4:
+				var cook := _first_place_of_type(data, data.start_region, "workshop")
+				return {"place": cook} if cook != "" else {}
+			5:
+				var t := style_teacher(c, npcs, data, region_id if region_id != "" else data.start_region, favor)
+				return {"npc": String(t["npc_id"])} if not t.is_empty() else {}
+			_:
+				return {}
+	return {}
+
+
 ## World flag set when the player opens a sect hall's menu (GOAL-009).
 const SECT_HALL_FLAG := "visited_sect_hall"
 

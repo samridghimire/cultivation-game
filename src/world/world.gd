@@ -123,6 +123,7 @@ func _ready() -> void:
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_season_tint()
 	_build_beast_arrow()
+	add_child(GoalMarker.new())  # WU-567
 	_lap("setup")
 	_build_decor()
 	_lap("props/decor")

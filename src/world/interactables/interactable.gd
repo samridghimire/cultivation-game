@@ -434,6 +434,13 @@ static func respread_due(clock: float, moved_px: float) -> bool:
 const GREAT_FIGURE := Vector2(48.0, 40.0)  ## GFX-071: a great beast's drawn body
 
 
+## WU-567: the drawn body of a standing person (about 16x28 above their feet), grown a little.
+static func person_figure_rect(node: Interactable) -> Rect2:
+	var feet := node.position.y + node.size.y / 2.0
+	return Rect2(node.position.x - 10.0, feet - 32.0, 20.0, 34.0)
+
+
+
 static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] = [], player_pos: Vector2 = Vector2.ZERO) -> void:
 	var shown: Array = []
 	var was_lift := {}
@@ -512,8 +519,14 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 			covers[i] = roofs
 		else:  # WU-562: a place's name never slides down onto its own art when a HUD panel pushes it
 			var me: Interactable = ranked[i]
+			var own_covers: Array[Rect2] = []
 			if me.size.x >= 40.0 and me.size.y >= 40.0 and me.get("great") != true and me.art_kind != "travel":
-				covers[i] = [Rect2(me.position - me.size / 2.0, me.size)] as Array[Rect2]
+				own_covers.append(Rect2(me.position - me.size / 2.0, me.size))
+			for other: Interactable in nodes:  # WU-567: nor onto a person's figure
+				if other != me and other.is_person() and other.visible and other.get("great") != true:
+					own_covers.append(person_figure_rect(other))
+			if not own_covers.is_empty():
+				covers[i] = own_covers
 	var result := LabelLayout.resolve(rects, view, blockers, own, covers)
 	for i in ranked.size():
 		var node: Interactable = ranked[i]
