@@ -5726,6 +5726,10 @@ static func _goal_way_fight(found: Array[Dictionary], c: CharacterData, data: Ga
 		if first_easy and not easy:
 			continue
 		e["text"] = "%s: %s (%s, %d in 100)" % [fair_fight_prefix(e), e["label"], trip, roundi(float(e["chance"]) * 100.0)]
+		# REVIEW (GUIDE-260): the one-road-away pass may already list this foe in the goal's region; keep only the goal line.
+		for i in range(found.size() - 1, -1, -1):
+			if String(found[i].get("kind", "")) == "explore" and String(found[i].get("enemy_id", "")) == String(e["enemy_id"]) and int(found[i].get("days", 0)) == days:
+				found.remove_at(i)
 		found.insert(0, e)
 		return
 

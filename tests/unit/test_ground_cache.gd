@@ -20,11 +20,15 @@ func _end() -> void:
 
 
 func _wipe() -> void:
+	if not DirAccess.dir_exists_absolute(TEST_DIR):  # REVIEW: a fresh container has no cache dir yet (get_files_at logs an error)
+		return
 	for f in DirAccess.get_files_at(TEST_DIR):
 		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, f])
 
 
 func _files() -> PackedStringArray:
+	if not DirAccess.dir_exists_absolute(TEST_DIR):
+		return PackedStringArray()
 	return DirAccess.get_files_at(TEST_DIR)
 
 
@@ -86,3 +90,8 @@ func test_small_textures_not_cached() -> void:
 	assert_eq(_files().size(), 0)
 	_end()
 
+
+
+func test_key_hashes_ground_source_in_dev_runs() -> void:
+	# REVIEW (PERF-013): a ground pass edited without a VERSION bump must not read back stale ground in dev runs.
+	assert_true(GroundCache._source_salt() != "", "ground_tiles.gd source is readable when running from the project")

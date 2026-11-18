@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: a8acadc
+Last reviewed commit: 75a139f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2206,3 +2206,18 @@ Last reviewed commit: a8acadc
   - WU-564 OK (hens only at the coop, gate keepout for marsh pools). The coop hens rect is only bounds-checked, not
     checked against roads or houses (draw-only, minor). GFX-195/196 draw-only with tests; I did not render them.
     QA-217/QA-235/PERF-011: sim only.
+- 2026-11-18 (reviewer): reviewed a8acadc..75a139f (GFX-197, PERF-012, QA-234, C-389, GFX-198, GUIDE-260, PERF-013, PERF-014,
+  GFX-199, WU-565 partial, C-390; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no
+  SAVE_VERSION change, no new binary assets. Fixed three things inline, nothing filed.
+  - Fixed (PERF-013): the ground disk cache key only changed with a manual GroundCache.VERSION bump, so in a container
+    that had already baked a region, a worker who edited a ground pass and re-rendered shots (or the 400x300 / 1600x1000
+    ground tests) read back the old pixels. In runs where the script source is readable (editor, tests, shot scripts)
+    the key now also hashes ground_tiles.gd; exports still rely on VERSION. Tested.
+  - Fixed (GUIDE-260): the goal-way fight could list the same foe twice (the GUIDE-249 one-road-away pass already had it
+    as "Explore <goal region>"); the away line is now replaced by the goal line. Tested.
+  - Fixed (PERF-013 test): test_ground_cache listed user://cache/ground_test before it existed, so the first
+    tools/test.sh in a fresh container failed (engine error from get_files_at). It now checks the dir exists.
+  - PERF-012 OK: rings draw in RainPuddles only; they now sit above world-drawn props (worker noted it; puddles avoid
+    landmarks). GFX-199 keyword order checked against every enemy id (sky_bearing_tortoise hits tortoise first).
+    WU-565 strip fix OK. C-389/C-390 data only, baselines refreshed. GFX-197/198 draw-only with tests; I did not render.
+    PERF-014/QA-234 sim only.

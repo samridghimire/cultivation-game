@@ -12,8 +12,21 @@ static var enabled := true
 static var dir := "user://cache/ground"
 
 
+static var _salt := "?"
+
+
 static func key(parts: Array) -> String:
-	return str([VERSION, Image.FORMAT_RGBA8, parts]).sha256_text().substr(0, 24)
+	return str([VERSION, Image.FORMAT_RGBA8, _source_salt(), parts]).sha256_text().substr(0, 24)
+
+
+## REVIEW (PERF-013): when the script source is readable (editor runs, tests, screenshot scripts) the key also hashes
+## ground_tiles.gd, so a changed ground pass never reads back stale ground during development even if VERSION was not
+## bumped. Exported builds ship no source text, so there VERSION alone decides.
+static func _source_salt() -> String:
+	if _salt == "?":
+		var s: Script = load("res://src/world/ground_tiles.gd")
+		_salt = s.source_code.sha256_text() if s != null and s.source_code != "" else ""
+	return _salt
 
 
 static func _path(k: String) -> String:
