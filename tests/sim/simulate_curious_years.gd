@@ -539,6 +539,33 @@ func _print_arm_report(runs: Array[Dictionary], months: int) -> void:
 	print("Arm report (QA-161): stones median m12 %.0f, m36 %.0f; qi pills bought %d for %d stones (used %d, +%d qi); fights lost %d; artifact lives bought %d; final deaths %d" % [_median(s12.duplicate()), _median(s36.duplicate()), ql["bought"], ql["stones"], ql["used"], ql["qi"], lost, lives, finals])
 	if FirstHour.buy_qi_travel:
 		print("  QA-164: %d trips to the pill the hint names" % FirstHour.qi_trips)
+		_print_buyer_table(runs.size())
+
+
+## QA-234: per seed pills bought by id and market, trips made only to buy, days on them, qi gained per stone.
+func _print_buyer_table(seeds: int) -> void:
+	print("  Buyer (QA-234): seed, pills bought (count item@market, * = bought on a buying trip), trips, trip days, far hints followed, qi per stone")
+	for s in range(1, seeds + 1):
+		var counts := {}
+		var stones := 0
+		var qi := 0
+		for e: Dictionary in FirstHour.qi_buys:
+			if int(e["seed"]) != s:
+				continue
+			var key := "%s@%s%s" % [e["item"], e["region"], "*" if e["trip"] else ""]
+			counts[key] = int(counts.get(key, 0)) + int(e["bought"])
+			stones += int(e["stones"])
+			qi += int(e["qi"])
+		var parts: Array[String] = []
+		for k: String in counts:
+			parts.append("%dx %s" % [counts[k], k])
+		var trips := 0
+		var days := 0
+		for t: Dictionary in FirstHour.qi_trip_log:
+			if int(t["seed"]) == s:
+				trips += 1
+				days += int(t["days"])
+		print("    %d: %s; trips %d, days %d, far hints %d, qi/stone %s" % [s, ", ".join(parts) if not parts.is_empty() else "none", trips, days, int(FirstHour.qi_hint_far.get(s, 0)), "%.2f" % (float(qi) / stones) if stones > 0 else "-"])
 
 
 ## QA-162: per seed what the sect member did with the sect (see FirstHour.sect_report), then medians.

@@ -116,6 +116,13 @@ static var buy_qi := false
 ## (Guidance.qi_pill_offer_near) to the region it names, buy there and walk home. `--buy-qi-travel` sets it.
 static var buy_qi_travel := false
 static var qi_trips := 0
+## QA-234: per-seed qi-pill buyer log. qi_buys has one entry per purchase {seed, item, region, trip, bought, stones, qi};
+## qi_trip_log one per trip made only to buy {seed, region, days}; qi_hint_far counts hints naming a far pill the buyer skipped.
+static var qi_buys: Array[Dictionary] = []
+static var qi_trip_log: Array[Dictionary] = []
+static var qi_hint_far: Dictionary = {}
+static var _qi_seed := 0
+static var _qi_on_trip := false
 ## QA-140: follow the "Sell your ..." / armor hints: sell loot to the named merchant, walk to the smithy, buy and
 ## wear the armor, walk home. simulate_first_hour.gd turns it on for --curious (`--no-armor` restores the old policy of never selling or buying armor).
 static var shop_armor := false
@@ -174,6 +181,7 @@ static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, cur
 
 
 static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, month_hook: Callable = Callable(), no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
+	_qi_seed = seed_value
 	season_seed = seed_value
 	gs.rng.seed = seed_value
 	var rng := RandomNumberGenerator.new()
@@ -1058,12 +1066,19 @@ static func _tend_field(gs: Node, c: CharacterData, field: Dictionary, key: Stri
 
 ## QA-144: see buy_qi. The reserve is the next realm pill's price in the last three stages while none is held.
 static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
-	if _buy_qi_here(gs, c) or not buy_qi_travel or not c.alive:
+	if not buy_qi_travel:
+		_buy_qi_here(gs, c)
 		return
+	# QA-234: ask the hint first; the old order bought the local pill whenever one was on sale, so a far pill the hint named was never followed.
 	var offer := Guidance.qi_pill_offer_near(c, gs.data, gs.current_region, gs.world_flags)
-	if offer.is_empty() or not offer.has("region_id") or String(offer["region_id"]) == gs.current_region:
+	if offer.is_empty() or not offer.has("region_id") or String(offer["region_id"]) == gs.current_region or not c.alive:
+		_buy_qi_here(gs, c)
 		return
+	if c.item_count("spirit_stone") <= 20:
+		return
+	qi_hint_far[_qi_seed] = int(qi_hint_far.get(_qi_seed, 0)) + 1
 	var home: String = gs.current_region
+	var start_day: int = gs.get_node("/root/GameClock").total_days
 	var target := String(offer["region_id"])
 	for hop in 12:
 		if gs.current_region == target or not c.alive:
@@ -1078,7 +1093,9 @@ static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
 	if gs.current_region != target:
 		return
 	qi_trips += 1
+	_qi_on_trip = true
 	_buy_qi_here(gs, c)
+	_qi_on_trip = false
 	for hop in 12:
 		if gs.current_region == home or not c.alive:
 			break
@@ -1089,6 +1106,7 @@ static func _buy_qi_pills(gs: Node, c: CharacterData) -> void:
 		gs.travel(back)
 		if gs.current_region == before2:
 			break
+	qi_trip_log.append({"seed": _qi_seed, "region": target, "days": int(gs.get_node("/root/GameClock").total_days) - start_day})
 
 
 ## QA-144: buys and uses pills from the current region's merchants; true if any were bought.
@@ -1127,6 +1145,8 @@ static func _buy_qi_here(gs: Node, c: CharacterData) -> bool:
 	gs.buy_item(best_id, "", count)
 	var bought := c.item_count(best_id) - had
 	qi_log["bought"] += bought
+	if bought > 0:
+		qi_buys.append({"seed": _qi_seed, "item": best_id, "region": String(gs.current_region), "trip": _qi_on_trip, "bought": bought, "stones": stones_before - c.item_count("spirit_stone"), "qi": 0})
 	qi_log["stones"] += stones_before - c.item_count("spirit_stone")
 	for i in bought:
 		if not c.alive or Cultivation.is_at_bottleneck(c, gs.data):
@@ -1136,6 +1156,8 @@ static func _buy_qi_here(gs: Node, c: CharacterData) -> bool:
 		if c.item_count(best_id) < had + bought - i:
 			qi_log["used"] += 1
 			qi_log["qi"] += maxi(0, c.qi - qi_before)
+			if not qi_buys.is_empty():
+				qi_buys[-1]["qi"] += maxi(0, c.qi - qi_before)
 	return bought > 0
 
 
