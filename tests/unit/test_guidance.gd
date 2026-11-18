@@ -7552,3 +7552,30 @@ func test_goal_target_is_empty_once_all_goals_are_done() -> void:
 	var c := _fresh()
 	c.realm_index = 2
 	assert_eq(Guidance.goal_target(c, d, {Guidance.ELDER_MO_FLAG: true}), {})
+
+
+## GUIDE-261: Headman Zhou's line names real, doable work and goes away when there is none.
+func test_headman_work_hint_follows_available_chores() -> void:
+	var d := data()
+	var c := _fresh()
+	var flags: Dictionary = {}
+	var line := Guidance.headman_work_hint(c, d, flags, 0)
+	assert_true(line.begins_with("Headman Zhou has work today: "), line)
+	assert_true(line.contains("stones)"), line)
+	# One-time chores done, the repeatable ones on cooldown: nothing to show.
+	for id: String in ["chore_gather_herbs", "chore_drive_off_boar", "chore_widow_roof"]:
+		flags[String(d.deeds[id]["blocked_by_flag"])] = true
+	c.deed_days["chore_odd_jobs"] = 0
+	c.deed_days["chore_haul_water"] = 0
+	assert_eq(Guidance.headman_work_hint(c, d, flags, 1), "")
+	# A cooldown ends: the line is back.
+	assert_true(Guidance.headman_work_hint(c, d, flags, 7).contains("errands"), "odd jobs again after 7 days")
+	assert_true(Guidance.headman_work_hint(c, d, flags, 10).contains("Headman Zhou has work"))
+	# Only headman-context chores count: with all of them done, the other contexts' chores don't bring it back.
+	for id: String in d.deeds:
+		var deed: Dictionary = d.deeds[id]
+		if String(deed.get("context", "")) == "headman" and String(id).begins_with("chore_"):
+			c.deed_days[id] = 0
+			if deed.has("blocked_by_flag"):
+				flags[String(deed["blocked_by_flag"])] = true
+	assert_eq(Guidance.headman_work_hint(c, d, flags, 1), "")

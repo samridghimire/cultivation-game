@@ -4327,6 +4327,28 @@ static func _ready_mission_wants(c: CharacterData, data: GameData, item_id: Stri
 	return Sects.deliver_needs(c, data, flags).has(item_id)
 
 
+## GUIDE-261: "Headman Zhou has work today: <deed> (<days>d, <stones> stones)." naming the best paying
+## headman chore that passes Deeds.check right now; "" when every one is done or on cooldown.
+static func headman_work_hint(c: CharacterData, data: GameData, flags: Dictionary, today: int) -> String:
+	var best: Dictionary = {}
+	var best_stones := -1
+	for deed: Dictionary in Deeds.available(data, "headman", flags):
+		if not String(deed["id"]).begins_with("chore_"):
+			continue
+		if Deeds.check(c, data, deed, flags, maxi(today, 0)) != "":
+			continue
+		var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
+		if stones > best_stones:
+			best_stones = stones
+			best = deed
+	if best.is_empty():
+		return ""
+	var terms := "%dd" % int(best.get("days", 0))
+	if best_stones > 0:
+		terms += ", %d stones" % best_stones
+	return "Headman Zhou has work today: %s (%s)." % [String(best["name"]), terms]
+
+
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1, people: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
@@ -4375,10 +4397,9 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	if body_art != "":
 		out.append(body_art)
 	if region_id == CHORE_REGION:
-		for deed: Dictionary in data.deeds.values():
-			if String(deed["id"]).begins_with("chore_") and not flags.get(String(deed.get("blocked_by_flag", "")), false):
-				out.append("Headman Zhou has paid work: errands and chores.")
-				break
+		var work := headman_work_hint(c, data, flags, today)
+		if work != "":
+			out.append(work)
 	if c.techniques.is_empty() and not technique_done:
 		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing else TECHNIQUE_HINT)
 	var sect := _sect_hint(c, data, region_id)
