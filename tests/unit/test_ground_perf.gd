@@ -28,6 +28,12 @@ func _paved(season: String) -> Image:
 	return GroundTiles.ground_texture(Color("8b8272"), "fallen_star_market", SMALL, false, season, "paved", [Rect2(10, 10, 120, 80)], 1.0, {}).get_image()
 
 
+func _bog(season: String) -> Image:
+	GroundTiles.clear_cache()
+	var life := {"avoid": [Rect2(100, 70, 40, 30)], "worn": [Rect2(20, 20, 80, 50)], "path_color": Color("5a4f3a")}
+	return GroundTiles.ground_texture(Color("3f4f3a"), "withered_bone_marsh", SMALL, true, season, "bog", [], 1.0, life).get_image()
+
+
 func _check(name: String, img: Image, expected: String) -> void:
 	if RECORD:
 		print("RECORD %s %s" % [name, _hash(img)])
@@ -69,3 +75,7 @@ func test_ihash_is_deterministic_and_spread() -> void:
 	for y in 20:
 		seen[GroundTiles._ihash(7, 1, y) % 100] = true
 	assert_gt(seen.size(), 10, "neighbouring rows must not hash alike")
+
+
+func test_bog_winter_identical() -> void:  ## PERF-010: shade_grid_for rebuilt per lattice row, same doubles
+	_check("bog_winter", _bog("Winter"), "7f0e8b3a3aabd917731408b7adcd1ec1411fb17cd0da24ed4679f0168d289c4e")

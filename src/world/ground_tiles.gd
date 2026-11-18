@@ -247,40 +247,59 @@ static func shade_grid_for(rid: String, size_px: Vector2i) -> PackedFloat32Array
 			tx[x] = smoothstep(0.0, 1.0, fx - cx)
 		txs.append(tx)
 		cxs.append(cxa)
+	# PERF-010: the lattice interpolation along x only changes when the lattice row does (every 96 / 40 rows), so the
+	# top and bottom edge values of both octaves are built once per lattice row (doubles, same arithmetic as before).
+	var l0: PackedFloat32Array = lat[0]
+	var l1: PackedFloat32Array = lat[1]
+	var tx0: PackedFloat64Array = txs[0]
+	var tx1: PackedFloat64Array = txs[1]
+	var cx0: PackedInt32Array = cxs[0]
+	var cx1: PackedInt32Array = cxs[1]
+	var gw0: int = w / PATCH_CELLS[0] + 2
+	var gw1: int = w / PATCH_CELLS[1] + 2
+	var cell0: int = PATCH_CELLS[0]
+	var cell1: int = PATCH_CELLS[1]
+	var top0 := PackedFloat64Array()
+	var bot0 := PackedFloat64Array()
+	var top1 := PackedFloat64Array()
+	var bot1 := PackedFloat64Array()
+	top0.resize(w)
+	bot0.resize(w)
+	top1.resize(w)
+	bot1.resize(w)
+	var last_cy0 := -1
+	var last_cy1 := -1
 	for y in size_px.y:
-		var rows: Array = []  # per octave: [row offset of cy, row offset of cy + 1, ty]
-		for o in PATCH_CELLS.size():
-			var cell: int = PATCH_CELLS[o]
-			var gw := w / cell + 2
-			var fy := float(y) / cell
-			var cy := int(fy)
-			rows.append([cy * gw, (cy + 1) * gw, smoothstep(0.0, 1.0, fy - cy)])
-		var l0: PackedFloat32Array = lat[0]
-		var l1: PackedFloat32Array = lat[1]
-		var tx0: PackedFloat64Array = txs[0]
-		var tx1: PackedFloat64Array = txs[1]
-		var cx0: PackedInt32Array = cxs[0]
-		var cx1: PackedInt32Array = cxs[1]
-		var r0: Array = rows[0]
-		var r1: Array = rows[1]
-		var a0: int = r0[0]
-		var b0: int = r0[1]
-		var ty0: float = r0[2]
-		var a1: int = r1[0]
-		var b1: int = r1[1]
-		var ty1: float = r1[2]
+		var fy0 := float(y) / cell0
+		var cy0 := int(fy0)
+		var ty0 := smoothstep(0.0, 1.0, fy0 - cy0)
+		if cy0 != last_cy0:
+			last_cy0 = cy0
+			var a0 := cy0 * gw0
+			var b0 := a0 + gw0
+			for x in w:
+				var c := cx0[x]
+				var t := tx0[x]
+				top0[x] = l0[a0 + c] + (l0[a0 + c + 1] - l0[a0 + c]) * t
+				bot0[x] = l0[b0 + c] + (l0[b0 + c + 1] - l0[b0 + c]) * t
+		var fy1 := float(y) / cell1
+		var cy1 := int(fy1)
+		var ty1 := smoothstep(0.0, 1.0, fy1 - cy1)
+		if cy1 != last_cy1:
+			last_cy1 = cy1
+			var a1 := cy1 * gw1
+			var b1 := a1 + gw1
+			for x in w:
+				var c := cx1[x]
+				var t := tx1[x]
+				top1[x] = l1[a1 + c] + (l1[a1 + c + 1] - l1[a1 + c]) * t
+				bot1[x] = l1[b1 + c] + (l1[b1 + c + 1] - l1[b1 + c]) * t
 		var base_i := y * w
 		for x in w:
-			var c0 := cx0[x]
-			var t0 := tx0[x]
-			var top0 := l0[a0 + c0] + (l0[a0 + c0 + 1] - l0[a0 + c0]) * t0
-			var bot0 := l0[b0 + c0] + (l0[b0 + c0 + 1] - l0[b0 + c0]) * t0
-			var c1 := cx1[x]
-			var t1 := tx1[x]
-			var top1 := l1[a1 + c1] + (l1[a1 + c1 + 1] - l1[a1 + c1]) * t1
-			var bot1 := l1[b1 + c1] + (l1[b1 + c1 + 1] - l1[b1 + c1]) * t1
-			var total := (top0 + (bot0 - top0) * ty0) * 0.7
-			total += (top1 + (bot1 - top1) * ty1) * 0.3
+			var t0 := top0[x]
+			var t1 := top1[x]
+			var total := (t0 + (bot0[x] - t0) * ty0) * 0.7
+			total += (t1 + (bot1[x] - t1) * ty1) * 0.3
 			total *= 1.35  # clampf inlined: this is the hottest loop of a region load
 			grid[base_i + x] = 1.0 if total > 1.0 else (-1.0 if total < -1.0 else total)
 	return grid
