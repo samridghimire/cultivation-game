@@ -19,6 +19,10 @@ extends SceneTree
 ## the next pill buy gear once per major realm, and injuries with over a month
 ## left are healed at a clinic when that leaves the next pill's price. Sources
 ## "work" reproduces the QA-006 run.
+## QA-217: the "sect missions / work" line excludes stipends. Bisected: 25.5/month before C-356,
+## 20.5 after C-356 (gather_spirit_herbs 40 -> 36), 7.7 after C-359 (procure_azure_crystal 84 -> 70,
+## the sim buys the crystal at ~56-63, so its net fell). Real data changes, not rng drift: the mission
+## picks use no rng. With stipends a disciple still earns 1.6-2.2x the work rate (33 vs 15-21/month).
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_economy.gd -- [lives] [work_every] [deaths_per_century] [seed] [all|work] [sect_id|none]
 
 const START_AGE_YEARS := 16
