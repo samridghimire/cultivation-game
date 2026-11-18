@@ -25,6 +25,8 @@ const OUTGROWN_RATED_MAX := 4  # foes rated per region by outgrown_hint (hints()
 const OUTGROWN_SURE_CHANCE := 0.95
 const OUTGROWN_FAIR_MIN := 0.4
 const OUTGROWN_FAIR_MAX := 0.85
+## GUIDE-259: a foe whose first 40 fights win this far below FAIR_FIGHT_MIN_CHANCE is dropped without the full rating.
+static var fair_quick_margin: float = 0.15  # tests set 2.0 to switch the quick stage off
 const FAIR_FIGHT_MIN_CHANCE := 0.7  # "Even" or better (Combat.label_for_chance)
 const FASTER_SPOT_MIN_SAVED := 90  ## GUIDE-197: days a faster qi spot must save (or a third of the wait, if more) to be named.
 const MISSION_HINT_RICH := 2000  ## GUIDE-197: a duty-met member holding this much contribution gets no mission hint.
@@ -5712,7 +5714,7 @@ static func _away_explore_fights(found: Array[Dictionary], c: CharacterData, dat
 			if Combat.odds_kind(c, data, foe) == "far":
 				continue
 			rated += 1
-			var chance := Combat.win_chance(c, data, foe)
+			var chance := Combat.win_chance_in_band(c, data, foe, FAIR_FIGHT_MIN_CHANCE, EASY_FIGHT_CHANCE, fair_quick_margin)
 			if chance >= EASY_FIGHT_CHANCE or chance < FAIR_FIGHT_MIN_CHANCE:
 				continue
 			kept += 1
@@ -5841,7 +5843,7 @@ static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
 
 
 static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "", days: int = 0, phrase: String = "") -> void:
-	var chance := Combat.win_chance_at_least(c, data, enemy, FAIR_FIGHT_MIN_CHANCE)
+	var chance := Combat.win_chance_at_least(c, data, enemy, FAIR_FIGHT_MIN_CHANCE, Combat.RATING_SAMPLES, fair_quick_margin)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
 	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy), "label": label, "phrase": phrase})

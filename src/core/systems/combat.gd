@@ -475,6 +475,8 @@ static func fight_fingerprint(c: CharacterData) -> String:
 
 ## Sample count behind every player-facing fight rating.
 const RATING_SAMPLES := 120
+## GUIDE-259: fights in the quick first stage of a hint-only rating.
+const QUICK_SAMPLES := 40
 
 ## Estimated chance (0..1) that `c` beats `enemy`, by simulating fights with
 ## a private fixed-seed rng (so it is stable and never touches game rng).
@@ -503,7 +505,9 @@ static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samp
 ## win_chance when it is >= `floor` (same rng stream, same samples; the result is cached), and a value < `floor`
 ## otherwise (the exact one if cached, else -1.0, not cached). Proof: wins <= samples - losses, so once
 ## (samples - losses) / samples < floor the final chance is < floor whatever the remaining fights do.
-static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Dictionary, floor_chance: float, samples: int = RATING_SAMPLES) -> float:
+## GUIDE-259: with `quick_margin` > 0 it also gives up after the first QUICK_SAMPLES fights (the same rng stream, so
+## a prefix of the full rating) when their win rate lies more than `quick_margin` below `floor_chance`.
+static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Dictionary, floor_chance: float, samples: int = RATING_SAMPLES, quick_margin: float = 0.0) -> float:
 	var key := "%d|%d|%s|%s" % [data.get_instance_id(), samples, str(enemy), fight_fingerprint(c)]
 	if _chance_cache.has(key):
 		return _chance_cache[key]
@@ -517,8 +521,39 @@ static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Diction
 			wins += 1
 		elif float(samples - (i + 1 - wins)) / samples < floor_chance:
 			return -1.0
+		if quick_margin > 0.0 and i + 1 == QUICK_SAMPLES and float(wins) / QUICK_SAMPLES < floor_chance - quick_margin:
+			return -1.0
 	_sim_count += 1
 	var chance := float(wins) / samples
+	if _chance_cache.size() >= CHANCE_CACHE_MAX:
+		_chance_cache.clear()
+	_chance_cache[key] = chance
+	return chance
+
+
+## GUIDE-259: win_chance for a caller that only wants fights with a chance in [low, high): the first QUICK_SAMPLES
+## fights (a prefix of the full rating's rng stream) decide whether the full rating runs. Returns the exact full-rating
+## chance when the quick win rate lies within `margin` of the band, else -1.0 (not cached; the exact one if cached).
+static func win_chance_in_band(c: CharacterData, data: GameData, enemy: Dictionary, low: float, high: float, margin: float) -> float:
+	var key := "%d|%d|%s|%s" % [data.get_instance_id(), RATING_SAMPLES, str(enemy), fight_fingerprint(c)]
+	if _chance_cache.has(key):
+		return _chance_cache[key]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var pre_p := stats(c, data)
+	var pre_e := enemy_stats(enemy, data)
+	var wins := 0
+	for i in QUICK_SAMPLES:
+		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:
+			wins += 1
+	var quick := float(wins) / QUICK_SAMPLES
+	if quick < low - margin or quick >= high + margin:
+		return -1.0
+	for i in range(QUICK_SAMPLES, RATING_SAMPLES):
+		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:
+			wins += 1
+	_sim_count += 1
+	var chance := float(wins) / RATING_SAMPLES
 	if _chance_cache.size() >= CHANCE_CACHE_MAX:
 		_chance_cache.clear()
 	_chance_cache[key] = chance
