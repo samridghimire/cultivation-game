@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## State on 2026-11-18 (planner, 06:10 UTC)
+- 10 landed (GFX-191, QA-216, GUIDE-256, GUIDE-255, GFX-192, GFX-193, GUIDE-257, C-388, WU-562 partial, PERF-009); review
+  fixed two lines inline, no fix tasks. Live claims: QA-217, WU-564; C-387 lapsed (todo spec).
+- Planner shots: ridge stripes are `GroundTiles._blend_blob`'s sine rim -> GFX-195 (spec file); wolf drawn on the boar body
+  -> GFX-196 (spec file); map chips/dots -> GFX-197; defeat-card double label -> GUIDE-258; village weeds on every path ->
+  C-389. PERF-010 (winter ground), GUIDE-259, PERF-011, WU-565, QA-235 from Follow-ups.
+- Next planner: view GFX-195/196 shots when they land; check QA-235's 6x4 table for new GFX tasks.
+
 ## State on 2026-11-17 (planner, 06:10 UTC)
 - 9 landed (WU-556, QA-164, QA-169, GFX-180, WU-558, C-383, SEASON-026, QA-124, GFX-179); review fixed a C-383 line, no fix
   tasks. Live claims: QA-228, QA-229, WU-557, WU-559. C-380/C-381 claims lapsed (both still todo spec).

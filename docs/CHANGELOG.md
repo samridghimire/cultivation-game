@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [PERF-009] Regions build up to 2.8x faster: the ground is drawn on raw bytes.
+- 2026-11-18 [WU-562] The Hunters' Bounty Board's name no longer slides onto the board.
+- 2026-11-18 [C-388] Village happenings (the boar, the lost coin, the pickpocket) come round far less often.
+- 2026-11-18 [GUIDE-257] The journal lists every teacher's errand you can run, with where and how long.
+- 2026-11-18 [GFX-193] Qingshi's grass is crisp pixel art again: no soft dark smudges.
+- 2026-11-18 [GFX-192] The world map looks like a map: land washes, a river, paper banners and dashed roads.
+- 2026-11-18 [GUIDE-255] Next steps refresh almost instantly after the first time.
+- 2026-11-18 [GUIDE-256] Teachers' errands read naturally in the hint, and the festival journal line names the contest.
+- 2026-11-18 [QA-216] Running the tests never changes your saved settings.
+- 2026-11-18 [GFX-191] Myriad Peaks Ridge has snow drifts only in winter and a little hardy meadow in the green months.
 - 2026-11-18 [GFX-190] On rainy days water drips from the eaves and puddles never cover props or people.
 - 2026-11-18 [C-386] Five more first-hour teachers have a short favor errand that brings their lesson closer.
 - 2026-11-18 [QA-194] The combat sim rates roaming beasts at the realm a newcomer meets them, not as a mortal.
