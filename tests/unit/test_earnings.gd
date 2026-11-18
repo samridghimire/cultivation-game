@@ -339,7 +339,7 @@ func test_disciple_gets_mission_row_at_hall() -> void:
 			mission = r
 	assert_false(mission.is_empty(), "mission row")
 	assert_eq(mission["note"], String(data().sect_missions["herb_hall_tithe"]["name"]))
-	assert_eq(int(roundf(float(mission["per_day"]))), 4)  # GUIDE-235: net of the herbs handed in
+	assert_eq(int(roundf(float(mission["per_day"]))), 8)  # GUIDE-235: net of the herbs handed in
 	var text := " ".join(Earnings.lines(rows, data()))
 	assert_true(text.contains("Sect mission"), text)
 	assert_true(text.contains("contribution"), text)

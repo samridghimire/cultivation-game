@@ -4376,7 +4376,7 @@ func test_sect_line_best_pays_first() -> void:
 func test_mission_extra_pay_names_stones_and_qi() -> void:
 	var d := data()
 	assert_eq(Guidance._mission_extra_pay(d.sect_missions["cull_mist_wolves"]), " and 100 qi")
-	assert_eq(Guidance._mission_extra_pay(d.sect_missions["deliver_cold_iron"]), " and 75 spirit stones")
+	assert_eq(Guidance._mission_extra_pay(d.sect_missions["deliver_cold_iron"]), " and 85 spirit stones")
 	assert_eq(Guidance._mission_extra_pay(d.sect_missions["escort_mortal_villagers"]), "")
 	assert_eq(Guidance._mission_extra_pay({"rewards": {"qi": 5, "items": {"spirit_stone": 7}}}), " and 7 spirit stones and 5 qi")
 
