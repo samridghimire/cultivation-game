@@ -122,6 +122,37 @@ func test_every_roamer_has_a_kind() -> void:
 			assert_eq(img.get_size(), Vector2i(24, 16))
 
 
+## GFX-199: bears, rhinos, tortoises, spiders, tuskers and pengs get their own kinds.
+func test_new_beast_keywords() -> void:
+	var expect := {"black_iron_bear_king": "bear", "iron_horn_rhino": "rhino", "ancient_tortoise_sage": "tortoise",
+		"sky_bearing_tortoise": "tortoise", "ice_soul_spider": "spider", "scarred_old_tusker": "boar",
+		"ten_thousand_li_peng": "bird", "nine_thunder_peng": "bird", "quillback_porcupine": "boar"}
+	for id: String in expect:
+		assert_eq(DuelStage.beast_kind(id), expect[id], id)
+
+
+func test_new_beast_silhouettes_differ() -> void:
+	var fur := Color("8a8d92")
+	var plain := PixelFigure.beast_frame(fur, 0, "").get_image()
+	var kinds: Array[String] = ["bear", "rhino", "tortoise", "spider"]
+	for a in kinds.size():
+		var ia := PixelFigure.beast_frame(fur, 0, kinds[a]).get_image()
+		var others: Array[Image] = [plain]
+		for k in ["wolf", "boar", "tiger", "deer", "ape", "toad"]:
+			others.append(PixelFigure.beast_frame(fur, 0, k).get_image())
+		for b in kinds.size():
+			if b != a:
+				others.append(PixelFigure.beast_frame(fur, 0, kinds[b]).get_image())
+		for ib in others:
+			var diff := 0
+			for y in 16:
+				for x in 24:
+					if (ia.get_pixel(x, y).a > 0.0) != (ib.get_pixel(x, y).a > 0.0):
+						diff += 1
+			assert_true(diff > 40, "%s differs by %d px" % [kinds[a], diff])
+		assert_true(PixelFigure.beast_frame(fur, 0, kinds[a]).get_image().get_data() != PixelFigure.beast_frame(fur, 1, kinds[a]).get_image().get_data(), "%s has two leg frames" % kinds[a])
+
+
 func test_beast_kinds_look_different_and_cache() -> void:
 	var fur := Color("8a8d92")
 	var kinds: Array[String] = ["", "wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape"]

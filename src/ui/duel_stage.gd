@@ -32,6 +32,9 @@ const TAG_GAP := 5.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
+	["tortoise", "tortoise"], ["turtle", "tortoise"], ["bear", "bear"], ["rhino", "rhino"], ["spider", "spider"],
+	["tusker", "boar"], ["porcupine", "boar"], ["peng", "bird"],
+	["basilisk", "snake"], ["wyrm", "snake"], ["dragonling", "snake"],
 	["cloud_crane", "crane"], ["toad", "toad"], ["_ram", "ram"], ["ram_", "ram"],
 	["wolf", "wolf"], ["alpha", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
 	["boar", "boar"], ["pig", "boar"],
