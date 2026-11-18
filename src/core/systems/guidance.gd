@@ -5665,7 +5665,69 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	found.sort_custom(fair_fight_before)
 	prefer_fresh_foe(found, c)
 	_lift_away_fair(found)
+	_goal_way_fight(found, c, data, flags, today, region_id, rated < FAIR_FIGHT_MAX_RATED)
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
+
+
+## GUIDE-260: the region the first unfinished first goal names (e.g. Qingshi for "Talk to Elder Mo in Qingshi Village"),
+## "" once the first goals are done, when the goal names no other region, or without a region_id. Same source as the HUD's Goal line.
+static func goal_region(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> String:
+	if region_id == "" or first_goals_done(c, data, flags) or c.realm_index >= 2:
+		return ""
+	for goal in first_goals(c, data, flags):
+		if not goal["done"]:
+			return hinted_region(data, String(goal["text"]), region_id)
+	return ""
+
+
+## GUIDE-260: a fight in the goal's region that costs at most FAIR_FIGHT_GOAL_EXTRA_DAYS more travel than the nearest
+## fight found, put first, so one trip serves both. Never swaps an easy first entry for a lower-odds one.
+const FAIR_FIGHT_GOAL_EXTRA_DAYS := 2
+static func _goal_way_fight(found: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, may_rate: bool) -> void:
+	if not may_rate:
+		return
+	var goal := goal_region(c, data, flags, region_id)
+	if goal == "":
+		return
+	var days := route_days(c, data, region_id, goal)
+	if days <= 0:
+		return
+	var nearest := 1000000
+	var first_easy := false
+	for f in found:
+		if String(f.get("kind", "")) != "trial" and int(f.get("days", 0)) < nearest:
+			nearest = int(f.get("days", 0))
+			first_easy = float(f["chance"]) >= EASY_FIGHT_CHANCE
+	if days > nearest + FAIR_FIGHT_GOAL_EXTRA_DAYS:
+		return
+	var tags: Array = data.regions.get(goal, {}).get("encounter_tags", [])
+	var goal_text := ""
+	for g in first_goals(c, data, flags):
+		if not g["done"]:
+			goal_text = String(g["text"])
+			break
+	var who := RegEx.new()
+	who.compile("^Talk to (.+?) in ")
+	var m := who.search(goal_text)
+	var way := "on the way to %s" % (m.get_string(1) if m != null else _region_name(data, goal))
+	var trip := Calendar.format_duration(days)
+	for enemy_id in Exploration.eligible_fights(c, data, tags, flags, Calendar.season_of(today), goal, today):
+		var foe: Dictionary = data.enemies[enemy_id]
+		if Combat.odds_kind(c, data, foe) == "far":
+			continue
+		var mine: Array[Dictionary] = []
+		var name := String(foe.get("name", enemy_id))
+		_rate_fight(mine, c, data, foe, "explore", "%s in %s, %s" % [name, _region_name(data, goal), way], 0, "%s in %s (%s)" % [name, _region_name(data, goal), trip], days, "%s in %s, %s, %s away" % [name, _region_name(data, goal), way, trip])
+		if mine.is_empty():
+			continue
+		var e := mine[0]
+		e["kind"] = "goal_way"
+		var easy := float(e["chance"]) >= EASY_FIGHT_CHANCE
+		if first_easy and not easy:
+			continue
+		e["text"] = "%s: %s (%s, %d in 100)" % [fair_fight_prefix(e), e["label"], trip, roundi(float(e["chance"]) * 100.0)]
+		found.insert(0, e)
+		return
 
 
 ## REVIEW (GUIDE-249): away entries sort after every days-0 home entry, so with 3+ easy home fights the cap dropped them

@@ -7453,3 +7453,51 @@ func test_journal_drops_teacher_errand_once_done() -> void:
 	var npcs := _style_world()
 	var lines := _teacher_errand_lines(c, npcs, {"hunter_ma": 3}, {"ma_snare_done": true})
 	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Hunter Ma (")).size(), 0)
+
+
+## GUIDE-260: a fight in the goal's region within 2 days of the nearest one leads the fight list.
+func test_goal_region_names_the_first_goal_region() -> void:
+	var c := CharacterData.new()
+	assert_eq(Guidance.goal_region(c, data(), {}, "fallen_star_market"), "qingshi_village")
+	assert_eq(Guidance.goal_region(c, data(), {}, "qingshi_village"), "", "already there")
+	assert_eq(Guidance.goal_region(c, data(), {}, ""), "", "no region")
+	var vet := _fighter()
+	vet.realm_index = 2
+	assert_eq(Guidance.goal_region(vet, data(), {}, "fallen_star_market"), "", "first goals done for a veteran")
+
+
+func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
+	var c := _fighter()
+	var d := data()
+	var far_roamer := {"text": "Easy fight: A Wild Boar roams Misty Forest today, 9 days away (99 in 100)", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "stones": 0, "short": "Wild Boar in Misty Forest (9 days)", "days": 9}
+	var found: Array[Dictionary] = [far_roamer.duplicate()]
+	var days := Guidance.route_days(c, d, "fallen_star_market", "qingshi_village")
+	found[0]["days"] = days - 1  # within FAIR_FIGHT_GOAL_EXTRA_DAYS of the goal region
+	Guidance._goal_way_fight(found, c, d, {}, c.age_days, "fallen_star_market", true)
+	assert_eq(found.size(), 2, "the goal-region fight joined")
+	assert_eq(String(found[0]["kind"]), "goal_way")
+	assert_true("Qingshi Village, on the way to Elder Mo (" in String(found[0]["text"]), String(found[0]["text"]))
+	assert_true(float(found[0]["chance"]) >= Guidance.FAIR_FIGHT_MIN_CHANCE)
+	# The shown odds equal the full rating (GUIDE-259).
+	var foe: Dictionary = d.enemies[String(found[0]["enemy_id"])]
+	assert_eq(float(found[0]["chance"]), Combat.win_chance_at_least(c, d, foe, Guidance.FAIR_FIGHT_MIN_CHANCE, Combat.RATING_SAMPLES, Guidance.fair_quick_margin))
+	# A nearer fight (more than 2 days closer) keeps the lead.
+	var near: Array[Dictionary] = [far_roamer.duplicate()]
+	near[0]["days"] = 0
+	Guidance._goal_way_fight(near, c, d, {}, c.age_days, "fallen_star_market", true)
+	assert_eq(near.size(), 1)
+	# Rating budget spent: nothing added.
+	var spent: Array[Dictionary] = [far_roamer.duplicate()]
+	spent[0]["days"] = days
+	Guidance._goal_way_fight(spent, c, d, {}, c.age_days, "fallen_star_market", false)
+	assert_eq(spent.size(), 1)
+
+
+func test_goal_way_fight_unchanged_when_in_goal_region_or_goal_done() -> void:
+	var c := _fighter()
+	for f: Dictionary in Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"):
+		assert_false("on the way to" in String(f["text"]))
+	var vet := _fighter()
+	vet.realm_index = 2
+	for f: Dictionary in Guidance.fair_fights(vet, data(), {}, vet.age_days, "fallen_star_market"):
+		assert_false("on the way to" in String(f["text"]))
