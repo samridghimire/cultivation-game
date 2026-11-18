@@ -52,3 +52,29 @@ func test_ripples_only_while_raining_and_not_reduced() -> void:
 	assert_true(after.puddles().size() > 0)
 	n.free()
 	after.free()
+
+
+## GFX-190: puddle bodies are painted by the world between the path/yard ground and the props.
+func test_world_paints_puddles_between_ground_and_props() -> void:
+	var src := FileAccess.get_file_as_string("res://src/world/world.gd")
+	var ground := src.find("_draw_market_ground()\n\tif _rain_puddles")
+	var paint := src.find("_rain_puddles.paint_puddles(self)")
+	var props := src.find("_draw_yard_props()\n\t_draw_square_props()")
+	assert_true(ground >= 0 and paint > ground and props > paint, "puddles paint after the ground, before props")
+	var n := RainPuddles.new()
+	assert_eq(n.z_index, 0)
+	n.free()
+
+
+func test_eaves_drip_only_in_rain_not_snow() -> void:
+	var region := {"id": "t", "places": [{"name": "Hut", "type": "family_home", "pos": [300, 300], "size": [100, 80]},
+		{"name": "Pond", "type": "gather", "pos": [600, 300], "size": [60, 60]}]}
+	var rain := RainEaves.layout(region, "rain", false)
+	assert_eq(rain.size(), 1)  # buildings only
+	var n: int = (rain[0]["drips"] as Array).size()
+	assert_true(n >= 3 and n <= 6)
+	assert_eq(RainEaves.layout(region, "rain", false), rain)  # seeded
+	assert_eq(RainEaves.layout(region, "rain", true).size(), 0)
+	assert_eq(RainEaves.layout(region, "clear", false).size(), 0)
+	var wet: Rect2 = rain[0]["base"]
+	assert_eq(wet.size.y, 3.0)

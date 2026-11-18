@@ -125,16 +125,28 @@ func _process(delta: float) -> void:
 	advance(delta)
 
 
+## GFX-190: the puddle bodies are painted by the world's own _draw between the paths and the props
+## (see paint_puddles), so every prop, shadow and figure sits above them. This node only draws the
+## wet-ground tint and the ripples.
 func _draw() -> void:
 	if _wet:
 		draw_rect(Rect2(Vector2.ZERO, _size), Color(0.0, 0.02, 0.06, WET_DARKEN))
-	for p in _puddles:
-		_draw_oval(p["pos"], float(p["rx"]), float(p["ry"]))
 	for r in _ripples:
 		var pd: Dictionary = _puddles[int(r["i"])]
 		var k := float(r["t"]) / RIPPLE_LIFE
 		var c: Vector2 = pd["pos"]
 		_draw_ring(c, float(pd["rx"]) * (0.3 + 0.6 * k), float(pd["ry"]) * (0.3 + 0.6 * k), Color(0.92, 0.97, 1.0, 0.7 * (1.0 - k)))
+
+
+## GFX-190: paint the puddle bodies onto `ci` (the world, in its ground pass, above paths, below props).
+func paint_puddles(ci: CanvasItem) -> void:
+	for p in _puddles:
+		var c: Vector2 = p["pos"]
+		var rx := float(p["rx"])
+		var ry := float(p["ry"])
+		ci.draw_colored_polygon(_oval_points(c, rx + 1.0, ry + 1.0), Color(0.85, 0.93, 1.0, 0.45))
+		ci.draw_colored_polygon(_oval_points(c, rx, ry), Color(0.45, 0.58, 0.72, 0.8))
+		ci.draw_colored_polygon(_oval_points(c + Vector2(-rx * 0.15, -ry * 0.25), rx * 0.55, ry * 0.4), Color(0.7, 0.82, 0.92, 0.5))
 
 
 func _oval_points(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
@@ -143,13 +155,6 @@ func _oval_points(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
 		var a := TAU * float(i) / 14.0
 		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
 	return pts
-
-
-func _draw_oval(c: Vector2, rx: float, ry: float) -> void:
-	var rim := _oval_points(c, rx + 1.0, ry + 1.0)
-	draw_colored_polygon(rim, Color(0.85, 0.93, 1.0, 0.45))
-	draw_colored_polygon(_oval_points(c, rx, ry), Color(0.45, 0.58, 0.72, 0.8))
-	draw_colored_polygon(_oval_points(c + Vector2(-rx * 0.15, -ry * 0.25), rx * 0.55, ry * 0.4), Color(0.7, 0.82, 0.92, 0.5))
 
 
 func _draw_ring(c: Vector2, rx: float, ry: float, col: Color) -> void:

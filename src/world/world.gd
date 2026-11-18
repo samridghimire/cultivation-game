@@ -65,6 +65,7 @@ var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
+var _rain_eaves: RainEaves  ## GFX-190
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
 var _tracks: Array[Dictionary] = []  ## WU-450: a great beast's trail of prints
@@ -304,6 +305,12 @@ func _refresh_puddles() -> void:
 	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
 	var yesterday := "clear" if _forced_weather != "" else Weather.of(GameState.data, GameState.current_region, GameClock.total_days - 1)
 	_rain_puddles.setup(_region, map_size, GameClock.total_days, _weather_kind, yesterday, snowy, _yards, MotionFx.reduced())
+	if _rain_eaves == null:
+		_rain_eaves = RainEaves.new()
+		_rain_eaves.name = "RainEaves"
+		add_child(_rain_eaves)
+	_rain_eaves.setup(_region, _weather_kind, snowy, MotionFx.reduced())
+	queue_redraw()  # GFX-190: the puddle bodies live in the world's own draw
 
 
 ## GFX-033: a white flash every 6-14 s on storm days (none with reduce_motion).
@@ -1252,6 +1259,8 @@ func _draw() -> void:
 			_draw_road(rect, path_color, GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_yard_ground()
 	_draw_market_ground()
+	if _rain_puddles != null:
+		_rain_puddles.paint_puddles(self)  # GFX-190: above the paths and yards, below every prop and figure
 	_draw_scree_detail(map)
 	_draw_outcrop_scree(map)
 	_draw_relief(map)
