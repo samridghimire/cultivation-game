@@ -68,3 +68,20 @@ func test_fringe_leaves_mist() -> void:
 	for f: Dictionary in a["fringe"]:
 		for k in keep:
 			assert_false(k.has_point(f["pos"]), "fringe reed in a keepout")
+
+
+## WU-564: the region gate (posts, roof, name board) is a marsh keepout, so no pool or reed clump sits on it.
+func test_gate_is_a_keepout() -> void:
+	var region := _bone_marsh()
+	var gate := SectCourt.gate(region)
+	assert_false(gate.is_empty(), "the marsh has a gate")
+	var gr := SectCourt.gate_rect(gate)
+	var extra: Array[Rect2] = [gr]
+	var covered := false
+	for k in Scenery.marsh_keepouts(region, extra):
+		if k.encloses(gr):
+			covered = true
+	assert_true(covered, "one keepout encloses the gate")
+	var f := Scenery.marsh_features(hash("withered_bone_marsh|marsh"), Vector2(1600, 1000), Scenery.marsh_keepouts(region, extra))
+	for reed: Dictionary in f["reeds"]:
+		assert_false(gr.has_point(reed["pos"]), "no reed on the gate")

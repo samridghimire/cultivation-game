@@ -34,3 +34,20 @@ func test_npc_yields_to_place_label() -> void:
 	var places: Array[Rect2] = [Rect2(0, 0, 100, 16)]
 	assert_eq(LabelFade.npc_alpha(Rect2(50, 5, 60, 16), places), 0.35)
 	assert_eq(LabelFade.npc_alpha(Rect2(200, 5, 60, 16), places), 1.0)
+
+
+## WU-564: name labels draw above the player sprite (label layer z 10, player z 0), so the player never covers one.
+func test_labels_draw_above_the_player() -> void:
+	var player: Node2D = load("res://src/world/player.tscn").instantiate()
+	assert_eq(player.z_index, 0)
+	var node := Interactable.new()
+	node.size = Vector2(40, 40)
+	node.display_name = "Test"
+	Engine.get_main_loop().root.add_child(node)
+	var z := -1
+	for c: Node in node.get_children():
+		if c is Node2D and (c as Node2D).z_index > 0:
+			z = (c as Node2D).z_index
+	node.queue_free()
+	player.queue_free()
+	assert_true(z > player.z_index, "label z %d above the player" % z)

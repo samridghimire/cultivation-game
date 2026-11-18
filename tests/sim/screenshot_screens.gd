@@ -299,7 +299,7 @@ func _start() -> void:
 	var spouse := Npcs.spawn(gs.npcs, gs.data, rng, {"gender": "female", "region": gs.current_region, "age_years": 28})
 	Family.marry(c, spouse, "wife")
 	for k in 2:
-		var kid := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 4 + k * 3, "region": gs.current_region})
+		var kid := Npcs.spawn(gs.npcs, gs.data, rng, {"age_years": 4 + k * 3, "region": gs.current_region, "surname": c.surname})  # WU-564: the father's surname, as Children.gd gives it
 		kid.parents = [c.id, spouse.id] as Array[String]
 		c.children.append(kid.id)
 	_add_week_data(gs, c)

@@ -520,7 +520,7 @@ func _build_decor() -> void:
 	_square = Scenery.village_square(_region)
 	_market_dress = Scenery.market_props(_region, map_size) if _region.get("map", {}).has("market") else {}
 	if str(_region.get("map", {}).get("ground_style", "")) == "bog":
-		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region))
+		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region, _gate_keepouts()))
 	_edge = Scenery.edge_props(_region, map_size)
 	_crags = Scenery.high_crags(_region)
 	if not _crags.is_empty():  # GFX-123: nothing grows on a crag
@@ -1406,6 +1406,8 @@ func _draw_yard_props() -> void:
 		return
 	var snowy := Scenery.is_snowy(_season)
 	for p: Dictionary in _yards["props"]:
+		if snowy and str(p["kind"]) == "hens":  # WU-564: the hens stay in on snowy days
+			continue
 		var r: Rect2 = p["rect"]
 		draw_rect(Rect2(r.position + Vector2(1, r.size.y - 2), Vector2(r.size.x, 3)), Color(0, 0, 0, 0.25))
 		match str(p["kind"]):
@@ -1453,8 +1455,8 @@ func _draw_yard_props() -> void:
 				draw_rect(Rect2(r.position + Vector2(7, 0), Vector2(1, 2)), Color("8a5a2a"))
 				draw_rect(Rect2(r.position + Vector2(10, 0), Vector2(1, 2)), Color("8a5a2a"))
 				draw_rect(Rect2(r.position + Vector2(0, 5), Vector2(3, 2)), Color("8a5a2a"))
-			"hens":  # GFX-188: two hens pecking by the door
-				for h in 2:
+			"hens":  # GFX-188/WU-564: three hens pecking in front of the coop (indoors on snowy days)
+				for h in 3:
 					var hp := r.position + Vector2(h * 11.0, 2.0)
 					draw_rect(Rect2(hp + Vector2(0, 2), Vector2(7, 5)), Color("e8dcc4") if h == 0 else Color("a8602a"))
 					draw_rect(Rect2(hp + Vector2(5, 0), Vector2(3, 3)), Color("e8dcc4") if h == 0 else Color("a8602a"))
@@ -1700,6 +1702,15 @@ func _draw_marsh_decor() -> void:
 			draw_line(p + Vector2(lean * 0.7, -h * 0.7), p + Vector2(lean * 0.7 - 10.0, -h * 0.9), Color("3b3a2c"), 2.0)
 			if winter:
 				draw_rect(Rect2(p + Vector2(lean - 3.0, -h - 2.0), Vector2(6, 3)), Color("f4f8ff"))
+
+
+## WU-564: the region gate's rect as a keepout list (empty without a gate).
+func _gate_keepouts() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var gate := SectCourt.gate(_region)
+	if not gate.is_empty():
+		out.append(SectCourt.gate_rect(gate))
+	return out
 
 
 ## GFX-125: lily pads on the pools and the bog's ponds, then reed clumps (snow caps in winter).

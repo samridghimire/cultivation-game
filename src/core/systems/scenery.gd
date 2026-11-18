@@ -2786,7 +2786,7 @@ static func pond_lilies(rect: Rect2, seed_value: int, count: int) -> Array[Dicti
 
 
 ## GFX-125: the keepouts of a bog's ground features: roads, places, landmarks, NPC spots and the arrival ring.
-static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
+static func marsh_keepouts(region: Dictionary, extra: Array[Rect2] = []) -> Array[Rect2]:
 	var out := blocked_rects(region)
 	for lm in landmark_rects(region):
 		out.append(lm.grow(14.0))
@@ -2796,6 +2796,8 @@ static func marsh_keepouts(region: Dictionary) -> Array[Rect2]:
 		out.append(Rect2(float(pp[0]) - maxf(float(ps[0]) / 2.0, 60.0), float(pp[1]) - float(ps[1]) / 2.0 - 36.0, maxf(float(ps[0]), 120.0), float(ps[1]) + 72.0))
 	for spot: Array in region.get("npc_spots", []):
 		out.append(Rect2(float(spot[0]) - 40.0, float(spot[1]) - 40.0, 80.0, 80.0))
+	for e in extra:  # WU-564: e.g. the region gate (posts, roof, name board), which the world passes in
+		out.append(e.grow(10.0))
 	var arrival: Array = []
 	if region.has("spawn"):
 		arrival.append(region["spawn"])
@@ -3293,7 +3295,7 @@ const YARD_PATH_W := 11.0
 const YARD_PATH_MAX := 260.0
 const YARD_PATH_FALLBACK := 520.0  # GFX-138: a house that finds no short path may take a longer one round a field
 const YARD_PATH_MAX_PLACE := 420.0  # GFX-132: temple, workshop, clinic, sect hall may sit further from a road
-const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10), "drying_rack": Vector2(34, 18), "cat": Vector2(12, 8), "hens": Vector2(22, 10)}
+const YARD_PROP_SIZES := {"woodpile": Vector2(20, 12), "water_jar": Vector2(10, 12), "veg_row": Vector2(36, 20), "washing_line": Vector2(40, 24), "bench": Vector2(22, 10), "drying_rack": Vector2(34, 18), "cat": Vector2(12, 8), "hens": Vector2(34, 10)}
 
 
 ## GFX-127: the lived-in dressing of a village (regions with `map.yards`): {"footpaths": [{rect, door}] (door = index of the
@@ -3407,6 +3409,7 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 		var yr := Rect2(hr.get_center().x - hr.size.x * 0.7, hr.end.y - 4.0, hr.size.x * 1.4, 24.0)
 		yards_out.append({"rect": yr, "outline": ragged_outline(yr, hash("%s|yard|%d" % [region.get("id", ""), i]), 10.0, 5.0)})
 		var kinds := YARD_PROP_SIZES.keys()
+		kinds.erase("hens")  # WU-564: hens only ever come with the Hen Coop (below)
 		var left := rng.randi() % 2 == 0
 		var placed := 0
 		for m in rng.randi_range(1, 2):
@@ -3441,6 +3444,12 @@ static func village_yards(region: Dictionary, size: Vector2) -> Dictionary:
 				if done:
 					break
 			left = not left if m == 0 else left
+	var coop := Critters.coop_rect(region)  # WU-564: three hens pecking just in front of the Hen Coop's door
+	if coop.size != Vector2.ZERO:
+		var hsz: Vector2 = YARD_PROP_SIZES["hens"]
+		var hrect := Rect2(coop.get_center().x - hsz.x / 2.0, coop.end.y + 6.0, hsz.x, hsz.y)
+		if not _market_blocked(hrect, [] as Array[Rect2], [] as Array[Rect2], [] as Array[Rect2], 0.0, size, Rect2()):
+			props_out.append({"kind": "hens", "rect": hrect})
 	return out
 
 

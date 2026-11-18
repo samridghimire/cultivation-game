@@ -134,3 +134,20 @@ func test_yard_outline_is_ragged() -> void:
 func test_ring_has_an_arc_of_stones() -> void:
 	var sq := Scenery.village_square(data().regions["qingshi_village"])
 	assert_true((sq["stones"] as Array).size() >= 8, "stones: %d" % (sq["stones"] as Array).size())
+
+
+## WU-564: hens come only with the Hen Coop: 3 of them just below its door, and no random house gets a hens prop.
+func test_hens_only_by_the_coop() -> void:
+	var r := _qingshi()
+	var s: Array = r["map"]["size"]
+	var coop := Critters.coop_rect(r)
+	assert_true(coop.size != Vector2.ZERO, "Qingshi has a coop")
+	var y := Scenery.village_yards(r, Vector2(float(s[0]), float(s[1])))
+	var hens := 0
+	for p: Dictionary in y["props"]:
+		if p["kind"] == "hens":
+			hens += 1
+			var rect: Rect2 = p["rect"]
+			assert_true(rect.get_center().distance_to(Vector2(coop.get_center().x, coop.end.y)) <= 40.0, "hens within 40 px of the coop door")
+	assert_eq(hens, 1, "one hens prop (three hens) at the coop")
+	assert_eq(Scenery.village_yards(r, Vector2(float(s[0]), float(s[1])))["props"], y["props"], "deterministic")
