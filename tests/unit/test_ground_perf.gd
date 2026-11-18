@@ -50,11 +50,11 @@ func test_grass_winter_identical() -> void:
 
 
 func test_scree_winter_identical() -> void:
-	_check("scree_winter", _scree("Winter"), "eaf37513875108db7df70ef60976204b73fa4e4829fa8c841b43f31e82fc2e5e")
+	_check("scree_winter", _scree("Winter"), "a23035103ae523277bf8388c2574426093c683b760e5a928dfffbc7d8b8a1b43")
 
 
 func test_scree_summer_identical() -> void:
-	_check("scree_summer", _scree("Summer"), "67f2a33a904c24d3b61ab58561e309f43e86fc2546314181a27e38625b78fb18")
+	_check("scree_summer", _scree("Summer"), "fd6c2f3fec467187372d1f70785453c251268e270f615a9908c7ea37ee474afb")
 
 
 func test_paved_winter_identical() -> void:

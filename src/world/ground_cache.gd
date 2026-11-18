@@ -5,7 +5,7 @@ extends RefCounted
 ## scree density, life: avoid/worn/path_color/speckle/alpine_meadow); the key here hashes that same text plus VERSION.
 ## Bump VERSION whenever a ground pass changes its output. Only user:// is ever written.
 
-const VERSION := 2
+const VERSION := 3
 const MIN_PIXELS := 40000  ## smaller textures (duel stage strips, test tiles) are cheap and not cached
 
 static var enabled := true

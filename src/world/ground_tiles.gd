@@ -610,8 +610,12 @@ static func _alpine_life(img: Image, rid: String, season: String, meadow: float 
 	for b in alpine_blobs(rid, "hollow", n, size_px):
 		_blend_blob(img, b, 0.6, Color("3a4450"), 0.5)
 	# GFX-179: scree fans are drawn at each outcrop's foot by world.gd, no random fans in the ground
+	# GFX-203: lichen is a handful of crisp opaque dots (no translucent blobs on the pixel art)
 	for b in alpine_blobs(rid, "lichen", n * 2, size_px):
-		_blend_blob(img, Vector3(b.x, b.y, b.z * 0.5), 0.7, Color("8d9a5a"), 0.5)
+		var lx := int(b.x)
+		var ly := int(b.y)
+		for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(-2, 1), Vector2i(2, 1), Vector2i(0, 2)]:
+			_set_clipped(img, lx + o.x, ly + o.y, Color("8d9a5a") if (o.x + o.y) % 2 == 0 else Color("a3a86a"))
 	var grass := Color("6b8248")
 	if season == "Autumn":
 		grass = Color("a8602f")
@@ -645,7 +649,15 @@ static func _alpine_meadow(img: Image, rid: String, season: String, n: int, dens
 	for b in alpine_blobs(rid, "moss", n * 2, size_px):
 		_blend_blob(img, Vector3(b.x, b.y, b.z * 1.3), 0.6, moss_col, 0.55)
 	for b in alpine_blobs(rid, "needles", n, size_px):
-		_blend_blob(img, Vector3(b.x, b.y, b.z * 0.8), 0.7, Color("7a5f3a"), 0.45)
+		# GFX-203: pine-needle drifts are crisp short brown strokes, not a translucent blob
+		var nx := int(b.x)
+		var ny := int(b.y)
+		for k in 7:
+			var nh := absi(hash("%s|nd|%d|%d|%d" % [rid, nx, ny, k]))
+			var sx := nx + (nh % 11) - 5
+			var sy := ny + ((nh / 11) % 5) - 2
+			for o in [0, 1, 2]:
+				_set_clipped(img, sx + o, sy, Color("7a5f3a") if o < 2 else Color("8f7448"))
 	for b in alpine_blobs(rid, "blade", n * 10, size_px):
 		var x := int(b.x)
 		var y := int(b.y)
