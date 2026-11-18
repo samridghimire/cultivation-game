@@ -84,7 +84,7 @@ func test_village_foundation_beats_fade_or_retire() -> void:
 
 
 func test_c265_repeats_rest_or_retire() -> void:
-	var rests := {"village_lost_coin": 60, "village_boar": 45, "city_pickpocket_caught": 90, "village_old_boxer_spar": 60, "village_drunk_bully": 90}
+	var rests := {"village_lost_coin": 300, "village_boar": 240, "city_pickpocket_caught": 300, "village_old_boxer_spar": 240, "village_drunk_bully": 240}
 	for id: String in rests:
 		assert_eq(int(data().encounters[id].get("rest_days", 0)), rests[id], "%s rest_days" % id)
 	var once := {"village_beast_at_the_fold": "met_fold_beast", "village_hopeful_youths": "met_hopeful_youths", "village_rogue_begs_pointers": "met_peak_rogue", "village_name_the_newborn": "named_a_newborn"}
