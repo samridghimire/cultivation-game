@@ -74,6 +74,30 @@ func test_market_dog_chore_is_an_easy_first_fight() -> void:
 	gs.end_session()
 
 
+## C-392: Azure Peak, the marsh and the Ridge each pay for an easy first fight, repeatable after a cooldown.
+func test_regional_chores_are_easy_first_fights() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Newcomer", gs.data, seeded_rng(9))
+	gs.start_session(c)
+	var chores := {
+		"chore_drive_stair_goats": ["crag_goat", "azure_steward"],
+		"chore_scrape_boardwalk_leeches": ["bog_leech_swarm", "lotus_steward"],
+		"chore_scatter_cairn_crows": ["ridge_crow_flock", "ridge_cairn_keeper"],
+	}
+	for deed_id: String in chores:
+		var foe: Dictionary = gs.data.enemies[String(chores[deed_id][0])]
+		c.realm_index = 0
+		assert_true(Combat.win_chance(c, gs.data, foe) >= 0.9, "mortal rates %s Easy" % deed_id)
+		c.realm_index = 1
+		assert_true(Combat.win_chance(c, gs.data, foe) >= 0.9, "Qi Refining 1 rates %s Easy" % deed_id)
+		var ids: Array = Deeds.available(gs.data, String(chores[deed_id][1]), gs.world_flags).map(func(dd: Dictionary) -> String: return dd["id"])
+		assert_true(ids.has(deed_id), "%s is listed for a rogue" % deed_id)
+		var stones := c.item_count("spirit_stone")
+		gs.perform_deed(deed_id)
+		assert_eq(c.item_count("spirit_stone"), stones + 8, "%s pays 8 stones" % deed_id)
+	gs.end_session()
+
+
 ## QA-063: the sim records the first real win, its foe, and the day the first style was bought.
 func test_sim_records_first_win_and_style() -> void:
 	var root := _root()

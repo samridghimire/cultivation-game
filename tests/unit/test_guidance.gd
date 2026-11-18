@@ -2015,6 +2015,8 @@ func test_pill_saving_goal_mentions_sellable_loot() -> void:
 ## C-391: the Fallen Star Market yard-dog chore is one route away from Qingshi; tests about Qingshi's own fights rest it.
 func _rest_yard_dogs(c: CharacterData, day: int) -> void:
 	c.deed_days["chore_clear_yard_dogs"] = day
+	for chore_id: String in ["chore_drive_stair_goats", "chore_scrape_boardwalk_leeches", "chore_scatter_cairn_crows"]:  # C-392
+		c.deed_days[chore_id] = day
 
 
 func _deed_texts(c: CharacterData, flags: Dictionary) -> Array:
