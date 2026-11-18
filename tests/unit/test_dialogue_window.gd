@@ -14,6 +14,7 @@ func test_choice_label_shows_lock_reason() -> void:
 func test_window_renders_and_advances_conversation() -> void:
 	var gs := _gs()
 	gs.start_session(new_character())
+	gs.npc_favor["elder_mo"] = 5  # WU-568: the village talk opens with his first favor
 	gs.start_dialogue("elder_mo")
 	var window := DialogueWindow.new()
 	window.open()

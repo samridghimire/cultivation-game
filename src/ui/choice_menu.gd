@@ -30,7 +30,7 @@ func _init() -> void:
 	_portrait = PortraitBox.new()
 	row.add_child(_portrait)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 6)  # WU-568: no gap between the rule and the first row
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(box)
 	_title = UIStyle.label("", 22, UIStyle.ACCENT)

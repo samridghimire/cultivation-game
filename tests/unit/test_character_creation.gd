@@ -87,8 +87,8 @@ func test_attribute_rows_have_tooltips() -> void:
 func test_focus_reroll_and_buttons_reachable() -> void:
 	var scene: Control = await _scene()
 	await (Engine.get_main_loop() as SceneTree).process_frame
-	assert_true(scene._reroll_button.has_focus())
-	var next: Control = scene._reroll_button.find_valid_focus_neighbor(SIDE_RIGHT)
+	assert_true(scene._begin_button.has_focus(), "WU-568: Begin is the default focus")
+	var next: Control = scene._reroll_button.find_valid_focus_neighbor(SIDE_RIGHT)  # Reroll stays reachable
 	assert_true(next == scene._begin_button)
 	assert_true(scene._begin_button.find_valid_focus_neighbor(SIDE_RIGHT) is Button)
 	scene.queue_free()

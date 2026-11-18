@@ -90,7 +90,7 @@ func _ready() -> void:
 	_reroll_button.focus_neighbor_top = _gender.get_path()
 
 	_roll(false)
-	_reroll_button.grab_focus.call_deferred()
+	_begin_button.grab_focus.call_deferred()  # WU-568: Begin is the default focus; Reroll is one step left
 
 
 func _field(parent: Control, caption: String, text: String, max_len: int) -> LineEdit:
