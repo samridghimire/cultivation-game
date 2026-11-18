@@ -407,7 +407,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 			var contest := FestivalContest.contest_of(data, eid)
 			if not contest.is_empty():
 				if FestivalContest.check(data, active_events, c, eid, region_id, flags, year) == "":
-					line += "; the %s is open" % String(contest["name"])
+					line += "; contest open today: %s" % String(contest["name"])
 				var champ := FestivalContest.champion_text(flags, eid, year)
 				if champ != "":
 					line += " (%s)" % champ
@@ -3972,7 +3972,7 @@ static func next_teacher_hint(c: CharacterData, npcs: Dictionary, data: GameData
 	return line
 
 
-## GUIDE-254: "help with his snare line (2 days, +12 favor)" for an available deed whose `favor` names `npc_id`
+## GUIDE-254: "check his snare line (2 days, +12 favor)" for an available deed whose `favor` names `npc_id`
 ## (the NPC's own deed_context; not done, not blocked, requirements met), else "". Needs `today` >= 0.
 static func _errand_clause(c: CharacterData, data: GameData, npc_id: String, flags: Dictionary, today: int) -> String:
 	var context := String(data.npcs.get(npc_id, {}).get("deed_context", ""))
@@ -3983,18 +3983,29 @@ static func _errand_clause(c: CharacterData, data: GameData, npc_id: String, fla
 		var gain := int(deed.get("favor", {}).get(npc_id, 0))
 		if gain <= 0 or Deeds.check(c, data, deed, flags, today) != "":
 			continue
-		var name := String(deed.get("name", ""))
-		for lead in ["Help %s with " % npc_name, "Help %s " % npc_name]:
-			if name.begins_with(lead):
-				name = name.trim_prefix(lead)
-				break
-		name = name.trim_prefix("check ")
-		var his := "her" if String(data.npcs[npc_id].get("gender", "")) == "female" else ("his" if String(data.npcs[npc_id].get("gender", "")) == "male" else "their")
-		name = name.replace(npc_name + "'s", his).replace(npc_name, "them" if his == "their" else ("her" if his == "her" else "him"))
+		var gender := String(data.npcs[npc_id].get("gender", ""))
+		var his := "her" if gender == "female" else ("his" if gender == "male" else "their")
+		var him := "her" if gender == "female" else ("him" if gender == "male" else "them")
 		var days := int(deed.get("days", 0))
-		var clause := "help with %s (%d day%s, +%d favor)" % [name.substr(0, 1).to_lower() + name.substr(1), days, "" if days == 1 else "s", gain]
-		if clause.length() > 46:
-			clause = "an errand for %s, +%d favor" % ["her" if his == "her" else ("him" if his == "his" else "them"), gain]
+		var tail := " (%d day%s, +%d favor)" % [days, "" if days == 1 else "s", gain]
+		var phrase := String(deed.get("hint", ""))  # GUIDE-256: authored imperative phrase, used verbatim
+		var authored := phrase != ""
+		if not authored:
+			var name := String(deed.get("name", ""))
+			var stripped := false
+			for lead in ["Help %s with " % npc_name, "Help %s " % npc_name]:
+				if name.begins_with(lead):
+					name = name.trim_prefix(lead)
+					stripped = true
+					break
+			name = name.replace(npc_name + "'s", his).replace(npc_name, him)
+			phrase = name.substr(0, 1).to_lower() + name.substr(1)
+			# "Help X on her rounds" leaves a bare preposition: put the helper verb back.
+			if stripped and phrase.split(" ")[0] in ["on", "with", "in", "at", "for", "to", "from", "by"]:
+				phrase = "help %s %s" % [him, phrase]
+		var clause := phrase + tail
+		if not authored and clause.length() > 46:
+			clause = "an errand for %s, +%d favor" % [him, gain]
 		return clause
 	return ""
 

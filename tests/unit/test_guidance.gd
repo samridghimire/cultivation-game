@@ -6835,7 +6835,7 @@ func test_style_teacher_names_the_snare_errand() -> void:
 	c.techniques = {}
 	var npcs := _style_world()
 	var t := Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, 10, {})
-	assert_eq(t.get("close", ""), "help with his snare line (2 days, +12 favor)")
+	assert_eq(t.get("close", ""), "check his snare line (2 days, +12 favor)")
 	t = Guidance.style_teacher(c, npcs, data(), "qingshi_village", {}, 10, {"ma_snare_done": true})
 	assert_false(String(t.get("close", "")).contains("snare"), "done: falls back")
 	c.inventory = {"venison": 1}
@@ -7320,3 +7320,49 @@ func test_qi_pill_offer_near_weighs_a_pill_two_routes_away() -> void:
 		var offer := Guidance.qi_pill_offer_near(_qr(2, 500), d, home)
 		assert_eq(String(offer.get("item_id", "")), "fixture_good_pill")
 		assert_eq(String(offer.get("region_id", "")), two))
+
+
+## GUIDE-256: each teacher's errand reads as the deed's authored `hint`, never "help with <verb>".
+func test_every_teacher_errand_reads_right() -> void:
+	var d := data()
+	var c := _fresh()
+	var seen := 0
+	for deed_id: String in d.deeds:
+		var deed: Dictionary = d.deeds[deed_id]
+		if not deed.has("favor"):
+			continue
+		var npc_id := String((deed["favor"] as Dictionary).keys()[0])
+		var clause := Guidance._errand_clause(c, d, npc_id, {}, 10)
+		assert_true(clause.contains(String(deed["hint"])), "%s: %s" % [deed_id, clause])
+		assert_false(clause.contains("help with "), clause)
+		assert_false(clause.contains("  "), clause)
+		seen += 1
+	assert_true(seen >= 6, "six teacher errands in data")
+
+
+func test_errand_clause_without_hint_keeps_the_verb_phrase() -> void:
+	var d := GameData.load_from_dir()  # own copy: the test edits deeds
+	var c := _fresh()
+	d.deeds["ma_snare_line"].erase("hint")
+	d.deeds["ma_snare_line"]["name"] = "Help Hunter Ma check his traps"
+	assert_true(Guidance._errand_clause(c, d, "hunter_ma", {}, 10).begins_with("check his traps ("))
+	d.deeds["ma_snare_line"]["name"] = "Help Hunter Ma on his rounds"
+	assert_true(Guidance._errand_clause(c, d, "hunter_ma", {}, 10).begins_with("help him on his rounds ("))
+
+
+func test_deed_hint_is_validated() -> void:
+	var d := GameData.load_from_dir()
+	d.deeds["ma_snare_line"]["hint"] = "x".repeat(41)
+	d.load_errors.clear()
+	d._validate()
+	assert_true(String(" ".join(d.load_errors)).contains("hint must be 1..40"))
+	d.deeds["ma_snare_line"]["hint"] = "ok"
+	d.deeds["ma_snare_line"].erase("favor")
+	d.load_errors.clear()
+	d._validate()
+	assert_true(String(" ".join(d.load_errors)).contains("hint only on deeds with favor"))
+
+
+func test_festival_contest_line_has_no_plural_mismatch() -> void:
+	var src := FileAccess.get_file_as_string("res://src/core/systems/guidance.gd")
+	assert_false(src.contains("; the %s is open"), "contest names such as 'Lantern riddles' are plural")
