@@ -94,11 +94,22 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
 ## cells picked by `variant_for`. Built once per region and season-bloom state, so `_draw()` stays cheap.
+## PERF-009: per-pass timings (usec) of `ground_texture`, filled only while `profiling` is true.
+static var profiling := false
+static var profile: Dictionary = {}
+
+
+static func _prof(pass_name: String, t0: int) -> void:
+	if profiling:
+		profile[pass_name] = int(profile.get(pass_name, 0)) + Time.get_ticks_usec() - t0
+
+
 static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = [], scree_density: float = 1.0, life: Dictionary = {}) -> ImageTexture:
 	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density, life]
 	if _cache.has(key):
 		return _cache[key]
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
+	var t0 := Time.get_ticks_usec() if profiling else 0
 	var variants: Array[Image] = []
 	for v in 4:
 		variants.append(make_variant(base, rid, v, flowers).get_image())
@@ -108,30 +119,55 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
+	_prof("variants+blit", t0)
 	var lively := LIVELY_STYLES.has(style)
 	var dry_tips: Array[Vector2i] = []
 	var shade_grid: PackedFloat32Array = PackedFloat32Array()
 	if lively:
+		t0 = Time.get_ticks_usec() if profiling else 0
 		shade_grid = shade_grid_for(rid, size_px)
+		_prof("shade_grid", t0)
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_apply_patches(img, base, shade_grid)
+		_prof("patches", t0)
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_apply_clover(img, base, rid, style, life.get("avoid", []))
+		_prof("clover", t0)
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_apply_worn(img, rid, life.get("worn", []), life.get("path_color", base.lerp(Color("7a6a48"), 0.5)), shade_grid)
+		_prof("worn", t0)
 		if style == "grass":
+			t0 = Time.get_ticks_usec() if profiling else 0
 			dry_tips = _meadow_life(img, base, rid, season, life.get("avoid", []), life.get("worn", []))  # GFX-181
+			_prof("meadow_life", t0)
+	t0 = Time.get_ticks_usec() if profiling else 0
 	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)))
+	_prof("style", t0)
 	if style == "scree":
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_scree_slopes(img, base, rid)  # GFX-159
+		_prof("scree_slopes", t0)
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_alpine_life(img, rid, season, meadow_density(life.get("alpine_meadow", false)))  # GFX-175, GFX-187
+		_prof("alpine_life", t0)
 	var summer: Image = img.duplicate() if season == "Winter" and style == "paved" and not zones.is_empty() else null
+	t0 = Time.get_ticks_usec() if profiling else 0
 	_apply_season(img, rid, season, PAVED_SNOW if style == "paved" else WINTER_SNOW)
+	_prof("season", t0)
 	if summer != null:
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_winter_streets(img, summer, rid, zones)
+		_prof("winter_streets", t0)
 	if lively and season == "Winter":
+		t0 = Time.get_ticks_usec() if profiling else 0
 		_vary_snow(img, shade_grid)
+		_prof("vary_snow", t0)
 		for t in dry_tips:  # GFX-181: dry stalks poke through the snow
 			_set_clipped(img, t.x, t.y, Color("b59a62"))
 			_set_clipped(img, t.x, t.y + 1, Color("8a7447"))
+	t0 = Time.get_ticks_usec() if profiling else 0
 	var tex := ImageTexture.create_from_image(img)
+	_prof("texture_upload", t0)
 	_cache[key] = tex
 	return tex
 
@@ -148,6 +184,19 @@ static func _lattice(rid: String, octave: int, cx: int, cy: int) -> float:
 	h = ((h >> 16) ^ h) * 0x45d9f3b & 0x7fffffff
 	h = (h >> 16) ^ h
 	return float(h % 2001) / 1000.0 - 1.0
+
+
+## PERF-009: an integer mix of a precomputed string seed and two coordinates (non-negative, avalanche like `_lattice`),
+## for the per-pixel noise that used to hash a formatted string for every pixel.
+static func _ihash(seed_value: int, a: int, b: int) -> int:
+	var h := (seed_value ^ (a * 0x45d9f3b) ^ (b * 0x2c1b3c6d)) & 0x7fffffff
+	h = ((h >> 16) ^ h) * 0x45d9f3b & 0x7fffffff
+	h = ((h >> 16) ^ h) * 0x45d9f3b & 0x7fffffff
+	return (h >> 16) ^ h
+
+
+static func _seed_of(rid: String, tag: String) -> int:
+	return absi(hash(rid + tag)) & 0x7fffffff
 
 
 ## GFX-130: low-frequency value noise in -1..1 (two octaves, ~96 px and ~40 px cells, smoothstep between lattice values).
@@ -182,23 +231,58 @@ static func shade_grid_for(rid: String, size_px: Vector2i) -> PackedFloat32Array
 			for cx in gw:
 				l[cy * gw + cx] = _lattice(rid, o, cx, cy)
 		lat.append(l)
+	var w := size_px.x
+	var txs: Array = []  # per octave: the lattice column and smoothstep weight of every x (PERF-009: not per pixel)
+	var cxs: Array = []
+	for o in PATCH_CELLS.size():
+		var cell: int = PATCH_CELLS[o]
+		var tx := PackedFloat64Array()
+		var cxa := PackedInt32Array()
+		tx.resize(w)
+		cxa.resize(w)
+		for x in w:
+			var fx := float(x) / cell
+			var cx := int(fx)
+			cxa[x] = cx
+			tx[x] = smoothstep(0.0, 1.0, fx - cx)
+		txs.append(tx)
+		cxs.append(cxa)
 	for y in size_px.y:
-		for x in size_px.x:
-			var total := 0.0
-			for o in PATCH_CELLS.size():
-				var cell: int = PATCH_CELLS[o]
-				var gw := size_px.x / cell + 2
-				var l: PackedFloat32Array = lat[o]
-				var fx := float(x) / cell
-				var fy := float(y) / cell
-				var cx := int(fx)
-				var cy := int(fy)
-				var tx := smoothstep(0.0, 1.0, fx - cx)
-				var ty := smoothstep(0.0, 1.0, fy - cy)
-				var top := lerpf(l[cy * gw + cx], l[cy * gw + cx + 1], tx)
-				var bot := lerpf(l[(cy + 1) * gw + cx], l[(cy + 1) * gw + cx + 1], tx)
-				total += lerpf(top, bot, ty) * (0.7 if o == 0 else 0.3)
-			grid[y * size_px.x + x] = clampf(total * 1.35, -1.0, 1.0)
+		var rows: Array = []  # per octave: [row offset of cy, row offset of cy + 1, ty]
+		for o in PATCH_CELLS.size():
+			var cell: int = PATCH_CELLS[o]
+			var gw := w / cell + 2
+			var fy := float(y) / cell
+			var cy := int(fy)
+			rows.append([cy * gw, (cy + 1) * gw, smoothstep(0.0, 1.0, fy - cy)])
+		var l0: PackedFloat32Array = lat[0]
+		var l1: PackedFloat32Array = lat[1]
+		var tx0: PackedFloat64Array = txs[0]
+		var tx1: PackedFloat64Array = txs[1]
+		var cx0: PackedInt32Array = cxs[0]
+		var cx1: PackedInt32Array = cxs[1]
+		var r0: Array = rows[0]
+		var r1: Array = rows[1]
+		var a0: int = r0[0]
+		var b0: int = r0[1]
+		var ty0: float = r0[2]
+		var a1: int = r1[0]
+		var b1: int = r1[1]
+		var ty1: float = r1[2]
+		var base_i := y * w
+		for x in w:
+			var c0 := cx0[x]
+			var t0 := tx0[x]
+			var top0 := l0[a0 + c0] + (l0[a0 + c0 + 1] - l0[a0 + c0]) * t0
+			var bot0 := l0[b0 + c0] + (l0[b0 + c0 + 1] - l0[b0 + c0]) * t0
+			var c1 := cx1[x]
+			var t1 := tx1[x]
+			var top1 := l1[a1 + c1] + (l1[a1 + c1 + 1] - l1[a1 + c1]) * t1
+			var bot1 := l1[b1 + c1] + (l1[b1 + c1 + 1] - l1[b1 + c1]) * t1
+			var total := (top0 + (bot0 - top0) * ty0) * 0.7
+			total += (top1 + (bot1 - top1) * ty1) * 0.3
+			total *= 1.35  # clampf inlined: this is the hottest loop of a region load
+			grid[base_i + x] = 1.0 if total > 1.0 else (-1.0 if total < -1.0 else total)
 	return grid
 
 
@@ -281,6 +365,8 @@ static func _apply_clover(img: Image, base: Color, rid: String, style: String, a
 static func _apply_worn(img: Image, rid: String, worn: Array, path_color: Color, grid: PackedFloat32Array) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
+	var rim_seed := _seed_of(rid, "|wr")  # PERF-009: integer hashes, not a formatted string per pixel
+	var pebble_seed := _seed_of(rid, "|wp")
 	for rc: Rect2 in worn:
 		var c := rc.get_center()
 		var x0 := maxi(0, int(rc.position.x))
@@ -292,10 +378,10 @@ static func _apply_worn(img: Image, rid: String, worn: Array, path_color: Color,
 				var d := Vector2((x - c.x) / (rc.size.x * 0.5), (y - c.y) / (rc.size.y * 0.5)).length()
 				d += grid[y * w + x] * 0.18
 				if d > 0.75 and d < 1.25:  # GFX-181: ragged lobes near the rim
-					d += (float(absi(hash("%s|wr|%d|%d" % [rid, x / 4, y / 4])) % 100) / 100.0 - 0.5) * 0.3
+					d += (float(_ihash(rim_seed, x / 4, y / 4) % 100) / 100.0 - 0.5) * 0.3
 				if d < 1.0:
 					var col := img.get_pixel(x, y).lerp(path_color, 0.35 * smoothstep(1.0, 0.5, d))
-					if d < 0.8 and absi(hash("%s|wp|%d|%d" % [rid, x, y])) % 70 == 0:  # pebble
+					if d < 0.8 and _ihash(pebble_seed, x, y) % 70 == 0:  # pebble
 						var pc := path_color.darkened(0.25) if (x + y) % 2 == 0 else path_color.lightened(0.2)
 						col = pc
 						img.set_pixel(x, y, col)
@@ -510,13 +596,51 @@ static func _alpine_meadow(img: Image, rid: String, season: String, n: int, dens
 static func _scree_slopes(img: Image, base: Color, rid: String) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
+	var data := img.get_data()  # PERF-009: raw RGBA8 bytes, written back once
+	var ch: PackedFloat32Array = _byte_to_float()
+	var rid_seed := rid + "|sl|"
+	var shade_by_k := {}  # scree_slope_shade per (y + off), shared by every column
+	var wobble_by_cell := {}
 	for x in w:  # GFX-164: the band edges wander with x (never a straight line)
 		var off := int(10.0 * sin(float(x) * 0.021 + 1.3) + 7.0 * sin(float(x) * 0.0063) + 4.0 * sin(float(x) * 0.09))
-		var wobble := (float(absi(hash("%s|sl|%d" % [rid, x / 40])) % 5) - 2.0) * 0.004
+		var cell := x / 40
+		if not wobble_by_cell.has(cell):
+			wobble_by_cell[cell] = (float(absi(hash(rid_seed + str(cell))) % 5) - 2.0) * 0.004
+		var wobble: float = wobble_by_cell[cell]
+		var i := x * 4
 		for y in h:
-			var f := scree_slope_shade(rid, y + off, h) + wobble
-			var c := img.get_pixel(x, y)
-			img.set_pixel(x, y, c.lightened(f) if f >= 0.0 else c.darkened(-f))
+			var k := y + off
+			var sh: float
+			if shade_by_k.has(k):
+				sh = shade_by_k[k]
+			else:
+				sh = scree_slope_shade(rid, k, h)
+				shade_by_k[k] = sh
+			var f := sh + wobble
+			var col := Color(ch[data[i]], ch[data[i + 1]], ch[data[i + 2]])
+			col = col.lightened(f) if f >= 0.0 else col.darkened(-f)
+			data[i] = int(col.r * 255.0)
+			data[i + 1] = int(col.g * 255.0)
+			data[i + 2] = int(col.b * 255.0)
+			i += w * 4
+	img.set_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+
+## PERF-009: the RGB bytes `set_pixel` writes for a colour.
+static func _rgb_bytes(c: Color) -> PackedByteArray:
+	return PackedByteArray([int(c.r * 255.0), int(c.g * 255.0), int(c.b * 255.0)])
+
+
+static var _b2f := PackedFloat32Array()
+
+
+## PERF-009: byte (0..255) -> channel float, the way Image.get_pixel reads it.
+static func _byte_to_float() -> PackedFloat32Array:
+	if _b2f.is_empty():
+		_b2f.resize(256)
+		for i in 256:
+			_b2f[i] = float(i) / 255.0
+	return _b2f
 
 
 ## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
@@ -576,26 +700,81 @@ static func in_paved_zone_grid(zones: Array, grid: PackedFloat32Array, cols: int
 ## GFX-158: how far a winter market pixel is tinted toward snow: swept stone stays dark (0.2) with snow only in a 4 px
 ## band along the kerbs (0.7); earth lots get a heavy but uneven cover (0.8) with about a quarter bare patches (0.3).
 ## PERF-008: `shade` is the pixel's `patch_shade` (a `shade_grid_for` entry), or NAN to compute it here.
-static func winter_street_amount(paved: bool, in_band: bool, rid: String, x: int, y: int, shade: float = NAN) -> float:
+static func winter_street_amount(paved: bool, in_band: bool, rid: String, x: int, y: int, shade: float = NAN, slush_seed: int = -1) -> float:
 	if paved:
 		return 0.2 if not in_band else 0.7
-	var jitter := float(absi(hash("%s|%d|%d|slush" % [rid, x, y])) % 100) / 100.0 * 0.2 - 0.1  # ragged patch edges
+	if slush_seed < 0:
+		slush_seed = _seed_of(rid, "|slush")
+	var jitter := float(_ihash(slush_seed, x, y) % 100) / 100.0 * 0.2 - 0.1  # ragged patch edges
 	if is_nan(shade):
 		shade = patch_shade(rid, x, y)
 	return 0.3 if shade + jitter < -0.3 else 0.8
 
 
 ## GFX-158: re-tints a paved market's winter ground from its `summer` pixels (streets vs earth lots, see above).
+## PERF-009: fills `cls` (one entry per x of row `y`) like `in_paved_zone_grid` would: bit 1 when the pixel is in a paved zone,
+## bit 2 when it is also inside the zone shrunk by the 4 px kerb band. Works per 8 px jitter cell, not per pixel.
+static func _zone_row(cls: PackedByteArray, y: int, w: int, cols: int, jit: PackedFloat32Array, zones: Array) -> void:
+	cls.fill(0)
+	for cx in cols:
+		var j := jit[(y / 8) * cols + cx]
+		var x_lo := cx * 8
+		var x_hi := mini(w, x_lo + 8)
+		for z: Rect2 in zones:
+			for kind in 2:
+				var g := z.grow(-(j + (4.0 if kind == 1 else 0.0)))
+				if float(y) < g.position.y or float(y) >= g.end.y:
+					continue
+				var lo := maxi(x_lo, ceili(g.position.x))
+				var hi := mini(x_hi, ceili(g.end.x))
+				for x in range(lo, hi):
+					cls[x] |= 1 << kind
+
+
 static func _winter_streets(img: Image, summer: Image, rid: String, zones: Array) -> void:
-	var cols := ceili(float(img.get_width()) / 8.0)
-	var jit := zone_jitter_grid(rid, img.get_width(), img.get_height())
-	var shades := shade_grid_for(rid, Vector2i(img.get_width(), img.get_height()))
-	for y in img.get_height():
-		for x in img.get_width():
-			var paved := in_paved_zone_grid(zones, jit, cols, x, y)
-			var band := paved and not in_paved_zone_grid(zones, jit, cols, x, y, 4.0)
-			var a := winter_street_amount(paved, band, rid, x, y, shades[y * img.get_width() + x])
-			img.set_pixel(x, y, summer.get_pixel(x, y).lerp(SNOW, a))
+	var w := img.get_width()
+	var h := img.get_height()
+	var cols := ceili(float(w) / 8.0)
+	var jit := zone_jitter_grid(rid, w, h)
+	var shades := shade_grid_for(rid, Vector2i(w, h))
+	var slush_seed := _seed_of(rid, "|slush")
+	# PERF-009: raw bytes. Snow amounts 0.2 swept stone, 0.7 kerb band, 0.3 / 0.8 earth are four lookup tables.
+	var amounts := [0.2, 0.7, 0.3, 0.8]
+	var ch := _byte_to_float()
+	var lut := PackedByteArray()
+	lut.resize(4 * 3 * 256)
+	for k in 4:
+		for c in 3:
+			for v in 256:
+				var col := Color(0.0, 0.0, 0.0)
+				col[c] = ch[v]
+				lut[(k * 3 + c) * 256 + v] = int(col.lerp(SNOW, amounts[k])[c] * 255.0)
+	var src := summer.get_data()
+	var out := src.duplicate()
+	var cls := PackedByteArray()  # per row: bit 1 in a paved zone, bit 2 inside it by the 4 px kerb band
+	cls.resize(w)
+	for y in h:
+		_zone_row(cls, y, w, cols, jit, zones)
+		var row := y * w
+		for x in w:
+			var m := cls[x]
+			var k: int
+			if m & 1:
+				k = 0 if m & 2 else 1
+			else:
+				var shade := shades[row + x]
+				if shade >= -0.2:  # jitter is within +-0.1, so the verdict is settled without hashing
+					k = 3
+				elif shade < -0.4:
+					k = 2
+				else:
+					var jitter := float(_ihash(slush_seed, x, y) % 100) / 100.0 * 0.2 - 0.1
+					k = 2 if shade + jitter < -0.3 else 3
+			var i := (row + x) * 4
+			out[i] = lut[(k * 3) * 256 + src[i]]
+			out[i + 1] = lut[(k * 3 + 1) * 256 + src[i + 1]]
+			out[i + 2] = lut[(k * 3 + 2) * 256 + src[i + 2]]
+	img.set_data(w, h, false, Image.FORMAT_RGBA8, out)
 
 
 ## GFX-054: packed earth between the streets: the ground colour warmed and darkened with sparse pebbles.
@@ -620,31 +799,58 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 	match style:
 		"paved":
 			# 16 px flagstones in offset rows, a 1 px darker mortar line, +-4% brightness per stone.
-			var mortar := base.darkened(0.3)
+			# PERF-009: raw bytes; the packed earth between the streets hashes integers, not strings.
+			var mortar := _rgb_bytes(base.darkened(0.3))
 			var jit := zone_jitter_grid(rid, w, h)
 			var jcols := ceili(float(w) / 8.0)
+			var earth := base.lerp(Color("7a6a48"), 0.3).darkened(0.08)
+			var earth_light := _rgb_bytes(earth.lightened(0.14))
+			var earth_dark := _rgb_bytes(earth.darkened(0.1))
+			var earth_tone: Array[PackedByteArray] = []
+			for t in 3:
+				earth_tone.append(_rgb_bytes(earth.darkened(float(t) * 0.02)))
+			var earth_seed := _seed_of(rid, "|earth")
+			var data := img.get_data()
+			var cls := PackedByteArray()
+			cls.resize(w)
 			var stones := {}
+			var no_zones := zones.is_empty()
 			for y in h:
+				if not no_zones:
+					_zone_row(cls, y, w, jcols, jit, zones)
 				var row := y / SIZE
 				var shift := 8 if row % 2 == 1 else 0
 				for x in w:
-					if not zones.is_empty() and not in_paved_zone_grid(zones, jit, jcols, x, y):
-						img.set_pixel(x, y, _earth_pixel(base, rid, x, y))
-						continue
-					var col := (x + shift) / SIZE
-					var edge := y % SIZE == 0 or (x + shift) % SIZE == 0
-					if edge:
-						img.set_pixel(x, y, mortar)
+					var rgb: PackedByteArray
+					if not no_zones and cls[x] & 1 == 0:
+						var r := (earth_seed ^ (x * 0x45d9f3b) ^ (y * 0x2c1b3c6d)) & 0x7fffffff  # _ihash, inlined (hot loop)
+						r = ((r >> 16) ^ r) * 0x45d9f3b & 0x7fffffff
+						r = ((r >> 16) ^ r) * 0x45d9f3b & 0x7fffffff
+						r = (r >> 16) ^ r
+						if r % 53 == 0:
+							rgb = earth_light
+						elif r % 17 == 0:
+							rgb = earth_dark
+						else:
+							rgb = earth_tone[(x / 4 + y / 4) % 3]
+					elif y % SIZE == 0 or (x + shift) % SIZE == 0:
+						rgb = mortar
 					else:
+						var col := (x + shift) / SIZE
 						var skey := row * 4096 + col  # PERF-008: a stone's variant and tone are hashed once, not per pixel
 						if not stones.has(skey):
-							stones[skey] = [variant_for(rid, col, row), (float(absi(hash("%s|%d|%d|stone" % [rid, col, row])) % 81) - 40.0) / 1000.0]
-						var v: int = stones[skey][0]
-						var f: float = stones[skey][1]
-						var c := base.lightened(f) if f >= 0.0 else base.darkened(-f)
-						if (x * 7 + y * 13 + v) % 11 == 0:
-							c = c.darkened(0.06)
-						img.set_pixel(x, y, c)
+							var v := variant_for(rid, col, row)
+							var f := (float(absi(hash("%s|%d|%d|stone" % [rid, col, row])) % 81) - 40.0) / 1000.0
+							var c := base.lightened(f) if f >= 0.0 else base.darkened(-f)
+							stones[skey] = [v, _rgb_bytes(c), _rgb_bytes(c.darkened(0.06))]
+						var st: Array = stones[skey]
+						rgb = st[2] if (x * 7 + y * 13 + int(st[0])) % 11 == 0 else st[1]
+					var i := (y * w + x) * 4
+					data[i] = rgb[0]
+					data[i + 1] = rgb[1]
+					data[i + 2] = rgb[2]
+					data[i + 3] = 255
+			img.set_data(w, h, false, Image.FORMAT_RGBA8, data)
 		"scree":
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):

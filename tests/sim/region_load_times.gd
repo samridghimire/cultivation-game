@@ -41,8 +41,12 @@ func _run() -> void:
 		elif arg.begins_with("--region="):
 			for id in arg.substr(9).split(",", false):
 				only.append(id)
+	var passes := OS.get_cmdline_user_args().has("--passes")
 	var ids: Array = gs.data.regions.keys()
 	ids.sort()
+	if passes:
+		_print_passes(gs, ids, only)
+		return
 	var over: Array[String] = []
 	for warm in [false, true]:
 		print("\n== %s cache (median of %d runs, ms) ==" % ["WARM" if warm else "COLD", runs])
@@ -108,3 +112,27 @@ func _parts(w: Node, gs: Node, rid: String, season: String, warm: bool) -> Array
 	w.call("_build_decor")
 	var d := _ms(t0)
 	return [g, p, d]
+
+
+## `--passes`: per-pass usec inside GroundTiles.ground_texture for each region (cold, Summer and Winter).
+func _print_passes(gs: Node, ids: Array, only: Array[String]) -> void:
+	for id: String in ids:
+		if not only.is_empty() and not only.has(id):
+			continue
+		for season: String in SEASON_DAYS:
+			root.get_node("GameClock").total_days = SEASON_DAYS[season]
+			gs.current_region = id
+			var w := _build()
+			GroundTiles.clear_cache()
+			GroundTiles.profile = {}
+			GroundTiles.profiling = true
+			var parts := _parts(w, gs, id, season, false)
+			GroundTiles.profiling = false
+			var keys: Array = GroundTiles.profile.keys()
+			keys.sort_custom(func(a, b): return GroundTiles.profile[a] > GroundTiles.profile[b])
+			var line := "%-24s %-6s ground %7.1f ms:" % [id, season, parts[0]]
+			for k in keys:
+				line += "  %s %.0f" % [k, float(GroundTiles.profile[k]) / 1000.0]
+			print(line)
+			root.remove_child(w)
+			w.free()
