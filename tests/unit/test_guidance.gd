@@ -6004,6 +6004,22 @@ func test_qi_pill_offer_near_names_a_pill_one_route_away() -> void:
 	assert_false(here.has("where"), "a pill sold here has no far clause")
 
 
+func test_star_dew_pill_is_the_market_best_buy() -> void:
+	# C-387: the Fallen Star Market's own pill (13 qi/stone) is the best pill buy in its own lanes and
+	# is sold nowhere else, and a player with too few stones is not offered it.
+	var d := data()
+	var rich := Guidance.qi_pill_offer(_qr(2, 300), d, "fallen_star_market")
+	assert_eq(String(rich.get("item_id", "")), "star_dew_qi_pill", str(rich))
+	assert_eq(String(rich.get("merchant", "")), "Star-Dew Pill Stall")
+	for region_id: String in d.regions:
+		if region_id == "fallen_star_market":
+			continue
+		var offer := Guidance.qi_pill_offer(_qr(2, 300), d, region_id)
+		assert_false(String(offer.get("item_id", "")) == "star_dew_qi_pill", region_id)
+	var poor := Guidance.qi_pill_offer_near(_qr(2, 19), d, "qingshi_village")
+	assert_false(String(poor.get("item_id", "")) == "star_dew_qi_pill", str(poor))
+
+
 func test_chore_fair_fight_reads_as_a_chore() -> void:
 	var c := new_character()
 	c.realm_index = 1
