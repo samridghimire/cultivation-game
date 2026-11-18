@@ -116,3 +116,15 @@ func test_persist_off_does_not_write() -> void:
 	assert_almost_eq(s.get_value("music_volume"), 0.1)
 	assert_false(FileAccess.file_exists(s.path), "no file written while persist is off")
 	_cleanup(s)
+
+
+## QA-216: the test runner keeps the real Settings autoload in memory only, so a test that
+## changes a setting can never leave it behind in user://settings.cfg.
+func test_runner_keeps_autoload_settings_off_disk() -> void:
+	var s: Node = Engine.get_main_loop().root.get_node("Settings")
+	assert_false(s.persist, "run_tests.gd turns persistence off")
+	var before := FileAccess.get_file_as_bytes(s.path)
+	var old: Variant = s.get_value("hud_hints")
+	s.set_value("hud_hints", 0)
+	assert_true(FileAccess.get_file_as_bytes(s.path) == before, "settings.cfg untouched by set_value")
+	s.set_value("hud_hints", old)

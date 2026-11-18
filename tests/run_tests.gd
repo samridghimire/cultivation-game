@@ -42,6 +42,7 @@ func _run() -> void:
 	var settings: Node = root.get_node("Settings")
 	var settings_before: Dictionary = settings._values.duplicate()
 	var cfg_before := FileAccess.get_file_as_bytes(settings.path)
+	settings.persist = false  # QA-216: tests change settings in memory only, never user://settings.cfg
 
 	for file_name in DirAccess.get_files_at(TEST_DIR):
 		if not (file_name.begins_with("test_") and file_name.ends_with(".gd")):
