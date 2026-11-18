@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 44803d1
+Last reviewed commit: a8acadc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2186,3 +2186,23 @@ Last reviewed commit: 44803d1
     tools/balance.sh --check (worker follow-up).
   - GFX-190/191/192/193 draw-only with pure seeded helpers and tests; QA-216 sets Settings.persist=false in the runner.
     I did not render them. QA-194: sim only, baseline refreshed.
+- 2026-11-18 (reviewer): reviewed 44803d1..a8acadc (C-388, WU-562, PERF-009, QA-217, WU-564, GFX-195, GUIDE-258, PERF-010,
+  C-387, QA-235, GFX-194, GFX-196, GUIDE-259, PERF-011; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by
+  workers, no SAVE_VERSION change, no new binary assets. Nothing fixed inline; filed PERF-012.
+  - Filed PERF-012 (GFX-194): RainPuddles now queues a redraw of the whole World node at 8 Hz on rain days so the ripples
+    sit in the ground pass. Probe (Qingshi, forced rain, xvfb opengl3): 46 -> 68 ms/frame average. The ripples need their
+    own CanvasItem between the ground and the props, not a full world redraw.
+  - GUIDE-259 OK: the quick pass is a prefix of the full rating's seed-1 stream, so a kept foe's odds equal win_chance
+    exactly; drops are not cached. The band drop is a heuristic (a foe 0.15 outside on 40 fights could land inside on
+    120); test_fair_fights_quick shows no change for three builds in every region today.
+  - GUIDE-258 OK: phrases built per kind, labelled entries without a phrase fall back to the label; tested per kind and
+    against a live fair_fights list.
+  - PERF-009/010 OK: byte loops match set_pixel truncation (sha256 goldens for grass/scree/paved/bog winter); the winter
+    street shortcut is exact (jitter is within +-0.1, so shade >= -0.2 / < -0.4 settle the verdict); _zone_row's
+    ceil bounds match has_point. Grass worn/patch noise changed layout by design.
+  - C-387 data OK (stock_tags names the item id; the star_market tag keeps untagged merchants from selling it). Its
+    follow-up stands: at 13 qi/stone the pill never clears GUIDE-251's 1.25 margin against Qingshi's 12.5 qi/stone Fox
+    Spirit Pill, so qi_pill_offer_near never sends Qingshi players there. Design call for the planner.
+  - WU-564 OK (hens only at the coop, gate keepout for marsh pools). The coop hens rect is only bounds-checked, not
+    checked against roads or houses (draw-only, minor). GFX-195/196 draw-only with tests; I did not render them.
+    QA-217/QA-235/PERF-011: sim only.
