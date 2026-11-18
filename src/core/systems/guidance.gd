@@ -5267,6 +5267,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	for line in Letters.request_lines(c, data, people, today):
 		_add(out, "Errands", line, "normal")
 	_errand_entries(out, data, flags)
+	_teacher_errand_entries(out, c, data, flags, today, region_id, people, favor)
 	_household_entries(out, c, data, people)
 	_rival_entry(out, c, data, flags, people, favor, region_id)
 	_karma_entries(out, c, data, people)
@@ -6165,6 +6166,40 @@ static func _errand_entries(out: Array[Dictionary], data: GameData, flags: Dicti
 	for errand: Dictionary in data.errands:
 		if bool(flags.get(String(errand["asked_flag"]), false)) and not bool(flags.get(String(errand["done_flag"]), false)):
 			_add(out, "Errands", String(errand["text"]), "normal")
+
+
+## GUIDE-257: one "Errands" line per open teacher favor errand (a deed with `favor` in the deed_context of an NPC the
+## player has met, who still has an unlearned lesson): "<Teacher> (<Region>, <N>d away|here): <hint>, <days> day(s), +<F> favor toward <lesson>."
+static func _teacher_errand_entries(out: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary, favor: Dictionary) -> void:
+	if today < 0 or region_id == "":
+		return
+	var map := _route_day_map(c, data, region_id, -1, true)
+	for npc_id: String in data.npcs:
+		var npc: CharacterData = people.get(npc_id)
+		var context := String(data.npcs[npc_id].get("deed_context", ""))
+		if npc == null or not npc.alive or context == "" or not favor.has(npc_id):
+			continue
+		var lesson := ""
+		var lesson_need := 1000000
+		for t in Npcs.teachings(npc_id, c, data, int(favor[npc_id])):
+			if not bool(t["known"]) and int(t["need_favor"]) < lesson_need:
+				lesson = String(t["name"])
+				lesson_need = int(t["need_favor"])
+		if lesson == "":
+			continue
+		for deed: Dictionary in Deeds.available(data, context, flags):
+			var gain := int(deed.get("favor", {}).get(npc_id, 0))
+			if gain <= 0 or Deeds.check(c, data, deed, flags, today) != "":
+				continue
+			var at := Npcs.region_of(npc, data)
+			var days := int(map["days"].get(at, -1))
+			var rdef: Dictionary = data.regions.get(at, {})
+			var where := String(rdef.get("short_name", rdef.get("name", at)))
+			where += ", here" if at == region_id else (", %dd away" % days if days >= 0 else "")
+			var phrase := String(deed.get("hint", deed.get("name", "")))
+			var n := int(deed.get("days", 0))
+			_add(out, "Errands", "%s (%s): %s, %d day%s, +%d favor toward %s." % [npc.name, where, phrase, n, "" if n == 1 else "s", gain, lesson], "normal" if at == region_id else "dim")
+			break
 
 
 ## Expected tribulation damage at or above this share of hp + shield reads "close" (FOUND-007).

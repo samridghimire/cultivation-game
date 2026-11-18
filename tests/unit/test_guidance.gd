@@ -7383,3 +7383,31 @@ func test_fair_fights_memo_same_result_and_no_resims() -> void:
 	c.wins_by_foe["wolf"] = 9
 	var third := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
 	assert_eq(str(third), str(Guidance._fair_fights_uncached(c, data(), {}, c.age_days, "qingshi_village", {}, {})), "changed player gets a fresh result")
+
+
+## GUIDE-257: open teacher errands in the journal's Errands section.
+func _teacher_errand_lines(c: CharacterData, npcs: Dictionary, favor: Dictionary, flags: Dictionary = {}) -> Array[String]:
+	var lines: Array[String] = []
+	for row: Dictionary in Guidance.journal(c, data(), flags, 100, "qingshi_village", 1.0, npcs, [], null, favor):
+		if row["section"] == "Errands" and "favor toward" in String(row["text"]):
+			lines.append(String(row["text"]))
+	return lines
+
+
+func test_journal_lists_errands_of_met_teachers_only() -> void:
+	var c := _fresh()
+	var npcs := _style_world()
+	var lines := _teacher_errand_lines(c, npcs, {"hunter_ma": 3, "xiao_ling": 3})
+	var ma := lines.filter(func(l: String) -> bool: return l.begins_with("Hunter Ma ("))
+	assert_eq(ma.size(), 1, str(lines))
+	assert_true(String(ma[0]).contains("check his snare line, 2 days, +12 favor toward "), ma[0])
+	assert_true(String(ma[0]).contains("here"), ma[0])
+	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Peddler Hei")).size(), 0, "unmet teacher")
+	assert_eq(_teacher_errand_lines(c, npcs, {}).size(), 0, "nobody met")
+
+
+func test_journal_drops_teacher_errand_once_done() -> void:
+	var c := _fresh()
+	var npcs := _style_world()
+	var lines := _teacher_errand_lines(c, npcs, {"hunter_ma": 3}, {"ma_snare_done": true})
+	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Hunter Ma (")).size(), 0)
