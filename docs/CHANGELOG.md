@@ -2,6 +2,7 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [GFX-190] On rainy days water drips from the eaves and puddles never cover props or people.
 - 2026-11-18 [C-386] Five more first-hour teachers have a short favor errand that brings their lesson closer.
 - 2026-11-18 [QA-194] The combat sim rates roaming beasts at the realm a newcomer meets them, not as a mortal.
 - 2026-11-18 [QA-177] A repeat report: a few village happenings still come round too often (next: C-388).
