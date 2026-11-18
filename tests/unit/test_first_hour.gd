@@ -57,6 +57,23 @@ func test_headman_chores_pay_once() -> void:
 	gs.end_session()
 
 
+## C-391: the Porters' Foreman in Fallen Star Market pays for an easy first fight (stray dogs), repeatable after a cooldown.
+func test_market_dog_chore_is_an_easy_first_fight() -> void:
+	var gs := _root().get_node("GameState")
+	var c := CharacterFactory.create("Newcomer", gs.data, seeded_rng(9))
+	gs.start_session(c)
+	var dogs: Dictionary = gs.data.enemies["warehouse_stray_dog"]
+	assert_true(Combat.win_chance(c, gs.data, dogs) >= 0.9, "mortal rates the dogs Easy")
+	c.realm_index = 1
+	assert_true(Combat.win_chance(c, gs.data, dogs) >= 0.9, "Qi Refining 1 rates them Easy")
+	var stones := c.item_count("spirit_stone")
+	gs.perform_deed("chore_clear_yard_dogs")
+	assert_eq(c.item_count("spirit_stone"), stones + 10, "the foreman pays 10 stones")
+	var ids: Array = Deeds.available(gs.data, "porter_foreman", gs.world_flags).map(func(dd: Dictionary) -> String: return dd["id"])
+	assert_true(ids.has("chore_clear_yard_dogs"), "the chore stays listed (it has a cooldown)")
+	gs.end_session()
+
+
 ## QA-063: the sim records the first real win, its foe, and the day the first style was bought.
 func test_sim_records_first_win_and_style() -> void:
 	var root := _root()

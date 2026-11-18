@@ -66,6 +66,10 @@ func test_appearances_cover_every_enemy() -> void:
 			seen[String(great["enemy"])] = true
 			if great.has("return"):
 				seen[String(great["return"]["enemy"])] = true  # WILD-014
+	# C-391: a chore's foe is an optional, non-lethal fight picked at a deed giver.
+	for deed: Dictionary in data().deeds.values():
+		if deed.has("enemy") and not data().enemies.get(String(deed["enemy"]), {}).get("lethal", false):
+			seen[String(deed["enemy"])] = true
 	for enemy_id: String in data().enemies:
 		assert_true(seen.has(enemy_id), "%s never appears in a fight source; add it to appearances() or remove it" % enemy_id)
 

@@ -1649,6 +1649,7 @@ func test_bare_rogue_gets_first_combat_hint_instead() -> void:
 	var c := _fresh()
 	c.sect = {}
 	c.techniques = {}
+	_rest_yard_dogs(c, c.age_days)
 	var fights := Guidance.fair_fights(c, data(), {"chore_boar_done": true}, c.age_days, "qingshi_village")
 	for f in fights:
 		assert_true(f["kind"] in ["explore", "roamer"], "only wilds foes are left for a bare rogue")
@@ -2012,10 +2013,15 @@ func test_pill_saving_goal_mentions_sellable_loot() -> void:
 	assert_false(Guidance.pill_saving_goal(c, d, "qingshi_village").contains("Selling"), "affordable: unchanged")
 
 
+## C-391: the Fallen Star Market yard-dog chore is one route away from Qingshi; tests about Qingshi's own fights rest it.
+func _rest_yard_dogs(c: CharacterData, day: int) -> void:
+	c.deed_days["chore_clear_yard_dogs"] = day
+
+
 func _deed_texts(c: CharacterData, flags: Dictionary) -> Array:
 	var out: Array = []
 	for f in Guidance.fair_fights(c, data(), flags, c.age_days, "qingshi_village"):
-		if f["kind"] == "deed":
+		if f["kind"] == "deed" and String(f["short"]).begins_with("Chore for"):
 			out.append(String(f["text"]))
 	return out
 
@@ -3603,6 +3609,7 @@ func _gv99_injured_fighter() -> CharacterData:
 
 func test_empty_fair_fights_note_says_heal_first_when_injury_is_the_reason() -> void:
 	var c := _gv99_injured_fighter()
+	_rest_yard_dogs(c, c.age_days)
 	var flags := {"chore_boar_done": true}
 	for region_id: String in data().regions:  # GUIDE-205: a weak roamer is a fair fight even when hurt; none are about today
 		for slot in Wildlife.MAX_COUNT:
@@ -5919,6 +5926,7 @@ func test_fair_fights_name_a_roaming_beast() -> void:
 			if Combat.win_chance(c, d, d.enemies[String(r["enemy"])]) >= Guidance.FAIR_FIGHT_MIN_CHANCE and day < 0:
 				day = t
 	assert_true(day >= 0, "a winnable roamer exists in Misty Forest")
+	_rest_yard_dogs(c, day)
 	var near := Guidance.fair_fights(c, d, {}, day, "qingshi_village")
 	var away := near.filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
 	assert_eq(away.size(), 1)
@@ -5940,6 +5948,7 @@ func test_fair_fight_entries_carry_a_short_label() -> void:
 			if Combat.win_chance(c, d, d.enemies[String(r["enemy"])]) >= Guidance.FAIR_FIGHT_MIN_CHANCE and day < 0:
 				day = t
 	assert_true(day >= 0)
+	_rest_yard_dogs(c, day)
 	var away := Guidance.fair_fights(c, d, {}, day, "qingshi_village").filter(func(f: Dictionary) -> bool: return f["kind"] == "roamer")
 	assert_eq(away.size(), 1)
 	assert_true(String(away[0]["short"]).contains(" in Misty Forest ("), String(away[0]["short"]))
@@ -6024,6 +6033,7 @@ func test_chore_fair_fight_reads_as_a_chore() -> void:
 	var c := new_character()
 	c.realm_index = 1
 	c.stage = 4
+	_rest_yard_dogs(c, c.age_days)
 	var shorts: Array[String] = []
 	for e: Dictionary in Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village"):
 		if String(e["kind"]) == "deed":

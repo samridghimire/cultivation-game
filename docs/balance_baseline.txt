@@ -34,39 +34,39 @@ Lines by category: { "warning": 51, "danger": 26, "info": 448, "almanac": 170, "
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   44  222    -    44         0   39     0     0  67.7
+     1   44  222    -    44         0   37     0     0  64.3
         first win day 14 (wild_boar), style bought day 27
-     2   14  164    -    14         0   33     6     0  64.0
+     2   14  164    -    14         0   31     4     0  64.0
         first win day 14 (wild_boar), style bought day 49
-     3   14  189    -    14         0   38     1     0  67.6
+     3   14  189    -    14         0   38     1     0  66.1
         first win day 14 (wild_boar), style bought day 49
-     4   14  237    -    14         0   31     2     0  56.8
+     4   14  237    -    14         0   30     2     0  54.8
         first win day 14 (wild_boar), style bought day 40
-     5   14   79  771    14         0   43     4     0  71.2
+     5   14   79  716    14         0   40     3     0  68.8
         first win day 14 (wild_boar), style bought day 48
-     6   14  168    -    14         0   44     1     0  81.4
+     6   14  168    -    14         1   44     2     0  78.2
         first win day 14 (wild_boar), style bought day 49
      7   14  152    -    14         0   39     2     0  74.3
         first win day 14 (wild_boar), style bought day 43
-     8   14  149    -    14         0   36     2     0  68.2
+     8   14  149    -    14         0   32     2     0  64.2
         first win day 47 (mountain_bandit), style bought day 47
-     9   14  230    -    14         0   33     1     0  62.9
+     9   14  230    -    14         0   33     1     0  63.1
         first win day 14 (wild_boar), style bought day 44
-    10   14  140    -    14         0   36     4     0  69.2
+    10   14  140    -    14         0   35     3     0  60.9
         first win day 14 (wild_boar), style bought day 43
-Medians (day): QR1 14, QR3 168, QR9 771 (1/10 seeds reached it), sect 14; injuries 0; fights won 38, lost 2, fled 0; 68.2 log lines/month
+Medians (day): QR1 14, QR3 168, QR9 716 (1/10 seeds reached it), sect 14; injuries 0; fights won 37, lost 2, fled 0; 64.3 log lines/month
 First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 9, "mountain_bandit": 1 }; median style day 47 (10 seeds)
-Sect trials: Inner Disciple median day 609 (4/10 seeds); trials won 7, lost 5; stones at the last month: median 225
-Distinct action kinds per month: 6.8; months after the first with no log lines: 0
-Injury treatments (QA-128): 17, clinic stones 247
-Iron Fist level median (QA-138): m03 1, m06 3, m12 5; first Mist Wolf win: median day 532 (9/10 seeds)
+Sect trials: Inner Disciple median day 606 (4/10 seeds); trials won 7, lost 2; stones at the last month: median 352
+Distinct action kinds per month: 6.6; months after the first with no log lines: 0
+Injury treatments (QA-128): 13, clinic stones 213
+Iron Fist level median (QA-138): m03 1, m06 3, m12 5; first Mist Wolf win: median day 521 (9/10 seeds)
 Spar-hint bouts (QA-138): 4, refusals: []
-Armor shopping (QA-140): armor worn by day 351 median (10/10 seeds); 0 loot sales for 0 stones, 11 trips to a smithy
-Road encounters (QA-118): 9/10 seeds met one; { "road_milestone_carver": 1, "road_caravan_fire": 2, "road_overturned_cart": 1, "road_talisman_peddler": 1, "road_highwayman": 1, "road_star_market_cracked_slate": 2, "road_winter_snowbound_traveller": 2, "road_woodcutter_warning": 1, "road_wandering_boxer": 1, "road_lost_child": 2, "road_star_market_lantern_line": 1, "road_rain_shelter": 1 }
-Sect contribution (QA-146): m06 median 570, m12 median 1582; stage at m12: { "QR6": 3, "QR7": 3, "QR5": 2, "QR9": 1, "QR8": 1 }
+Armor shopping (QA-140): armor worn by day 351 median (10/10 seeds); 1 loot sales for 233 stones, 11 trips to a smithy
+Road encounters (QA-118): 9/10 seeds met one; { "road_milestone_carver": 1, "road_caravan_fire": 2, "road_overturned_cart": 1, "road_talisman_peddler": 1, "road_highwayman": 1, "road_star_market_cracked_slate": 2, "road_woodcutter_warning": 1, "road_caravan_guard": 1, "road_wandering_boxer": 1, "road_lost_child": 2, "road_star_market_lantern_line": 1, "road_winter_snowbound_traveller": 1, "road_rain_shelter": 1 }
+Sect contribution (QA-146): m06 median 570, m12 median 1527; stage at m12: { "QR6": 3, "QR7": 4, "QR5": 2, "QR9": 1 }
 Stones at the QR9 bottleneck (QA-146): median -1 (0/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 22, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "azure_peak": 3 }; taken (times): { "qingshi_village": 57, "misty_forest": 8 }
-Lines by category: { "warning": 206, "danger": 755, "info": 1934, "almanac": 1632, "world": 1044, "progress": 2128, "karma": 288, "artifact": 133, "travel": 68, "social": 6, "normal": 5 }
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 21, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 21, "azure_peak": 3 }; taken (times): { "qingshi_village": 53, "misty_forest": 3 }
+Lines by category: { "warning": 213, "danger": 710, "info": 1838, "almanac": 1606, "world": 986, "progress": 2069, "karma": 288, "artifact": 133, "travel": 56, "social": 4, "normal": 4 }
 
 ## log noise (seeds 1-5, 12 months)
 
@@ -1743,27 +1743,27 @@ Curious practiser: 10 seeds, 12 months
   --practise=false
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
      1        1        3         5             -   31     4  230
-     2        1        3         5           545   33     3  160
+     2        1        3         5           627   32     4  160
      3        2        2         4           445   36     2  189
      4        1        2         3             -   31     2  239
-     5        1        3         5           438   39     3  79
+     5        1        3         5           438   35     3  79
      6        1        2         4           250   38     7  168
-     7        2        3         5           709   38     1  152
-     8        1        3         5           419   44     1  149
-     9        2        3         4           411   41     0  279
+     7        2        3         5           701   34     3  152
+     8        1        3         5           419   39     1  149
+     9        2        3         4           544   35     0  279
     10        1        3         5           548   32     3  140
-  Medians: iron_fist level m3 1, m6 3, m12 5; first wolf win day 445 (2 seeds never); fights won 38, lost 3; QR3 day 168 (10/10 reached)
+  Medians: iron_fist level m3 1, m6 3, m12 5; first wolf win day 544 (2 seeds never); fights won 35, lost 3; QR3 day 168 (10/10 reached)
   --practise=true
   seed  fist@m3  fist@m6  fist@m12  wolf win day  won  lost  QR3
      1        3        4         5             -   29     5  319
-     2        3        4         5             -   35     6  223
-     3        3        4         5           418   46     1  234
+     2        3        4         5           632   37     2  223
+     3        3        4         5           418   43     1  234
      4        3        3         4             -   29     2  279
-     5        3        4         5           356   42     0  79
+     5        3        4         5           356   40     0  79
      6        3        4         4           430   32     5  229
-     7        3        4         4           464   41     2  167
-     8        3        4         5           458   42     1  170
+     7        3        4         4           464   39     2  167
+     8        3        4         5           464   38     1  170
      9        3        4         5             -   33     2  329
-    10        3        4         4           687   37     3  173
-  Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 458 (4 seeds never); fights won 37, lost 2; QR3 day 229 (10/10 reached)
+    10        3        4         4           626   39     1  173
+  Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 464 (3 seeds never); fights won 38, lost 2; QR3 day 229 (10/10 reached)
 
