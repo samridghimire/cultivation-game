@@ -1651,12 +1651,17 @@ New days per month (median over seeds): 9 12 8 6 7 6 5 4 4 5 4 4 1
   longest 2: seed 2, days 312-326 (14 days), months 11-11, actions: meditate,explore
   longest 3: seed 2, days 244-258 (14 days), months 9-9, actions: meditate,explore,fight
 
-Hints player: 520 weeks, 321 meditated with nothing to act on; acted: { "talk": 10, "explore": 60, "mission": 69, "fight": 15, "chore": 10, "buy_qi": 24, "use_item": 10, "heal": 1 }
-  unactionable x404: Your sect's home is Azure Cloud Hall in Azure Peak (N days by road): y
-  unactionable x377: Unseal Storage Space in the artifact (O)
-  unactionable x370: Hunter Ma can teach you Iron Fist (favor N/N); check his snare line (N
-  unactionable x360: Headman Zhou has paid work: errands and chores.
-  unactionable x355: Goal: Learn a fighting style
+Hints player: 520 weeks, 304 meditated with nothing to act on; acted: { "talk": 10, "explore": 30, "mission": 95, "fight": 20, "teacher": 10, "chore": 10, "use_item": 1, "buy_qi": 25, "unseal": 13, "spar": 2 }
+  unactionable x430: Your sect's home is Azure Cloud Hall in Azure Peak (N days by road): y
+  unactionable x371: Headman Zhou has paid work: errands and chores.
+  unactionable x359: Goal: Walk to Misty Forest (N days from Qingshi Village)
+  unactionable x310: Practise Iron Fist on the Techniques screen: level N in about N days (
+  unactionable x253: Your sect treasury sells Manual: Stone Skin Tempering for N contributi
+  acted x33: Sect mission ready: Drive Off the Den Wolves (N contribution and N qi,
+  acted x30: Goal: Pick something by the path (herbs grow along the Qingshi roads)
+  acted x30: Your sect's home is Azure Cloud Hall in Azure Peak (N days by road): y
+  acted x28: Sect mission ready: Escort Mortal Villagers (N contribution, N days) a
+  acted x13: Unseal Storage Space in the artifact (O)
 
 
 ## first Foundation Establishment year (seeds 1-10)

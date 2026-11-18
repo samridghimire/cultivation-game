@@ -42,6 +42,12 @@ func _print_hints_log() -> void:
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] or (a[1] == b[1] and a[0] < b[0]))
 	for i in mini(5, rows.size()):
 		print("  unactionable x%d: %s" % [rows[i][1], rows[i][0]])
+	var acted_rows: Array = []
+	for k: String in log.get("acted_lines", {}):
+		acted_rows.append([k, int(log["acted_lines"][k])])
+	acted_rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] or (a[1] == b[1] and a[0] < b[0]))
+	for i in mini(5, acted_rows.size()):
+		print("  acted x%d: %s" % [acted_rows[i][1], acted_rows[i][0]])
 	print("")
 
 

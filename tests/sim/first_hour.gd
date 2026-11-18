@@ -1459,9 +1459,9 @@ static func teacher_reachable(gs: Node, c: CharacterData) -> bool:
 const TEACHER_REACH_DAYS := 3
 
 
-static func _visit_style_teacher(gs: Node, c: CharacterData) -> void:
+static func _visit_style_teacher(gs: Node, c: CharacterData, reach: int = TEACHER_REACH_DAYS, allow_far: bool = false) -> void:
 	var teacher := Guidance.style_teacher(c, gs.npcs, gs.data, gs.current_region, gs.npc_favor, _day(gs))
-	if teacher.is_empty() or bool(teacher.get("far", false)) or int(teacher["days"]) > TEACHER_REACH_DAYS:
+	if teacher.is_empty() or (bool(teacher.get("far", false)) and not allow_far) or int(teacher["days"]) > reach:
 		return
 	var home: String = gs.current_region
 	if gs.current_region != String(teacher["region_id"]) and not _go_to(gs, c, String(teacher["region_id"])):
@@ -2023,6 +2023,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		var day: int = gs.get_node("/root/GameClock").total_days
 		hints_log["weeks"] += 1
 		var acted := ""
+		var acted_line := ""
 		var skipped: Array[String] = []
 		var tries: Dictionary = done.get_or_add("hint_tries", {})
 		for line: String in _next_steps(gs, c, day):
@@ -2030,6 +2031,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			if int(tries.get(line, 0)) < HINT_MAX_TRIES:
 				acted = _act_on_hint(gs, c, done, line, day)
 			if acted != "":
+				acted_line = line
 				tries[line] = int(tries.get(line, 0)) + 1
 				break
 			skipped.append(line)
@@ -2044,6 +2046,9 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			kinds["meditate"] = true
 		else:
 			hints_log["acted"][acted] = int(hints_log["acted"].get(acted, 0)) + 1
+			# SIM-011: per-line tally of lines acted on (the unmatched tally above counts the lines it could not act on).
+			var acted_key := RegEx.create_from_string("\\d+").sub(acted_line, "N", true).substr(0, 70)
+			(hints_log.get_or_add("acted_lines", {}) as Dictionary)[acted_key] = int((hints_log["acted_lines"] as Dictionary).get(acted_key, 0)) + 1
 			kinds[acted] = true
 			# An action that took less than the week leaves the rest of it to meditation.
 			var left: int = 7 - (gs.get_node("/root/GameClock").total_days - day)
@@ -2124,6 +2129,23 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.begins_with("Sell your"):
 		_sell_loot_here(gs, c, gs.current_region)
 		return "sell" if c.item_count("spirit_stone") > stones_before else ""
+	if line.contains("can teach you") or line == "Goal: Learn a fighting style":
+		# SIM-011: a player who reads the hint walks to the teacher, runs his favor errand, gifts, and asks for the lesson.
+		var favor_before: Dictionary = gs.npc_favor.duplicate()
+		_visit_style_teacher(gs, c, HINT_TEACHER_REACH_DAYS, true)
+		if Techniques.knows_kind(c, gs.data, "combat") or gs.npc_favor != favor_before or gs.get_node("/root/GameClock").total_days != day_before:
+			return "teacher"
+	if line.begins_with("Your sect's home") and not c.is_rogue():
+		var home := Sects.home_region(gs.data, String(c.sect["id"]))
+		if home != "":
+			_walk_to(gs, c, home)
+		return "sect_home" if home != "" and gs.get_node("/root/GameClock").total_days != day_before else ""
+	if line.begins_with("Unseal "):
+		var ready := ArtifactFunctions.ready_to_unseal(c, gs.data, gs.world_flags)
+		if not ready.is_empty():
+			gs.unlock_artifact_function(ready[0])
+			return "unseal" if ArtifactFunctions.is_unlocked(c, ready[0]) else ""
+		return ""
 	if line.begins_with("Goal: ") and (line.contains("Pick something") or line.contains("Learn a fighting")):
 		var seen := _explore_watched(gs, c, day)
 		_explore(gs)
@@ -2133,6 +2155,9 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_attempt_open_trial(gs, c, done, kinds)
 		return "trial" if kinds.has("trial") else ""
 	return "" if gs.get_node("/root/GameClock").total_days == day_before else "other"
+
+
+const HINT_TEACHER_REACH_DAYS := 30
 
 
 static func _talk_to_elder_mo(gs: Node, prefer: String = "") -> void:

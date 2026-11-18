@@ -203,3 +203,41 @@ func test_hints_player_acts_on_next_steps() -> void:
 	var acted: Dictionary = FirstHour.hints_log["acted"]
 	assert_true(acted.has("talk"), "the first Next-steps line sends the newcomer to Elder Mo")
 	assert_true(int(out["month_days"][1]) > int(out["month_days"][0]), "time passes every month")
+
+
+## SIM-011: the hints player acts on the unseal line and the sect-home line when they show (staged state), and learns a style from the teacher.
+func test_hints_player_follows_unseal_sect_home_and_teacher_lines() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var saves := _root().get_node("SaveManager")
+	var autosave: bool = saves.autosave_enabled
+	FirstHour.hints_policy = true
+	FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
+	FirstHour.play(gs, clock, 3, 1)
+	FirstHour.hints_policy = false
+	var c: CharacterData = gs.player
+	c.artifact_energy = 100000
+	var ready := ArtifactFunctions.ready_to_unseal(c, gs.data, gs.world_flags)
+	if not ready.is_empty():
+		var line := "Unseal %s in the artifact (O)" % ArtifactFunctions.function_name(gs.data, ready[0])
+		assert_eq(FirstHour._act_on_hint(gs, c, {}, line, 0), "unseal", "the unseal line unseals the function")
+		assert_true(ArtifactFunctions.is_unlocked(c, ready[0]), "the function is open")
+	# Sect home: a joined player away from the home region walks there.
+	var home := Sects.home_region(gs.data, "azure_cloud_sect")
+	gs.current_region = home
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	c.visited_regions.erase(home)
+	c.realm_index = maxi(c.realm_index, gs.data.realm_index_of("qi_refining"))
+	for rid: String in gs.data.regions:
+		for route: Dictionary in gs.data.regions[rid].get("routes", []):
+			if route.get("to", "") == home and gs.current_region == home:
+				gs.current_region = rid
+	if gs.current_region == home:
+		gs.current_region = "qingshi_village"
+	var day_before: int = clock.total_days
+	var res: String = FirstHour._act_on_hint(gs, c, {}, "Your sect's home is a hall.", day_before)
+	assert_eq(res, "sect_home", "the sect-home line sends the player to the sect home")
+	assert_eq(gs.current_region, home, "arrived")
+	gs.end_session()
+	saves.autosave_enabled = autosave
