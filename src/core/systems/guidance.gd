@@ -5715,15 +5715,21 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
 
 
-## GUIDE-260: the region the first unfinished first goal names (e.g. Qingshi for "Talk to Elder Mo in Qingshi Village"),
-## "" once the first goals are done, when the goal names no other region, or without a region_id. Same source as the HUD's Goal line.
-static func goal_region(c: CharacterData, data: GameData, flags: Dictionary, region_id: String) -> String:
-	if region_id == "" or first_goals_done(c, data, flags) or c.realm_index >= 2:
-		return ""
-	for goal in first_goals(c, data, flags):
-		if not goal["done"]:
-			return hinted_region(data, String(goal["text"]), region_id)
+## GUIDE-262: the text of the first unfinished goal on the ladder the HUD's Goal line reads ("" when none).
+static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> String:
+	for row in active_goal_ladder(c, data, flags, null, today):
+		if not row["done"]:
+			return String(row["text"])
 	return ""
+
+
+## GUIDE-260/262: the region the current goal names (e.g. Qingshi for "Talk to Elder Mo in Qingshi Village"),
+## "" when the goal names no other region or without a region_id. Same ladder as the HUD's Goal line.
+static func goal_region(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = 0) -> String:
+	if region_id == "":
+		return ""
+	var text := current_goal_text(c, data, flags, today)
+	return hinted_region(data, text, region_id) if text != "" else ""
 
 
 ## GUIDE-260: a fight in the goal's region that costs at most FAIR_FIGHT_GOAL_EXTRA_DAYS more travel than the nearest
@@ -5732,7 +5738,7 @@ const FAIR_FIGHT_GOAL_EXTRA_DAYS := 2
 static func _goal_way_fight(found: Array[Dictionary], c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, may_rate: bool) -> void:
 	if not may_rate:
 		return
-	var goal := goal_region(c, data, flags, region_id)
+	var goal := goal_region(c, data, flags, region_id, today)
 	if goal == "":
 		return
 	var days := route_days(c, data, region_id, goal)
@@ -5747,11 +5753,7 @@ static func _goal_way_fight(found: Array[Dictionary], c: CharacterData, data: Ga
 	if days > nearest + FAIR_FIGHT_GOAL_EXTRA_DAYS:
 		return
 	var tags: Array = data.regions.get(goal, {}).get("encounter_tags", [])
-	var goal_text := ""
-	for g in first_goals(c, data, flags):
-		if not g["done"]:
-			goal_text = String(g["text"])
-			break
+	var goal_text := current_goal_text(c, data, flags, today)
 	var who := RegEx.new()
 	who.compile("^Talk to (.+?) in ")
 	var m := who.search(goal_text)

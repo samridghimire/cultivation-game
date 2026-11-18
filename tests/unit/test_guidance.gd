@@ -7474,7 +7474,31 @@ func test_goal_region_names_the_first_goal_region() -> void:
 	assert_eq(Guidance.goal_region(c, data(), {}, ""), "", "no region")
 	var vet := _fighter()
 	vet.realm_index = 2
-	assert_eq(Guidance.goal_region(vet, data(), {}, "fallen_star_market"), "", "first goals done for a veteran")
+	var text := Guidance.current_goal_text(vet, data(), {}, vet.age_days)
+	assert_true(text != "", "a veteran has a current goal")
+	assert_eq(Guidance.goal_region(vet, data(), {}, ""), "", "no region")
+	# GUIDE-262: the region comes from the same goal text the HUD shows, after the first goals too.
+	assert_eq(Guidance.goal_region(vet, data(), {}, "fallen_star_market", vet.age_days), Guidance.hinted_region(data(), text, "fallen_star_market"))
+
+
+## GUIDE-262: a goal that names a region other than the current one yields a goal_way fight past the first hour.
+func test_goal_way_fight_works_for_a_later_goal() -> void:
+	var c := _fighter()
+	var d := data()
+	c.realm_index = 2
+	var text := Guidance.current_goal_text(c, d, {}, c.age_days)
+	var region := ""
+	for rid: String in d.regions.keys():
+		if Guidance.hinted_region(d, text, rid) != "" :
+			region = rid
+			break
+	if region == "":
+		return  # this goal names no region; nothing to route
+	var goal := Guidance.hinted_region(d, text, region)
+	var days := Guidance.route_days(c, d, region, goal)
+	var probe: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "days": days}]
+	Guidance._goal_way_fight(probe, c, d, {}, c.age_days, region, true)
+	assert_true(probe.size() >= 1)
 
 
 func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
