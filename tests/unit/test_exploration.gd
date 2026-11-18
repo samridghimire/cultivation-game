@@ -278,6 +278,23 @@ func test_outlook_text_reads_cleanly() -> void:
 	assert_false(text.contains("{") or text.contains("%s") or text.contains("%d"))
 
 
+## GUIDE-263: a newcomer reads the odds in plain words, a veteran keeps the compact form.
+func test_outlook_plain_for_newcomers() -> void:
+	var o := {"other": 0.6, "fight": 0.25, "choice": 0.0, "fortune": 0.1, "misfortune": 0.04,
+		"foes": [{"name": "Mist Wolf", "danger": "Even"}, {"name": "Wild Boar", "danger": "Easy"}, {"name": "Bandit", "danger": "Risky"}]}
+	assert_eq(Guidance.outlook_plain(o), "Most trips: nothing happens (60 in 100). Otherwise: a fight (25 in 100) with Mist Wolf (Even), Wild Boar (Easy); a fortune (10 in 100).")
+	assert_eq(Guidance.outlook_plain({"other": 0.3, "fight": 0.7, "foes": [{"name": "Wild Boar", "danger": "Easy"}]}), "Most trips: a fight (70 in 100) with Wild Boar (Easy). Otherwise: nothing happens (30 in 100).")
+	var c := new_character()
+	c.realm_index = data().realm_index_of("qi_refining")
+	c.stage = 3
+	assert_true(Guidance.outlook_is_plain(c))
+	c.stage = 4
+	assert_false(Guidance.outlook_is_plain(c))
+	c.realm_index = 0
+	assert_true(Guidance.outlook_is_plain(c))
+	assert_true(Guidance.outlook_text(o).begins_with("Mostly quiet 60%."))
+
+
 ## RV-009: every gather place yields something on at least half the rolls for a
 ## newcomer (locked min_realm entries count as misses), so trips are not empty.
 func test_every_gather_place_finds_something_at_least_half_the_rolls() -> void:

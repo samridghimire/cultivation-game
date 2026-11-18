@@ -933,7 +933,8 @@ func explore_outlook(tags: Array = []) -> String:
 	if tags.is_empty():
 		tags = data.regions.get(current_region, {}).get("encounter_tags", [])
 	tags = tags + WorldEvents.encounter_tags(data, world_events, current_region)
-	var line := Guidance.outlook_text(Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region, GameClock.total_days))
+	var outlook := Exploration.outlook(player, data, tags, world_flags, Calendar.season_of(GameClock.total_days), current_region, GameClock.total_days)
+	var line := Guidance.outlook_plain(outlook) if Guidance.outlook_is_plain(player) else Guidance.outlook_text(outlook)
 	if Exploration.mastered(player, data, current_region, world_flags, GameClock.total_days):
 		line = (line + " You know every path here.").strip_edges()
 	return line

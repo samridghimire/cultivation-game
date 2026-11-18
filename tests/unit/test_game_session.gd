@@ -1146,7 +1146,7 @@ func test_explore_outlook_is_a_line() -> void:
 	_start()
 	var text: String = _game_state().explore_outlook()
 	assert_true(text != "")
-	assert_true(text.contains("%"))
+	assert_true(text.contains("in 100"))
 
 
 func test_new_year_posts_a_review_once_and_restores_snapshot() -> void:

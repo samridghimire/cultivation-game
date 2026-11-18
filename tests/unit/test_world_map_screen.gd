@@ -204,7 +204,7 @@ func test_explore_options_describe_foes_in_misty_forest() -> void:
 	site.free()
 	assert_eq(options[0]["label"], "Explore")
 	var desc := String(options[0]["description"])
-	assert_true(desc.contains("Fights"), desc)
+	assert_true(desc.contains("a fight"), desc)
 	assert_eq(options[1]["description"], desc)
 	gs.end_session()
 

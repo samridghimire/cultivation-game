@@ -6475,6 +6475,44 @@ static func quiet_word(percent: int) -> String:
 	return "Sometimes quiet" if percent >= 20 else "Rarely quiet"
 
 
+## GUIDE-263: a mortal or Qi Refining 1-3 player reads the outlook in plain words (see `outlook_plain`).
+static func outlook_is_plain(c: CharacterData) -> bool:
+	return c.realm_index == 0 or (c.realm_index == 1 and c.stage <= 3)
+
+
+## GUIDE-263: the outlook for a newcomer: "Most trips: nothing happens (60 in 100). Otherwise: a fight (25 in 100) with
+## Mist Wolf (Even); a fortune (10 in 100)." Likeliest first, at most two foes, categories under 5 in 100 dropped.
+static func outlook_plain(outlook: Dictionary) -> String:
+	var cats: Array[Dictionary] = []
+	var evade := false
+	for entry: Array in [["other", "nothing happens"], ["fight", "a fight"], ["choice", "a crossroads"], ["fortune", "a fortune"], ["misfortune", "a mishap"]]:
+		var pct := roundi(float(outlook.get(entry[0], 0.0)) * 100)
+		if pct < 5:
+			continue
+		var text := "%s (%d in 100)" % [entry[1], pct]
+		if entry[0] == "fight":
+			var foes := PackedStringArray()
+			for foe: Dictionary in (outlook.get("foes", []) as Array).slice(0, 2):
+				foes.append("%s (%s)" % [foe["name"], foe["danger"]])
+				if foe["danger"] == "Deadly" and bool(foe.get("lethal", false)):
+					evade = true
+			if not foes.is_empty():
+				text += " with " + ", ".join(foes)
+		cats.append({"pct": pct, "text": text})
+	if cats.is_empty():
+		return ""
+	cats.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pct"] > b["pct"])
+	var line := "Most trips: %s." % cats[0]["text"]
+	if cats.size() > 1:
+		var rest := PackedStringArray()
+		for i in range(1, cats.size()):
+			rest.append(cats[i]["text"])
+		line += " Otherwise: %s." % "; ".join(rest)
+	if evade:
+		line += " You would sense the deadliest foe and slip away."
+	return line
+
+
 ## One line describing an Exploration.outlook(): "Mostly quiet 60%. Fights 25%: Mist Wolf (Even). Fortunes 10%."
 static func outlook_text(outlook: Dictionary) -> String:
 	var parts := PackedStringArray()
