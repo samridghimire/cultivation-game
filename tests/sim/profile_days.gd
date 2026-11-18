@@ -3,6 +3,8 @@ extends SceneTree
 ## and prints the total, per-day and worst-day cost. To see where it goes, temporarily wrap calls inside
 ## GameState._on_days_advanced / Npcs.simulate with Time.get_ticks_usec() and print the sums here.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/profile_days.gd
+## PERF-011: `-- --realm=<index>` starts the session at that realm's first stage (e.g. 1 = Foundation Establishment)
+## with a mid-realm qi bar, so a year of a later-realm save can be timed.
 ## QA-159: add `-- --hints` to time Guidance.hints / Guidance.journal for a Foundation Middle member instead
 ## (cold = Combat._chance_cache cleared, as after a stage-up or technique level; warm = second call).
 
@@ -20,21 +22,32 @@ func _run() -> void:
 	gs.rng.seed = 5
 	gs.pending_event = ""
 	gs.join_sect("azure_cloud_sect")
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--realm="):
+			c.realm_index = int(arg.get_slice("=", 1))
+			c.stage = 1
+			c.qi = gs.data.realms[c.realm_index].qi_required(1) * 0.5
 	if OS.get_cmdline_user_args().has("--hints"):
 		_profile_hints(gs, c)
 		quit()
 		return
 	var total := 0
 	var worst := 0
+	var worst_day := 0
+	var slow := 0
 	for day in 365:
 		var t0 := Time.get_ticks_usec()
 		gs._pass_time(1)
 		var dt := Time.get_ticks_usec() - t0
 		total += dt
-		worst = maxi(worst, dt)
+		if dt > worst:
+			worst = dt
+			worst_day = day
+		if dt > 60000:
+			slow += 1
 		if not gs.player.alive:
 			break
-	print("365 days: %.1f ms total, %.0f us/day, worst day %.1f ms" % [total / 1000.0, total / 365.0, worst / 1000.0])
+	print("365 days: %.1f ms total, %.0f us/day, worst day %.1f ms (day %d), %d days > 60 ms" % [total / 1000.0, total / 365.0, worst / 1000.0, worst_day, slow])
 	quit()
 
 
