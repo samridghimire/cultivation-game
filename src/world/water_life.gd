@@ -15,6 +15,9 @@ const SHIMMER_HIGH := 0.3
 const RIPPLE_LIFE := 1.8
 const MAX_RIPPLES := 5
 const MIN_RIPPLES := 3
+const RING_LIFE := 0.5  ## GFX-194: small rain rings, 2 -> 6 px
+const RING_AREA := 600.0  ## one new ring per second per this many px² of open water
+const MAX_RINGS := 40
 
 var flow_offset := 0.0
 var _streams: Array[Rect2] = []
@@ -28,6 +31,9 @@ var _clock := 0.0
 var _decor: Array[Dictionary] = []  ## GFX-115: glints, lily pads, reeds, pebbles
 var _ripples: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
+var _rain_water: Array[Rect2] = []  ## GFX-194: open water that takes rain rings (ponds, streams, bog pools)
+var _rings: Array[Dictionary] = []
+var _ring_acc := 0.0
 
 
 ## Ripple count wanted on rain days for `pond_count` ponds (3-5 per pond).
@@ -41,7 +47,7 @@ static func shimmer_alpha(t: float) -> float:
 
 
 ## Rebuilds from a region: `rain` for rain/storm days, `frozen` for snowy seasons.
-func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, season: String = "") -> void:
+func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, season: String = "", extra_water: Array[Rect2] = []) -> void:
 	_decor = Scenery.water_decor(region, "Winter" if frozen else season)
 	_streams.clear()
 	_stream_shapes.clear()
@@ -49,6 +55,9 @@ func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, se
 	_jetties.clear()
 	_paths.clear()
 	_ripples.clear()
+	_rings.clear()
+	_rain_water.clear()
+	_ring_acc = 0.0
 	flow_offset = 0.0
 	_clock = 0.0
 	_rain = rain and not frozen and not reduce_motion
@@ -70,8 +79,12 @@ func setup(region: Dictionary, rain: bool, frozen: bool, reduce_motion: bool, se
 					_ponds.append(rect)
 			"jetty":
 				_jetties.append(Scenery.jetty_layout(region, lm)["rect"] as Rect2)
+	if _rain:
+		_rain_water.append_array(_ponds)
+		_rain_water.append_array(_streams)
+		_rain_water.append_array(extra_water)
 	_rng.seed = hash(str(region.get("id", "")))
-	set_process(not reduce_motion and (not _streams.is_empty() or not _ponds.is_empty()))
+	set_process(not reduce_motion and (not _streams.is_empty() or not _ponds.is_empty() or not _rain_water.is_empty()))
 	queue_redraw()
 
 
@@ -81,6 +94,15 @@ func on_jetty(p: Vector2) -> bool:
 		if j.has_point(p):
 			return true
 	return false
+
+
+func ring_count() -> int:
+	return _rings.size()
+
+
+## New rain rings per second for `area` px² of open water.
+static func ring_rate(area: float) -> float:
+	return area / RING_AREA
 
 
 func ripple_count() -> int:
@@ -103,6 +125,27 @@ func advance(delta: float) -> void:
 			var spot := VillageLife.point_in(pond, _rng.randi(), _rng.randi())
 			if not on_jetty(spot):
 				_ripples.append({"pos": spot, "t": 0.0})
+	if not _rain_water.is_empty():
+		for g in _rings:
+			g["t"] = float(g["t"]) + delta
+		_rings = _rings.filter(func(g: Dictionary) -> bool: return float(g["t"]) < RING_LIFE)
+		var area := 0.0
+		for w in _rain_water:
+			area += w.size.x * w.size.y
+		_ring_acc += ring_rate(area) * delta
+		while _ring_acc >= 1.0:
+			_ring_acc -= 1.0
+			if _rings.size() < MAX_RINGS:
+				var pick := _rng.randf() * area
+				var water := _rain_water[0]
+				for w in _rain_water:
+					pick -= w.size.x * w.size.y
+					water = w
+					if pick <= 0.0:
+						break
+				var spot := VillageLife.point_in(water, _rng.randi(), _rng.randi())
+				if not on_jetty(spot):
+					_rings.append({"pos": spot, "t": 0.0})
 	queue_redraw()
 
 
@@ -132,6 +175,15 @@ func _draw() -> void:
 		if pts.size() >= 2:
 			draw_polyline(pts, Color(1, 1, 1, a), 2.0)
 	_draw_decor()
+	for g in _rings:
+		var k := float(g["t"]) / RING_LIFE
+		var gr := 2.0 + k * 4.0
+		var gp: Vector2 = g["pos"]
+		var gpts := PackedVector2Array()
+		for i in 9:
+			var ga := TAU * float(i) / 8.0
+			gpts.append(gp + Vector2(cos(ga) * gr, sin(ga) * gr * 0.55))
+		draw_polyline(gpts, Color(1, 1, 1, 0.6 * (1.0 - k)), 1.0)
 	for r in _ripples:
 		var t := float(r["t"]) / RIPPLE_LIFE
 		var rad := 2.0 + t * 12.0

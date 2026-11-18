@@ -286,7 +286,11 @@ func _refresh_village_life() -> void:
 		add_child(_water_life)
 		move_child(_water_life, 0)  # WU-429: under the player, beasts and people
 	var frozen := Fishing.is_iced(GameState.data, GameState.current_region, _season)
-	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced(), _season)
+	var pool_rects: Array[Rect2] = []  # GFX-194: the bog's open water takes rain rings too (not under winter ice)
+	if GroundTiles.ground_season(_season, _region.get("map", {})) != "Winter":
+		for pool: Dictionary in _marsh.get("pools", []):
+			pool_rects.append(pool["rect"] as Rect2)
+	_water_life.setup(_region, _weather_kind in ["rain", "storm"], frozen, MotionFx.reduced(), _season, pool_rects)
 	_refresh_puddles()
 	if _critters == null:
 		_critters = CritterLayer.new()
@@ -302,6 +306,7 @@ func _refresh_puddles() -> void:
 		_rain_puddles.name = "RainPuddles"
 		add_child(_rain_puddles)
 		move_child(_rain_puddles, 1)  # GFX-184: with the ground, under the figures
+		_rain_puddles.host = self  # GFX-194
 	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
 	var yesterday := "clear" if _forced_weather != "" else Weather.of(GameState.data, GameState.current_region, GameClock.total_days - 1)
 	_rain_puddles.setup(_region, map_size, GameClock.total_days, _weather_kind, yesterday, snowy, _yards, MotionFx.reduced())

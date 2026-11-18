@@ -111,3 +111,26 @@ func _kinds(decor: Array[Dictionary]) -> Dictionary:
 	for d in decor:
 		k[d["kind"]] = true
 	return k
+
+
+## GFX-194: small rain rings on every kind of open water.
+func test_rain_rings_on_streams_and_pools_not_frozen_or_reduced() -> void:
+	var pools: Array[Rect2] = [Rect2(600, 600, 100, 60)]
+	var w := WaterLife.new()
+	w.setup(REGION, true, false, false, "Summer", pools)
+	for i in 120:
+		w.advance(1.0 / 60.0)
+	assert_true(w.ring_count() > 0)
+	w.free()
+	var frozen := WaterLife.new()
+	frozen.setup(REGION, true, true, false, "Winter", pools)
+	var still := WaterLife.new()
+	still.setup(REGION, true, false, true, "Summer", pools)
+	for i in 120:
+		frozen.advance(1.0 / 60.0)
+		still.advance(1.0 / 60.0)
+	assert_eq(frozen.ring_count(), 0)
+	assert_eq(still.ring_count(), 0)
+	frozen.free()
+	still.free()
+	assert_true(absf(WaterLife.ring_rate(6000.0) - 10.0) < 0.01)

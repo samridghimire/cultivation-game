@@ -8,6 +8,7 @@ extends Node2D
 const WET_DARKEN := 0.08
 const RIPPLE_EVERY := 1.5
 const RIPPLE_LIFE := 1.6
+const REDRAW_EVERY := 0.125  ## GFX-194: ripples step at 8 Hz in the world's own pass
 const PER_MILLION_PX := 9.0  ## puddles per 1000x1000 px (spec: 6-12)
 
 var _puddles: Array[Dictionary] = []
@@ -17,6 +18,8 @@ var _reduce := false
 var _clock := 0.0
 var _next_ripple := 0.0
 var _ripples: Array[Dictionary] = []
+var host: CanvasItem  ## GFX-194: the world, redrawn (throttled) while ripples move: they draw in its ground pass
+var _since_redraw := 0.0
 var _rng := RandomNumberGenerator.new()
 
 
@@ -118,7 +121,11 @@ func advance(delta: float) -> void:
 	if _clock >= _next_ripple:
 		_next_ripple = _clock + RIPPLE_EVERY
 		_ripples.append({"i": _rng.randi() % _puddles.size(), "t": 0.0})
-	queue_redraw()
+	_since_redraw += delta
+	if _since_redraw >= REDRAW_EVERY:
+		_since_redraw = 0.0
+		if host != null:
+			host.queue_redraw()
 
 
 func _process(delta: float) -> void:
@@ -127,15 +134,10 @@ func _process(delta: float) -> void:
 
 ## GFX-190: the puddle bodies are painted by the world's own _draw between the paths and the props
 ## (see paint_puddles), so every prop, shadow and figure sits above them. This node only draws the
-## wet-ground tint and the ripples.
+## wet-ground tint; the ripples are painted with the bodies (GFX-194).
 func _draw() -> void:
 	if _wet:
 		draw_rect(Rect2(Vector2.ZERO, _size), Color(0.0, 0.02, 0.06, WET_DARKEN))
-	for r in _ripples:
-		var pd: Dictionary = _puddles[int(r["i"])]
-		var k := float(r["t"]) / RIPPLE_LIFE
-		var c: Vector2 = pd["pos"]
-		_draw_ring(c, float(pd["rx"]) * (0.3 + 0.6 * k), float(pd["ry"]) * (0.3 + 0.6 * k), Color(0.92, 0.97, 1.0, 0.7 * (1.0 - k)))
 
 
 ## GFX-190: paint the puddle bodies onto `ci` (the world, in its ground pass, above paths, below props).
@@ -147,6 +149,12 @@ func paint_puddles(ci: CanvasItem) -> void:
 		ci.draw_colored_polygon(_oval_points(c, rx + 1.0, ry + 1.0), Color(0.85, 0.93, 1.0, 0.45))
 		ci.draw_colored_polygon(_oval_points(c, rx, ry), Color(0.45, 0.58, 0.72, 0.8))
 		ci.draw_colored_polygon(_oval_points(c + Vector2(-rx * 0.15, -ry * 0.25), rx * 0.55, ry * 0.4), Color(0.7, 0.82, 0.92, 0.5))
+	for r in _ripples:  # GFX-194: in the same pass as the bodies, so props and figures cover the rings
+		var pd: Dictionary = _puddles[int(r["i"])]
+		var k := float(r["t"]) / RIPPLE_LIFE
+		var pts := _oval_points(pd["pos"], float(pd["rx"]) * (0.3 + 0.6 * k), float(pd["ry"]) * (0.3 + 0.6 * k))
+		pts.append(pts[0])
+		ci.draw_polyline(pts, Color(0.92, 0.97, 1.0, 0.7 * (1.0 - k)), 1.0)
 
 
 func _oval_points(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
@@ -155,9 +163,3 @@ func _oval_points(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
 		var a := TAU * float(i) / 14.0
 		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
 	return pts
-
-
-func _draw_ring(c: Vector2, rx: float, ry: float, col: Color) -> void:
-	var pts := _oval_points(c, rx, ry)
-	pts.append(pts[0])
-	draw_polyline(pts, col, 1.0)

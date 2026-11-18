@@ -78,3 +78,11 @@ func test_eaves_drip_only_in_rain_not_snow() -> void:
 	assert_eq(RainEaves.layout(region, "clear", false).size(), 0)
 	var wet: Rect2 = rain[0]["base"]
 	assert_eq(wet.size.y, 3.0)
+
+
+## GFX-194: the ripple rings paint in the world's ground pass with the bodies, not in a node above the props.
+func test_ripples_paint_with_the_bodies_not_in_the_node_draw() -> void:
+	var src := FileAccess.get_file_as_string("res://src/world/rain_puddles.gd")
+	var node_draw := src.substr(src.find("func _draw()"), src.find("func paint_puddles") - src.find("func _draw()"))
+	assert_false(node_draw.contains("_ripples"))
+	assert_true(src.substr(src.find("func paint_puddles")).contains("_ripples"))
