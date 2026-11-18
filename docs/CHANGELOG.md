@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [PERF-012] Rainy days no longer slow the game down: ripples draw on their own layer.
+- 2026-11-18 [GFX-197] The world map's travel-day chips stay clear of the region banners.
+- 2026-11-18 [PERF-011] A whole in-game year runs without a single slow day.
+- 2026-11-18 [GUIDE-259] Next steps refresh faster for Foundation cultivators, with the same odds shown.
+- 2026-11-18 [GFX-196] Wolves, boars, tigers, deer and foxes each have their own shape in fights and in the wild.
+- 2026-11-18 [GFX-194] Rain rings on ponds, streams and bog pools; puddle ripples stay under props.
+- 2026-11-18 [QA-235] Every region checked in every season.
+- 2026-11-18 [C-387] The Fallen Star Market sells its own Star-Dew Qi Pill.
+- 2026-11-18 [PERF-010] Winter regions build faster (shade grid).
+- 2026-11-18 [GUIDE-258] After a lost fight, the "A fairer fight" advice reads as a plain sentence.
+- 2026-11-18 [GFX-195] Myriad Peaks Ridge's snow patches are solid snow with a shadow edge, no white stripes.
+- 2026-11-18 [WU-564] Hens stay by the coop, and the marsh gate is clear of bog pools.
+- 2026-11-18 [QA-217] The sect-mission income drop is explained (two mission pay changes).
 - 2026-11-18 [PERF-009] Regions build up to 2.8x faster: the ground is drawn on raw bytes.
 - 2026-11-18 [WU-562] The Hunters' Bounty Board's name no longer slides onto the board.
 - 2026-11-18 [C-388] Village happenings (the boar, the lost coin, the pickpocket) come round far less often.
