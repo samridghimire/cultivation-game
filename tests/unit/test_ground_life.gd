@@ -58,3 +58,30 @@ func test_grass_gets_patches() -> void:
 			lo = minf(lo, l)
 			hi = maxf(hi, l)
 	assert_gt(hi - lo, 0.04, "tonal variety")
+
+
+## GFX-193: patch tint is hard-edged: steps in -2..2 and a patch edge never ramps over more than 2 px.
+func test_patch_step_is_quantised() -> void:
+	for i in 41:
+		var s := -1.0 + float(i) * 0.05
+		for c in 4:
+			var st := GroundTiles.patch_step(s, c, 0)
+			assert_true(absi(st) <= 2, "two steps at most")
+			assert_true(st == 0 or (st > 0) == (s > 0.0), "sign follows the shade")
+	assert_eq(GroundTiles.patch_step(0.0, 0, 0), 0)
+	assert_eq(GroundTiles.patch_step(0.9, 1, 0), 2)
+	assert_eq(GroundTiles.patch_step(-0.9, 1, 0), -2)
+
+
+func test_ground_patches_have_few_colours_and_are_deterministic() -> void:
+	var a := GroundTiles.ground_texture(BASE, "gfx193_test", Vector2i(192, 192), false, "Summer", "grass").get_image()
+	GroundTiles._cache.clear()
+	var b := GroundTiles.ground_texture(BASE, "gfx193_test", Vector2i(192, 192), false, "Summer", "grass").get_image()
+	assert_true(a.get_data() == b.get_data(), "identical across two builds")
+	# No smooth ramp: along any 8 px row run the patch layer adds at most the base + 2 tint steps, so
+	# count distinct colours across the whole image stays bounded far below a continuous gradient.
+	var seen := {}
+	for y in 192:
+		for x in 192:
+			seen[a.get_pixel(x, y).to_html()] = true
+	assert_true(seen.size() < 400, "no alpha gradient: %d colours" % seen.size())

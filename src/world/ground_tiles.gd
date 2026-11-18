@@ -202,17 +202,37 @@ static func shade_grid_for(rid: String, size_px: Vector2i) -> PackedFloat32Array
 	return grid
 
 
+## GFX-193: hard-edged patch tint in 2x2 pixel clusters, at most two steps from the base grass (no alpha ramps).
+## Returns -2..2: negative darker, positive lighter; a cluster within 0.06 of a threshold dithers by a checker so the border is one cluster wide.
+static func patch_step(s: float, cx: int, cy: int) -> int:
+	var a := absf(s)
+	var step := 0
+	if a > 0.62:
+		step = 2
+	elif a > 0.38:
+		step = 1
+	var edge: float = 0.62 if step == 2 else 0.38
+	if step > 0 and a - edge < 0.06 and (cx + cy) % 2 == 0:
+		step -= 1
+	elif step < 2 and (0.62 if step == 1 else 0.38) - a < 0.06 and (cx + cy) % 2 == 0 and a > 0.3:
+		step += 1
+	return step if s >= 0.0 else -step
+
+
 static func _apply_patches(img: Image, base: Color, grid: PackedFloat32Array) -> void:
 	var w := img.get_width()
-	var light := base.lightened(0.10)
-	var dark := base.darkened(0.12)
-	for y in img.get_height():
-		for x in w:
-			var s := grid[y * w + x]
-			if s > 0.35:
-				img.set_pixel(x, y, img.get_pixel(x, y).lerp(light, smoothstep(0.35, 0.8, s)))
-			elif s < -0.35:
-				img.set_pixel(x, y, img.get_pixel(x, y).lerp(dark, smoothstep(0.35, 0.8, -s)))
+	var h := img.get_height()
+	var tints: Array[Color] = [base.darkened(0.12), base.darkened(0.06), base, base.lightened(0.05), base.lightened(0.10)]
+	for cy in range(0, h, 2):
+		for cx in range(0, w, 2):
+			var step := patch_step(grid[mini(cy + 1, h - 1) * w + mini(cx + 1, w - 1)], cx / 2, cy / 2)
+			if step == 0:
+				continue
+			var t: Color = tints[step + 2]
+			var amt := 0.5 if absi(step) == 1 else 0.85
+			for yy in range(cy, mini(cy + 2, h)):
+				for xx in range(cx, mini(cx + 2, w)):
+					img.set_pixel(xx, yy, img.get_pixel(xx, yy).lerp(t, amt))
 
 
 ## GFX-130: 6-12 clover/moss blobs (sprite px, 20-48 wide) per region, none touching a rect in `avoid`.
