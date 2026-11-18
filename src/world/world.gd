@@ -1224,7 +1224,7 @@ func _ground_life(map: Dictionary, sc: float) -> Dictionary:
 			worn.append(Rect2(e.position / sc, e.size / sc))
 	for r in worn:
 		avoid.append(r)
-	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0)), "alpine_meadow": bool(map.get("alpine_meadow", false))}
+	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0)), "alpine_meadow": map.get("alpine_meadow", false)}
 
 
 func _draw() -> void:
@@ -1945,7 +1945,7 @@ func _draw_relief(map: Dictionary) -> void:
 					bi += 1
 			"drift":
 				var look := Scenery.drift_look(gseason, int(it["seed"]))
-				if not bool(look["show"]):
+				if not bool(look["show"]) or not Scenery.drift_visible(gseason, map):
 					continue
 				var sc: Vector2 = look["scale"]
 				var dr := Rect2(r.position.x, r.end.y - r.size.y * sc.y, r.size.x * sc.x, r.size.y * sc.y)
@@ -2327,7 +2327,7 @@ func _draw_crags(map: Dictionary) -> void:
 				draw_polyline(PackedVector2Array(outline.slice(2, outline.size() - 2)), Color("e8eef4"), px * 2.0)
 		else:
 			var look := Scenery.drift_look(GroundTiles.ground_season(_season, map), int(it["seed"]))  # GFX-153: remnants outside winter
-			if not bool(look["show"]):
+			if not bool(look["show"]) or not Scenery.drift_visible(GroundTiles.ground_season(_season, map), map):
 				continue
 			var sc: Vector2 = look["scale"]
 			var dr := Rect2(r.position.x, r.end.y - r.size.y * sc.y, r.size.x * sc.x, r.size.y * sc.y)

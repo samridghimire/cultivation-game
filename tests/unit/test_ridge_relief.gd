@@ -350,3 +350,12 @@ func test_dirt_road_wanders_has_ruts_and_stays_calm_at_bridges() -> void:  # GFX
 	for p: Vector2 in calm["verge"]:
 		if bridge[0].grow(10.0).has_point(p) and p.x > 650.0:
 			assert_true(is_equal_approx(p.y, 468.0) or is_equal_approx(p.y, 512.0), "straight near a bridge (%s)" % p)
+
+
+## GFX-191: a map.high ridge draws no drifts outside Winter; other regions keep their remnants.
+func test_ridge_drifts_only_in_winter() -> void:
+	var ridge := {"high": {"drifts": 8}}
+	assert_true(Scenery.drift_visible("Winter", ridge))
+	for season in ["Spring", "Summer", "Autumn"]:
+		assert_false(Scenery.drift_visible(season, ridge), season)
+		assert_true(Scenery.drift_visible(season, {}), "non-ridge keeps remnants in " + season)

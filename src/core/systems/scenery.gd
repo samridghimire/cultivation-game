@@ -2223,6 +2223,12 @@ static func drift_look(season: String, seed_value: int) -> Dictionary:
 			return {"show": rng.randi() % of >= hide_in, "scale": Vector2(0.45, 0.6), "color": Color("c9d3dc"), "alpha": 0.85, "lumps": rng.randi_range(2, 3)}
 
 
+## GFX-191: whether a ridge's (map.high) snow drifts draw at all: only in Winter; elsewhere the pale remnants read as glitches.
+## Regions without map.high keep GFX-153's remnants.
+static func drift_visible(season: String, map: Dictionary) -> bool:
+	return season == "Winter" or not map.get("high", null) is Dictionary
+
+
 ## GFX-153: the lumps of a remnant drift as rects along `r` (a slice of its width each, 4-10 px gaps, hugging the foot of the ledge).
 static func drift_lumps(r: Rect2, lumps: int, seed_value: int) -> Array[Rect2]:
 	var rng := RandomNumberGenerator.new()
