@@ -886,6 +886,7 @@ func _build_npcs() -> void:
 	Interactable.clear_person_labels(all)  # WU-511
 	Interactable.spread_labels(all)
 	Interactable.clamp_labels(all, Rect2(Vector2.ZERO, map_size))
+	Interactable.clear_player_labels(all, Rect2(player.position - Vector2(16, 34), Vector2(32, 50)), Rect2(Vector2.ZERO, map_size))  # GFX-201
 	Interactable.sync_person_labels(all)  # WU-555
 
 

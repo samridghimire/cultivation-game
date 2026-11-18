@@ -186,3 +186,17 @@ static func separate(rects: Array[Rect2], fixed: Array[bool]) -> Array[Dictionar
 		if not done:
 			out[i]["faded"] = true
 	return out
+
+
+## GFX-201: the y shift that lifts `label` clear of `avoid` (the player's sprite rect): above it, or below it when
+## above would leave `bounds`. 0 when they do not overlap or neither fits.
+static func clear_of(label: Rect2, avoid: Rect2, bounds: Rect2) -> float:
+	if not label.intersects(avoid):
+		return 0.0
+	var up := avoid.position.y - 2.0 - label.end.y
+	var down := avoid.end.y + 2.0 - label.position.y
+	for dy in [up, down]:
+		var moved := Rect2(label.position + Vector2(0, dy), label.size)
+		if bounds.size == Vector2.ZERO or bounds.encloses(moved):
+			return dy
+	return 0.0

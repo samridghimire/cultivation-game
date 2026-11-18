@@ -185,3 +185,18 @@ func test_separate_is_deterministic_and_fades_when_stuck() -> void:
 	var b := LabelLayout.separate(rects, fixed)
 	assert_eq(a, b)
 	assert_true(a[5]["faded"])
+
+
+## GFX-201: a label that overlaps the player's sprite rect moves above it, or below when above leaves the map.
+func test_label_clears_player_sprite() -> void:
+	var bounds := Rect2(0, 0, 1600, 1000)
+	var player := Rect2(784, 556, 32, 50)
+	var label := Rect2(740, 570, 120, 18)  # right at the player's position
+	var dy := LabelLayout.clear_of(label, player, bounds)
+	assert_true(dy < 0.0, "lifted above the sprite")
+	assert_false(Rect2(label.position + Vector2(0, dy), label.size).intersects(player), "clear of the sprite")
+	var top_player := Rect2(784, 4, 32, 50)
+	var top_label := Rect2(740, 20, 120, 18)
+	var dy2 := LabelLayout.clear_of(top_label, top_player, bounds)
+	assert_true(dy2 > 0.0, "below the sprite when above leaves the map")
+	assert_eq(LabelLayout.clear_of(Rect2(100, 100, 50, 18), player, bounds), 0.0, "far labels stay put")

@@ -178,6 +178,9 @@ func _draw() -> void:
 	_draw_companion()
 	var sash: Color = _look.get("sash", PlayerLook.SASH_COLORS["neutral"])
 	_draw_aura()
+	# GFX-201: a soft gold ring under the feet (pulses gently every 2 s) so you find yourself in a crowd
+	var ring_pulse := 0.0 if MotionFx.reduced() else 0.5 + 0.5 * sin(_time * TAU / 2.0)
+	PlaceArt.ellipse(self, Vector2(0, 12.0), Vector2(9.0 + ring_pulse, 3.0 + ring_pulse * 0.3), Color(1.0, 0.82, 0.35, 0.30 + 0.1 * ring_pulse))
 	# Shadow stays on the ground; the body bobs while walking.
 	var sh := Scenery.figure_shadow(Vector2(RADIUS * 2.0 + 8.0, RADIUS * 2.0), snowy)  # GFX-117: same helper as villagers
 	var shc := Scenery.figure_shadow_color(snowy)

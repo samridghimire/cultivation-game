@@ -264,6 +264,13 @@ static func spread_labels(nodes: Array) -> void:
 			node.label_offset.y = minf(node.label_offset.y, 0.0)
 
 
+## GFX-201: a label whose rect overlaps the player's sprite rect moves above it (below when that leaves the map).
+static func clear_player_labels(nodes: Array, player_rect: Rect2, bounds: Rect2) -> void:
+	for node: Interactable in nodes:
+		if node.label_text() != "":
+			node.label_offset.y += LabelLayout.clear_of(node.label_rect(), player_rect, bounds)
+
+
 ## WU-511: a person's name label (NPC or roamer) never sits on a place's label: it drops below their feet or slides.
 static func clear_person_labels(nodes: Array) -> void:
 	var places: Array[Rect2] = []
