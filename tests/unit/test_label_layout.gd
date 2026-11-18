@@ -120,6 +120,15 @@ func test_label_moves_below_a_building_it_would_sit_on() -> void:
 	assert_eq(float(free[0]["offset"]), 0.0)
 
 
+func test_place_label_pushed_by_hud_never_lands_on_own_art() -> void:  # WU-562
+	var label := Rect2(100, 100, 80, 16)
+	var own_art := Rect2(110, 118, 70, 60)  # just below the label
+	var hud: Array[Rect2] = [Rect2(80, 90, 120, 20)]  # covers the label, nudging down is the first try
+	var out := LabelLayout.resolve([label] as Array[Rect2], Rect2(0, 0, 1280, 800), hud, {}, {0: [own_art]})
+	var moved := Rect2(label.position + Vector2(0, float(out[0]["offset"])), label.size)
+	assert_false(moved.intersects(own_art), "label stays off its own art")
+
+
 ## WU-511: a person's label that meets a place label drops below their feet, else slides sideways.
 func test_person_offset_clear_label_stays() -> void:
 	var places: Array[Rect2] = [Rect2(500, 500, 100, 20)]

@@ -503,6 +503,10 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 				if other != ranked[i] and other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
 					roofs.append(Rect2(other.position - other.size / 2.0, other.size))
 			covers[i] = roofs
+		else:  # WU-562: a place's name never slides down onto its own art when a HUD panel pushes it
+			var me: Interactable = ranked[i]
+			if me.size.x >= 40.0 and me.size.y >= 40.0 and me.get("great") != true and me.art_kind != "travel":
+				covers[i] = [Rect2(me.position - me.size / 2.0, me.size)] as Array[Rect2]
 	var result := LabelLayout.resolve(rects, view, blockers, own, covers)
 	for i in ranked.size():
 		var node: Interactable = ranked[i]
