@@ -369,6 +369,70 @@ const TOAD_LEGS := [
 	["..ofo.oo.....oo.ofo....", ".offo.........offo.....", ".ooo..........ooo......"],
 	["..ofo..oo...oo..ofo....", "..offo........offo.....", "..ooo.........ooo......"],
 ]
+## GFX-196: own silhouettes for wolf (lean, long legs, head high), boar (low, humped, snout down), tiger (long, round head, curled tail) and deer (slim, raised neck); fox reuses the wolf rows with short legs.
+const WOLF_ROWS := [
+	"..................o...o.",
+	".................ofo.ofo",
+	"................offfffoo",
+	"....oofffffffffffeffffoo",
+	"...offFFFFffffffffffffoo",
+	"..offFFFFFFFFFFFffoo....",
+	".ooffffffffffffffoo.....",
+	"offffffffffffffoo.......",
+	"offFo.ooffffffoo........",
+	"ooo...ofo.ofo..ofo.ofo..",
+]
+const WOLF_LEGS := [
+	["......ofo.ofo..ofo.ofo..", "......ooo.ooo..ooo.ooo.."],
+	[".....ofo..ofo...ofo.ofo.", ".....ooo..ooo...ooo.ooo."],
+]
+const BOAR_ROWS := [
+	"......ooooooo...........",
+	"....ooFFFFFFFoo.........",
+	"o.ooffffffffffooooo.....",
+	".offffffffffffffffffoo..",
+	"offffffffffffffffeffffoo",
+	"offFFFFFFFFFFFFffffffoo.",
+	".ooffffffffffffffffppoo.",
+	"...oooffffffffffooo.....",
+]
+const BOAR_LEGS := [
+	["...ofo.ofo..ofo.ofo.....", "...ooo.ooo..ooo.ooo....."],
+	["....ofo.ofo..ofo.ofo....", "....ooo.ooo..ooo.ooo...."],
+]
+const TIGER_ROWS := [
+	"oo...............oo.oo..",
+	"ofo..............offffo.",
+	"ofo..ooooooooooofffeffoo",
+	".ofooffffffffffffffffffo",
+	"..offfffffffffffffffooo.",
+	"..offFFFFFFFFFFFfffoo...",
+	"...offFFFFFFFFFFFfoo....",
+	"...ooffffffffffffoo.....",
+]
+const TIGER_LEGS := [
+	["...ofo.ofo...ofo.ofo....", "...ooo.ooo...ooo.ooo...."],
+	["....ofo.ofo..ofo.ofo....", "....ooo.ooo..ooo.ooo...."],
+]
+const DEER_ROWS := [
+	"................oo......",
+	"...............offo.....",
+	"...............offeo....",
+	"..............offffoo...",
+	"............oofffoo.....",
+	"...oooooooooffoo........",
+	"..offffffffffffo........",
+	"..offFFFFFFFffo.........",
+	"o.ooffffffffoo..........",
+]
+const DEER_LEGS := [
+	["..ofo.ofo...ofo.ofo.....", "..ofo.ofo...ofo.ofo.....", "..ooo.ooo...ooo.ooo....."],
+	["...ofo.ofo..ofo.ofo.....", "...ofo.ofo..ofo.ofo.....", "...ooo.ooo..ooo.ooo....."],
+]
+const OWN_BEASTS := {
+	"wolf": [WOLF_ROWS, WOLF_LEGS], "fox": [WOLF_ROWS, WOLF_LEGS], "boar": [BOAR_ROWS, BOAR_LEGS],
+	"tiger": [TIGER_ROWS, TIGER_LEGS], "deer": [DEER_ROWS, DEER_LEGS],
+}
 const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram"]
 
 
@@ -407,6 +471,13 @@ static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTextu
 			if i == 1:  # wings up on the second frame
 				rows[4] = "..oo...ooffooo.....oo..."
 				rows[5] = "..ofo.ooffffffo...ofo..."
+		elif kind in OWN_BEASTS:
+			var legs: Array = OWN_BEASTS[kind][1][i]
+			rows = OWN_BEASTS[kind][0].duplicate()
+			if kind == "fox":  # shorter legs: drop the fixed leg row above the frame rows
+				rows = rows.slice(0, rows.size() - 1)
+			rows.append_array(legs)
+			top = BEAST_SIZE.y - 1 - rows.size()
 		else:
 			rows.append_array(BEAST_LEGS[i])
 		for y in rows.size():
@@ -422,34 +493,23 @@ static func beast_frame(fur: Color, index: int, kind: String = "") -> ImageTextu
 ## Kind-specific marks on the plain body: wolf ears and a long tail, boar tusks and a bristle ridge, tiger stripes.
 static func _beast_marks(img: Image, fur: Color, kind: String) -> void:
 	match kind:
-		"wolf":
-			for p in [Vector2i(16, 3), Vector2i(21, 3), Vector2i(16, 2), Vector2i(21, 2)]:
-				img.set_pixelv(p, OUTLINE)
-			for p in [Vector2i(0, 7), Vector2i(0, 8), Vector2i(1, 6), Vector2i(0, 6)]:
-				img.set_pixelv(p, fur.darkened(0.25))
-			img.set_pixelv(Vector2i(0, 5), OUTLINE)
-		"boar":
-			for x in range(4, 13):
-				img.set_pixelv(Vector2i(x, 6), fur.darkened(0.4))
-			for p in [Vector2i(22, 11), Vector2i(23, 10), Vector2i(21, 11)]:
-				img.set_pixelv(p, Color("f0e8d0"))
-		"fox":  # pointed ears, a big bushy tail with a pale tip
-			for p in [Vector2i(17, 3), Vector2i(17, 2), Vector2i(20, 3), Vector2i(20, 2), Vector2i(18, 3), Vector2i(19, 3)]:
-				img.set_pixelv(p, OUTLINE if p.x != 18 and p.x != 19 else fur)
+		"fox":  # a big bushy tail with a pale tip behind the wolf body
 			for y in range(5, 10):
 				for x in range(0, 3):
 					img.set_pixel(x, y, fur if x > 0 else OUTLINE)
-			for p in [Vector2i(1, 5), Vector2i(1, 6), Vector2i(2, 5)]:
+			for p in [Vector2i(0, 4), Vector2i(1, 4), Vector2i(1, 5), Vector2i(2, 5)]:
 				img.set_pixelv(p, Color("f0e8d0"))
-			img.set_pixelv(Vector2i(2, 4), OUTLINE)
-		"deer":  # antlers, a short pale tail and a pale belly
+		"tiger":  # dark stripes over the flank
+			for x in range(5, 17, 3):
+				for y in range(9, 13):
+					if img.get_pixel(x, y).a > 0.0 and img.get_pixel(x, y) != OUTLINE:
+						img.set_pixel(x, y, OUTLINE.lightened(0.1))
+		"deer":  # antlers on the small raised head and a pale tail
 			var antler := Color("c9b27a")
-			for p in [Vector2i(18, 0), Vector2i(18, 1), Vector2i(18, 2), Vector2i(17, 1), Vector2i(16, 0),
-					Vector2i(20, 1), Vector2i(21, 0), Vector2i(19, 2)]:
+			for p in [Vector2i(16, 0), Vector2i(16, 1), Vector2i(17, 1), Vector2i(15, 0), Vector2i(19, 0), Vector2i(19, 1),
+					Vector2i(20, 0), Vector2i(18, 0)]:
 				img.set_pixelv(p, antler)
-			for x in range(4, 13):
-				img.set_pixelv(Vector2i(x, 11), Color("e0d4b0"))
-			for p in [Vector2i(1, 8), Vector2i(2, 8), Vector2i(1, 9)]:
+			for p in [Vector2i(0, 8), Vector2i(1, 8)]:
 				img.set_pixelv(p, Color("f0e8d0"))
 		"ram":  # curled pale horns and a thick shaggy ruff
 			var horn := Color("d8cfae")

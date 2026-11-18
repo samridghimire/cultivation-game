@@ -92,3 +92,70 @@ func test_overlays_keep_row_width_and_change_pixels() -> void:
 	var plain := PixelFigure.frame(LOOK, "down", 0)
 	var hat := PixelFigure.frame({"robe": Color("336699"), "sash": Color("ff0000"), "accessories": PackedStringArray(["straw_hat"])}, "down", 0)
 	assert_true(plain != hat)
+
+
+## GFX-196: opaque-pixel mask of a beast frame.
+func _beast_mask(kind: String, index: int) -> Dictionary:
+	var img := PixelFigure.beast_frame(Color("8a8a8a"), index, kind).get_image()
+	var mask := {}
+	for y in img.get_height():
+		for x in img.get_width():
+			if img.get_pixel(x, y).a > 0.0:
+				mask[Vector2i(x, y)] = true
+	return mask
+
+
+func test_beast_silhouettes_differ_pairwise() -> void:
+	var kinds := ["wolf", "boar", "tiger", "deer", "fox"]
+	for a in kinds.size():
+		for b in range(a + 1, kinds.size()):
+			var ma := _beast_mask(kinds[a], 0)
+			var mb := _beast_mask(kinds[b], 0)
+			var diff := 0
+			for p: Vector2i in ma:
+				if not mb.has(p):
+					diff += 1
+			for p: Vector2i in mb:
+				if not ma.has(p):
+					diff += 1
+			var larger := maxi(ma.size(), mb.size())
+			assert_true(diff >= larger * 0.15, "%s vs %s differ by %d of %d" % [kinds[a], kinds[b], diff, larger])
+
+
+func test_wolf_is_leggier_with_a_higher_head_than_boar() -> void:
+	var wolf := _beast_mask("wolf", 0)
+	var boar := _beast_mask("boar", 0)
+	var wolf_top := 99
+	var boar_top := 99
+	var wolf_head_x := 0
+	for p: Vector2i in wolf:
+		if p.y < wolf_top:
+			wolf_top = p.y
+			wolf_head_x = p.x
+	var boar_head_y := 0
+	for p: Vector2i in boar:
+		boar_top = mini(boar_top, p.y)
+		if p.x >= 20:
+			boar_head_y = maxi(boar_head_y, p.y)
+	assert_true(wolf_head_x >= 16, "the wolf's highest pixel is its head (front third): x=%d" % wolf_head_x)
+	assert_true(wolf_top < boar_top, "the wolf holds its head higher than the boar's hump")
+	assert_true(boar_head_y >= 8, "the boar's snout hangs in the bottom half")
+
+
+func test_beast_frames_stand_on_the_ground_and_differ_only_in_legs() -> void:
+	for kind in PixelFigure.BEAST_KINDS:
+		var m0 := _beast_mask(kind, 0)
+		var m1 := _beast_mask(kind, 1)
+		var bottom0 := 0
+		var bottom1 := 0
+		for p: Vector2i in m0:
+			assert_true(p.x < 24 and p.y < 16, "%s inside the canvas" % kind)
+			bottom0 = maxi(bottom0, p.y)
+		for p: Vector2i in m1:
+			bottom1 = maxi(bottom1, p.y)
+		assert_true(bottom0 >= 12 and bottom0 == bottom1, "%s feet on the same bottom row (%d/%d)" % [kind, bottom0, bottom1])
+		if kind in ["wolf", "boar", "tiger", "deer", "fox"]:
+			for p: Vector2i in m0:
+				if p.y < bottom0 - (2 if kind == "deer" else 1) and not m1.has(p):
+					assert_true(false, "%s frames differ above the leg rows at %s" % [kind, p])
+					return

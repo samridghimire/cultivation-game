@@ -479,7 +479,7 @@ func _start() -> void:
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
-	shots.append({"name": "combat_report" + ("_cultivator" if _fight_foe() != "wild_boar" else ""), "open": func() -> void:
+	shots.append({"name": "combat_report" + ("" if _fight_foe() == "wild_boar" else "_" + ("cultivator" if _fight_foe() == "rogue_cultivator" else _fight_foe())), "open": func() -> void:
 		gs.rng.seed = 11
 		gs.fight(_fight_foe())
 		if OS.get_cmdline_user_args().has("--blows"):  # WU-473: capture mid-playback with the numbers up
@@ -557,11 +557,13 @@ func _clear_bubble() -> void:
 	world.set("_greet_bubble", null)
 
 
-## `--fight=beast|cultivator` picks the combat_report foe (default: the boar).
+## `--fight=cultivator|<enemy_id>` picks the combat_report foe (default: the boar); GFX-196: any enemy id, e.g. mist_wolf.
 func _fight_foe() -> String:
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--fight=cultivator":
 			return "rogue_cultivator"
+		if arg.begins_with("--fight=") and arg != "--fight=beast":
+			return arg.trim_prefix("--fight=")
 	return "wild_boar"
 
 
