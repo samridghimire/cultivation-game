@@ -111,11 +111,14 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
 	var t0 := Time.get_ticks_usec() if profiling else 0
 	var variants: Array[Image] = []
-	for v in 4:
-		variants.append(make_variant(base, rid, v, flowers).get_image())
+	var scree_cells := style == "scree"
+	# GFX-198: 70% of cells shared one 16 px tile, so rock ground showed a regular dotted grid in the green months.
+	# Scree uses SCREE_TILES distinct plain tiles instead (no clover/bloom variants).
+	for v in (SCREE_TILES if scree_cells else 4):
+		variants.append(make_tile(base, "%s|st%d" % [rid, v], "ground").get_image() if scree_cells else make_variant(base, rid, v, flowers).get_image())
 	for cy in ceili(float(size_px.y) / SIZE):
 		for cx in ceili(float(size_px.x) / SIZE):
-			var src := variants[variant_for(rid, cx, cy)]
+			var src := variants[absi(hash("%s|%d|%d|st" % [rid, cx, cy])) % SCREE_TILES if scree_cells else variant_for(rid, cx, cy)]
 			var w := mini(SIZE, size_px.x - cx * SIZE)
 			var h := mini(SIZE, size_px.y - cy * SIZE)
 			img.blit_rect(src, Rect2i(0, 0, w, h), Vector2i(cx * SIZE, cy * SIZE))
@@ -172,6 +175,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	return tex
 
 
+const SCREE_TILES := 12  ## GFX-198: distinct ground tiles on a scree ground
 const LIVELY_STYLES := ["grass", "litter", "bog"]  ## GFX-130: the styles that get patches, clover and worn ground
 const PATCH_CELLS := [96, 40]
 
@@ -530,7 +534,12 @@ static func alpine_blobs(rid: String, kind: String, count: int, size_px: Vector2
 		var rx := absi(hash("%s|alp|%s|%d|x" % [rid, kind, i]))
 		var ry := absi(hash("%s|alp|%s|%d|y" % [rid, kind, i]))
 		var rs := absi(hash("%s|alp|%s|%d|s" % [rid, kind, i]))
-		out.append(Vector3(float(rx % maxi(size_px.x, 1)), float(ry % maxi(size_px.y, 1)), 10.0 + float(rs % 22)))
+		var bx := float(rx % maxi(size_px.x, 1))
+		var by := float(ry % maxi(size_px.y, 1))
+		# GFX-198: a blob centre within 24 px of a map edge shows as a lone clipped blob: skip it
+		if size_px.x > 96 and size_px.y > 96 and (bx < 24.0 or by < 24.0 or bx > float(size_px.x) - 24.0 or by > float(size_px.y) - 24.0):
+			continue
+		out.append(Vector3(bx, by, 10.0 + float(rs % 22)))
 	return out
 
 
@@ -812,6 +821,9 @@ static func _winter_streets(img: Image, summer: Image, rid: String, zones: Array
 			var k: int
 			if m & 1:
 				k = 0 if m & 2 else 1
+				# GFX-198: the kerb band dithers snow and swept stone in 2x2 clusters: no hard rectangle edge
+				if k == 1 and _ihash(slush_seed, x / 2, y / 2) % 3 == 0:
+					k = 0
 			else:
 				var shade := shades[row + x]
 				if shade >= -0.2:  # jitter is within +-0.1, so the verdict is settled without hashing

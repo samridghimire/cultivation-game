@@ -1520,11 +1520,22 @@ func _draw_market_ground() -> void:
 				centre += pt
 			centre /= float(ring.size())
 			var snow := Color(0.84, 0.84, 0.85)  # GFX-168: neutral snow a shade darker than the ground, no blue tint
-			draw_colored_polygon(ring, snow.darkened(0.1))
+			# GFX-198: a snow-free dark inner bowl inside a thin light snow line on the upper rim (no blocky ground snow showing through)
+			draw_colored_polygon(ring, snow.darkened(0.28))
 			var near := PackedVector2Array()
 			for pt: Vector2 in ring:
-				near.append(centre.lerp(pt, 0.88) + Vector2(0, 4))
-			draw_colored_polygon(near, snow.lightened(0.05))
+				near.append(centre.lerp(pt, 0.8) + Vector2(0, 3))
+			draw_colored_polygon(near, Color(0.30, 0.27, 0.26))
+			var deep := PackedVector2Array()
+			for pt: Vector2 in ring:
+				deep.append(centre.lerp(pt, 0.45) + Vector2(0, 5))
+			draw_colored_polygon(deep, Color(0.20, 0.17, 0.17))
+			var upper := PackedVector2Array()
+			for pt: Vector2 in ring:
+				if pt.y <= centre.y + 2.0:
+					upper.append(pt)
+			if upper.size() >= 2:
+				draw_polyline(upper, snow.lightened(0.1), 3.0)
 			for fi in ring.size():  # soot only where the ground shows through (about a third of the rim)
 				var hv := hash("%s|soot|%d" % [_region.get("id", ""), fi])
 				if hv % 3 == 0:

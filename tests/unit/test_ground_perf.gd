@@ -50,15 +50,15 @@ func test_grass_winter_identical() -> void:
 
 
 func test_scree_winter_identical() -> void:
-	_check("scree_winter", _scree("Winter"), "d3eb9975ae6ccdcbfb4ca6e62ee9fd2fa970d52deeaf74b861f9feaf1b17dabd")
+	_check("scree_winter", _scree("Winter"), "eaf37513875108db7df70ef60976204b73fa4e4829fa8c841b43f31e82fc2e5e")
 
 
 func test_scree_summer_identical() -> void:
-	_check("scree_summer", _scree("Summer"), "7b44af3495cf247e88148186c14420289ebe322cea22e055677076fdadd7f828")
+	_check("scree_summer", _scree("Summer"), "67f2a33a904c24d3b61ab58561e309f43e86fc2546314181a27e38625b78fb18")
 
 
 func test_paved_winter_identical() -> void:
-	_check("paved_winter", _paved("Winter"), "983083006336d1268b9513ebc9a8ee4c2286236948609ca832a1a7e791d6c0b5")
+	_check("paved_winter", _paved("Winter"), "06237dd6c71ded8675bdaf1ec979081931313bec4d4881b0b36a2603a23679b7")
 
 
 func test_paved_summer_identical() -> void:
@@ -79,3 +79,48 @@ func test_ihash_is_deterministic_and_spread() -> void:
 
 func test_bog_winter_identical() -> void:  ## PERF-010: shade_grid_for rebuilt per lattice row, same doubles
 	_check("bog_winter", _bog("Winter"), "7f0e8b3a3aabd917731408b7adcd1ec1411fb17cd0da24ed4679f0168d289c4e")
+
+
+## GFX-198: no 8x8-periodic dotted grid on the ridge's Spring scree (luminance autocorrelation at lag 8 vs lag 7).
+func _lag_corr(img: Image, lag: int) -> float:
+	var n := 128
+	var vals := PackedFloat32Array()
+	var mean := 0.0
+	for y in n:
+		for x in n:
+			var v := img.get_pixel(x, y).get_luminance()
+			vals.append(v)
+			mean += v
+	mean /= float(n * n)
+	var s := 0.0
+	for y in n:
+		for x in n - lag:
+			s += (vals[y * n + x] - mean) * (vals[y * n + x + lag] - mean)
+	return s
+
+
+func test_scree_spring_has_no_tile_lattice() -> void:
+	GroundTiles.clear_cache()
+	var img := GroundTiles.ground_texture(Color("4d5568"), "myriad_peaks_ridge", Vector2i(400, 300), false, "Spring", "scree", [], 0.4, {"speckle": 0.33}).get_image()
+	var c7 := _lag_corr(img, 7)
+	var c8 := _lag_corr(img, 8)
+	var c16 := _lag_corr(img, 16)
+	assert_true(c8 <= c7 * 1.1, "lag 8 not stronger than lag 7")
+	assert_true(c16 <= c7 * 1.1, "lag 16 not stronger than lag 7")
+
+
+func test_alpine_blobs_stay_off_the_edge() -> void:
+	var size := Vector2i(1600, 1000)
+	for kind in ["snow", "tuft", "bloom", "hollow"]:
+		for b in GroundTiles.alpine_blobs("myriad_peaks_ridge", kind, 400, size):
+			assert_true(b.x >= 24.0 and b.y >= 24.0 and b.x <= 1576.0 and b.y <= 976.0, "%s blob inside" % kind)
+
+
+func test_winter_paving_edge_mixes_snow_and_stone() -> void:
+	GroundTiles.clear_cache()
+	var zone := Rect2(40, 40, 120, 80)
+	var img := GroundTiles.ground_texture(Color("8b8272"), "fallen_star_market", Vector2i(200, 160), false, "Winter", "paved", [zone], 1.0, {}).get_image()
+	var lums := {}
+	for x in range(41, 160):  # top kerb band rows (y 40..43 minus jitter): count distinct luminance levels in the band
+		lums[snappedf(img.get_pixel(x, 42).get_luminance(), 0.03)] = true
+	assert_true(lums.size() > 4, "kerb band is not one flat strip")
