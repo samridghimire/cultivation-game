@@ -50,7 +50,7 @@ var _shops: Label
 var _heads: Dictionary = {}  ## WU-528: block name -> its heading label
 const SHOP_CAP := 5
 const PLACE_CAP := 8
-var _marks: Label
+var _marks: RichTextLabel
 var _foes: RichTextLabel
 var _routes: Label
 var _today: Label
@@ -110,11 +110,17 @@ func _init() -> void:
 	_foes.add_theme_font_size_override("normal_font_size", 15)
 	_foes.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	details.add_child(_foes)
-	_marks = _wrapped(UIStyle.label("", 15, Color(0.85, 0.85, 0.95)))
+	_marks = RichTextLabel.new()  # GFX-197: bullets take the colour of their banner pip
+	_marks.bbcode_enabled = true
+	_marks.fit_content = true
+	_marks.scroll_active = false
+	_marks.add_theme_font_size_override("normal_font_size", 15)
+	_marks.add_theme_color_override("default_color", Color(0.85, 0.85, 0.95))
+	_marks.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	details.add_child(_marks)
 	_routes = _wrapped(UIStyle.label("", 15, UIStyle.CATEGORY_COLORS["progress"]))
 	details.add_child(_routes)
-	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots: blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red world event. Row under a name: weather, coin market open today, paw beasts roam (gold: a great beast), leaf forage by the path.", 14, Color(0.6, 0.6, 0.6))))
+	details.add_child(_wrapped(UIStyle.label("Red roads need a higher realm. Travel at a region's gate. Dots under a banner (same colours as the bullets above): blue sect hall, gold abode, pink family, teal anchor, purple secret realm, red event, pale discovery, orange letter, rust rival, amber bounty. Row under a name: weather, coin market open today, paw beasts roam (gold: a great beast), leaf forage by the path.", 14, Color(0.6, 0.6, 0.6))))
 
 	_close_button = UIStyle.button("Close", close)
 	box.add_child(_close_button)
@@ -325,6 +331,47 @@ static func day_label_pos(a: Vector2, b: Vector2, boxes: Array[Rect2], taken: Ar
 		if not boxes.any(func(n: Rect2) -> bool: return n.intersects(rect)) and not taken.any(func(n: Rect2) -> bool: return n.intersects(rect)):
 			return c
 	return a.lerp(b, 0.5)
+
+
+## GFX-197: centre of a route's day chip: of 9 points along the road (0.1 .. 0.9) the one whose chip rect
+## has the biggest clearance from every banner rect; a point whose chip would overlap a placed chip is skipped.
+static func chip_pos(a: Vector2, b: Vector2, boxes: Array[Rect2], taken: Array[Rect2], size: Vector2 = Vector2(36, 22)) -> Vector2:
+	var best := a.lerp(b, 0.5)
+	var best_gap := -INF
+	for i in 9:
+		var c := a.lerp(b, 0.1 + 0.1 * i)
+		var rect := Rect2(c - size / 2.0, size)
+		if taken.any(func(n: Rect2) -> bool: return n.grow(2.0).intersects(rect)):
+			continue
+		var gap := INF
+		for box: Rect2 in boxes:
+			gap = minf(gap, rect_gap(rect, box))
+		if gap > best_gap + 0.01:
+			best_gap = gap
+			best = c
+	return best
+
+
+## GFX-197: one details line for a mark: a bullet in the mark's pip colour, then its text.
+static func mark_bbcode(mark: Dictionary) -> String:
+	var col: Color = MARK_COLORS.get(mark["kind"], Color.WHITE)
+	return "[color=#%s]●[/color] %s" % [col.to_html(false), String(mark["text"]).replace("[", "[lb]")]
+
+
+## GFX-197: distance between two rects (0 when they touch or overlap).
+static func rect_gap(a: Rect2, b: Rect2) -> float:
+	var dx := maxf(0.0, maxf(a.position.x - b.end.x, b.position.x - a.end.x))
+	var dy := maxf(0.0, maxf(a.position.y - b.end.y, b.position.y - a.end.y))
+	return sqrt(dx * dx + dy * dy)
+
+
+## GFX-197: x of the first mark pip and the pip step for `count` pips under a banner: right-aligned to
+## `x_right`, never left of `x_left` (the weather/market glyphs), step 14 px shrinking to 5 px to fit.
+static func pip_row(x_left: float, x_right: float, count: int) -> Vector2:
+	if count <= 0:
+		return Vector2(x_left, 14.0)
+	var step := clampf((x_right - x_left) / float(count), 5.0, 14.0)
+	return Vector2(maxf(x_left, x_right - step * count), step)
 
 
 ## Text lines for the focused region: route from the current region (or
@@ -799,7 +846,7 @@ func _draw_map() -> void:
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
 			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)
-			var centre := day_label_pos(a, b, node_rects, taken, size)
+			var centre := chip_pos(a, b, node_rects, taken, size)
 			var pos := centre - size / 2.0
 			taken.append(Rect2(pos, size))
 			_canvas.draw_rect(Rect2(pos, size), Color(0.96, 0.92, 0.8))
@@ -841,9 +888,11 @@ func _draw_map() -> void:
 		for mark in region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, region_id, GameState.current_region, GameState.world_flags):
 			if not kinds.has(mark["kind"]):
 				kinds.append(mark["kind"])
+		var row := pip_row(x, rect.end.x, kinds.size())
+		var pip_x := row.x
 		for kind in kinds:
-			_canvas.draw_circle(Vector2(x + 6.0, y + GLYPH_SIZE / 2.0), 5.0, MARK_COLORS[kind])
-			x += 14.0
+			_canvas.draw_circle(Vector2(pip_x + row.y / 2.0, y + GLYPH_SIZE / 2.0), minf(5.0, row.y / 2.0 - 0.5), MARK_COLORS[kind])
+			pip_x += row.y
 	if _hint_region != "" and _rects.has(_hint_region):
 		var hr: Rect2 = _rects[_hint_region]
 		var hm := hint_marker_rect(hr)
@@ -935,7 +984,7 @@ func _show_details() -> void:
 	_foes.visible = foes_text != ""
 	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region, GameState.world_flags)
 	_marks.visible = not marks.is_empty()
-	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return "• " + String(m["text"])))
+	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return mark_bbcode(m)))
 	_routes.text = "\n".join(route_lines(GameState.player, data, GameState.current_region, _selected))
 
 

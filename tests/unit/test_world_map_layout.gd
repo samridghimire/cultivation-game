@@ -116,3 +116,29 @@ func test_land_patch_is_deterministic_and_pixel_stepped() -> void:
 		assert_true(r.grow(40.0).has_point(p), "patch point near rect")
 		assert_eq(int(p.x) % 2, 0)
 		assert_eq(int(p.y) % 2, 0)
+
+
+func test_chip_pos_picks_the_point_farthest_from_banners() -> void:  # GFX-197
+	var none: Array[Rect2] = []
+	var boxes: Array[Rect2] = [Rect2(80, 80, 40, 40)]
+	var c := WorldMapScreen.chip_pos(Vector2(0, 100), Vector2(200, 100), boxes, none)
+	var chip := Rect2(c - Vector2(18, 11), Vector2(36, 22))
+	assert_true(WorldMapScreen.rect_gap(chip, boxes[0]) >= 30.0, "chip well clear of the banner it passes")
+	var edge := WorldMapScreen.chip_pos(Vector2(0, 100), Vector2(200, 100), none, none)
+	assert_true(edge.x >= 20.0 and edge.x <= 180.0)
+	var taken: Array[Rect2] = [Rect2(c - Vector2(18, 11), Vector2(36, 22))]
+	assert_true(WorldMapScreen.chip_pos(Vector2(0, 100), Vector2(200, 100), boxes, taken).distance_to(c) > 10.0, "placed chips are avoided")
+
+
+func test_pip_row_fits_under_the_banner() -> void:  # GFX-197
+	assert_eq(WorldMapScreen.pip_row(10.0, 200.0, 3), Vector2(158.0, 14.0))
+	var tight := WorldMapScreen.pip_row(100.0, 160.0, 9)
+	assert_true(tight.y >= 5.0 and tight.y < 14.0)
+	assert_true(tight.x >= 100.0)
+	assert_eq(WorldMapScreen.pip_row(10.0, 20.0, 0).y, 14.0)
+
+
+func test_mark_bbcode_colours_the_bullet() -> void:  # GFX-197
+	var s := WorldMapScreen.mark_bbcode({"kind": "sect", "text": "A hall [x]"})
+	assert_true(s.begins_with("[color=#6fa8e8]●[/color]"))
+	assert_true(s.contains("[lb]x]"))
