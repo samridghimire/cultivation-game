@@ -463,3 +463,23 @@ func test_hill_dog_odds_follow_the_stage() -> void:
 	assert_eq(Combat.odds_reason(c, data(), dog), "")
 	var boar: Dictionary = data().enemies["wild_boar"]
 	assert_eq(Combat.odds_reason(c, data(), boar), "Well below you")
+
+
+func test_win_chance_at_least_matches_win_chance() -> void:
+	# GUIDE-255: the early exit never changes a rating that reaches the floor, for every enemy and three builds.
+	var d := data()
+	for build in 3:
+		var c := new_character()
+		c.realm_index = build
+		c.stage = 2 + build
+		c.attributes["strength"] = 10 + 15 * build
+		for id: String in d.enemies:
+			var enemy: Dictionary = d.enemies[id]
+			Combat._chance_cache.clear()
+			var full := Combat.win_chance(c, d, enemy)
+			Combat._chance_cache.clear()
+			var early := Combat.win_chance_at_least(c, d, enemy, 0.7)
+			if full >= 0.7:
+				assert_eq(early, full, "%s build %d" % [id, build])
+			else:
+				assert_true(early < 0.7, "%s build %d" % [id, build])

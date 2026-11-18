@@ -5536,6 +5536,34 @@ static func _fair_fight_entries(out: Array[Dictionary], fights: Array[Dictionary
 ## GUIDE-033: with `people` (and `favor`) the living, met rival of this region is rated too (kind "rival").
 ## An open trial is always kept (GUIDE-096).
 static func fair_fights(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary = {}, favor: Dictionary = {}) -> Array[Dictionary]:
+	# GUIDE-255: the whole result is memoised. An empty win-chance cache means "cold" (stage-up, tests, profiles), so the memo goes too.
+	if Combat._chance_cache.is_empty():
+		_fair_memo.clear()
+	var rival_key := ""
+	if c.rival != "" and people.has(c.rival):
+		rival_key = "%s|%s|%s" % [str(people[c.rival].to_dict()), str(favor.get(c.rival, 0)), str(Npcs.region_of(people[c.rival], data))]
+	var key := "%d|%s|%d|%s|%s|%s|%s" % [data.get_instance_id(), region_id, today, str(flags), rival_key, Combat.fight_fingerprint(c), str(c.to_dict())]
+	if _fair_memo.has(key):
+		var hit: Array[Dictionary] = []
+		for f: Dictionary in _fair_memo[key]:
+			hit.append(f.duplicate(true))
+		return hit
+	var result := _fair_fights_uncached(c, data, flags, today, region_id, people, favor)
+	if _fair_memo.size() >= FAIR_MEMO_MAX:
+		_fair_memo.erase(_fair_memo.keys()[0])
+	var stored: Array[Dictionary] = []
+	for f: Dictionary in result:
+		stored.append(f.duplicate(true))
+	_fair_memo[key] = stored
+	return result
+
+
+## GUIDE-255: fair_fights results by (data, region, day, flags, rival, player), oldest entry dropped past FAIR_MEMO_MAX.
+static var _fair_memo: Dictionary = {}
+const FAIR_MEMO_MAX := 8
+
+
+static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dictionary, today: int, region_id: String, people: Dictionary, favor: Dictionary) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	var rated := 0
 	# GUIDE-087: the promotion trial is the one fight that raises your rank.
@@ -5812,7 +5840,7 @@ static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
 
 
 static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "", days: int = 0) -> void:
-	var chance := Combat.win_chance(c, data, enemy)
+	var chance := Combat.win_chance_at_least(c, data, enemy, FAIR_FIGHT_MIN_CHANCE)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
 	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy)})

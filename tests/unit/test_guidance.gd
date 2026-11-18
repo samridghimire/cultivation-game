@@ -7366,3 +7366,20 @@ func test_deed_hint_is_validated() -> void:
 func test_festival_contest_line_has_no_plural_mismatch() -> void:
 	var src := FileAccess.get_file_as_string("res://src/core/systems/guidance.gd")
 	assert_false(src.contains("; the %s is open"), "contest names such as 'Lantern riddles' are plural")
+
+
+func test_fair_fights_memo_same_result_and_no_resims() -> void:
+	# GUIDE-255: a repeat call is free, returns equal but independent copies, and a changed player is not served stale.
+	var c := _fighter()
+	Combat._chance_cache.clear()
+	var first := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
+	var sims: int = Combat._sim_count
+	var second := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
+	assert_eq(Combat._sim_count, sims, "memo hit runs no simulation")
+	assert_eq(str(first), str(second))
+	if not second.is_empty():
+		second[0]["chance"] = -1.0
+		assert_true(float(Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")[0]["chance"]) >= 0.0, "copies are independent")
+	c.wins_by_foe["wolf"] = 9
+	var third := Guidance.fair_fights(c, data(), {}, c.age_days, "qingshi_village")
+	assert_eq(str(third), str(Guidance._fair_fights_uncached(c, data(), {}, c.age_days, "qingshi_village", {}, {})), "changed player gets a fresh result")

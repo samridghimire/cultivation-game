@@ -499,6 +499,32 @@ static func win_chance(c: CharacterData, data: GameData, enemy: Dictionary, samp
 	return chance
 
 
+## GUIDE-255: win_chance, but gives up early once `floor` can no longer be reached. Returns the same chance as
+## win_chance when it is >= `floor` (same rng stream, same samples; the result is cached), and a value < `floor`
+## otherwise (the exact one if cached, else -1.0, not cached). Proof: wins <= samples - losses, so once
+## (samples - losses) / samples < floor the final chance is < floor whatever the remaining fights do.
+static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Dictionary, floor_chance: float, samples: int = RATING_SAMPLES) -> float:
+	var key := "%d|%d|%s|%s" % [data.get_instance_id(), samples, str(enemy), fight_fingerprint(c)]
+	if _chance_cache.has(key):
+		return _chance_cache[key]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var wins := 0
+	var pre_p := stats(c, data)
+	var pre_e := enemy_stats(enemy, data)
+	for i in samples:
+		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:
+			wins += 1
+		elif float(samples - (i + 1 - wins)) / samples < floor_chance:
+			return -1.0
+	_sim_count += 1
+	var chance := float(wins) / samples
+	if _chance_cache.size() >= CHANCE_CACHE_MAX:
+		_chance_cache.clear()
+	_chance_cache[key] = chance
+	return chance
+
+
 ## Danger rating for menus and encounter evasion, from win_chance()
 ## (Weak/Even/Risky/Dangerous/Deadly).
 static func danger_label(c: CharacterData, data: GameData, enemy: Dictionary) -> String:
