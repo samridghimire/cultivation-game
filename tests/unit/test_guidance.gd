@@ -7483,21 +7483,20 @@ func test_goal_region_names_the_first_goal_region() -> void:
 
 ## GUIDE-262: a goal that names a region other than the current one yields a goal_way fight past the first hour.
 func test_goal_way_fight_works_for_a_later_goal() -> void:
+	# [REVIEW] past the first goals the HUD shows the road ladder ("Walk to <region> ..."); GUIDE-260 returned "" here.
 	var c := _fighter()
 	var d := data()
-	c.realm_index = 2
-	var text := Guidance.current_goal_text(c, d, {}, c.age_days)
-	var region := ""
-	for rid: String in d.regions.keys():
-		if Guidance.hinted_region(d, text, rid) != "" :
-			region = rid
-			break
-	if region == "":
-		return  # this goal names no region; nothing to route
-	var goal := Guidance.hinted_region(d, text, region)
-	var days := Guidance.route_days(c, d, region, goal)
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	LifeStats.add(c, "fights_won", 1)
+	assert_true(Guidance.first_goals_done(c, d, flags), "the first goals are done")
+	var text := Guidance.current_goal_text(c, d, flags, c.age_days)
+	assert_true(text.begins_with("Walk to "), text)
+	var goal := Guidance.goal_region(c, d, flags, d.start_region, c.age_days)
+	assert_true(goal != "", "the road goal names a region")
+	assert_eq(goal, Guidance.hinted_region(d, text, d.start_region))
+	var days := Guidance.route_days(c, d, d.start_region, goal)
 	var probe: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "days": days}]
-	Guidance._goal_way_fight(probe, c, d, {}, c.age_days, region, true)
+	Guidance._goal_way_fight(probe, c, d, flags, c.age_days, d.start_region, true)
 	assert_true(probe.size() >= 1)
 
 

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 75a139f
+Last reviewed commit: 52ab9fc
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2221,3 +2221,18 @@ Last reviewed commit: 75a139f
     landmarks). GFX-199 keyword order checked against every enemy id (sky_bearing_tortoise hits tortoise first).
     WU-565 strip fix OK. C-389/C-390 data only, baselines refreshed. GFX-197/198 draw-only with tests; I did not render.
     PERF-014/QA-234 sim only.
+- 2026-11-18 (reviewer, 2nd run): reviewed 75a139f..52ab9fc (SIM-010, PERF-015, C-391, GFX-200, WU-566, GFX-201, WU-567,
+  GUIDE-261, C-392, SIM-011, GFX-202, GFX-203, GUIDE-262; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits
+  by workers, no SAVE_VERSION change, no new binary assets. One test fixed inline, nothing filed.
+  - Fixed (GUIDE-262 test): test_goal_way_fight_works_for_a_later_goal tested nothing: its realm-2 goal ("Learn a body art
+    and wear armor") names no region, so it hit its early `return` every run, and its only assert (`probe.size() >= 1` on a
+    one-entry list) could not fail anyway. It now finishes the first goals and asserts goal_region names the road goal's
+    region ("Walk to ..."), which the GUIDE-260 cut-off returned "" for.
+  - WU-567 OK: goal_target's row indices match first_goals' order (0 Mo, 3 fish/field, 4 cook, 5 style); a target in another
+    region simply finds no node. Note: the marker retries goal_target every 30 frames while its target is absent (cheap),
+    and its doc mentions day changes but no day signal is connected (player_changed covers goal changes). GFX-202 made deed
+    givers is_person(); every is_person() caller (label passes, WU-567 person covers, marker tip) still reads correctly.
+  - GUIDE-261 OK (cooldown via Deeds.check; `today` -1 is treated as day 0, minor). C-391/C-392 data OK, Easy ratings
+    asserted; C-392 left the balance baseline to SIM-011, which refreshed it. GFX-200 `_court_link` does not check that a
+    horizontal road spans the court's x (a link can end short in open ground; draw-only, minor). GFX-201/202/203 draw or
+    layout only with tests; I did not render. PERF-015/SIM-010/SIM-011 sim only (World lap timing is a no-op unless `lapping`).
