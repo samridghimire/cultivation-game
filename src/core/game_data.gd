@@ -452,7 +452,7 @@ func _validate() -> void:
 		if deed.has("hint"):  # GUIDE-256
 			if not deed.has("favor"):
 				load_errors.append("Deed '%s': hint only on deeds with favor" % deed_id)
-			var hint_len := String(deed["hint"]).length()
+			var hint_len := str(deed["hint"]).length()
 			if typeof(deed["hint"]) != TYPE_STRING or hint_len < 1 or hint_len > 40:
 				load_errors.append("Deed '%s': hint must be 1..40 characters" % deed_id)
 		if String(deed.get("result", "")).length() > 140:

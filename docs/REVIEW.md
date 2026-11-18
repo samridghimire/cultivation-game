@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 2c9b885
+Last reviewed commit: 44803d1
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2169,3 +2169,20 @@ Last reviewed commit: 2c9b885
     per spec). QA-232 OK: Settings.persist=false in both shot scripts, which closes my last run's hud_hints note.
   - GFX-187/188/189 draw-only (alpine_meadow documented in regions.json `_doc`; draw-only flag, no validation needed);
     I did not render them. QA-231/QA-177: sim only.
+- 2026-11-18 (reviewer): reviewed 2c9b885..44803d1 (C-386, QA-194, GFX-190, GFX-191, QA-216, GUIDE-256, GUIDE-255, GFX-192,
+  GFX-193, GUIDE-257; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change,
+  no new binary assets. Nothing filed.
+  - Fixed (GFX-191): regions.json `_doc` still called map.alpine_meadow a bool; it now says bool or density number.
+  - Fixed (GUIDE-256): the hint validator cast `String(deed["hint"])` before its type check; it now uses str(), so a
+    non-string hint reports the load error instead of risking a constructor error.
+  - GUIDE-255 OK: the fair_fights memo key covers data, region, day, flags, the rival's state/favor/region and the whole
+    player dict, and it is dropped when the win-chance cache is cold. win_chance_at_least shares win_chance's cache key
+    and only caches full ratings; the early -1.0 exit is sound (wins can no longer reach the floor). Returned entries
+    are deep copies, so callers cannot mutate the memo.
+  - GUIDE-257 OK: one line per met, living teacher with an unlearned lesson and a passing favor deed; dim outside the
+    current region. GUIDE-256 OK: authored hints used verbatim, the name fallback re-adds "help him/her" before a bare
+    preposition; tested.
+  - C-386 data only, GameState test per errand. Planner note: its favor/item sources were not run through
+    tools/balance.sh --check (worker follow-up).
+  - GFX-190/191/192/193 draw-only with pure seeded helpers and tests; QA-216 sets Settings.persist=false in the runner.
+    I did not render them. QA-194: sim only, baseline refreshed.
