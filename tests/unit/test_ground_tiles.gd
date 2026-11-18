@@ -301,3 +301,41 @@ func test_ridge_alpine_density() -> void:
 			if full.get_pixel(x, y) != plain.get_pixel(x, y):
 				d_full += 1
 	assert_true(d_sparse > 0 and d_sparse < d_full, "sparser than Azure Peak: %d vs %d" % [d_sparse, d_full])
+
+
+func _flat(w: int, h: int) -> Image:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 1))
+	return img
+
+
+func test_blend_blob_is_clustered_not_banded() -> void:
+	var img := _flat(64, 64)
+	GroundTiles._blend_blob(img, Vector3(32, 32, 24), 1.0, Color(1, 1, 1), 1.0)
+	var tinted := 0
+	for cy in 32:
+		for cx in 32:
+			var vals := {}
+			for o in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				vals[img.get_pixel(cx * 2 + o.x, cy * 2 + o.y).r] = true
+			assert_eq(vals.size(), 1, "cluster %d,%d is uniform" % [cx, cy])
+			if img.get_pixel(cx * 2, cy * 2).r > 0.0:
+				tinted += 1
+	assert_true(tinted > 100)
+	var img2 := _flat(64, 64)
+	GroundTiles._blend_blob(img2, Vector3(32, 32, 24), 1.0, Color(1, 1, 1), 1.0)
+	assert_true(img.get_data() == img2.get_data())
+
+
+func test_spring_ridge_has_fewer_snow_patches_than_azure_peak() -> void:
+	var count := func(meadow: float) -> int:
+		var img := Image.create(1000, 1000, false, Image.FORMAT_RGBA8)
+		img.fill(Color("4d6b3c"))
+		GroundTiles._alpine_life(img, "myriad_peaks_ridge", "Spring", meadow)
+		var n := 0
+		for y in range(0, 1000, 2):
+			for x in range(0, 1000, 2):
+				if img.get_pixel(x, y).r > 0.85:
+					n += 1
+		return n
+	assert_true(count.call(0.3) < count.call(1.0))

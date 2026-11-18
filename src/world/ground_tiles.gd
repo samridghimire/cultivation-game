@@ -515,17 +515,48 @@ static func alpine_blobs(rid: String, kind: String, count: int, size_px: Vector2
 	return out
 
 
-static func _blend_blob(img: Image, b: Vector3, squash: float, tint: Color, strength: float) -> void:
+## GFX-195: the blob's distance for a 2x2 cluster (cluster coords cx, cy), or -1.0 when the cluster is outside. The rim is a
+## per-cluster integer hash (no diagonal sine bands), so the edge is ragged but never striped.
+static func _blob_cluster_d(b: Vector3, squash: float, seed_value: int, cx: int, cy: int) -> float:
+	var d := Vector2((float(cx * 2) + 1.0 - b.x) / b.z, (float(cy * 2) + 1.0 - b.y) / (b.z * squash)).length()
+	var hh := float(_ihash(seed_value, cx, cy) % 100) / 100.0
+	return d if d < 0.82 + 0.18 * hh else -1.0
+
+
+## Flat tint inside the blob and one dithered border ring of clusters at half strength. `shadow` (alpha > 0) paints a 1 px
+## shadow on the lowest pixel row of each cluster column's last cluster.
+static func _blend_blob(img: Image, b: Vector3, squash: float, tint: Color, strength: float, shadow: Color = Color(0, 0, 0, 0)) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	var rx := b.z
 	var ry := b.z * squash
-	for y in range(maxi(0, int(b.y - ry)), mini(h, int(b.y + ry) + 1)):
-		for x in range(maxi(0, int(b.x - rx)), mini(w, int(b.x + rx) + 1)):
-			var d := Vector2((x - b.x) / rx, (y - b.y) / ry).length()
-			var edge := 0.78 + 0.22 * sin(float(x) * 0.7 + float(y) * 0.5)  # ragged rim
-			if d < edge:
-				img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, strength * (1.0 - d / edge) * 0.8 + strength * 0.2))
+	var data := img.get_data()  # raw RGBA8 bytes, written back once
+	var seed_value := (int(b.x) * 73856093 ^ int(b.y) * 19349663 ^ int(b.z * 10.0) * 83492791) & 0x7fffffff
+	var cx0 := maxi(0, int(b.x - rx)) / 2
+	var cx1 := mini(w - 1, int(b.x + rx) + 1) / 2
+	var cy0 := maxi(0, int(b.y - ry)) / 2
+	var cy1 := mini(h - 1, int(b.y + ry) + 1) / 2
+	for cy in range(cy0, cy1 + 1):
+		for cx in range(cx0, cx1 + 1):
+			var d := _blob_cluster_d(b, squash, seed_value, cx, cy)
+			if d < 0.0:
+				continue
+			var k := strength if d < 0.7 else strength * 0.5
+			var is_bottom := shadow.a > 0.0 and _blob_cluster_d(b, squash, seed_value, cx, cy + 1) < 0.0
+			for py in range(cy * 2, cy * 2 + 2):
+				for px in range(cx * 2, cx * 2 + 2):
+					if px >= w or py >= h:
+						continue
+					var i := (py * w + px) * 4
+					var col := tint
+					var kk := k
+					if is_bottom and py == cy * 2 + 1:
+						col = shadow
+						kk = 1.0
+					for c in 3:
+						var cur := float(data[i + c]) / 255.0
+						data[i + c] = int(clampf(lerpf(cur, col[c], kk), 0.0, 1.0) * 255.0 + 0.5)
+	img.set_data(w, h, false, img.get_format(), data)
 
 
 ## GFX-191: map.alpine_meadow is `true` (Azure Peak, density 1.0), a number (density, e.g. 0.3 for the ridge) or absent (0.0).
@@ -558,8 +589,9 @@ static func _alpine_life(img: Image, rid: String, season: String, meadow: float 
 		_alpine_meadow(img, rid, season, n, meadow)
 	match season:
 		"Spring":
-			for b in alpine_blobs(rid, "snow", maxi(3, n / 2), size_px):
-				_blend_blob(img, Vector3(b.x, b.y, b.z * 1.1), 0.55, Color("eef3f7"), 0.9)
+			var snow_n := maxi(3, n / 2) if meadow >= 1.0 or meadow <= 0.0 else maxi(2, n / 4)
+			for b in alpine_blobs(rid, "snow", snow_n, size_px):
+				_blend_blob(img, Vector3(b.x, b.y, b.z * 1.1), 0.55, Color("eef3f7"), 1.0, Color("b8c4d0"))
 		"Summer":
 			for b in alpine_blobs(rid, "flower", n * 6, size_px):
 				_set_clipped(img, int(b.x), int(b.y), FLOWER_COLORS[int(b.z) % FLOWER_COLORS.size()])
