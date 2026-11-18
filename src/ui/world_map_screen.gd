@@ -631,6 +631,19 @@ func _draw_land(data: GameData) -> void:
 	_canvas.draw_rect(Rect2(Vector2.ONE, CANVAS_SIZE - Vector2(2, 2)), Color(0.36, 0.25, 0.14), false, 2.0)
 	var ids := _positions.keys()
 	ids.sort()
+	for region_id: String in ids:  # GFX-192: a wash of land under each region
+		var faded_land := is_unexplored(GameState.player, region_id, GameState.current_region)
+		var base := land_color(data.regions[region_id])
+		var patch := land_patch(region_id, _rects[region_id])
+		_canvas.draw_colored_polygon(patch, Color(base.r, base.g, base.b, 0.18 if faded_land else 0.35))
+		var edge := base.darkened(0.35)
+		var closed := patch.duplicate()
+		closed.append(patch[0])
+		_canvas.draw_polyline(closed, Color(edge.r, edge.g, edge.b, 0.5), 2.0)
+	var river := river_points(_positions, _rects)
+	if river.size() >= 2:
+		_canvas.draw_polyline(river, Color(0.35, 0.55, 0.7, 0.7), 3.0)
+		_canvas.draw_polyline(river, Color(0.6, 0.78, 0.88, 0.7), 1.0)
 	for region_id: String in ids:
 		var region: Dictionary = data.regions[region_id]
 		var r: Rect2 = _rects[region_id]
@@ -644,6 +657,55 @@ func _draw_land(data: GameData) -> void:
 			if k >= 5:
 				p = r.get_center() + Vector2(rng.randf_range(-r.size.x / 2.0, r.size.x / 2.0), -r.size.y / 2.0 - rng.randf_range(10, 20))
 			_draw_vignette(kind, p, rng.randf_range(0.8, 1.2), faded)
+
+
+## GFX-192: a seeded, pixel-stepped land blob around a node rect (12 points, all on even coordinates).
+static func land_patch(region_id: String, rect: Rect2) -> PackedVector2Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(region_id) + 7
+	var out := PackedVector2Array()
+	var n := 12
+	var c := rect.get_center()
+	var half := rect.size / 2.0 + Vector2(28, 18)
+	for i in n:
+		var a := TAU * float(i) / n
+		var k := rng.randf_range(0.78, 1.0)
+		var pt := c + Vector2(cos(a) * half.x, sin(a) * half.y) * k
+		out.append(Vector2(roundf(pt.x / 2.0) * 2.0, roundf(pt.y / 2.0) * 2.0))
+	return out
+
+
+## GFX-192: the one river, from the canvas top east of Azure Peak, between the ridge and the marsh,
+## to the canvas bottom east of the market. Built from node positions; keeps clear of every node footprint.
+static func river_points(positions: Dictionary, rects: Dictionary) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for id: String in ["azure_peak", "myriad_peaks_ridge", "withered_bone_marsh", "misty_forest", "fallen_star_market"]:
+		if not rects.has(id):
+			return out
+	var azure: Rect2 = rects["azure_peak"]
+	var ridge := node_footprint(rects["myriad_peaks_ridge"])
+	var marsh := node_footprint(rects["withered_bone_marsh"])
+	var forest := node_footprint(rects["misty_forest"])
+	var market := node_footprint(rects["fallen_star_market"])
+	var x_east := minf(azure.end.x + 16.0, CANVAS_SIZE.x - 14.0)
+	var y_mid := (ridge.end.y + marsh.position.y) / 2.0
+	var x_mid := (forest.end.x + marsh.position.x) / 2.0
+	var x_low := maxf(x_mid + 60.0, market.end.x + 30.0)
+	var ctrl: Array[Vector2] = [Vector2(x_east, 0), Vector2(x_east, y_mid - 20.0), Vector2(x_east - 70.0, y_mid), Vector2(x_mid, y_mid + 6.0),
+		Vector2(x_mid + 10.0, marsh.end.y + 10.0), Vector2(x_low, (marsh.end.y + market.position.y) / 2.0), Vector2(x_low, CANVAS_SIZE.y)]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("river")
+	for i in ctrl.size() - 1:
+		var a := ctrl[i]
+		var b := ctrl[i + 1]
+		var steps := maxi(1, int(a.distance_to(b) / 14.0))
+		var perp := (b - a).normalized().orthogonal()
+		for k in steps:
+			var t := float(k) / steps
+			var wob := 0.0 if (i == 0 and k == 0) else rng.randf_range(-4.0, 4.0)
+			out.append(a.lerp(b, t) + perp * wob)
+	out.append(ctrl[ctrl.size() - 1])
+	return out
 
 
 ## GFX-108: one small terrain mark at p (ink-and-wash colours, paler when unexplored).
@@ -673,6 +735,16 @@ func _draw_vignette(kind: String, p: Vector2, sc: float, faded: bool) -> void:
 			_canvas.draw_arc(p, 8.0 * sc, PI, TAU, 10, Color(0.4, 0.5, 0.28, al), 2.0)
 
 
+## GFX-192: a dashed road from a to b (4 px on, 3 px off, 2 px thick).
+func _draw_dashed(a: Vector2, b: Vector2, col: Color) -> void:
+	var len := a.distance_to(b)
+	var dir := (b - a).normalized()
+	var t := 0.0
+	while t < len:
+		_canvas.draw_line(a + dir * t, a + dir * minf(t + 4.0, len), col, 2.0)
+		t += 7.0
+
+
 ## GFX-108: a dotted ink road from a to b (dots every 9 px).
 func _draw_dotted(a: Vector2, b: Vector2, col: Color) -> void:
 	var n := maxi(1, int(a.distance_to(b) / 9.0))
@@ -683,12 +755,14 @@ func _draw_dotted(a: Vector2, b: Vector2, col: Color) -> void:
 func _style_node(b: Button, unexplored: bool, current: bool) -> void:
 	var col := node_colors(unexplored)
 	var text: Color = SEAL_COLOR if current else col["text"]
+	if not unexplored:
+		col["bg"] = Color(0.96, 0.92, 0.8, 0.97)  # GFX-192: paper banner
 	for state: String in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = col["bg"]
 		sb.border_color = col["border"]
-		sb.set_border_width_all(1 if unexplored else 2)
-		sb.set_corner_radius_all(4)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(2)
 		sb.set_content_margin_all(3)
 		if state != "normal":
 			sb.bg_color = (col["bg"] as Color).lightened(0.12)
@@ -721,7 +795,7 @@ func _draw_map() -> void:
 			var b: Vector2 = _positions[to]
 			var seg := clip_to_rects(a, b, node_footprint(_rects[region_id]), node_footprint(_rects[to]))
 			if seg.size() == 2:
-				_draw_dotted(seg[0], seg[1], LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR)
+				_draw_dashed(seg[0], seg[1], LOCKED_COLOR if _route_gated(data, region_id, to) else ROUTE_COLOR)
 			var snow := Weather.travel_extra_days(data, GameState.current_region, GameClock.total_days) if region_id == GameState.current_region else 0
 			var days := route_days_label(GameState.player, data, route, snow)
 			var size := font.get_string_size(days, HORIZONTAL_ALIGNMENT_LEFT, -1, 14) + Vector2(10, 4)
@@ -740,6 +814,9 @@ func _draw_map() -> void:
 			_draw_dotted(Vector2(rc.end.x, rc.position.y), rc.end, edge)
 			_draw_dotted(rc.end, Vector2(rc.position.x, rc.end.y), edge)
 			_draw_dotted(Vector2(rc.position.x, rc.end.y), rc.position, edge)
+		var scroll := Color(0.62, 0.5, 0.3) if not is_unexplored(GameState.player, region_id, GameState.current_region) else Color(0.7, 0.62, 0.48)
+		_canvas.draw_rect(Rect2(rect.position.x - 3.0, rect.get_center().y - 2.5, 3, 5), scroll)  # GFX-192 scroll ends
+		_canvas.draw_rect(Rect2(rect.end.x, rect.get_center().y - 2.5, 3, 5), scroll)
 		var x := rect.position.x
 		var y := rect.end.y + 3.0
 		if not is_unexplored(GameState.player, region_id, GameState.current_region):

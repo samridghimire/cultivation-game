@@ -82,3 +82,37 @@ func test_ui_block_has_heading_and_body() -> void:
 	assert_eq((b.get_child(0) as Label).text, "Shops")
 	assert_eq((b.get_child(1) as Label).text, "a\nb")
 	b.free()
+
+
+func _real_positions() -> Array:
+	var rects := _rects()
+	var pos := {}
+	for id: String in rects:
+		pos[id] = (rects[id] as Rect2).get_center()
+	return [pos, rects]
+
+
+func test_river_clears_every_node_and_spans_the_canvas() -> void:
+	var pr := _real_positions()
+	var river := WorldMapScreen.river_points(pr[0], pr[1])
+	assert_true(river.size() > 4, "river exists")
+	assert_eq(river[0].y, 0.0)
+	assert_eq(river[river.size() - 1].y, WorldMapScreen.CANVAS_SIZE.y)
+	for id: String in pr[1]:
+		var fp := WorldMapScreen.node_footprint(pr[1][id])
+		for i in river.size() - 1:
+			var a := river[i]
+			var b := river[i + 1]
+			for k in 11:
+				assert_false(fp.has_point(a.lerp(b, k / 10.0)), "river crosses %s" % id)
+
+
+func test_land_patch_is_deterministic_and_pixel_stepped() -> void:
+	var r := Rect2(100, 100, 120, 40)
+	var a := WorldMapScreen.land_patch("azure_peak", r)
+	assert_eq(a, WorldMapScreen.land_patch("azure_peak", r))
+	assert_true(a.size() >= 10)
+	for p in a:
+		assert_true(r.grow(40.0).has_point(p), "patch point near rect")
+		assert_eq(int(p.x) % 2, 0)
+		assert_eq(int(p.y) % 2, 0)
