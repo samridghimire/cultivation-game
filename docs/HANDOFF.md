@@ -2,6 +2,18 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## First five minutes (WU-566)
+Shots at 1280x800 (title, creation, arrival card, hud_arrival, Elder Mo dialogue, explore menu, Wild Boar report, journal day 3). Observed:
+- Title: clear. Continue/Load greyed on a fresh install (good); the lower buttons sit over the pine silhouettes, readable.
+- Creation: clear, one screen, Reroll Fate focused first; "Begin" is the second tab stop, so a new player must tab past Reroll.
+- Arrival: three HUD panels plus the log plus a ~12-label village is dense. The "Meditation Rock" label covers Elder Mo's sprite
+  and his own "Elder Mo" label floats ~60 px above the figure (the shots show two Mo figures at different frames of his walk).
+  The goal line "Talk to Elder Mo" is correct but he is not marked on screen.
+- Elder Mo dialogue: first option teaches cultivation, good; seven options is a lot for a first talk.
+- Explore menu: an empty row sits between the title and "Explore"; the odds paragraph ("Rarely quiet 3%. Fights 16%...") is jargon for a newcomer.
+- Fight report: readable; "Defeated" tag sits close to the boar. Journal day 3: dense; "Mugwort" appears in both Almanac and Here today.
+No fixes landed (nothing under 60 lines that was clearly safe); see Follow-ups on the commit.
+
 ## Ground disk cache (PERF-013)
 `GroundCache` (src/world/ground_cache.gd) bakes ground textures of 40000+ px to `user://cache/ground/<key>.png` (key = sha256 of `GroundCache.VERSION` plus the same argument text as GroundTiles' memory key; newest 120 files kept). **Bump `GroundCache.VERSION` whenever a ground pass changes its output**, or players keep stale ground. Corrupt or mismatched files fall back to a cold build. `region_load_times.gd --no-disk-cache` forces cold builds. Ground only, ms (cold no disk / first visit writes / second visit reads): qingshi Summer 114/146/3, Winter 180/248/5; marsh Summer 104/132/3, Winter 174/242/5; fallen_star Summer 181/208/3, Winter 388/421/4. The first visit pays +30-70 ms for the PNG write (above the 15 ms target; see Follow-ups on the commit).
 
