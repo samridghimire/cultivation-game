@@ -306,7 +306,6 @@ func _refresh_puddles() -> void:
 		_rain_puddles.name = "RainPuddles"
 		add_child(_rain_puddles)
 		move_child(_rain_puddles, 1)  # GFX-184: with the ground, under the figures
-		_rain_puddles.host = self  # GFX-194
 	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
 	var yesterday := "clear" if _forced_weather != "" else Weather.of(GameState.data, GameState.current_region, GameClock.total_days - 1)
 	_rain_puddles.setup(_region, map_size, GameClock.total_days, _weather_kind, yesterday, snowy, _yards, MotionFx.reduced())

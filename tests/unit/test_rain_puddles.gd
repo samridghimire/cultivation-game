@@ -80,9 +80,15 @@ func test_eaves_drip_only_in_rain_not_snow() -> void:
 	assert_eq(wet.size.y, 3.0)
 
 
-## GFX-194: the ripple rings paint in the world's ground pass with the bodies, not in a node above the props.
-func test_ripples_paint_with_the_bodies_not_in_the_node_draw() -> void:
+## PERF-012: ripples redraw only the RainPuddles node; stepping them never queues a redraw on the world.
+func test_ripples_never_redraw_the_world() -> void:
 	var src := FileAccess.get_file_as_string("res://src/world/rain_puddles.gd")
-	var node_draw := src.substr(src.find("func _draw()"), src.find("func paint_puddles") - src.find("func _draw()"))
-	assert_false(node_draw.contains("_ripples"))
-	assert_true(src.substr(src.find("func paint_puddles")).contains("_ripples"))
+	assert_false(src.contains("host"), "no host reference to the world")
+	assert_false(src.substr(src.find("func paint_puddles")).contains("_ripples"), "bodies pass has no rings")
+	assert_true(src.substr(src.find("func _draw()"), src.find("func paint_puddles") - src.find("func _draw()")).contains("_ripples"))
+	var n := RainPuddles.new()
+	n.setup(REGION, SIZE, 5, "rain", "clear", false, {}, false)
+	for i in 120:
+		n.advance(1.0 / 60.0)
+	assert_true(n.ripple_count() > 0)
+	n.free()
