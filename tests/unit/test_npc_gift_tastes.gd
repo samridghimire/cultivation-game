@@ -155,3 +155,16 @@ func test_regional_teachers_have_gifts_in_every_season() -> void:
 				if hit:
 					reachable += 1
 			assert_true(reachable >= 2, "%s has %d likes within reach in %s in %s" % [pair[0], reachable, pair[1], season])
+
+
+## C-393: each first-hour fighting-style teacher has a once-only favor errand (favor >= 10, a `result` line) under their own
+## deed_context, so the favor gap to their lesson closes in about a week.
+func test_every_style_teacher_has_a_favor_errand() -> void:
+	for npc_id: String in ["hunter_ma", "xiao_ling", "peddler_hei", "disciple_bai", "alchemist_ye", "broker_qian"]:
+		var context: String = String(data().npcs[npc_id].get("deed_context", ""))
+		var found := false
+		for deed_id: String in data().deeds:
+			var deed: Dictionary = data().deeds[deed_id]
+			if String(deed.get("context", "")) == context and deed.get("once", false) and (deed.get("favor", {}) as Dictionary).get(npc_id, 0) >= 10 and int(deed.get("days", 9)) <= 2 and String(deed.get("result", "")) != "":
+				found = true
+		assert_true(found, "%s has no once-only favor errand (>= 10 favor, <= 2 days)" % npc_id)
