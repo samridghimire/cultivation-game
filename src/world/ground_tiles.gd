@@ -849,7 +849,7 @@ static func _winter_streets(img: Image, summer: Image, rid: String, zones: Array
 
 ## GFX-054: packed earth between the streets: the ground colour warmed and darkened with sparse pebbles.
 static func _earth_pixel(base: Color, rid: String, x: int, y: int) -> Color:
-	var earth := base.lerp(Color("7a6a48"), 0.3).darkened(0.08)
+	var earth := base.lerp(Color("8a8274"), 0.55).lightened(0.04)  # GFX-200: packed warm-grey city earth, not field brown
 	var r := absi(hash("%s|%d|%d|earth" % [rid, x, y]))
 	if r % 53 == 0:
 		return earth.lightened(0.14)
@@ -873,7 +873,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 			var mortar := _rgb_bytes(base.darkened(0.3))
 			var jit := zone_jitter_grid(rid, w, h)
 			var jcols := ceili(float(w) / 8.0)
-			var earth := base.lerp(Color("7a6a48"), 0.3).darkened(0.08)
+			var earth := base.lerp(Color("8a8274"), 0.55).lightened(0.04)  # GFX-200: packed warm-grey city earth, not field brown
 			var earth_light := _rgb_bytes(earth.lightened(0.14))
 			var earth_dark := _rgb_bytes(earth.darkened(0.1))
 			var earth_tone: Array[PackedByteArray] = []
@@ -897,9 +897,9 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 						r = ((r >> 16) ^ r) * 0x45d9f3b & 0x7fffffff
 						r = ((r >> 16) ^ r) * 0x45d9f3b & 0x7fffffff
 						r = (r >> 16) ^ r
-						if r % 53 == 0:
-							rgb = earth_light
-						elif r % 17 == 0:
+						if r % 31 == 0:
+							rgb = earth_light  # GFX-200: fine grit
+						elif r % 13 == 0:
 							rgb = earth_dark
 						else:
 							rgb = earth_tone[(x / 4 + y / 4) % 3]

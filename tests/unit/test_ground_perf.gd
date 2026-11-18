@@ -58,11 +58,11 @@ func test_scree_summer_identical() -> void:
 
 
 func test_paved_winter_identical() -> void:
-	_check("paved_winter", _paved("Winter"), "06237dd6c71ded8675bdaf1ec979081931313bec4d4881b0b36a2603a23679b7")
+	_check("paved_winter", _paved("Winter"), "7d499aff4d27d3733d676a8714f01f46ea47ee5fcd7c3f4dfd3698a8f6e5a14c")
 
 
 func test_paved_summer_identical() -> void:
-	_check("paved_summer", _paved("Summer"), "a079db12f944e345acb6bd21b13c4a2ee10cd79b95aa759eaa11e3c99eb0c03b")
+	_check("paved_summer", _paved("Summer"), "5b91670d541a6fbbc16cc469c35a77a156a07fb8d726411c5637af3013a78073")
 
 
 func test_profiling_off_by_default() -> void:

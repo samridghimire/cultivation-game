@@ -570,3 +570,39 @@ func test_hall_grounds_draw() -> void:
 	canvas.queue_free()
 	assert_eq(SectCourt.court_style({"hall_ground": "bogus"}), "stone")
 	assert_eq(SectCourt.court_style({}), "stone")
+
+
+## GFX-200: the market's halls get forecourts to a street, gutters line the main street, planters stay off roads and places.
+func test_market_city_dressing() -> void:
+	var region: Dictionary = data().regions["fallen_star_market"]
+	var map: Dictionary = region["map"]
+	var dress := Scenery.market_props(region, Vector2(float(map["size"][0]), float(map["size"][1])))
+	var roads: Array[Rect2] = []
+	for r in map["paths"]:
+		roads.append(Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])))
+	var paved := roads.duplicate()
+	paved.append(Rect2(float(map["plaza"][0]), float(map["plaza"][1]), float(map["plaza"][2]), float(map["plaza"][3])))
+	for pl: Dictionary in region["places"]:
+		if not (str(pl.get("type", "")) in ["auction", "sect_hall", "workshop", "clinic"]):
+			continue
+		var k := Npcs.place_keepout(pl)
+		var reached := false
+		for c: Rect2 in dress["courts"]:
+			if c.intersects(k.grow(2.0)):
+				for rd in paved:
+					if rd.grow(1.0).intersects(c):
+						reached = true
+				for c2: Rect2 in dress["courts"]:
+					for rd in paved:
+						if c2.grow(1.0).intersects(c) and rd.grow(1.0).intersects(c2):
+							reached = true
+		assert_true(reached, "a forecourt reaches a street at %s" % str(pl["pos"]))
+	var gutters := Scenery.street_gutters(map)
+	assert_gt(gutters.size(), 2)
+	var planters: Array = dress["planters"]
+	assert_true(planters.size() >= 3 and planters.size() <= 5, "3-5 planters, got %d" % planters.size())
+	for p: Rect2 in planters:
+		for rd in roads:
+			assert_false(rd.intersects(p), "planter off the streets")
+		for pl: Dictionary in region["places"]:
+			assert_false(Npcs.place_keepout(pl).intersects(p), "planter off places")

@@ -1527,6 +1527,16 @@ func _draw_market_ground() -> void:
 			cy += 10.0
 			row += 1
 		draw_rect(fr, fcol.darkened(0.3), false, 1.0)
+	var gut := paveb.darkened(0.3) if not snowy else Color(0.62, 0.64, 0.70)  # GFX-200: stone gutters along the main street
+	for g: Rect2 in Scenery.street_gutters(_region.get("map", {})):
+		draw_rect(g, gut)
+	for pr: Rect2 in _market_dress.get("planters", []):  # GFX-200: potted trees by the hall doors
+		draw_rect(Rect2(pr.position.x + 1.0, pr.end.y - 5.0, 8.0, 5.0), Color("7a4a30"))
+		draw_rect(Rect2(pr.position.x + 1.0, pr.end.y - 5.0, 8.0, 1.0), Color("9a6a48"))
+		var leaf := Color("4f7a3a") if not snowy else Color("d8dde6")
+		draw_rect(Rect2(pr.position.x + 4.0, pr.position.y + 4.0, 2.0, 4.0), Color("5a4228"))
+		draw_rect(Rect2(pr.position.x + 1.0, pr.position.y, 8.0, 5.0), leaf)
+		draw_rect(Rect2(pr.position.x + 3.0, pr.position.y - 1.0, 4.0, 1.0), leaf.lightened(0.15))
 	var avenue: Rect2 = _market_dress.get("avenue", Rect2())
 	if avenue.size.x > 0.0:
 		var road := Color(_region.get("map", {}).get("path_color", "9c917a"))

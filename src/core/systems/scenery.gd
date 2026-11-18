@@ -2875,12 +2875,23 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 				props.append({"kind": kinds[rng.randi() % 3], "rect": rect})
 	# GFX-174: flagstone courts under the big halls and short cobbled lanes joining each stall to a street (all draw-only)
 	var courts: Array[Rect2] = []
+	var keeps: Array[Rect2] = []
+	var linkable: Array[Rect2] = roads.duplicate()  # streets and the plaza
+	var plz: Variant = map.get("plaza", null)
+	if plz is Array and plz.size() == 4:
+		linkable.append(Rect2(float(plz[0]), float(plz[1]), float(plz[2]), float(plz[3])))
+	for pl: Dictionary in region.get("places", []):
+		keeps.append(Npcs.place_keepout(pl))
 	for pl: Dictionary in region.get("places", []):
 		if not (str(pl.get("type", "")) in ["auction", "sect_hall", "workshop", "clinic"]):
 			continue
 		var k := Npcs.place_keepout(pl)
-		var cr := Rect2(k.position - Vector2(14, 8), k.size + Vector2(28, 30))
-		courts.append(cr.intersection(Rect2(Vector2(10, 10), size - Vector2(20, 20))))
+		var cr := Rect2(k.position - Vector2(14, 8), k.size + Vector2(28, 36))
+		cr = cr.intersection(Rect2(Vector2(10, 10), size - Vector2(20, 20)))
+		courts.append(cr)
+		var link := _court_link(cr, linkable, keeps)  # GFX-200: the forecourt reaches the nearest street, so no hall stands in mud
+		if link.size.x > 0.0:
+			courts.append(link)
 	var crater_bounds: Array[Rect2] = []
 	for pl: Dictionary in region.get("places", []):
 		if str(pl.get("look", "")) == "crater":
@@ -2926,6 +2937,15 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 			if not avenue.intersects(best) and not bad:
 				lanes.append(best)
 	var floors: Array[Rect2] = courts + lanes
+	var planters: Array[Rect2] = []  # GFX-200: a few potted trees by hall doors (draw-only, kept off roads, places and stalls)
+	for pl: Dictionary in region.get("places", []):
+		if not (str(pl.get("type", "")) in ["auction", "sect_hall", "workshop", "clinic"]) or planters.size() >= 5:
+			continue
+		var pk := Npcs.place_keepout(pl)
+		for sx in [-1.0, 1.0]:
+			var pr := Rect2(pk.get_center().x + sx * 26.0 - 5.0, pk.end.y + 12.0, 10.0, 12.0)
+			if planters.size() < 5 and not _market_blocked(pr, roads, solid, lms, 2.0, size, Rect2()) and not _hits_any(planters, pr.grow(6.0)):
+				planters.append(pr)
 	var patches: Array[Rect2] = []  # packed earth only toward the region edges and round the crater rim
 	for i in 200:
 		var pr := Rect2(rng.randf_range(20.0, size.x - 60.0), rng.randf_range(20.0, size.y - 40.0), rng.randf_range(24.0, 44.0), rng.randf_range(12.0, 22.0))
@@ -2941,7 +2961,7 @@ static func market_props(region: Dictionary, size: Vector2) -> Dictionary:
 		var cr := Rect2(rng.randf_range(10.0, size.x - 16.0), rng.randf_range(10.0, size.y - 14.0), 5.0, 4.0)
 		if not _market_blocked(cr, roads, solid, lms, 2.0, size, Rect2()) and not avenue.intersects(cr) and not _hits_any(floors, cr):
 			cobbles.append(cr)
-	var out := {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch, "avenue": avenue, "avenue_slabs": _avenue_slabs(avenue), "ring": PackedVector2Array(), "shards": [] as Array[Rect2], "fence": [] as Array[Dictionary], "courts": courts, "lanes": lanes}
+	var out := {"props": props, "patches": patches, "cobbles": cobbles, "scorch": scorch, "avenue": avenue, "avenue_slabs": _avenue_slabs(avenue), "ring": PackedVector2Array(), "shards": [] as Array[Rect2], "fence": [] as Array[Dictionary], "courts": courts, "lanes": lanes, "planters": planters}
 	var arng := RandomNumberGenerator.new()
 	arng.seed = hash("%s|avenue" % region.get("id", ""))
 	# GFX-134: clusters of crates, barrels and sacks along the avenue (appended to props so they draw and test alike)
@@ -3474,6 +3494,69 @@ static func _hits_any(rects: Array[Rect2], r: Rect2) -> bool:
 		if q.grow(2.0).intersects(r):
 			return true
 	return false
+
+
+## GFX-200: a 28 px flagstone strip from a court to the nearest road (empty when it already touches one or a place is in the way).
+static func _court_link(court: Rect2, roads: Array[Rect2], solid: Array[Rect2]) -> Rect2:
+	var best := Rect2()
+	var best_len := 1e9
+	for rd in roads:
+		if rd.intersects(court):
+			return Rect2()
+		var link := Rect2()
+		if rd.size.x > rd.size.y:
+			var lx := court.get_center().x - 14.0
+			if court.end.y <= rd.position.y:
+				link = Rect2(lx, court.end.y, 28.0, rd.position.y - court.end.y)
+			elif court.position.y >= rd.end.y:
+				link = Rect2(lx, rd.end.y, 28.0, court.position.y - rd.end.y)
+		else:
+			var ly := court.get_center().y - 14.0
+			if court.end.x <= rd.position.x:
+				link = Rect2(court.end.x, ly, rd.position.x - court.end.x, 28.0)
+			elif court.position.x >= rd.end.x:
+				link = Rect2(rd.end.x, ly, court.position.x - rd.end.x, 28.0)
+		var ln := maxf(link.size.x, link.size.y)
+		if ln > 0.0 and ln < best_len:
+			best = link
+			best_len = ln
+	if best_len > 300.0:
+		return Rect2()
+	for r in solid:
+		if r.grow(-2.0).intersects(best):
+			return Rect2()
+	return best
+
+
+## GFX-200: 3 px stone gutters along both sides of the longest east-west street, broken where another street crosses.
+static func street_gutters(map: Dictionary) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var main := Rect2()
+	var others: Array[Rect2] = []
+	for r in map.get("paths", []):
+		var rc := Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3]))
+		if rc.size.x > rc.size.y and rc.size.x > main.size.x:
+			if main.size.x > 0.0:
+				others.append(main)
+			main = rc
+		else:
+			others.append(rc)
+	if main.size.x <= 0.0:
+		return out
+	for edge_y in [main.position.y - 3.0, main.end.y]:
+		var x := main.position.x
+		var cuts: Array[Vector2] = []
+		for o in others:
+			if o.size.y > o.size.x and o.position.x < main.end.x and o.end.x > main.position.x:
+				cuts.append(Vector2(o.position.x, o.end.x))
+		cuts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+		for c in cuts:
+			if c.x > x:
+				out.append(Rect2(x, edge_y, c.x - x, 3.0))
+			x = maxf(x, c.y)
+		if x < main.end.x:
+			out.append(Rect2(x, edge_y, main.end.x - x, 3.0))
+	return out
 
 
 static func _market_blocked(rect: Rect2, roads: Array[Rect2], solid: Array[Rect2], lms: Array[Rect2], gap: float, size: Vector2, own: Rect2) -> bool:
