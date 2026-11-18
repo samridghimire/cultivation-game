@@ -1714,6 +1714,32 @@ func test_fairer_fight_note() -> void:
 	assert_eq(Guidance.fairer_fight_note(entries, "Boar"), " A fairer fight: Bounty: Wolf in Marsh (Even, 50 in 100).")
 
 
+## GUIDE-258: the defeat line is built from the entry's parts, never a second "Easy fight" / "Fair fight" label.
+func test_fight_phrase_by_kind() -> void:
+	var chore := {"kind": "deed", "chance": 0.96, "label": "Chore for Headman Zhou: Wild Boar", "phrase": Guidance._deed_phrase("Drive off the wild boar", "Headman Zhou"), "text": "Easy fight: Chore (96 in 100)"}
+	assert_eq(Guidance.fight_phrase(chore), "drive off the wild boar for Headman Zhou (96 in 100)")
+	assert_eq(Guidance.fairer_fight_note([chore], "Wolf"), " A fairer fight: drive off the wild boar for Headman Zhou (96 in 100).")
+	var roamer := {"kind": "roamer", "chance": 0.99, "label": "x", "phrase": "Wild Boar in Withered Bone Marsh, 9 days away"}
+	assert_eq(Guidance.fight_phrase(roamer), "Wild Boar in Withered Bone Marsh, 9 days away (99 in 100)")
+	var explore := {"kind": "explore", "chance": 0.6, "label": "Explore here: Wolf", "phrase": "Wolf here"}
+	assert_eq(Guidance.fight_phrase(explore), "Wolf here (60 in 100)")
+	var bounty := {"kind": "bounty", "chance": 0.5, "label": "Bounty: Wolf in Marsh", "text": "Fair fight: Bounty: Wolf in Marsh (50 in 100)"}
+	assert_eq(Guidance.fight_phrase(bounty), "Bounty: Wolf in Marsh (50 in 100)")
+
+
+func test_defeat_line_has_no_double_label() -> void:
+	var d := data()
+	for realm in [0, 1]:
+		var c := CharacterData.new()
+		c.realm_index = realm
+		c.stage = 3 if realm == 0 else 1
+		var fights := Guidance.fair_fights(c, d, {}, 100, "qingshi_village")
+		for f: Dictionary in fights:
+			var line := Guidance.fairer_fight_note([f], "")
+			assert_false(line.contains("fight: Easy fight") or line.contains("fight: Fair fight"), line)
+			assert_false(line.contains("Easy fight") or line.contains("Fair fight: "), line)
+
+
 
 ## GUIDE-024: the mission hint does not count fights the player would likely lose.
 func test_mission_hint_skips_deadly_fights() -> void:

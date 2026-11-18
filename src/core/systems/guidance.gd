@@ -5595,7 +5595,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 			if deed_enemy.is_empty() or Deeds.check(c, data, deed, flags, today) != "":
 				continue
 			rated += 1
-			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "Chore for %s: %s" % [place.get("display_name", "the village"), deed_enemy.get("name", "Foe")])
+			_rate_fight(found, c, data, deed_enemy, "deed", "%s: %s" % [place.get("display_name", "Chore"), deed["name"]], _item_stones(deed.get("effects", {})), "Chore for %s: %s" % [place.get("display_name", "the village"), deed_enemy.get("name", "Foe")], 0, _deed_phrase(String(deed["name"]), String(place.get("display_name", "the village"))))
 	# GUIDE-215: chores one route away, so a nearer chore beats a far roamer.
 	for route: Dictionary in data.regions.get(region_id, {}).get("routes", []):
 		var away := String(route.get("to", ""))
@@ -5614,7 +5614,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 					continue
 				rated += 1
 				var trip := Calendar.format_duration(away_days)
-				_rate_fight(found, c, data, far_enemy, "deed", "%s in %s, %s away: %s" % [place.get("display_name", "Chore"), _region_name(data, away), trip, deed["name"]], _item_stones(deed.get("effects", {})), "%s in %s (%s)" % [far_enemy.get("name", "Foe"), _region_name(data, away), trip], away_days)
+				_rate_fight(found, c, data, far_enemy, "deed", "%s in %s, %s away: %s" % [place.get("display_name", "Chore"), _region_name(data, away), trip, deed["name"]], _item_stones(deed.get("effects", {})), "%s in %s (%s)" % [far_enemy.get("name", "Foe"), _region_name(data, away), trip], away_days, "%s for %s in %s, %s away" % [_lower_first(String(deed["name"])), place.get("display_name", "the village"), _region_name(data, away), trip])
 	var candidates: Array[Dictionary] = []
 	var hunt := Bounties.active(c, data, today)
 	if not hunt.is_empty():
@@ -5656,7 +5656,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 				continue
 			rated += 1
 			explore_rated += 1
-			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id))
+			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id), 0, "%s here" % foe.get("name", enemy_id))
 	# GUIDE-249: nothing but easy fights here: the next fair fight one road away.
 	if region_id != "" and not _has_fair_entry(found):
 		rated += _away_explore_fights(found, c, data, flags, today, region_id, maxi(FAIR_FIGHT_MAX_RATED - rated, FAIR_FIGHT_AWAY_RESERVE))
@@ -5717,7 +5717,7 @@ static func _away_explore_fights(found: Array[Dictionary], c: CharacterData, dat
 				continue
 			kept += 1
 			var short_region := String(data.regions.get(where, {}).get("short_name", _region_name(data, where)))
-			_rate_fight(found, c, data, foe, "explore", "Explore %s: %s" % [_region_name(data, where), foe.get("name", enemy_id)], 0, "%s, %s" % [foe.get("name", enemy_id), short_region], int(route["days"]))
+			_rate_fight(found, c, data, foe, "explore", "Explore %s: %s" % [_region_name(data, where), foe.get("name", enemy_id)], 0, "%s, %s" % [foe.get("name", enemy_id), short_region], int(route["days"]), "%s in %s, %s away" % [foe.get("name", enemy_id), _region_name(data, where), Calendar.format_duration(int(route["days"]))])
 	return rated
 
 
@@ -5759,7 +5759,7 @@ static func _roamer_fight(found: Array[Dictionary], c: CharacterData, data: Game
 			if int(spot["days"]) > 0:
 				label = "A %s roams %s today, %s away" % [name, _region_name(data, where), Calendar.format_duration(int(spot["days"]))]
 				short = "%s in %s (%s)" % [name, _region_name(data, where), Calendar.format_duration(int(spot["days"]))]
-			_rate_fight(found, c, data, enemy, "roamer", label, 0, short, int(spot["days"]))
+			_rate_fight(found, c, data, enemy, "roamer", label, 0, short, int(spot["days"]), name + (" roams here today" if int(spot["days"]) == 0 else " in %s, %s away" % [_region_name(data, where), Calendar.format_duration(int(spot["days"]))]))
 			return {enemy_id: true}
 	return {}
 
@@ -5840,11 +5840,11 @@ static func fair_fight_before(a: Dictionary, b: Dictionary) -> bool:
 	return String(a["text"]) < String(b["text"])
 
 
-static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "", days: int = 0) -> void:
+static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameData, enemy: Dictionary, kind: String, label: String, stones: int = 0, short: String = "", days: int = 0, phrase: String = "") -> void:
 	var chance := Combat.win_chance_at_least(c, data, enemy, FAIR_FIGHT_MIN_CHANCE)
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
-	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy)})
+	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy), "label": label, "phrase": phrase})
 
 
 ## GUIDE-240: wins against one foe after which the HUD fight line looks for a fairer one.
@@ -5923,7 +5923,26 @@ static func fairer_fight_note(entries: Array, lost_enemy_name: String) -> String
 	var best: Dictionary = entries[0]
 	if String(best.get("enemy", "")) == lost_enemy_name:
 		return ""
-	return " A fairer fight: %s." % best["text"]
+	return " A fairer fight: %s." % fight_phrase(best)
+
+
+## GUIDE-258: the entry's wording without its "Easy fight"/"Fair fight" label: "drive off the wild boar for Headman Zhou
+## (96 in 100)". Entries without a `phrase` (missions, bounties, trials, rivals) use their label.
+static func fight_phrase(entry: Dictionary) -> String:
+	var body := String(entry.get("phrase", ""))
+	if body == "":
+		body = String(entry.get("label", ""))
+	if body == "":
+		return String(entry.get("text", "")).trim_prefix("Fair fight: ").trim_prefix("Easy fight: ")
+	return "%s (%d in 100)" % [body, roundi(float(entry.get("chance", 0.0)) * 100.0)]
+
+
+static func _lower_first(t: String) -> String:
+	return t.substr(0, 1).to_lower() + t.substr(1)
+
+
+static func _deed_phrase(task: String, giver: String) -> String:
+	return "%s for %s" % [_lower_first(task), giver]
 
 
 static func _add(out: Array[Dictionary], section: String, text: String, tone: String) -> void:
