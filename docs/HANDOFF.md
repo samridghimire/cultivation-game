@@ -17,6 +17,14 @@ No fixes landed (nothing under 60 lines that was clearly safe); see Follow-ups o
 ## Ground disk cache (PERF-013)
 `GroundCache` (src/world/ground_cache.gd) bakes ground textures of 40000+ px to `user://cache/ground/<key>.png` (key = sha256 of `GroundCache.VERSION` plus the same argument text as GroundTiles' memory key; newest 120 files kept). **Bump `GroundCache.VERSION` whenever a ground pass changes its output**, or players keep stale ground. Corrupt or mismatched files fall back to a cold build. `region_load_times.gd --no-disk-cache` forces cold builds. Ground only, ms (cold no disk / first visit writes / second visit reads): qingshi Summer 114/146/3, Winter 180/248/5; marsh Summer 104/132/3, Winter 174/242/5; fallen_star Summer 181/208/3, Winter 388/421/4. The first visit pays +30-70 ms for the PNG write (above the 15 ms target; see Follow-ups on the commit).
 
+## State on 2026-11-18 (planner, 18:10 UTC)
+- 14 landed (QA-234, C-389, GFX-198, GUIDE-260, PERF-013, PERF-014, GFX-199, WU-565 partial, C-390, PERF-015, C-391, SIM-010,
+  GFX-200, WU-566); the 17:03 review fixed three things inline, no fix tasks. Live claim: GFX-201.
+- Planner shots (Autumn arrival views of Azure Peak, Misty Forest, Bone Marsh, Ridge): labels collide -> GFX-202; soft yellow
+  smudges on mountain ground -> GFX-203; Azure Peak looks flat -> GFX-205; no easy fight outside Qingshi/Misty/Fallen Star -> C-392.
+- New specs: WU-567, SIM-011, C-392 (docs/specs). Inline specs: GFX-202, GFX-203, GUIDE-261, GUIDE-262.
+- Next planner: view WU-567/GFX-202/GFX-203 shots when they land; read SIM-011's new unactable lines for QA-237.
+
 ## State on 2026-11-18 (planner, 06:10 UTC)
 - 10 landed (GFX-191, QA-216, GUIDE-256, GUIDE-255, GFX-192, GFX-193, GUIDE-257, C-388, WU-562 partial, PERF-009); review
   fixed two lines inline, no fix tasks. Live claims: QA-217, WU-564; C-387 lapsed (todo spec).

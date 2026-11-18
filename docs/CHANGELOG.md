@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [WU-566] The first five minutes checked shot by shot.
+- 2026-11-18 [GFX-200] The Fallen Star Market looks like a city: grey street earth, gutters, potted trees by the halls.
+- 2026-11-18 [SIM-010] A new test player who follows the Next steps hints.
+- 2026-11-18 [PERF-015] Travel between regions measured: every switch under a tenth of a second.
+- 2026-11-18 [C-391] Odd jobs in the Fallen Star Market: chase the stray dogs out of the warehouse yard.
+- 2026-11-18 [C-390] Sect missions that ask for items pay about 1.4 times their price.
+- 2026-11-18 [GFX-199] Bears, rhinos, tortoises and spiders get their own shapes in fights.
+- 2026-11-18 [PERF-014] Saves measured: a ten-year autosave stays under 50 ms.
+- 2026-11-18 [PERF-013] Regions you have visited before load their ground from a cache.
+- 2026-11-18 [GUIDE-260] Next steps suggests a first fight on the way to your goal.
+- 2026-11-18 [GFX-198] Fixed a dotted grid on the ridge and blocky snow in the market.
+- 2026-11-18 [C-389] Misty Forest, Bone Marsh and Myriad Peaks Ridge have their own seasonal forage.
+- 2026-11-18 [QA-234] Checked that the far-pill hint works as intended.
 - 2026-11-18 [PERF-012] Rainy days no longer slow the game down: ripples draw on their own layer.
 - 2026-11-18 [GFX-197] The world map's travel-day chips stay clear of the region banners.
 - 2026-11-18 [PERF-011] A whole in-game year runs without a single slow day.
