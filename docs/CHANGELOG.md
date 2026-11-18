@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [C-386] Five more first-hour teachers have a short favor errand that brings their lesson closer.
+- 2026-11-18 [QA-194] The combat sim rates roaming beasts at the realm a newcomer meets them, not as a mortal.
+- 2026-11-18 [QA-177] A repeat report: a few village happenings still come round too often (next: C-388).
+- 2026-11-18 [QA-232] Screenshot runs no longer change your settings, and the screens script runs without errors.
+- 2026-11-18 [WU-563] A beaten beast rolls onto its back in the fight scene, with a puff of dust.
+- 2026-11-18 [GFX-187] Azure Peak's slopes have moss, needles and spring flowers, and frost in winter.
+- 2026-11-18 [GUIDE-252] The first Next-steps refresh after loading is about 3x faster.
+- 2026-11-18 [GFX-189] Woods in winter look like a snowy grove instead of dark blobs.
+- 2026-11-18 [QA-231] The sim learns to run a teacher's errand first: a first fighting style in about three weeks.
+- 2026-11-18 [GFX-188] Qingshi's houses look lived in: drying racks, laundry, a sleeping cat, hens.
 - 2026-11-17 [WU-561] Fight stage: a beaten foe's shadow lies under it, and beasts are drawn at a sensible size.
 - 2026-11-17 [GUIDE-253] The qi-pill hint weighs every market within reach, minus the trip's lost meditation.
 - 2026-11-17 [GUIDE-254] The "no fighting style" hint tells you about the teacher's errand that earns his favor fast.
