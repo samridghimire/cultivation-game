@@ -137,6 +137,13 @@ static var spend_contribution := false
 static var qi_pill_cap := -1
 static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
+## SIM-010: the "hints" player. Once a week (4 a month) it acts on the first Next-steps line it can act on (goal line, then the
+## hints) through the same GameState calls the curious policy uses, else meditates the week. It replaces the month's 30-day
+## meditation and the end-of-month explore. hints_log: {"acted": {action: count}, "idle_weeks": n, "weeks": n,
+## "unmatched": {normalised line: times it sat above the line acted on, or was the whole list}}. Part of the memo key.
+const HINT_MAX_TRIES := 3
+static var hints_policy := false
+static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
 static var far_qi := false
@@ -173,7 +180,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, hints_policy, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -270,7 +277,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			probe_ok = Cultivation.days_to_bottleneck(c, gs.data, probe_used) > Calendar.DAYS_PER_MONTH
 			probe_expected = Cultivation.qi_per_day(c, gs.data, qi_density * gs.region_qi_density(Calendar.DAYS_PER_MONTH) * Sects.cultivation_bonus(c, gs.data))
 		_walk_home_for_duty(gs, c, done, kinds_pre, clock.total_days)
-		gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
+		if hints_policy:
+			kinds_pre.merge(_hints_month(gs, c, done, clock.total_days, qi_density))
+		else:
+			gs.cultivate(Calendar.DAYS_PER_MONTH, qi_density)
 		if probe_ok and c.alive and c.stage == probe_stage and c.realm_index == realm_before_med and clock.total_days > probe_day:
 			qi_probe_log.append({"seed": seed_value, "month": month + 1, "region": probe_region, "sect": not c.is_rogue(), "asked": qi_density, "used": probe_used, "bonus": Sects.cultivation_bonus(c, gs.data), "days": clock.total_days - probe_day, "measured": (c.qi - qi_before) / float(clock.total_days - probe_day), "expected": probe_expected})
 		if not c.alive:
@@ -320,7 +330,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				var offered: Dictionary = bounty_log["offered"]
 				offered[String(b["region"])] = int(offered.get(String(b["region"]), 0)) + 1
 		_note_first_win(out, c, clock, fight)
-		if not curious:
+		if hints_policy:
+			kinds = kinds_pre
+		elif not curious:
 			_retry_chores(gs, c)
 			_note_first_win(out, c, clock, fight)
 		if curious:
@@ -330,9 +342,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 				out["first_style_day"] = clock.total_days
 			_note_first_win(out, c, clock, fight)
 		var home_region: String = gs.current_region
-		gs.explore()
-		if explore_observer.is_valid():
-			explore_observer.call(home_region, 1)
+		if not hints_policy:
+			gs.explore()
+			if explore_observer.is_valid():
+				explore_observer.call(home_region, 1)
 		_note_first_win(out, c, clock, fight)
 		var counts := {}
 		for i in range(mark, bus.history.size()):
@@ -2001,7 +2014,128 @@ static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> bool:
 	return false
 
 
-static func _talk_to_elder_mo(gs: Node) -> void:
+## SIM-010: one sim month of the hints player: four weekly steps (see hints_policy). Returns the kinds of action taken.
+static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: int, density: float) -> Dictionary:
+	var kinds := {}
+	for week in 4:
+		if not c.alive:
+			break
+		var day: int = gs.get_node("/root/GameClock").total_days
+		hints_log["weeks"] += 1
+		var acted := ""
+		var skipped: Array[String] = []
+		var tries: Dictionary = done.get_or_add("hint_tries", {})
+		for line: String in _next_steps(gs, c, day):
+			# A line acted on HINT_MAX_TRIES times that is still there is one the policy cannot finish: a player moves on.
+			if int(tries.get(line, 0)) < HINT_MAX_TRIES:
+				acted = _act_on_hint(gs, c, done, line, day)
+			if acted != "":
+				tries[line] = int(tries.get(line, 0)) + 1
+				break
+			skipped.append(line)
+		for line in skipped:
+			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
+			key = key.substr(0, 70)
+			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
+		if acted == "":
+			hints_log["idle_weeks"] += 1
+			if c.alive:
+				gs.cultivate(7, density)
+			kinds["meditate"] = true
+		else:
+			hints_log["acted"][acted] = int(hints_log["acted"].get(acted, 0)) + 1
+			kinds[acted] = true
+			# An action that took less than the week leaves the rest of it to meditation.
+			var left: int = 7 - (gs.get_node("/root/GameClock").total_days - day)
+			if left > 0 and c.alive:
+				gs.cultivate(left, density)
+	return kinds
+
+
+## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
+static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
+	var lines: Array[String] = []
+	for g: Dictionary in Guidance.active_goal_ladder(c, gs.data, gs.world_flags, null, day):
+		if not g.get("done", false):
+			lines.append("Goal: " + String(g["text"]))
+			break
+	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
+		lines.append("Easy fight: " + String(f.get("text", "")))
+		break
+	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor):
+		lines.append(h)
+	return lines
+
+
+## SIM-010: acts on one Next-steps line when a known action fits it; returns the action's name, "" when none did anything.
+static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: String, day: int) -> String:
+	var kinds := {}
+	var stones_before := c.item_count("spirit_stone")
+	var day_before: int = gs.get_node("/root/GameClock").total_days
+	var inv_before := c.inventory.size()
+	if line.contains("Elder Mo") and (line.begins_with("Ask ") or line.begins_with("Goal: Talk") or line.contains("teaches a breathing")) or line == "Goal: Learn your first technique":
+		_walk_to(gs, c, "qingshi_village")
+		if gs.current_region != "qingshi_village":
+			return ""
+		var before := c.techniques.size()
+		var flag_before: bool = gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)
+		_talk_to_elder_mo(gs, "teach me how to cultivate")
+		var changed: bool = c.techniques.size() != before or bool(gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)) != flag_before
+		return "talk" if changed else ""
+	if line.begins_with("Use your"):
+		_use_qi_items(gs, c)
+		return "use_item" if c.inventory.size() != inv_before or c.item_count("spirit_stone") != stones_before else ""
+	if line.begins_with("Buy ") and line.contains("spare stones"):
+		return "buy_qi" if _buy_qi_here(gs, c) else ""
+	if line.begins_with("Treat your injuries") and not c.injuries.is_empty():
+		var log := {"healed": 0}
+		_heal_before_fighting(gs, c, log)
+		return "heal" if int(log["healed"]) > 0 else ""
+	if line.contains("paid work") or line.begins_with("Headman Zhou"):
+		var got := false
+		for chore in CHORES:
+			if not done.has(chore):
+				done[chore] = true
+				gs.perform_deed(chore)
+				got = true
+		return "chore" if got else ""
+	if line.begins_with("Easy fight") or line.contains("Fights you can win"):
+		var fair := Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor)
+		_take_listed_deed(gs, c, done, fair, kinds, day)
+		if not kinds.is_empty():
+			return "fight"
+		var won: int = LifeStats.get_stat(c, "fights_won")
+		_explore(gs)
+		return "fight" if LifeStats.get_stat(c, "fights_won") > won else ""
+	if line.contains("would spar with you"):
+		var spar_before := int(spar_log["bouts"])
+		var was := spar_hint
+		spar_hint = true
+		_follow_spar_hint(gs, c, day)
+		spar_hint = was
+		return "spar" if int(spar_log["bouts"]) > spar_before else ""
+	if line.contains("mission") and not c.is_rogue():
+		var best := Guidance.best_mission(c, gs.data, gs.world_flags)
+		if best != "" and _mission_is_sane(gs, c, best, done, day):
+			var fair2: Array[Dictionary] = []
+			_take_one_mission(gs, c, done, kinds, fair2, best, day)
+			return "mission"
+		return ""
+	if line.begins_with("Sell your"):
+		_sell_loot_here(gs, c, gs.current_region)
+		return "sell" if c.item_count("spirit_stone") > stones_before else ""
+	if line.begins_with("Goal: ") and (line.contains("Pick something") or line.contains("Learn a fighting")):
+		var seen := _explore_watched(gs, c, day)
+		_explore(gs)
+		_log_explore_fights(done, seen)
+		return "explore"
+	if line.contains("trial") and line.contains("open"):
+		_attempt_open_trial(gs, c, done, kinds)
+		return "trial" if kinds.has("trial") else ""
+	return "" if gs.get_node("/root/GameClock").total_days == day_before else "other"
+
+
+static func _talk_to_elder_mo(gs: Node, prefer: String = "") -> void:
 	gs.start_dialogue("elder_mo")
 	var guard := 0
 	while gs.in_dialogue() and guard < 20:
@@ -2010,6 +2144,9 @@ static func _talk_to_elder_mo(gs: Node) -> void:
 		for choice: Dictionary in view.get("choices", []):
 			if not choice.get("disabled", false) and String(choice.get("label", "")).begins_with("I am new"):
 				pick = int(choice["index"])
+			if prefer != "" and not choice.get("disabled", false) and String(choice.get("label", "")).contains(prefer):
+				pick = int(choice["index"])
+				break
 		if pick < 0:
 			for choice: Dictionary in view.get("choices", []):
 				if not choice.get("disabled", false):

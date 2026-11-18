@@ -201,6 +201,7 @@ func _print_injury_origins(rows: Array, slow_days: Array, breaks: Array, seeds: 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var curious := args.has("--curious")
+	FirstHour.hints_policy = args.has("--hints")  # SIM-010: the player who reads the Next-steps lines (not --curious)
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
 	var forced := args.has("--forced")  # QA-139: tally every fight rated under 20%, by source, with its outcome
 	var long_hints := args.has("--long-hints")  # QA-143: tally hint lines longer than the HUD cap

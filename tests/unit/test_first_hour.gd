@@ -160,3 +160,22 @@ func test_spar_hint_flag_spars_and_is_never_refused() -> void:
 	assert_eq((FirstHour.spar_log["refused"] as Array).size(), 0, "the partner the hint names agrees to spar")
 	assert_true(int(FirstHour.spar_log["bouts"]) >= 0, "bouts are counted")
 	gs.end_session()
+
+
+## SIM-010: the hints player acts on Next-steps lines, meditates otherwise, and leaves the other policies' memo untouched.
+func test_hints_player_acts_on_next_steps() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var saves := _root().get_node("SaveManager")
+	var autosave: bool = saves.autosave_enabled
+	FirstHour.hints_policy = true
+	FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
+	var out: Dictionary = FirstHour.play(gs, clock, 3, 2)
+	FirstHour.hints_policy = false
+	gs.end_session()
+	saves.autosave_enabled = autosave
+	assert_eq(int(FirstHour.hints_log["weeks"]), 8, "four weekly steps a month")
+	var acted: Dictionary = FirstHour.hints_log["acted"]
+	assert_true(acted.has("talk"), "the first Next-steps line sends the newcomer to Elder Mo")
+	assert_true(int(out["month_days"][1]) > int(out["month_days"][0]), "time passes every month")

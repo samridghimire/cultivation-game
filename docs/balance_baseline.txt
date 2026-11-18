@@ -1634,6 +1634,30 @@ New days per month (median over seeds): 10 7 6 7 3 8 8 6 7 8 5 6 2
   longest 2: seed 3, days 119-150 (31 days), months 4-5, actions: meditate,explore,deed,mission,gift,spar,lecture,bounty
   longest 3: seed 3, days 50-81 (31 days), months 2-3, actions: meditate,explore,deed,mission,bounty,gift,spar,lecture
 
+Quiet stretches, hints policy, 10 seeds, 365 days
+  seed  1:  75 new days, longest stretch  11 days
+  seed  2:  73 new days, longest stretch  14 days
+  seed  3:  74 new days, longest stretch  14 days
+  seed  4:  79 new days, longest stretch  14 days
+  seed  5:  73 new days, longest stretch  13 days
+  seed  6:  79 new days, longest stretch  14 days
+  seed  7:  71 new days, longest stretch  15 days
+  seed  8:  70 new days, longest stretch  14 days
+  seed  9:  75 new days, longest stretch  14 days
+  seed 10:  73 new days, longest stretch  14 days
+Stretch (days between new things): median 4, max 15; median of per-seed medians 5, of per-seed maxes 14
+New days per month (median over seeds): 9 12 8 6 7 6 5 4 4 5 4 4 1
+  longest 1: seed 7, days 145-160 (15 days), months 5-6, actions: meditate,explore,mission
+  longest 2: seed 2, days 312-326 (14 days), months 11-11, actions: meditate,explore
+  longest 3: seed 2, days 244-258 (14 days), months 9-9, actions: meditate,explore,fight
+
+Hints player: 520 weeks, 321 meditated with nothing to act on; acted: { "talk": 10, "explore": 60, "mission": 69, "fight": 15, "chore": 10, "buy_qi": 24, "use_item": 10, "heal": 1 }
+  unactionable x404: Your sect's home is Azure Cloud Hall in Azure Peak (N days by road): y
+  unactionable x377: Unseal Storage Space in the artifact (O)
+  unactionable x370: Hunter Ma can teach you Iron Fist (favor N/N); check his snare line (N
+  unactionable x360: Headman Zhou has paid work: errands and chores.
+  unactionable x355: Goal: Learn a fighting style
+
 
 ## first Foundation Establishment year (seeds 1-10)
 

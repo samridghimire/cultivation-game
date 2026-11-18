@@ -23,9 +23,26 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var seeds := int(args[0]) if args.size() > 0 else 10
 	var days := int(args[1]) if args.size() > 1 else 365
-	for curious in [false, true]:
-		_policy(seeds, days, curious)
+	for policy in ["default", "curious", "hints"]:
+		FirstHour.hints_policy = policy == "hints"
+		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
+		_policy(seeds, days, policy == "curious")
+		if policy == "hints":
+			_print_hints_log()
 	quit(0)
+
+
+## SIM-010: what the hints player did, and the Next-steps lines it could not act on most often.
+func _print_hints_log() -> void:
+	var log: Dictionary = FirstHour.hints_log
+	print("Hints player: %d weeks, %d meditated with nothing to act on; acted: %s" % [log["weeks"], log["idle_weeks"], str(log["acted"])])
+	var rows: Array = []
+	for k: String in log["unmatched"]:
+		rows.append([k, int(log["unmatched"][k])])
+	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] or (a[1] == b[1] and a[0] < b[0]))
+	for i in mini(5, rows.size()):
+		print("  unactionable x%d: %s" % [rows[i][1], rows[i][0]])
+	print("")
 
 
 static func _median(values: Array) -> float:
@@ -78,7 +95,7 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 	var worst: Array = []
 	var medians: Array = []
 	var maxes: Array = []
-	print("Quiet stretches, %s policy, %d seeds, %d days" % ["curious" if curious else "default", seeds, days])
+	print("Quiet stretches, %s policy, %d seeds, %d days" % ["hints" if FirstHour.hints_policy else ("curious" if curious else "default"), seeds, days])
 	for s in range(1, seeds + 1):
 		var log := {"day0": -1, "last_new": 0, "last": {}, "stretches": [], "new_days": []}
 		var on_days := func(n: int) -> void:
