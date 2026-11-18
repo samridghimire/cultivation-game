@@ -472,9 +472,10 @@ static func split_sections(t: String) -> Array[Dictionary]:
 
 
 static func _finish_section(head: Dictionary, body: PackedStringArray) -> Dictionary:
-	var text := "\n".join(body).strip_edges()
+	# Only blank lines are trimmed at the top: strip_edges() would eat the first row's indent.
+	var text := "\n".join(body).lstrip("\n").rstrip(" \n\t")
 	if head["note"] != "":
-		text = ("%s\n%s" % [head["note"], text]).strip_edges()
+		text = ("%s\n%s" % [head["note"], text]).rstrip(" \n\t")
 	return {"title": head["title"], "color": head["color"], "body": text}
 
 

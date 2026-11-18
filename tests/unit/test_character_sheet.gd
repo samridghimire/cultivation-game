@@ -158,6 +158,7 @@ func test_split_sections_makes_a_card_per_header() -> void:
 	assert_true(String(secs[1]["body"]).contains("Str: 3"))
 	assert_false(String(secs[1]["body"]).contains("Sect"), "sections do not run into each other")
 	assert_eq(secs[2]["title"], "Sect Reputation")
+	assert_eq(secs[1]["body"], "  Str: 3", "the first row keeps its indent (WU-565)")
 
 
 func test_sheet_polish_gfx034() -> void:
