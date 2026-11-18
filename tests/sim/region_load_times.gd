@@ -46,6 +46,9 @@ func _run() -> void:
 	var passes := OS.get_cmdline_user_args().has("--passes")
 	var ids: Array = gs.data.regions.keys()
 	ids.sort()
+	if OS.get_cmdline_user_args().has("--full"):
+		_print_full(gs, ids, only, runs)
+		return
 	if passes:
 		_print_passes(gs, ids, only)
 		return
@@ -114,6 +117,55 @@ func _parts(w: Node, gs: Node, rid: String, season: String, warm: bool) -> Array
 	w.call("_build_decor")
 	var d := _ms(t0)
 	return [g, p, d]
+
+
+## PERF-015 `--full`: a whole region switch (what a travel's scene reload does) split by step, median ms over `runs`.
+## total = instantiate + _ready + the ground/path textures the first _draw makes; hud = what _ready of the HUD child
+## (Next steps, Today ...) and the rest of the scene took; steps come from World.lap_log. Steps over 5 ms are marked *.
+func _print_full(gs: Node, ids: Array, only: Array[String], runs: int) -> void:
+	var World := load("res://src/world/world.gd")
+	World.lapping = true
+	var cols: Array[String] = ["setup", "props/decor", "ambient", "places", "stalls", "npc haunts", "roamers", "forage/eggs", "bounds/camera", "labels"]
+	for warm in [false, true]:
+		print("\n== %s switch (median of %d runs, ms; * = over 5 ms) ==" % ["WARM" if warm else "COLD", runs])
+		var head := "%-26s %-6s %7s %7s" % ["region", "season", "total", "ground"]
+		for c in cols:
+			head += " %7s" % c.substr(0, 7)
+		print(head + "     hud")
+		for id: String in ids:
+			if not only.is_empty() and not only.has(id):
+				continue
+			for season: String in SEASON_DAYS:
+				var series := {"total": [] as Array[float], "ground": [] as Array[float], "hud": [] as Array[float]}
+				for c in cols:
+					series[c] = [] as Array[float]
+				for i in runs + (1 if warm else 0):
+					root.get_node("GameClock").total_days = SEASON_DAYS[season]
+					gs.current_region = id
+					if not warm:
+						GroundTiles.clear_cache()
+					World.lap_log = {}
+					var t0 := Time.get_ticks_usec()
+					var w := _build()
+					var build_ms := _ms(t0)
+					var parts := _parts(w, gs, id, season, warm)
+					var laps := 0.0
+					if not (warm and i == 0):  # the first warm run primes the caches
+						for c in cols:
+							var v := float(World.lap_log.get(c, 0)) / 1000.0
+							series[c].append(v)
+							laps += v
+						series["total"].append(build_ms + parts[0] + parts[1])
+						series["ground"].append(parts[0] + parts[1])
+						series["hud"].append(maxf(0.0, build_ms - laps))
+					root.remove_child(w)
+					w.free()
+				var line := "%-26s %-6s %7.1f %7.1f" % [id, season, _median(series["total"]), _median(series["ground"])]
+				for c in cols:
+					var m := _median(series[c])
+					line += " %6.1f%s" % [m, "*" if m > 5.0 else " "]
+				print(line + " %7.1f" % _median(series["hud"]))
+	World.lapping = false
 
 
 ## `--passes`: per-pass usec inside GroundTiles.ground_texture for each region (cold, Summer and Winter).

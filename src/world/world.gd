@@ -96,7 +96,22 @@ var _prints: Array = []
 var _last_print_pos := Vector2.INF
 
 
+## PERF-015: when `lapping`, `_ready` adds the microseconds each build step took to `lap_log` (step name -> usec).
+static var lapping := false
+static var lap_log: Dictionary = {}
+var _lap_t := 0
+
+
+func _lap(step: String) -> void:
+	if not lapping:
+		return
+	var now := Time.get_ticks_usec()
+	lap_log[step] = int(lap_log.get(step, 0)) + now - _lap_t
+	_lap_t = Time.get_ticks_usec()
+
+
 func _ready() -> void:
+	_lap_t = Time.get_ticks_usec()
 	if not GameState.has_session():
 		GameState.rng.randomize()
 		GameState.start_session(CharacterFactory.create("Debug Disciple", GameState.data, GameState.rng))
@@ -108,26 +123,36 @@ func _ready() -> void:
 	player.position = _vec(_region.get("spawn", [map_size.x / 2.0, map_size.y / 2.0]))
 	_build_season_tint()
 	_build_beast_arrow()
+	_lap("setup")
 	_build_decor()
+	_lap("props/decor")
 	_refresh_ambient()
 	Settings.changed.connect(_on_setting_changed)
+	_lap("ambient")
 	_build_places()
+	_lap("places")
 	_refresh_stalls()
 	_place_at_spawn_anchor()
+	_lap("stalls")
 	_build_npcs()
+	_lap("npc haunts")
 	_build_roamers()
+	_lap("roamers")
 	_build_forage()
 	_build_eggs()
+	_lap("forage/eggs")
 	_build_bounds()
 	_build_landmark_bodies()
 	_limit_camera()
 	_fit_pixel_zoom()
+	_lap("bounds/camera")
 	get_viewport().size_changed.connect(_fit_pixel_zoom)
 	_last_label_pos = player.position
 	for node in get_children():
 		if node is Interactable:
 			(node as Interactable).refresh_label_alpha(player.position)
 	_spread_on_screen()
+	_lap("labels")
 	var hud := get_node_or_null("HUD")
 	if hud != null:
 		hud.hints_changed.connect(_mark_hinted.bind(hud))
