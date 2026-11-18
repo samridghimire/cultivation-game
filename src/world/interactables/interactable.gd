@@ -40,6 +40,7 @@ const PLACE_FAR := 420.0
 const PLACE_FAR_ALPHA := 0.35
 ## WU-549: labels sharing a row keep at least this many px between them.
 const LABEL_MIN_GAP := 12.0
+const PLATE_PAD := 3.0  ## GFX-202: the dark plate drawn behind a name grows its rect by this much
 ## WU-555: a person re-lays their label against the fixed place labels once they have moved this far, at most this often.
 const RELAYOUT_MOVE := 6.0
 const RELAYOUT_EVERY := 0.2
@@ -322,7 +323,7 @@ func person_label_tick(delta: float, anchor: Vector2) -> void:
 
 ## WU-511: whether this is a person or creature (NPC, roamer) rather than a place.
 func is_person() -> bool:
-	return get("npc_id") != null or self is Roamer
+	return get("npc_id") != null or self is Roamer or art_kind == "deed_giver"  # GFX-202: a deed giver is a standing person too
 
 
 ## The interact prompt already names the current target, so its own label is not drawn
@@ -555,7 +556,7 @@ static func _final_separate(ranked: Array, view: Rect2) -> void:
 	var rects: Array[Rect2] = []
 	var fixed: Array[bool] = []
 	for node: Interactable in shown:
-		rects.append(node.drawn_label_rect(view))
+		rects.append(node.drawn_label_rect(view).grow(PLATE_PAD))  # GFX-202: the dark plate counts
 		fixed.append(not node.is_person())
 	var res := LabelLayout.separate(rects, fixed)
 	for i in shown.size():
@@ -736,7 +737,7 @@ func _draw_label() -> void:
 	var paint := label_paint(fade, label_color())
 	# WU-549: one rule everywhere: every name gets the soft dark plate, whatever the ground.
 	var h := font.get_height(LABEL_FONT_SIZE)
-	var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(3.0)
+	var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(PLATE_PAD)
 	_label_node.draw_rect(plate, Color(0.05, 0.05, 0.07, 0.4 * fade))
 	# A dark outline first so the name reads on any ground (GFX-015, GFX-052).
 	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 4, paint["outline"])
