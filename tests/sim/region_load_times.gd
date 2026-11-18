@@ -41,6 +41,8 @@ func _run() -> void:
 		elif arg.begins_with("--region="):
 			for id in arg.substr(9).split(",", false):
 				only.append(id)
+	if OS.get_cmdline_user_args().has("--no-disk-cache"):
+		GroundCache.enabled = false
 	var passes := OS.get_cmdline_user_args().has("--passes")
 	var ids: Array = gs.data.regions.keys()
 	ids.sort()

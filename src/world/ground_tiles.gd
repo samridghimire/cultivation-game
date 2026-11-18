@@ -108,6 +108,12 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density, life]
 	if _cache.has(key):
 		return _cache[key]
+	var disk_key := GroundCache.key([key])  # PERF-013: bump GroundCache.VERSION when any pass below changes its output
+	var disk := GroundCache.load_image(disk_key, size_px)
+	if disk != null:
+		var cached_tex := ImageTexture.create_from_image(disk)
+		_cache[key] = cached_tex
+		return cached_tex
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
 	var t0 := Time.get_ticks_usec() if profiling else 0
 	var variants: Array[Image] = []
@@ -172,6 +178,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	var tex := ImageTexture.create_from_image(img)
 	_prof("texture_upload", t0)
 	_cache[key] = tex
+	GroundCache.save_image(disk_key, img)
 	return tex
 
 
