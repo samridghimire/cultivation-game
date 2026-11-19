@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-19 [PERF-019] Label work while walking costs about a sixth of what it did.
+- 2026-11-19 [WU-571] The easy-fight HUD line fits one row; label lift loose ends fixed.
+- 2026-11-19 [GUIDE-270] The Today card names who will say more once you are friends.
+- 2026-11-19 [GFX-209] A beaten foe lies on its shadow in the fight report.
+- 2026-11-19 [GFX-210] Azure Peak shows a rock ledge, stream cascades and boulders on arrival.
+- 2026-11-19 [GFX-208] Elder Mo's name (and every named villager's) stays on them as they walk.
+- 2026-11-19 [SIM-013] The hints sim visits Fallen Star Market and picks by the path.
+- 2026-11-19 [GUIDE-269] Every easy fight says where to start it: board, mission hall or explore site.
+- 2026-11-19 [C-395] A test guards an easy fight in every early region in every season.
+- 2026-11-19 [GUIDE-268] Goal and abode hints for a gated region say which realm opens the road.
+- 2026-11-19 [SIM-012] The hints sim takes --start and --join.
+- 2026-11-19 [WU-570] A silver marker points at the easy fight when the goal is elsewhere.
 - 2026-11-19 [GFX-207] Goats, leech swarms, crow flocks and monkey troops get their own fight shapes.
 - 2026-11-19 [QA-238] Tests guard that every teacher likes an affordable gift and chore fights pay fairly.
 - 2026-11-19 [GUIDE-265] The Today card names a by-the-path item once, with its buyer folded in.
