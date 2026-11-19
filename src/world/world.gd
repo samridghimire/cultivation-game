@@ -3368,6 +3368,7 @@ func _draw_peak_ground(map: Dictionary) -> void:
 		return
 	var winter := GroundTiles.ground_season(_season, map) == "Winter"
 	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	_draw_peak_ledge(rock, winter)
 	for c: Dictionary in _peak["cliffs"]:
 		var r: Rect2 = c["rect"]
 		var rng := RandomNumberGenerator.new()
@@ -3405,12 +3406,40 @@ func _draw_peak_ground(map: Dictionary) -> void:
 			draw_rect(Rect2(tr.position.x, tr.end.y - 2.0, tr.size.x, 2.0), Color("6f787e"))
 
 
+## GFX-210: the rock ledge band north of the road, its stream cascades and the boulders at its foot (draw-only).
+func _draw_peak_ledge(rock: Color, winter: bool) -> void:
+	for l: Dictionary in _peak.get("ledges", []):
+		var r: Rect2 = l["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(l["seed"])
+		draw_rect(Rect2(r.position.x - 2.0, r.end.y, r.size.x + 4.0, 8.0), Color(0.08, 0.1, 0.13, 0.4))
+		draw_rect(r, rock.darkened(0.5))
+		draw_rect(Rect2(r.position.x, r.position.y + 5.0, r.size.x, r.size.y - 5.0), rock.darkened(0.35))
+		draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 5.0), Color(0.93, 0.96, 0.98) if winter else rock.lightened(0.2))
+		for k in int(r.size.x / 20.0):
+			draw_rect(Rect2(r.position.x + rng.randf() * (r.size.x - 8.0), r.position.y + 6.0 + rng.randf() * 6.0, 8.0, 2.0), rock.darkened(0.6))
+	for b: Dictionary in _peak.get("boulders", []):
+		var p: Vector2 = b["pos"]
+		var rad: float = b["r"]
+		draw_rect(Rect2(p.x - rad, p.y + rad * 0.5, rad * 2.0, 3.0), Color(0.08, 0.1, 0.13, 0.35))
+		draw_circle(p, rad, rock.darkened(0.3))
+		draw_circle(p + Vector2(-rad * 0.25, -rad * 0.3), rad * 0.6, Color(0.93, 0.96, 0.98) if winter else rock.lightened(0.12))
+
+
 ## GFX-205: wind-bent pine clusters and the pale mist rows low on the map edges of a peak region.
 func _draw_peak_top(map: Dictionary) -> void:
 	if _peak.is_empty() or (_peak["cliffs"] as Array).is_empty():
 		return
 	var base := Color(str(map.get("decor", {}).get("tree_color", "2e5a2a")))
 	var snowy := Scenery.is_snowy(_season) and not bool(map.get("no_snow", false))
+	for c: Rect2 in _peak.get("cascades", []):
+		var cx := c.get_center().x
+		for i in 3:
+			var cy := c.position.y + 14.0 + float(i) * 11.0
+			var hw := c.size.x / 2.0 - 3.0 + float(i) * 2.0
+			draw_rect(Rect2(cx - hw, cy, hw * 2.0, 8.0), Color(0.42, 0.62, 0.74, 0.9))
+			draw_rect(Rect2(cx - hw, cy, hw * 2.0, 2.0), Color(0.96, 0.99, 1.0, 0.95))
+			draw_rect(Rect2(cx - hw * 0.6, cy + 4.0, hw * 1.2, 2.0), Color(0.9, 0.97, 1.0, 0.7))
 	for p: Dictionary in _peak["pines"]:
 		draw_set_transform(p["pos"], float(p["lean"]) * 0.22, Vector2.ONE)
 		_draw_tree_pine(Vector2.ZERO, 1.05, base, snowy)

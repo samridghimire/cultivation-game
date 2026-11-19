@@ -47,3 +47,21 @@ func test_validate_rejects_non_bool_peak() -> void:
 	var data := GameData.load_from_dir()
 	data.regions["azure_peak"]["map"]["high"]["peak"] = 3
 	assert_eq(Scenery.validate(data).size(), 1)
+
+
+func test_ledge_in_arrival_view_clear_of_places() -> void:
+	var r := _azure()
+	var a := PeakDressing.layout(r)
+	var arrival := Rect2(0.0, 100.0, 1280.0, 800.0)  # camera at the left, player at Mountain Path
+	var inside := 0
+	for l: Dictionary in a["ledges"]:
+		var lr: Rect2 = l["rect"]
+		if arrival.encloses(lr):
+			inside += 1
+		for pl: Dictionary in r["places"]:
+			var c := Vector2(float(pl["pos"][0]), float(pl["pos"][1]))
+			var sz: Array = pl.get("size", [64, 64])
+			assert_false(Rect2(c - Vector2(float(sz[0]), float(sz[1])) / 2.0, Vector2(float(sz[0]), float(sz[1]))).intersects(lr), "ledge %s on a place" % lr)
+	assert_true(inside >= 1, "a ledge segment is in the arrival view")
+	assert_true((a["cascades"] as Array).size() >= 1, "the stream has cascades")
+	assert_true((a["boulders"] as Array).size() >= 1, "boulders at the ledge foot")

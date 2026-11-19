@@ -10,6 +10,10 @@ const CLIFF_SIDE_DEPTH := 26.0
 const MAX_TERRACES := 5
 const MAX_STAIRS := 2
 const PINE_CLUSTERS := 3
+const LEDGE_Y := 430.0  # GFX-210: the rock ledge band north of the road (road y 470..530 on Azure Peak)
+const LEDGE_H := 18.0
+const LEDGE_X0 := 60.0
+const LEDGE_X1 := 1360.0
 const LABEL_LIFT := 44.0  # keepout above a place for its name label
 
 
@@ -18,10 +22,12 @@ static func enabled(region: Dictionary) -> bool:
 	return high is Dictionary and bool(high.get("peak", false))
 
 
+## GFX-210 adds ledges: Array[Dictionary{rect, seed}] (rock band north of the road, broken by places and paths),
+## cascades: Array[Rect2] (foam steps where a stream crosses the ledge) and boulders: Array[Dictionary{pos, r}] at the ledge foot.
 ## {cliffs: Array[Dictionary{rect, seed, side}], terraces: Array[Rect2], stairs: Array[Rect2],
 ##  pines: Array[Dictionary{pos, lean}], mist: Array[Dictionary{rect, alpha}]}; all empty when not enabled.
 static func layout(region: Dictionary) -> Dictionary:
-	var out := {"cliffs": [] as Array[Dictionary], "terraces": [] as Array[Rect2], "stairs": [] as Array[Rect2], "pines": [] as Array[Dictionary], "mist": [] as Array[Dictionary]}
+	var out := {"cliffs": [] as Array[Dictionary], "terraces": [] as Array[Rect2], "stairs": [] as Array[Rect2], "pines": [] as Array[Dictionary], "mist": [] as Array[Dictionary], "ledges": [] as Array[Dictionary], "cascades": [] as Array[Rect2], "boulders": [] as Array[Dictionary]}
 	if not enabled(region):
 		return out
 	var map: Dictionary = region["map"]
@@ -104,7 +110,69 @@ static func layout(region: Dictionary) -> Dictionary:
 					out["pines"].append({"pos": f, "lean": lean})
 					taken.append(Rect2(f - Vector2(26.0, 56.0), Vector2(52.0, 64.0)))
 				break
+	# Ledge keepouts: the hard blockers and each place's own rect (names are drawn over the band, not blocked by it).
+	var lforbid: Array[Rect2] = []
+	for b in Scenery.blocked_rects(region):
+		if b.size.y < 900.0:  # a stream's full-height blocker is handled by the cascade gap in _ledges
+			lforbid.append(b)
+	for p: Dictionary in region.get("places", []) + region.get("abodes", []):
+		var c := Vector2(float(p["pos"][0]), float(p["pos"][1]))
+		var ps: Array = p.get("size", [64, 64])
+		lforbid.append(Rect2(c - Vector2(float(ps[0]), float(ps[1])) / 2.0, Vector2(float(ps[0]), float(ps[1]))).grow(12.0))
+	for it: Dictionary in Scenery.relief_layout(region):
+		lforbid.append((it["rect"] as Rect2).grow(6.0))
+	for it: Dictionary in Scenery.high_crags(region):
+		lforbid.append((it["rect"] as Rect2).grow(6.0))
+	_ledges(region, rng, lforbid, out)
 	return out
+
+
+## GFX-210: a rock ledge band across the map north of the road, skipped wherever a place, path, landmark or label zone is in
+## the way; streams that cross the band get cascades; boulders gather at the ledge foot.
+static func _ledges(region: Dictionary, rng: RandomNumberGenerator, forbid: Array[Rect2], out: Dictionary) -> void:
+	var map: Dictionary = region["map"]
+	var streams: Array[Rect2] = []
+	for lm: Dictionary in map.get("landmarks", []):
+		if String(lm.get("kind", "")) == "stream":
+			var c := Vector2(float(lm["pos"][0]), float(lm["pos"][1]))
+			streams.append(Rect2(c.x - float(lm["size"][0]) / 2.0, LEDGE_Y - 14.0, float(lm["size"][0]), LEDGE_H + 40.0))
+	var x := LEDGE_X0
+	while x < LEDGE_X1:
+		var w := rng.randf_range(70.0, 130.0)
+		var r := Rect2(x, LEDGE_Y + rng.randf_range(-3.0, 3.0), minf(w, LEDGE_X1 - x), LEDGE_H)
+		var hit := false
+		for f in forbid:
+			if f.intersects(r):
+				hit = true
+				break
+		for st in streams:
+			if st.intersects(r):
+				hit = true
+		if not hit:
+			out["ledges"].append({"rect": r, "seed": rng.randi()})
+		x += w + (rng.randf_range(4.0, 14.0))
+	for st in streams:
+		out["cascades"].append(st)
+	# boulders at the ledge foot, in the meadow just north of the band (the road hugs its south side)
+	var led: Array = out["ledges"]
+	var tries := 0
+	while (out["boulders"] as Array).size() < 7 and tries < 200 and not led.is_empty():
+		tries += 1
+		var l: Rect2 = (led[rng.randi() % led.size()] as Dictionary)["rect"]
+		var rad := rng.randf_range(6.0, 11.0)
+		var pos := Vector2(l.position.x + rng.randf_range(0.0, l.size.x), l.position.y - 8.0 - rng.randf_range(0.0, 8.0))
+		var box := Rect2(pos - Vector2(rad, rad), Vector2(rad, rad) * 2.0)
+		var ok := true
+		for f in forbid:
+			if f.intersects(box):
+				ok = false
+				break
+		if ok:
+			for b: Dictionary in out["boulders"]:
+				if (b["pos"] as Vector2).distance_to(pos) < 26.0:
+					ok = false
+		if ok:
+			out["boulders"].append({"pos": pos, "r": rad})
 
 
 static func _fits(r: Rect2, bounds: Rect2, forbid: Array[Rect2], taken: Array[Rect2]) -> bool:
