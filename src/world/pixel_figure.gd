@@ -431,8 +431,8 @@ const DEER_LEGS := [
 ]
 ## GFX-199: own silhouettes for bear (hump, thick legs), rhino (long barrel, pale horn), tortoise (domed plated shell) and spider (eight thin legs).
 const BEAR_ROWS := [
-	"........ooooo....oo.oo..",
-	"......oofffffoo..offoffo",
+	"........ooooo....o...o..",
+	"......oofffffoo..ofo.ofo",
 	".....offffffffffoofffffo",
 	"....ofFfffffffffffffefoo",
 	"...offffffffffffffffffoo",
@@ -445,12 +445,13 @@ const BEAR_LEGS := [
 	["....offo.offo.offo.offo.", "....oooo.oooo.oooo.oooo."],
 ]
 const RHINO_ROWS := [
-	"....................pp..",
-	"..ooooooooooo.....oppo..",
+	"..................pppp.",
+	"..ooooooooooo...oppppo..",
 	".offffffffffffo..offfffo",
 	"offfffffffffffooofffeffo",
 	"offFFFFFFFFFFFffffffffoo",
 	"offffffffffffffffffffoo.",
+	"offffffffffffffffffoo...",
 	"ooffffffffffffffffooo...",
 	".ooooffffffffffooo......",
 ]
@@ -485,13 +486,40 @@ const SPIDER_LEGS := [
 	["..o..o.o......o.o..o....", "..o.o.o........o.o.o...."],
 	["...o..o.o....o.o..o.....", "....o.o.o....o.o.o......"],
 ]
+## GFX-204: a dog (lean, upright ears, curled tail) and a drake (lizard body, small folded wings, long tail).
+const DOG_ROWS := [
+	"...................o.o..",
+	"..................ofoofo",
+	"o..oooooooooo....offfffo",
+	"oo.offffffffffooofffeffo",
+	".ofofffffffffffffffffoo.",
+	"..oofFFFFFFFffffffffoo..",
+	"...ooffffffffffffffoo...",
+]
+const DOG_LEGS := [
+	["....ofo..ofo..ofo..ofo..", "....ooo..ooo..ooo..ooo.."],
+	["...ofo..ofo...ofo.ofo...", "...ooo..ooo...ooo.ooo..."],
+]
+const DRAKE_ROWS := [
+	"....oo.......oo.........",
+	"...ofo..ooooofo...oo....",
+	"..offfooffFFFffoooffo...",
+	".offffffffffffffffffeoo.",
+	"offffFFFFFFFFffffffffoo.",
+	".ooofffffffffffffffoo...",
+	"...ooooffffffffoooo.....",
+]
+const DRAKE_LEGS := [
+	["......ofo....ofo........", "......ooo....ooo........"],
+	["......ofo...ofo.........", "......ooo...ooo........."],
+]
 const OWN_BEASTS := {
 	"wolf": [WOLF_ROWS, WOLF_LEGS], "fox": [WOLF_ROWS, WOLF_LEGS], "boar": [BOAR_ROWS, BOAR_LEGS],
 	"tiger": [TIGER_ROWS, TIGER_LEGS], "deer": [DEER_ROWS, DEER_LEGS],
 	"bear": [BEAR_ROWS, BEAR_LEGS], "rhino": [RHINO_ROWS, RHINO_LEGS], "tortoise": [TORTOISE_ROWS, TORTOISE_LEGS],
-	"spider": [SPIDER_ROWS, SPIDER_LEGS],
+	"spider": [SPIDER_ROWS, SPIDER_LEGS], "dog": [DOG_ROWS, DOG_LEGS], "drake": [DRAKE_ROWS, DRAKE_LEGS],
 }
-const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram", "bear", "rhino", "tortoise", "spider"]
+const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram", "bear", "rhino", "tortoise", "spider", "dog", "drake"]
 
 
 ## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames;

@@ -34,9 +34,9 @@ const RIM_LIGHTEN := 0.45
 const BEAST_KEYWORDS := [
 	["tortoise", "tortoise"], ["turtle", "tortoise"], ["bear", "bear"], ["rhino", "rhino"], ["spider", "spider"],
 	["tusker", "boar"], ["porcupine", "boar"], ["peng", "bird"],
-	["basilisk", "snake"], ["wyrm", "snake"], ["dragonling", "snake"],
-	["cloud_crane", "crane"], ["toad", "toad"], ["_ram", "ram"], ["ram_", "ram"],
-	["wolf", "wolf"], ["alpha", "wolf"], ["fox", "fox"], ["dog", "wolf"], ["hound", "wolf"],
+	["basilisk", "snake"], ["wyrm", "snake"], ["dragonling", "drake"], ["drake", "drake"],
+	["cloud_crane", "crane"], ["toad", "toad"], ["_ram", "ram"], ["ram_", "ram"], ["goat", "ram"],
+	["wolf", "wolf"], ["alpha", "wolf"], ["fox", "fox"], ["dog", "dog"], ["hound", "dog"],
 	["boar", "boar"], ["pig", "boar"],
 	["stag", "deer"], ["deer", "deer"], ["antler", "deer"], ["elk", "deer"], ["ape", "ape"], ["monkey", "ape"],
 	["tiger", "tiger"], ["leopard", "tiger"], ["cat", "tiger"],
