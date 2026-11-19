@@ -41,6 +41,7 @@ extends SceneTree
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
 ## QA-198: `-- --festival` (festival_qingshi), `--contest` (contest_card), `--practice` (practice_menu), `--regular` (shop_regular), `--journal` (journal_today); one flag per run.
+## WU-565: `-- --shop-manual` opens the shop selling the first fighting-style manual (shop_manual.png).
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
 ##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
@@ -774,7 +775,7 @@ func _has_festival_flag() -> bool:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--festival-stall="):
 			return true
-	for f in ["--festival", "--contest", "--practice", "--regular", "--journal"]:
+	for f in ["--festival", "--contest", "--practice", "--regular", "--shop-manual", "--journal"]:
 		if OS.get_cmdline_user_args().has(f):
 			return true
 	return false
@@ -879,6 +880,15 @@ func _festival_shots(gs: Node) -> void:
 		shots.append({"name": "shop_regular", "open": func() -> void:
 			hud.get("_banner").visible = false
 			root.get_node("EventBus").shop_requested.emit(String(stall["display_name"]), 0, [], "", []), "close": shop.close})
+	if args.has("--shop-manual"):  # WU-565: the shop that sells the first fighting-style manual
+		var found := Guidance.first_combat_manual(gs.player, gs.data, gs.current_region)
+		if found.is_empty():
+			push_warning("--shop-manual: no first combat manual in %s" % gs.current_region)
+		else:
+			var shop_m: Control = hud.get("_shop")
+			shots.append({"name": "shop_manual", "open": func() -> void:
+				hud.get("_banner").visible = false
+				root.get_node("EventBus").shop_requested.emit(String(found["merchant"]), 0, [], "", []), "close": shop_m.close})
 	if args.has("--journal"):
 		var journal: Control = hud.get("_screens")["toggle_journal"]
 		shots.append({"name": "journal_today", "open": func() -> void:
