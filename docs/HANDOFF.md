@@ -17,6 +17,15 @@ No fixes landed (nothing under 60 lines that was clearly safe); see Follow-ups o
 ## Ground disk cache (PERF-013)
 `GroundCache` (src/world/ground_cache.gd) bakes ground textures of 40000+ px to `user://cache/ground/<key>.png` (key = sha256 of `GroundCache.VERSION` plus the same argument text as GroundTiles' memory key; newest 120 files kept). **Bump `GroundCache.VERSION` whenever a ground pass changes its output**, or players keep stale ground. Corrupt or mismatched files fall back to a cold build. `region_load_times.gd --no-disk-cache` forces cold builds. Ground only, ms (cold no disk / first visit writes / second visit reads): qingshi Summer 114/146/3, Winter 180/248/5; marsh Summer 104/132/3, Winter 174/242/5; fallen_star Summer 181/208/3, Winter 388/421/4. The first visit pays +30-70 ms for the PNG write (above the 15 ms target; see Follow-ups on the commit).
 
+## State on 2026-11-19 (planner, 18:10 UTC)
+- 10 landed (GFX-211, GFX-212, GFX-213, WU-572, GUIDE-271, SIM-014 partial, C-396, C-397, PERF-020 partial, GUIDE-272 partial);
+  the 17:24 review fixed the great-beast goal cache inline, no fix tasks. Live claims: PERF-017, WU-565, QA-236.
+- Planner shots: Azure Peak arrival and `--meditate` there look right (seated figure, motes, overlay below the player).
+- New specs: WU-573 (docs/specs/WU-573.md, procedural ambience), GFX-215, GFX-214, SIM-016, PERF-021; new todo WU-574,
+  GUIDE-273, SIM-017, C-399. QA-225 now also covers C-396/C-397 (balance check skipped).
+- Next planner: when WU-573 lands, check `tests/sim/dump_audio.gd` exists so the owner can listen; read SIM-016's idle lines
+  for GUIDE-273.
+
 ## State on 2026-11-19 (planner, 12:10 UTC)
 - 12 landed (WU-570, SIM-012, GUIDE-268, C-395, GUIDE-269, SIM-013, GFX-208, GFX-210, GFX-209, GUIDE-270, WU-571, PERF-019);
   the 11:02 review removed one dead branch, no fix tasks. Live claims: C-396, PERF-017, PERF-018.

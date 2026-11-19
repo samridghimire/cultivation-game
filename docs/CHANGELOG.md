@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-19 [GUIDE-272] The hints sim finds half as many empty weeks (sim gaps fixed; no hint change needed).
+- 2026-11-19 [PERF-020] Label separation and crowd checks allocate nothing per frame (partial).
+- 2026-11-19 [WU-572] Goal markers drop a lapsed bounty or mission the morning it ends.
+- 2026-11-19 [C-397] Seventeen villagers share a first secret, a small gift and a place tip once you are acquainted.
+- 2026-11-19 [GFX-213] Meditating shows you seated with qi motes drifting in, in your root's colour.
+- 2026-11-19 [SIM-014] The hints sim fishes and buys armor like a player would.
+- 2026-11-19 [GFX-212] Footprints in snow, ripples in rain puddles and dust on dry roads.
+- 2026-11-19 [GUIDE-271] The great-beast goal says your odds and waits until one is beatable.
+- 2026-11-19 [GFX-211] Every first foe checked in the fight report; Azure Peak's cascades freeze in winter.
+- 2026-11-19 [C-396] Every first fight drops something a neighbour wants or a recipe uses.
 - 2026-11-19 [PERF-019] Label work while walking costs about a sixth of what it did.
 - 2026-11-19 [WU-571] The easy-fight HUD line fits one row; label lift loose ends fixed.
 - 2026-11-19 [GUIDE-270] The Today card names who will say more once you are friends.
