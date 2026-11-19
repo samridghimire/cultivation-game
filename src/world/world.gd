@@ -95,8 +95,7 @@ var _greeted: Dictionary = {}
 var _greet_bubble: Control = null
 var _greet_modal := false
 ## GFX-043: snow-day footprints behind the player (world positions, oldest first, max 12).
-var _prints: Array = []
-var _last_print_pos := Vector2.INF
+var _footprints: Footprints  ## GFX-212
 
 
 ## PERF-015: when `lapping`, `_ready` adds the microseconds each build step took to `lap_log` (step name -> usec).
@@ -338,6 +337,13 @@ func _refresh_puddles() -> void:
 	var snowy := GroundTiles.ground_season(_season, _region.get("map", {})) == "Winter"
 	var yesterday := "clear" if _forced_weather != "" else Weather.of(GameState.data, GameState.current_region, GameClock.total_days - 1)
 	_rain_puddles.setup(_region, map_size, GameClock.total_days, _weather_kind, yesterday, snowy, _yards, MotionFx.reduced())
+	if _footprints == null:  # GFX-212
+		_footprints = Footprints.new()
+		_footprints.name = "Footprints"
+		add_child(_footprints)
+		move_child(_footprints, 2)
+	var no_snow := bool(_region.get("map", {}).get("no_snow", false))
+	_footprints.setup(_region, _yards, snowy and not no_snow, _weather_kind in ["rain", "storm"], _rain_puddles.puddles(), MotionFx.reduced())
 	if _rain_eaves == null:
 		_rain_eaves = RainEaves.new()
 		_rain_eaves.name = "RainEaves"
@@ -1038,7 +1044,8 @@ func _process(_delta: float) -> void:
 	if _critters != null and player != null:
 		_critters.player_pos = player.position  # GFX-088
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
-	_track_footprints()
+	if _footprints != null and player != null:
+		_footprints.track(player.position)  # GFX-212
 	if moved:
 		_last_label_pos = player.position
 		_check_greetings()
@@ -1092,25 +1099,6 @@ func _movers_moved() -> float:
 		for node in movers:
 			_roamer_spread_pos[node.get_instance_id()] = (node as Node2D).position
 	return far
-
-
-## GFX-043: on snow days drop a footprint every ~16 px of walking; the trail fades by age (redraws only on a new print).
-func _track_footprints() -> void:
-	if player == null or not Scenery.is_snowy(_season) or bool(_region.get("map", {}).get("no_snow", false)):
-		return
-	if _last_print_pos.distance_to(player.position) < 16.0:
-		return
-	_last_print_pos = player.position
-	_prints = Scenery.add_footprint(_prints, player.position + Vector2(0, 14))
-	queue_redraw()
-
-
-func _draw_footprints() -> void:
-	for i in _prints.size():
-		var a := 0.15 + 0.5 * float(i + 1) / _prints.size()
-		var p: Vector2 = _prints[i]
-		draw_rect(Rect2(p + Vector2(-4, 0), Vector2(3, 4)), Color(0.45, 0.52, 0.62, a))
-		draw_rect(Rect2(p + Vector2(1, 3), Vector2(3, 4)), Color(0.45, 0.52, 0.62, a))
 
 
 ## WU-401: a nearby generated villager who has not greeted today says their line in a bubble.
@@ -1344,7 +1332,6 @@ func _draw() -> void:
 	_draw_terraces()
 	_draw_high_pines(map)
 	_draw_peak_top(map)
-	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
 	_draw_canopy_shadows()

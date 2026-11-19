@@ -23,6 +23,7 @@ extends SceneTree
 ## WU-430: `-- --great` (with --region=) starts on the region's next great-beast day.
 ## WU-450: `-- --great --tracks` starts the day before it, so the trail of prints shows.
 ## GFX-033: append `-- --storm` to render the first-hour shots under a storm.  GFX-051: `-- --rain` forces rain.  GFX-120: `-- --fog` forces fog.
+## GFX-212: `-- --walk=<px>` walks the player along the first road before the arrival shot (footprints show).
 ## GFX-037: append `-- --season=Winter` (Spring/Summer/Autumn/Winter) to start on that season's first day.
 ## GFX-029: append `-- --field` for field.png (a growing field).
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
@@ -394,7 +395,9 @@ func _start() -> void:
 					world.get_node("Player").position = node.position + Vector2(0, 50), "close": func() -> void: pass})
 	if special:
 		return
-	shots.append({"name": "hud_arrival", "open": func() -> void: _focus_on(), "close": func() -> void: pass})
+	shots.append({"name": "hud_arrival", "open": func() -> void:
+		_walk_along()
+		_focus_on(), "close": func() -> void: pass})
 	if region_list.size() == 1:
 		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
 			_first_visit_card(gs, region_list[0])
@@ -544,6 +547,31 @@ func _focus_on() -> void:
 			_teleport_player((node as Node2D).position + Vector2(0, 90))
 			return
 	print("focus: nothing named %s here" % want)
+
+
+## GFX-212: `--walk=<px>` walks the player that far along the road (feeding the footprint layer) before the arrival shot.
+func _walk_along() -> void:
+	for a in OS.get_cmdline_user_args():
+		if not a.begins_with("--walk="):
+			continue
+		var player: Node2D = world.get_node("Player")
+		var fp: Footprints = world.get("_footprints")
+		var dist := float(a.substr(7))
+		var start: Vector2 = player.position
+		var paths: Array = gs_paths()
+		if not paths.is_empty():
+			var r: Array = paths[0]
+			start = Vector2(float(r[0]) + 20.0, float(r[1]) + float(r[3]) * 0.5 - 14.0)
+		var x := 0.0
+		while x < dist:
+			player.position = start + Vector2(x, 0)
+			fp.track(player.position)
+			x += 4.0
+		_teleport_player(player.position)
+
+
+func gs_paths() -> Array:
+	return world.get("_region").get("map", {}).get("paths", [])
 
 
 func _teleport_player(pos: Vector2) -> void:
