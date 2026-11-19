@@ -49,6 +49,8 @@ var _place_rects: Array[Rect2] = []
 var _label_avoid := Vector2.ZERO
 var _label_target := Vector2.ZERO
 var _label_anchor := Vector2.INF
+var _walk_lift := 0.0  ## WU-569: the y lift currently applied because the player stands on this label
+var _walk_lift_target := 0.0
 var _relayout_wait := 0.0
 static var ground_style := "grass"
 ## Draws the name label above every sibling building (WU-278).
@@ -270,6 +272,30 @@ static func clear_player_labels(nodes: Array, player_rect: Rect2, bounds: Rect2)
 	for node: Interactable in nodes:
 		if node.label_text() != "":
 			node.label_offset.y += LabelLayout.clear_of(node.label_rect(), player_rect, bounds)
+
+
+## WU-569: re-aims every label's walk lift at the player's current rect (the lift it already carries is taken out first,
+## so a label returns to its place once the player leaves). `tick_walk_lift` eases it there.
+static func aim_walk_lift(nodes: Array, player_rect: Rect2, bounds: Rect2) -> void:
+	for node: Interactable in nodes:
+		if node.label_text() == "":
+			continue
+		var base := node.label_rect()
+		base.position.y -= node._walk_lift
+		node._walk_lift_target = LabelLayout.clear_of(base, player_rect, bounds)
+
+
+## WU-569: moves the applied walk lift toward its target (snaps under reduce_motion); returns whether it changed.
+func tick_walk_lift(delta: float) -> bool:
+	if is_equal_approx(_walk_lift, _walk_lift_target):
+		return false
+	var next := _walk_lift_target if MotionFx.reduced() or absf(_walk_lift_target - _walk_lift) <= 0.5 else move_toward(_walk_lift, _walk_lift_target, maxf(1.0, absf(_walk_lift_target - _walk_lift) * minf(1.0, delta / RELAYOUT_EASE)))
+	var d := next - _walk_lift
+	_walk_lift = next
+	label_offset.y += d
+	_label_target.y += d
+	_redraw_label()
+	return true
 
 
 ## WU-511: a person's name label (NPC or roamer) never sits on a place's label: it drops below their feet or slides.

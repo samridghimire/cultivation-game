@@ -208,3 +208,30 @@ func test_label_clears_player_sprite() -> void:
 	var dy2 := LabelLayout.clear_of(top_label, top_player, bounds)
 	assert_true(dy2 > 0.0, "below the sprite when above leaves the map")
 	assert_eq(LabelLayout.clear_of(Rect2(100, 100, 50, 18), player, bounds), 0.0, "far labels stay put")
+
+
+func _walk_node(pos: Vector2) -> Interactable:
+	var n := Interactable.new()
+	n.display_name = "Meditation Rock"
+	n.size = Vector2(30, 30)
+	n.position = pos
+	return n
+
+
+func test_walk_lift_moves_label_off_player_and_back() -> void:
+	var n := _walk_node(Vector2(300, 300))
+	var bounds := Rect2(0, 0, 1000, 1000)
+	var on_label := n.label_rect()
+	var player_on := Rect2(on_label.get_center() - Vector2(16, 25), Vector2(32, 50))
+	var before := n.label_offset.y
+	var arr: Array = [n]
+	Interactable.aim_walk_lift(arr, player_on, bounds)
+	for i in 40:
+		n.tick_walk_lift(0.05)
+	assert_true(n.label_offset.y != before)
+	assert_false(n.label_rect().intersects(player_on))
+	Interactable.aim_walk_lift(arr, Rect2(900, 900, 32, 50), bounds)  # the player walked away
+	for i in 40:
+		n.tick_walk_lift(0.05)
+	assert_true(absf(n.label_offset.y - before) < 0.01)
+	n.free()

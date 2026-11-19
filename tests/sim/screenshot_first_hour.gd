@@ -259,6 +259,8 @@ func _start() -> void:
 					if od >= 0:
 						gs.get_node("/root/GameClock").total_days = od
 				_rebuild_world(gs, id)
+				if OS.get_cmdline_user_args().has("--edge-goal"):  # WU-569: bottom-left, so the goal person is off screen
+					_teleport_player(Vector2(40.0, world.map_size.y - 20.0))
 				if OS.get_cmdline_user_args().has("--edge"):  # GFX-110: stand at the bottom path end
 					_teleport_player(Vector2(float(world.map_size.x) - 40.0 if gs.data.regions[id]["map"]["paths"].size() < 2 else 800.0, world.map_size.y - 20.0))
 				root.get_node("EventBus").clear_history()

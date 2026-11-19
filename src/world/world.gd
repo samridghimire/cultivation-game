@@ -1044,6 +1044,14 @@ func _process(_delta: float) -> void:
 			if node is Interactable:
 				(node as Interactable).refresh_label_alpha(player.position)
 	_spread_clock += _delta
+	_walk_clear_clock += _delta
+	if player != null and _walk_clear_clock >= 0.25 and _walk_clear_pos.distance_to(player.position) >= 8.0:  # WU-569
+		_walk_clear_clock = 0.0
+		_walk_clear_pos = player.position
+		Interactable.aim_walk_lift(get_children().filter(func(n: Node) -> bool: return n is Interactable), Rect2(player.position - Vector2(16, 34), Vector2(32, 50)), Rect2(Vector2.ZERO, map_size))
+	for node in get_children():
+		if node is Interactable and (node as Interactable).tick_walk_lift(_delta):
+			_spread_clock = maxf(_spread_clock, 0.0)
 	var banner_now := false
 	var hud_node := get_node_or_null("HUD")
 	if hud_node != null and hud_node.has_method("banner_showing"):
@@ -1126,6 +1134,8 @@ func _check_greetings() -> void:
 
 
 var _banner_was_showing := false
+var _walk_clear_clock := 0.0  ## WU-569
+var _walk_clear_pos := Vector2.INF
 
 
 ## Lifts labels that the screen-edge clamp pushed together (WU-281).
