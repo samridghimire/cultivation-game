@@ -348,3 +348,21 @@ func test_lives_badge_follows_lives_hint() -> void:
 	assert_false(hud.lives_badge_visible(), "badge hidden for other hints")
 	hud.free()
 	gs.end_session()
+
+
+## GUIDE-266: the HUD's Goal line is Guidance.hud_goal_text, for day 0, a sect member and a Foundation player.
+func test_goal_text_is_hud_goal_text() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(HUD.goal_text(c, d, {}, null, 1.0, d.start_region, 0), "Goal: " + Guidance.hud_goal_text(c, d, {}, d.start_region, 0) + Guidance.goal_trip_note(c, d, Guidance.hud_goal_text(c, d, {}, d.start_region, 0), d.start_region))
+	var m := new_character()
+	m.sect = {"id": "blood_lotus_sect", "contribution": 0}
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	LifeStats.add(m, "fights_won", 1)
+	var mt := Guidance.hud_goal_text(m, d, flags, d.start_region, 100)
+	assert_true(mt != "", "a sect member has a goal")
+	assert_eq(HUD.goal_text(m, d, flags, null, 1.0, d.start_region, 100), "Goal: " + mt)
+	var f := new_character()
+	f.realm_index = 2
+	var ft := Guidance.hud_goal_text(f, d, {}, d.start_region, 100)
+	assert_eq(HUD.goal_text(f, d, {}, null, 1.0, d.start_region, 100), "Goal: " + ft if ft != "" else "")

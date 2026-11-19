@@ -5778,12 +5778,27 @@ static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionar
 	return ""
 
 
+## GUIDE-266: exactly the text the HUD's Goal line shows after "Goal: " ("" = none): the first unfinished first goal,
+## then the realm ladder's next step, then the first generic goal. The HUD calls this; the goal-way fight reads it too.
+static func hud_goal_text(c: CharacterData, data: GameData, flags: Dictionary, region_id: String = "", today: int = -1, clan: ClanData = null, density: float = 1.0) -> String:
+	if first_goals_done(c, data, flags) or c.realm_index >= 2:
+		for row in active_goal_ladder(c, data, flags, clan, maxi(today, 0)):
+			if not row["done"]:
+				return String(row["text"])
+		var lines := goals(c, data, flags, clan, density, region_id, today)
+		return lines[0] if not lines.is_empty() else ""
+	for goal in first_goals(c, data, flags):
+		if not goal["done"]:
+			return String(goal["text"])
+	return ""
+
+
 ## GUIDE-260/262: the region the current goal names (e.g. Qingshi for "Talk to Elder Mo in Qingshi Village"),
 ## "" when the goal names no other region or without a region_id. Same ladder as the HUD's Goal line.
 static func goal_region(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = 0) -> String:
 	if region_id == "":
 		return ""
-	var text := current_goal_text(c, data, flags, today)
+	var text := hud_goal_text(c, data, flags, region_id, today)
 	return hinted_region(data, text, region_id) if text != "" else ""
 
 
@@ -5808,7 +5823,7 @@ static func _goal_way_fight(found: Array[Dictionary], c: CharacterData, data: Ga
 	if days > nearest + FAIR_FIGHT_GOAL_EXTRA_DAYS:
 		return
 	var tags: Array = data.regions.get(goal, {}).get("encounter_tags", [])
-	var goal_text := current_goal_text(c, data, flags, today)
+	var goal_text := hud_goal_text(c, data, flags, region_id, today)
 	var who := RegEx.new()
 	who.compile("^Talk to (.+?) in ")
 	var m := who.search(goal_text)
