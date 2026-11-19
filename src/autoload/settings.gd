@@ -10,13 +10,15 @@ const SECTION := "settings"
 const WINDOW_MODES: PackedStringArray = ["windowed", "fullscreen"]
 const UI_SCALE_RANGE := Vector2(0.75, 1.5)
 ## Audio bus name -> settings key. Missing buses are created on boot.
-const VOLUME_BUSES := {"Master": "master_volume", "Music": "music_volume", "SFX": "sfx_volume"}
+const VOLUME_BUSES := {"Master": "master_volume", "Music": "music_volume", "SFX": "sfx_volume", "Ambience": "ambience_volume"}
 const DEFAULTS := {
 	"window_mode": "windowed",
 	"ui_scale": 1.0,
 	"master_volume": 0.8,
 	"music_volume": 0.7,
 	"sfx_volume": 0.8,
+	# WU-573: the ambience beds and accents under the music.
+	"ambience_volume": 0.6,
 	# How many next-step hints the HUD shows, 0-3 (0 hides the panel).
 	"hud_hints": 2,
 	# The key strip at the bottom right of the HUD (GFX-010); F1 help stays available.

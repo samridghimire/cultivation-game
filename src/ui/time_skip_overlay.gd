@@ -76,6 +76,8 @@ func show_skip(summary: Dictionary) -> void:
 	else:
 		_gather.end()
 	_set_player_seated(seated)
+	if seated:
+		Audio.play("meditate_hum")  # WU-573
 	_tween = create_tween()
 	_tween.tween_property(_bar, "value", 1.0, FILL_SECONDS)
 	_tween.tween_property(_lines, "modulate:a", 1.0, 0.15)
@@ -97,6 +99,8 @@ func close() -> void:
 	visible = false
 	_gather.end()
 	_set_player_seated(false)
+	if QI_TITLES.has(_title.text.get_slice("...", 0)):
+		Audio.play("bell")  # WU-573
 	closed.emit()
 
 

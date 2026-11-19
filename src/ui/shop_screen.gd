@@ -803,6 +803,7 @@ func _trade() -> void:
 		GameState.sell_item(_selected, _quantity)
 	else:
 		GameState.buy_item(_selected, _faction, _quantity)
+	Audio.play("coin")
 	_quantity = 1
 	_focus_selected.call_deferred()
 

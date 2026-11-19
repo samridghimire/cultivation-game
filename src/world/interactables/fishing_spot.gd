@@ -38,6 +38,7 @@ func get_options() -> Array[Dictionary]:
 
 ## Opens the timing bar, or fishes at once with an ordinary cast when "auto cast" is on.
 func _fish() -> void:
+	Audio.play("splash")  # WU-573
 	var kind := Weather.of(GameState.data, GameState.current_region, GameClock.total_days)
 	if Settings.get_value("auto_cast") or Fishing.too_wild(kind):
 		GameState.fish(catch_table, gather_days, display_name)

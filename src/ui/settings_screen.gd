@@ -13,6 +13,7 @@ const SLIDERS := [
 	["master_volume", "Master Volume"],
 	["music_volume", "Music Volume"],
 	["sfx_volume", "Effects Volume"],
+	["ambience_volume", "Ambience Volume"],
 ]
 
 var _fullscreen: CheckButton
@@ -47,7 +48,7 @@ func _init() -> void:
 	add_child(outer)
 	outer.add_child(UIStyle.label("Settings", 26, UIStyle.ACCENT))
 	_general = VBoxContainer.new()
-	_general.add_theme_constant_override("separation", 5)
+	_general.add_theme_constant_override("separation", 3)
 	outer.add_child(_general)
 	var box := _general
 	_build_controls(outer)

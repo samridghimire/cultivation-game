@@ -151,6 +151,7 @@ func _finish(quality: float, lost: bool) -> void:
 	var d := days
 	var p := place_name
 	close()
+	Audio.play("splash")  # WU-573
 	GameState.fish(t, d, p, quality)
 
 

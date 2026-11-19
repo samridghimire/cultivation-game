@@ -125,6 +125,7 @@ func use_directly() -> bool:
 		return true
 	if not GameState.pick_forage(slot):
 		return true
+	Audio.play("rustle")  # WU-573
 	taken = true
 	monitoring = false
 	monitorable = false

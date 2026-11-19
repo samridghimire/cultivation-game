@@ -21,6 +21,8 @@ var _road_rects: Array[Rect2] = []
 var _puddles: Array[Dictionary] = []
 var _since_redraw := 0.0
 var _flip := false
+var _step_count := 0
+var _last_step_ms := 0
 
 
 ## "print", "ripple", "dust" or "" for the ground under the feet.
@@ -84,6 +86,7 @@ func track(pos: Vector2) -> void:
 	if kind == "" or (_reduce and kind != "print"):
 		return
 	_flip = not _flip
+	_step_sound(kind)
 	_marks.append({"kind": kind, "pos": pos + Vector2(0, 14), "age": 0.0, "flip": _flip})
 	while _marks.size() > CAP:
 		_marks.pop_front()
@@ -92,6 +95,19 @@ func track(pos: Vector2) -> void:
 
 func _life(kind: String) -> float:
 	return PRINT_LIFE if kind == "print" else (RIPPLE_LIFE if kind == "ripple" else DUST_LIFE)
+
+
+## WU-573: a soft tick on every second snow print or road dust mark, at most 4 a second.
+func _step_sound(kind: String) -> void:
+	if kind != "print" and kind != "dust":
+		return
+	_step_count += 1
+	var now := Time.get_ticks_msec()
+	if _step_count % 2 == 0 and now - _last_step_ms >= 250:
+		_last_step_ms = now
+		var audio: Node = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("Audio")
+		if audio != null:
+			audio.call("play", "step_snow" if kind == "print" else "step_dirt")
 
 
 func advance(delta: float) -> void:
