@@ -14,6 +14,11 @@ var _bar: ProgressBar
 var _lines: Label
 var _hint: Label
 var _tween: Tween
+var _gather: QiGathering
+var _center: CenterContainer
+
+## GFX-213: skips whose title is one of these show the qi gathering around the player.
+const QI_TITLES := ["Meditating", "In seclusion"]
 
 
 func _init() -> void:
@@ -49,6 +54,10 @@ func _init() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
+	_center = center
+	_gather = QiGathering.new()
+	add_child(_gather)
+	_bar.value_changed.connect(func(v: float) -> void: _gather.on_bar(v))
 
 
 ## Show a TimeSkip.summarize() result: {title, days, lines}.
@@ -60,6 +69,13 @@ func show_skip(summary: Dictionary) -> void:
 	_lines.modulate.a = 0.0
 	_bar.value = 0.0
 	visible = true
+	var seated := QI_TITLES.has(String(summary.get("title", "")))
+	_center.offset_top = 260.0 if seated else 0.0  # the panel drops below the meditating player
+	if seated:
+		_gather.begin(GameState.last_cultivate_density)
+	else:
+		_gather.end()
+	_set_player_seated(seated)
 	_tween = create_tween()
 	_tween.tween_property(_bar, "value", 1.0, FILL_SECONDS)
 	_tween.tween_property(_lines, "modulate:a", 1.0, 0.15)
@@ -79,6 +95,8 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	_gather.end()
+	_set_player_seated(false)
 	closed.emit()
 
 
@@ -99,3 +117,9 @@ static func is_dismiss_event(event: InputEvent) -> bool:
 	if event is InputEventJoypadButton or event is InputEventMouseButton:
 		return event.pressed
 	return false
+
+
+func _set_player_seated(on: bool) -> void:
+	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
+	if p != null and p.has_method("set_seated"):
+		p.set_seated(on)

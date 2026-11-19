@@ -23,6 +23,7 @@ var _time := 0.0
 var _celebrate_left := 0.0
 var _celebrate_ok := true
 var _camera_shake_left := 0.0
+var _seated := false
 
 const CAMERA_SHAKE_SECONDS := 0.3
 const CAMERA_SHAKE_PIXELS := 4.0
@@ -77,6 +78,16 @@ func celebrate(success: bool) -> void:
 		_camera_shake_left = CAMERA_SHAKE_SECONDS
 	_celebrate_left = CELEBRATE_SECONDS
 	queue_redraw()
+
+
+## GFX-213: sit cross-legged while the meditation overlay is up.
+func set_seated(on: bool) -> void:
+	_seated = on
+	queue_redraw()
+
+
+func is_seated() -> bool:
+	return _seated
 
 
 func is_celebrating() -> bool:
@@ -188,8 +199,11 @@ func _draw() -> void:
 	PlaceArt.ellipse(self, Vector2(0, 11.0), sh.size / 2.0, shc)
 	var bob := -absf(sin(_time * BOB_SPEED)) * BOB_PIXELS if velocity != Vector2.ZERO else idle_bob(_time, MotionFx.reduced())
 	var o := Vector2(shake, bob)
+	if _seated:
+		o = Vector2(0, 3.0)  # lowered, no bob
 	_draw_cake(o)
 	if _draw_sprite(o, sash):
+		_draw_folded_legs()
 		return
 	# Generated pixel figure (GFX-011), feet on the hem line.
 	var tex := PixelFigure.frame(_look, _dir_name(), int(_time * 6.0) if velocity != Vector2.ZERO else 0)
@@ -200,6 +214,17 @@ func _draw() -> void:
 	for d: Vector2 in [Vector2(s, 0), Vector2(-s, 0), Vector2(0, s), Vector2(0, -s)]:
 		draw_texture_rect(sil, Rect2(body.position + d, size), false)
 	draw_texture_rect(tex, body, false)
+	_draw_folded_legs()
+
+
+## GFX-213: crossed legs over the hem while seated.
+func _draw_folded_legs() -> void:
+	if not _seated:
+		return
+	var robe: Color = _look.get("robe", Color(0.4, 0.4, 0.5))
+	PlaceArt.ellipse(self, Vector2(0, 10.0), Vector2(11.0, 4.5), robe.darkened(0.15))
+	PlaceArt.ellipse(self, Vector2(-3, 9.0), Vector2(6.0, 2.5), robe)
+	PlaceArt.ellipse(self, Vector2(3, 9.0), Vector2(6.0, 2.5), robe.lightened(0.1))
 
 
 ## WU-494: true on the player's own birthday (FOLK-027); pure so tests can pass any day.

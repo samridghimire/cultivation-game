@@ -97,6 +97,8 @@ var rng := RandomNumberGenerator.new()
 var clan: ClanData = null
 ## NPC clans (FAM-009, data/clans.json): clan id -> ClanData. See NpcClans.
 var npc_clans: Dictionary = {}
+## GFX-213: the qi multiplier of the last cultivate() (drives the gathering motes).
+var last_cultivate_density := 1.0
 ## Player numbers before the current long action (TimeSkip.snapshot), for the
 ## time-skip summary. Set by _start_time_skip(), read by _pass_time().
 var _skip_before: Dictionary = {}
@@ -216,6 +218,7 @@ func cultivate(days: int, location_density: float = 1.0, skip_title: String = "M
 	# Weather is averaged over the days spent (RV-016); the span and the days to the bottleneck depend on each
 	# other, so settle them in a few passes.
 	var density := _cultivation_density(location_density, days)
+	last_cultivate_density = density
 	var needed := Cultivation.days_to_bottleneck(player, data, density)
 	var asked := days
 	for _pass in 6:

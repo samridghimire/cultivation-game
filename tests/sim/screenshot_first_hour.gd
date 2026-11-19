@@ -30,6 +30,7 @@ extends SceneTree
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020); GFX-211: `--fight=<enemy_id>[,<id>...]` renders combat_report_<id>.png per foe.
+## GFX-213: `--meditate` renders meditate.png, mid time-skip overlay (seated player, qi motes, glow).
 ## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
@@ -481,6 +482,15 @@ func _start() -> void:
 	shots.append({"name": "shop", "open": func() -> void:
 		hud.get("_banner").visible = false
 		root.get_node("EventBus").shop_requested.emit("Wandering Merchant", 0, [], "", []), "close": shop.close})
+	if OS.get_cmdline_user_args().has("--meditate"):  # GFX-213
+		var skip: Control = hud.get("_time_skip")
+		shots.append({"name": "meditate", "open": func() -> void:
+			hud.get("_banner").visible = false
+			gs.player.qi = 0.0
+			gs.cultivate(30, 1.0)
+			if not skip.visible:
+				hud.call("_show_time_skip", {"title": "Meditating", "days": 30, "lines": ["+0 qi"]}),
+			"settle": 30, "close": skip.close})
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.

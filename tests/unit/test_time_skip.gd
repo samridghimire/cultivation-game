@@ -205,3 +205,43 @@ func test_other_long_actions_emit_time_skipped() -> void:
 	assert_eq(got.size(), 1)
 	assert_eq(got[0][1]["title"], "In seclusion")
 	gs.end_session()
+
+
+## GFX-213: qi motes take the two strongest root colours; the count scales with the qi multiplier.
+func test_qi_motes_colors_and_count() -> void:
+	var c := new_character(5)
+	var data: GameData = _gs().data
+	c.spiritual_roots = {"fire": 70, "water": 40, "wood": 10}
+	var cols := QiMotes.colors_for(c, data)
+	assert_eq(cols.size(), 2)
+	assert_eq(cols[0], CharacterSheet.ELEMENT_COLORS["fire"])
+	assert_eq(cols[1], CharacterSheet.ELEMENT_COLORS["water"])
+	c.spiritual_roots = {"earth": 50}
+	assert_eq(QiMotes.colors_for(c, data).size(), 1)
+	c.spiritual_roots = {}
+	assert_eq(QiMotes.colors_for(c, data), [QiMotes.FALLBACK] as Array[Color])
+	assert_eq(QiMotes.count_for(1.0), 12)
+	assert_eq(QiMotes.count_for(0.4), 12)
+	assert_eq(QiMotes.count_for(2.5), 24)
+	assert_eq(QiMotes.count_for(9.0), 24)
+	var mid := QiMotes.count_for(1.75)
+	assert_true(mid > 12 and mid < 24)
+
+
+## GFX-213: the overlay seats the player and shows the motes only for meditation skips.
+func test_overlay_seats_player_for_meditation() -> void:
+	_start()
+	var player := Player.new()
+	player.add_to_group("player")
+	_root().add_child(player)
+	var overlay := TimeSkipOverlay.new()
+	_root().add_child(overlay)
+	overlay.show_skip({"title": "Meditating", "days": 30, "lines": []})
+	assert_true(player.is_seated())
+	overlay.close()
+	assert_false(player.is_seated())
+	overlay.show_skip({"title": "Resting", "days": 3, "lines": []})
+	assert_false(player.is_seated())
+	overlay.close()
+	overlay.queue_free()
+	player.queue_free()
