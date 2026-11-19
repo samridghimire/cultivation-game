@@ -1654,8 +1654,8 @@ static func _road_rect(path_rect: Rect2, along_x: bool, along: float, across: fl
 
 
 ## GFX-113: map.high (a sect on a mountain): rail (bool: a carved rail round the sect hall court), wisps (int 0-8 drifting cloud wisps)
-## lean_pines (int 0-8 pines leaning out over the top cliffs), crags (GFX-123, int 0-8 rock outcrops) and drifts (int 0-12 snow drift patches).
-const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines", "crags", "drifts"]
+## lean_pines (int 0-8 pines leaning out over the top cliffs), crags (GFX-123, int 0-8 rock outcrops) drifts (int 0-12 snow drift patches) and peak (GFX-205, bool: PeakDressing cliff faces, terraces, stairs, pine clusters and mist).
+const HIGH_KEYS: PackedStringArray = ["rail", "wisps", "lean_pines", "crags", "drifts", "peak"]
 const HIGH_CRAG_MAX := 8
 const HIGH_DRIFT_MAX := 12
 const HIGH_PINE_MAX := 8
@@ -1866,9 +1866,9 @@ static func validate(data: GameData) -> PackedStringArray:
 				for key in high:
 					if not key in HIGH_KEYS:
 						errors.append("Region '%s' map.high has unknown key '%s'" % [region["id"], key])
-					elif key == "rail":
+					elif key == "rail" or key == "peak":
 						if not high[key] is bool:
-							errors.append("Region '%s' map.high.rail must be a bool" % region["id"])
+							errors.append("Region '%s' map.high.%s must be a bool" % [region["id"], key])
 					else:
 						var cap := HIGH_PINE_MAX
 						match key:

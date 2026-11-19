@@ -56,6 +56,7 @@ var _season_tint: CanvasModulate
 var _season := ""
 var _relief: Array[Dictionary] = []  # GFX-109
 var _crags: Array[Dictionary] = []  # GFX-123
+var _peak: Dictionary = {}  # GFX-205: PeakDressing.layout of a peak region
 var _edge: Array[Dictionary] = []  # GFX-110
 var _ambient: Node
 var _critters: CritterLayer  # GFX-086: hens, ducks, butterflies
@@ -553,6 +554,7 @@ func _build_decor() -> void:
 		_marsh = Scenery.marsh_features(hash(GameState.current_region + "|marsh"), map_size, Scenery.marsh_keepouts(_region, _gate_keepouts()))
 	_edge = Scenery.edge_props(_region, map_size)
 	_crags = Scenery.high_crags(_region)
+	_peak = PeakDressing.layout(_region)
 	if not _crags.is_empty():  # GFX-123: nothing grows on a crag
 		_decor = _decor.filter(func(d: Dictionary) -> bool:
 			for it: Dictionary in _crags:
@@ -1308,6 +1310,7 @@ func _draw() -> void:
 	_draw_outcrop_scree(map)
 	_draw_relief(map)
 	_draw_crags(map)
+	_draw_peak_ground(map)
 	_draw_sect_courts()
 	_draw_terrace_places()
 	_draw_marsh_pools()
@@ -1325,6 +1328,7 @@ func _draw() -> void:
 				_draw_ice_hole(Scenery.ice_hole_point(_region, lm))
 	_draw_terraces()
 	_draw_high_pines(map)
+	_draw_peak_top(map)
 	_draw_footprints()
 	for t: Dictionary in _tracks:
 		BeastTracks.draw_print(self, t["pos"], t["angle"], _tracks_shape, t["alpha"], t["side"], GroundTiles.ground_season(_season, map) == "Winter")
@@ -3346,3 +3350,65 @@ func _draw_decor(d: Dictionary) -> void:
 			for i in 5:
 				draw_circle(p + Vector2.from_angle(TAU * i / 5.0) * 3.0 * k, 2.2 * k, fl["color"])
 			draw_circle(p, 1.6 * k, Color("f2d24b"))
+
+
+## GFX-205: cliff faces on the top and right map edges, stone terraces and stair segments of a peak region (draw-only).
+func _draw_peak_ground(map: Dictionary) -> void:
+	if _peak.is_empty() or (_peak["cliffs"] as Array).is_empty():
+		return
+	var winter := GroundTiles.ground_season(_season, map) == "Winter"
+	var rock := Color(String(map.get("decor", {}).get("rock_color", "a3adb5")))
+	for c: Dictionary in _peak["cliffs"]:
+		var r: Rect2 = c["rect"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(c["seed"])
+		var top: bool = c["side"] == "top"
+		# dark drop shadow on the map side, then a layered grey face
+		var shadow := Rect2(r.position.x, r.end.y, r.size.x, 7.0) if top else Rect2(r.position.x - 7.0, r.position.y, 7.0, r.size.y)
+		draw_rect(shadow, Color(0.08, 0.1, 0.13, 0.45))
+		draw_rect(r, rock.darkened(0.55))
+		var layers := 3
+		for i in layers:
+			var t := float(i) / layers
+			var lr := Rect2(r.position.x, r.position.y + r.size.y * t, r.size.x, r.size.y / layers) if top else Rect2(r.position.x + r.size.x * t, r.position.y, r.size.x / layers, r.size.y)
+			draw_rect(lr, rock.darkened(0.45 - 0.15 * i))
+			# ragged strata notches
+			var n := int((r.size.x if top else r.size.y) / 22.0)
+			for k in n:
+				var off := rng.randf() * (r.size.x if top else r.size.y)
+				var nr := Rect2(lr.position.x + off, lr.position.y, 8.0, 2.0) if top else Rect2(lr.position.x, lr.position.y + off, 2.0, 8.0)
+				draw_rect(nr.intersection(r), rock.darkened(0.6))
+		var lip := Rect2(r.position.x, r.end.y - 3.0, r.size.x, 3.0) if top else Rect2(r.position.x, r.position.y, 3.0, r.size.y)
+		draw_rect(lip, Color(0.93, 0.96, 0.98) if winter else rock.lightened(0.25))
+	for t: Rect2 in _peak["terraces"]:
+		draw_rect(Rect2(t.position.x, t.end.y - 2.0, t.size.x, 5.0), Color(0.08, 0.1, 0.13, 0.35))
+		draw_rect(t, rock.darkened(0.35))
+		draw_rect(Rect2(t.position.x, t.position.y, t.size.x, 4.0), Color(0.93, 0.96, 0.98) if winter else rock.lightened(0.2))
+		draw_rect(Rect2(t.position.x, t.position.y + 4.0, t.size.x, 1.0), rock.darkened(0.6))
+	for s: Rect2 in _peak["stairs"]:
+		draw_rect(s.grow(2.0), Color("5f686e"))
+		var treads := 5
+		for i in treads:
+			var tr := Rect2(s.position.x, s.position.y + s.size.y * float(i) / treads, s.size.x, s.size.y / treads)
+			draw_rect(tr, Color("b4bcc0") if i % 2 == 0 else Color("a9b2b6"))
+			draw_rect(Rect2(tr.position.x, tr.position.y, tr.size.x, 2.0), Color("dde3e6") if not winter else Color(0.95, 0.98, 1.0))
+			draw_rect(Rect2(tr.position.x, tr.end.y - 2.0, tr.size.x, 2.0), Color("6f787e"))
+
+
+## GFX-205: wind-bent pine clusters and the pale mist rows low on the map edges of a peak region.
+func _draw_peak_top(map: Dictionary) -> void:
+	if _peak.is_empty() or (_peak["cliffs"] as Array).is_empty():
+		return
+	var base := Color(str(map.get("decor", {}).get("tree_color", "2e5a2a")))
+	var snowy := Scenery.is_snowy(_season) and not bool(map.get("no_snow", false))
+	for p: Dictionary in _peak["pines"]:
+		draw_set_transform(p["pos"], float(p["lean"]) * 0.22, Vector2.ONE)
+		_draw_tree_pine(Vector2.ZERO, 1.05, base, snowy)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for m: Dictionary in _peak["mist"]:
+		var r: Rect2 = m["rect"]
+		var bands := 5
+		for i in bands:
+			var a := float(m["alpha"]) * (1.0 - float(i) / bands) * 0.6
+			var br := Rect2(r.position.x, r.position.y + r.size.y * float(i) / bands, r.size.x, r.size.y / bands) if r.size.x > r.size.y else Rect2(r.position.x + r.size.x * float(i) / bands, r.position.y, r.size.x / bands, r.size.y)
+			draw_rect(br, Color(0.93, 0.96, 1.0, a if r.size.x < r.size.y else a * (float(i) + 1.0) / 2.0))
