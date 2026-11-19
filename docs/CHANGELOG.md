@@ -2,6 +2,19 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-19 [GFX-207] Goats, leech swarms, crow flocks and monkey troops get their own fight shapes.
+- 2026-11-19 [QA-238] Tests guard that every teacher likes an affordable gift and chore fights pay fairly.
+- 2026-11-19 [GUIDE-265] The Today card names a by-the-path item once, with its buyer folded in.
+- 2026-11-19 [GUIDE-266] The HUD, the map and the goal-way fight read the same goal.
+- 2026-11-19 [C-394] Woodcutter Bai's monkey troop: a first easy fight in Misty Forest.
+- 2026-11-19 [WU-569] Labels near you step aside as you walk.
+- 2026-11-19 [GFX-205] Azure Peak gets cliffs, terraces, stairs, wind-bent pines and mist.
+- 2026-11-19 [GUIDE-267] The easy fight line says who to ask.
+- 2026-11-19 [QA-237] The test player who reads the hints travels, practises and uses the treasury.
+- 2026-11-19 [GFX-206] Names stay on their owners and clear of the arrival banner.
+- 2026-11-19 [GUIDE-264] Hints about a sect home behind a closed road say when the road opens.
+- 2026-11-19 [PERF-016] The first visit to a region no longer stalls writing the ground cache.
+- 2026-11-19 [GFX-204] Dogs and drakes get their own fight shapes; bears and rhinos look sharper.
 - 2026-11-18 [C-393] Every teacher likes a gift you can afford or pick nearby.
 - 2026-11-18 [WU-568] Character creation, Elder Mo's talk and the Explore menu are lighter to read.
 - 2026-11-18 [GUIDE-263] Fight odds in plain words for newcomers.

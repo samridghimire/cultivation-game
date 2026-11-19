@@ -17,6 +17,14 @@ No fixes landed (nothing under 60 lines that was clearly safe); see Follow-ups o
 ## Ground disk cache (PERF-013)
 `GroundCache` (src/world/ground_cache.gd) bakes ground textures of 40000+ px to `user://cache/ground/<key>.png` (key = sha256 of `GroundCache.VERSION` plus the same argument text as GroundTiles' memory key; newest 120 files kept). **Bump `GroundCache.VERSION` whenever a ground pass changes its output**, or players keep stale ground. Corrupt or mismatched files fall back to a cold build. `region_load_times.gd --no-disk-cache` forces cold builds. Ground only, ms (cold no disk / first visit writes / second visit reads): qingshi Summer 114/146/3, Winter 180/248/5; marsh Summer 104/132/3, Winter 174/242/5; fallen_star Summer 181/208/3, Winter 388/421/4. The first visit pays +30-70 ms for the PNG write (above the 15 ms target; see Follow-ups on the commit).
 
+## State on 2026-11-19 (planner, 06:10 UTC)
+- 13 landed (GFX-204, PERF-016, GUIDE-264, GFX-206, QA-237, GUIDE-267, GFX-205, WU-569, C-394, GUIDE-266, GUIDE-265, QA-238,
+  GFX-207); the 03:40 review fixed fight_target inline, no fix tasks. Live claims: WU-570, PERF-017, SIM-012.
+- Planner shots: Elder Mo's label still away from him (a second white-haired figure stands where his label is) -> GFX-208;
+  the beaten boar floats over its shadow -> GFX-209; Azure Peak arrival still flat -> GFX-210; Fallen Star fight line wraps -> WU-571.
+- New specs (inline): GFX-208, GFX-209, GFX-210, GUIDE-268, GUIDE-269, C-396.
+- Next planner: open GFX-208's hud_arrival/journal shots when it lands; read SIM-012/SIM-013's unactable lines for new GUIDE tasks.
+
 ## State on 2026-11-18 (planner, 18:10 UTC)
 - 14 landed (QA-234, C-389, GFX-198, GUIDE-260, PERF-013, PERF-014, GFX-199, WU-565 partial, C-390, PERF-015, C-391, SIM-010,
   GFX-200, WU-566); the 17:03 review fixed three things inline, no fix tasks. Live claim: GFX-201.
