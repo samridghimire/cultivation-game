@@ -23,7 +23,13 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var seeds := int(args[0]) if args.size() > 0 and not args[0].begins_with("--") else 10
 	var days := int(args[1]) if args.size() > 1 and not args[1].begins_with("--") else 365
+	for a in args:
+		FirstHour.parse_start_arg(a)  # SIM-015: --start=<region_id> / --join=<sect_id>
+	var hints_only := args.has("--hints-only")
+	FirstHour.sect_report = true
 	for policy in ["default", "curious", "hints"]:
+		if hints_only and policy != "hints":
+			continue
 		FirstHour.hints_policy = policy == "hints"
 		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}, "idle_lists": {}}
 		_policy(seeds, days, policy == "curious")
@@ -106,6 +112,7 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 	for i in months:
 		per_month.append([])
 	var worst: Array = []
+	var realms: Array = []
 	var medians: Array = []
 	var maxes: Array = []
 	print("Quiet stretches, %s policy, %d seeds, %d days" % ["hints" if FirstHour.hints_policy else ("curious" if curious else "default"), seeds, days])
@@ -155,7 +162,18 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 		medians.append(_median(lengths))
 		maxes.append(lengths.max() if not lengths.is_empty() else 0)
 		print("  seed %2d: %3d new days, longest stretch %3d days" % [s, log["new_days"].size(), int(maxes[-1])])
+		var realm_now: String = "%d.%d" % [gs.player.realm_index, gs.player.stage] if gs.player != null else "?"
+		realms.append(realm_now)
 		gs.end_session()
+	if FirstHour.hints_policy and not FirstHour.sect_log.is_empty():
+		var ms := 0
+		var sk := 0
+		for e: Dictionary in FirstHour.sect_log:
+			ms += int(e.get("months", 0))
+			sk += int(e.get("skipped", 0))
+		print("SIM-015 sect: %d sect months over %d seeds, %d stipends skipped for missed duty (duty met %d months); realms at end: %s" % [ms, seeds, sk, ms - sk, str(realms)])
+	elif FirstHour.hints_policy:
+		print("SIM-015 realms at end: %s" % str(realms))
 	print("Stretch (days between new things): median %.0f, max %d; median of per-seed medians %.0f, of per-seed maxes %.0f" % [_median(all_stretches), all_stretches.max() if not all_stretches.is_empty() else 0, _median(medians), _median(maxes)])
 	var line := PackedStringArray()
 	for m in months:
