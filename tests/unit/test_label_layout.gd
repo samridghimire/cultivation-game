@@ -156,7 +156,6 @@ func test_person_offset_boxed_in_gives_zero() -> void:  # GFX-206
 	var places: Array[Rect2] = [Rect2(-200, 40, 700, 100)]
 	var label := Rect2(100, 70, 80, 20)
 	assert_eq(LabelLayout.person_offset(label, 120.0, places), Vector2.ZERO)
-	assert_true(LabelLayout.person_blocked(label, places))
 
 
 func test_covered_label_slides_sideways_clear_of_building() -> void:  # WU-540
@@ -232,6 +231,21 @@ func test_walk_lift_moves_label_off_player_and_back() -> void:
 	assert_false(n.label_rect().intersects(player_on))
 	Interactable.aim_walk_lift(arr, Rect2(900, 900, 32, 50), bounds)  # the player walked away
 	for i in 40:
+		n.tick_walk_lift(0.05)
+	assert_true(absf(n.label_offset.y - before) < 0.01)
+	n.free()
+
+
+func test_build_time_player_lift_is_undone_when_player_leaves() -> void:  # WU-571
+	var n := _walk_node(Vector2(300, 300))
+	var bounds := Rect2(0, 0, 1000, 1000)
+	var on_label := n.label_rect()
+	var before := n.label_offset.y
+	var arr: Array = [n]
+	Interactable.clear_player_labels(arr, Rect2(on_label.get_center() - Vector2(16, 25), Vector2(32, 50)), bounds)
+	assert_true(n.label_offset.y != before)
+	Interactable.aim_walk_lift(arr, Rect2(900, 900, 32, 50), bounds)
+	for i in 60:
 		n.tick_walk_lift(0.05)
 	assert_true(absf(n.label_offset.y - before) < 0.01)
 	n.free()

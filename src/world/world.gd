@@ -1050,8 +1050,8 @@ func _process(_delta: float) -> void:
 		_walk_clear_pos = player.position
 		Interactable.aim_walk_lift(get_children().filter(func(n: Node) -> bool: return n is Interactable), Rect2(player.position - Vector2(16, 34), Vector2(32, 50)), Rect2(Vector2.ZERO, map_size))
 	for node in get_children():
-		if node is Interactable and (node as Interactable).tick_walk_lift(_delta):
-			_spread_clock = maxf(_spread_clock, 0.0)
+		if node is Interactable:
+			(node as Interactable).tick_walk_lift(_delta)
 	var banner_now := false
 	var hud_node := get_node_or_null("HUD")
 	if hud_node != null and hud_node.has_method("banner_showing"):

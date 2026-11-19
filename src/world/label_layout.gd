@@ -99,7 +99,7 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 ## drawn above their head, `feet_y` the y of their feet (NAN: no below-the-feet try). Clear of `place_rects` ->
 ## Vector2.ZERO; else it tries, in order: sideways up to 24 px, a lift of at most PERSON_MAX_LIFT (with the sideways
 ## tries), then just below the feet (label top at feet_y + 2, with the sideways tries). Vector2.ZERO when nothing fits
-## (the caller then moves the place label, see `person_blocked`).
+## (the caller then moves the place label).
 const PERSON_MAX_LIFT := 16.0
 
 
@@ -121,11 +121,6 @@ static func person_offset(label: Rect2, feet_y: float, raw_place_rects: Array[Re
 				if not _hits(Rect2(label.position + d, label.size), place_rects):
 					return d
 	return Vector2.ZERO
-
-
-## GFX-206: whether `label` (already offset) still hits a place label, with the same 2 px margin as `person_offset`.
-static func person_blocked(label: Rect2, raw_place_rects: Array[Rect2]) -> bool:
-	return _hits(label, _padded(raw_place_rects))
 
 
 static func _padded(rects: Array[Rect2]) -> Array[Rect2]:

@@ -366,3 +366,11 @@ func test_goal_text_is_hud_goal_text() -> void:
 	f.realm_index = 2
 	var ft := Guidance.hud_goal_text(f, d, {}, d.start_region, 100)
 	assert_eq(HUD.goal_text(f, d, {}, null, 1.0, d.start_region, 100), "Goal: " + ft if ft != "" else "")
+
+
+func test_easy_fight_line_stays_on_one_row() -> void:  # WU-571
+	var font: Font = ThemeDB.fallback_font
+	var long_line := "Easy fight: Stray Warehouse Dog (ask Foreman) · 100%"
+	var out: String = HUD.one_row_fight_text(long_line, font, 14, 316.0)
+	assert_eq(HUD.wrapped_lines(out, font, 14, 316.0).size(), 1, out)
+	assert_eq(HUD.one_row_fight_text("Easy fight: Wild Boar (ask Zhou) · 99%", font, 14, 2000.0), "Easy fight: Wild Boar (ask Zhou) · 99%")

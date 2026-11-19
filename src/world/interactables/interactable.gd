@@ -263,6 +263,8 @@ static func spread_labels(nodes: Array) -> void:
 	for i in nodes.size():
 		var node := nodes[i] as Interactable
 		node.label_offset += shifts[i]
+		node._walk_lift = 0.0  # WU-571: a full re-spread rewrites the offset; the walk lift restarts from it
+		node._walk_lift_target = 0.0
 		if node.is_person():  # WU-522: a person's label may rise but never drops onto their own head (GFX-206: below the feet is fine)
 			node.label_offset.y = minf(node.label_offset.y, maxf(0.0, node._label_avoid.y))
 
@@ -271,7 +273,9 @@ static func spread_labels(nodes: Array) -> void:
 static func clear_player_labels(nodes: Array, player_rect: Rect2, bounds: Rect2) -> void:
 	for node: Interactable in nodes:
 		if node.label_text() != "":
-			node.label_offset.y += LabelLayout.clear_of(node.label_rect(), player_rect, bounds)
+			var d := LabelLayout.clear_of(node.label_rect(), player_rect, bounds)
+			node.label_offset.y += d
+			node._walk_lift += d  # WU-571: counted as a walk lift, so it is undone when the player walks away
 
 
 ## WU-569: re-aims every label's walk lift at the player's current rect (the lift it already carries is taken out first,
@@ -312,12 +316,12 @@ static func clear_person_labels(nodes: Array) -> void:
 			node._label_avoid = avoid
 			node._label_anchor = node.position
 			node._label_target = node.label_offset
-	_yield_place_labels(nodes, places)
+	_yield_place_labels(nodes)
 
 
 ## GFX-206: a named villager whose label still hits a place label after `person_offset` makes the place label yield:
 ## it moves clear of the person's label (up if the person is below it, else down).
-static func _yield_place_labels(nodes: Array, _places: Array[Rect2]) -> void:
+static func _yield_place_labels(nodes: Array) -> void:
 	for node: Interactable in nodes:
 		if not node.is_person() or node.get("npc_id") == null or node.label_text() == "":
 			continue
