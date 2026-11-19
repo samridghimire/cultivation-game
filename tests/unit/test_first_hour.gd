@@ -242,3 +242,28 @@ func test_hints_player_follows_unseal_sect_home_and_teacher_lines() -> void:
 	assert_eq(gs.current_region, home, "arrived")
 	gs.end_session()
 	saves.autosave_enabled = autosave
+
+
+## SIM-012: the --start and --join flags parse, and a --join run ends in that sect.
+func test_sim_start_and_join_flags() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	assert_true(FirstHour.parse_start_arg("--start=withered_bone_marsh"))
+	assert_true(FirstHour.parse_start_arg("--join=blood_lotus_sect"))
+	assert_false(FirstHour.parse_start_arg("--hints"))
+	assert_eq(FirstHour.start_region, "withered_bone_marsh")
+	assert_eq(FirstHour.join_sect_id, "blood_lotus_sect")
+	FirstHour.start_region = ""
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	var saves := _root().get_node("SaveManager")
+	var autosave: bool = saves.autosave_enabled
+	FirstHour.hints_policy = true
+	FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
+	var out: Dictionary = FirstHour.play(gs, clock, 3, 1)
+	FirstHour.hints_policy = false
+	var c: CharacterData = out["player"]
+	var sect_id := "" if c.is_rogue() else String(c.sect["id"])
+	FirstHour.join_sect_id = ""
+	gs.end_session()
+	saves.autosave_enabled = autosave
+	assert_eq(sect_id, "blood_lotus_sect", "a mortal joins the named sect at day 0")

@@ -158,6 +158,10 @@ static var recharge_first := false
 static var hint_missions := false
 ## QA-158: never join a sect (the rogue path).
 static var stay_rogue := false
+## SIM-012: --start=<region_id> moves the newcomer there at day 0 (the creation screen only offers data.start_region, so
+## this is a what-if), --join=<sect_id> joins that sect at day 0 when it takes a mortal, else at the first chance.
+static var start_region := ""
+static var join_sect_id := ""
 ## QA-212: with artifact_report on, play() unseals each Creation Artifact function the day it is ready (cheapest first, never feeds stones)
 ## and artifact_log (per seed: {open: {id: day}, foundation: day, energy: {source: total}}) records when.
 static var artifact_report := false
@@ -180,7 +184,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, hints_policy, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, hints_policy, start_region, join_sect_id, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -199,6 +203,10 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	saves.autosave_enabled = false  # a sim month must not write the autosave slot (QA-137)
 	gs.start_session(c)
 	gs.pending_event = ""
+	if start_region != "" and gs.data.regions.has(start_region):
+		gs.current_region = start_region
+	if join_sect_id != "" and c.is_rogue() and Sects.accepting_sects(c, gs.data).has(join_sect_id):
+		gs.join_sect(join_sect_id)
 	var bus: Node = gs.get_node("/root/EventBus")
 	bus.clear_history()
 	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1, "month_days": []}
@@ -312,6 +320,8 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_use_qi_items(gs, c)
 		if c.is_rogue() and out["sect_day"] < 0 and not stay_rogue:
 			for sect_id: String in Sects.accepting_sects(c, gs.data):
+				if join_sect_id != "" and sect_id != join_sect_id:
+					continue  # SIM-012: --join waits for that sect
 				gs.join_sect(sect_id)
 				break
 		if not c.is_rogue() and out["sect_day"] < 0:
@@ -2010,6 +2020,17 @@ static func _recharge_with_spare_stones(gs: Node, c: CharacterData) -> bool:
 		return false
 	if CreationArtifact.check_recharge(c, gs.data) == "" and c.item_count("spirit_stone") > (1 if c.artifact_lives <= 1 else 2) * CreationArtifact.recharge_cost(c, gs.data):
 		gs.recharge_artifact()
+		return true
+	return false
+
+
+## SIM-012: reads `--start=<region_id>` and `--join=<sect_id>` from a command line; returns true for an argument it consumed.
+static func parse_start_arg(arg: String) -> bool:
+	if arg.begins_with("--start="):
+		start_region = arg.substr(8)
+		return true
+	if arg.begins_with("--join="):
+		join_sect_id = arg.substr(7)
 		return true
 	return false
 
