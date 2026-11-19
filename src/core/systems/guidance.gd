@@ -452,9 +452,14 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 	var market_merged := false
 	# 4. A stall's wanted item (folded into the market line when it is the same stall, TODAY-004).
 	var wanted_line := ""
+	var wanted_buyer := ""  # GUIDE-265: stall + item name, to fold into the forage line
+	var wanted_item := ""
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		var wanted := Places.wanted_phrase(place, day, data)
 		if wanted != "":
+			var w := Places.wanted_today(place, day)
+			wanted_item = String(data.items.get(w["item"], {}).get("name", w["item"]))
+			wanted_buyer = String(place.get("display_name", "A stall"))
 			if market != "" and stall_name == String(place.get("display_name", "")) and int(market_stall["offset"]) == 0:
 				market = "Market day today at %s: wants %s" % [stall_name, wanted]
 				market_merged = true
@@ -467,14 +472,19 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		elif market_merged:
 			market += "."
 		out.append(market)
-	if wanted_line != "":
-		out.append(wanted_line)
 	# 5. In-season beasts, seasonal or weather forage, fishing.
 	var season := Wildlife.season_clause(data, region_id, day)
 	if season != "":
 		out.append(season)
 	var bits: PackedStringArray = []
 	var forage := _forage_phrase(c, data, region_id, day, flags)
+	if forage != "" and wanted_item != "" and wanted_line != "" and forage.contains(wanted_item):
+		# GUIDE-265: the buyer folds into the forage line instead of a second line about the same item.
+		var what := "it" if forage.begins_with(wanted_item + " by the path") else wanted_item
+		forage = forage.trim_suffix(" by the path") + " by the path (%s buys %s today)" % [wanted_buyer, what]
+		wanted_line = ""
+	if wanted_line != "":
+		out.append(wanted_line)
 	if forage != "":
 		bits.append(forage)
 	var fish := _fish_phrase(data, region_id, Weather.of(data, region_id, day), Calendar.season_of(day))
@@ -719,7 +729,7 @@ static func short_today_phrase(text: String) -> String:
 static func short_today_item(body: String) -> String:
 	body = body.rstrip(".")
 	var re := RegEx.new()
-	re.compile("^(.+?) by the path(?:,|$)")
+	re.compile("^(.+?) by the path(?: \\(.*?\\))?(?:,|$)")
 	var m := re.search(body)
 	if m != null:
 		var names := m.get_string(1)

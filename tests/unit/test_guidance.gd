@@ -7652,3 +7652,40 @@ func test_misty_forest_lists_monkey_chore_first() -> void:
 	var fights := Guidance.fair_fights(c, data(), {}, 0, "misty_forest")
 	assert_true(fights.size() > 0, "a fight is listed in the forest")
 	assert_true(String(fights[0]["text"]).contains("monkeys"), str(fights[0]["text"]))
+
+
+## GUIDE-265: a stall's wanted item that is also by the path folds into the forage line, once.
+func test_wanted_item_folds_into_forage_line() -> void:
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("F", d, seeded_rng(1))
+	var places: Array = d.regions["qingshi_village"]["places"]
+	var stall: Dictionary = {}
+	for p: Dictionary in places:
+		if p.has("wanted") and p.has("open_days"):
+			stall = p
+	assert_false(stall.is_empty())
+	var original := stall
+	stall = stall.duplicate(true)
+	original.erase("wanted")  # only the copy below wants anything
+	# an always-open copy (no open_days), so it is no market-day stall
+	stall["display_name"] = "Test Stall"
+	stall.erase("open_days")
+	places.append(stall)
+	var folded := false
+	var kept := false
+	for day in range(1, 200):
+		if not Places.is_open(stall, day):
+			continue
+		var wanted_name := String(d.items[String(Places.wanted_today(stall, day)["item"])]["name"])
+		var forage := Guidance._forage_phrase(c, d, "qingshi_village", day, {})
+		var lines := " | ".join(Guidance.today_lines(c, d, {}, [], day, "qingshi_village"))
+		if forage.contains(wanted_name):
+			assert_true(lines.contains("(%s buys " % stall["display_name"]), lines)
+			assert_false(lines.contains("Test Stall wants"), lines)
+			folded = true
+		elif lines.contains("Test Stall wants %s" % wanted_name):
+			kept = true
+	assert_true(folded, "a day where the wanted item is by the path")
+	assert_true(kept, "a day where it is not")
+	assert_eq(Guidance.short_today_item("Mugwort by the path (the Stall buys it today), rain."), "Mugwort")
+	assert_eq(Guidance.short_today_item("Willow Branch and Mugwort by the path (the Stall buys Mugwort today)."), "Willow Branch +1")
