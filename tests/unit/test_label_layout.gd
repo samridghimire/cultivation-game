@@ -334,3 +334,27 @@ func test_separate_and_crowd_keep_match_plain_definitions() -> void:
 						out += 1
 				want = out < 3
 			assert_eq(keep[i], want)
+
+
+## PERF-021: a typed cover list is read in place (shared between labels) and gives the same result as an untyped copy.
+func test_resolve_shared_typed_covers_match_untyped_and_are_not_changed() -> void:
+	var rng := seeded_rng()
+	for round in 50:
+		var rects: Array[Rect2] = []
+		var shared: Array[Rect2] = []
+		for i in 6:
+			rects.append(Rect2(rng.randf_range(0, 1100), rng.randf_range(0, 700), 80, 16))
+		for i in 5:
+			shared.append(Rect2(rng.randf_range(0, 1100), rng.randf_range(0, 700), 60, 50))
+		var typed := {}
+		var untyped := {}
+		for i in rects.size():
+			typed[i] = shared
+			var plain: Array = []
+			plain.assign(shared)
+			untyped[i] = plain
+		var before := shared.duplicate()
+		var a := LabelLayout.resolve(rects, SCREEN, [], {}, typed)
+		var b := LabelLayout.resolve(rects, SCREEN, [], {}, untyped)
+		assert_eq(a, b, "round %d" % round)
+		assert_eq(shared, before, "shared covers untouched")

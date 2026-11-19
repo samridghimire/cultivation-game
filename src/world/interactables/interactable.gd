@@ -593,14 +593,19 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if is_p and other.visible and other.get("great") != true:
 			figure_nodes.append(other)
 			figure_rects.append(person_figure_rect(other))
+	var person_covers: Array[Rect2] = place_rects.duplicate()  # PERF-021: one list shared by every person who is not a roof themselves
+	person_covers.append_array(roof_rects)
 	for i in ranked.size():
 		var me: Interactable = ranked[i]
 		if me.is_person():  # WU-483, WU-511: nor on the roof of a building behind them, nor on a place's name
-			var roofs: Array[Rect2] = place_rects.duplicate()
-			for j in roof_nodes.size():
-				if roof_nodes[j] != me:
-					roofs.append(roof_rects[j])
-			covers[i] = roofs
+			if me in roof_nodes:
+				var roofs: Array[Rect2] = place_rects.duplicate()
+				for j in roof_nodes.size():
+					if roof_nodes[j] != me:
+						roofs.append(roof_rects[j])
+				covers[i] = roofs
+			else:
+				covers[i] = person_covers
 		else:  # WU-562: a place's name never slides down onto its own art when a HUD panel pushes it
 			var own_covers: Array[Rect2] = []
 			if me.size.x >= 40.0 and me.size.y >= 40.0 and me.get("great") != true and me.art_kind != "travel":

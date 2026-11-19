@@ -22,7 +22,11 @@ static func resolve(rects: Array[Rect2], screen: Rect2, blockers: Array[Rect2] =
 		var dx := 0.0
 		var faded := false
 		var extra: Array[Rect2] = []
-		extra.assign(covers.get(ri, []))
+		var given: Variant = covers.get(ri, extra)
+		if given is Array and (given as Array).is_typed():  # PERF-021: typed lists are read in place, not copied
+			extra = given
+		else:
+			extra.assign(given)
 		if _hits(rect, placed, skip) or _hits(rect, extra):
 			faded = true
 			var step := rect.size.y + 2.0
