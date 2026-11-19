@@ -88,12 +88,18 @@ func _ready() -> void:
 	add_child(layer)
 	EventBus.player_changed.connect(refresh)
 	EventBus.region_changed.connect(_on_region)
+	GameClock.days_advanced.connect(_on_days)
 	EventBus.ui_modal_changed.connect(_on_modal)
 	refresh()
 
 
 func _on_modal(is_open: bool) -> void:
 	_edge.visible = not is_open
+
+
+## WU-572: a bounty or mission that ends overnight must lose its marker now, not at the next player change.
+func _on_days(_days: int) -> void:
+	refresh()
 
 
 func _on_region(_id: String) -> void:

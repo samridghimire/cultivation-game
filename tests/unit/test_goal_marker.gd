@@ -86,3 +86,22 @@ func test_easy_fight_marker_points_at_chore_giver_when_goal_is_elsewhere() -> vo
 	assert_true(marker._node != null and marker._node.display_name == "Hall Steward Qiu")
 	world.free()
 	gs.end_session()
+
+
+## WU-572: the marker re-reads its target when days pass (a bounty or mission can lapse overnight).
+func test_marker_refreshes_on_day_advance() -> void:
+	var world := _build()
+	var marker: GoalMarker = null
+	for child in world.get_children():
+		if child is GoalMarker:
+			marker = child
+	assert_true(marker != null, "world has a GoalMarker")
+	if marker != null:
+		marker.target = {"place": "Stale Hall"}  # a target that no longer exists
+		marker._node = null
+		var clock: Node = _root().get_node("GameClock")
+		clock.days_advanced.emit(1)
+		assert_eq(marker.target, GoalMarker.current_target(), "refreshed from the live goal")
+		assert_true(marker.target.get("place", "") != "Stale Hall")
+	world.free()
+	_root().get_node("GameState").end_session()
