@@ -1338,15 +1338,22 @@ static func _take_listed_deed(gs: Node, c: CharacterData, done: Dictionary, fair
 			if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
 				continue
 			for deed in Deeds.available(gs.data, String(place["deed_context"]), gs.world_flags):
-				if not String(f["text"]).begins_with("%s: %s" % [place.get("display_name", "Chore"), deed["name"]]) or Deeds.check(c, gs.data, deed, gs.world_flags, today) != "":
+				if not String(f.get("label", f["text"])).begins_with("%s: %s" % [place.get("display_name", "Chore"), deed["name"]]) or Deeds.check(c, gs.data, deed, gs.world_flags, today) != "":
 					continue
 				var won_before := LifeStats.get_stat(c, "fights_won")
 				fight_origin = "deed"
 				gs.perform_deed(String(deed["id"]))
 				fight_origin = "other"
-				done["fair_log"]["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
+				_fair_log(done)["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
 				kinds["deed_fight"] = true
 				return
+
+
+## SIM-016: the fair-fight log in `done`, created on first use (the hints policy never reaches the curious player's setup).
+static func _fair_log(done: Dictionary) -> Dictionary:
+	if not done.has("fair_log"):
+		done["fair_log"] = {"listed": [], "taken": [], "by_kind": {}}
+	return done["fair_log"]
 
 
 ## QA-070: once a month, takes the listed bounty when "Fights you can win" rates it >= 0.7 and no hunt is
@@ -1369,6 +1376,31 @@ static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fa
 			break
 	if picked.is_empty():
 		return
+	_hunt_bounty(gs, c, done, kinds, picked, float(entry["chance"]))
+
+
+## SIM-016: "Goal: Finish a bounty": the offer here with the best rated odds, taken when they are >= 0.7 (the board's rating).
+static func _take_best_bounty(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary) -> void:
+	if not c.alive or not c.bounty.is_empty():
+		return
+	var today: int = gs.get_node("/root/GameClock").total_days
+	var picked := {}
+	var best := 0.7
+	for b: Dictionary in Bounties.offers(c, gs.data, today, gs.current_region):
+		var foe: Dictionary = gs.data.enemies.get(String(b.get("enemy", "")), {})
+		if foe.is_empty() or Bounties.check_take(c, gs.data, String(b["id"]), today) != "":
+			continue
+		var chance := Combat.win_chance(c, gs.data, foe)
+		if chance >= best:
+			best = chance
+			picked = b
+	if not picked.is_empty():
+		_hunt_bounty(gs, c, done, kinds, picked, best)
+
+
+## Takes `picked`, travels to its region, explores until it is claimed (or 30 days), then goes home.
+static func _hunt_bounty(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, picked: Dictionary, chance: float) -> void:
+	var today: int = gs.get_node("/root/GameClock").total_days
 	var home: String = gs.current_region
 	var where := String(picked["region"])
 	var taken: Dictionary = bounty_log["taken"]
@@ -1396,7 +1428,7 @@ static func _take_listed_bounty(gs: Node, c: CharacterData, done: Dictionary, fa
 		if gs.pending_threat != "":
 			gs.face_threat(false)
 	bus.bounty_claimed.disconnect(on_claim)
-	done["fair_log"]["taken"].append({"kind": "bounty", "chance": float(entry["chance"]), "won": claimed[0] > 0})
+	_fair_log(done)["taken"].append({"kind": "bounty", "chance": chance, "won": claimed[0] > 0})
 	kinds["bounty"] = true
 	if c.alive and gs.current_region != home:
 		gs.travel(home)
@@ -2151,6 +2183,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.begins_with("Easy fight") or line.contains("Fights you can win"):
 		var fair := Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor)
 		_take_listed_deed(gs, c, done, fair, kinds, day)
+		# SIM-016: start where the line says (GUIDE-269): the bounty board or the mission board.
+		var start := easy_fight_start(line)
+		if kinds.is_empty() and start == "bounty":
+			_take_listed_bounty(gs, c, done, fair, kinds)
+		elif kinds.is_empty() and start == "mission" and not c.is_rogue():
+			var pick := Guidance.best_mission(c, gs.data, gs.world_flags)
+			if pick != "" and _mission_is_sane(gs, c, pick, done, day):
+				_take_one_mission(gs, c, done, kinds, [] as Array[Dictionary], pick, day)
 		if not kinds.is_empty():
 			return "fight"
 		var won: int = LifeStats.get_stat(c, "fights_won")
@@ -2201,7 +2241,17 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_sell_loot_here(gs, c, gs.current_region)
 		var armor_before: String = String(c.equipment.get("armor", ""))
 		_follow_defence_hint(gs, c)
+		if String(c.equipment.get("armor", "")) == armor_before:
+			_buy_armor_trip(gs, c)
 		return "armor" if String(c.equipment.get("armor", "")) != armor_before else ""
+	if line.begins_with("Goal: Finish a bounty"):
+		# SIM-016: the board here; the offer with the best rated odds when they are >= 0.7.
+		_take_best_bounty(gs, c, done, kinds)
+		return "bounty" if kinds.has("bounty") else ""
+	if line.begins_with("Goal: Cook a meal"):
+		# SIM-016: the workshop is in the village; cook the cheapest dish the pack (or the stalls here) can fill.
+		_walk_to(gs, c, "qingshi_village")
+		return "cook" if gs.current_region == "qingshi_village" and _cook_cheapest(gs, c) else ""
 	if line.begins_with("Goal: Walk to "):
 		# QA-237: the goal names the first hop out of the village; the player travels there.
 		_walk_to(gs, c, "misty_forest")
@@ -2256,6 +2306,61 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 
 
 const HINT_TEACHER_REACH_DAYS := 30
+
+
+## SIM-016: cooks the cheapest known home meal the pack covers, buying missing ingredients from a merchant here. True when cooked.
+static func _cook_cheapest(gs: Node, c: CharacterData) -> bool:
+	var data: GameData = gs.data
+	var best := ""
+	var best_cost := 1 << 30
+	for m: Dictionary in Cooking.known_meals(c, data):
+		var cost := 0
+		var ok := true
+		var ingredients: Dictionary = m["ingredients"]
+		for item_id: Variant in ingredients:
+			var missing := maxi(0, int(ingredients[item_id]) - c.item_count(String(item_id)))
+			if missing > 0:
+				if Guidance.merchant_selling(data, gs.current_region, String(item_id)) == "":
+					ok = false
+					break
+				cost += missing * Guidance.merchant_price(c, data, gs.current_region, String(item_id))
+		if ok and cost <= c.item_count("spirit_stone") and cost < best_cost:
+			best = String(m["id"])
+			best_cost = cost
+	if best == "":
+		return false
+	for item_id: Variant in Cooking.meal(data, best)["ingredients"]:
+		var need := int(Cooking.meal(data, best)["ingredients"][item_id]) - c.item_count(String(item_id))
+		for _i in maxi(0, need):
+			gs.buy_item(String(item_id))
+	var before := int(c.cooked_meals.get(best, 0))
+	gs.cook_meal(best)
+	return int(c.cooked_meals.get(best, 0)) > before
+
+
+## SIM-016: walks to the nearest region whose merchants sell armor the purse reaches, buys and wears it, and walks home.
+static func _buy_armor_trip(gs: Node, c: CharacterData) -> void:
+	var data: GameData = gs.data
+	var home: String = gs.current_region
+	var targets: Array[String] = [home]
+	for rid: String in data.regions:
+		if rid != home:
+			targets.append(rid)
+	for rid: String in targets:
+		var armor := Guidance.affordable_armor(c, data, rid)
+		if armor == "" or not c.alive:
+			continue
+		if rid != gs.current_region:
+			if Guidance.route_days(c, data, home, rid) <= 0:
+				continue
+			_walk_to(gs, c, rid)
+			if gs.current_region != rid:
+				break
+		gs.buy_item(armor)
+		gs.equip_item(armor)
+		break
+	if c.alive and gs.current_region != home:
+		_walk_to(gs, c, home)
 
 
 static func _talk_to_elder_mo(gs: Node, prefer: String = "") -> void:
