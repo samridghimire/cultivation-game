@@ -235,3 +235,40 @@ func test_walk_lift_moves_label_off_player_and_back() -> void:
 		n.tick_walk_lift(0.05)
 	assert_true(absf(n.label_offset.y - before) < 0.01)
 	n.free()
+
+
+func test_pin_shift_pulls_a_far_label_back_to_the_body() -> void:  # GFX-208
+	var feet := 300.0
+	var far := Rect2(Vector2(400, 200), Vector2(60, 20))  # 100 px above the feet, 70 px left of the body
+	var s := Interactable.pin_shift(far, 540.0, feet)
+	var moved := Rect2(far.position + s, far.size)
+	assert_true(absf(moved.get_center().x - 540.0) <= Interactable.PIN_SIDE + 0.01)
+	assert_true(moved.end.y >= feet - 32.0 - Interactable.PIN_ABOVE_HEAD - 0.01 and moved.end.y <= feet + Interactable.PIN_BELOW_FEET + 0.01)
+	var fine := Rect2(Vector2(510, 262), Vector2(60, 20))
+	assert_eq(Interactable.pin_shift(fine, 540.0, feet), Vector2.ZERO)
+
+
+func test_named_villager_label_stays_on_him_in_a_crowd() -> void:  # GFX-208
+	var npc_script := preload("res://src/world/interactables/npc.gd")
+	var nodes: Array = []
+	var elder: Interactable = npc_script.new()
+	elder.display_name = "Elder Mo"
+	elder.position = Vector2(540, 262)
+	elder.size = Vector2(28, 28)
+	nodes.append(elder)
+	for k in 3:  # more labels stacked over him to push his name away
+		var other: Interactable = npc_script.new()
+		other.display_name = "Villager Number %d" % k
+		other.position = Vector2(520 + k * 20, 262 - 24 * (k + 1))
+		other.size = Vector2(28, 28)
+		nodes.append(other)
+	var view := Rect2(0, 0, 1280, 800)
+	for step in 3:  # he walks 40 px, the labels are re-spread each time
+		elder.position.x += 14.0
+		Interactable.spread_on_screen(nodes, view)
+		var r := elder.drawn_label_rect(view)
+		var feet := elder.position.y + elder.size.y / 2.0
+		assert_true(absf(r.get_center().x - elder.position.x) <= 24.0, "label x %s body %s" % [r.get_center().x, elder.position.x])
+		assert_true(r.end.y >= feet - 32.0 - Interactable.PIN_ABOVE_HEAD - 0.5 and r.end.y <= feet + Interactable.PIN_BELOW_FEET + 0.5, "label bottom %s feet %s" % [r.end.y, feet])
+	for n: Node in nodes:
+		n.free()

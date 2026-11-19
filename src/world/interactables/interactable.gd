@@ -587,6 +587,71 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if changed:
 			node._redraw_label()
 	_final_separate(ranked, view)
+	_pin_person_labels(ranked, view, occupied)
+
+
+## GFX-208: the band a named villager's label must stay in, relative to their body (so the name reads as theirs):
+## its bottom no higher than PIN_ABOVE_HEAD over the head nor lower than PIN_BELOW_FEET under the feet, and its
+## centre within PIN_SIDE px of the body. Pure so tests can call it: returns the (dx, dy) that moves `label` into the band.
+const PIN_ABOVE_HEAD := 16.0
+const PIN_BELOW_FEET := 20.0
+const PIN_SIDE := 12.0
+
+
+static func pin_shift(label: Rect2, body_x: float, feet_y: float) -> Vector2:
+	var head := feet_y - 32.0
+	var dy := clampf(label.end.y, head - PIN_ABOVE_HEAD, feet_y + PIN_BELOW_FEET) - label.end.y
+	var dx := clampf(label.get_center().x, body_x - PIN_SIDE, body_x + PIN_SIDE) - label.get_center().x
+	return Vector2(dx, dy)
+
+
+## GFX-208: the last pass: a named villager's label that the lifts, slides and separations carried away from them
+## is pulled back into `pin_shift`'s band, and a place label it now touches yields (up if the person is below it,
+## else down), like GFX-206's rule.
+static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2] = []) -> void:
+	var gap := PLATE_PAD * 2.0 + 1.0
+	for node: Interactable in ranked:
+		if node.get("npc_id") == null or not node.label_drawn():
+			continue
+		var r := node.drawn_label_rect(view)
+		var feet := node.position.y + node.size.y / 2.0
+		var want := pin_shift(r, node.position.x, feet)
+		if want == Vector2.ZERO:
+			continue
+		var obstacles: Array[Rect2] = occupied.duplicate()
+		for other: Interactable in ranked:
+			if other == node:
+				continue
+			if other.label_drawn():
+				obstacles.append(other.drawn_label_rect(view).grow(gap / 2.0))
+			if other.is_person() and other.visible:
+				obstacles.append(person_figure_rect(other))
+		obstacles.append(person_figure_rect(node).grow_individual(0.0, 0.0, 0.0, -6.0))  # nor on his own body (the feet may touch)
+		# Candidate spots inside the band, nearest to the current rect first: any that touches nothing wins.
+		var best := Vector2.INF
+		var best_cost := INF
+		var dy0 := feet - 32.0 - PIN_ABOVE_HEAD - r.end.y
+		for dy: float in range(int(dy0), int(feet + PIN_BELOW_FEET - r.end.y) + 1, 4):
+			for dx: float in [0.0, -4.0, 4.0, -8.0, 8.0, -12.0, 12.0]:
+				var cx := r.get_center().x + want.x + dx
+				if absf(cx - node.position.x) > PIN_SIDE + 0.01:
+					continue
+				var moved := Rect2(r.position + Vector2(want.x + dx, dy), r.size).grow(gap / 2.0)
+				var hit := false
+				for o in obstacles:
+					if o.intersects(moved):
+						hit = true
+						break
+				if not hit:
+					var cost := absf(dy - want.y) * 2.0 + absf(dx)
+					if cost < best_cost:
+						best_cost = cost
+						best = Vector2(want.x + dx, dy)
+		if best == Vector2.INF:
+			continue  # nothing clear in the band: keep the separated spot
+		node.screen_lift += best.y
+		node.screen_shift_x += best.x
+		node._redraw_label()
 
 
 ## WU-545: after every other rule, no two shown labels overlap: a place name stays, a villager's or roamer's moves
