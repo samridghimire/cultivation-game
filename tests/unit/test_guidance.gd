@@ -6664,7 +6664,7 @@ func test_short_goal_fits_and_keeps_the_target() -> void:
 
 
 func test_short_fight_lines() -> void:
-	assert_eq(Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_hint("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar (ask Headman Zhou) · 99%")
 	assert_eq(Guidance.short_hint("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
 
 
@@ -6700,7 +6700,7 @@ func test_region_short_name_falls_back_and_validates() -> void:
 # GUIDE-223
 func test_short_fight_line_and_hunt_line() -> void:
 	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", data()), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
-	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar · 99%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Headman Zhou: Wild Boar (99 in 100)", data()), "Easy fight: Wild Boar (ask Headman Zhou) · 99%")
 	assert_eq(Guidance.short_fight_line("Hunting: Blood-Eyed Wolf in Withered Bone Marsh (3 days left)", data()), "Hunting: Blood-Eyed Wolf, Bone Marsh")
 	assert_eq(Guidance.short_fight_line("Rest a while.", data()), "Rest a while.")
 
@@ -7624,3 +7624,23 @@ func test_headman_work_hint_follows_available_chores() -> void:
 			if deed.has("blocked_by_flag"):
 				flags[String(deed["blocked_by_flag"])] = true
 	assert_eq(Guidance.headman_work_hint(c, d, flags, 1), "")
+
+
+## GUIDE-267: a chore's short fight line says whom to ask; fight_target points at the giver.
+func test_short_fight_keeps_the_chore_giver() -> void:
+	var d := data()
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Qiu) · 100%")
+	var long_line := Guidance.short_fight_line("Easy fight: Chore for Reed Hall Overseer: Boardwalk Leech Swarm (100 in 100)", d)
+	assert_true(long_line.contains("Overseer") and long_line.length() <= Guidance.SHORT_ASK_CHARS, long_line)
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Porters' Foreman: A Very Long Beast Name Indeed Here (100 in 100)", d), "Easy fight: A Very Long Beast Name Indeed Here · 100%")
+	# the region goes before the giver
+	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", d), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
+
+
+func test_fight_target_names_the_chore_giver_here() -> void:
+	var d := data()
+	var c := _fresh()
+	var t := Guidance.fight_target(c, d, {}, d.start_region, 0)
+	if not t.is_empty():
+		assert_eq(String(t["place"]), "Headman Zhou")
+	assert_eq(Guidance.fight_target(c, d, {}, "no_such_region", 0), {})

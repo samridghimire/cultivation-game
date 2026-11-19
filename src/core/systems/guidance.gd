@@ -795,7 +795,9 @@ static func _short_fight(line: String, data: GameData) -> String:
 	var head := m.get_string(1) + ": "
 	var route := _short_days(m.get_string(3))  # GUIDE-247: how far, in the goal line's "Nd" form
 	var chore := rest.find(": ")
-	var no_chore := rest.substr(chore + 2) if rest.begins_with("Chore for ") and chore > 0 else rest
+	var is_chore := rest.begins_with("Chore for ") and chore > 0
+	var no_chore := rest.substr(chore + 2) if is_chore else rest
+	var giver := rest.substr(10, chore - 10) if is_chore else ""  # GUIDE-267: who has the job
 	var foe := no_chore
 	var where := ""
 	var at := no_chore.find(" in ")
@@ -806,6 +808,14 @@ static func _short_fight(line: String, data: GameData) -> String:
 			for id: String in data.regions:
 				if String(data.regions[id].get("name", "")) == where:
 					where = Places.short_region_name(data, id)
+	# GUIDE-267: a chore keeps "(ask <giver>)"; the region goes first, then the giver shrinks to its last word, then goes.
+	var asks: Array[String] = []
+	if giver != "":
+		asks.append(" (ask %s)" % giver)
+		var last := giver.get_slice(" ", giver.get_slice_count(" ") - 1)
+		if last != giver:
+			asks.append(" (ask %s)" % last)
+	asks.append("")
 	var tries: Array[String] = []
 	if where != "":
 		if route != "":
@@ -813,11 +823,37 @@ static func _short_fight(line: String, data: GameData) -> String:
 			if far.length() <= SHORT_FAR_CHARS:
 				return far
 		tries.append(head + foe + ", " + where + tail)
-	tries.append(head + foe + tail)
+	for ask in asks:
+		var t := head + foe + ask + tail
+		if ask != "" and t.length() <= SHORT_ASK_CHARS:
+			return t
+		tries.append(t)
 	for t in tries:
 		if t.length() <= SHORT_HINT_CHARS:
 			return t
 	return tries[tries.size() - 1]
+
+
+## GUIDE-267: a chore's "(ask Qiu)" may run this long: a beast name alone leaves the newcomer with no one to ask.
+const SHORT_ASK_CHARS := 56
+
+
+## GUIDE-267: the first Easy/Fair fight the HUD shows, when it is a chore given in `region_id` or an explore fight at a
+## place there: {"npc": id} / {"place": place_id}, else {}. The giver is found by its display name in the line's label.
+static func fight_target(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = 0, people: Dictionary = {}, favor: Dictionary = {}) -> Dictionary:
+	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
+	var order := hud_fight_order(fights)
+	if order.is_empty():
+		return {}
+	var top: Dictionary = order[0]
+	if String(top.get("kind", "")) != "deed":
+		return {}
+	var label := String(top.get("short", top.get("label", "")))
+	var places: Array = data.regions.get(region_id, {}).get("places", [])
+	for place: Dictionary in places:
+		if String(place.get("type", "")) == "deed_giver" and label.begins_with("Chore for %s:" % place.get("display_name", "")):
+			return {"place": String(place.get("display_name", ""))}
+	return {}
 
 
 ## GUIDE-222: the HUD goal line in <= SHORT_GOAL_CHARS: "(N days)" -> "· Nd", full region names -> short names,
