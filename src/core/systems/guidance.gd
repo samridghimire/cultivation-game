@@ -3820,6 +3820,10 @@ static func _abode_seat_clause(c: CharacterData, data: GameData, region_id: Stri
 			var days := route_days(c, data, region_id, abode_region)
 			if days > 0:
 				parts.append(Calendar.format_duration(days))
+			elif days < 0:
+				var gate := route_gate(c, data, region_id, abode_region)
+				if not gate.is_empty():
+					parts.append("opens at %s" % gate["realm_name"])
 	var stones := c.item_count("spirit_stone")
 	var cost := int(abode.get("cost", 0))
 	parts.append("%d stones%s" % [cost, "" if stones >= cost else " (you have %d)" % stones])
@@ -3845,6 +3849,10 @@ static func _abode_hint(c: CharacterData, data: GameData, region_id: String = ""
 	if region_id != "":
 		var days := 0 if abode_region == region_id else route_days(c, data, region_id, abode_region)
 		travel = " (here)" if abode_region == region_id else (" (%s)" % Calendar.format_duration(days) if days > 0 else "")
+		if days < 0:
+			var gate := route_gate(c, data, region_id, abode_region)
+			if not gate.is_empty():
+				travel = " (opens at %s)" % gate["realm_name"]
 	var cost := int(abode.get("cost", 0))
 	var short := "" if stones >= cost else " (you have %d)" % stones
 	var seclusion := float(abode.get("qi_density", 1.0))
@@ -5987,9 +5995,12 @@ static func goal_trip_note(c: CharacterData, data: GameData, goal: String, regio
 	var target := hinted_region(data, goal, region_id)
 	if target == "":
 		return ""
+	# GUIDE-268: a road closed by min_realm says when it opens instead of a days tail that cannot be walked yet.
 	var days := route_days(c, data, region_id, target)
 	if days < 0:
-		# GUIDE-223: roads gated by min_realm (the Ridge's) still have a length worth telling.
+		var gate := route_gate(c, data, region_id, target)
+		if not gate.is_empty():
+			return " (opens at %s)" % gate["realm_name"]
 		days = route_days(c, data, region_id, target, true)
 	return " (%s)" % Calendar.format_duration(days) if days > 0 else ""
 

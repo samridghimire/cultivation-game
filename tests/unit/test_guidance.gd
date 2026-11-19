@@ -6722,7 +6722,22 @@ func test_short_hint_never_ends_on_a_stop_word() -> void:
 func test_goal_trip_note_counts_realm_gated_roads() -> void:
 	var c := _fresh()
 	var note := Guidance.goal_trip_note(c, data(), "Talk to Elder Mo in Qingshi Village", "myriad_peaks_ridge")
-	assert_true(note.contains("days"), note)
+	assert_true(note.begins_with(" (opens at "), note)
+	assert_false(note.contains("days"), note)
+
+
+## GUIDE-268: a goal naming a gated region ends in "(opens at <realm>)", and the days tail returns once the road is open.
+func test_goal_trip_note_gated_region_then_open() -> void:
+	var c := _fresh()
+	var goal := "Walk to Withered Bone Marsh"
+	var gate := Guidance.route_gate(c, data(), "qingshi_village", "withered_bone_marsh")
+	assert_false(gate.is_empty())
+	var note := Guidance.goal_trip_note(c, data(), goal, "qingshi_village")
+	assert_eq(note, " (opens at %s)" % gate["realm_name"])
+	c.realm_index = int(gate["realm_index"])
+	note = Guidance.goal_trip_note(c, data(), goal, "qingshi_village")
+	assert_true(note.contains("day"), note)
+	assert_false(note.contains("opens at"), note)
 
 
 ## GUIDE-225: probes swap-and-restore on the character itself and give what a copy would.
