@@ -7641,8 +7641,7 @@ func test_fight_target_names_the_chore_giver_here() -> void:
 	var d := data()
 	var c := _fresh()
 	var t := Guidance.fight_target(c, d, {}, d.start_region, 0)
-	if not t.is_empty():
-		assert_eq(String(t["place"]), "Headman Zhou")
+	assert_eq(String(t.get("place", "")), "Headman Zhou", str(t))  # REVIEW: was skipped when empty
 	assert_eq(Guidance.fight_target(c, d, {}, "no_such_region", 0), {})
 
 

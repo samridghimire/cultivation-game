@@ -68,7 +68,20 @@ static func save_image(k: String, img: Image) -> void:
 	var copy := Image.new()
 	copy.copy_from(img)
 	var d := dir
+	_reap()
 	_tasks.append(WorkerThreadPool.add_task(func() -> void: _write(d, k, copy)))
+
+
+## REVIEW (PERF-016): every WorkerThreadPool task must be waited on once to free it; finished ones are collected here
+## (the wait returns at once) so a long session that never calls flush() does not keep every task id.
+static func _reap() -> void:
+	var pending: Array[int] = []
+	for id in _tasks:
+		if WorkerThreadPool.is_task_completed(id):
+			WorkerThreadPool.wait_for_task_completion(id)
+		else:
+			pending.append(id)
+	_tasks = pending
 
 
 ## Blocks until every pending background write has finished (tests, quit).

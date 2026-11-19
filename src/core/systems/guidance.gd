@@ -838,8 +838,9 @@ static func _short_fight(line: String, data: GameData) -> String:
 const SHORT_ASK_CHARS := 56
 
 
-## GUIDE-267: the first Easy/Fair fight the HUD shows, when it is a chore given in `region_id` or an explore fight at a
-## place there: {"npc": id} / {"place": place_id}, else {}. The giver is found by its display name in the line's label.
+## GUIDE-267: the first Easy/Fair fight the HUD shows, when it is a chore given in `region_id`: {"place": the giver's
+## display_name}, else {} (explore fights and chores elsewhere are not targeted yet). The giver is found by its display
+## name in the line's label.
 static func fight_target(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = 0, people: Dictionary = {}, favor: Dictionary = {}) -> Dictionary:
 	var fights := fair_fights(c, data, flags, today, region_id, people, favor)
 	var order := hud_fight_order(fights)

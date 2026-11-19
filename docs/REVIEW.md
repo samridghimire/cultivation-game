@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 52ab9fc
+Last reviewed commit: b2d7636
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2236,3 +2236,21 @@ Last reviewed commit: 52ab9fc
     asserted; C-392 left the balance baseline to SIM-011, which refreshed it. GFX-200 `_court_link` does not check that a
     horizontal road spans the court's x (a link can end short in open ground; draw-only, minor). GFX-201/202/203 draw or
     layout only with tests; I did not render. PERF-015/SIM-010/SIM-011 sim only (World lap timing is a no-op unless `lapping`).
+- 2026-11-19 (reviewer): reviewed 52ab9fc..b2d7636 (GUIDE-263, WU-568, C-393, GFX-204, PERF-016, GUIDE-264, GFX-206, QA-237,
+  GUIDE-267, GFX-205, WU-569, C-394; [PLAN]/[REVIEW] skipped). Main green (4341 tests). No BACKLOG/CHANGELOG edits by workers,
+  no SAVE_VERSION change, no new binary assets. Fixed two things inline, nothing filed.
+  - Fixed (PERF-016): background ground-cache writes were only waited on by flush(), which the game never calls, so every
+    WorkerThreadPool task stayed unwaited (Godot needs each one waited to free it). save_image now reaps finished tasks
+    first. Tested.
+  - Fixed (GUIDE-267): fight_target's doc promised {"npc": id} / {"place": place_id} and explore-fight targets; it only
+    returns {"place": giver display_name} for a local chore. Doc corrected. Its test skipped the assert when the result was
+    empty; it now requires Headman Zhou (passes). WU-570 should know only chores are targeted.
+  - GUIDE-264 OK: route_gate probes higher realms through _with_probe; the gated home line moves to the end. Spec items
+    3-4 (other hint builders, goal-line tail) were not done (worker said so); planner should keep them open.
+  - GFX-206: LabelLayout.person_blocked is unused, and _yield_place_labels has an unused _places param (dead code, minor).
+    WU-569: the walk lift adds to label_offset/_label_target; a full re-spread that rewrites label_offset can leave
+    _walk_lift stale until the next aim (cosmetic). `_spread_clock = maxf(_spread_clock, 0.0)` in World._process is a
+    no-op. Neither was rendered by me.
+  - WU-568: Elder Mo's "What lies beyond" and errand now need favor 5; no hint points at them, so nothing is misleading.
+    C-394 data OK (monkey -> ape silhouette; balance baseline not refreshed, worker noted it). C-393 test only.
+    GUIDE-263, GFX-204 and GFX-205 (PeakDressing is pure RefCounted in core) are OK with tests. QA-237 is sim only.

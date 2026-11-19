@@ -99,6 +99,21 @@ func test_threaded_write_appears_after_flush_and_leaves_no_tmp() -> void:
 	_end()
 
 
+## REVIEW (PERF-016): finished background writes are collected on the next save, so the task list does not grow forever.
+func test_finished_tasks_are_reaped() -> void:
+	_begin()
+	var img := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	for i in 3:
+		GroundCache.save_image(GroundCache.key(["reap", i]), img)
+	var waited := 0
+	while GroundCache._tasks.size() > 0 and not GroundCache._tasks.all(func(id: int) -> bool: return WorkerThreadPool.is_task_completed(id)) and waited < 200:
+		OS.delay_msec(5)
+		waited += 1
+	GroundCache.save_image(GroundCache.key(["reap", 9]), img)
+	assert_eq(GroundCache._tasks.size(), 1, "only the newest write is still tracked")
+	_end()
+
+
 func test_disabled_never_touches_disk() -> void:
 	_begin()
 	GroundCache.enabled = false
