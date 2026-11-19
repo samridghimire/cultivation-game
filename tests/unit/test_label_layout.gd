@@ -286,3 +286,51 @@ func test_named_villager_label_stays_on_him_in_a_crowd() -> void:  # GFX-208
 		assert_true(r.end.y >= feet - 32.0 - Interactable.PIN_ABOVE_HEAD - 0.5 and r.end.y <= feet + Interactable.PIN_BELOW_FEET + 0.5, "label bottom %s feet %s" % [r.end.y, feet])
 	for n: Node in nodes:
 		n.free()
+
+
+## PERF-020: the allocation-free separate and crowd_keep give what the plain definitions give.
+func test_separate_and_crowd_keep_match_plain_definitions() -> void:
+	var rng := seeded_rng(20)
+	for round in 40:
+		var rects: Array[Rect2] = []
+		var fixed: Array[bool] = []
+		var prio: Array[int] = []
+		for k in 3 + rng.randi() % 10:
+			rects.append(Rect2(rng.randf() * 200.0, rng.randf() * 80.0, 40.0 + rng.randf() * 80.0, 16.0))
+			fixed.append(rng.randf() < 0.4)
+			prio.append(1 + rng.randi() % 2)
+		var got := LabelLayout.separate(rects, fixed)
+		var placed: Array[Rect2] = rects.duplicate()
+		for i in rects.size():
+			var dy := 0.0
+			var faded := false
+			if not fixed[i]:
+				var bl: Array[Rect2] = []
+				for j in rects.size():
+					if j != i and (fixed[j] or j < i):
+						bl.append(placed[j])
+				if LabelLayout._hits(rects[i], bl):
+					faded = true
+					for step in [-1.0, 1.0, -2.0, 2.0]:
+						var moved := Rect2(rects[i].position + Vector2(0, step * rects[i].size.y), rects[i].size)
+						if not LabelLayout._hits(moved, bl):
+							placed[i] = moved
+							dy = step * rects[i].size.y
+							faded = false
+							break
+			assert_eq(got[i]["dy"], dy)
+			assert_eq(got[i]["faded"], faded)
+		var keep := LabelLayout.crowd_keep(rects, prio, -1)
+		for i in rects.size():
+			var near: Array[int] = []
+			for j in rects.size():
+				if rects[i].get_center().distance_to(rects[j].get_center()) <= 160.0:
+					near.append(j)
+			var want := true
+			if near.size() > 3:
+				var out := 0
+				for j in near:
+					if j != i and LabelLayout._outranks(j, i, prio, -1):
+						out += 1
+				want = out < 3
+			assert_eq(keep[i], want)

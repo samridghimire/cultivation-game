@@ -136,10 +136,15 @@ static func _padded(rects: Array[Rect2]) -> Array[Rect2]:
 ## by distance to the player). Labels in a thin neighbourhood are always kept.
 static func crowd_keep(rects: Array[Rect2], priority: Array[int], focus: int, radius: float = 160.0, max_shown: int = 3) -> Array[bool]:
 	var keep: Array[bool] = []
+	var centers: Array[Vector2] = []  # PERF-020: centres once, squared distances
+	for r in rects:
+		centers.append(r.get_center())
+	var r2 := radius * radius
 	for i in rects.size():
 		var near: Array[int] = []
+		var ci := centers[i]
 		for j in rects.size():
-			if rects[i].get_center().distance_to(rects[j].get_center()) <= radius:
+			if ci.distance_squared_to(centers[j]) <= r2:
 				near.append(j)
 		if near.size() <= max_shown:
 			keep.append(true)
@@ -169,6 +174,14 @@ static func _hits(rect: Rect2, others: Array[Rect2], skip: int = -1) -> bool:
 	return false
 
 
+## PERF-020: whether `rect` hits a placed rect j != i that is fixed or earlier than i (separate's blockers).
+static func _hits_placed(rect: Rect2, placed: Array[Rect2], fixed: Array[bool], i: int) -> bool:
+	for j in placed.size():
+		if j != i and (fixed[j] or j < i) and rect.intersects(placed[j]):
+			return true
+	return false
+
+
 ## WU-545: the last pass over labels already placed. `fixed[i]` marks place labels (they never move); a moving label
 ## that overlaps anything placed is nudged up, then down, by its own height (at most two tries), else it is marked faded.
 ## Rects are processed in order, so earlier ones win. Returns one {dy: float, faded: bool} per rect.
@@ -183,16 +196,12 @@ static func separate(rects: Array[Rect2], fixed: Array[bool]) -> Array[Dictionar
 		if fixed[i]:
 			continue
 		var r := rects[i]
-		var blockers: Array[Rect2] = []
-		for j in rects.size():
-			if j != i and (fixed[j] or j < i):
-				blockers.append(placed[j])
-		if not _hits(r, blockers):
+		if not _hits_placed(r, placed, fixed, i):  # PERF-020: no blockers list built per label
 			continue
 		var done := false
 		for step in [-1.0, 1.0, -2.0, 2.0]:
 			var moved := Rect2(r.position + Vector2(0, step * r.size.y), r.size)
-			if not _hits(moved, blockers):
+			if not _hits_placed(moved, placed, fixed, i):
 				placed[i] = moved
 				out[i]["dy"] = step * r.size.y
 				done = true
