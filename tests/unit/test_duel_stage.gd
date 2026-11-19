@@ -396,3 +396,18 @@ func test_zero_width_stage_draws_without_error() -> void:
 	await (Engine.get_main_loop() as SceneTree).process_frame
 	assert_true(st.is_inside_tree())
 	st.queue_free()
+
+
+## GFX-209: a lying beast's visible base rests on its shadow (no floating corpse over an empty oval).
+func test_fallen_beast_rests_on_shadow() -> void:
+	var st := DuelStage.new()
+	st.size = Vector2(620, 200)
+	st.setup("wild_boar", ["beast"])
+	st._tilt[1] = 1.5
+	st._dark[1] = 0.5
+	var sh := st.shadow_rect(1)
+	var body := st.fallen_body_rect(1)
+	var base := body.end.y + st.lying_pad()
+	assert_true(absf(sh.get_center().y - (base - st.lying_pad())) <= 4.0)
+	assert_true(st.lying_pad() >= 0.0)
+	st.free()

@@ -418,7 +418,8 @@ func _draw() -> void:
 	for who in 2:
 		var sh := shadow_rect(who)
 		draw_set_transform(Vector2(sh.get_center().x, base_y), 0.0, Vector2(1.0, 0.28))
-		draw_circle(Vector2.ZERO, sh.size.x / 2.0, Color(0, 0, 0, 0.35 * _alpha[who]))
+		var lying := is_fallen(who)
+		draw_circle(Vector2.ZERO, sh.size.x / 2.0 * (1.0 if not lying else 0.9), Color(0, 0, 0, (0.5 if lying else 0.35) * _alpha[who]))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_fighter(0, Vector2(size.x * 0.25 + dx, base_y))
 	_draw_fighter(1, Vector2(size.x * 0.75 + dx, base_y))
@@ -441,7 +442,7 @@ func shadow_rect(who: int) -> Rect2:
 	var by := size.y - FEET_INSET + _stage_offset().y
 	if is_fallen(who):
 		var r := fallen_rect(_body_size(who), Vector2(cx, by), who == 1 and _foe_beast)
-		return Rect2(r.position.x, by - 2.0, r.size.x, 4.0)
+		return Rect2(r.position.x, by - 2.0, r.size.x, 4.0)  # GFX-209: ~70 % alpha, flatter, see _draw
 	return Rect2(cx - 30.0, by - 2.0, 60.0, 4.0)
 
 
@@ -453,6 +454,23 @@ func _feet_of(who: int) -> Vector2:
 ## The bounds of the lying body of fighter `who`.
 func fallen_body_rect(who: int) -> Rect2:
 	return fallen_rect(_body_size(who), _feet_of(who), who == 1 and _foe_beast)
+
+
+## GFX-209: drawn pixels of empty rows above the foe beast's art (they end up under the body once it lies flipped).
+func lying_pad() -> float:
+	if not _foe_beast:
+		return 0.0
+	var tex: Texture2D = _foe_texture
+	var z := float(Sprites.scale()) * 2.0
+	if tex == null:
+		tex = _pixel_texture(1)
+		z = _foe_zoom
+	if tex == null:
+		return 0.0
+	var img := tex.get_image()
+	if img == null:
+		return 0.0
+	return float(img.get_used_rect().position.y) * z * BEAST_LIE_SCALE
 
 
 ## The "Defeated" plate: centred on the lying body, its bottom TAG_GAP above the body's top (WU-547).
@@ -1090,7 +1108,8 @@ func _draw_fighter(who: int, feet: Vector2) -> void:
 		var pivot := pos + Vector2(0.0, -body.x / 2.0)
 		draw_set_transform_matrix(Transform2D(rot, pivot) * Transform2D(0.0, Vector2(0.0, body.y / 2.0)))
 	elif on_back:  # on its side: squashed flat, feet on the ground, legs stuck out stiff
-		draw_set_transform(pos + Vector2(0.0, -body.y * BEAST_LIE_SCALE), 0.0, Vector2(1.0, -BEAST_LIE_SCALE))
+		# GFX-209: the flipped sprite's old top padding is now its bottom edge: sink it so the body rests on its shadow
+		draw_set_transform(pos + Vector2(0.0, -body.y * BEAST_LIE_SCALE + lying_pad()), 0.0, Vector2(1.0, -BEAST_LIE_SCALE))
 	elif _kneel[who]:  # a kneeling bow: shorter, a little forward
 		draw_set_transform(pos + Vector2(8.0 if who == 0 else -8.0, 0.0), 0.12 * (1.0 if who == 0 else -1.0), Vector2(1.0, 0.8))
 	else:
