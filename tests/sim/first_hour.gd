@@ -2078,6 +2078,11 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 	return kinds
 
 
+## SIM-013: "Easy fight: <text>" with exactly one prefix (the fight text may already carry it).
+static func with_easy_fight_prefix(text: String) -> String:
+	return "Easy fight: " + text.trim_prefix("Easy fight: ")
+
+
 ## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
@@ -2086,7 +2091,7 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 			lines.append("Goal: " + String(g["text"]))
 			break
 	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
-		lines.append("Easy fight: " + String(f.get("text", "")))
+		lines.append(with_easy_fight_prefix(String(f.get("text", ""))))
 		break
 	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor):
 		lines.append(h)
@@ -2184,7 +2189,26 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 			gs.unlock_artifact_function(ready[0])
 			return "unseal" if ArtifactFunctions.is_unlocked(c, ready[0]) else ""
 		return ""
-	if line.begins_with("Goal: ") and (line.contains("Pick something") or line.contains("Learn a fighting")):
+	if line.begins_with("Goal: Visit "):
+		# SIM-013: the goal names a place (the market); the player travels there like the map's Travel button.
+		var visit := "fallen_star_market" if line.contains("Fallen Star") else ""
+		if visit == "":
+			return ""
+		_walk_to(gs, c, visit)
+		return "travel" if gs.get_node("/root/GameClock").total_days != day_before or gs.current_region == visit else ""
+	if line.contains("by the path") or line.begins_with("Goal: Pick something"):
+		# SIM-013: pick what lies by the path here (the same action as the Pick button); explore when nothing grows here today.
+		var picked := false
+		for n: Dictionary in gs.forage_here():
+			if gs.pick_forage(int(n["slot"])):
+				picked = true
+		if picked:
+			return "forage"
+		if line.begins_with("Goal: "):
+			_explore(gs)
+			return "explore"
+		return ""
+	if line.begins_with("Goal: ") and line.contains("Learn a fighting"):
 		var seen := _explore_watched(gs, c, day)
 		_explore(gs)
 		_log_explore_fights(done, seen)

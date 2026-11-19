@@ -206,6 +206,13 @@ func test_hints_player_acts_on_next_steps() -> void:
 	assert_true(int(out["month_days"][1]) > int(out["month_days"][0]), "time passes every month")
 
 
+## SIM-013: the Easy fight tally strips one prefix, never doubles it.
+func test_easy_fight_prefix_is_not_doubled() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	assert_eq(FirstHour.with_easy_fight_prefix("Bounty: Drunk Bully"), "Easy fight: Bounty: Drunk Bully")
+	assert_eq(FirstHour.with_easy_fight_prefix("Easy fight: Bounty: Drunk Bully"), "Easy fight: Bounty: Drunk Bully")
+
+
 ## SIM-011: the hints player acts on the unseal line and the sect-home line when they show (staged state), and learns a style from the teacher.
 func test_hints_player_follows_unseal_sect_home_and_teacher_lines() -> void:
 	var FirstHour := preload("res://tests/sim/first_hour.gd")
