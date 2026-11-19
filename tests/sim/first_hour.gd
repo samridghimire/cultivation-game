@@ -2140,6 +2140,23 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		if home != "":
 			_walk_to(gs, c, home)
 		return "sect_home" if home != "" and gs.get_node("/root/GameClock").total_days != day_before else ""
+	if line.begins_with("Goal: Walk to "):
+		# QA-237: the goal names the first hop out of the village; the player travels there.
+		_walk_to(gs, c, "misty_forest")
+		return "travel" if gs.get_node("/root/GameClock").total_days != day_before else ""
+	if line.begins_with("Practise ") and line.contains(" on the Techniques screen"):
+		var practise_id := Techniques.practice_target(c, gs.data)
+		if practise_id == "":
+			return ""
+		gs.practice_technique(practise_id, 7)
+		return "practise" if gs.get_node("/root/GameClock").total_days != day_before else ""
+	if line.begins_with("Your sect treasury sells ") or line.contains("from your sect treasury"):
+		var claim := Guidance._body_manual_treasury(c, gs.data)
+		if claim.is_empty():
+			return ""
+		var held := c.item_count(String(claim["item_id"]))
+		gs.buy_with_contribution(String(claim["item_id"]))
+		return "treasury" if c.item_count(String(claim["item_id"])) > held else ""
 	if line.begins_with("Unseal "):
 		var ready := ArtifactFunctions.ready_to_unseal(c, gs.data, gs.world_flags)
 		if not ready.is_empty():
