@@ -513,13 +513,60 @@ const DRAKE_LEGS := [
 	["......ofo....ofo........", "......ooo....ooo........"],
 	["......ofo...ofo.........", "......ooo...ooo........."],
 ]
+## GFX-207: a shaggy goat with curled horns, a knot of glossy leeches, three hopping crows and a troop of monkeys.
+const GOAT_ROWS := [
+	"..............pp.p......",
+	"...............pppp.....",
+	"....oooooooo...oofffo...",
+	"...offfffffffooooffeffo.",
+	"..offFFFFFFFFFfffffffpoo",
+	"..offFFFFFFFFFffffffpp..",
+	"...ooffffffffffffffp....",
+]
+const GOAT_LEGS := [
+	["...ofo..ofo..ofo..ofo..", "...ofo..ofo..ofo..ofo..", "...ooo..ooo..ooo..ooo.."],
+	["....ofo.ofo...ofo.ofo..", "....ofo.ofo...ofo.ofo..", "....ooo.ooo...ooo.ooo.."],
+]
+const LEECH_ROWS := [
+	"......oooo..............",
+	".....offffo......oooo...",
+	"..ooooffpfo.....offffo..",
+	".offffoffoo.oooooffpfo..",
+	"offpffooooo.offffooooo..",
+]
+const LEECH_LEGS := [
+	[".oooooo..ooffffo.ooo.....", "........ooooooooo..ooooo.."],
+	["..ooooo.ooffffo...ooo....", "...ooo...ooooooooo.ooooo.."],
+]
+const CROW_ROWS := [
+	"..oo............oo......",
+	".offdo..oo.....offdo.oo.",
+	".offo..offdo...offo.offd",
+	"..ooo..offo.....ooo..ooo",
+]
+const CROW_LEGS := [
+	[".offfo..offfo..offffo.off", "..o.o...o.o.....o.o....o"],
+	["oofffo...ooffo.ooffo.ooff", "...o.o....o.o....o.o...o."],
+]
+const MONKEY_ROWS := [
+	"..oo.oo......oo.oo......",
+	".offoffo....offoffo..oo.",
+	".offeffo....offeffo.offo",
+	"..offfo.....offfo...offo",
+	".ooffffoo..ooffffoo.ooo.",
+]
+const MONKEY_LEGS := [
+	[".offfffo.o.offfffo.o.ooo", ".ofo.ofo...ofo.ofo......"],
+	["o.offffo...offfffo..o.oo", "..ofo.ofo..ofo.ofo......"],
+]
 const OWN_BEASTS := {
 	"wolf": [WOLF_ROWS, WOLF_LEGS], "fox": [WOLF_ROWS, WOLF_LEGS], "boar": [BOAR_ROWS, BOAR_LEGS],
 	"tiger": [TIGER_ROWS, TIGER_LEGS], "deer": [DEER_ROWS, DEER_LEGS],
 	"bear": [BEAR_ROWS, BEAR_LEGS], "rhino": [RHINO_ROWS, RHINO_LEGS], "tortoise": [TORTOISE_ROWS, TORTOISE_LEGS],
 	"spider": [SPIDER_ROWS, SPIDER_LEGS], "dog": [DOG_ROWS, DOG_LEGS], "drake": [DRAKE_ROWS, DRAKE_LEGS],
+	"goat": [GOAT_ROWS, GOAT_LEGS], "leech": [LEECH_ROWS, LEECH_LEGS], "crows": [CROW_ROWS, CROW_LEGS], "monkeys": [MONKEY_ROWS, MONKEY_LEGS],
 }
-const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram", "bear", "rhino", "tortoise", "spider", "dog", "drake"]
+const BEAST_KINDS := ["wolf", "boar", "tiger", "snake", "bird", "fox", "deer", "ape", "crane", "toad", "ram", "bear", "rhino", "tortoise", "spider", "dog", "drake", "goat", "leech", "crows", "monkeys"]
 
 
 ## A generated 24x16 beast facing right (the foe mirrors it). `index` picks one of two leg frames;

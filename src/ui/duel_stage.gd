@@ -12,7 +12,8 @@ const FOE_ROBE := Color("3a2f3d")
 const FOE_SASH := Color("7a2a2a")
 const BEAST_FURS := {"wolf": Color("8a8d92"), "boar": Color("5a4636"), "tiger": Color("b5652a"), "fox": Color("c4702c"),
 	"stag": Color("a8854f"), "deer": Color("a8854f"), "elk": Color("a8854f"), "antler": Color("a8854f"),
-	"ape": Color("6e665a"), "cloud_crane": Color("eceae4"), "toad": Color("6a8f3c"), "_ram": Color("7d6850"), "python": Color("6b7040")}
+	"ape": Color("6e665a"), "cloud_crane": Color("eceae4"), "toad": Color("6a8f3c"), "_ram": Color("7d6850"), "python": Color("6b7040"),
+	"leech": Color("3f4a2c"), "crow": Color("2b2b36"), "monkey": Color("86868c"), "goat": Color("9a9288")}
 const FALLEN_DARKEN := 0.3
 const DEFAULT_FUR := Color("6b5a48")
 const STAGE_HEIGHT := 182.0
@@ -32,6 +33,7 @@ const TAG_GAP := 5.0
 const RIM_LIGHTEN := 0.45
 ## Enemy id keywords -> PixelFigure beast kind, checked in order (GFX-028).
 const BEAST_KEYWORDS := [
+	["leech", "leech"], ["crow", "crows"], ["monkey", "monkeys"], ["goat", "goat"],
 	["tortoise", "tortoise"], ["turtle", "tortoise"], ["bear", "bear"], ["rhino", "rhino"], ["spider", "spider"],
 	["tusker", "boar"], ["porcupine", "boar"], ["peng", "bird"],
 	["basilisk", "snake"], ["wyrm", "snake"], ["dragonling", "drake"], ["drake", "drake"],

@@ -127,7 +127,8 @@ func test_new_beast_keywords() -> void:
 	var expect := {"black_iron_bear_king": "bear", "iron_horn_rhino": "rhino", "ancient_tortoise_sage": "tortoise",
 		"sky_bearing_tortoise": "tortoise", "ice_soul_spider": "spider", "scarred_old_tusker": "boar",
 		"ten_thousand_li_peng": "bird", "nine_thunder_peng": "bird", "quillback_porcupine": "boar",
-		"warehouse_stray_dog": "dog", "hill_dog": "dog", "void_rift_dragonling": "drake", "crag_goat": "ram"}
+		"warehouse_stray_dog": "dog", "hill_dog": "dog", "void_rift_dragonling": "drake", "crag_goat": "goat",
+		"bog_leech_swarm": "leech", "ridge_crow_flock": "crows", "thicket_monkey_troop": "monkeys"}
 	for id: String in expect:
 		assert_eq(DuelStage.beast_kind(id), expect[id], id)
 
@@ -135,7 +136,7 @@ func test_new_beast_keywords() -> void:
 func test_new_beast_silhouettes_differ() -> void:
 	var fur := Color("8a8d92")
 	var plain := PixelFigure.beast_frame(fur, 0, "").get_image()
-	var kinds: Array[String] = ["bear", "rhino", "tortoise", "spider", "dog", "drake"]
+	var kinds: Array[String] = ["bear", "rhino", "tortoise", "spider", "dog", "drake", "goat", "leech", "crows", "monkeys"]
 	for a in kinds.size():
 		var ia := PixelFigure.beast_frame(fur, 0, kinds[a]).get_image()
 		var others: Array[Image] = [plain]
