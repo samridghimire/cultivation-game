@@ -347,3 +347,24 @@ func test_teachers_last_errand() -> void:
 			return (v["choices"] as Array).map(func(ch: Dictionary) -> String: return String(ch["label"]))
 		assert_false(labels.call({grad: true}).has(row[4]), "no thanks before the errand")
 		assert_true(labels.call({grad: true, row[3]: true}).has(row[4]), "thanks after the errand: " + npc_id)
+
+
+## GUIDE-270: next_unlock names the lowest favor gate; other blockers skip the option.
+func test_next_unlock_elder_mo() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	var d: Dictionary = data().dialogues["elder_mo"]
+	var u := Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 0))
+	assert_eq(int(u["favor"]), 5)
+	assert_eq(int(u["have"]), 0)
+	assert_true(String(u["label"]) != "")
+	assert_true(Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 2))["favor"] == 5)
+	assert_true(int(Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 5))["favor"]) > 5)
+	assert_true(Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 100)).is_empty())
+
+
+func test_next_unlock_skips_realm_gated_options() -> void:
+	var npcs := _npcs()
+	var c := new_character()
+	var d := {"nodes": {"a": {"choices": [{"label": "x", "next": "end", "if": {"min_favor": 3, "min_realm": "foundation_establishment"}}]}}}
+	assert_true(Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 0)).is_empty())

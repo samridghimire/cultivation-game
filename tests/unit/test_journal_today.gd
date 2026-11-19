@@ -178,3 +178,17 @@ func test_blocks_split_and_cap() -> void:
 	s._build_today(PackedStringArray(), _tasks([false, false, false, false, false, false, false]))
 	assert_eq(s._today.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool: return n.has_meta("season_row")).size(), JournalScreen.BLOCK_CAP)
 	s.queue_free()
+
+
+## GUIDE-270: one "will tell you more as a friend" line, for a met person only, not on the day they were met.
+func test_friend_unlock_line_once_for_met_people() -> void:
+	var npcs := {}
+	Npcs.ensure_all(npcs, data(), seeded_rng())
+	var c := new_character()
+	var favor := {"elder_mo": 2}
+	assert_eq(Guidance.friend_unlock_line(c, data(), {}, npcs, favor, "qingshi_village", 10), "", "unmet people are not listed")
+	var flags := {Guidance.MET_FLAG + "elder_mo": 10}
+	assert_eq(Guidance.friend_unlock_line(c, data(), flags, npcs, favor, "qingshi_village", 10), "", "not on the day met")
+	var line := Guidance.friend_unlock_line(c, data(), flags, npcs, favor, "qingshi_village", 11)
+	assert_eq(line, "Elder Mo will tell you more as a friend (favor 2/5).")
+	assert_eq(Guidance.friend_unlock_line(c, data(), flags, npcs, favor, "withered_bone_marsh", 11), "", "other region")

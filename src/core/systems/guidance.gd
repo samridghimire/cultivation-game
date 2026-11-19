@@ -334,7 +334,39 @@ static func people_today_lines(c: CharacterData, data: GameData, active_events: 
 			out.append("It is %s's birthday (find them at %s): a gift counts double." % [b["npc"].name, Folk.stand_phrase(data, b["npc"].id, day, active_events)])
 	for w: Dictionary in Folk.lessons_waiting(npcs, data, region_id, favor, c.lessons_taught, day):
 		out.append("%s has something to show you (find them at %s)." % [w["npc"].name, Folk.stand_phrase(data, w["npc"].id, day, active_events)])
+	var friend := friend_unlock_line(c, data, flags, npcs, favor, region_id, day)
+	if friend != "":
+		out.append(friend)
 	return out
+
+
+const MET_FLAG := "npc_met_"  # GUIDE-270: world flag per NPC holding the day the player first talked to them
+
+
+## GUIDE-270: at most one line for a met person in this region whose dialogue holds an option that waits only on
+## more favor ("Elder Mo will tell you more as a friend (favor 2/5)."); the smallest gap wins. People met today
+## are skipped. "" when none. Pure.
+static func friend_unlock_line(c: CharacterData, data: GameData, flags: Dictionary, npcs: Dictionary,
+		favor: Dictionary, region_id: String, day: int) -> String:
+	var best_gap := 1 << 30
+	var best := ""
+	var best_name := ""
+	for npc in Npcs.in_region(npcs, data, region_id):
+		if not data.npcs.has(npc.id) or not npc.alive or not flags.has(MET_FLAG + npc.id) or int(flags[MET_FLAG + npc.id]) >= day:
+			continue
+		var dialogue: Dictionary = data.dialogues.get(String(data.npcs[npc.id].get("dialogue", "")), {})
+		if dialogue.is_empty():
+			continue
+		var ctx := {"player": c, "npc": npc, "data": data, "flags": flags, "favor": int(favor.get(npc.id, 0)), "today": day}
+		var unlock := Dialogue.next_unlock(dialogue, ctx)
+		if unlock.is_empty():
+			continue
+		var gap := int(unlock["favor"]) - int(unlock["have"])
+		if gap < best_gap or (gap == best_gap and npc.name < best_name):
+			best_name = npc.name
+			best_gap = gap
+			best = "%s will tell you more as a friend (favor %d/%d)." % [npc.name, int(unlock["have"]), int(unlock["favor"])]
+	return best
 
 
 const FESTIVAL_LINE_MAX := 160

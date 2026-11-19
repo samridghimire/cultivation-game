@@ -1797,6 +1797,8 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_npc = npc_id
 	dialogue_event = ""
 	dialogue_node = node
+	if not world_flags.has(Guidance.MET_FLAG + npc_id):
+		world_flags[Guidance.MET_FLAG + npc_id] = GameClock.total_days  # GUIDE-270
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
 	_named_remembers(npc_id)

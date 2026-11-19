@@ -157,6 +157,27 @@ static func format(text: String, ctx: Dictionary) -> String:
 	})
 
 
+## GUIDE-270: the nearest friendship gate of `npc_id`'s dialogue: the lowest `min_favor` among its choices that
+## the player cannot pick only because of favor (every other condition of the choice passes). {"favor": need,
+## "have": favor, "label": choice label}; {} when there is none. `ctx` as everywhere (its "favor" is the NPC's).
+static func next_unlock(dialogue: Dictionary, ctx: Dictionary) -> Dictionary:
+	var best := {}
+	var favor := int(ctx.get("favor", 0))
+	for node_id: String in dialogue.get("nodes", {}):
+		for choice: Dictionary in dialogue["nodes"][node_id].get("choices", []):
+			var cond: Dictionary = choice.get("if", {})
+			var need := int(cond.get("min_favor", 0))
+			if not cond.has("min_favor") or favor >= need:
+				continue
+			var rest := cond.duplicate()
+			rest.erase("min_favor")
+			if unmet_reason(rest, ctx) != "" or Effects.check(ctx["player"], ctx["data"], choice.get("effects", {})) != "":
+				continue
+			if best.is_empty() or need < int(best["favor"]):
+				best = {"favor": need, "have": favor, "label": String(choice.get("label", ""))}
+	return best
+
+
 static func _choice_blocker(choice: Dictionary, ctx: Dictionary) -> String:
 	var reason := unmet_reason(choice.get("if", {}), ctx)
 	if reason == "":
