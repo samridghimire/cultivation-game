@@ -16,6 +16,11 @@ static func clear_cache() -> void:
 ## A deterministic seamless tile: `base` speckled with darker and lighter pixels. Ground
 ## tiles get a few two-pixel grass blades, path tiles darker pebbles.
 static func make_tile(base: Color, seed_text: String, kind: String) -> ImageTexture:
+	return ImageTexture.create_from_image(make_tile_image(base, seed_text, kind))
+
+
+## PERF-017: the pixels of `make_tile`, with no texture, so a worker thread can build ground ahead of time.
+static func make_tile_image(base: Color, seed_text: String, kind: String) -> Image:
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(base)
 	var rng := RandomNumberGenerator.new()
@@ -35,7 +40,7 @@ static func make_tile(base: Color, seed_text: String, kind: String) -> ImageText
 			var by := rng.randi_range(0, SIZE - 2)
 			img.set_pixel(bx, by, base.lightened(0.18))
 			img.set_pixel(bx, by + 1, base.lightened(0.18))
-	return ImageTexture.create_from_image(img)
+	return img
 
 
 ## `make_tile`, memoised so a region redraw does not rebuild it.
@@ -61,7 +66,11 @@ static func variant_for(rid: String, cx: int, cy: int) -> int:
 
 ## One grass variant tile. Flowers only bloom when `flowers` is true (spring/summer); otherwise variant 3 is plain.
 static func make_variant(base: Color, rid: String, variant: int, flowers: bool) -> ImageTexture:
-	var img := make_tile(base, rid, "ground").get_image()
+	return ImageTexture.create_from_image(make_variant_image(base, rid, variant, flowers))
+
+
+static func make_variant_image(base: Color, rid: String, variant: int, flowers: bool) -> Image:
+	var img := make_tile_image(base, rid, "ground")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%s|v%d" % [rid, variant])
 	match variant:
@@ -89,7 +98,7 @@ static func make_variant(base: Color, rid: String, variant: int, flowers: bool) 
 				var blooms := [Color("f4efe0"), Color("f2d24b"), Color("e88aa8")]
 				for i in 3:
 					img.set_pixel(rng.randi_range(1, SIZE - 2), rng.randi_range(1, SIZE - 2), blooms[rng.randi() % blooms.size()])
-	return ImageTexture.create_from_image(img)
+	return img
 
 
 ## The whole ground of a region as one texture, 1 px per sprite pixel (the caller scales it): 16-px
@@ -104,8 +113,16 @@ static func _prof(pass_name: String, t0: int) -> void:
 		profile[pass_name] = int(profile.get(pass_name, 0)) + Time.get_ticks_usec() - t0
 
 
+static func memory_key(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String, style: String, zones: Array, scree_density: float, life: Dictionary) -> String:
+	return "ground|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density, life]
+
+
+static func is_cached(key: String) -> bool:
+	return _cache.has(key)
+
+
 static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String = "", style: String = "grass", zones: Array = [], scree_density: float = 1.0, life: Dictionary = {}) -> ImageTexture:
-	var key := "ground|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [base.to_html(), rid, size_px, flowers, season, style, zones, scree_density, life]
+	var key := memory_key(base, rid, size_px, flowers, season, style, zones, scree_density, life)
 	if _cache.has(key):
 		return _cache[key]
 	var disk_key := GroundCache.key([key])  # PERF-013: bump GroundCache.VERSION when any pass below changes its output
@@ -114,6 +131,17 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		var cached_tex := ImageTexture.create_from_image(disk)
 		_cache[key] = cached_tex
 		return cached_tex
+	var img := ground_image(base, rid, size_px, flowers, season, style, zones, scree_density, life)
+	var t0 := Time.get_ticks_usec() if profiling else 0
+	var tex := ImageTexture.create_from_image(img)
+	_prof("texture_upload", t0)
+	_cache[key] = tex
+	GroundCache.save_image(disk_key, img)
+	return tex
+
+
+## PERF-017: the pure pixel work of `ground_texture` (no textures, no caches, no scene tree), safe on a worker thread.
+static func ground_image(base: Color, rid: String, size_px: Vector2i, flowers: bool, season: String, style: String, zones: Array, scree_density: float, life: Dictionary) -> Image:
 	var img := Image.create(size_px.x, size_px.y, false, Image.FORMAT_RGBA8)
 	var t0 := Time.get_ticks_usec() if profiling else 0
 	var variants: Array[Image] = []
@@ -121,7 +149,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 	# GFX-198: 70% of cells shared one 16 px tile, so rock ground showed a regular dotted grid in the green months.
 	# Scree uses SCREE_TILES distinct plain tiles instead (no clover/bloom variants).
 	for v in (SCREE_TILES if scree_cells else 4):
-		variants.append(make_tile(base, "%s|st%d" % [rid, v], "ground").get_image() if scree_cells else make_variant(base, rid, v, flowers).get_image())
+		variants.append(make_tile_image(base, "%s|st%d" % [rid, v], "ground") if scree_cells else make_variant_image(base, rid, v, flowers))
 	for cy in ceili(float(size_px.y) / SIZE):
 		for cx in ceili(float(size_px.x) / SIZE):
 			var src := variants[absi(hash("%s|%d|%d|st" % [rid, cx, cy])) % SCREE_TILES if scree_cells else variant_for(rid, cx, cy)]
@@ -174,12 +202,7 @@ static func ground_texture(base: Color, rid: String, size_px: Vector2i, flowers:
 		for t in dry_tips:  # GFX-181: dry stalks poke through the snow
 			_set_clipped(img, t.x, t.y, Color("b59a62"))
 			_set_clipped(img, t.x, t.y + 1, Color("8a7447"))
-	t0 = Time.get_ticks_usec() if profiling else 0
-	var tex := ImageTexture.create_from_image(img)
-	_prof("texture_upload", t0)
-	_cache[key] = tex
-	GroundCache.save_image(disk_key, img)
-	return tex
+	return img
 
 
 const SCREE_TILES := 12  ## GFX-198: distinct ground tiles on a scree ground

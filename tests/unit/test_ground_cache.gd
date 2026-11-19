@@ -134,3 +134,27 @@ func test_small_textures_not_cached() -> void:
 func test_key_hashes_ground_source_in_dev_runs() -> void:
 	# REVIEW (PERF-013): a ground pass edited without a VERSION bump must not read back stale ground in dev runs.
 	assert_true(GroundCache._source_salt() != "", "ground_tiles.gd source is readable when running from the project")
+
+
+## PERF-017: a background warm bakes a neighbour's ground into the cache, identical to a cold build, and is not queued twice.
+func test_warm_bakes_neighbour_ground_identical_to_cold() -> void:
+	_begin()
+	GroundWarm._queued.clear()
+	GroundTiles.clear_cache()
+	var d := data()
+	var rid := "fallen_star_market"
+	var region: Dictionary = d.regions[rid]
+	assert_true(GroundWarm.warm(region, rid, "Winter"), "a task starts on a cold cache")
+	assert_true(not GroundWarm.warm(region, rid, "Winter"), "not queued twice")
+	GroundCache.flush()
+	assert_eq(_files().size(), 1, "one baked PNG")
+	var a := GroundWarm.args_for(region, rid, "Winter", float(Sprites.scale()))
+	var tex: ImageTexture = GroundTiles.ground_texture(a["base"], a["rid"], a["size_px"], a["flowers"], a["season"], a["style"], a["zones"], a["scree"], a["life"])
+	var warmed := tex.get_image()
+	GroundTiles.clear_cache()
+	GroundCache.enabled = false
+	var cold: Image = GroundTiles.ground_texture(a["base"], a["rid"], a["size_px"], a["flowers"], a["season"], a["style"], a["zones"], a["scree"], a["life"]).get_image()
+	assert_true(warmed.get_data() == cold.get_data(), "baked pixels equal a cold build")
+	assert_true(not GroundWarm.warm(region, rid, "Winter"), "disabled cache: no task")
+	GroundCache.enabled = true
+	_end()

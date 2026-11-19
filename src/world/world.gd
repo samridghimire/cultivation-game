@@ -131,6 +131,7 @@ func _ready() -> void:
 	_build_decor()
 	_lap("props/decor")
 	_refresh_ambient()
+	get_tree().create_timer(2.0).timeout.connect(func() -> void: GroundWarm.warm_neighbours(GameState.data, GameState.current_region, _season))  # PERF-017
 	Settings.changed.connect(_on_setting_changed)
 	_lap("ambient")
 	_build_places()
@@ -1288,23 +1289,7 @@ func _vec(a: Array) -> Vector2:
 
 ## GFX-130: path rects clover keeps off and the worn ellipses round places, in ground-texture px.
 func _ground_life(map: Dictionary, sc: float) -> Dictionary:
-	var avoid: Array = []
-	for r in map.get("paths", []):
-		avoid.append(Rect2(float(r[0]) / sc, float(r[1]) / sc, float(r[2]) / sc, float(r[3]) / sc))
-	var zones := Scenery.paved_zones(map, sc)
-	var worn: Array = []
-	for pl in _region.get("places", []):
-		var k := Npcs.place_keepout(pl)
-		var e := Rect2(k.get_center() - k.size * 0.65, k.size * 1.3)
-		var ok := true
-		for z: Rect2 in zones:
-			if z.intersects(Rect2(e.position / sc, e.size / sc)):
-				ok = false
-		if ok:
-			worn.append(Rect2(e.position / sc, e.size / sc))
-	for r in worn:
-		avoid.append(r)
-	return {"avoid": avoid, "worn": worn, "path_color": Color(map.get("path_color", "8a7350")), "speckle": float(map.get("speckle", 1.0)), "alpine_meadow": map.get("alpine_meadow", false)}
+	return GroundWarm.life_for(_region, sc)
 
 
 func _draw() -> void:

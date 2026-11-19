@@ -33,6 +33,10 @@ static func _path(k: String) -> String:
 	return "%s/%s.png" % [dir, k]
 
 
+static func has(k: String) -> bool:
+	return FileAccess.file_exists(_path(k))
+
+
 ## The cached image, or null on a miss, a size mismatch or a decode error.
 static func load_image(k: String, size_px: Vector2i) -> Image:
 	if not enabled or size_px.x * size_px.y < MIN_PIXELS:
