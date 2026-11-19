@@ -274,3 +274,32 @@ func test_sim_start_and_join_flags() -> void:
 	gs.end_session()
 	saves.autosave_enabled = autosave
 	assert_eq(sect_id, "blood_lotus_sect", "a mortal joins the named sect at day 0")
+
+
+## C-396: each first-fight foe drops something a loop in its region uses: a rank-0 recipe ingredient, a home-meal ingredient or a local NPC's like.
+func test_first_fight_spoils_feed_a_local_loop() -> void:
+	var d := data()
+	var foes := {"wild_boar": "qingshi_village", "warehouse_stray_dog": "fallen_star_market", "crag_goat": "azure_peak", "bog_leech_swarm": "withered_bone_marsh", "ridge_crow_flock": "myriad_peaks_ridge", "thicket_monkey_troop": "misty_forest"}
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/recipes.json"))
+	var meals: Array = (raw as Dictionary)["home_meals"]
+	var npcs_raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/npcs.json"))
+	for foe_id: String in foes:
+		var items: Dictionary = (d.enemies[foe_id].get("rewards", {}) as Dictionary).get("items", {})
+		assert_true(not items.is_empty(), "%s drops something" % foe_id)
+		var fed := false
+		for item_id: String in items:
+			assert_true(int(d.items[item_id].get("price", 0)) <= 6 or item_id == "boar_hide" or item_id == "boar_meat", "%s: %s is cheap" % [foe_id, item_id])
+			for r: Dictionary in d.recipes.values():
+				if int(r.get("min_rank", 0)) == 0 and (r["ingredients"] as Dictionary).has(item_id):
+					fed = true
+			for m: Dictionary in meals:
+				if (m["ingredients"] as Dictionary).has(item_id):
+					fed = true
+			var tags: Array = d.items[item_id].get("tags", [])
+			for n: Dictionary in (npcs_raw as Dictionary)["npcs"]:
+				if n.get("region", "") != foes[foe_id]:
+					continue
+				for like: String in n.get("likes", []):
+					if like == item_id or like in tags:
+						fed = true
+		assert_true(fed, "%s: a drop feeds a recipe, a meal or a local like" % foe_id)
