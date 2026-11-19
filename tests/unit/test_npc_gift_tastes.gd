@@ -168,3 +168,60 @@ func test_every_style_teacher_has_a_favor_errand() -> void:
 			if String(deed.get("context", "")) == context and deed.get("once", false) and (deed.get("favor", {}) as Dictionary).get(npc_id, 0) >= 10 and int(deed.get("days", 9)) <= 2 and String(deed.get("result", "")) != "":
 				found = true
 		assert_true(found, "%s has no once-only favor errand (>= 10 favor, <= 2 days)" % npc_id)
+
+
+## QA-238 (C-393 Follow-up): every NPC who teaches a technique likes at least one item a newcomer can get cheaply: shop price
+## <= 5 stones, or foraged / caught / gathered in their region or one road away.
+func test_every_teacher_has_a_cheap_or_foraged_like() -> void:
+	var by_id: Dictionary = {}
+	for r: Dictionary in _all_regions():
+		by_id[String(r["id"])] = r
+	for npc_id: String in data().npcs:
+		var teaches := Npcs.teachings(npc_id, CharacterData.new(), data(), 0).filter(func(t: Dictionary) -> bool: return t["kind"] == "technique")
+		if teaches.is_empty():
+			continue
+		var home: String = String(data().npcs[npc_id].get("region", ""))
+		if not by_id.has(home):
+			continue
+		var near: Array = [home]
+		for route: Dictionary in by_id[home].get("routes", []):
+			near.append(String(route["to"]))
+		var entries: Array = []
+		for rid: String in near:
+			if not by_id.has(rid):
+				continue
+			var region: Dictionary = by_id[rid]
+			for place: Dictionary in region.get("places", []):
+				for table_key: String in ["catch_table", "gather_table"]:
+					for e: Dictionary in place.get(table_key, []):
+						entries.append(String(e["item"]))
+			for e: Dictionary in region.get("forage", {}).get("items", []):
+				entries.append(String(e["item"]))
+		var found := false
+		for like: String in data().npcs[npc_id].get("likes", []):
+			for item_id: String in data().items:
+				var def: Dictionary = data().items[item_id]
+				if item_id == like or (def.get("tags", []) as Array).has(like):
+					if int(def.get("price", 99)) <= 5 or entries.has(item_id):
+						found = true
+		assert_true(found, "%s teaches a technique but no like is cheap (<= 5 stones) or near (%s)" % [npc_id, ", ".join(near)])
+
+
+## QA-238 (C-392 Follow-up): chore fights are never lethal and pay 6-12 stones.
+func test_chore_fights_are_gentle_and_pay_fairly() -> void:
+	var seen := 0
+	for deed_id: String in data().deeds:
+		var deed: Dictionary = data().deeds[deed_id]
+		if not deed_id.begins_with("chore_") or String(deed.get("enemy", "")) == "":
+			continue
+		seen += 1
+		assert_true(data().enemies.has(String(deed["enemy"])), "%s names a missing enemy" % deed_id)
+		assert_false(bool(data().enemies[String(deed["enemy"])].get("lethal", true)), "%s fights a lethal enemy" % deed_id)
+		var stones := int(deed.get("effects", {}).get("items", {}).get("spirit_stone", 0))
+		assert_true(stones >= 6 and stones <= 12, "%s pays %d stones" % [deed_id, stones])
+	assert_true(seen >= 6, "expected the chore fights, found %d" % seen)
+
+
+func _all_regions() -> Array:
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/regions.json"))
+	return raw["regions"] if raw is Dictionary and raw.has("regions") else raw
