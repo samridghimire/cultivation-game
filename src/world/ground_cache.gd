@@ -51,22 +51,52 @@ static func load_image(k: String, size_px: Vector2i) -> Image:
 	return img
 
 
+## PERF-016: the PNG is encoded and written from a WorkerThreadPool task (the image is copied first; the thread never
+## touches the scene tree). The bytes go to `<key>.tmp` and are renamed when complete, so a crash mid-write leaves no
+## corrupt .png (the reader ignores .tmp files and falls back on a bad file anyway).
+static var threaded := true
+static var _tasks: Array[int] = []
+
+
 static func save_image(k: String, img: Image) -> void:
 	if not enabled or img.get_width() * img.get_height() < MIN_PIXELS:
 		return
 	DirAccess.make_dir_recursive_absolute(dir)
-	img.save_png(_path(k))
-	prune()
+	if not threaded:
+		_write(dir, k, img)
+		return
+	var copy := Image.new()
+	copy.copy_from(img)
+	var d := dir
+	_tasks.append(WorkerThreadPool.add_task(func() -> void: _write(d, k, copy)))
+
+
+## Blocks until every pending background write has finished (tests, quit).
+static func flush() -> void:
+	for id in _tasks:
+		WorkerThreadPool.wait_for_task_completion(id)
+	_tasks.clear()
+
+
+static func _write(d: String, k: String, img: Image) -> void:
+	var tmp := "%s/%s.tmp" % [d, k]
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_buffer(img.save_png_to_buffer())
+	f.close()
+	DirAccess.rename_absolute(tmp, "%s/%s.png" % [d, k])
+	prune(d)
 
 
 ## Deletes the oldest files beyond `keep`.
-static func prune(keep: int = 120) -> void:
+static func prune(d: String = dir, keep: int = 120) -> void:
 	var files: Array = []
-	for f in DirAccess.get_files_at(dir):
+	for f in DirAccess.get_files_at(d):
 		if f.ends_with(".png"):
-			files.append([FileAccess.get_modified_time("%s/%s" % [dir, f]), f])
+			files.append([FileAccess.get_modified_time("%s/%s" % [d, f]), f])
 	if files.size() <= keep:
 		return
 	files.sort_custom(func(a, b): return a[0] < b[0])
 	for i in files.size() - keep:
-		DirAccess.remove_absolute("%s/%s" % [dir, files[i][1]])
+		DirAccess.remove_absolute("%s/%s" % [d, files[i][1]])

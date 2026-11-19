@@ -108,4 +108,5 @@ func _run() -> void:
 	for i in mini(10, files_sorted.size()):
 		print("  %6d ms  %s" % [per_file[files_sorted[i]], files_sorted[i]])
 	print("%d passed, %d failed" % [passed, failed.size()])
+	GroundCache.flush()  # PERF-016: let background cache writes finish before the engine shuts down
 	quit(1 if failed.size() > 0 else 0)

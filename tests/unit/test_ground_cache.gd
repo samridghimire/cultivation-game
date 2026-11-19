@@ -13,6 +13,7 @@ func _begin() -> void:
 
 
 func _end() -> void:
+	GroundCache.flush()
 	_wipe()
 	GroundCache.dir = "user://cache/ground"
 	GroundCache.enabled = true
@@ -33,13 +34,19 @@ func _files() -> PackedStringArray:
 
 
 func _grass(season: String) -> Image:
+	GroundCache.flush()
 	GroundTiles.clear_cache()
-	return GroundTiles.ground_texture(Color("4d6b3c"), "qingshi_village", SIZE, true, season, "grass", [], 1.0, {}).get_image()
+	var img: Image = GroundTiles.ground_texture(Color("4d6b3c"), "qingshi_village", SIZE, true, season, "grass", [], 1.0, {}).get_image()
+	GroundCache.flush()
+	return img
 
 
 func _paved(season: String) -> Image:
+	GroundCache.flush()
 	GroundTiles.clear_cache()
-	return GroundTiles.ground_texture(Color("8b8272"), "fallen_star_market", SIZE, false, season, "paved", [Rect2(10, 10, 120, 80)], 1.0, {}).get_image()
+	var img: Image = GroundTiles.ground_texture(Color("8b8272"), "fallen_star_market", SIZE, false, season, "paved", [Rect2(10, 10, 120, 80)], 1.0, {}).get_image()
+	GroundCache.flush()
+	return img
 
 
 func test_cached_load_is_byte_identical() -> void:
@@ -72,6 +79,23 @@ func test_corrupt_file_falls_back_and_is_rewritten() -> void:
 	var again := _grass("Summer")
 	assert_true(cold.get_data() == again.get_data(), "fallback equals cold build")
 	assert_true(FileAccess.get_file_as_bytes(path).size() > 100, "file rewritten")
+	_end()
+
+
+func test_threaded_write_appears_after_flush_and_leaves_no_tmp() -> void:
+	_begin()
+	assert_true(GroundCache.threaded, "background writes are the default")
+	var img := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.2, 0.5, 0.3, 1.0))
+	var k := GroundCache.key(["threaded-test"])
+	GroundCache.save_image(k, img)
+	img.fill(Color.RED)  # the task works on a copy
+	GroundCache.flush()
+	assert_eq(_files().size(), 1, "one file, no .tmp left")
+	assert_true(_files()[0].ends_with(".png"))
+	var back := GroundCache.load_image(k, Vector2i(256, 256))
+	assert_true(back != null)
+	assert_true(abs(back.get_pixel(5, 5).g - 0.5) < 0.01, "copy was written, not the later fill")
 	_end()
 
 
