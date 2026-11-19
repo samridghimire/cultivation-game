@@ -83,6 +83,7 @@ func test_regional_chores_are_easy_first_fights() -> void:
 		"chore_drive_stair_goats": ["crag_goat", "azure_steward"],
 		"chore_scrape_boardwalk_leeches": ["bog_leech_swarm", "lotus_steward"],
 		"chore_scatter_cairn_crows": ["ridge_crow_flock", "ridge_cairn_keeper"],
+		"chore_chase_lunch_monkeys": ["thicket_monkey_troop", "woodcutter"],  # C-394
 	}
 	for deed_id: String in chores:
 		var foe: Dictionary = gs.data.enemies[String(chores[deed_id][0])]

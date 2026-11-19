@@ -2015,7 +2015,7 @@ func test_pill_saving_goal_mentions_sellable_loot() -> void:
 ## C-391: the Fallen Star Market yard-dog chore is one route away from Qingshi; tests about Qingshi's own fights rest it.
 func _rest_yard_dogs(c: CharacterData, day: int) -> void:
 	c.deed_days["chore_clear_yard_dogs"] = day
-	for chore_id: String in ["chore_drive_stair_goats", "chore_scrape_boardwalk_leeches", "chore_scatter_cairn_crows"]:  # C-392
+	for chore_id: String in ["chore_drive_stair_goats", "chore_scrape_boardwalk_leeches", "chore_scatter_cairn_crows", "chore_chase_lunch_monkeys"]:  # C-392, C-394
 		c.deed_days[chore_id] = day
 
 
@@ -7644,3 +7644,12 @@ func test_fight_target_names_the_chore_giver_here() -> void:
 	if not t.is_empty():
 		assert_eq(String(t["place"]), "Headman Zhou")
 	assert_eq(Guidance.fight_target(c, d, {}, "no_such_region", 0), {})
+
+
+## C-394: Misty Forest's own easy fight (Woodcutter Bai's monkey chore) is listed first, ahead of going home to the boar.
+func test_misty_forest_lists_monkey_chore_first() -> void:
+	var c := CharacterData.new()
+	c.age_days = 0
+	var fights := Guidance.fair_fights(c, data(), {}, 0, "misty_forest")
+	assert_true(fights.size() > 0, "a fight is listed in the forest")
+	assert_true(String(fights[0]["text"]).contains("monkeys"), str(fights[0]["text"]))
