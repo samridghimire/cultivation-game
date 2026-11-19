@@ -5,12 +5,14 @@ extends Node2D
 ## reduce_motion: no bob. Lives in the World; refreshes on goal changes (player_changed), travel and day changes.
 
 const GOLD := Color(0.98, 0.82, 0.25)
+const SILVER := Color(0.78, 0.82, 0.88)  ## WU-570: the easy-fight marker, dimmer than the goal's gold
 const OUTLINE := Color(0.1, 0.07, 0.02, 0.9)
 const SIZE := Vector2(9, 7)
 const EDGE_MARGIN := 36.0
 
 var target: Dictionary = {}  ## {"npc": id} or {"place": display name}, {} = none
 var _node: Interactable = null
+var silver := false  ## WU-570: marking the easy fight's giver because the goal has no target in this region
 var _t := 0.0
 var _edge := _EdgeArrow.new()
 
@@ -20,6 +22,7 @@ class _EdgeArrow:
 	extends Control
 	var info := {"visible": false}
 	var label := ""
+	var color := GOLD
 
 	func _ready() -> void:
 		set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -35,12 +38,12 @@ class _EdgeArrow:
 		var l := p + Vector2.from_angle(a + 2.5) * s
 		var r := p + Vector2.from_angle(a - 2.5) * s
 		draw_colored_polygon(PackedVector2Array([tip + Vector2(1, 1), l + Vector2(1, 1), r + Vector2(1, 1)]), Color(0, 0, 0, 0.6))
-		draw_colored_polygon(PackedVector2Array([tip, l, r]), GOLD)
+		draw_colored_polygon(PackedVector2Array([tip, l, r]), color)
 		var font := ThemeDB.fallback_font
 		var w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
 		var at := Vector2(clampf(p.x - w / 2.0, 4.0, size.x - w - 4.0), p.y + 28.0)
 		draw_string(font, at + Vector2(1, 1), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.8))
-		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, GOLD)
+		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
 
 
 ## The target dictionary for the current player, region and favor ({} when none or not in this region).
@@ -48,6 +51,13 @@ static func current_target() -> Dictionary:
 	if not GameState.has_session():
 		return {}
 	return Guidance.goal_target(GameState.player, GameState.data, GameState.world_flags, GameState.npcs, GameState.current_region, GameState.npc_favor)
+
+
+## WU-570: the easy fight's giver in this region ({} when none or no session).
+static func current_fight_target() -> Dictionary:
+	if not GameState.has_session():
+		return {}
+	return Guidance.fight_target(GameState.player, GameState.data, GameState.world_flags, GameState.current_region, GameClock.total_days, GameState.npcs, GameState.npc_favor)
 
 
 ## The node among `nodes` that `goal` names (an npc id, or a place display name); null when absent.
@@ -95,6 +105,15 @@ func refresh() -> void:
 	target = current_target()
 	var parent := get_parent()
 	_node = find_node(parent.get_children(), target) if parent != null and not target.is_empty() else null
+	silver = false
+	if _node == null and parent != null:  # the goal is elsewhere: point at the easy fight instead, never both
+		var fight := current_fight_target()
+		var fnode := find_node(parent.get_children(), fight) if not fight.is_empty() else null
+		if fnode != null:
+			target = fight
+			_node = fnode
+			silver = true
+	_edge.color = SILVER if silver else GOLD
 	_edge.info = {"visible": false}
 	_edge.queue_redraw()
 	queue_redraw()
@@ -127,4 +146,4 @@ func _draw() -> void:
 	var tip := tip_for(_node) + Vector2(0, _bob())
 	var pts := PackedVector2Array([tip, tip + Vector2(-SIZE.x / 2.0, -SIZE.y), tip + Vector2(SIZE.x / 2.0, -SIZE.y)])
 	draw_colored_polygon(PackedVector2Array([tip + Vector2(0, 1.5), tip + Vector2(-SIZE.x / 2.0 - 1.5, -SIZE.y - 1.0), tip + Vector2(SIZE.x / 2.0 + 1.5, -SIZE.y - 1.0)]), OUTLINE)
-	draw_colored_polygon(pts, GOLD)
+	draw_colored_polygon(pts, SILVER if silver else GOLD)

@@ -59,3 +59,30 @@ func test_no_place_label_covers_a_person_figure_in_qingshi() -> void:
 	assert_eq(bad.size(), 0, "; ".join(bad))
 	world.free()
 	_root().get_node("GameState").end_session()
+
+
+## WU-570: the silver easy-fight marker shows only when the goal has no node in this region.
+func test_easy_fight_marker_points_at_chore_giver_when_goal_is_elsewhere() -> void:
+	var gs: Node = _root().get_node("GameState")
+	var world := _build()  # Qingshi day 0: Elder Mo (gold), no silver
+	var marker: GoalMarker = null
+	for child in world.get_children():
+		if child is GoalMarker:
+			marker = child
+	assert_true(not marker.silver, "goal wins in Qingshi")
+	assert_eq(marker.target, {"npc": "elder_mo"})
+	world.free()
+	gs.current_region = "azure_peak"
+	world = load("res://src/world/world.tscn").instantiate()
+	_root().add_child(world)
+	for child in world.get_children():
+		if child is GoalMarker:
+			marker = child
+	marker.refresh()
+	var fight := GoalMarker.current_fight_target()
+	assert_eq(fight, {"place": "Hall Steward Qiu"}, str(fight))
+	assert_true(marker.silver, "silver marker in Azure Peak")
+	assert_eq(marker.target, fight)
+	assert_true(marker._node != null and marker._node.display_name == "Hall Steward Qiu")
+	world.free()
+	gs.end_session()
