@@ -145,6 +145,16 @@ func apply() -> void:
 			var ev := InputEventJoypadButton.new()
 			ev.button_index = button
 			InputMap.action_add_event(action, ev)
+	# WU-574: guarantee the pad can confirm/cancel every menu even where the engine's UI defaults carry
+	# no joypad button (the headless build has none): A accepts, B cancels.
+	for pair: Array in [["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+		var has_pad := false
+		for existing in InputMap.action_get_events(pair[0]):
+			has_pad = has_pad or existing is InputEventJoypadButton
+		if not has_pad:
+			var pad_ev := InputEventJoypadButton.new()
+			pad_ev.button_index = pair[1]
+			InputMap.action_add_event(pair[0], pad_ev)
 
 
 ## Defaults, then any saved rebinds (unknown actions and bad values are ignored).
