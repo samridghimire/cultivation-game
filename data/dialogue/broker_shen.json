@@ -2,12 +2,15 @@
   "id": "broker_shen",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "first_secret": {"text": "Shen raises one finger. \"Two sheets of blank talisman paper. A gift, because I enjoy being remembered.\" He lowers his voice. \"The Auction House clerks drink late on closing days. Their ledgers grow loose with their tongues.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "Sit, sit. I trade in what people would rather not say aloud, and I never ask what you plan to do with it. Names, routes, debts. Everything has a price.",
       "choices": [
         {"label": "Ask what moves through the market.", "next": "rumours"},
         {"label": "Buy him a cup of rice wine and let him talk. (2 days, 10 stones)", "next": "wine", "days": 2, "favor": 5, "effects": {"qi": 1500, "items": {"spirit_stone": -10}}, "show_locked": true},
         {"label": "Ask if he needs anything found.", "next": "errand_ask", "if": {"not_flag": "errand_shen_asked"}},
         {"label": "Bring the two Star Silver Shen asked for.", "next": "errand_thanks", "if": {"has_items": {"star_silver": 2}, "flag": "errand_shen_asked", "not_flag": "errand_shen_done"}, "effects": {"items": {"star_silver": -2, "spirit_stone": 650}, "qi": 3000, "set_flag": "errand_shen_done"}, "favor": 15},
+        {"label": "Ask what he would tell a stranger for free.", "next": "first_secret", "if": {"min_favor": 12, "not_flag": "secret_broker_shen"}, "effects": {"items": {"talisman_paper": 2}, "set_flag": "secret_broker_shen"}},
         {"label": "Not today.", "next": "end"}
       ]},
     "rumours": {"text": "Sect envoys buy herbs by the cartload before a breakthrough season, and prices follow them. The crater keeps spitting out star metal, and the foolish keep dying in it. Both are opportunities.",

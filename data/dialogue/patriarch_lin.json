@@ -5,6 +5,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Lin does not open his eyes. \"You sat. That is rarer than you think.\" He nudges a cup of frostbell tea toward you. \"Cloud-Sword Cave. The sword-marks there remember anyone who looks without hurry.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "The old man sits beneath a pine with a sword across his knees, rust on the blade and no dust on the man. 'I founded the Azure Cloud Sect when this peak had no name. Sit, child. I have not been asked a good question in two hundred years.'",
       "choices": [
         {"label": "Ask what a sect is for.", "next": "sect"},
@@ -13,6 +15,7 @@
         {"label": "Ask if the sect's Elder canon may pass to you.", "next": "canon", "if": {"min_favor": 60, "min_realm": "core_formation", "min_alignment": 100, "not_flag": "lin_canon", "not_knows_technique": "azure_sky_primordial_canon"}, "show_locked": true},
         {"label": "Ask if anything weighs on him.", "next": "errand_ask", "if": {"not_flag": "errand_lin_asked"}},
         {"label": "Bring the three Ice Soul Flowers Lin asked for.", "next": "errand_thanks", "if": {"has_items": {"ice_soul_flower": 3}, "flag": "errand_lin_asked", "not_flag": "errand_lin_done"}, "effects": {"items": {"ice_soul_flower": -3, "longevity_pill": 1}, "alignment": 15, "set_flag": "errand_lin_done"}, "favor": 15},
+        {"label": "Sit with the old man a while.", "next": "first_secret", "if": {"min_favor": 12, "not_flag": "secret_patriarch_lin"}, "effects": {"items": {"frostbell_tea": 1}, "set_flag": "secret_patriarch_lin"}},
         {"label": "Farewell, Patriarch.", "next": "end"}
       ]},
     "sect": {"text": "'To keep a lamp lit for those who come after. Strength is only the oil.' He looks at your hands. 'You carry yourself like someone who has already decided what the lamp is for. Good. Keep deciding.'",

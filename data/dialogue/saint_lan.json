@@ -4,11 +4,14 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Lan opens his palm: three rowan berries, a little squashed. \"I picked them for the birds. They are yours.\" He looks past you. \"Cairn Keeper Dun knows every trail on this ridge. Ask him kindly.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "A lean man in a threadbare grey coat sits on a boulder at the ridge's edge, an unsheathed sword laid across his knees. He is watching the clouds break against the cliff as if they might say something. 'Sit if you like. I have not decided yet whether I am going to die today.'",
       "choices": [
         {"label": "Ask about the sword.", "next": "sword"},
         {"label": "Sit with him and watch the clouds. (3 days)", "next": "sit", "days": 3, "favor": 5, "effects": {"qi": 3000}},
         {"label": "Ask what he learned after a thousand years.", "next": "years", "if": {"min_favor": 30}, "show_locked": true},
+        {"label": "Ask what he sees in the clouds.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_saint_lan"}, "effects": {"items": {"rowan_berry": 3}, "set_flag": "secret_saint_lan"}},
         {"label": "Leave him to the clouds.", "next": "end"}
       ]},
     "sword": {"text": "'It has no name. I gave the name away to a man who needed it more, and the sword has been quieter since. A blade that does not know what it is called cuts only what it must.'",

@@ -4,6 +4,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Wen lifts his head and smiles for the first time. \"No one asks. Thank you.\" He offers two sprigs of highland thyme. \"Cross the Cloud-Bridge slowly. It sways, but it has never dropped anyone who walked with respect.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "An old man in earth-brown robes kneels at a crack in the ridge, pressing the stone shut with two fingers as if closing a wound. 'Mind your step. The mountain is older than my patience, and it has been bleeding since the last war.'",
       "choices": [
         {"label": "Ask what he is mending.", "next": "mending"},
@@ -11,6 +13,7 @@
         {"label": "Ask how a cultivator crosses from Nascent Soul to Soul Formation.", "next": "severing", "if": {"min_favor": 30}, "show_locked": true},
         {"label": "Ask if he needs anything.", "next": "errand_ask", "if": {"not_flag": "errand_wen_asked"}},
         {"label": "Bring the two Soul Infant Fruit Wen asked for.", "next": "errand_thanks", "if": {"has_items": {"soul_infant_fruit": 2}, "flag": "errand_wen_asked", "not_flag": "errand_wen_done"}, "effects": {"items": {"soul_infant_fruit": -2, "longevity_pill": 1}, "alignment": 20, "set_flag": "errand_wen_done"}, "favor": 20},
+        {"label": "Ask if the crack in the stone is closing.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_sage_wen"}, "effects": {"items": {"highland_thyme": 2}, "set_flag": "secret_sage_wen"}},
         {"label": "Leave him to his work.", "next": "end"}
       ]},
     "mending": {"text": "'Where the old cultivators fought, the veins of the world were cut. Qi leaks out and beasts grow mad on it. I close what I can. It is slow work. Heaven does not grade it, so I grade it myself, and I am a harsh teacher.'",

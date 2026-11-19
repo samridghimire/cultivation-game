@@ -4,6 +4,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Ye stirs, sniffs, and fishes out a rain-cap mushroom. \"Edible. Probably.\" She points her ladle at the Thunder Tarn Ledge. \"Lightning strikes there every few hours. Wait it out and the stones hum with qi.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "teach_immovable_mountain_stance": {"text": "Ye plants her heels. \"Thunder wants to knock you off, {player}. So be a rock it cannot find. Knees, breath, ground. Again.\"",
       "choices": [
         {"label": "Stand the storm with her. (6 days)", "next": "end", "days": 6, "effects": {"learn_technique": "immovable_mountain_stance"}},
@@ -32,6 +34,7 @@
         {"label": "Ask if she would stand the ledge with you again.", "next": "ye_weekly", "if": {"knows_technique": "immovable_mountain_stance", "not_flag": "ye_ledge_week"}, "favor": 1, "effects": {"set_flag": "ye_ledge_week"}},
         {"label": "Ask if she would stand the ledge with you again.", "next": "ye_weekly", "if": {"knows_technique": "immovable_mountain_stance", "flag": "ye_ledge_week"}},
         {"label": "Tell her the ram has left her ledge.", "next": "errand_done_thanks", "if": {"flag": "ye_errand_done", "not_flag": "ye_errand_thanked"}, "favor": 5, "effects": {"set_flag": "ye_errand_thanked"}},
+        {"label": "Ask what is in the cracked cauldron.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_alchemist_ye"}, "effects": {"items": {"rain_cap_mushroom": 1}, "set_flag": "secret_alchemist_ye"}},
         {"label": "Leave her to her soup.", "next": "end"}
       ]},
     "brew": {"text": "'Today: nothing fancy, a thunder-tempering draught. Tomorrow: whatever a dying man begs me for. An alchemist's whole career is deciding who to sell the cure to. I decided long ago it would be whoever asks politely.'",

@@ -5,6 +5,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Ma grunts, then tears off a strip of smoked venison. \"Eat. You look like a hare in winter.\" He nods toward the Village Outskirts. \"Boars root there at dusk. Stay downwind and they never see you.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "Mind your step on the forest road, {player}. I lead the village hunt each season; the boars do not care whether you cultivate or not.",
       "choices": [
         {"label": "How does the village hunt work?", "next": "hunt"},
@@ -13,6 +15,7 @@
         {"label": "Spar with me. (1 day)", "next": "spar", "if": {"knows_technique": "iron_fist", "not_flag": "ma_spar_week"}, "days": 1, "favor": 1, "effects": {"practice_days": 1, "set_flag": "ma_spar_week", "flag_days": 7}},
         {"label": "Spar with me. (1 day)", "next": "spar", "if": {"knows_technique": "iron_fist", "flag": "ma_spar_week"}, "days": 1, "effects": {"practice_days": 1}},
         {"label": "Tell him the traps are clear.", "next": "errand_thanks", "if": {"flag": "ma_errand_done", "not_flag": "ma_errand_thanked"}, "favor": 5, "effects": {"set_flag": "ma_errand_thanked"}},
+        {"label": "Ask what he is smoking over the fire.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_hunter_ma"}, "effects": {"items": {"venison": 1}, "set_flag": "secret_hunter_ma"}},
         {"label": "Later, Hunter Ma.", "next": "end"}
       ]},
     "friend": {"text": "{player}! Good. A steady arm is worth more than a clever tongue when a stag is charging. Sit, the venison is nearly done.",
@@ -23,6 +26,7 @@
         {"label": "Spar with me. (1 day)", "next": "spar", "if": {"knows_technique": "iron_fist", "not_flag": "ma_spar_week"}, "days": 1, "favor": 1, "effects": {"practice_days": 1, "set_flag": "ma_spar_week", "flag_days": 7}},
         {"label": "Spar with me. (1 day)", "next": "spar", "if": {"knows_technique": "iron_fist", "flag": "ma_spar_week"}, "days": 1, "effects": {"practice_days": 1}},
         {"label": "Tell him the traps are clear.", "next": "errand_thanks", "if": {"flag": "ma_errand_done", "not_flag": "ma_errand_thanked"}, "favor": 5, "effects": {"set_flag": "ma_errand_thanked"}},
+        {"label": "Ask what he is smoking over the fire.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_hunter_ma"}, "effects": {"items": {"venison": 1}, "set_flag": "secret_hunter_ma"}},
         {"label": "Later, Hunter Ma.", "next": "end"}
       ]},
     "hunt": {"text": "Each season, on the first market day, we ride out after whatever runs fat in Misty Forest: the stag in spring, the boar in summer, the fox in autumn, the wolf in winter. Join us, and the beast's spoils come doubled.",

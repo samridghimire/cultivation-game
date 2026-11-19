@@ -368,3 +368,21 @@ func test_next_unlock_skips_realm_gated_options() -> void:
 	var c := new_character()
 	var d := {"nodes": {"a": {"choices": [{"label": "x", "next": "end", "if": {"min_favor": 3, "min_realm": "foundation_establishment"}}]}}}
 	assert_true(Dialogue.next_unlock(d, _ctx("elder_mo", c, npcs, {}, 0)).is_empty())
+
+
+## C-397: every named NPC of the six early regions (but Elder Mo) has a friend's first secret at favor <= 12.
+func test_every_early_npc_has_a_cheap_first_secret() -> void:
+	var early := ["qingshi_village", "misty_forest", "fallen_star_market", "azure_peak", "withered_bone_marsh", "myriad_peaks_ridge"]
+	var npcs := _npcs()
+	var checked := 0
+	for npc_id: String in npcs:
+		var def: Dictionary = data().npcs[npc_id]
+		if npc_id == "elder_mo" or String(def.get("dialogue", "")) == "" or not early.has(String(def.get("region", ""))):
+			continue
+		var d: Dictionary = data().dialogues[String(def["dialogue"])]
+		var u := Dialogue.next_unlock(d, _ctx(npc_id, new_character(), npcs, {}, 0))
+		assert_false(u.is_empty(), npc_id + " has a favor-gated option")
+		if not u.is_empty():
+			assert_true(int(u["favor"]) <= 12, npc_id + " first secret at favor <= 12")
+		checked += 1
+	assert_true(checked >= 17, "checked all early NPCs: %d" % checked)

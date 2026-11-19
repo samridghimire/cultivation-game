@@ -2,6 +2,8 @@
   "id": "peddler_hei",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "first_secret": {"text": "Hei grins and hands you a carved reed whistle. \"Hei gives nothing, remember that. This one is a loan that I forgot.\" He nods at the Black Reed Shallows. \"Walk the north edge. The south edge walks back.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "teach_drowned_reed_step": {"text": "Hei squints. \"Reeds do not fight the wind, {player}. Stand in the skiff. No, lower. Let it rock you. There.\"",
       "choices": [
         {"label": "Pole the skiff with him. (5 days)", "next": "end", "days": 5, "effects": {"learn_technique": "drowned_reed_step"}},
@@ -28,6 +30,7 @@
         {"label": "Ask if he would pole the channel with you again.", "next": "hei_weekly", "if": {"knows_technique": "drowned_reed_step", "not_flag": "hei_pole_week"}, "favor": 1, "effects": {"set_flag": "hei_pole_week"}},
         {"label": "Ask if he would pole the channel with you again.", "next": "hei_weekly", "if": {"knows_technique": "drowned_reed_step", "flag": "hei_pole_week"}},
         {"label": "Tell him the cargo made it through.", "next": "errand_done_thanks", "if": {"flag": "hei_errand_done", "not_flag": "hei_errand_thanked"}, "favor": 5, "effects": {"set_flag": "hei_errand_thanked"}},
+        {"label": "Ask what he whistles when the skiff is empty.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_peddler_hei"}, "effects": {"items": {"hei_reed_whistle": 1}, "set_flag": "secret_peddler_hei"}},
         {"label": "Leave.", "next": "end"}
       ]},
     "girl": {"text": "A herb-gatherer's daughter from Qingshi, caught in the reeds. The Blood Lotus scouts want her for the pools, a refiner wants her for his puppets. Me, I only want a fair price. Someone with a conscience might want her more.",

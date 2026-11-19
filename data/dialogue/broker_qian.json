@@ -2,6 +2,8 @@
   "id": "broker_qian",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "first_secret": {"text": "Qian slides a counting bead across the table and coughs. \"Do not mistake this for kindness. It is an investment.\" He taps the table. \"Back Alleys, after dark. Ask for the lantern-hanger; he knows who is buying what.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "teach_gold_piercing_finger": {"text": "Qian taps one finger on your wrist, light as a coin. \"One point. All your qi. A lock, a seal, a purse-string, {player}. Again.\"",
       "choices": [
         {"label": "Learn the finger-tap. (5 days)", "next": "end", "days": 5, "effects": {"learn_technique": "gold_piercing_finger"}},
@@ -27,6 +29,7 @@
         {"label": "Ask if he would drill you on the finger again.", "next": "qian_weekly", "if": {"knows_technique": "gold_piercing_finger", "not_flag": "qian_finger_week"}, "favor": 1, "effects": {"set_flag": "qian_finger_week"}},
         {"label": "Ask if he would drill you on the finger again.", "next": "qian_weekly", "if": {"knows_technique": "gold_piercing_finger", "flag": "qian_finger_week"}},
         {"label": "Tell him the ledger is delivered.", "next": "errand_done_thanks", "if": {"flag": "qian_errand_done", "not_flag": "qian_errand_thanked"}, "favor": 5, "effects": {"set_flag": "qian_errand_thanked"}},
+        {"label": "Ask what he would sell you for free.", "next": "first_secret", "if": {"min_favor": 12, "not_flag": "secret_broker_qian"}, "effects": {"items": {"qian_counting_bead": 1}, "set_flag": "secret_broker_qian"}},
         {"label": "Not today.", "next": "end"}
       ]},
     "peak": {"text": "A cave on the peak holds a dead cultivator's legacy. A stone guardian watches it. Do not go before Foundation Establishment.",

@@ -6,6 +6,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Gu wheezes a laugh and holds out a frostbell sprig. \"My knees will not climb to the Frost Ledge any more. Take some, a young back is a fine thing.\" He closes your fingers around it. \"Do not tell the sect I gave you anything.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "Mm. A visitor on this cold ledge. I was an Elder of the Azure Cloud Sect once, before I gave my seat to younger hands. Now I wait for the snow and the end, in that order.",
       "choices": [
         {"label": "Senior, how long do you have?", "next": "time"},
@@ -15,6 +17,7 @@
         {"label": "Ask what he would pass on.", "next": "not_yet", "if": {"min_favor": 40, "max_realm": "qi_refining"}},
         {"label": "Ask if the mountain wants anything from him.", "next": "errand_ask", "if": {"not_flag": "errand_gu_asked"}},
         {"label": "Bring the three Cold Iron Gu asked for.", "next": "errand_thanks", "if": {"has_items": {"cold_iron": 3}, "flag": "errand_gu_asked", "not_flag": "errand_gu_done"}, "effects": {"items": {"cold_iron": -3, "manual_cloud_parting_palm": 1}, "qi": 400, "set_flag": "errand_gu_done"}, "favor": 15},
+        {"label": "Ask whether the old man needs anything.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_hermit_gu"}, "effects": {"items": {"frostbell_herb": 1}, "set_flag": "secret_hermit_gu"}},
         {"label": "Farewell, senior.", "next": "end"}
       ]},
     "time": {"text": "Thirty winters, perhaps. Core Formation gave me five hundred years and I spent most of them on sect politics. Do not repeat my mistake, young one.",

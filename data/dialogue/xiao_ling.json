@@ -5,6 +5,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Ling looks left, then right, and pulls out a stick of candied haws. \"Grandmother does not know I kept this. Half is yours.\" She whispers that the big fish bite at the Village Pond Jetty just after dawn, when no one else is awake.",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "{player}! Did you hear? Elder Mo said I have a fire root. One day I'll fly on a sword. ...Will you come with me?",
       "choices": [
         {"label": "Let's cultivate together.", "next": "together", "days": 30, "favor": 10, "effects": {"qi": 200}},
@@ -16,6 +18,7 @@
         {"label": "Ask if she would carry water with you again.", "next": "yoke_weekly", "if": {"knows_technique": "stone_skin", "flag": "ling_yoke_week"}},
         {"label": "Tell her the quarry stone is home.", "next": "errand_thanks", "if": {"flag": "ling_errand_done", "not_flag": "ling_errand_thanked"}, "favor": 5, "effects": {"set_flag": "ling_errand_thanked"}},
         {"label": "Mock her dreams.", "next": "mocked", "favor": -20, "effects": {"alignment": -10}},
+        {"label": "Ask what she is hiding behind her back.", "next": "first_secret", "if": {"min_favor": 8, "not_flag": "secret_xiao_ling"}, "effects": {"items": {"candied_haws": 1}, "set_flag": "secret_xiao_ling"}},
         {"label": "Later, Ling.", "next": "end"}
       ]},
     "yoke": {"text": "You stand like a reed, {player}. Two full buckets on a yoke since I was seven, and nothing bruises me now. Here, I will show you how to take the weight.",

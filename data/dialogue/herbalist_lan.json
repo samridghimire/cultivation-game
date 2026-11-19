@@ -2,6 +2,8 @@
   "id": "herbalist_lan",
   "entries": [{"node": "greet"}],
   "nodes": {
+    "first_secret": {"text": "Lan presses a dew-grass shoot into your palm. \"You pick gently. Most do not.\" She lowers her voice. \"The Herb Valley, at first light. Nobody else gets there before the dew dries.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "Careful where you step, those are Dew Grass shoots. I'm Lan. I've gathered in this forest for twenty years.",
       "choices": [
         {"label": "Where do the best herbs grow?", "next": "herbs"},
@@ -11,6 +13,7 @@
         {"label": "Ask her to share her secret valley.", "next": "secret", "if": {"min_favor": 25, "not_flag": "lan_secret"}, "show_locked": true},
         {"label": "Ask if she needs anything fetched.", "next": "errand_ask", "if": {"not_flag": "errand_lan_asked"}},
         {"label": "Bring the five Qi Condensing Grass Lan asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_condensing_grass": 5}, "flag": "errand_lan_asked", "not_flag": "errand_lan_done"}, "effects": {"items": {"qi_condensing_grass": -5, "spirit_stone": 70}, "set_flag": "errand_lan_done"}, "favor": 15},
+        {"label": "Ask why she keeps watching your hands.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_herbalist_lan"}, "effects": {"items": {"dew_grass": 1}, "set_flag": "secret_herbalist_lan"}},
         {"label": "Goodbye.", "next": "end"}
       ]},
     "herbs": {"text": "The Herb Patch by the trail is safe enough. The valley to the south hides older roots. Up on Azure Peak, frost flowers grow on the ledges, if the beasts let you live.",

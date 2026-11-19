@@ -5,6 +5,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Yun says nothing for a breath, then offers a pine needle. \"Chew it. It clears the head after a fall.\" He points his chin at the Frost Ledge. \"Ice-bells grow there. The beasts fear the cold, so you will not meet many.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "weak": {"text": "Turn back, junior. The beasts of this mountain eat Qi Refining cultivators for breakfast.",
       "choices": [
         {"label": "I can take care of myself.", "next": "end", "favor": -5},
@@ -15,6 +17,7 @@
         {"label": "Spar with me.", "next": "spar", "days": 3, "favor": 5, "effects": {"qi": 2000}},
         {"label": "Teach me the Metal Edge Sword Art.", "next": "teach", "if": {"min_favor": 30, "not_knows_technique": "metal_edge_sword"}, "show_locked": true},
         {"label": "What guards the Ancient Cave?", "next": "cave", "if": {"not_flag": "cave_guardian_slain"}},
+        {"label": "Ask why he stands watch on this ledge.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_swordsman_yun"}, "effects": {"items": {"azure_pine_needle": 1}, "set_flag": "secret_swordsman_yun"}},
         {"label": "Farewell.", "next": "end"}
       ]},
     "spar": {"text": "Your footwork is sloppy, but your qi is solid. Again, another day.",

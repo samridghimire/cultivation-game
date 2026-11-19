@@ -5,6 +5,8 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Bai brushes dust from her sleeve and hands you a cliff edelweiss. \"The terrace gardeners drop these. Take it.\" She smiles thinly. \"The Cloud-Sea Orchid Terraces are safest in the morning, before the wind turns.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "teach_rippling_moon_sword": {"text": "Bai draws a slow arc over the pool. \"The blade is the moon, the enemy the ripple. Look at the water, {player}, not at me.\"",
       "choices": [
         {"label": "Practice with her. (6 days)", "next": "end", "days": 6, "effects": {"learn_technique": "rippling_moon_sword"}},
@@ -30,6 +32,7 @@
         {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "not_flag": "bai_sword_week"}, "favor": 1, "effects": {"set_flag": "bai_sword_week"}},
         {"label": "Ask if she would practice at dawn with you again.", "next": "bai_weekly", "if": {"knows_technique": "rippling_moon_sword", "flag": "bai_sword_week"}},
         {"label": "Tell her the terraces are clear.", "next": "errand_done_thanks", "if": {"flag": "bai_errand_done", "not_flag": "bai_errand_thanked"}, "favor": 5, "effects": {"set_flag": "bai_errand_thanked"}},
+        {"label": "Ask how the terraces are faring.", "next": "first_secret", "if": {"min_favor": 8, "not_flag": "secret_disciple_bai"}, "effects": {"items": {"cliff_edelweiss": 1}, "set_flag": "secret_disciple_bai"}},
         {"label": "Farewell, senior sister.", "next": "end"}
       ]},
     "foundation": {"text": "I did not chase the pill. I chased a clear mind, and the Foundation came as the cold comes down the mountain. Do not hurry the layers; they remember every shortcut.",

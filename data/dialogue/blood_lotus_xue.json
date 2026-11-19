@@ -6,11 +6,14 @@
     {"node": "greet"}
   ],
   "nodes": {
+    "first_secret": {"text": "Xue flicks a dried leech gland at you without looking. \"Do not read into it. It was spare.\" Then, grudgingly: \"The Deep Woods are quiet before the rain. Hunt there, or hide there.\"",
+      "choices": [{"label": "Thank you.", "next": "greet"}]},
     "greet": {"text": "A lost lamb in the mist. Relax, I have already eaten today. I am Xue Yao of the Blood Lotus. Say what you want or keep walking.",
       "choices": [
         {"label": "Why would anyone join the Blood Lotus?", "next": "why"},
         {"label": "Sell her a Blood Ginseng. (+110 stones)", "next": "greet", "effects": {"items": {"blood_ginseng": -1, "spirit_stone": 110}}, "favor": 5, "show_locked": true},
         {"label": "Help her track a wounded mist wolf. (5 days)", "next": "hunt", "days": 5, "favor": 6, "effects": {"items": {"spirit_stone": 30}, "alignment": -10}},
+        {"label": "Ask why she has not left you for the mist.", "next": "first_secret", "if": {"min_favor": 12, "not_flag": "secret_blood_lotus_xue"}, "effects": {"items": {"leech_gland": 1}, "set_flag": "secret_blood_lotus_xue"}},
         {"label": "Leave.", "next": "end"}
       ]},
     "why": {"text": "The righteous sects measure your roots and throw you away. The Blood Lotus measures your will. Trash roots soaked in enough blood still blossom.",
