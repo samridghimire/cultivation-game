@@ -3442,6 +3442,12 @@ func _draw_peak_top(map: Dictionary) -> void:
 		for i in 3:
 			var cy := c.position.y + 14.0 + float(i) * 11.0
 			var hw := c.size.x / 2.0 - 3.0 + float(i) * 2.0
+			if snowy:  # GFX-211: a frozen icefall: a darker rim round pale blue-white streaks, so it still reads on the snow
+				draw_rect(Rect2(cx - hw - 1.0, cy - 1.0, hw * 2.0 + 2.0, 10.0), Color(0.36, 0.5, 0.62))
+				draw_rect(Rect2(cx - hw, cy, hw * 2.0, 8.0), Color(0.82, 0.92, 0.98))
+				for sx in [-0.6, -0.1, 0.45]:
+					draw_rect(Rect2(cx + hw * sx, cy, 2.0, 8.0), Color(0.62, 0.78, 0.9))
+				continue
 			draw_rect(Rect2(cx - hw, cy, hw * 2.0, 8.0), Color(0.42, 0.62, 0.74, 0.9))
 			draw_rect(Rect2(cx - hw, cy, hw * 2.0, 2.0), Color(0.96, 0.99, 1.0, 0.95))
 			draw_rect(Rect2(cx - hw * 0.6, cy + 4.0, hw * 1.2, 2.0), Color(0.9, 0.97, 1.0, 0.7))

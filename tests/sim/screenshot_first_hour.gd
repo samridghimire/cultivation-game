@@ -28,7 +28,7 @@ extends SceneTree
 ## GFX-023: append `-- --celebration` for celebration.png (wedding lanterns and red sashes).
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
-## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020).
+## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020); GFX-211: `--fight=<enemy_id>[,<id>...]` renders combat_report_<id>.png per foe.
 ## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
@@ -481,15 +481,17 @@ func _start() -> void:
 	var report: Control = hud.get("_combat_report")
 	# A real fight through GameState.fight (WU-181): the boar is rated and resolved
 	# like in play; seed 11 is a newcomer win. The HUD opens the report itself.
-	shots.append({"name": "combat_report" + ("" if _fight_foe() == "wild_boar" else "_" + ("cultivator" if _fight_foe() == "rogue_cultivator" else _fight_foe())), "open": func() -> void:
-		gs.rng.seed = 11
-		gs.fight(_fight_foe())
-		if OS.get_cmdline_user_args().has("--blows"):  # WU-473: capture mid-playback with the numbers up
-			for _i in 4:
-				report.tick()
-			return
-		report.skip(),  # WU-262: close() refuses while the playback runs, so the report covered later shots
-		"close": report.close})
+	for foe: String in _fight_foes():  # GFX-211: --fight=<id>[,<id>...] renders one won fight per foe
+		shots.append({"name": "combat_report" + ("" if foe == "wild_boar" else "_" + ("cultivator" if foe == "rogue_cultivator" else foe)), "open": func() -> void:
+			gs.rng.seed = 11
+			gs.player.injuries.clear()  # GFX-211: a lost fight must not wound the next foe's shot
+			gs.fight(foe)
+			if OS.get_cmdline_user_args().has("--blows"):  # WU-473: capture mid-playback with the numbers up
+				for _i in 4:
+					report.tick()
+				return
+			report.skip(),  # WU-262: close() refuses while the playback runs, so the report covered later shots
+			"close": report.close})
 	for action: String in ["toggle_journal", "toggle_inventory", "toggle_character_sheet"]:
 		if hud.get("_screens").has(action):
 			var s: Control = hud.get("_screens")[action]
@@ -560,13 +562,17 @@ func _clear_bubble() -> void:
 
 
 ## `--fight=cultivator|<enemy_id>` picks the combat_report foe (default: the boar); GFX-196: any enemy id, e.g. mist_wolf.
-func _fight_foe() -> String:
+func _fight_foes() -> Array[String]:
+	var out: Array[String] = []
 	for arg in OS.get_cmdline_user_args():
 		if arg == "--fight=cultivator":
-			return "rogue_cultivator"
-		if arg.begins_with("--fight=") and arg != "--fight=beast":
-			return arg.trim_prefix("--fight=")
-	return "wild_boar"
+			out.append("rogue_cultivator")
+		elif arg.begins_with("--fight=") and arg != "--fight=beast":  # GFX-211: a comma list
+			for id in arg.trim_prefix("--fight=").split(",", false):
+				out.append(id)
+	if out.is_empty():
+		out.append("wild_boar")
+	return out
 
 
 ## The node under the world whose script file ends with `script_name` (for a gather site, one whose
