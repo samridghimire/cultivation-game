@@ -96,6 +96,7 @@ var _greet_bubble: Control = null
 var _greet_modal := false
 ## GFX-043: snow-day footprints behind the player (world positions, oldest first, max 12).
 var _footprints: Footprints  ## GFX-212
+var _foliage: FoliageFx  ## GFX-214
 
 
 ## PERF-015: when `lapping`, `_ready` adds the microseconds each build step took to `lap_log` (step name -> usec).
@@ -344,6 +345,12 @@ func _refresh_puddles() -> void:
 		move_child(_footprints, 2)
 	var no_snow := bool(_region.get("map", {}).get("no_snow", false))
 	_footprints.setup(_region, _yards, snowy and not no_snow, _weather_kind in ["rain", "storm"], _rain_puddles.puddles(), MotionFx.reduced())
+	if _foliage == null:  # GFX-214
+		_foliage = FoliageFx.new()
+		_foliage.name = "FoliageFx"
+		add_child(_foliage)
+		move_child(_foliage, 3)
+	_foliage.setup(_region, _yards, _decor, _season, snowy and not no_snow, bool(Settings.get_value("ambient_effects")), MotionFx.reduced())
 	if _rain_eaves == null:
 		_rain_eaves = RainEaves.new()
 		_rain_eaves.name = "RainEaves"
@@ -459,6 +466,8 @@ func _on_setting_changed(key: String, _value: Variant) -> void:
 		for node in get_children():
 			if node is QiSpringGlow:
 				node.visible = bool(_value)
+		if _foliage != null:
+			_foliage.set_enabled(bool(Settings.get_value("ambient_effects")), _season, _region.get("map", {}))
 	elif key == "show_all_labels" and player != null:
 		for node in get_children():
 			if node is Interactable:
@@ -1066,6 +1075,9 @@ func _process(_delta: float) -> void:
 	var moved := player != null and _last_label_pos.distance_to(player.position) > 8.0
 	if _footprints != null and player != null:
 		_footprints.track(player.position)  # GFX-212
+	if _foliage != null and player != null:
+		_foliage.set_view(get_canvas_transform().affine_inverse() * get_viewport_rect())
+		_foliage.track(player.position)  # GFX-214
 	if moved:
 		_last_label_pos = player.position
 		_check_greetings()
