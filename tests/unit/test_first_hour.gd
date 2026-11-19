@@ -303,3 +303,11 @@ func test_first_fight_spoils_feed_a_local_loop() -> void:
 					if like == item_id or like in tags:
 						fed = true
 		assert_true(fed, "%s: a drop feeds a recipe, a meal or a local like" % foe_id)
+
+
+func test_easy_fight_start_clause() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	assert_eq(FirstHour.easy_fight_start("Easy fight: Drunk Bully (Bounty Board)"), "bounty")
+	assert_eq(FirstHour.easy_fight_start("Easy fight: Wolves (mission board, Outer Hall)"), "mission")
+	assert_eq(FirstHour.easy_fight_start("Easy fight: Boar (explore Misty Forest)"), "explore")
+	assert_eq(FirstHour.easy_fight_start("Easy fight: Boar"), "")

@@ -2078,6 +2078,17 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 	return kinds
 
 
+## SIM-014: where an easy-fight line says to start: "bounty", "mission", "explore" or "" (GUIDE-269 trailing clause).
+static func easy_fight_start(line: String) -> String:
+	if line.contains("(Bounty Board") or line.contains("(Hunters' Bounty Board"):
+		return "bounty"
+	if line.contains("(mission board"):
+		return "mission"
+	if line.contains("(explore "):
+		return "explore"
+	return ""
+
+
 ## SIM-013: "Easy fight: <text>" with exactly one prefix (the fight text may already carry it).
 static func with_easy_fight_prefix(text: String) -> String:
 	return "Easy fight: " + text.trim_prefix("Easy fight: ")
@@ -2161,6 +2172,23 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_visit_style_teacher(gs, c, HINT_TEACHER_REACH_DAYS, true)
 		if Techniques.knows_kind(c, gs.data, "combat") or gs.npc_favor != favor_before or gs.get_node("/root/GameClock").total_days != day_before:
 			return "teacher"
+	if line.begins_with("Goal: Catch a fish"):
+		# SIM-014: the village jetty, with the table and days its own menu passes.
+		_walk_to(gs, c, "qingshi_village")
+		if gs.current_region != "qingshi_village":
+			return ""
+		var caught_before := c.catch_log.size()
+		for p: Dictionary in gs.data.regions["qingshi_village"].get("places", []):
+			if String(p.get("type", "")) == "fishing":
+				gs.fish(p.get("catch_table", []), int(p.get("gather_days", 2)), String(p.get("display_name", "")))
+				break
+		return "fish" if c.catch_log.size() != caught_before or gs.get_node("/root/GameClock").total_days != day_before else ""
+	if line.begins_with("Armor keeps you standing"):
+		# SIM-014: sell the loot the line names here, then buy and equip the armor as the defence follow-up does.
+		_sell_loot_here(gs, c, gs.current_region)
+		var armor_before: String = String(c.equipment.get("armor", ""))
+		_follow_defence_hint(gs, c)
+		return "armor" if String(c.equipment.get("armor", "")) != armor_before else ""
 	if line.begins_with("Your sect's home") and not c.is_rogue():
 		var home := Sects.home_region(gs.data, String(c.sect["id"]))
 		if home != "":
