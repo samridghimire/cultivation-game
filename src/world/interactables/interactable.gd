@@ -178,10 +178,25 @@ func label_color() -> Color:
 func label_rect(text: String = "") -> Rect2:
 	if text == "":
 		text = label_text()
-	var font := ThemeDB.fallback_font
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
-	var h := font.get_height(LABEL_FONT_SIZE)
+	var sz := label_text_size(text)
+	var w := sz.x
+	var h := sz.y
 	return Rect2(position + Vector2(-w / 2.0, -size.y / 2.0 - 8.0 - h * 0.8) + label_offset, Vector2(w, h))
+
+
+## PERF-019: measured label text sizes by string; shaping a string is the slow part of every label pass.
+static var _text_sizes: Dictionary = {}
+
+
+static func label_text_size(text: String) -> Vector2:
+	if _text_sizes.has(text):
+		return _text_sizes[text]
+	var font := ThemeDB.fallback_font
+	var sz := Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x, font.get_height(LABEL_FONT_SIZE))
+	if _text_sizes.size() > 512:
+		_text_sizes.clear()
+	_text_sizes[text] = sz
+	return sz
 
 
 ## The names in `names` that appear in `hint`, longest first; a name inside an already-counted longer one
@@ -511,14 +526,19 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 			if before != 0.0 or node.label_covered:
 				node.label_covered = false
 				node._redraw_label()
+	var rank_of := {}  # PERF-019: the sort key is computed once per label, not once per comparison
+	var npc_of := {}
+	for node: Interactable in shown:
+		rank_of[node] = label_rank(node, player_pos)
+		npc_of[node] = node.get("npc_id") != null
 	var ranked := shown.duplicate()
 	ranked.sort_custom(func(a: Interactable, b: Interactable) -> bool:
-		var ra := label_rank(a, player_pos)
-		var rb := label_rank(b, player_pos)
+		var ra: int = rank_of[a]
+		var rb: int = rank_of[b]
 		if ra != rb:
 			return ra < rb
-		var an := a.get("npc_id") != null
-		var bn := b.get("npc_id") != null
+		var an: bool = npc_of[a]
+		var bn: bool = npc_of[b]
 		if an != bn:
 			return not an
 		return a.position.distance_to(player_pos) < b.position.distance_to(player_pos))
@@ -555,24 +575,39 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 			own[i] = blockers.size()
 			blockers.append(Rect2(gn.position - GREAT_FIGURE / 2.0, GREAT_FIGURE))
 	var covers := {}
-	for i in ranked.size():  # WU-483: a villager's name never sits on the roof of a building behind them
-		if (ranked[i] as Interactable).is_person():  # WU-511: nor on a place's name (roamers move, so this runs live)
-			var roofs: Array[Rect2] = []
-			for other: Interactable in ranked:
-				if not other.is_person() and other.label_drawn():
-					roofs.append(other.drawn_label_rect(view))
-			for other: Interactable in nodes:
-				if other != ranked[i] and other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
-					roofs.append(Rect2(other.position - other.size / 2.0, other.size))
+	# PERF-019: what a label must not sit on is the same for every label but its own, so the lists are built once.
+	var roof_nodes: Array = []  # buildings a villager's name never sits on (WU-483)
+	var roof_rects: Array[Rect2] = []
+	var figure_nodes: Array = []  # people's bodies a place's name never slides onto (WU-567)
+	var figure_rects: Array[Rect2] = []
+	var place_nodes: Array = []  # drawn place labels a villager's name never sits on (WU-511)
+	var place_rects: Array[Rect2] = []
+	for other: Interactable in nodes:
+		var is_p := other.is_person()
+		if not is_p and other in ranked and other.label_drawn():
+			place_nodes.append(other)
+			place_rects.append(other.drawn_label_rect(view))
+		if other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
+			roof_nodes.append(other)
+			roof_rects.append(Rect2(other.position - other.size / 2.0, other.size))
+		if is_p and other.visible and other.get("great") != true:
+			figure_nodes.append(other)
+			figure_rects.append(person_figure_rect(other))
+	for i in ranked.size():
+		var me: Interactable = ranked[i]
+		if me.is_person():  # WU-483, WU-511: nor on the roof of a building behind them, nor on a place's name
+			var roofs: Array[Rect2] = place_rects.duplicate()
+			for j in roof_nodes.size():
+				if roof_nodes[j] != me:
+					roofs.append(roof_rects[j])
 			covers[i] = roofs
 		else:  # WU-562: a place's name never slides down onto its own art when a HUD panel pushes it
-			var me: Interactable = ranked[i]
 			var own_covers: Array[Rect2] = []
 			if me.size.x >= 40.0 and me.size.y >= 40.0 and me.get("great") != true and me.art_kind != "travel":
 				own_covers.append(Rect2(me.position - me.size / 2.0, me.size))
-			for other: Interactable in nodes:  # WU-567: nor onto a person's figure
-				if other != me and other.is_person() and other.visible and other.get("great") != true:
-					own_covers.append(person_figure_rect(other))
+			for j in figure_nodes.size():  # WU-567: nor onto a person's figure
+				if figure_nodes[j] != me:
+					own_covers.append(figure_rects[j])
 			if not own_covers.is_empty():
 				covers[i] = own_covers
 	var result := LabelLayout.resolve(rects, view, blockers, own, covers)
@@ -753,8 +788,7 @@ func camera_moved() -> void:
 
 ## True when the label is within one label width of a screen edge (cheap redraw test).
 func _label_near_edge() -> bool:
-	var font := ThemeDB.fallback_font
-	var w := font.get_string_size(label_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE).x
+	var w := label_text_size(label_text()).x
 	var view := _view_rect_local()
 	return label_offset.x - w / 2.0 < view.position.x + w or label_offset.x + w / 2.0 > view.end.x - w
 

@@ -67,6 +67,8 @@ var _market_life: MarketLife  # GFX-119
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
 var _rain_eaves: RainEaves  ## GFX-190
+## PERF-019: seconds between label re-spreads while only the camera moves (a spread costs 2-4 ms).
+const WALK_RESPREAD_INTERVAL := 0.2
 var _spread_clock := 0.0  ## WU-429: seconds since the last label spread from a moving beast.
 var _roamer_spread_pos := {}
 var _tracks: Array[Dictionary] = []  ## WU-450: a great beast's trail of prints
@@ -1066,6 +1068,9 @@ func _process(_delta: float) -> void:
 			_spread_clock = 0.0
 			_spread_on_screen()
 		return
+	if _spread_clock < WALK_RESPREAD_INTERVAL:  # PERF-019: while the camera walks, re-spread 5 times a second, not every frame
+		return
+	_spread_clock = 0.0
 	_last_canvas_origin = origin
 	for node in get_children():
 		if node is Interactable:
