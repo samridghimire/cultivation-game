@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b2d7636
+Last reviewed commit: 8e3f7c5
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2254,3 +2254,17 @@ Last reviewed commit: b2d7636
   - WU-568: Elder Mo's "What lies beyond" and errand now need favor 5; no hint points at them, so nothing is misleading.
     C-394 data OK (monkey -> ape silhouette; balance baseline not refreshed, worker noted it). C-393 test only.
     GUIDE-263, GFX-204 and GFX-205 (PeakDressing is pure RefCounted in core) are OK with tests. QA-237 is sim only.
+- 2026-11-19 (reviewer, 2nd run): reviewed b2d7636..8e3f7c5 (GUIDE-266, GUIDE-265, QA-238, GFX-207, WU-570, SIM-012, GUIDE-268,
+  C-395, GUIDE-269, SIM-013, GFX-208, GFX-210, GFX-209, GUIDE-270; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG
+  edits by workers, no SAVE_VERSION change (GUIDE-270's `npc_met_<id>` lives in world_flags; old saves just show no friend
+  line until the person is talked to again), no new binary assets. One dead branch removed, nothing filed.
+  - Fixed (GUIDE-269): `_place_clause` had an unreachable `if kind == "explore": return ""` after the explore case returned.
+  - GUIDE-266 OK: HUD and goal_region/_goal_way_fight now share hud_goal_text; the trip note still only follows first goals.
+  - GUIDE-265 OK: the fold uses `forage.contains(item name)`, so an item whose name is a substring of another forage name
+    could fold wrongly (minor, no such pair seen). The separate wants-line now comes after the season line (order change).
+  - WU-570: the silver fight marker refreshes on player_changed/region_changed only, not on day change, so a bounty or
+    mission that expires overnight can keep its marker until the next player change (cosmetic). GUIDE-269 fight_target
+    returns boards/halls/explore sites in this region, which the marker uses.
+  - GUIDE-268, GUIDE-270 (next_unlock skips options with other blockers; tested), GFX-208/209/210 (draw-only; PeakDressing's
+    LEDGE_Y is fixed for Azure Peak, the only `peak` region) OK; I did not render. C-395's second test does not actually
+    do the chore (worker noted it). QA-238, SIM-012, SIM-013 test/sim only.

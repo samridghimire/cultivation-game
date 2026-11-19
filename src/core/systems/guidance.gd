@@ -921,8 +921,6 @@ static func _place_clause(c: CharacterData, data: GameData, region_id: String, k
 	var lead := "mission board, " if kind == "mission" else ""
 	if here != "":
 		return " (%s%s)" % [lead, here] if kind == "mission" else " (Bounty Board)"
-	if kind == "explore":
-		return ""
 	var pick := func(r: String) -> String: return _fight_place_name(c, data, r, kind)
 	var far := nearest_selling(c, data, region_id, pick)
 	if far.is_empty():
