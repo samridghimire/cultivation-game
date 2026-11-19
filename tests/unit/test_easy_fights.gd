@@ -48,3 +48,34 @@ func test_easy_fight_remains_after_the_chore() -> void:
 			var deed_foes := chores.size()
 			assert_true(others > 0 or deed_foes > 1, "%s keeps an Easy fight besides one chore (day %d, %s)" % [region, day, Calendar.season_of(day)])
 	gs.end_session()
+
+
+## C-398: really do the region's easy chore on the first day of each season (so its cooldown is set),
+## then an Easy fight (here or one route away) is still on offer on each of the next 7 days.
+func test_easy_fight_each_day_of_the_week_after_the_chore() -> void:
+	var gs := _root().get_node("GameState")
+	var gaps: Array[String] = []
+	for s in 4:
+		var day := s * 90
+		for region in REGIONS:
+			var c := CharacterFactory.create("Newcomer", gs.data, seeded_rng(9))
+			gs.start_session(c)
+			var done: Array[String] = []
+			for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, region, gs.npcs, gs.npc_favor):
+				if f["kind"] != "deed" or float(f["chance"]) < 0.9:
+					continue
+				for deed_id: String in gs.data.deeds:
+					var deed: Dictionary = gs.data.deeds[deed_id]
+					if String(deed.get("enemy", "")) == String(f["enemy_id"]) and not done.has(deed_id) \
+							and Deeds.check(c, gs.data, deed, gs.world_flags, day) == "":
+						var res := Deeds.perform(c, gs.data, deed_id, gs.world_flags, day)
+						if res["ok"]:
+							done.append(deed_id)
+							break
+				if not done.is_empty():
+					break
+			for d in range(1, 8):
+				if _easy(c, gs, region, day + d).is_empty():
+					gaps.append("%s %s day +%d (did %s)" % [region, Calendar.season_of(day), d, ", ".join(done)])
+			gs.end_session()
+	assert_true(gaps.is_empty(), "Easy fight every day after the chore: gaps %s" % str(gaps))
