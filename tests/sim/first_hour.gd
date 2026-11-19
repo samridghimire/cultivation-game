@@ -2062,6 +2062,12 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
 		if acted == "":
 			hints_log["idle_weeks"] += 1
+			# GUIDE-272: what the Next-steps card said on an idle week (normalised), for --idle-dump.
+			var idle_key := " || ".join(skipped).replace("\n", " ")
+			idle_key = RegEx.create_from_string("\\d+").sub(idle_key, "N", true).substr(0, 260)
+			if idle_key == "":
+				idle_key = "(no lines)"
+			(hints_log.get_or_add("idle_lists", {}) as Dictionary)[idle_key] = int((hints_log["idle_lists"] as Dictionary).get(idle_key, 0)) + 1
 			if c.alive:
 				gs.cultivate(7, density)
 			kinds["meditate"] = true
@@ -2098,7 +2104,8 @@ static func with_easy_fight_prefix(text: String) -> String:
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
 	for g: Dictionary in Guidance.active_goal_ladder(c, gs.data, gs.world_flags, null, day):
-		if not g.get("done", false):
+		# GUIDE-271: the HUD skips a row flagged "skip" (a great beast that rates Deadly); so does the player.
+		if not g.get("done", false) and not g.get("skip", false):
 			lines.append("Goal: " + String(g["text"]))
 			break
 	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
@@ -2156,6 +2163,12 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_follow_spar_hint(gs, c, day)
 		spar_hint = was
 		return "spar" if int(spar_log["bouts"]) > spar_before else ""
+	# GUIDE-272: before the generic mission branch (the line says "your sect's own missions").
+	if line.begins_with("Your sect's home") and not c.is_rogue():
+		var home := Sects.home_region(gs.data, String(c.sect["id"]))
+		if home != "":
+			_walk_to(gs, c, home)
+		return "sect_home" if home != "" and gs.get_node("/root/GameClock").total_days != day_before else ""
 	if line.contains("mission") and not c.is_rogue():
 		var best := Guidance.best_mission(c, gs.data, gs.world_flags)
 		if best != "" and _mission_is_sane(gs, c, best, done, day):
@@ -2189,11 +2202,6 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		var armor_before: String = String(c.equipment.get("armor", ""))
 		_follow_defence_hint(gs, c)
 		return "armor" if String(c.equipment.get("armor", "")) != armor_before else ""
-	if line.begins_with("Your sect's home") and not c.is_rogue():
-		var home := Sects.home_region(gs.data, String(c.sect["id"]))
-		if home != "":
-			_walk_to(gs, c, home)
-		return "sect_home" if home != "" and gs.get_node("/root/GameClock").total_days != day_before else ""
 	if line.begins_with("Goal: Walk to "):
 		# QA-237: the goal names the first hop out of the village; the player travels there.
 		_walk_to(gs, c, "misty_forest")

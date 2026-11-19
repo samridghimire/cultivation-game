@@ -21,11 +21,11 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	var seeds := int(args[0]) if args.size() > 0 else 10
-	var days := int(args[1]) if args.size() > 1 else 365
+	var seeds := int(args[0]) if args.size() > 0 and not args[0].begins_with("--") else 10
+	var days := int(args[1]) if args.size() > 1 and not args[1].begins_with("--") else 365
 	for policy in ["default", "curious", "hints"]:
 		FirstHour.hints_policy = policy == "hints"
-		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
+		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}, "idle_lists": {}}
 		_policy(seeds, days, policy == "curious")
 		if policy == "hints":
 			_print_hints_log()
@@ -48,6 +48,13 @@ func _print_hints_log() -> void:
 	acted_rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] or (a[1] == b[1] and a[0] < b[0]))
 	for i in mini(5, acted_rows.size()):
 		print("  acted x%d: %s" % [acted_rows[i][1], acted_rows[i][0]])
+	if OS.get_cmdline_user_args().has("--idle-dump"):
+		var idle_rows: Array = []
+		for k: String in log.get("idle_lists", {}):
+			idle_rows.append([k, int(log["idle_lists"][k])])
+		idle_rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] or (a[1] == b[1] and a[0] < b[0]))
+		for i in mini(15, idle_rows.size()):
+			print("  idle x%d: %s" % [idle_rows[i][1], idle_rows[i][0]])
 	print("")
 
 
