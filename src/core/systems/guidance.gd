@@ -4837,7 +4837,8 @@ static func _next_great(c: CharacterData, data: GameData, today: int, min_realm:
 const GREAT_GOAL_DAYS := 30
 static var _great_cache: Dictionary = {}
 static func _best_great(c: CharacterData, data: GameData, today: int) -> Dictionary:
-	var key := "%d|%d|%d|%d" % [c.get_instance_id(), today, c.realm_index, c.stage]
+	# The win chance moves with gear, techniques and stats within a day (Combat.fight_fingerprint), and a beaten beast drops out.
+	var key := "%d|%d|%d|%d|%d|%s" % [data.get_instance_id(), c.get_instance_id(), today, c.realm_index, c.stage, Combat.fight_fingerprint(c)] + "|" + ",".join(PackedStringArray(c.great_beasts.keys()))
 	if _great_cache.has(key):
 		return _great_cache[key]
 	if _great_cache.size() > 16:

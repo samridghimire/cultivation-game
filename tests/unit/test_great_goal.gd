@@ -53,3 +53,19 @@ func test_whole_name_match() -> void:
 	assert_false(Guidance._has_whole_name("Mugwort Root by the path", "Mugwort"))
 	assert_false(Guidance._has_whole_name("Wild Mugwort by the path", "Mugwort"))
 	assert_true(Guidance._has_whole_name("Sage, Mugwort and moss", "Mugwort"))
+
+
+## REVIEW: the cached pick follows same-day changes (gear, beaten beasts): it matches a fresh computation.
+func test_cache_follows_same_day_changes() -> void:
+	var c := _after_ladder()
+	var d := data()
+	Guidance._best_great(c, d, 0)
+	c.realm_index = 2
+	c.stage = 8
+	Guidance._best_great(c, d, 0)
+	c.great_beasts["cloud_crane"] = 0
+	c.great_beasts["cloud_crane_mate"] = 0
+	c.attributes["strength"] = int(c.attributes.get("strength", 0)) + 40
+	var cached := Guidance._best_great(c, d, 0)
+	Guidance._great_cache.clear()
+	assert_eq(str(cached), str(Guidance._best_great(c, d, 0)))

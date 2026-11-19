@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8e3f7c5
+Last reviewed commit: 9ddf0bd
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2268,3 +2268,15 @@ Last reviewed commit: 8e3f7c5
   - GUIDE-268, GUIDE-270 (next_unlock skips options with other blockers; tested), GFX-208/209/210 (draw-only; PeakDressing's
     LEDGE_Y is fixed for Azure Peak, the only `peak` region) OK; I did not render. C-395's second test does not actually
     do the chore (worker noted it). QA-238, SIM-012, SIM-013 test/sim only.
+- 2026-11-19 (reviewer, 3rd run): reviewed 8e3f7c5..9ddf0bd (WU-571, PERF-019, C-396, GFX-211, GUIDE-271, GFX-212, SIM-014,
+  GFX-213, C-397, PERF-020; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION
+  change, no new binary assets. One small fix, nothing filed.
+  - Fixed (GUIDE-271): `_best_great`'s cache key was player id + day + realm + stage, so a same-day gear/technique/buff change
+    (SIM-014's hint now buys and equips armor) or a beaten chain beast kept the old pick and odds until the next day. The key
+    now adds data id, Combat.fight_fingerprint and the beaten beasts; new test compares the cached pick with a fresh one
+    (fails on the old key). Note: GUIDE-271's two data tests return early / assert only under a condition (weak, worker noted).
+  - C-396 OK: leech_gland is untagged on purpose (a `beast_material` must feed a recipe, test_items checks it).
+  - GFX-213 OK (QiGathering lives in src/ui, QiMotes pure; `last_cultivate_density` includes weather, close enough). GFX-212
+    OK; with reduce_motion prints never age out (stay until the 40 cap; intended "static"). Scenery.add_footprint may now be
+    dead. WU-571, PERF-019, PERF-020 (randomized equivalence test) OK; PERF-020 is partial (targets not met; worker said so).
+    C-397 data OK; its test checks next_unlock's first favor-gated option, not the secret itself. GFX-211/SIM-014 sim only.
