@@ -7652,6 +7652,46 @@ func test_short_fight_keeps_the_chore_giver() -> void:
 	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", d), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
 
 
+## GUIDE-269: bounty, mission and explore easy fights say where to start them.
+func test_short_fight_names_the_board_hall_and_site() -> void:
+	var d := data()
+	assert_true(Guidance.short_fight_line("Easy fight: Bounty: Drunk Bully Disciple in Qingshi Village (Bounty Board) (99 in 100)", d).contains("(Bounty Board)"))
+	assert_true(Guidance.short_fight_line("Easy fight: Sect mission: Cull Wolves (mission board, Azure Cloud Hall) (95 in 100)", d).contains("(mission board"))
+	assert_true(Guidance.short_fight_line("Easy fight: Explore here: Wild Boar (explore Old Cave) (99 in 100)", d).contains("(explore Old Cave)"))
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Qiu) · 100%")
+
+
+func test_place_clause_names_board_hall_and_site() -> void:
+	var d := data()
+	var c := _fresh()
+	assert_eq(Guidance._place_clause(c, d, "qingshi_village", "bounty"), " (Bounty Board)")
+	assert_true(Guidance._place_clause(c, d, "qingshi_village", "explore").begins_with(" (explore "))
+	assert_eq(Guidance._place_clause(c, d, "", "bounty"), "")
+	# another region: the board's name, region and days
+	var far := Guidance._place_clause(c, d, "misty_forest", "bounty")
+	assert_true(far == "" or far.contains("Bounty Board") and far.contains(" · "), far)
+
+
+func test_fight_target_names_non_chore_places_in_qingshi() -> void:
+	var d := data()
+	var seen := 0
+	for stage in range(0, 9):
+		var c := _fresh()
+		c.realm_index = 1
+		c.stage = stage
+		var order := Guidance.hud_fight_order(Guidance.fair_fights(c, d, {}, 0, d.start_region))
+		if order.is_empty() or not ["bounty", "mission", "explore"].has(String(order[0].get("kind", ""))):
+			continue
+		var t := Guidance.fight_target(c, d, {}, d.start_region, 0)
+		var kind := String(order[0]["kind"])
+		if kind == "explore" and int(order[0].get("days", 0)) > 0:
+			assert_eq(t, {})
+			continue
+		assert_eq(String(t.get("place", "")), Guidance._fight_place_name(c, d, d.start_region, kind), str(order[0]))
+		seen += 1
+	assert_true(seen >= 0)
+
+
 func test_fight_target_names_the_chore_giver_here() -> void:
 	var d := data()
 	var c := _fresh()

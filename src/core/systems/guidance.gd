@@ -808,6 +808,14 @@ static func _short_fight(line: String, data: GameData) -> String:
 	var is_chore := rest.begins_with("Chore for ") and chore > 0
 	var no_chore := rest.substr(chore + 2) if is_chore else rest
 	var giver := rest.substr(10, chore - 10) if is_chore else ""  # GUIDE-267: who has the job
+	# GUIDE-269: a trailing "(Bounty Board)" / "(mission board, Hall)" / "(explore Place)" says where to start the fight.
+	var place_re := RegEx.new()
+	place_re.compile("^(.+?) \\((Bounty Board|Hunters' Bounty Board[^)]*|mission board[^)]*|explore [^)]*)\\)$")
+	var pm := place_re.search(no_chore)
+	var place_clause := ""
+	if pm != null:
+		no_chore = pm.get_string(1)
+		place_clause = pm.get_string(2)
 	var foe := no_chore
 	var where := ""
 	var at := no_chore.find(" in ")
@@ -818,6 +826,11 @@ static func _short_fight(line: String, data: GameData) -> String:
 			for id: String in data.regions:
 				if String(data.regions[id].get("name", "")) == where:
 					where = Places.short_region_name(data, id)
+	if place_clause != "":  # GUIDE-269: the clause says what kind of fight it is and where; the prefix and region go
+		where = ""
+		for prefix in ["Bounty: ", "Sect mission: ", "Explore here: "]:
+			if foe.begins_with(prefix):
+				foe = foe.substr(prefix.length())
 	# GUIDE-267: a chore keeps "(ask <giver>)"; the region goes first, then the giver shrinks to its last word, then goes.
 	var asks: Array[String] = []
 	if giver != "":
@@ -825,6 +838,14 @@ static func _short_fight(line: String, data: GameData) -> String:
 		var last := giver.get_slice(" ", giver.get_slice_count(" ") - 1)
 		if last != giver:
 			asks.append(" (ask %s)" % last)
+	if place_clause != "":
+		asks.append(" (%s)" % place_clause)
+		var lead := place_clause.get_slice(" · ", 0)
+		if lead != place_clause:
+			asks.append(" (%s)" % lead)
+		var first := lead.get_slice(", ", 0)
+		if first != lead:
+			asks.append(" (%s)" % first)
 	asks.append("")
 	var tries: Array[String] = []
 	if where != "":
@@ -844,6 +865,40 @@ static func _short_fight(line: String, data: GameData) -> String:
 	return tries[tries.size() - 1]
 
 
+## GUIDE-269: the place type each easy-fight kind starts at, and the clause naming it: " (Bounty Board)",
+## " (Hunters' Bounty Board, Fallen Star · 10d)" when the board is in another region, " (mission board, <Hall>)", " (explore <place>)".
+const FIGHT_PLACE_TYPES := {"bounty": "bounty_board", "mission": "sect_hall", "explore": "explore"}
+static func _fight_place_name(c: CharacterData, data: GameData, region_id: String, kind: String) -> String:
+	for p: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		if String(p.get("type", "")) != String(FIGHT_PLACE_TYPES.get(kind, "")):
+			continue
+		if kind == "mission":
+			if Sects.hall_serves(c, p):
+				return String(p.get("display_name", ""))
+			continue
+		return String(p.get("display_name", ""))
+	return ""
+
+
+static func _place_clause(c: CharacterData, data: GameData, region_id: String, kind: String) -> String:
+	if region_id == "" or not FIGHT_PLACE_TYPES.has(kind):
+		return ""
+	var here := _fight_place_name(c, data, region_id, kind)
+	if kind == "explore":
+		return " (explore %s)" % GameData.plain_name(here) if here != "" else ""
+	var lead := "mission board, " if kind == "mission" else ""
+	if here != "":
+		return " (%s%s)" % [lead, here] if kind == "mission" else " (Bounty Board)"
+	if kind == "explore":
+		return ""
+	var pick := func(r: String) -> String: return _fight_place_name(c, data, r, kind)
+	var far := nearest_selling(c, data, region_id, pick)
+	if far.is_empty():
+		return ""
+	var days := _short_days(Calendar.format_duration(int(far["days"])))
+	return " (%s%s, %s · %s)" % [lead, far["result"], Places.short_region_name(data, String(far["region_id"])), days]
+
+
 ## GUIDE-267: a chore's "(ask Qiu)" may run this long: a beast name alone leaves the newcomer with no one to ask.
 const SHORT_ASK_CHARS := 56
 
@@ -857,7 +912,12 @@ static func fight_target(c: CharacterData, data: GameData, flags: Dictionary, re
 	if order.is_empty():
 		return {}
 	var top: Dictionary = order[0]
-	if String(top.get("kind", "")) != "deed":
+	var kind := String(top.get("kind", ""))
+	if kind != "deed":
+		# GUIDE-269: bounty boards, mission halls and explore sites in this region.
+		if FIGHT_PLACE_TYPES.has(kind) and (kind != "explore" or int(top.get("days", 0)) == 0):
+			var name := _fight_place_name(c, data, region_id, kind)
+			return {"place": name} if name != "" else {}
 		return {}
 	var label := String(top.get("short", top.get("label", "")))
 	var places: Array = data.regions.get(region_id, {}).get("places", [])
@@ -5703,7 +5763,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 		if enemy.is_empty() or Sects.mission_cooldown_left(c, id) > 0 or Sects.check_mission(c, data, id, flags) != "":
 			continue
 		rated += 1
-		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s" % mission["name"], _item_stones(mission.get("rewards", {})), "Mission: %s" % mission["name"])
+		_rate_fight(found, c, data, enemy, "mission", "Sect mission: %s%s" % [mission["name"], _place_clause(c, data, region_id, "mission")], _item_stones(mission.get("rewards", {})), "Mission: %s" % mission["name"])
 	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
 		if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
 			continue
@@ -5746,6 +5806,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 			var where := String(b["region"])
 			if (where == region_id or Exploration.is_nearby(data, region_id, where)) and Bounties.check_take(c, data, String(b["id"]), today) == "":
 				candidates.append({"bounty": b, "label": "Bounty"})
+	var board_clause := _place_clause(c, data, region_id, "bounty") if not candidates.is_empty() else ""
 	for cand in candidates:
 		if rated >= FAIR_FIGHT_MAX_RATED:
 			break
@@ -5754,7 +5815,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 		if enemy.is_empty():
 			continue
 		rated += 1
-		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"]))], Bounties.paid_stones(c, data, b), "Bounty: %s%s" % [enemy.get("name", b["enemy"]), "" if String(b["region"]) == region_id else " in " + _region_name(data, String(b["region"]))])
+		_rate_fight(found, c, data, enemy, "bounty", "%s: %s in %s%s" % [cand["label"], enemy.get("name", b["enemy"]), _region_name(data, String(b["region"])), board_clause], Bounties.paid_stones(c, data, b), "Bounty: %s%s" % [enemy.get("name", b["enemy"]), "" if String(b["region"]) == region_id else " in " + _region_name(data, String(b["region"]))])
 	if rated < FAIR_FIGHT_MAX_RATED and c.rival != "" and flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		var rival: CharacterData = people.get(c.rival)
 		if rival != null and rival.alive and region_id != "" and Npcs.region_of(rival, data) == region_id \
@@ -5778,7 +5839,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 				continue
 			rated += 1
 			explore_rated += 1
-			_rate_fight(found, c, data, foe, "explore", "Explore here: %s" % foe.get("name", enemy_id), 0, "%s, explore here" % foe.get("name", enemy_id), 0, "%s here" % foe.get("name", enemy_id))
+			_rate_fight(found, c, data, foe, "explore", "Explore here: %s%s" % [foe.get("name", enemy_id), _place_clause(c, data, region_id, "explore")], 0, "%s, explore here" % foe.get("name", enemy_id), 0, "%s here" % foe.get("name", enemy_id))
 	# GUIDE-249: nothing but easy fights here: the next fair fight one road away.
 	if region_id != "" and not _has_fair_entry(found):
 		rated += _away_explore_fights(found, c, data, flags, today, region_id, maxi(FAIR_FIGHT_MAX_RATED - rated, FAIR_FIGHT_AWAY_RESERVE))
