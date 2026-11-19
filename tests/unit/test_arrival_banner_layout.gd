@@ -30,3 +30,26 @@ func test_slim_banner_stays_between_the_cards() -> void:
 		assert_true(ribbon.end.x <= 1280.0 * Banner.SLIM_RIGHT + 1.0, "clear of the Next-steps card at %d" % h)
 		assert_true(ribbon.end.y <= float(h) * 0.4, "stays in the top part of the screen at %d" % h)
 		host.queue_free()
+
+
+## GFX-206: the HUD's blocker rects include the banner ribbon while it shows.
+func test_hud_occupied_rects_include_banner() -> void:
+	var hud: Node = load("res://src/ui/hud.tscn").instantiate() if ResourceLoader.exists("res://src/ui/hud.tscn") else null
+	if hud == null:
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(hud)
+	await tree.process_frame
+	hud._banner.announce("Qingshi Village", "Arrival", Color.WHITE, 5.0, false, null, true)
+	await tree.process_frame
+	await tree.process_frame
+	assert_true(hud.banner_showing())
+	var ribbon: Rect2 = hud._banner.ribbon_rect()
+	var covered := false
+	for r: Rect2 in hud.occupied_rects():
+		if r.encloses(ribbon):
+			covered = true
+	assert_true(covered, "banner ribbon in occupied_rects")
+	tree.root.remove_child(hud)
+	hud.free()
+	await tree.process_frame

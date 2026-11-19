@@ -95,25 +95,44 @@ static func offsets(rects: Array[Rect2], anchors: Array[Vector2]) -> Array[Vecto
 	return out
 
 
-## WU-511/WU-522: where a person's name label goes so it never sits on a place label. `label` is the rect drawn
-## above their head, `feet_y` the y of their feet. Clear of `place_rects` -> Vector2.ZERO; else it slides sideways in
-## 4 px steps up to 40 px, then tries again 4..80 px higher. It never moves down (that put it on the figure).
-## Returns the offset to add to the label; Vector2.ZERO when nothing fits.
-static func person_offset(label: Rect2, _feet_y: float, raw_place_rects: Array[Rect2]) -> Vector2:
-	var place_rects: Array[Rect2] = []
-	for pr in raw_place_rects:  # GFX-145: keep a 2 px margin
-		place_rects.append(pr.grow(2.0))
+## WU-511/WU-522, GFX-206: where a person's name label goes so it never sits on a place label. `label` is the rect
+## drawn above their head, `feet_y` the y of their feet (NAN: no below-the-feet try). Clear of `place_rects` ->
+## Vector2.ZERO; else it tries, in order: sideways up to 24 px, a lift of at most PERSON_MAX_LIFT (with the sideways
+## tries), then just below the feet (label top at feet_y + 2, with the sideways tries). Vector2.ZERO when nothing fits
+## (the caller then moves the place label, see `person_blocked`).
+const PERSON_MAX_LIFT := 16.0
+
+
+static func person_offset(label: Rect2, feet_y: float, raw_place_rects: Array[Rect2]) -> Vector2:
+	var place_rects: Array[Rect2] = _padded(raw_place_rects)
 	if not _hits(label, place_rects):
 		return Vector2.ZERO
-	for up in range(0, 21):
-		for k in range(0, 11):
+	var rows: Array[float] = []
+	for up in range(0, int(PERSON_MAX_LIFT / 4.0) + 1):
+		rows.append(-4.0 * up)
+	if not is_nan(feet_y):
+		rows.append(feet_y + 2.0 - label.position.y)
+	for dy in rows:
+		for k in range(0, 7):
 			for dir in [1.0, -1.0]:
 				if k == 0 and dir < 0.0:
 					continue
-				var d := Vector2(dir * 4.0 * k, -4.0 * up)
+				var d := Vector2(dir * 4.0 * k, dy)
 				if not _hits(Rect2(label.position + d, label.size), place_rects):
 					return d
 	return Vector2.ZERO
+
+
+## GFX-206: whether `label` (already offset) still hits a place label, with the same 2 px margin as `person_offset`.
+static func person_blocked(label: Rect2, raw_place_rects: Array[Rect2]) -> bool:
+	return _hits(label, _padded(raw_place_rects))
+
+
+static func _padded(rects: Array[Rect2]) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for pr in rects:  # GFX-145: keep a 2 px margin
+		out.append(pr.grow(2.0))
+	return out
 
 
 ## WU-475: which labels stay in a crowd. A label whose neighbourhood (rect centres within `radius`, itself

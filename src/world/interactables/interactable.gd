@@ -261,8 +261,8 @@ static func spread_labels(nodes: Array) -> void:
 	for i in nodes.size():
 		var node := nodes[i] as Interactable
 		node.label_offset += shifts[i]
-		if node.is_person():  # WU-522: a person's label may rise but never drops onto their own head
-			node.label_offset.y = minf(node.label_offset.y, 0.0)
+		if node.is_person():  # WU-522: a person's label may rise but never drops onto their own head (GFX-206: below the feet is fine)
+			node.label_offset.y = minf(node.label_offset.y, maxf(0.0, node._label_avoid.y))
 
 
 ## GFX-201: a label whose rect overlaps the player's sprite rect moves above it (below when that leaves the map).
@@ -286,6 +286,24 @@ static func clear_person_labels(nodes: Array) -> void:
 			node._label_avoid = avoid
 			node._label_anchor = node.position
 			node._label_target = node.label_offset
+	_yield_place_labels(nodes, places)
+
+
+## GFX-206: a named villager whose label still hits a place label after `person_offset` makes the place label yield:
+## it moves clear of the person's label (up if the person is below it, else down).
+static func _yield_place_labels(nodes: Array, _places: Array[Rect2]) -> void:
+	for node: Interactable in nodes:
+		if not node.is_person() or node.get("npc_id") == null or node.label_text() == "":
+			continue
+		var mine := node.label_rect(node.label_text())
+		for other: Interactable in nodes:
+			if other.is_person() or other.label_text() == "":
+				continue
+			var theirs := other.label_rect(other.label_text())
+			if not mine.grow(2.0).intersects(theirs):
+				continue
+			var dy := mine.position.y - 2.0 - theirs.end.y if theirs.get_center().y < mine.get_center().y else mine.end.y + 2.0 - theirs.position.y
+			other.label_offset.y += dy
 
 
 ## WU-555: call once after spread/clamp so a person's eased target starts at the laid-out offset.
@@ -297,8 +315,8 @@ static func sync_person_labels(nodes: Array) -> void:
 
 ## WU-555: the label offset a person needs at `anchor` (their home + wander, no bob) to clear `place_rects`, given
 ## `base`, the offset they would have with no place in the way. Pure: also the unit-test entry point.
-static func relayout_person(label_at_base: Rect2, place_rects: Array[Rect2]) -> Vector2:
-	return LabelLayout.person_offset(label_at_base.grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0, 0.0), 0.0, place_rects)
+static func relayout_person(label_at_base: Rect2, place_rects: Array[Rect2], feet_y: float = NAN) -> Vector2:
+	return LabelLayout.person_offset(label_at_base.grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0, 0.0), feet_y, place_rects)
 
 
 ## WU-555: called by a moving person every physics frame with their bob-free position. Re-lays the label when they
@@ -313,8 +331,7 @@ func person_label_tick(delta: float, anchor: Vector2) -> void:
 		var base := _label_target - _label_avoid
 		var rect := label_rect(label_text())
 		rect.position += base - label_offset + (anchor - position)
-		_label_avoid = relayout_person(rect, _place_rects)
-		_label_avoid.y = minf(_label_avoid.y, 0.0)
+		_label_avoid = relayout_person(rect, _place_rects, anchor.y + size.y / 2.0)
 		_label_target = base + _label_avoid
 	if label_offset != _label_target:
 		label_offset = _label_target if MotionFx.reduced() else label_offset.move_toward(_label_target, maxf(0.5, label_offset.distance_to(_label_target) * minf(1.0, delta / RELAYOUT_EASE)))

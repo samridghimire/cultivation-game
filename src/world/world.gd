@@ -1042,6 +1042,15 @@ func _process(_delta: float) -> void:
 			if node is Interactable:
 				(node as Interactable).refresh_label_alpha(player.position)
 	_spread_clock += _delta
+	var banner_now := false
+	var hud_node := get_node_or_null("HUD")
+	if hud_node != null and hud_node.has_method("banner_showing"):
+		banner_now = hud_node.banner_showing()
+	if banner_now != _banner_was_showing:  # GFX-206: labels step off the banner, and back when it hides
+		_banner_was_showing = banner_now
+		_spread_clock = 0.0
+		_spread_on_screen()
+		return
 	if origin == _last_canvas_origin and not moved:
 		if Interactable.respread_due(_spread_clock, _movers_moved()):
 			_spread_clock = 0.0
@@ -1112,6 +1121,9 @@ func _check_greetings() -> void:
 		if node is Interactable and node.get("npc_id") == id:
 			_greet_bubble = VillagerGreeting.show_bubble(node, node.size.y, text, Settings.get_value("reduce_motion"))
 			return
+
+
+var _banner_was_showing := false
 
 
 ## Lifts labels that the screen-edge clamp pushed together (WU-281).

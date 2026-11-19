@@ -135,20 +135,28 @@ func test_person_offset_clear_label_stays() -> void:
 	assert_eq(LabelLayout.person_offset(Rect2(0, 0, 80, 20), 100.0, places), Vector2.ZERO)
 
 
-func test_person_offset_never_moves_down() -> void:
-	var places: Array[Rect2] = [Rect2(90, 60, 100, 20)]
+func test_person_offset_lift_is_capped() -> void:  # GFX-206
+	var places: Array[Rect2] = [Rect2(90, 40, 100, 30)]  # directly above the head, label under it
 	var label := Rect2(100, 70, 80, 20)
 	var d := LabelLayout.person_offset(label, 120.0, places)
-	assert_true(d.y <= 0.0, "label moved down: %s" % d)
-	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
+	assert_true(-d.y <= LabelLayout.PERSON_MAX_LIFT or label.position.y + d.y >= 120.0, "lift %s" % d)
+	assert_false(Rect2(label.position + d, label.size).intersects(places[0].grow(2.0)))
 
 
-func test_person_offset_rises_when_sides_are_taken() -> void:
+func test_person_offset_falls_below_feet() -> void:  # GFX-206
 	var places: Array[Rect2] = [Rect2(20, 60, 260, 20)]
 	var label := Rect2(100, 70, 80, 20)
 	var d := LabelLayout.person_offset(label, 120.0, places)
-	assert_true(d.y < 0.0 and d.y <= -12.0)
-	assert_false(Rect2(label.position + d, label.size).intersects(places[0]))
+	assert_true(d.y > 0.0, "below the feet: %s" % d)
+	assert_true(label.position.y + d.y >= 122.0 - 0.01)
+	assert_false(Rect2(label.position + d, label.size).intersects(places[0].grow(2.0)))
+
+
+func test_person_offset_boxed_in_gives_zero() -> void:  # GFX-206
+	var places: Array[Rect2] = [Rect2(-200, 40, 700, 100)]
+	var label := Rect2(100, 70, 80, 20)
+	assert_eq(LabelLayout.person_offset(label, 120.0, places), Vector2.ZERO)
+	assert_true(LabelLayout.person_blocked(label, places))
 
 
 func test_covered_label_slides_sideways_clear_of_building() -> void:  # WU-540

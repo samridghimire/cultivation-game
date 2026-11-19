@@ -390,7 +390,8 @@ func test_moved_person_label_steps_aside() -> void:
 	for i in 40:
 		npc.person_label_tick(0.1, npc.position)
 	assert_false(npc.label_rect().intersects(pr), "label still on the place name")
-	assert_true(npc.label_offset.y <= 0.0, "label dropped onto the head")
+	var body := Rect2(npc.position - npc.size / 2.0, npc.size)  # GFX-206: above, or below the feet, never on the figure
+	assert_false(npc.label_rect().intersects(body), "label dropped onto the head")
 
 
 func test_person_label_ignores_small_moves() -> void:
@@ -408,7 +409,7 @@ func test_person_label_ignores_small_moves() -> void:
 
 func test_relayout_person_clears_with_gap() -> void:
 	var place: Array[Rect2] = [Rect2(100, 100, 80, 16)]
-	var off := Interactable.relayout_person(Rect2(120, 100, 80, 16), place)
+	var off := Interactable.relayout_person(Rect2(120, 100, 80, 16), place, 130.0)
 	var moved := Rect2(Rect2(120, 100, 80, 16).position + off, Vector2(80, 16))
 	assert_false(moved.grow(Interactable.LABEL_MIN_GAP / 2.0 - 0.1).intersects(place[0]) and off.y == 0.0)
 	assert_false(moved.intersects(place[0]))

@@ -42,3 +42,31 @@ func test_no_label_collisions_in_starting_regions() -> void:
 	for region: String in REGIONS:
 		all.append_array(await _collisions(region))
 	assert_true(all.is_empty(), "label collisions: %s" % ["; ".join(all)])
+
+
+## GFX-206: a named villager's label stays within 24 px (vertically) of their sprite, above or below.
+func _named_label_gaps(region: String, npc: String) -> Array:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.current_region = region
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	tree.root.add_child(world)
+	for i in 4:
+		await tree.process_frame
+	var out: Array = []
+	for node in world.get_children():
+		if node is Interactable and node.get("npc_id") == npc:
+			var n := node as Interactable
+			var body := Rect2(n.position - n.size / 2.0, n.size)
+			var r := n.label_rect()
+			out.append(maxf(body.position.y - r.end.y, r.position.y - body.end.y))
+	world.queue_free()
+	gs.end_session()
+	return out
+
+
+func test_elder_mo_label_hugs_him() -> void:
+	var gaps := await _named_label_gaps("qingshi_village", "elder_mo")
+	for g: float in gaps:
+		assert_true(g <= 24.0, "Elder Mo's label is %s px from him" % g)

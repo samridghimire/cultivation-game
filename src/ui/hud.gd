@@ -975,7 +975,14 @@ func occupied_rects() -> Array[Rect2]:
 			if c == _key_bar:
 				r = r.grow_side(SIDE_TOP, KEY_STRIP_CLEARANCE)  # WU-441: labels keep off the key strip
 			rects.append(r)
+	if banner_showing():  # GFX-206: a label never hides behind the announcement ribbon
+		rects.append(_banner.ribbon_rect())
 	return rects
+
+
+## GFX-206: whether an announcement banner is on screen (the world re-spreads labels when this flips).
+func banner_showing() -> bool:
+	return _banner != null and _banner.is_visible_in_tree()
 
 
 ## GFX-069: screen rect of the shown "[E] <name>" chip, an empty Rect2 when there is none.
