@@ -89,7 +89,6 @@ var _amb_accents: Array[String] = []
 var _amb_gap := Vector2(5, 14)
 var _amb_accent_player: AudioStreamPlayer
 var _amb_rng := RandomNumberGenerator.new()
-var _amb_tween: Tween
 
 
 func _ready() -> void:
@@ -212,18 +211,12 @@ func refresh_ambience() -> void:
 
 func apply_ambience(amb: Dictionary) -> void:
 	var wanted: Array = amb["layers"]
-	if _amb_tween != null:
-		_amb_tween.kill()
-	_amb_tween = null
 	for layer: String in _amb_players.keys():
 		if not wanted.has(layer):
 			var old: AudioStreamPlayer = _amb_players[layer]
 			_amb_players.erase(layer)
 			if is_inside_tree():
-				if _amb_tween == null:
-					_amb_tween = create_tween().set_parallel(true)
-				_amb_tween.tween_property(old, "volume_db", SILENT_DB, AMB_FADE)
-				_amb_tween.tween_callback(old.queue_free).set_delay(AMB_FADE)
+				_fade_layer(old, SILENT_DB, true)
 			else:
 				old.queue_free()
 	for layer: String in wanted:
@@ -238,9 +231,7 @@ func apply_ambience(amb: Dictionary) -> void:
 		p.play()
 		_amb_players[layer] = p
 		if is_inside_tree():
-			if _amb_tween == null:
-				_amb_tween = create_tween().set_parallel(true)
-			_amb_tween.tween_property(p, "volume_db", 0.0, AMB_FADE)
+			_fade_layer(p, 0.0, false)
 	_amb_accents.clear()
 	for a: String in amb["accents"]:
 		_amb_accents.append(a)
@@ -249,6 +240,20 @@ func apply_ambience(amb: Dictionary) -> void:
 		_amb_timer.stop()
 	elif _amb_timer.is_stopped():
 		_amb_timer.start(_amb_rng.randf_range(_amb_gap.x, _amb_gap.y))
+
+
+## One tween per layer, bound to that player: a second refresh in the same frame (travel advances the day,
+## then changes region) must not kill another layer's fade-in or fade-out and leave it stuck or never freed.
+func _fade_layer(p: AudioStreamPlayer, to_db: float, free_after: bool) -> void:
+	if p.has_meta("amb_tween"):
+		var prev: Tween = p.get_meta("amb_tween")
+		if prev != null and prev.is_valid():
+			prev.kill()
+	var t := p.create_tween()
+	t.tween_property(p, "volume_db", to_db, AMB_FADE)
+	if free_after:
+		t.tween_callback(p.queue_free)
+	p.set_meta("amb_tween", t)
 
 
 func _on_accent_timer() -> void:

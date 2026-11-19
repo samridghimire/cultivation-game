@@ -76,3 +76,16 @@ func test_reduce_motion_leaves_lie_still_no_puffs() -> void:
 	for s in f._pool:
 		if bool(s["on"]):
 			assert_eq(s["kind"], "leaf")
+
+
+## REVIEW: toggling Ambient effects off and on gives the same leaves as a fresh setup (it used to also need grass ground).
+func test_toggle_keeps_leaves_rule() -> void:
+	var fx := FoliageFx.new()
+	var region := {"id": "x", "map": {"ground_style": "scree", "ambient": {"any": "leaves"}}}
+	var decor: Array[Dictionary] = [{"kind": "tree", "pos": Vector2(100, 100)}]
+	fx.setup(region, {}, decor, "Summer", false, true, false)
+	var before := fx.leaves_enabled()
+	fx.set_enabled(false, "Summer", region["map"])
+	fx.set_enabled(true, "Summer", region["map"])
+	assert_eq(fx.leaves_enabled(), before)
+	fx.free()

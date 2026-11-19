@@ -62,3 +62,19 @@ func test_ambience_players_follow_the_selection() -> void:
 func test_ambience_volume_default() -> void:
 	assert_almost_eq(float(Settings.DEFAULTS["ambience_volume"]), 0.6)
 	assert_true(Settings.VOLUME_BUSES.has("Ambience"))
+
+
+## REVIEW: travel refreshes twice in one frame (days_advanced, then region_changed). The second, unchanged refresh
+## used to kill the shared fade tween, so new layers stayed silent and the old ones played on, never freed.
+func test_second_refresh_keeps_fades_running() -> void:
+	Audio.apply_ambience({"layers": [], "accents": [], "accent_every": Vector2(5, 14)})
+	Audio.apply_ambience({"layers": ["amb_village"], "accents": [], "accent_every": Vector2(5, 14)})
+	var old: AudioStreamPlayer = Audio._amb_players["amb_village"]
+	var next := {"layers": ["amb_marsh"], "accents": [], "accent_every": Vector2(5, 14)}
+	Audio.apply_ambience(next)
+	var fresh: AudioStreamPlayer = Audio._amb_players["amb_marsh"]
+	Audio.apply_ambience(next)
+	for p: AudioStreamPlayer in [old, fresh]:
+		var t: Variant = p.get_meta("amb_tween") if p.has_meta("amb_tween") else null
+		assert_true(t is Tween and (t as Tween).is_valid() and (t as Tween).is_running(), "fade still running on %s" % p.name)
+	Audio.apply_ambience({"layers": [], "accents": [], "accent_every": Vector2(5, 14)})

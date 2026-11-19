@@ -21,6 +21,7 @@ var _reduce := false
 var _grass := false  ## the region's ground is grass/litter (not scree, bog, paved)
 var _petals := false
 var _leaves := false
+var _snowy := false
 var _grass_color := Color("5f8a45")
 var _road_rects: Array[Rect2] = []
 var _trees: Array[Vector2] = []
@@ -53,6 +54,7 @@ func setup(region: Dictionary, yards: Dictionary, decor: Array[Dictionary], seas
 	var map: Dictionary = region.get("map", {})
 	_enabled = enabled
 	_reduce = reduce_motion
+	_snowy = snowy
 	_grass = grass_ground(str(map.get("ground_style", "grass")), snowy)
 	var cfg := Scenery.settings(region)
 	_grass_color = Color(str(cfg.get("grass_color", "5f8a45")))
@@ -77,7 +79,7 @@ func setup(region: Dictionary, yards: Dictionary, decor: Array[Dictionary], seas
 ## The Ambient effects setting changed: off clears everything.
 func set_enabled(on: bool, season: String, map: Dictionary) -> void:
 	_enabled = on
-	_leaves = on and leaves_fall(season, map) and _grass
+	_leaves = on and leaves_fall(season, map) and not _snowy  # same rule as setup (a `leaves` ambient region may be scree)
 	if not on:
 		for s in _pool:
 			s["on"] = false

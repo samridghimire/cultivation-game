@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 9ddf0bd
+Last reviewed commit: 7b8a6c6
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2280,3 +2280,17 @@ Last reviewed commit: 9ddf0bd
     OK; with reduce_motion prints never age out (stay until the 40 cap; intended "static"). Scenery.add_footprint may now be
     dead. WU-571, PERF-019, PERF-020 (randomized equivalence test) OK; PERF-020 is partial (targets not met; worker said so).
     C-397 data OK; its test checks next_unlock's first favor-gated option, not the secret itself. GFX-211/SIM-014 sim only.
+- 2026-11-19 (reviewer, 4th run): reviewed 9ddf0bd..7b8a6c6 (WU-572, GUIDE-272, WU-573, SIM-016, C-398, PERF-021, GFX-215,
+  GFX-214, SIM-015; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change, no
+  new binary assets (WU-573's sounds are synthesized). Two fixes, nothing filed.
+  - Fixed (WU-573): `Audio.apply_ambience` killed one shared fade tween on every call. Travel refreshes twice in one frame
+    (`_pass_time` -> days_advanced, then region_changed), so the second, unchanged call killed the first call's fades: the
+    new region's layers stayed at -40 dB and the old region's layers kept playing at full volume, never freed. Each layer
+    now gets its own tween bound to its player (`_fade_layer`). New test fails on the old code.
+  - Fixed (GFX-214): `FoliageFx.set_enabled` used `and _grass` while `setup` used `and not snowy`, so toggling Ambient
+    effects dropped falling leaves in a `leaves`-ambient region on non-grass ground. Same rule now; test added.
+  - WU-573 notes: shop `coin` plays even when the trade fails (no funds); a mountain storm stacks wind_soft + wind_hard.
+    Cosmetic, not filed. Soundscape is pure and validated in GameData.
+  - WU-572 (marker refresh on days_advanced, tested), PERF-021 (typed shared covers read in place; resolve never mutates
+    `extra`; equivalence test), GFX-215 (glow sits at the place centre, freed with its place, hidden with Ambient effects)
+    OK; I did not render GFX-214/215. C-398 test only. GUIDE-272, SIM-015, SIM-016 sim only.
