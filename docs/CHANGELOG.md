@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-18 [C-393] Every teacher likes a gift you can afford or pick nearby.
+- 2026-11-18 [WU-568] Character creation, Elder Mo's talk and the Explore menu are lighter to read.
+- 2026-11-18 [GUIDE-263] Fight odds in plain words for newcomers.
+- 2026-11-18 [GUIDE-262] A fight on the way to whatever your goal is.
+- 2026-11-18 [GFX-203] No more yellow smudges on the mountain ground.
+- 2026-11-18 [GFX-202] Place and people labels no longer touch.
+- 2026-11-18 [SIM-011] The test player who reads the hints now follows more of them.
+- 2026-11-18 [C-392] A first easy fight in Azure Peak, the Bone Marsh and the Ridge.
+- 2026-11-18 [GUIDE-261] Headman Zhou's work shows only when he has work.
+- 2026-11-18 [WU-567] A gold marker shows who your goal is about, with an arrow when they are off screen.
+- 2026-11-18 [GFX-201] You stand out in a crowd: a soft gold ring under your feet.
 - 2026-11-18 [WU-566] The first five minutes checked shot by shot.
 - 2026-11-18 [GFX-200] The Fallen Star Market looks like a city: grey street earth, gutters, potted trees by the halls.
 - 2026-11-18 [SIM-010] A new test player who follows the Next steps hints.
