@@ -6775,6 +6775,26 @@ func test_sect_home_hint_until_visited() -> void:
 	assert_eq(Guidance.sect_home_hint(rogue, data(), "qingshi_village"), "")
 
 
+## GUIDE-264: a home behind a realm-gated road says when it opens and sits after every actionable line.
+func test_sect_home_hint_gated_road() -> void:
+	var c := _fresh()
+	c.sect = {"id": "blood_lotus_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+	c.visited_regions.clear()
+	var hint := Guidance.sect_home_hint(c, data(), "qingshi_village")
+	assert_true(hint.contains("the road opens at Qi Refining"), hint)
+	assert_false(hint.contains("by road"), hint)
+	var lines := Guidance.hints(c, data(), 1.0, 12, {}, {}, "qingshi_village")
+	assert_true(lines[lines.size() - 1].contains("the road opens at"), str(lines))
+	var gate := Guidance.route_gate(c, data(), "qingshi_village", "withered_bone_marsh")
+	assert_eq(String(gate["realm_name"]), "Qi Refining")
+	assert_true(int(gate["days"]) > 0)
+	assert_eq(Guidance.route_gate(c, data(), "qingshi_village", "qingshi_village"), {})
+	assert_eq(Guidance.route_gate(c, data(), "nowhere", "qingshi_village"), {})
+	c.realm_index = 1
+	assert_eq(Guidance.route_gate(c, data(), "qingshi_village", "withered_bone_marsh"), {})
+	assert_false(Guidance.sect_home_hint(c, data(), "qingshi_village").contains("the road opens"))
+
+
 ## TODAY-004: a marked market day, the market line and the wanted line fold into one line for the same stall.
 func test_today_market_lines_merge_with_mark_and_wanted() -> void:
 	var d := data()

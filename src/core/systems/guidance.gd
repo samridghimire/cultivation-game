@@ -887,7 +887,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		if duty != "":
 			out.append(duty)
 	var home_hint := sect_home_hint(c, data, region_id)
-	if home_hint != "":
+	# GUIDE-264: a home behind a closed road is not something to do today; it goes after every actionable line.
+	var home_gated := home_hint.contains("the road opens at")
+	if home_hint != "" and not home_gated:
 		out.append(home_hint)
 	var unseal := ArtifactFunctions.ready_to_unseal(c, data, flags)
 	if not unseal.is_empty():
@@ -1013,6 +1015,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
+	if home_gated:
+		out.append(home_hint)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
@@ -1466,6 +1470,18 @@ static func route_days(c: CharacterData, data: GameData, from_id: String, to_id:
 		return -1
 	var days: Dictionary = _route_day_map(c, data, from_id, -1, ignore_realm_gates)["days"]
 	return int(days[to_id]) if days.has(to_id) else -1
+
+
+## GUIDE-264: what closes the road `from_id` -> `to_id` for `c`: {} when it is walkable now (or never), else
+## {"realm_index", "realm_name", "days"} for the lowest realm at which it opens.
+static func route_gate(c: CharacterData, data: GameData, from_id: String, to_id: String) -> Dictionary:
+	if route_days(c, data, from_id, to_id) >= 0 or route_days(c, data, from_id, to_id, true) < 0:
+		return {}
+	for i in range(c.realm_index + 1, data.realms.size()):
+		var d := int(_with_probe(c, "realm_index", i, func() -> int: return route_days(c, data, from_id, to_id)))
+		if d >= 0:
+			return {"realm_index": i, "realm_name": data.realms[i].name, "days": d}
+	return {}
 
 
 ## GUIDE-098: the first region on the shortest-days route from `from_id` to `to_id`; "" when equal, unknown or unreachable.
@@ -3503,6 +3519,9 @@ static func sect_home_hint(c: CharacterData, data: GameData, region_id: String =
 	var tail := ""
 	if not what.is_empty():
 		tail = ": " + " and ".join(what)
+	var gate := route_gate(c, data, region_id, home) if region_id != "" else {}
+	if not gate.is_empty():
+		return "Your sect's home is %s in %s; the road opens at %s." % [hall, Exploration.region_name(data, home), gate["realm_name"]]
 	var days := route_days(c, data, region_id, home) if region_id != "" else 0
 	var road := " (%s by road)" % Calendar.format_duration(days) if days > 0 else ""
 	return "Your sect's home is %s in %s%s%s." % [hall, Exploration.region_name(data, home), road, tail]
