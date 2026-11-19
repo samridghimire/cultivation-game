@@ -456,6 +456,9 @@ func _on_contest_finished(_result: Dictionary) -> void:
 func _on_setting_changed(key: String, _value: Variant) -> void:
 	if key == "ambient_effects":
 		_refresh_ambient()
+		for node in get_children():
+			if node is QiSpringGlow:
+				node.visible = bool(_value)
 	elif key == "show_all_labels" and player != null:
 		for node in get_children():
 			if node is Interactable:
@@ -817,7 +820,23 @@ func _make_place(place: Dictionary) -> Interactable:
 	move_child(node, player.get_index())
 	if place["type"] == "merchant" and not place.has("open_days") and not place.has("festival_only"):
 		_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
+	if place["type"] == "meditation":
+		_add_qi_glow(node, float(place.get("qi_density", 1.0)))
 	return node
+
+
+## GFX-215: a quiet shimmer where qi pools (qi_density > 1); none without Ambient effects.
+func _add_qi_glow(place_node: Node2D, qi_density: float) -> void:
+	if QiSpringGlow.mote_count(qi_density) == 0:
+		return
+	var glow := QiSpringGlow.new()
+	glow.name = "QiGlow"
+	glow.position = place_node.position
+	glow.visible = bool(Settings.get_value("ambient_effects"))
+	glow.setup((place_node as Interactable).size, qi_density, MotionFx.reduced())
+	add_child(glow)
+	move_child(glow, player.get_index())
+	place_node.tree_exited.connect(glow.queue_free)
 
 
 ## The Family Home (FAM-011) while the player's spouses or children live here.
@@ -848,6 +867,7 @@ func _build_abodes() -> void:
 		node.art_kind = "abode"
 		add_child(node)
 		move_child(node, player.get_index())
+		_add_qi_glow(node, float(Abodes.get_def(GameState.data, node.abode_id).get("qi_density", 1.0)))
 
 
 ## After an artifact respawn the player awakens beside their anchor place.
