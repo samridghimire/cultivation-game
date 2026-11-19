@@ -510,7 +510,7 @@ static func today_lines(c: CharacterData, data: GameData, flags: Dictionary, act
 		out.append(season)
 	var bits: PackedStringArray = []
 	var forage := _forage_phrase(c, data, region_id, day, flags)
-	if forage != "" and wanted_item != "" and wanted_line != "" and forage.contains(wanted_item):
+	if forage != "" and wanted_item != "" and wanted_line != "" and _has_whole_name(forage, wanted_item):
 		# GUIDE-265: the buyer folds into the forage line instead of a second line about the same item.
 		var what := "it" if forage.begins_with(wanted_item + " by the path") else wanted_item
 		forage = forage.trim_suffix(" by the path") + " by the path (%s buys %s today)" % [wanted_buyer, what]
@@ -4684,17 +4684,31 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	if data.regions.has("fallen_star_market"):
 		rows.append(["Visit %s: armor, weapons and manuals are sold there" % _region_name(data, "fallen_star_market"), vet or c.visited_regions.has("fallen_star_market")])
 	var great_text := "Beat a great beast"
-	var next_great := _next_great(c, data, today)
-	var best_rid: String = next_great["region"]
-	var best_day: int = next_great["day"]
+	var best := _best_great(c, data, today)
+	var skip_great := false
+	var rate_note := ""
+	if best.is_empty():
+		best = _next_great(c, data, today)
+		best["chance"] = -1.0
+	var best_rid: String = best["region"]
+	var best_day: int = best["day"]
 	if best_rid != "":
 		var away := best_day - today
 		var when := "today" if away == 0 else ("tomorrow" if away == 1 else "in %d days" % away)
-		great_text += " (the next one: %s in %s, %s, %s)" % [Wildlife.display_name(data, Wildlife.active_great_enemy(c, data, best_rid), true), _region_name(data, best_rid), Calendar.weekday_name(best_day), when]
+		var chance := float(best["chance"])
+		var odds := ""
+		if chance >= 0.0:
+			odds = "; %s, %d in 100" % [Combat.label_for_chance(chance), roundi(chance * 100.0)]
+			if chance < 0.5:
+				skip_great = true
+				rate_note = " (%s now; come back stronger)" % Combat.label_for_chance(chance)
+				odds = ""
+		great_text += " (the next one: %s in %s, %s, %s%s)" % [Wildlife.display_name(data, Wildlife.active_great_enemy(c, data, best_rid), true), _region_name(data, best_rid), Calendar.weekday_name(best_day), when, odds]
 		var rumor := Wildlife.rumor_of(data, best_rid, c)
 		if rumor != "":
 			great_text += ". Hunters say: " + rumor
-	rows.append([great_text, vet or not c.great_beasts.is_empty()])
+		great_text += rate_note
+	rows.append([great_text, vet or not c.great_beasts.is_empty(), skip_great and not vet and c.great_beasts.is_empty()])
 	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
 	var found := false
 	for key: String in flags:
@@ -4720,7 +4734,10 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 			rows.append([extra["text"], extra["done"]])
 	var out: Array[Dictionary] = []
 	for row: Array in rows:
-		out.append({"text": row[0], "done": row[1]})
+		var entry := {"text": row[0], "done": row[1]}
+		if row.size() > 2 and bool(row[2]):
+			entry["skip"] = true  # GUIDE-271: unfinished, but the HUD goal passes it by
+		out.append(entry)
 	return out
 
 
@@ -4815,6 +4832,46 @@ static func _next_great(c: CharacterData, data: GameData, today: int, min_realm:
 	return {"region": best_rid, "day": best_day}
 
 
+## GUIDE-271: the great beast worth walking to: of the open-road regions whose next great day is within 30 days, the one
+## with the highest win chance >= FAIR_FIGHT_MIN_CHANCE (ties: soonest), else the soonest. {region, day, enemy, chance}, {} when none.
+const GREAT_GOAL_DAYS := 30
+static var _great_cache: Dictionary = {}
+static func _best_great(c: CharacterData, data: GameData, today: int) -> Dictionary:
+	var key := "%d|%d|%d|%d" % [c.get_instance_id(), today, c.realm_index, c.stage]
+	if _great_cache.has(key):
+		return _great_cache[key]
+	if _great_cache.size() > 16:
+		_great_cache.clear()
+	var best := {}
+	for rid: String in data.regions:
+		var def: Dictionary = data.regions[rid].get("roamers", {}).get("great", {})
+		if def.is_empty() or c.great_beasts.has(String(def.get("enemy", ""))):
+			continue
+		var nd := Wildlife.next_great_day(data, rid, today, c.realm_index, c)
+		if nd < 0 or nd - today > GREAT_GOAL_DAYS or route_days(c, data, data.start_region, rid) < 0:
+			continue
+		var enemy_id := Wildlife.active_great_enemy(c, data, rid)
+		if not data.enemies.has(enemy_id):
+			continue
+		var foe: Dictionary = data.enemies[enemy_id]
+		var chance := float(_with_probe(c, "injuries", {}, func() -> Variant: return Combat.win_chance(c, data, foe)))
+		var cand := {"region": rid, "day": nd, "enemy": enemy_id, "chance": chance}
+		if best.is_empty() or _great_better(cand, best):
+			best = cand
+	_great_cache[key] = best
+	return best
+
+
+static func _great_better(a: Dictionary, b: Dictionary) -> bool:
+	var a_ok := float(a["chance"]) >= FAIR_FIGHT_MIN_CHANCE
+	var b_ok := float(b["chance"]) >= FAIR_FIGHT_MIN_CHANCE
+	if a_ok != b_ok:
+		return a_ok
+	if a_ok and not is_equal_approx(float(a["chance"]), float(b["chance"])):
+		return float(a["chance"]) > float(b["chance"])
+	return int(a["day"]) < int(b["day"])
+
+
 ## WU-439: the region the first unfinished road goal points at ("" when all done or that goal has no region).
 static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> String:
 	var regions: Array[String] = []
@@ -4823,7 +4880,8 @@ static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary
 		regions.append(first_hop)
 	if data.regions.has("fallen_star_market"):
 		regions.append("fallen_star_market")
-	regions.append(String(_next_great(c, data, today)["region"]))
+	var bg := _best_great(c, data, today)
+	regions.append(String(bg["region"]) if not bg.is_empty() else String(_next_great(c, data, today)["region"]))
 	regions.append_array(["", "", "", "", "", ""])  # bounty, discovery, sect, mission, 6th layer, 9th layer
 	var sect_pill := _foundation_pill_where(c, data).begins_with("the sect treasury")
 	regions.append("" if sect_pill else _foundation_pill_region(c, data))
@@ -4833,7 +4891,7 @@ static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary
 			regions.append(String(extra["region"]))
 	var goals := road_goals(c, data, flags, today)
 	for i in goals.size():
-		if not bool(goals[i]["done"]):
+		if not bool(goals[i]["done"]) and not bool(goals[i].get("skip", false)):
 			return regions[i] if i < regions.size() else ""
 	return ""
 
@@ -5398,7 +5456,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		var road_flagged := false
 		for goal in road_goals(c, data, flags, today):
 			var road_tone := "dim"
-			if not goal["done"]:
+			if not goal["done"] and not goal.get("skip", false):
 				road_tone = "normal" if road_flagged else "warning"
 				road_flagged = true
 			_add(out, "Road goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), road_tone)
@@ -5880,10 +5938,38 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	return _keep_trial(found, FAIR_FIGHTS_MAX)
 
 
+## GUIDE-271: true when `name` occurs in `text` as a whole name (not inside a longer word-name like "Mugwort Root").
+static func _has_whole_name(text: String, name: String) -> bool:
+	var from := 0
+	while true:
+		var i := text.find(name, from)
+		if i < 0:
+			return false
+		var before := i == 0 or not _is_name_char(text[i - 1])
+		if before and i >= 2 and text[i - 1] == " " and _is_name_char(text[i - 2]) and _is_upper(text[text.rfind(" ", i - 2) + 1]):
+			before = false  # "Wild Mugwort": a longer capitalised name
+		var end := i + name.length()
+		var after := end >= text.length() or not _is_name_char(text[end])
+		if after and end + 1 < text.length() and text[end] == " " and _is_upper(text[end + 1]):
+			after = false  # "Mugwort Root"
+		if before and after:
+			return true
+		from = i + 1
+	return false
+
+
+static func _is_upper(ch: String) -> bool:
+	return ch != ch.to_lower()
+
+
+static func _is_name_char(ch: String) -> bool:
+	return ch.to_lower() != ch.to_upper() or ch == "'" or ch == "-"
+
+
 ## GUIDE-262: the text of the first unfinished goal on the ladder the HUD's Goal line reads ("" when none).
 static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> String:
 	for row in active_goal_ladder(c, data, flags, null, today):
-		if not row["done"]:
+		if not row["done"] and not row.get("skip", false):
 			return String(row["text"])
 	return ""
 
@@ -5893,7 +5979,7 @@ static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionar
 static func hud_goal_text(c: CharacterData, data: GameData, flags: Dictionary, region_id: String = "", today: int = -1, clan: ClanData = null, density: float = 1.0) -> String:
 	if first_goals_done(c, data, flags) or c.realm_index >= 2:
 		for row in active_goal_ladder(c, data, flags, clan, maxi(today, 0)):
-			if not row["done"]:
+			if not row["done"] and not row.get("skip", false):
 				return String(row["text"])
 		var lines := goals(c, data, flags, clan, density, region_id, today)
 		return lines[0] if not lines.is_empty() else ""
