@@ -97,3 +97,34 @@ func test_panel_shrinks_after_long_menu() -> void:
 	assert_true(menu.size.y < tall, "panel shrank")
 	assert_eq(menu.size.y, menu.get_combined_minimum_size().y, "panel height == content height")
 	vp.free()
+
+
+class StripSource extends Node:
+	var display_name := "Somewhere"
+	var look := "cave"
+
+	func menu_scene_look() -> String:
+		return look
+
+	func menu_options() -> Array[Dictionary]:
+		return [{"label": "Explore", "action": func() -> void: pass}]
+
+
+## WU-582: a source naming a look gets the 96 px place strip; one without does not.
+func test_place_strip_shows_for_explore_looks() -> void:
+	var menu := ChoiceMenu.new()
+	_tree().root.add_child(menu)
+	var src := StripSource.new()
+	_tree().root.add_child(src)
+	menu.open_for(src)
+	assert_true(menu.strip_visible(), "cave look shows the strip")
+	assert_eq(menu.strip_height(), 96.0)
+	src.look = ""
+	menu.open_for(src)
+	assert_false(menu.strip_visible(), "no look, no strip")
+	menu.open_for(FakeSource.new())
+	assert_false(menu.strip_visible(), "a plain source has no strip")
+	for look in PlaceLooks.EXPLORE_LOOKS:
+		assert_true(EncounterScene.backdrop_for_look(look) != "", "%s maps to a backdrop" % look)
+	menu.free()
+	src.free()

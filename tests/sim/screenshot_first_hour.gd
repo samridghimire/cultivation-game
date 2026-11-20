@@ -46,6 +46,7 @@ extends SceneTree
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
 ##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
+## WU-582: `--explore=<place slug>[,<slug>...]` opens that explore place's menu (explore_<slug>.png; use --region= for its region).
 ## WU-558: `--dialogue=<id>[,<id>...]` opens a story-event dialogue (dialogue_<id>.png), e.g. rival_first_meeting.
 ## WU-550: `--threat=<enemy_id>[,<id>...]` stages the sensed-foe prompt (threat_<id>.png; `--realm=<index>` sets the realm first);
 ##   `--encounter=<id>[,<id>...]` opens that encounter card (encounter_<id>.png) on the first day of its season (its `seasons`),
@@ -225,6 +226,16 @@ func _start() -> void:
 				menu_buttons.get_child(1).call_deferred("grab_focus"), "close": func() -> void:
 				gs.pending_threat = ""
 				hud.get("_choice_menu").close()})
+	for a in OS.get_cmdline_user_args():  # WU-582
+		if a.begins_with("--explore="):
+			for slug in a.substr(10).split(",", false):
+				var site := _find_explore_by_slug(slug)
+				if site == null:
+					push_warning("--explore: no explore place %s" % slug)
+					continue
+				shots.append({"name": "explore_" + slug, "open": func() -> void:
+					hud.get("_banner").visible = false
+					hud.get("_choice_menu").open_for(site), "close": hud.get("_choice_menu").close})
 	for id in enc_ids:
 		if not gs.data.encounters.has(id):
 			push_warning("--encounter: unknown encounter %s" % id)
@@ -1013,6 +1024,17 @@ func _find_gather_site(site_name: String) -> Node:
 				and str(node.get("display_name")) == site_name:
 			return node
 	assert(false, "no %s in the world" % site_name)
+	return null
+
+
+func _find_explore_by_slug(slug: String) -> Node:
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("explore_site.gd") \
+				and String(node.get("display_name")).to_lower().replace(" ", "_").replace("'", "") == slug:
+			return node
 	return null
 
 

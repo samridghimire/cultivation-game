@@ -8,6 +8,11 @@ extends Interactable
 @export var look := "cave"
 
 
+## WU-582: the look the menu's picture strip draws (the place's own look).
+func menu_scene_look() -> String:
+	return look if EncounterScene.backdrop_for_look(look) != "" else ""
+
+
 func get_options() -> Array[Dictionary]:
 	var outlook := GameState.explore_outlook(explore_tags)
 	var known := familiarity_line(GameState.player, GameState.data, GameState.current_region)

@@ -6,9 +6,12 @@ signal closed
 
 ## Screen height kept free for the title, description line and panel padding.
 const MENU_MARGIN := 190.0
+## WU-582: height of the place strip (the encounter card's is 120).
+const STRIP_HEIGHT := 96.0
 
 var _source: Node
 var _title: Label
+var _strip: EncounterScene  ## WU-582: the place picture above an explore site's title
 var _buttons: VBoxContainer
 var _scroll: ScrollContainer
 var _description: Label
@@ -33,6 +36,11 @@ func _init() -> void:
 	box.add_theme_constant_override("separation", 6)  # WU-568: no gap between the rule and the first row
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(box)
+	_strip = EncounterScene.new()
+	_strip.custom_minimum_size = Vector2(0, STRIP_HEIGHT)
+	_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_strip.visible = false
+	box.add_child(_strip)
 	_title = UIStyle.label("", 22, UIStyle.ACCENT)
 	box.add_child(_title)
 	# A rule under the title so it does not read as one of the options (WU-161).
@@ -137,6 +145,25 @@ func likes_text() -> String:
 	return _likes_label.text if _likes_label.visible else ""
 
 
+## WU-582: shows the place strip when the source names a look (explore sites), else hides it.
+func _set_strip() -> void:
+	var look := String(_source.menu_scene_look()) if _source.has_method("menu_scene_look") else ""
+	_strip.visible = look != ""
+	if _strip.visible:
+		_strip.show_encounter({}, look)
+		_strip.custom_minimum_size = Vector2(0, STRIP_HEIGHT)
+		_strip.size = Vector2(_strip.size.x, STRIP_HEIGHT)
+
+
+## Test hook: whether the place strip shows, and its height.
+func strip_visible() -> bool:
+	return _strip.visible
+
+
+func strip_height() -> float:
+	return _strip.custom_minimum_size.y
+
+
 func portrait_visible() -> bool:
 	return _portrait.visible
 
@@ -156,6 +183,7 @@ func _rebuild() -> void:
 		_buttons.remove_child(child)  # WU-485: gone now, so the old rows no longer pad the panel's height
 		child.queue_free()
 	_title.text = _source.display_name
+	_set_strip()
 	_portrait.set_portrait(_source.portrait_texture() if _source.has_method("portrait_texture") else null)
 	_set_header(_source.menu_header() if _source.has_method("menu_header") else {})
 	_set_teaches(_source.menu_teaches() if _source.has_method("menu_teaches") else [])
