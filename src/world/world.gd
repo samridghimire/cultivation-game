@@ -140,6 +140,7 @@ func _ready() -> void:
 	Settings.changed.connect(_on_setting_changed)
 	_lap("ambient")
 	_build_places()
+	_build_place_sounds()
 	_lap("places")
 	_refresh_stalls()
 	_place_at_spawn_anchor()
@@ -534,6 +535,9 @@ func _exit_tree() -> void:
 ## Closing the window saves first (bypassing the once-a-day limit); suspending or
 ## losing focus saves too, rate-limited (Steam Deck sleeps rather than closes).
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		for p: Node in get_tree().get_nodes_in_group("place_sound") if is_inside_tree() else []:
+			(p as AudioStreamPlayer2D).stream_paused = what == NOTIFICATION_APPLICATION_FOCUS_OUT
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		SaveManager.autosave(true)
 		get_tree().quit()
@@ -820,6 +824,20 @@ func _on_roamers_changed() -> void:
 	for r: Dictionary in GameState.roamers_here():
 		if not present.has(int(r["slot"])):
 			_spawn_roamer(r, blocked, avoid)
+
+
+## WU-577: one positional loop per place/landmark that names a `sound`, on the Ambience bus.
+func _build_place_sounds() -> void:
+	for entry: Dictionary in Soundscape.place_sounds(_region):
+		var p := AudioStreamPlayer2D.new()
+		p.bus = Audio.AMBIENCE_BUS if AudioServer.get_bus_index(Audio.AMBIENCE_BUS) != -1 else "Master"
+		p.stream = Audio.ambience_stream(String(entry["sound"]))
+		p.position = _vec(entry["pos"])
+		p.max_distance = 320.0
+		p.attenuation = 1.5
+		p.add_to_group("place_sound")
+		add_child(p)
+		p.play()
 
 
 func _build_places() -> void:

@@ -6,7 +6,9 @@ extends RefCounted
 const BEDS: Array[String] = ["village", "forest", "marsh", "mountain", "city"]
 const KEYS: Array[String] = ["bed", "water"]
 const DEFAULT_BED := "village"
-const LOOPS: Array[String] = ["amb_wind_soft", "amb_wind_hard", "amb_village", "amb_crowd", "amb_marsh", "amb_water", "amb_rain"]
+const LOOPS: Array[String] = ["amb_wind_soft", "amb_wind_hard", "amb_village", "amb_crowd", "amb_marsh", "amb_water", "amb_rain", "amb_forge", "amb_falls"]
+## WU-577: loops a places.json/map.landmarks `sound` field may name (positional, heard near the place).
+const PLACE_SOUNDS: Array[String] = ["amb_water", "amb_crowd", "amb_wind_soft", "amb_forge", "amb_falls"]
 const ACCENTS: Array[String] = ["bird", "crow", "frog", "insect", "bell"]
 
 
@@ -24,7 +26,25 @@ static func validate(region: Dictionary) -> PackedStringArray:
 		errs.append("Region '%s' map.ambience.bed must be one of %s" % [region.get("id", "?"), ", ".join(BEDS)])
 	if amb.has("water") and not amb["water"] is bool:
 		errs.append("Region '%s' map.ambience.water must be true or false" % region.get("id", "?"))
+	var entries: Array = []
+	entries.append_array(region.get("places", []))
+	entries.append_array(region.get("map", {}).get("landmarks", []))
+	for e: Dictionary in entries:
+		if e.has("sound") and not PLACE_SOUNDS.has(String(e["sound"])):
+			errs.append("Region '%s' '%s' sound must be one of %s" % [region.get("id", "?"), e.get("display_name", e.get("kind", "?")), ", ".join(PLACE_SOUNDS)])
 	return errs
+
+
+## WU-577: [{sound, pos: [x, y]}] for every place and landmark of a region that names a `sound`.
+static func place_sounds(region: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var entries: Array = []
+	entries.append_array(region.get("places", []))
+	entries.append_array(region.get("map", {}).get("landmarks", []))
+	for e: Dictionary in entries:
+		if e.has("sound") and PLACE_SOUNDS.has(String(e["sound"])) and e.has("pos"):
+			out.append({"sound": String(e["sound"]), "pos": e["pos"]})
+	return out
 
 
 ## {layers: loop names, accents: one-shot names, accent_every: Vector2(min, max) seconds}.

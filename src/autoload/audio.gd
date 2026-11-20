@@ -53,6 +53,8 @@ const AMB_LOOPS := {
 	"amb_marsh": {"lp": 0.03, "wobble": 2, "depth": 0.5, "gain": 0.4},
 	"amb_water": {"lp": 0.35, "hp": 0.05, "wobble": 5, "depth": 0.35, "gain": 0.35},
 	"amb_rain": {"lp": 0.7, "hp": 0.2, "wobble": 3, "depth": 0.15, "gain": 0.4},
+	"amb_forge": {"lp": 0.12, "hp": 0.02, "wobble": 3, "depth": 0.3, "gain": 0.3, "clinks": [0.35, 0.9, 1.25, 2.05, 2.4, 3.0]},
+	"amb_falls": {"lp": 0.5, "hp": 0.015, "wobble": 7, "depth": 0.15, "gain": 0.6},
 }
 const AMB_FADE := 1.5
 
@@ -309,6 +311,17 @@ static func synth_ambience(recipe: Dictionary, seed_value: int) -> AudioStreamWA
 		buf[i] *= 1.0 - depth + depth * (0.5 + 0.5 * sin(TAU * wobble * float(i) / total))
 		peak = maxf(peak, absf(buf[i]))
 	var gain: float = recipe["gain"]
+	# WU-577: irregular decaying metal clinks (start times in seconds), all ending before the loop's end.
+	for k: int in (recipe.get("clinks", []) as Array).size():
+		var start := int(float((recipe["clinks"] as Array)[k]) * AMB_RATE)
+		var freq := 1250.0 + 310.0 * (k % 3)
+		for j in int(0.18 * AMB_RATE):
+			if start + j >= total:
+				break
+			var env := exp(-float(j) / (0.035 * AMB_RATE))
+			buf[start + j] += sin(TAU * freq * float(j) / AMB_RATE) * env * peak * 1.4
+	for i in total:
+		peak = maxf(peak, absf(buf[i]))
 	var data := PackedByteArray()
 	data.resize(total * 2)
 	for i in total:

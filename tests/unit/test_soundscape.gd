@@ -78,3 +78,40 @@ func test_second_refresh_keeps_fades_running() -> void:
 		var t: Variant = p.get_meta("amb_tween") if p.has_meta("amb_tween") else null
 		assert_true(t is Tween and (t as Tween).is_valid() and (t as Tween).is_running(), "fade still running on %s" % p.name)
 	Audio.apply_ambience({"layers": [], "accents": [], "accent_every": Vector2(5, 14)})
+
+
+## WU-577: places you can hear.
+func test_place_sound_validation() -> void:
+	var bad := {"id": "x", "places": [{"display_name": "P", "sound": "amb_ocean", "pos": [1, 1]}]}
+	assert_eq(Soundscape.validate(bad).size(), 1)
+	var bad_lm := {"id": "x", "map": {"landmarks": [{"kind": "pond", "sound": "nope", "pos": [1, 1]}]}}
+	assert_eq(Soundscape.validate(bad_lm).size(), 1)
+	var ok := {"id": "x", "places": [{"display_name": "P", "sound": "amb_forge", "pos": [1, 1]}]}
+	assert_eq(Soundscape.validate(ok).size(), 0)
+	assert_eq(Soundscape.place_sounds(ok).size(), 1)
+
+
+func test_new_loops_are_seamless() -> void:
+	for name in ["amb_forge", "amb_falls"]:
+		assert_true(Soundscape.PLACE_SOUNDS.has(name), name)
+		var wav := Audio.ambience_stream(name)
+		var n := wav.data.size() / 2
+		assert_eq(wav.loop_end, n, name)
+		assert_true(absi(wav.data.decode_s16(0) - wav.data.decode_s16((n - 1) * 2)) < 3000, name)
+
+
+func test_world_builds_one_player_per_sounding_place() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	var expected := 0
+	for rid in ["qingshi_village", "fallen_star_market", "azure_peak"]:
+		gs.current_region = rid
+		expected = Soundscape.place_sounds(gs.data.regions[rid]).size()
+		assert_true(expected >= 1, rid)
+		var world: Node = load("res://src/world/world.tscn").instantiate()
+		root.add_child(world)
+		assert_eq(root.get_tree().get_nodes_in_group("place_sound").size(), expected, rid)
+		world.free()
+		assert_eq(root.get_tree().get_nodes_in_group("place_sound").size(), 0, rid)
+	gs.end_session()
