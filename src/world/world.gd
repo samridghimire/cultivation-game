@@ -53,6 +53,9 @@ var _market_dress: Dictionary = {}  ## GFX-126: Scenery.market_props of a map.ma
 var _marsh: Dictionary = {}  ## GFX-125: Scenery.marsh_features of a bog region, else empty
 ## Seasonal tint (CanvasModulate only affects this canvas, not the HUD CanvasLayer).
 var _season_tint: CanvasModulate
+var _day_tween: Tween  ## GFX-217
+var _tint_tween: Tween
+var _night_glow: NightGlow
 var _season := ""
 var _relief: Array[Dictionary] = []  # GFX-109
 var _crags: Array[Dictionary] = []  # GFX-123
@@ -181,6 +184,40 @@ func _build_season_tint() -> void:
 	_season_tint.color = _tint_for(_season)
 	add_child(_season_tint)
 	GameClock.days_advanced.connect(_on_days_advanced)
+	EventBus.time_skipped.connect(_on_time_skipped)
+
+
+## GFX-217: a multi-day skip plays quick dusk-night-dawn cycles on the tint (none when reduced or ambient is off).
+func _on_time_skipped(days: int, _summary: Dictionary) -> void:
+	if days < 1 or MotionFx.reduced() or not bool(Settings.get_value("ambient_effects")) or _season_tint == null:
+		return
+	var cycles := DayLight.cycles_for(days)
+	var total: float = [1.6, 2.0, 2.2][cycles - 1]
+	if _day_tween != null:
+		_day_tween.kill()
+	if _tint_tween != null:
+		_tint_tween.kill()
+	if _night_glow == null:
+		_night_glow = NightGlow.new()
+		add_child(_night_glow)
+	_night_glow.setup(_region.get("map", {}).get("landmarks", []))
+	var cycle_len := total / cycles
+	_day_tween = create_tween()
+	_day_tween.tween_method(_apply_day_phase.bind(cycle_len), 0.0, float(cycles) * cycle_len, cycle_len * cycles)
+	_day_tween.tween_callback(_end_day_cycle)
+
+
+func _apply_day_phase(t: float, cycle_len: float) -> void:
+	var phase := fposmod(t / cycle_len, 1.0)
+	_season_tint.color = DayLight.tint_at(phase, _tint_for(_season))
+	_night_glow.strength = DayLight.lamp_strength(phase)
+
+
+func _end_day_cycle() -> void:
+	_season_tint.color = _tint_for(_season)
+	if _night_glow != null:
+		_night_glow.strength = 0.0
+	_day_tween = null
 
 
 func _on_days_advanced(_days: int) -> void:
@@ -204,8 +241,12 @@ func _on_days_advanced(_days: int) -> void:
 			(node as Interactable).queue_redraw()
 	queue_redraw()
 	_refresh_ambient()
-	var tween := create_tween()
-	tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
+	if _day_tween != null:  # GFX-217: a cycle is running; it ends on the new season's tint itself
+		return
+	if _tint_tween != null:
+		_tint_tween.kill()
+	_tint_tween = create_tween()
+	_tint_tween.tween_property(_season_tint, "color", _tint_for(season), 0.6)
 
 
 ## The weather for a region and day, honouring a pinned (screenshot/test) weather.

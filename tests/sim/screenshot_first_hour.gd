@@ -31,6 +31,7 @@ extends SceneTree
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020); GFX-211: `--fight=<enemy_id>[,<id>...]` renders combat_report_<id>.png per foe.
 ## GFX-213: `--meditate` renders meditate.png, mid time-skip overlay (seated player, qi motes, glow).
+## GFX-217: `--skip-dusk` (with --region=a,b) also renders skip_night_<id>.png: the world frozen at night (phase 0.5) behind a time-skip card.
 ## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
@@ -268,6 +269,14 @@ func _start() -> void:
 					_teleport_player(Vector2(float(world.map_size.x) - 40.0 if gs.data.regions[id]["map"]["paths"].size() < 2 else 800.0, world.map_size.y - 20.0))
 				root.get_node("EventBus").clear_history()
 				_first_visit_card(gs, id), "close": func() -> void: pass})  # QA-203: no previous region's log lines
+			if OS.get_cmdline_user_args().has("--skip-dusk"):  # GFX-217
+				shots.append({"name": "skip_night_" + id, "open": func() -> void:
+					_rebuild_world(gs, id)
+					world.call("_on_time_skipped", 3, {})
+					world.get("_day_tween").kill()
+					world.call("_apply_day_phase", 0.5, 1.0)
+					hud.call("_show_time_skip", {"title": "Meditating", "days": 3, "lines": ["+0 qi"]})
+					, "settle": 20, "close": hud.get("_time_skip").close})
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return

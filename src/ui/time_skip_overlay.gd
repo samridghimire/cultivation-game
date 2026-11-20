@@ -16,6 +16,7 @@ var _hint: Label
 var _tween: Tween
 var _gather: QiGathering
 var _center: CenterContainer
+var _dim: ColorRect
 
 ## GFX-213: skips whose title is one of these show the qi gathering around the player.
 const QI_TITLES := ["Meditating", "In seclusion"]
@@ -26,6 +27,7 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var dim := ColorRect.new()
+	_dim = dim
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.color = Color(0, 0, 0, 0.45)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -69,6 +71,8 @@ func show_skip(summary: Dictionary) -> void:
 	_lines.modulate.a = 0.0
 	_bar.value = 0.0
 	visible = true
+	# GFX-217: a lighter dim while the world plays its day cycle, so it shows through
+	_dim.color.a = 0.45 if (MotionFx.reduced() or not bool(Settings.get_value("ambient_effects"))) else 0.25
 	var seated := QI_TITLES.has(String(summary.get("title", "")))
 	_center.offset_top = 260.0 if seated else 0.0  # the panel drops below the meditating player
 	if seated:
