@@ -8,7 +8,7 @@ extends SceneTree
 ## meditation is one jump), so a jump with no change counts all its days as quiet.
 ## Prints per policy: median and max stretch, new-day counts per month (median over seeds) and the
 ## three longest stretches with the actions of the months they sit in.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/quiet_stretches.gd -- [seeds] [days]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/quiet_stretches.gd -- [seeds] [days]  [--profile]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const SKIPPED_STATS: Array[String] = ["days_in_seclusion", "qi_gathered", "stones_earned"]
@@ -34,7 +34,14 @@ func _run() -> void:
 			continue
 		FirstHour.hints_policy = policy == "hints"
 		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}, "idle_lists": {}}
+		FirstHour.step_usec = {}
+		var started := Time.get_ticks_usec()
 		_policy(seeds, days, policy == "curious")
+		if args.has("--profile"):  # PERF-027: where the wall time goes (hints policy: Next-steps sources, ms per seed)
+			var parts := PackedStringArray()
+			for k: String in FirstHour.step_usec:
+				parts.append("%s %d" % [k, int(FirstHour.step_usec[k]) / 1000 / maxi(seeds, 1)])
+			print("PROFILE %s: %d ms per seed in all; Next-steps sources (ms per seed): %s" % [policy, (Time.get_ticks_usec() - started) / 1000 / maxi(seeds, 1), ", ".join(parts)])
 		if policy == "hints":
 			_print_hints_log()
 	quit(0)

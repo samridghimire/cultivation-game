@@ -142,6 +142,8 @@ const TRIAL_MIN_ODDS := 0.7
 ## meditation and the end-of-month explore. hints_log: {"acted": {action: count}, "idle_weeks": n, "weeks": n,
 ## "unmatched": {normalised line: times it sat above the line acted on, or was the whole list}}. Part of the memo key.
 const HINT_MAX_TRIES := 3
+## PERF-027: microseconds spent per Next-steps source (see _next_steps), printed by quiet_stretches.gd --profile.
+static var step_usec: Dictionary = {}
 static var hints_policy := false
 static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
@@ -2215,18 +2217,25 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
 	# SIM-021: the make-a-friend line sits past the HUD's 5-line cap; a player who knows the NPC menu's "Lend a hand" does it
 	# first each week it is on offer (a weekly kindness, 1 day), so the sim reads it uncapped and puts it first.
+	var t0 := Time.get_ticks_usec()
 	var friend := Guidance.make_friend_hint(c, gs.data, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor)
 	if friend != "":
 		lines.append(friend)
 	# GUIDE-275: the HUD's own goal text (GUIDE-271's skipped rows included), so a goal's named first step reaches the policy.
+	var t1 := Time.get_ticks_usec()
 	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
 	if goal != "":
 		lines.append("Goal: " + goal)
+	var t2 := Time.get_ticks_usec()
 	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
 		lines.append(with_easy_fight_prefix(String(f.get("text", ""))))
 		break
+	var t3 := Time.get_ticks_usec()
 	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor):
 		lines.append(h)
+	var t4 := Time.get_ticks_usec()
+	for pair: Array in [["make_friend_hint", t1 - t0], ["hud_goal_text", t2 - t1], ["fair_fights", t3 - t2], ["hints", t4 - t3]]:
+		step_usec[pair[0]] = int(step_usec.get(pair[0], 0)) + int(pair[1])
 	return lines
 
 
