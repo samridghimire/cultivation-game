@@ -196,16 +196,62 @@ func _on_player_for_pips() -> void:
 	refresh_pips()
 
 
+## WU-583: the strip after a name is [pips][marker] with STRIP_GAP px between; offsets are from `at.x`.
+const STRIP_GAP := 2.0
+const PIP_PX := 2
+const MARKER_R := 8.0
+
+
+## Offsets of the pips' left edge, the marker's centre and the strip's total width (0 parts when absent).
+static func strip_layout(pips_w: float, marker_r: float) -> Dictionary:
+	var x := 0.0
+	var pips_x := 0.0
+	if pips_w > 0.0:
+		x = pips_w
+	var marker_x := -1.0
+	if marker_r > 0.0:
+		marker_x = x + (STRIP_GAP if x > 0.0 else 0.0) + marker_r
+		x = marker_x + marker_r
+	return {"pips_x": pips_x, "pips_right": pips_w, "marker_x": marker_x, "width": x}
+
+
+func _strip_marker_r() -> float:
+	if shows_badge():
+		return MARKER_R
+	return 3.5 if _talk_dot and not has_bubble() else 0.0
+
+
+func _strip_pips_w() -> float:
+	return float((MAX_PIPS * 6 - 1) * PIP_PX) if _pips > 0 else 0.0
+
+
+func badge_in_strip() -> bool:
+	return _pips > 0
+
+
+func strip_extras_width() -> float:
+	if _pips <= 0:
+		return 0.0
+	return PLATE_PAD + 3.0 + float(strip_layout(_strip_pips_w(), _strip_marker_r())["width"])
+
+
 func _draw_label_extras(at: Vector2, fade: float) -> void:
 	if _pips <= 0:
 		return
-	var px := 2
-	var tex := HudIcons.hearts(MAX_PIPS, _pips, px)
-	var h := float(5 * px)
-	var pos := Vector2(at.x, at.y - h - 1.0)
-	_label_node.draw_texture(tex, pos, Color(1, 1, 1, fade))
-	if _talk_dot and not has_bubble():
-		var c := pos + Vector2(tex.get_width() + 6.0, h / 2.0)
+	var tex := HudIcons.hearts(MAX_PIPS, _pips, PIP_PX)
+	var row_mid := at.y - Interactable.LABEL_FONT_SIZE * 0.3
+	var lay := strip_layout(_strip_pips_w(), _strip_marker_r())
+	_label_node.draw_texture(tex, Vector2(at.x, row_mid - tex.get_height() / 2.0), Color(1, 1, 1, fade))
+	if float(lay["marker_x"]) < 0.0:
+		return
+	var c := Vector2(at.x + float(lay["marker_x"]), row_mid)
+	if shows_badge():
+		_label_node.draw_circle(c, MARKER_R, Color(UIStyle.ACCENT, fade))
+		_label_node.draw_arc(c, MARKER_R, 0.0, TAU, 24, Color(0.1, 0.08, 0.04, fade), 1.5)
+		var font := ThemeDB.fallback_font
+		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		_label_node.draw_string(font, c + Vector2(-mw / 2.0, 4.5), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.1, 0.08, 0.04, fade))
+	else:
 		_label_node.draw_circle(c, 3.5, Color(0.95, 0.9, 0.8, fade))
 		_label_node.draw_arc(c, 3.5, 0.0, TAU, 12, Color(0.1, 0.08, 0.06, fade), 1.0)
 

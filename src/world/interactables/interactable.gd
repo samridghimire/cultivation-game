@@ -272,7 +272,7 @@ static func spread_labels(nodes: Array) -> void:
 	var rects: Array[Rect2] = []
 	var anchors: Array[Vector2] = []
 	for node: Interactable in nodes:
-		rects.append(node.label_rect(node.label_text()).grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0, 0.0))
+		rects.append(node.label_rect(node.label_text()).grow_individual(LABEL_MIN_GAP / 2.0, 0.0, LABEL_MIN_GAP / 2.0 + node.strip_extras_width(), 0.0))
 		anchors.append(node.position)
 	var shifts := LabelLayout.offsets(rects, anchors)
 	for i in nodes.size():
@@ -874,6 +874,16 @@ func _draw_label_extras(_at: Vector2, _fade: float) -> void:
 	pass
 
 
+## WU-583: width (px) of the strip after the name plate (pips, marker); 0 = none. spread_labels counts it.
+func strip_extras_width() -> float:
+	return 0.0
+
+
+## WU-583: true when the gold "!" badge is drawn in the strip after the name instead of above it.
+func badge_in_strip() -> bool:
+	return false
+
+
 func _draw_label() -> void:
 	var font := ThemeDB.fallback_font
 	var text := label_text()
@@ -885,7 +895,7 @@ func _draw_label() -> void:
 	left += screen_shift_x
 	if label_offscreen:
 		return
-	if shows_badge():
+	if shows_badge() and not badge_in_strip():
 		# A gold badge with a dark "!" above the label.
 		var center := Vector2(left + text_width / 2.0, -size.y / 2.0 - 8.0 + label_offset.y + screen_lift - LABEL_FONT_SIZE - 10.0)
 		_label_node.draw_circle(center, 10.0, UIStyle.ACCENT)
