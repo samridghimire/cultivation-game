@@ -976,10 +976,10 @@ static func short_goal(goal_line: String, data: GameData) -> String:
 	line = line.replace("Goal: Talk to ", "Goal: See ")
 	if line.length() <= SHORT_GOAL_CHARS:
 		return line
-	var cut := line.substr(0, SHORT_GOAL_CHARS + 1)
+	var cut := line.substr(0, SHORT_GOAL_CHARS)  # one char short of the limit's end: the ellipsis takes the last
 	var space := cut.rfind(" ")
-	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS)
-	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS - 1)
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-(")) + "\u2026"
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player

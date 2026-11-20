@@ -12,6 +12,7 @@ const LOG_HEIGHT := 108.0  ## Space the log panel takes at the bottom (offset 10
 const LOG_IDLE_SECONDS := 8.0  ## GFX-010: the log fades after this long without a message.
 const LOG_IDLE_ALPHA := 0.55
 const HINT_ICON_W := 16  ## WU-471: the icon column left of the hint lines.
+const GOAL_W := 316.0  ## The goal row's width (full card).
 const HINT_W := 300.0  ## The hint label's width (the card's 316 minus the icon column).
 const HINT_MAX_CHARS := 84  ## WU-468: a status-panel hint line is cut past this (about two wrapped lines).
 const STATUS_MARGIN := 8.0  ## Gap kept between the status panel and the log.
@@ -616,6 +617,7 @@ func _build_guide_panel() -> void:
 	panel.add_child(box)
 	box.add_child(UIStyle.label("Next steps", 12, Color(0.55, 0.57, 0.63)))
 	_goal = UIStyle.label("", 14, Color(0.62, 0.64, 0.7))
+	_goal.custom_minimum_size = Vector2(GOAL_W, 0)
 	_goal.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # WU-236: "Goal: Reach Tribulation Transcendence Middle" wraps
 	box.add_child(_goal)
 	_hunt = UIStyle.label("", 14, UIStyle.ACCENT)
@@ -799,7 +801,7 @@ func _refresh() -> void:
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density, GameState.current_region, GameClock.total_days) if hint_count > 0 else ""
-	_goal.text = Guidance.short_goal(goal, data)
+	_goal.text = fit_goal(Guidance.short_goal(goal, data), _goal.get_theme_font("font"))
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
 	var hints: PackedStringArray = []
@@ -2492,7 +2494,15 @@ static func cut_entries(entries: PackedStringArray, font: Font, font_size: int, 
 	return out
 
 
-const _DANGLERS: PackedStringArray = ["a", "an", "the", "to", "of", "off", "on", "in", "at", "for", "from", "and", "or", "with", "by", "into", "up", "out", "your", "his", "her", "their", "is", "are", "be"]
+## WU-580: the goal row at the card's width, at most 2 lines, trimmed at a word with an ellipsis (tooltip keeps the full text).
+static func fit_goal(text: String, font: Font) -> String:
+	if wrapped_lines(text, font, 14, GOAL_W).size() <= 2:
+		return text
+	var t := trim_entry(text, font, 14, GOAL_W, 2)
+	return t if t != "" else ellipsize_first_line(text, font, 14, GOAL_W)
+
+
+const _DANGLERS: PackedStringArray = ["a", "an", "the", "to", "of", "off", "on", "in", "at", "for", "from", "and", "or", "with", "by", "into", "up", "out", "your", "his", "her", "their", "is", "are", "be", "where", "when", "how", "what", "who", "that", "which", "if", "as", "until", "so", "but", "opens", "near"]
 
 
 ## The first `lines` wrapped lines of `text`, cut back to a word boundary and ended with "...". "" when fewer than

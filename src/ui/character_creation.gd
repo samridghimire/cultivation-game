@@ -270,7 +270,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventJoypadMotion:  # one step per stick push, not one per motion event
 		var held := event.is_action_pressed("scroll_down") or event.is_action_pressed("scroll_up")
 		if not held:
-			_stick_held = false
+			# WU-580: only the right stick's Y axis returning to its dead zone re-arms a step (left-stick drift must not).
+			if stick_released(event):
+				_stick_held = false
 			return
 		if _stick_held:
 			return
@@ -365,3 +367,8 @@ func _selected_gender() -> String:
 	if _gender.selected < 0:
 		return ""
 	return String(_gender.get_item_metadata(_gender.selected))
+
+
+## WU-580: true when `event` is the right stick's Y axis back inside the dead zone.
+static func stick_released(event: InputEventJoypadMotion) -> bool:
+	return event.axis == JOY_AXIS_RIGHT_Y and absf(event.axis_value) < 0.5

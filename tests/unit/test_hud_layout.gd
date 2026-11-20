@@ -248,3 +248,34 @@ func test_region_name_fits_or_ellipsis() -> void:
 		else:
 			assert_true(label.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS, id + " trims with an ellipsis")
 	_done(hud)
+
+
+# WU-580
+func test_goal_row_trims_with_an_ellipsis_at_card_width() -> void:
+	var font := ThemeDB.fallback_font
+	var long := "Goal: See Elder Mo in Qingshi (opens at Core Disciple rank, then wait for the new moon and the elders to gather in the great hall)"
+	var fit: String = HudScript.fit_goal(long, font)
+	assert_true(HudScript.wrapped_lines(fit, font, 14, HudScript.GOAL_W).size() <= 2, fit)
+	assert_true(fit.ends_with("…") or fit.ends_with("..."), fit)
+	assert_eq(HudScript.fit_goal("Goal: Reach the 2nd layer", font), "Goal: Reach the 2nd layer")
+
+
+func test_icon_row_trims_at_icon_adjusted_width() -> void:
+	var font := ThemeDB.fallback_font
+	var t: String = HudScript.trim_entry("Ask Elder Mo in Qingshi Village where the sect opens its gates", font, 14, HudScript.HINT_W, 1)
+	assert_true(t.ends_with("…") or t.ends_with("..."), t)
+	assert_false(t.trim_suffix("…").strip_edges().ends_with("where"), t)
+
+
+func test_stick_released_only_for_right_y_in_dead_zone() -> void:
+	var cc: GDScript = load("res://src/ui/character_creation.gd")
+	var e := InputEventJoypadMotion.new()
+	e.axis = JOY_AXIS_LEFT_X
+	e.axis_value = 0.0
+	assert_false(cc.stick_released(e), "left stick drift must not re-arm")
+	e.axis = JOY_AXIS_RIGHT_Y
+	e.axis_value = 0.9
+	assert_false(cc.stick_released(e))
+	e.axis_value = 0.1
+	assert_true(cc.stick_released(e))
+
