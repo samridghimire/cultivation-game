@@ -158,3 +158,30 @@ func test_scroll_steps_highlighted_attribute_and_about() -> void:
 	assert_eq(scene._attr_about.text, first_about)
 	assert_true(scene._begin_button.has_focus() or scene.get_viewport().gui_get_focus_owner() != null)
 	scene.queue_free()
+
+
+func test_root_texts_within_length() -> void:
+	for e in data().root_elements:
+		var d := String(e.get("description", ""))
+		assert_true(d != "" and d.length() <= 90, "element %s" % e["id"])
+	for g in data().root_grades:
+		var b := String(g.get("blurb", ""))
+		assert_true(b != "" and b.length() <= 90, "grade %s" % g["name"])
+
+
+func test_dominant_description_and_screen_line() -> void:
+	var cc = load("res://src/ui/character_creation.gd")
+	var d := data()
+	assert_eq(cc.dominant_description({}, d), "")
+	var one: String = cc.dominant_description({"fire": 80, "wood": 40}, d)
+	assert_true(one.begins_with("Fire: "), one)
+	assert_true(one.contains(String(d.root_elements[3]["description"])), one)
+	var two: String = cc.dominant_description({"metal": 60, "water": 60}, d)
+	assert_true(two.begins_with("Metal and Water: "), two)
+	assert_true(two.contains(String(d.root_elements[0]["description"])), two)
+	var scene: Control = (load("res://src/ui/character_creation.tscn") as PackedScene).instantiate()
+	(Engine.get_main_loop() as SceneTree).root.add_child(scene)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	scene._reroll()
+	assert_eq(scene._element_line.text, cc.dominant_description(scene._candidate.spiritual_roots, d))
+	scene.queue_free()

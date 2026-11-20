@@ -1,18 +1,18 @@
 {
-  "_doc": "Spiritual roots decide cultivation talent. Fewer elements = purer, faster root. Final multiplier = grade.cultivation_multiplier * (0.5 + average_purity / 100).",
+  "_doc": "Spiritual roots decide cultivation talent. Fewer elements = purer, faster root. Each element has a `description` and each grade a `blurb` (both required, <= 90 chars, shown at character creation). Final multiplier = grade.cultivation_multiplier * (0.5 + average_purity / 100).",
   "elements": [
-    {"id": "metal", "name": "Metal"},
-    {"id": "wood", "name": "Wood"},
-    {"id": "water", "name": "Water"},
-    {"id": "fire", "name": "Fire"},
-    {"id": "earth", "name": "Earth"}
+    {"id": "metal", "name": "Metal", "description": "Favours attack and speed: sword and finger arts, and sturdy golden shields."},
+    {"id": "wood", "name": "Wood", "description": "Favours speed and defense: step arts and vine lashes, plus a hardy spring of vitality."},
+    {"id": "water", "name": "Water", "description": "Favours vitality and defense: lake and cloud methods, plus frost and reed sword arts."},
+    {"id": "fire", "name": "Fire", "description": "Favours raw attack: ember and blood-lotus methods, cinder fists and thunder palms."},
+    {"id": "earth", "name": "Earth", "description": "Favours defense and vitality: stone-skin and mountain body arts, and heavy fists."}
   ],
   "grades": [
-    {"element_count": 1, "name": "Heavenly Root", "weight": 3, "cultivation_multiplier": 3.0},
-    {"element_count": 2, "name": "Earth Root", "weight": 12, "cultivation_multiplier": 1.8},
-    {"element_count": 3, "name": "Human Root", "weight": 25, "cultivation_multiplier": 1.2},
-    {"element_count": 4, "name": "Mixed Root", "weight": 30, "cultivation_multiplier": 0.8},
-    {"element_count": 5, "name": "Pseudo Root", "weight": 30, "cultivation_multiplier": 0.5}
+    {"element_count": 1, "name": "Heavenly Root", "blurb": "One pure element: one in thirty-odd, and by far the fastest cultivation.", "weight": 3, "cultivation_multiplier": 3.0},
+    {"element_count": 2, "name": "Earth Root", "blurb": "Two elements: uncommon, with swift cultivation.", "weight": 12, "cultivation_multiplier": 1.8},
+    {"element_count": 3, "name": "Human Root", "blurb": "Three elements: common, a little faster than the average.", "weight": 25, "cultivation_multiplier": 1.2},
+    {"element_count": 4, "name": "Mixed Root", "blurb": "Four elements: common, but slower than the average.", "weight": 30, "cultivation_multiplier": 0.8},
+    {"element_count": 5, "name": "Pseudo Root", "blurb": "Five elements: common, and the slowest road to the Dao.", "weight": 30, "cultivation_multiplier": 0.5}
   ],
   "purity_min": 20,
   "purity_max": 100

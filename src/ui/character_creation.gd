@@ -13,6 +13,7 @@ var _portrait: TextureRect
 var _root_title: Label
 var _root_box: VBoxContainer
 var _talent_box: HBoxContainer
+var _element_line: Label
 var _attr_box: GridContainer
 var _attr_about: Label  # WU-575: full description of the hovered/default attribute
 var _attr_rows: Array[Array] = []  # WU-578: per attribute, its 4 grid cells
@@ -80,6 +81,10 @@ func _ready() -> void:
 	_talent_box = HBoxContainer.new()
 	_talent_box.add_theme_constant_override("separation", 8)
 	right.add_child(_talent_box)
+	_element_line = UIStyle.label("", 13, Color(0.6, 0.6, 0.6))
+	_element_line.name = "element_line"
+	_element_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	right.add_child(_element_line)
 	right.add_child(UIStyle.label("Attributes", 20, UIStyle.ACCENT))
 	_attr_box = GridContainer.new()
 	_attr_box.columns = 4
@@ -156,7 +161,7 @@ func _roll(animate: bool = true) -> void:
 	_refresh_portrait()
 	var grade := SpiritualRoots.grade_for(_candidate.spiritual_roots, data)
 	_root_title.text = root_title_text(grade)
-	_root_title.tooltip_text = "Fewer elements, purer qi: %.1fx base" % float(grade.get("cultivation_multiplier", 1.0))
+	_root_title.tooltip_text = "%s Fewer elements, purer qi: %.1fx base" % [grade.get("blurb", ""), float(grade.get("cultivation_multiplier", 1.0))]
 	_root_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	_clear(_root_box)
 	for e in data.root_elements:
@@ -196,6 +201,7 @@ func _roll(animate: bool = true) -> void:
 	badge.name = "talent_badge"
 	_talent_box.add_child(badge)
 	_talent_box.add_child(UIStyle.label("%.2fx cultivation speed (average is 1.0x)" % mult, 14, Color(0.6, 0.6, 0.6)))
+	_element_line.text = dominant_description(_candidate.spiritual_roots, data)
 	_clear(_attr_box)
 	_attr_rows.clear()
 	_attr_descs.clear()
@@ -284,6 +290,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if step != 0:
 		_select_attr(clampi(_attr_index + step, 0, _attr_rows.size() - 1))
 		get_viewport().set_input_as_handled()
+
+
+## C-401: what the strongest element(s) favour; two equal top roots name both, with the first one's text.
+static func dominant_description(roots: Dictionary, data: GameData) -> String:
+	var best := 0
+	for e in data.root_elements:
+		best = maxi(best, int(roots.get(e["id"], 0)))
+	if best <= 0:
+		return ""
+	var names: Array[String] = []
+	var text := ""
+	for e in data.root_elements:
+		if int(roots.get(e["id"], 0)) == best and names.size() < 2:
+			names.append(String(e["name"]))
+			if text == "":
+				text = String(e.get("description", ""))
+	return "%s: %s" % [" and ".join(names), text]
 
 
 ## WU-575: colour(s) of the strongest root(s): one colour, or two for two equal top roots.

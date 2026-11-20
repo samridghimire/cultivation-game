@@ -558,6 +558,14 @@ func _validate() -> void:
 	for n in range(1, root_elements.size() + 1):
 		if not counts.has(n):
 			load_errors.append("No spiritual root grade for element_count %d" % n)
+	for e in root_elements:
+		var d := String(e.get("description", ""))
+		if d.strip_edges() == "" or d.length() > 90:
+			load_errors.append("Spiritual root element '%s' needs a description of 1-90 chars" % e.get("id", "?"))
+	for g in root_grades:
+		var b := String(g.get("blurb", ""))
+		if b.strip_edges() == "" or b.length() > 90:
+			load_errors.append("Spiritual root grade '%s' needs a blurb of 1-90 chars" % g.get("name", "?"))
 
 
 ## Load errors for an optional `seasons` list (SEASON-001) on a gather entry or encounter.
