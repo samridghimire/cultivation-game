@@ -24,6 +24,18 @@ const RANGES: Array[Dictionary] = [
 ]
 const MOON_POS := Vector2i(262, 38)
 const PAVILION_X := 214
+const FIGURE_X := 158
+const ROCK_GROUND := 184
+## Pines stay right of the menu column (backdrop x < 110 sits behind the plaque and buttons).
+const MENU_COLUMN_X := 110
+const MOTE_COUNT := 5
+const MOTE_COLOR := Color("cfeeff")
+const ROBE := Color(0.82, 0.80, 0.70)
+const ROBE_FOLD := Color(0.62, 0.60, 0.53)
+const HAIR := Color(0.04, 0.04, 0.06)
+const SKIN := Color(0.88, 0.72, 0.58)
+const WINDOW_GLOW := Color(1.0, 0.80, 0.35)
+const LANTERN := Color(1.0, 0.45, 0.25)
 
 var _time: float = 0.0
 var _image: Image
@@ -31,6 +43,7 @@ var _texture: ImageTexture
 var _stars: Array[Vector2i] = []
 var _clouds: Array[Dictionary] = []
 var _cloud_shift: float = 0.0
+var _cloud_images: Array[ImageTexture] = []
 
 
 func _ready() -> void:
@@ -41,6 +54,8 @@ func _ready() -> void:
 	_texture = ImageTexture.create_from_image(_image)
 	_stars = star_positions()
 	_clouds = cloud_strips()
+	for i in _clouds.size():
+		_cloud_images.append(ImageTexture.create_from_image(cloud_image(i)))
 
 
 func _process(delta: float) -> void:
@@ -94,8 +109,43 @@ static func cloud_strips() -> Array[Dictionary]:
 	rng.seed = SEED + 1
 	var out: Array[Dictionary] = []
 	for i in 3:
-		out.append({"y": 54 + i * 24 + rng.randi_range(0, 6), "x": rng.randi_range(0, W), "len": rng.randi_range(70, 110), "speed": 2.0 + i * 2.0})
+		out.append({"y": 54 + i * 24 + rng.randi_range(0, 6), "x": rng.randi_range(0, W), "len": 56 + i * 14 + rng.randi_range(0, 8), "speed": 2.0 + i * 2.0})
 	return out
+
+
+## A soft pixel cloud for `index`: 2-3 rounded lobes, top row narrowest, darker underside row, alpha 0.30-0.45.
+## Deterministic, never fully opaque. The width is the cloud's "len".
+static func cloud_image(index: int) -> Image:
+	var w: int = cloud_strips()[index]["len"]
+	var h := 14
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = SEED + 50 + index
+	var lobes := 2 + index % 2
+	var base_y := h - 3
+	for l in lobes:
+		var cx := int(float(w) * (l + 0.5) / lobes)
+		var half := rng.randi_range(w / (lobes * 2) - 2, w / (lobes * 2) + 3)
+		var rows := rng.randi_range(5, 8)
+		for r in rows:
+			# Rows widen from the narrow top down to the lobe's full width.
+			var rw := int(round(float(half) * sqrt(float(r + 1) / rows)))
+			var y := base_y - rows + 1 + r
+			for x in range(cx - rw, cx + rw + 1):
+				if x >= 0 and x < w and y >= 0:
+					img.set_pixel(x, y, Color(CLOUD.r, CLOUD.g, CLOUD.b, 0.40))
+	# Flat underside: every covered base row gets a darker, slightly fainter pixel below it.
+	for x in w:
+		if img.get_pixel(x, base_y).a > 0.0:
+			img.set_pixel(x, base_y + 1, Color(CLOUD.r * 0.8, CLOUD.g * 0.8, CLOUD.b * 0.9, 0.32))
+	return img
+
+
+## X (whole pixels, may be < 0 or > W while wrapping) of cloud `index` after `shift` seconds of drift.
+static func cloud_x(index: int, shift: float) -> int:
+	var c: Dictionary = cloud_strips()[index]
+	var len: int = c["len"]
+	return int(fposmod(float(c["x"]) - shift * float(c["speed"]), float(W + len))) - len
 
 
 ## The static 320x200 scene. Same pixels every call.
@@ -176,6 +226,8 @@ static func _paint_pavilion(img: Image) -> void:
 	_rect(img, PAVILION_X - 3, floor_y - 5, 6, 5, Color(0.14, 0.11, 0.18))
 	img.set_pixel(PAVILION_X, floor_y - 3, win)
 	img.set_pixel(PAVILION_X, floor_y - 4, win)
+	img.set_pixel(PAVILION_X - 7, floor_y - 7, LANTERN)
+	img.set_pixel(PAVILION_X + 8, floor_y - 7, LANTERN)
 	# Lower roof with upturned tips, then upper tier and finial.
 	_rect(img, PAVILION_X - 9, floor_y - 9, 19, 2, roof)
 	img.set_pixel(PAVILION_X - 10, floor_y - 10, roof)
@@ -187,14 +239,32 @@ static func _paint_pavilion(img: Image) -> void:
 	_rect(img, PAVILION_X, floor_y - 17, 1, 3, roof)
 
 
-static func _paint_pines(img: Image) -> void:
+## Pine x positions and heights; skips trees that would stand behind the menu column.
+static func _pine_specs() -> Array[Vector2i]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED + 30
-	var col := Color(0.03, 0.04, 0.09)
+	var out: Array[Vector2i] = []
 	for i in 9:
 		var x := 20 + i * 33 + rng.randi_range(-8, 8)
-		var top := ridge_row(2, x) + 1
 		var tall := rng.randi_range(14, 22)
+		if x >= MENU_COLUMN_X and absi(x - FIGURE_X) > 16:
+			out.append(Vector2i(x, tall))
+	return out
+
+
+static func pine_xs() -> Array[int]:
+	var out: Array[int] = []
+	for p in _pine_specs():
+		out.append(p.x)
+	return out
+
+
+static func _paint_pines(img: Image) -> void:
+	var col := Color(0.03, 0.04, 0.09)
+	for spec in _pine_specs():
+		var x := spec.x
+		var top := ridge_row(2, x) + 1
+		var tall := spec.y
 		_rect(img, x, top - 2, 1, 4, col)
 		for tier in 4:
 			var half := 1 + tier * 2 * tall / 20
@@ -203,23 +273,48 @@ static func _paint_pines(img: Image) -> void:
 		img.set_pixel(x, top - tall * 3 / 4 - 1, col)
 
 
-## A rock in the foreground (right of the menu column) with a small robed figure gazing up at the pavilion.
+## Row of the pavilion floor (the window pixel sits 3 rows above it).
+static func pavilion_floor_y() -> int:
+	var base := ridge_row(0, PAVILION_X)
+	for x in range(PAVILION_X - 9, PAVILION_X + 10):
+		base = mini(base, ridge_row(0, x))
+	return base + 2
+
+
+## Top row of the seated figure (rock top is ROCK_GROUND - 7).
+static func figure_top() -> int:
+	return ROCK_GROUND - 7 - 10
+
+
+## A rock in the foreground (right of the menu column) with a cultivator seated in lotus pose, facing the pavilion.
 static func _paint_rock_and_figure(img: Image) -> void:
 	var rock := Color(0.09, 0.09, 0.17)
-	var fx := 158
-	var ground := 184
+	var fx := FIGURE_X
+	var ground := ROCK_GROUND
 	_rect(img, fx - 9, ground - 2, 20, 4, rock)
 	_rect(img, fx - 6, ground - 5, 14, 3, rock)
 	_rect(img, fx - 3, ground - 7, 8, 2, rock)
-	var robe := Color(0.82, 0.80, 0.70)
-	var hair := Color(0.04, 0.04, 0.06)
-	var top := ground - 7 - 9
-	_rect(img, fx - 1, top, 3, 1, hair)
-	_rect(img, fx - 1, top + 1, 3, 2, Color(0.88, 0.72, 0.58))
-	_rect(img, fx - 1, top + 3, 3, 3, robe)
-	_rect(img, fx - 2, top + 6, 5, 3, robe)
-	img.set_pixel(fx + 2, top + 4, robe)
-	_rect(img, fx - 2, top + 3, 1, 3, robe.darkened(0.25))
+	var top := figure_top()
+	img.set_pixel(fx, top, HAIR)  # hair bun
+	_rect(img, fx - 1, top + 1, 3, 1, HAIR)
+	_rect(img, fx - 1, top + 2, 3, 1, SKIN)
+	_rect(img, fx - 2, top + 3, 5, 1, ROBE)  # shoulders
+	_rect(img, fx - 3, top + 4, 7, 4, ROBE)  # torso and folded arms
+	_rect(img, fx - 1, top + 5, 1, 3, ROBE_FOLD)  # robe fold
+	img.set_pixel(fx + 2, top + 2, HAIR)  # eye towards the pavilion
+	_rect(img, fx - 3, top + 8, 7, 1, ROBE_FOLD)  # crossed knees
+	_rect(img, fx - 3, top + 9, 7, 1, ROBE)  # wide base
+	img.set_pixel(fx, top + 8, ROBE)  # knot of the crossed legs
+
+
+## Positions (canvas pixels) of the rising qi motes after `time` seconds; fixed ones when `frozen`.
+static func mote_positions(time: float, frozen: bool = false) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for i in MOTE_COUNT:
+		var t := float(i) / MOTE_COUNT if frozen else fposmod(time / 3.0 + float(i) / MOTE_COUNT, 1.0)
+		var sway := sin(float(i) * 2.3 + t * 5.0) * 3.0
+		out.append(Vector2(float(FIGURE_X) + sway + (i - 2), float(figure_top()) - 2.0 - t * 22.0))
+	return out
 
 
 func _draw() -> void:
@@ -236,14 +331,19 @@ func _draw() -> void:
 			var on := int(floor(_time * 1.3 + i * 1.7)) % 2 == 0
 			if not on:
 				draw_rect(Rect2(origin + Vector2(_stars[i * 7]) * s, Vector2(s, s)), SKY_TOP)
-	for c in _clouds:
-		var len: int = c["len"]
-		var span := W + len
-		var x0 := int(fposmod(float(c["x"]) - _cloud_shift * float(c["speed"]), float(span))) - len
-		var y: int = c["y"]
-		for row in 3:
-			var inset := 0 if row == 1 else 6
-			var a := maxi(x0 + inset, 0)
-			var b := mini(x0 + len - inset, W)
-			if b > a:
-				draw_rect(Rect2(origin + Vector2(a, y + row * 2) * s, Vector2(b - a, 2) * s), CLOUD)
+	for i in _cloud_images.size():
+		var tex := _cloud_images[i]
+		var y: int = _clouds[i]["y"]
+		var x := cloud_x(i, _cloud_shift)
+		draw_texture_rect(tex, Rect2(origin + Vector2(x, y) * s, Vector2(tex.get_size()) * s), false)
+	# The pavilion window breathes (alpha 0.25-0.6 over 4 s; steady when motion is off).
+	var pulse := 0.4 if reduced_motion() else 0.425 + 0.175 * sin(_time * TAU / 4.0)
+	var wc := Vector2(PAVILION_X, pavilion_floor_y() - 3)
+	draw_rect(Rect2(origin + (wc - Vector2(1, 1)) * s, Vector2(3, 3) * s), Color(WINDOW_GLOW, pulse))
+	# Qi motes rising from the cultivator.
+	var frozen := reduced_motion()
+	var motes := mote_positions(_time, frozen)
+	for i in motes.size():
+		var t := 0.4 if frozen else fposmod(_time / 3.0 + float(i) / MOTE_COUNT, 1.0)
+		var a := clampf(1.0 - t, 0.0, 1.0) * 0.9
+		draw_rect(Rect2(origin + motes[i].floor() * s, Vector2(s, s)), Color(MOTE_COLOR, a))
