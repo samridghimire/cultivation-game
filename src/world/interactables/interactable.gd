@@ -654,7 +654,14 @@ static func pin_shift(label: Rect2, body_x: float, feet_y: float) -> Vector2:
 ## else down), like GFX-206's rule.
 static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2] = []) -> void:
 	var gap := PLATE_PAD * 2.0 + 1.0
-	for node: Interactable in ranked:
+	# PERF-024: every other label's grown rect and every body rect is built once; a pinned label only refreshes its own entry.
+	var label_rects: Array = []  # Rect2 per ranked index, or null when not drawn
+	var figure_rects: Array = []  # Rect2 per ranked index, or null when not a visible person
+	for other: Interactable in ranked:
+		label_rects.append(other.drawn_label_rect(view).grow(gap / 2.0) if other.label_drawn() else null)
+		figure_rects.append(person_figure_rect(other) if other.is_person() and other.visible else null)
+	for ni in ranked.size():
+		var node: Interactable = ranked[ni]
 		if node.get("npc_id") == null or not node.label_drawn():
 			continue
 		var r := node.drawn_label_rect(view)
@@ -663,13 +670,13 @@ static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2
 		if want == Vector2.ZERO:
 			continue
 		var obstacles: Array[Rect2] = occupied.duplicate()
-		for other: Interactable in ranked:
-			if other == node:
+		for oi in ranked.size():
+			if oi == ni:
 				continue
-			if other.label_drawn():
-				obstacles.append(other.drawn_label_rect(view).grow(gap / 2.0))
-			if other.is_person() and other.visible:
-				obstacles.append(person_figure_rect(other))
+			if label_rects[oi] != null:
+				obstacles.append(label_rects[oi])
+			if figure_rects[oi] != null:
+				obstacles.append(figure_rects[oi])
 		obstacles.append(person_figure_rect(node).grow_individual(0.0, 0.0, 0.0, -6.0))  # nor on his own body (the feet may touch)
 		# Candidate spots inside the band, nearest to the current rect first: any that touches nothing wins.
 		var best := Vector2.INF
@@ -696,6 +703,7 @@ static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2
 		node.screen_lift += best.y
 		node.screen_shift_x += best.x
 		node._redraw_label()
+		label_rects[ni] = node.drawn_label_rect(view).grow(gap / 2.0)
 
 
 ## WU-545: after every other rule, no two shown labels overlap: a place name stays, a villager's or roamer's moves
