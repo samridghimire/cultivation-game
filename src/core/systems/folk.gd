@@ -1963,3 +1963,44 @@ static func validate_spots(npc: Dictionary, data: GameData) -> Array[String]:
 		else:
 			errors.append("NPC '%s' spots has unknown key '%s'" % [who, key])
 	return errors
+
+
+## FOLK-035: the verb for helping `npc_id` with their work (data/family.json lend_a_hand.verbs).
+static func lend_verb(data: GameData, npc_id: String) -> String:
+	var verbs: Dictionary = data.family.get("lend_a_hand", {}).get("verbs", {})
+	var activity := String(data.npcs.get(npc_id, {}).get("activity", ""))
+	return String(verbs.get(activity, verbs.get("", "with their chores")))
+
+
+## FOLK-035: why `c` cannot lend `npc` a hand today ("" when they can). `flags` holds the lend_<id> days.
+static func lend_check(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int, region_id: String = "") -> String:
+	var rules: Dictionary = data.family.get("lend_a_hand", {})
+	if rules.is_empty() or npc == null or not npc.alive or npc.id == c.id or not data.npcs.has(npc.id):
+		return "There is no one to help."
+	if c.spouses.has(npc.id) or c.children.has(npc.id) or c.parents.has(npc.id):
+		return "Family has its own ways of spending the day."
+	if region_id != "" and Npcs.region_of(npc, data) != region_id:
+		return "%s is not here." % npc.name
+	if favor >= int(rules.get("max_favor", 0)):
+		return "%s is glad of the help, but friendship now grows from what you share, not chores." % npc.name
+	var last := int(flags.get("lend_" + npc.id, -100000))
+	var wait := int(rules.get("cooldown_days", 7)) - (today - last)
+	if wait > 0:
+		return "Again in %d day%s." % [wait, "" if wait == 1 else "s"]
+	return ""
+
+
+## FOLK-035: favor of a helping day before festival/clan/karma scaling (Charisma bonus like chat).
+static func lend_gain(c: CharacterData, data: GameData, favor: int) -> int:
+	var rules: Dictionary = data.family.get("lend_a_hand", {})
+	var step := maxi(1, int(data.family.get("acquaintance", {}).get("charisma_step", 4)))
+	@warning_ignore("integer_division")
+	var bonus := (c.attribute("charisma") - 10) / step
+	return clampi(maxi(1, int(rules.get("favor", 4)) + bonus), 0, maxi(0, int(rules.get("max_favor", 0)) - favor))
+
+
+## FOLK-035: {item, count} the villager hands over for their trade, or {}.
+static func lend_yield(data: GameData, npc_id: String) -> Dictionary:
+	var activity := String(data.npcs.get(npc_id, {}).get("activity", ""))
+	var y: Dictionary = data.family.get("lend_a_hand", {}).get("yields", {}).get(activity, {})
+	return y.duplicate() if not y.is_empty() else {}

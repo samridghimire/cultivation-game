@@ -4660,3 +4660,21 @@ func test_teacher_favor_errands_raise_favor_once() -> void:
 		assert_true(gained >= 10 and gained <= 12, "%s favor %d" % [deed_id, gained])
 		gs.perform_deed(deed_id)
 		assert_eq(int(gs.npc_favor[npc_id]), gained, "%s once only" % deed_id)
+
+
+## FOLK-035: lending a hand costs a day, raises favor, and is once a week per villager.
+func test_lend_a_hand() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var day: int = clock.total_days
+	gs.lend_a_hand("elder_mo")
+	assert_eq(clock.total_days, day + 1)
+	var favor: int = gs.npc_favor["elder_mo"]
+	assert_true(favor >= 4)
+	assert_eq(gs.world_flags["lend_elder_mo"], day)
+	gs.lend_a_hand("elder_mo")
+	assert_eq(clock.total_days, day + 1, "second call changes nothing")
+	assert_eq(gs.npc_favor["elder_mo"], favor)
+	gs.end_session()

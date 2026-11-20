@@ -547,6 +547,10 @@ func _acquaintance_options() -> Array[Dictionary]:
 		var days := int(data.family.get("acquaintance", {}).get("chat_days", 1))
 		var label := "Chat with %s (%s, favor %d)%s" % [npc.name, Calendar.format_duration(days), favor, festival_note(data, GameState.world_events, GameState.current_region)]
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
+	if not data.family.get("lend_a_hand", {}).is_empty() and data.npcs.has(npc_id):
+		var lend_cfg: Dictionary = data.family["lend_a_hand"]
+		var lend_label := "Lend a hand (%s, %s, favor %d)" % [Folk.lend_verb(data, npc_id), Calendar.format_duration(int(lend_cfg.get("days", 1))), favor]
+		options.append(_entry(lend_label, Folk.lend_check(p, npc, data, GameState.world_flags, GameClock.total_days, favor, GameState.current_region), GameState.lend_a_hand.bind(npc_id)))
 	if GameState.visitor_today() == npc_id:
 		options.append(_entry("Share tea with %s" % npc.name, GameState.check_tea(npc_id), GameState.share_tea.bind(npc_id)))
 	if not Folk.companion_rules(data).is_empty() and npc.realm_index >= 1:

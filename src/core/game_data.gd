@@ -840,6 +840,21 @@ func _validate_world() -> void:
 		for key in ["asked_flag", "done_flag", "text"]:
 			if String(errand.get(key, "")) == "":
 				load_errors.append("Errand of '%s' has no %s" % [errand.get("npc", ""), key])
+	var lend: Dictionary = family.get("lend_a_hand", {})  # FOLK-035
+	if not lend.is_empty():
+		for key in ["days", "cooldown_days"]:
+			if int(lend.get(key, 0)) < 1:
+				load_errors.append("lend_a_hand.%s must be >= 1" % key)
+		if int(lend.get("favor", -1)) < 0:
+			load_errors.append("lend_a_hand.favor must be >= 0")
+		if int(lend.get("max_favor", 0)) <= int(family.get("acquaintance", {}).get("chat_max_favor", 0)):
+			load_errors.append("lend_a_hand.max_favor must exceed acquaintance.chat_max_favor")
+		for verb_key: String in lend.get("verbs", {}):
+			if verb_key != "" and not PlaceLooks.ACTIVITIES.has(verb_key):
+				load_errors.append("lend_a_hand.verbs has unknown activity '%s'" % verb_key)
+		for yield_key: String in lend.get("yields", {}):
+			if not items.has(String(lend["yields"][yield_key].get("item", ""))):
+				load_errors.append("lend_a_hand.yields '%s' has unknown item" % yield_key)
 	var scene_ids := {}
 	var tier_mins: Array = []
 	for tier: Dictionary in family.get("folk_tiers", []):

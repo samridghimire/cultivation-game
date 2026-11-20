@@ -1092,6 +1092,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
+	var friend := make_friend_hint(c, data, people, flags, region_id, today, favor)  # FOLK-035
+	if friend != "":
+		out.append(friend)
 	if idle_nudge == "":
 		out.append(_cultivation_hint(c, data, density))
 	var method := _method_hint(c, data)
@@ -2238,6 +2241,28 @@ static func _workshop_hint(c: CharacterData, data: GameData) -> String:
 
 
 ## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
+## FOLK-035: until any villager is an Acquaintance, name the best local villager to lend a hand to.
+static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary) -> String:
+	if today < 0 or region_id == "" or data.family.get("lend_a_hand", {}).is_empty():
+		return ""
+	var goal := int(data.family.get("acquaintance", {}).get("taste_hint_favor", 20))
+	var best := ""
+	var best_favor := -1
+	for id: String in data.npcs:
+		var f := int(favor.get(id, 0))
+		if f >= goal:
+			return ""
+		var npc: CharacterData = people.get(id)
+		if npc == null or Folk.lend_check(c, npc, data, flags, today, f, region_id) != "":
+			continue
+		if f > best_favor:
+			best = id
+			best_favor = f
+	if best == "":
+		return ""
+	return "Make a friend: lend %s a hand (%s, 1 day, favor %d/%d)." % [people[best].name, Folk.lend_verb(data, best), best_favor, goal]
+
+
 static func _bitter_rival_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, favor: Dictionary) -> String:
 	if c.rival == "" or not flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		return ""

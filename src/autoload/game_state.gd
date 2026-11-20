@@ -2394,6 +2394,38 @@ func chat(npc_id: String) -> void:
 	_pass_time(result["days"])
 
 
+## FOLK-035: spend a day helping a named villager with their work for favor (once a week each).
+func lend_a_hand(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	var favor := int(npc_favor.get(npc_id, 0))
+	var reason := Folk.lend_check(player, npc, data, world_flags, GameClock.total_days, favor, current_region)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var cap := int(data.family.get("lend_a_hand", {}).get("max_favor", 0))
+	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, Folk.lend_gain(player, data, favor)), cap - favor)
+	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+	world_flags["lend_" + npc_id] = GameClock.total_days
+	var before := _rival_attitude()
+	npc_favor[npc_id] = favor + gain
+	var line := "You spend the day with %s, %s. (%s)" % [npc.name, Folk.lend_verb(data, npc_id), Family.favor_progress(int(npc_favor[npc_id]), data)]
+	var yielded := Folk.lend_yield(data, npc_id)
+	if not yielded.is_empty() and data.items.has(String(yielded.get("item", ""))):
+		player.add_item(String(yielded["item"]), int(yielded.get("count", 1)))
+		line += " They send you off with %s." % String(data.items[yielded["item"]].get("name", yielded["item"]))
+	EventBus.post(line + (" The festival warms the mood." if festival else ""))
+	_post_attitude_change(before)
+	_friend_scene(npc_id)
+	_note_teacher_seen(npc_id)
+	_teach_lessons(npc_id)
+	_pass_time(int(data.family.get("lend_a_hand", {}).get("days", 1)))
+
+
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
 func _greet_renowned(npc_id: String) -> void:
 	if player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id):
