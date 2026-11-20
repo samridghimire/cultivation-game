@@ -261,7 +261,11 @@ static func diligence_of(c: CharacterData, data: GameData) -> float:
 static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenerator) -> void:
 	for def: Dictionary in data.npcs.values():
 		if not npcs.has(def["id"]):
-			npcs[def["id"]] = create(def, data, rng)
+			# QA-239: each named NPC rolls from its own stream (world seed + id), so adding one NPC to
+			# data/npcs.json never shifts the shared rng or any other NPC's roots.
+			var own := RandomNumberGenerator.new()
+			own.seed = hash([rng.seed, String(def["id"])])
+			npcs[def["id"]] = create(def, data, own)
 
 
 ## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
