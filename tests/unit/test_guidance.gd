@@ -3311,7 +3311,7 @@ func test_heal_source_names_item_clinic_or_fallback() -> void:
 	assert_true(Guidance.heal_source(c, data(), "qingshi_village").contains("(you have 0)"))
 	# No region: old wording
 	assert_eq(Guidance.heal_source(c, data(), ""), "")
-	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Treat your injuries: use a healing item or see a doctor."))
+	assert_true(_has(Guidance.hints(c, data(), 1.0, 20), "Treat your injuries: rest or meditate: healed in"))
 
 
 func test_heal_source_names_an_unaffordable_clinic() -> void:
@@ -7816,3 +7816,42 @@ func test_prep_step_is_pure_and_falls_back() -> void:
 	assert_eq(c.to_dict(), before, "no side effects")
 	assert_true(["style", "meal", "armor", "practise", "meditate", "wait"].has(String(a["kind"])), str(a))
 	assert_true(String(a["text"]) != "")
+
+
+## GUIDE-275: "Learn your first technique" on the ridge names the manual to buy (or the stones to earn first); Qingshi keeps Elder Mo.
+func test_first_technique_goal_names_the_ridge_manual() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.techniques = {}
+	var d := data()
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var found := Guidance.first_combat_manual(c, d, "myriad_peaks_ridge")
+	assert_true(not found.is_empty() and String(found["merchant"]) != "", "the ridge pedlar sells a combat manual")
+	c.inventory = {}
+	var poor := Guidance.hud_goal_text(c, d, flags, "myriad_peaks_ridge", 10)
+	assert_true(poor.begins_with("Learn your first technique: ") and poor.contains(String(found["merchant"])) and poor.contains("earn "), "too poor: %s" % poor)
+	c.inventory = {"spirit_stone": 1000}
+	var rich := Guidance.hud_goal_text(c, d, flags, "myriad_peaks_ridge", 10)
+	assert_true(rich.contains(": buy ") and rich.contains(String(d.items[found["item"]]["name"])), "rich: %s" % rich)
+	assert_eq(Guidance.hud_goal_text(c, d, flags, d.start_region, 10), "Learn your first technique", "the start region keeps the plain goal")
+
+
+## GUIDE-275: injured with no healer to name, the line says how long rest takes.
+func test_treat_injuries_line_names_the_rest_days() -> void:
+	var c := _fresh()
+	c.injuries = {"qi_deviation": 40}
+	assert_eq(Injuries.days_to_heal(c), 40)
+	var hints := Guidance.hints(c, data(), 1.0, 10, {}, {}, "myriad_peaks_ridge", 5)
+	var line := ""
+	for h in hints:
+		if h.begins_with("Treat your injuries"):
+			line = h
+	assert_true(line.contains("rest or meditate: healed in 1 month") or line.contains("sees ") or line.contains("treats"), "line: %s" % line)
+
+
+## GUIDE-275: a mortal who cannot take the first hop is not told to walk there.
+func test_walk_goal_skipped_when_first_hop_is_closed() -> void:
+	var c := _fresh()
+	var d := data()
+	assert_true(not Guidance._walk_goal_blocked(c, d, d.start_region, "Walk to Misty Forest (3 days from Qingshi Village)"), "not at the start region")
+	assert_true(not Guidance._walk_goal_blocked(c, d, "myriad_peaks_ridge", "Cull the Mist Wolves"), "other goals are never blocked")

@@ -2137,6 +2137,15 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 				tries[line] = int(tries.get(line, 0)) + 1
 				break
 			skipped.append(line)
+		if acted == "":
+			# GUIDE-275: a great beast that is not for now: the player cultivates the week (raising the odds the line rates).
+			for line in skipped:
+				if line.begins_with("Goal: Beat a great beast"):
+					acted = _prepare_week(gs, c)
+					acted_line = line
+					break
+			if acted != "":
+				skipped.erase(acted_line)
 		for line in skipped:
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
@@ -2145,7 +2154,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			hints_log["idle_weeks"] += 1
 			# GUIDE-272: what the Next-steps card said on an idle week (normalised), for --idle-dump.
 			var idle_key := " || ".join(skipped).replace("\n", " ")
-			idle_key = RegEx.create_from_string("\\d+").sub(idle_key, "N", true).substr(0, 260)
+			idle_key = RegEx.create_from_string("\\d+").sub(idle_key, "N", true).substr(0, 700)
 			if idle_key == "":
 				idle_key = "(no lines)"
 			(hints_log.get_or_add("idle_lists", {}) as Dictionary)[idle_key] = int((hints_log["idle_lists"] as Dictionary).get(idle_key, 0)) + 1
@@ -2200,11 +2209,10 @@ static func with_easy_fight_prefix(text: String) -> String:
 ## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
-	for g: Dictionary in Guidance.active_goal_ladder(c, gs.data, gs.world_flags, null, day):
-		# GUIDE-271: the HUD skips a row flagged "skip" (a great beast that rates Deadly); so does the player.
-		if not g.get("done", false) and not g.get("skip", false):
-			lines.append("Goal: " + String(g["text"]))
-			break
+	# GUIDE-275: the HUD's own goal text (GUIDE-271's skipped rows included), so a goal's named first step reaches the policy.
+	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
+	if goal != "":
+		lines.append("Goal: " + goal)
 	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
 		lines.append(with_easy_fight_prefix(String(f.get("text", ""))))
 		break
@@ -2219,6 +2227,38 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	var stones_before := c.item_count("spirit_stone")
 	var day_before: int = gs.get_node("/root/GameClock").total_days
 	var inv_before := c.inventory.size()
+	if line.begins_with("Goal: Learn your first technique: buy "):
+		# GUIDE-275: the goal names a manual a merchant here sells and the stones are in hand.
+		var manual := cheapest_combat_manual(gs, c)
+		if manual == "" or c.item_count("spirit_stone") < int(gs.data.items[manual].get("price", 0)):
+			return ""
+		gs.buy_item(manual)
+		gs.use_item(manual)
+		return "manual" if not c.techniques.is_empty() else ""
+	if line.begins_with("Goal: Learn your first technique: ") and line.contains("earn "):
+		# GUIDE-275: too poor for the manual: sell what a stall pays for, else take the nearest fair fight for the stones.
+		_sell_loot_here(gs, c, gs.current_region)
+		if c.item_count("spirit_stone") > stones_before:
+			return "sell"
+		return _act_on_hint(gs, c, done, "Easy fight: earn the stones", day)
+	if line == "Goal: Learn your first technique" and start_region != "" and gs.current_region != start_region:
+		# GUIDE-275: away from a start whose merchant sells a combat manual: walk home to it and buy (the next week's line names the price).
+		var home_manual := Guidance.first_combat_manual(c, gs.data, start_region)
+		if not home_manual.is_empty() and String(home_manual["merchant"]) != "":
+			if c.item_count("spirit_stone") >= int(home_manual["price"]):
+				_walk_to(gs, c, start_region)
+				return "travel" if gs.current_region == start_region else ""
+			# Too poor for it: earn the stones where you stand (a sale, else the nearest fair fight).
+			_sell_loot_here(gs, c, gs.current_region)
+			if c.item_count("spirit_stone") > stones_before:
+				return "sell"
+			return _act_on_hint(gs, c, done, "Easy fight: earn the stones", day)
+	if line.begins_with("You are ready to break through") and Cultivation.can_attempt_breakthrough(c, gs.data):
+		# GUIDE-275: the line says to attempt it; a player does (pills first, as the breakthrough window's Take button does).
+		for pill_id in Guidance.breakthrough_item_ids(c, gs.data):
+			gs.use_item(pill_id)
+		gs.attempt_breakthrough()
+		return "breakthrough"
 	if line.contains("Elder Mo") and (line.begins_with("Ask ") or line.begins_with("Goal: Talk") or line.contains("teaches a breathing")) or line == "Goal: Learn your first technique":
 		_walk_to(gs, c, "qingshi_village")
 		if gs.current_region != "qingshi_village":
@@ -2237,7 +2277,13 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.begins_with("Treat your injuries") and not c.injuries.is_empty():
 		var log := {"healed": 0}
 		_heal_before_fighting(gs, c, log)
-		return "heal" if int(log["healed"]) > 0 else ""
+		if int(log["healed"]) > 0:
+			return "heal"
+		# GUIDE-275: no healer in reach and the line says to rest: meditate through it (the days heal it as they pass).
+		if line.contains("rest or meditate") and c.alive:
+			gs.cultivate(mini(7, Injuries.days_to_heal(c)), gs.hint_density())
+			return "rest"
+		return ""
 	if line.contains("paid work") or line.begins_with("Headman Zhou"):
 		var got := false
 		for chore in CHORES:
@@ -2305,7 +2351,7 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				gs.fish(p.get("catch_table", []), int(p.get("gather_days", 2)), String(p.get("display_name", "")))
 				break
 		return "fish" if c.catch_log.size() != caught_before or gs.get_node("/root/GameClock").total_days != day_before else ""
-	if line.begins_with("Armor keeps you standing"):
+	if line.begins_with("Armor keeps you standing") or line.begins_with("Your defence is thin"):
 		# SIM-014: sell the loot the line names here, then buy and equip the armor as the defence follow-up does.
 		_sell_loot_here(gs, c, gs.current_region)
 		var armor_before: String = String(c.equipment.get("armor", ""))
@@ -2321,7 +2367,7 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		# SIM-016: the workshop is in the village; cook the cheapest dish the pack (or the stalls here) can fill.
 		_walk_to(gs, c, "qingshi_village")
 		return "cook" if gs.current_region == "qingshi_village" and _cook_cheapest(gs, c) else ""
-	if line.begins_with("Goal: Beat a great beast of your realm"):
+	if line.begins_with("Goal: Beat a great beast"):
 		return _hunt_great_beast(gs, c, day)
 	if line.begins_with("Goal: Walk to "):
 		# QA-237: the goal names the first hop out of the village; the player travels there.
@@ -2400,6 +2446,15 @@ const GREAT_WAIT_DAYS := 30
 
 ## SIM-019: acts on the great-beast road goal on its weekday: skips (like a player) when the fight rates under GREAT_MIN_ODDS or the
 ## beast's day is too far; else waits, travels so as to arrive that day, fights it and walks home. "great_beast" when it was fought.
+## GUIDE-275: the beast is not for now (too weak, too far in days or the road): a player does not stand idle but cultivates the
+## week, which is what raises the odds the goal line rates. "prepare" when the week was spent.
+static func _prepare_week(gs: Node, c: CharacterData) -> String:
+	if not c.alive:
+		return ""
+	gs.cultivate(7, gs.hint_density())
+	return "prepare"
+
+
 static func _hunt_great_beast(gs: Node, c: CharacterData, day: int) -> String:
 	var clock: Node = gs.get_node("/root/GameClock")
 	var next := Guidance._next_great(c, gs.data, day, "", true)

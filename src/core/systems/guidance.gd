@@ -1012,7 +1012,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("Only %d %s of life remain. Break through to a higher realm or find a longevity treasure." % [years, "year" if years == 1 else "years"])
 	if Injuries.has_any(c):
 		var heal := heal_source(c, data, region_id, flags)
-		heal = heal + "." if heal != "" else "use a healing item or see a doctor."
+		# GUIDE-275: no healer to name: say how long rest takes (meditating passes the days) instead of a bare "see a doctor".
+		heal = heal + "." if heal != "" else "rest or meditate: healed in %s, or use a healing item." % Calendar.format_duration(Injuries.days_to_heal(c))
 		var lost := Injuries.qi_days_lost(c, data)
 		var cost := ""
 		if lost >= 3:
@@ -6022,14 +6023,41 @@ static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionar
 static func hud_goal_text(c: CharacterData, data: GameData, flags: Dictionary, region_id: String = "", today: int = -1, clan: ClanData = null, density: float = 1.0) -> String:
 	if first_goals_done(c, data, flags) or c.realm_index >= 2:
 		for row in active_goal_ladder(c, data, flags, clan, maxi(today, 0)):
-			if not row["done"] and not row.get("skip", false):
+			if not row["done"] and not row.get("skip", false) and not _walk_goal_blocked(c, data, region_id, String(row["text"])):
 				return String(row["text"])
 		var lines := goals(c, data, flags, clan, density, region_id, today)
 		return lines[0] if not lines.is_empty() else ""
 	for goal in first_goals(c, data, flags):
 		if not goal["done"]:
-			return String(goal["text"])
+			return _with_manual_step(c, data, flags, region_id, String(goal["text"]))
 	return ""
+
+
+## GUIDE-275: the road goal "Walk to Misty Forest" is skipped for a wanderer away from the start region whose first hop toward it is
+## closed to them (a mortal on the ridge cannot take the perilous pass): a goal nobody can act on is not shown.
+static func _walk_goal_blocked(c: CharacterData, data: GameData, region_id: String, text: String) -> bool:
+	var target := "misty_forest" if text.begins_with("Walk to ") else ("fallen_star_market" if text.begins_with("Visit Fallen Star") else "")
+	if target == "" or region_id == "" or region_id == data.start_region or not data.regions.has(target):
+		return false
+	var hop := first_hop(c, data, region_id, target)
+	return hop == "" or not bool(Exploration.check_travel(c, data, region_id, hop)["ok"])
+
+
+## GUIDE-275: "Learn your first technique" away from the start region, where a merchant sells a combat manual: the goal
+## names the step ("Buy Cloud-Parting Palm at the Scorched-Scroll Pedlar, 40 stones", or how many stones to earn first).
+## `text` unchanged otherwise (the start region's Elder Mo teaches for free).
+static func _with_manual_step(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, text: String) -> String:
+	if text != "Learn your first technique" or region_id == "" or region_id == data.start_region:
+		return text
+	var found := first_combat_manual(c, data, region_id)
+	if found.is_empty() or String(found["merchant"]) == "":
+		return text
+	var price := merchant_price(c, data, region_id, String(found["item"]), _season_in(flags))
+	var name: String = data.items[found["item"]]["name"]
+	var short := price - c.item_count("spirit_stone")
+	if short > 0:
+		return "%s: %s at the %s costs %d stones, earn %d more first" % [text, name, found["merchant"], price, short]
+	return "%s: buy %s at the %s, %d stones" % [text, name, found["merchant"], price]
 
 
 ## GUIDE-260/262: the region the current goal names (e.g. Qingshi for "Talk to Elder Mo in Qingshi Village"),

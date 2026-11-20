@@ -130,3 +130,11 @@ static func describe(c: CharacterData, data: GameData) -> PackedStringArray:
 	for id in c.injuries:
 		lines.append("%s (heals in %s)" % [injury_name(data, id), Calendar.format_duration(int(c.injuries[id]))])
 	return lines
+
+
+## GUIDE-275: days until every injury has healed on its own (the longest one), 0 with none.
+static func days_to_heal(c: CharacterData) -> int:
+	var longest := 0
+	for id in c.injuries:
+		longest = maxi(longest, int(c.injuries[id]))
+	return longest
