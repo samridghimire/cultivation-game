@@ -6206,7 +6206,8 @@ func test_road_goals_foundation_stretch() -> void:
 	var flags := {Guidance.ELDER_MO_FLAG: true}
 	var c := _after_ladder()
 	var goals := Guidance.road_goals(c, data(), flags)
-	assert_eq(goals[8]["text"], "Reach the 9th Layer of Qi Refining")
+	assert_true(String(goals[8]["text"]).begins_with("Reach the 9th Layer of Qi Refining: meditate"), String(goals[8]["text"]))  # GUIDE-273
+	assert_true(String(goals[8]["text"]).contains(" days"), String(goals[8]["text"]))
 	assert_false(goals[8]["done"])
 	assert_true(String(goals[9]["text"]).begins_with("Get a Foundation Establishment"), String(goals[9]["text"]))
 	assert_false(goals[9]["done"])

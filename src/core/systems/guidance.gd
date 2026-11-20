@@ -4671,6 +4671,22 @@ static func goal_target(c: CharacterData, data: GameData, flags: Dictionary, npc
 const SECT_HALL_FLAG := "visited_sect_hall"
 
 
+## GUIDE-273: a "Reach the Nth Layer" goal with its first step: meditate, and about how long it takes at ordinary qi.
+## `target_stage` is 0-based. Qi Refining only; otherwise (or once reached) `label` unchanged.
+static func _layer_goal_text(c: CharacterData, data: GameData, label: String, target_stage: int) -> String:
+	if c.realm_index != 1 or c.stage >= target_stage:
+		return label
+	var per_day := Cultivation.qi_per_day(c, data, 1.0)
+	if per_day <= 0.0:
+		return label
+	var realm: RealmDef = data.realms[c.realm_index]
+	var remaining := realm.qi_required(c.stage) - c.qi
+	for stage in range(c.stage + 1, target_stage):
+		remaining += realm.qi_required(stage)
+	var days := maxi(1, ceili(remaining / per_day - 0.000001))
+	return "%s: meditate (Cultivate on the action menu), about %s at ordinary qi" % [label, Calendar.format_duration(days)]
+
+
 ## GOAL-008: goals that lead out of the village, shown one at a time once the first ladder is done.
 ## A veteran (Foundation or above) sees them done. Day counts and names come from data.
 static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, today: int = 0) -> Array[Dictionary]:
@@ -4719,9 +4735,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	# GOAL-009: the sect road. A rogue who has stood in a sect hall and walked away has chosen too.
 	rows.append(["Join a sect, or stay free (a sect hall takes recruits)", vet or not c.is_rogue() or bool(flags.get(SECT_HALL_FLAG, false))])
 	rows.append(["Take a sect mission or a bounty", vet or LifeStats.get_stat(c, "missions_done") >= 1 or LifeStats.get_stat(c, "bounties_done") >= 1 or not c.bounty.is_empty()])
-	rows.append(["Reach the 6th Layer of Qi Refining", vet or (c.realm_index == 1 and c.stage >= 5)])  # stage is 0-based: 5 = 6th Layer
+	rows.append([_layer_goal_text(c, data, "Reach the 6th Layer of Qi Refining", 5), vet or (c.realm_index == 1 and c.stage >= 5)])  # stage is 0-based: 5 = 6th Layer
 	# GOAL-010: the last stretch of Qi Refining.
-	rows.append(["Reach the 9th Layer of Qi Refining", vet or (c.realm_index == 1 and c.stage >= 8)])  # 8 = 9th Layer, the last
+	rows.append([_layer_goal_text(c, data, "Reach the 9th Layer of Qi Refining", 8), vet or (c.realm_index == 1 and c.stage >= 8)])  # 8 = 9th Layer, the last
 	var pill_text := "Get a %s pill" % data.realms[mini(c.realm_index + 1, data.realms.size() - 1)].name
 	var where := _foundation_pill_where(c, data)
 	if where != "":
