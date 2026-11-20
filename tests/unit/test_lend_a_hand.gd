@@ -96,3 +96,59 @@ func test_friend_line_in_first_four() -> void:
 		if lines[i].begins_with("Make a friend: lend "):
 			idx = i
 	assert_true(idx >= 0 and idx < 4, "friend line index %d in %s" % [idx, lines])
+
+
+## C-404: validation of lend_lines.
+func test_lend_lines_validation() -> void:
+	var d := data()
+	var mo: Array = d.npcs["elder_mo"]["lend_lines"]
+	var ma: Array = d.npcs["hunter_ma"]["lend_lines"]
+	d.npcs["elder_mo"]["lend_lines"] = ["a", "b", "c", "d"]
+	d.npcs["hunter_ma"]["lend_lines"] = ["x".repeat(141)]
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	d.npcs["elder_mo"]["lend_lines"] = mo
+	d.npcs["hunter_ma"]["lend_lines"] = ma
+	d.load_errors.clear()
+	assert_true(text.contains("'elder_mo' lend_lines needs 1-3"), text)
+	assert_true(text.contains("'hunter_ma' lend_lines entries"), text)
+
+
+func test_every_start_region_named_npc_has_two_lend_lines() -> void:
+	var d := data()
+	for id: String in d.npcs:
+		var lines: Array = d.npcs[id].get("lend_lines", [])
+		assert_eq(lines.size(), 2, id)
+
+
+## C-404: the posted thank-you is one of the NPC's lines (with the player's name); no lines, only the lend message.
+func test_lend_posts_a_thank_you_line() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var bus := root.get_node("EventBus")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	var lines: Array = gs.data.npcs["elder_mo"]["lend_lines"].duplicate()
+	var mark: int = bus.posted_count
+	gs.lend_a_hand("elder_mo")
+	var texts: Array = []
+	for row in bus.history:
+		texts.append(String(row["text"]))
+	var found := 0
+	for line: String in lines:
+		if texts.has(line.replace("{player}", gs.player.name)):
+			found += 1
+	assert_eq(found, 1, str(texts))
+	gs.world_flags.erase("lend_elder_mo")
+	gs.data.npcs["elder_mo"].erase("lend_lines")
+	bus.history.clear()
+	gs.lend_a_hand("elder_mo")
+	var after: Array = []
+	for row in bus.history:
+		after.append(String(row["text"]))
+	gs.data.npcs["elder_mo"]["lend_lines"] = lines
+	gs.end_session()
+	assert_true(after.any(func(t: String) -> bool: return t.contains("You spend the day")), str(after))
+	for line: String in lines:
+		assert_false(after.has(line.replace("{player}", "")), line)

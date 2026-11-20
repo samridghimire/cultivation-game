@@ -2421,6 +2421,9 @@ func lend_a_hand(npc_id: String) -> void:
 		player.add_item(String(yielded["item"]), int(yielded.get("count", 1)))
 		line += " They send you off with %s." % String(data.items[yielded["item"]].get("name", yielded["item"]))
 	EventBus.post(line + (" The festival warms the mood." if festival else ""))
+	var thanks: Array = data.npcs.get(npc_id, {}).get("lend_lines", [])  # C-404: a stable pick by day, so the shared rng stream (and every seeded sim) is untouched
+	if not thanks.is_empty():
+		EventBus.post(String(thanks[hash("%s/%d" % [npc_id, GameClock.total_days]) % thanks.size()]).replace("{player}", player.name))
 	_post_attitude_change(before)
 	_friend_scene(npc_id)
 	_note_teacher_seen(npc_id)
