@@ -78,7 +78,7 @@ func test_sex_change_rebuilds_portrait_and_keeps_name() -> void:
 
 func test_attribute_rows_have_tooltips() -> void:
 	var scene: Control = await _scene()
-	assert_eq(scene._attr_box.get_child_count(), 5)
+	assert_eq(scene._attr_box.get_child_count(), 20)
 	for row in scene._attr_box.get_children():
 		assert_true((row as Control).tooltip_text != "")
 	scene.queue_free()
@@ -91,4 +91,38 @@ func test_focus_reroll_and_buttons_reachable() -> void:
 	var next: Control = scene._reroll_button.find_valid_focus_neighbor(SIDE_RIGHT)  # Reroll stays reachable
 	assert_true(next == scene._begin_button)
 	assert_true(scene._begin_button.find_valid_focus_neighbor(SIDE_RIGHT) is Button)
+	scene.queue_free()
+
+
+func test_attribute_bars_align_and_hints_trim() -> void:
+	var scene: Control = await _scene()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	var xs := {}
+	for c in scene._attr_box.get_children():
+		if c is ProgressBar:
+			xs[snappedf(c.global_position.x, 0.5)] = true
+		elif c is Label and c.clip_text:
+			assert_eq(c.text_overrun_behavior, TextServer.OVERRUN_TRIM_ELLIPSIS)
+			assert_eq(c.autowrap_mode, TextServer.AUTOWRAP_OFF)
+	assert_eq(xs.size(), 1, str(xs.keys()))
+	assert_true(scene._attr_about.text != "")
+	scene.queue_free()
+
+
+func test_aura_matches_dominant_root_after_rerolls() -> void:
+	var scene: Control = await _scene()
+	for i in 5:
+		scene._reroll()
+		var roots: Dictionary = scene._candidate.spiritual_roots
+		var best := 0
+		for id in roots:
+			best = maxi(best, int(roots[id]))
+		var expected: Array[Color] = []
+		for id in roots:
+			if int(roots[id]) == best and expected.size() < 2:
+				expected.append(CharacterSheet.ELEMENT_COLORS[id] if CharacterSheet.ELEMENT_COLORS.has(id) else Color.WHITE)
+		assert_eq(scene._aura_colors.size(), expected.size())
+		assert_true(scene._aura_colors.size() >= 1)
+		assert_eq(scene._aura_colors[0] in expected, true)
 	scene.queue_free()

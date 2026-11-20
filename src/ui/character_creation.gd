@@ -13,7 +13,10 @@ var _portrait: TextureRect
 var _root_title: Label
 var _root_box: VBoxContainer
 var _talent_box: HBoxContainer
-var _attr_box: VBoxContainer
+var _attr_box: GridContainer
+var _attr_about: Label  # WU-575: full description of the hovered/default attribute
+var _aura: Control
+var _aura_colors: Array[Color] = []
 var _bars: Array[ProgressBar] = []
 var _begin_button: Button
 var _reroll_button: Button
@@ -43,6 +46,10 @@ func _ready() -> void:
 	_portrait.custom_minimum_size = Vector2(PixelFigure.SIZE * 6)
 	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_aura = Control.new()  # WU-575: soft glow behind the figure in the dominant root's colour
+	_aura.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_aura.draw.connect(_draw_aura)
+	frame.add_child(_aura)
 	frame.add_child(_portrait)
 	var framed := CenterContainer.new()
 	framed.add_child(frame)
@@ -70,9 +77,15 @@ func _ready() -> void:
 	_talent_box.add_theme_constant_override("separation", 8)
 	right.add_child(_talent_box)
 	right.add_child(UIStyle.label("Attributes", 20, UIStyle.ACCENT))
-	_attr_box = VBoxContainer.new()
-	_attr_box.add_theme_constant_override("separation", 4)
+	_attr_box = GridContainer.new()
+	_attr_box.columns = 4
+	_attr_box.add_theme_constant_override("h_separation", 8)
+	_attr_box.add_theme_constant_override("v_separation", 4)
 	right.add_child(_attr_box)
+	_attr_about = UIStyle.label("", 13, Color(0.7, 0.7, 0.7))
+	_attr_about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_attr_about.custom_minimum_size = Vector2(0, 36)
+	right.add_child(_attr_about)
 
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
@@ -174,28 +187,65 @@ func _roll(animate: bool = true) -> void:
 	_talent_box.add_child(UIStyle.label("%.2fx cultivation speed (average is 1.0x)" % mult, 14, Color(0.6, 0.6, 0.6)))
 	_clear(_attr_box)
 	for attr in data.attributes:
-		var row := HBoxContainer.new()
-		row.name = "attr_" + String(attr["id"])
-		row.add_theme_constant_override("separation", 8)
-		row.tooltip_text = String(attr["description"])
-		row.mouse_filter = Control.MOUSE_FILTER_PASS
+		var desc := String(attr["description"])
 		var name_label := UIStyle.label(String(attr["name"]), 15)
-		name_label.custom_minimum_size = Vector2(108, 0)
-		row.add_child(name_label)
+		name_label.name = "attr_" + String(attr["id"])
+		name_label.custom_minimum_size = Vector2(150, 0)
 		var value := _candidate.attribute(attr["id"])
 		var num := UIStyle.label(str(value), 15)
-		num.custom_minimum_size = Vector2(26, 0)
-		row.add_child(num)
-		row.add_child(_bar_for(UIStyle.ACCENT, value, maxi(int(attr.get("roll_max", 20)), 20), Vector2(110, 10)))
-		var hint := UIStyle.label(String(attr["description"]).get_slice(".", 1).strip_edges().trim_suffix("."), 13, Color(0.55, 0.55, 0.55))
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # RV-019: wrap (two lines) instead of clipping
-		hint.max_lines_visible = 2
+		num.custom_minimum_size = Vector2(32, 0)
+		num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		var bar := _bar_for(UIStyle.ACCENT, value, maxi(int(attr.get("roll_max", 20)), 20), Vector2(110, 14))
+		var hint := UIStyle.label(desc.get_slice(".", 1).strip_edges().trim_suffix("."), 13, Color(0.55, 0.55, 0.55))
+		hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS  # WU-575: one line, full text in tooltip/about
+		hint.clip_text = true
 		hint.custom_minimum_size = Vector2(120, 0)
 		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(hint)
-		_attr_box.add_child(row)
+		for c: Control in [name_label, num, bar, hint]:
+			c.tooltip_text = desc
+			c.mouse_filter = Control.MOUSE_FILTER_PASS
+			c.mouse_entered.connect(_show_about.bind(desc))
+			_attr_box.add_child(c)
+	if data.attributes.size() > 0:
+		_show_about(String(data.attributes[0]["description"]))
 	if animate:
 		_animate()
+
+
+func _show_about(text: String) -> void:
+	_attr_about.text = text
+
+
+## WU-575: colour(s) of the strongest root(s): one colour, or two for two equal top roots.
+static func dominant_colors(roots: Dictionary, data: GameData) -> Array[Color]:
+	var best := 0
+	for e in data.root_elements:
+		best = maxi(best, int(roots.get(e["id"], 0)))
+	var out: Array[Color] = []
+	if best <= 0:
+		return out
+	for e in data.root_elements:
+		if int(roots.get(e["id"], 0)) == best and out.size() < 2:
+			out.append(CharacterSheet.ELEMENT_COLORS.get(String(e["id"]), Color.WHITE))
+	return out
+
+
+func _draw_aura() -> void:
+	if _aura_colors.is_empty():
+		return
+	var size := _aura.size
+	var centre := size * 0.5
+	var radius := minf(size.x, size.y) * 0.5
+	for i in 2:
+		var col: Color = _aura_colors[mini(i, _aura_colors.size() - 1)]
+		var off := Vector2.ZERO if _aura_colors.size() == 1 else Vector2(-radius * 0.28 if i == 0 else radius * 0.28, 0)
+		for step in 7:
+			var t := float(step) / 6.0
+			var c := col
+			c.a = 0.07 + 0.05 * t
+			_aura.draw_circle(centre + off, radius * (1.0 - 0.75 * t), c)
+		if _aura_colors.size() == 1:
+			break
 
 
 func _bar_for(color: Color, value: int, max_value: int, size: Vector2) -> ProgressBar:
@@ -226,6 +276,8 @@ func _clear(box: Container) -> void:
 
 func _refresh_portrait() -> void:
 	_candidate.gender = _selected_gender()
+	_aura_colors = dominant_colors(_candidate.spiritual_roots, GameState.data)
+	_aura.queue_redraw()
 	_portrait.texture = PixelFigure.frame(PlayerLook.of(_candidate, GameState.data), "down", 0)
 
 
