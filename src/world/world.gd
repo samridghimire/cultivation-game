@@ -2222,6 +2222,7 @@ func _draw_scree_detail(map: Dictionary) -> void:
 		var sz: Array = p.get("size", [64, 64])
 		var psize := Vector2(float(sz[0]), float(sz[1]))
 		keep.append(Rect2(Vector2(float(pos[0]), float(pos[1])) - psize / 2.0, psize).grow(8.0))
+	_draw_ridge_turf(map, keep)  # GFX-220: olive alpine turf under the patches, denser by the road
 	var patch_col := {"lichen": Color("7d8a6c"), "rust": Color("8c6a52"), "shale": Color("565e68")}
 	for pt: Dictionary in Scenery.ridge_patches(_region, keep):  # GFX-159: lichen clumps and shale plates (GFX-150 patches)
 		_draw_ridge_patch(pt, patch_col[pt["kind"]])
@@ -2274,6 +2275,26 @@ func _draw_outcrop_scree(map: Dictionary) -> void:
 			draw_rect(Rect2(q, Vector2(pb.z, maxf(pb.z - 1.0, 1.0))), tone)
 		var foot := Scenery.shadow_blob(Vector2(o.x, o.y + 1.0), Vector2(float(fan["spread"]) * 0.7, 4.0), int(fan["seed"]))
 		draw_colored_polygon(foot, Color(0, 0, 0, 0.2))
+
+
+## GFX-220: muted olive turf patches (ragged ovals, a darker foot edge and a few blades) baked into the ground pass.
+func _draw_ridge_turf(map: Dictionary, keep: Array[Rect2]) -> void:
+	if not map.has("turf"):
+		return
+	if GroundTiles.ground_season(_season, map) == "Winter":
+		return  # the snow covers the turf
+	var turf := Color(String(map["turf"]))
+	for t: Dictionary in Scenery.ridge_turf(_region, keep):
+		var c: Vector2 = t["center"]
+		var r := Rect2(c - Vector2(float(t["rx"]), float(t["ry"])), Vector2(float(t["rx"]), float(t["ry"])) * 2.0)
+		var tone := turf.lightened(0.08) if bool(t["near"]) else turf
+		draw_colored_polygon(Scenery.shadow_blob(c + Vector2(0, 1), Vector2(float(t["rx"]) + 1.5, float(t["ry"]) + 1.5), int(t["seed"])), Color(tone.darkened(0.3), 0.3))
+		draw_colored_polygon(Scenery.shadow_blob(c, Vector2(float(t["rx"]), float(t["ry"])), int(t["seed"]) + 1), Color(tone, 0.4))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(t["seed"])
+		for i in 7:
+			var q := (c + Vector2(rng.randf_range(-r.size.x, r.size.x), rng.randf_range(-r.size.y, r.size.y)) * 0.4).floor()
+			draw_rect(Rect2(q, Vector2(1, 2)), tone.lightened(0.18))
 
 
 ## GFX-159: a ridge patch: lichen = clumps of small greenish spots, rust = soft smudge, shale = angular dark plates with a lit edge.
@@ -2472,7 +2493,8 @@ func _draw_crags(map: Dictionary) -> void:
 		if it["kind"] == "crag":
 			var outline := Scenery.crag_outline(r, int(it["seed"]))
 			var foot := Scenery.shadow_blob(Vector2(r.get_center().x, r.end.y + 2.0), Vector2(r.size.x * 0.55, 6.0), int(it["seed"]))
-			draw_colored_polygon(foot, Color(0, 0, 0, 0.22))
+			draw_colored_polygon(foot, Color(0, 0, 0, 0.34))  # GFX-220: a firmer contact shadow so the slab sits on the ground
+			draw_colored_polygon(Scenery.shadow_blob(Vector2(r.get_center().x + 3.0, r.end.y), Vector2(r.size.x * 0.4, 3.0), int(it["seed"]) + 7), Color(0, 0, 0, 0.3))
 			draw_colored_polygon(outline, rock.darkened(0.45))
 			# a lit top-left facet: the upper left part of the silhouette
 			var lit := PackedVector2Array()
@@ -2493,6 +2515,8 @@ func _draw_crags(map: Dictionary) -> void:
 			draw_polyline(ring, rock.darkened(0.7), px)
 			if winter:
 				draw_polyline(PackedVector2Array(outline.slice(2, outline.size() - 2)), Color("e8eef4"), px * 2.0)
+			else:  # GFX-220: a lit top edge
+				draw_polyline(PackedVector2Array(outline.slice(1, outline.size() - 2)), rock.lightened(0.28), px)
 		else:
 			var look := Scenery.drift_look(GroundTiles.ground_season(_season, map), int(it["seed"]))  # GFX-153: remnants outside winter
 			if not bool(look["show"]) or not Scenery.drift_visible(GroundTiles.ground_season(_season, map), map):

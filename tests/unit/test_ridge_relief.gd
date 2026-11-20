@@ -359,3 +359,34 @@ func test_ridge_drifts_only_in_winter() -> void:
 	for season in ["Spring", "Summer", "Autumn"]:
 		assert_false(Scenery.drift_visible(season, ridge), season)
 		assert_true(Scenery.drift_visible(season, {}), "non-ridge keeps remnants in " + season)
+
+
+## GFX-220: olive turf patches, denser near the road, clear of keepouts, deterministic; none without map.turf.
+func test_ridge_turf_layout() -> void:
+	var region := {"id": "ridge_t", "map": {"size": [1600, 1000], "ground_style": "scree", "turf": "6f7a48", "paths": [[0, 470, 1600, 60]]}, "places": []}
+	var keep: Array[Rect2] = [Rect2(600, 100, 200, 200)]
+	var a := Scenery.ridge_turf(region, keep)
+	assert_true(a.size() >= 8, "enough turf, got %d" % a.size())
+	var near_road := 0
+	for t: Dictionary in a:
+		var c: Vector2 = t["center"]
+		var box := Rect2(c - Vector2(float(t["rx"]), float(t["ry"])), Vector2(float(t["rx"]), float(t["ry"])) * 2.0)
+		assert_false(keep[0].intersects(box), "turf clear of keepouts")
+		if absf(c.y - 500.0) < 120.0:
+			near_road += 1
+	assert_true(near_road * 2 > a.size(), "most turf lies near the road")
+	assert_eq(a, Scenery.ridge_turf(region, keep))
+	region["map"].erase("turf")
+	assert_true(Scenery.ridge_turf(region, keep).is_empty(), "no turf without map.turf")
+
+
+## GFX-220: a sparse ridge's Spring ground has no white melt blobs; Azure Peak (full meadow) keeps them.
+func test_ridge_spring_has_no_white_blobs() -> void:
+	var size := Vector2i(400, 300)
+	var ridge := GroundTiles.ground_texture(Color("4d5568"), "ridge_w", size, false, "Spring", "scree", [], 1.0, {"alpine_meadow": 0.6}).get_image()
+	var bright := 0
+	for y in size.y:
+		for x in size.x:
+			if x > 0 and y > 0 and x < size.x - 1 and y < size.y - 1 and ridge.get_pixel(x, y).get_luminance() > 0.8 and ridge.get_pixel(x - 1, y).get_luminance() > 0.8 and ridge.get_pixel(x, y - 1).get_luminance() > 0.8:
+				bright += 1  # blob interior (single bloom dots do not count)
+	assert_true(bright < 20, "no pale blobs on the ridge, %d bright px" % bright)

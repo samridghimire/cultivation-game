@@ -178,7 +178,7 @@ static func ground_image(base: Color, rid: String, size_px: Vector2i, flowers: b
 			dry_tips = _meadow_life(img, base, rid, season, life.get("avoid", []), life.get("worn", []))  # GFX-181
 			_prof("meadow_life", t0)
 	t0 = Time.get_ticks_usec() if profiling else 0
-	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)))
+	_apply_style(img, base, rid, style, zones, scree_density, float(life.get("speckle", 1.0)), 0.0 < meadow_density(life.get("alpine_meadow", false)) and meadow_density(life.get("alpine_meadow", false)) < 1.0)
 	_prof("style", t0)
 	if style == "scree":
 		t0 = Time.get_ticks_usec() if profiling else 0
@@ -651,7 +651,8 @@ static func _alpine_life(img: Image, rid: String, season: String, meadow: float 
 		_alpine_meadow(img, rid, season, n, meadow)
 	match season:
 		"Spring":
-			var snow_n := maxi(3, n / 2) if meadow >= 1.0 or meadow <= 0.0 else maxi(2, n / 4)
+			# GFX-220: a sparse ridge has no white melt blobs (they read as a stray white ellipse); the turf carries the season
+			var snow_n := maxi(3, n / 2) if meadow >= 1.0 or meadow <= 0.0 else 0
 			for b in alpine_blobs(rid, "snow", snow_n, size_px):
 				_blend_blob(img, Vector3(b.x, b.y, b.z * 1.1), 0.55, Color("eef3f7"), 1.0, Color("b8c4d0"))
 		"Summer":
@@ -664,7 +665,7 @@ static func _alpine_life(img: Image, rid: String, season: String, meadow: float 
 static func _alpine_meadow(img: Image, rid: String, season: String, n: int, density: float = 1.0) -> void:
 	var size_px := Vector2i(img.get_width(), img.get_height())
 	var cold := density < 1.0  # GFX-191: sparse rocky ridge: grey-green moss, lichen, rust grass in autumn
-	var moss_col := Color("5f7a62") if cold else Color("4f7a4a")
+	var moss_col := Color("6a7a4c") if cold else Color("4f7a4a")  # GFX-220: muted olive alpine turf on the ridge
 	var blade_col := Color("6e8a66") if cold else Color("5f8c4e")
 	if season == "Autumn" and cold:
 		blade_col = Color("94603a")
@@ -746,7 +747,7 @@ static func _byte_to_float() -> PackedFloat32Array:
 
 
 ## GFX-053: 3-6 big soft tint patches on a scree ground, seeded from the region id: frost above y 300, moss below.
-static func _scree_patches(img: Image, base: Color, rid: String) -> void:
+static func _scree_patches(img: Image, base: Color, rid: String, strength: float = 0.35) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	var n := 3 + absi(hash(rid + "|patches")) % 4
@@ -764,7 +765,7 @@ static func _scree_patches(img: Image, base: Color, rid: String) -> void:
 			for x in range(x0, x1):
 				var d := Vector2((x - centre.x) / radius, (y - centre.y) / (radius * 0.7)).length()
 				if d < 1.0:
-					var a := (1.0 - d) * (1.0 - d) * 0.35
+					var a := (1.0 - d) * (1.0 - d) * strength
 					img.set_pixel(x, y, img.get_pixel(x, y).lerp(tint, a))
 
 
@@ -898,7 +899,7 @@ const STYLES := PlaceLooks.GROUND_STYLES
 
 ## GFX-042: redraws a finished grass ground image in a regional style. "grass" is left alone. Every choice comes
 ## from hashes of (rid, cell), so the same inputs give the same image.
-static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = [], scree_density: float = 1.0, speckle: float = 1.0) -> void:
+static func _apply_style(img: Image, base: Color, rid: String, style: String, zones: Array = [], scree_density: float = 1.0, speckle: float = 1.0, soft_frost: bool = false) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	match style:
@@ -975,7 +976,7 @@ static func _apply_style(img: Image, base: Color, rid: String, style: String, zo
 						var cy0 := cy * SIZE + (roll / 64) % (SIZE - 6)
 						for k in 5:
 							_set_clipped(img, cx0 + k, cy0 + k / 2, base.darkened(0.15))
-			_scree_patches(img, base, rid)
+			_scree_patches(img, base, rid, 0.1 if soft_frost else 0.35)  # GFX-220: a sparse ridge gets faint frost, not a white ellipse
 		"litter":
 			# Grass with darker leaf-litter specks (2x1 px) scattered over it.
 			for cy in ceili(float(h) / SIZE):

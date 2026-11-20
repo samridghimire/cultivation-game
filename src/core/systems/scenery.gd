@@ -1884,6 +1884,8 @@ static func validate(data: GameData) -> PackedStringArray:
 		var density: Variant = region.get("map", {}).get("scree_density", 1.0)
 		if not ((density is float or density is int) and float(density) >= 0.0 and float(density) <= 1.0):
 			errors.append("Region '%s' map.scree_density must be 0-1" % region["id"])
+		if region.get("map", {}).has("turf") and not (region["map"]["turf"] is String and String(region["map"]["turf"]).is_valid_html_color()):
+			errors.append("Region '%s' map.turf must be a hex colour" % region["id"])  # GFX-220
 		var speckle: Variant = region.get("map", {}).get("speckle", 1.0)  # GFX-164
 		if not ((speckle is float or speckle is int) and float(speckle) >= 0.0 and float(speckle) <= 1.0):
 			errors.append("Region '%s' map.speckle must be 0-1" % region["id"])
@@ -2404,6 +2406,46 @@ static func ridge_patches(region: Dictionary, keepouts: Array[Rect2]) -> Array[D
 		var sd := rng.randi()
 		if not blocked:
 			out.append({"center": c, "rx": rx, "ry": ry, "kind": kind, "seed": sd})
+	return out
+
+
+## GFX-220: olive alpine turf patches of a scree map, [{center, rx, ry, seed}] (ragged ovals), denser and larger near the
+## road and the `places` rects, clear of every `keepouts` rect, seeded by the region id. Needs map.turf (a colour); else none.
+static func ridge_turf(region: Dictionary, keepouts: Array[Rect2]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var map: Dictionary = region.get("map", {})
+	if String(map.get("ground_style", "")) != "scree" or not map.has("turf"):
+		return out
+	var size_arr: Array = map.get("size", [1600, 1000])
+	var near: Array[Rect2] = []
+	for pr in map.get("paths", []):
+		near.append(Rect2(float(pr[0]), float(pr[1]), float(pr[2]), float(pr[3])).grow(90.0))
+	for p: Dictionary in region.get("places", []):
+		var pos: Array = p.get("pos", [0, 0])
+		near.append(Rect2(float(pos[0]) - 70.0, float(pos[1]) - 60.0, 140.0, 120.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(String(region.get("id", "")) + "|ridge_turf")
+	for attempt in 160:
+		if out.size() >= 22:
+			break
+		var rx := rng.randf_range(22.0, 54.0)
+		var ry := rng.randf_range(12.0, 26.0)
+		var c := Vector2(rng.randf_range(rx + 8.0, float(size_arr[0]) - rx - 8.0), rng.randf_range(ry + 8.0, float(size_arr[1]) - ry - 8.0))
+		var box := Rect2(c - Vector2(rx, ry), Vector2(rx, ry) * 2.0)
+		var is_near := false
+		for n in near:
+			if n.has_point(c):
+				is_near = true
+				break
+		if not is_near and rng.randf() > 0.1:
+			continue  # lighter away from the road and places
+		var blocked := false
+		for k in keepouts:
+			if k.intersects(box):
+				blocked = true
+				break
+		if not blocked:
+			out.append({"center": c, "rx": rx, "ry": ry, "seed": rng.randi(), "near": is_near})
 	return out
 
 
