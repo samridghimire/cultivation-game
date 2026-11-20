@@ -1884,7 +1884,7 @@ func _flush_season() -> void:
 
 
 func _on_time_skipped(days: int, summary: Dictionary) -> void:
-	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips")):
+	if not TimeSkip.should_show(days, Settings.get_value("fast_time_skips"), bool(summary.get("always", false))):
 		return
 	if _combat_report.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
 		return

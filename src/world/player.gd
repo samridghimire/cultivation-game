@@ -24,6 +24,8 @@ var _celebrate_left := 0.0
 var _celebrate_ok := true
 var _camera_shake_left := 0.0
 var _seated := false
+var _lend_saved := false
+var _lend_from := Vector2.ZERO
 
 const CAMERA_SHAKE_SECONDS := 0.3
 const CAMERA_SHAKE_PIXELS := 4.0
@@ -84,6 +86,23 @@ func celebrate(success: bool) -> void:
 func set_seated(on: bool) -> void:
 	_seated = on
 	queue_redraw()
+
+
+## GFX-221: stand at `pos` facing `dir` while helping a villager; end_lend() puts the player back (visual only).
+func begin_lend(pos: Vector2, dir: Vector2) -> void:
+	if not _lend_saved:
+		_lend_saved = true
+		_lend_from = position
+	position = pos
+	_facing = dir
+	queue_redraw()
+
+
+func end_lend() -> void:
+	if _lend_saved:
+		position = _lend_from
+		_lend_saved = false
+		queue_redraw()
 
 
 func is_seated() -> bool:

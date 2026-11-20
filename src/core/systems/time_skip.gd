@@ -19,8 +19,25 @@ static func snapshot(c: CharacterData) -> Dictionary:
 
 
 ## Whether a skip of `days` gets the overlay. `fast` = the "Fast time skips" setting.
-static func should_show(days: int, fast: bool) -> bool:
-	return days >= MIN_DAYS and not fast
+## `always` (a summary flagged "always", like a lend-a-hand day) shows even for a 1-day skip.
+static func should_show(days: int, fast: bool, always: bool = false) -> bool:
+	return (days >= MIN_DAYS or always) and not fast
+
+
+## GFX-221: turns a summary into the "Helping {name}" card: the verb heads the lines and the
+## overlay is told which villager to stand beside.
+static func lend_summary(summary: Dictionary, name: String, verb: String, npc_id: String) -> Dictionary:
+	var out := summary.duplicate(true)
+	out["title"] = "Helping %s" % name
+	var lines: Array = []
+	lines.append(verb.substr(0, 1).to_upper() + verb.substr(1) + ".")
+	for l in summary.get("lines", []):
+		if String(l) != "Nothing of note happened.":
+			lines.append(l)
+	out["lines"] = lines
+	out["always"] = true
+	out["lend_npc"] = npc_id
+	return out
 
 
 ## Overlay content: {title, days, lines}. `realm_label` is the realm after the

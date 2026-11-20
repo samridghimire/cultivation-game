@@ -50,6 +50,7 @@ var _wander := Vector2.ZERO
 var _wander_target := Vector2.ZERO
 var _wait := 0.0
 var _modal_open := false
+var _lending := false
 var _bubble: EmoteBubble = null
 var _lesson_bubble: EmoteBubble = null
 const MAX_PIPS := 3
@@ -71,11 +72,20 @@ func sprite_keys() -> PackedStringArray:
 
 
 func _on_modal_changed(is_open: bool) -> void:
-	_modal_open = is_open
+	_modal_open = is_open and not _lending
+	queue_redraw()
+
+
+## GFX-221: while the player helps this villager the prop keeps swinging under the modal card.
+func set_lending(on: bool) -> void:
+	_lending = on
+	if on:
+		_modal_open = false
 	queue_redraw()
 
 
 func _ready() -> void:
+	add_to_group("npc")
 	super._ready()
 	home = position
 	_walk_to = home

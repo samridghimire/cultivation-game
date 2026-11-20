@@ -245,3 +245,45 @@ func test_overlay_seats_player_for_meditation() -> void:
 	overlay.close()
 	overlay.queue_free()
 	player.queue_free()
+
+
+## GFX-221: a lend-a-hand day emits a card that names the villager and the verb, even for 1 day.
+func test_lend_card_names_villager_and_verb() -> void:
+	_start()
+	var gs := _gs()
+	gs.current_region = "qingshi_village"
+	var got := _capture(func(): gs.lend_a_hand("hunter_ma"))
+	assert_eq(got.size(), 1)
+	var summary: Dictionary = got[0][1]
+	assert_eq(summary["title"], "Helping " + String(gs.npcs["hunter_ma"].name))
+	assert_true(summary["always"])
+	assert_eq(summary["lend_npc"], "hunter_ma")
+	assert_true(String(summary["lines"][0]).to_lower().contains(Folk.lend_verb(gs.data, "hunter_ma")))
+	assert_true(TimeSkip.should_show(1, false, true))
+	assert_false(TimeSkip.should_show(1, true, true), "fast skips still skip it")
+	assert_false(TimeSkip.should_show(1, false))
+	gs.end_session()
+
+
+## GFX-221: the player stands beside the villager during the card and is back afterwards.
+func test_lend_card_moves_player_and_restores() -> void:
+	for stale in (Engine.get_main_loop() as SceneTree).get_nodes_in_group("player"):
+		stale.remove_from_group("player")  # leaked players from other tests
+	for stale in (Engine.get_main_loop() as SceneTree).get_nodes_in_group("npc"):
+		stale.remove_from_group("npc")
+	var player := Player.new()
+	player.position = Vector2(500, 300)
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = "elder_mo"
+	npc.position = Vector2(200, 200)
+	_root().add_child(player)
+	_root().add_child(npc)
+	var overlay := TimeSkipOverlay.new()
+	_root().add_child(overlay)
+	overlay.show_skip({"title": "Helping Elder Mo", "days": 1, "lines": ["x"], "lend_npc": "elder_mo"})
+	assert_eq(player.position, Vector2(200 - TimeSkipOverlay.LEND_GAP, 200))
+	overlay.close()
+	assert_eq(player.position, Vector2(500, 300))
+	overlay.free()
+	npc.free()
+	player.free()

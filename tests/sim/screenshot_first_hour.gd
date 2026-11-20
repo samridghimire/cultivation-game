@@ -30,6 +30,7 @@ extends SceneTree
 ## WU-223: append `-- --gather-note` for the Village Herb Slope menu in each season: gather_note_<season>.png.
 ## WU-404: shots open through the HUD's _update_modal, so the dim backdrop and hidden prompt show.
 ## append `-- --fight=cultivator` for combat_report_cultivator.png (GFX-020); GFX-211: `--fight=<enemy_id>[,<id>...]` renders combat_report_<id>.png per foe.
+## GFX-221: `--lend=<npc_id>[,<id>...]` renders lend_<id>.png, the "Helping ..." card with the player beside the villager.
 ## GFX-213: `--meditate` renders meditate.png, mid time-skip overlay (seated player, qi motes, glow).
 ## GFX-217: `--skip-dusk` (with --region=a,b) also renders skip_night_<id>.png: the world frozen at night (phase 0.5) behind a time-skip card.
 ## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
@@ -309,6 +310,11 @@ func _start() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a == "--friend" or a.begins_with("--friend="):  # WU-537: --friend=<npc_id> opens that named villager's menu
 			friend_arg = true
+	for a in OS.get_cmdline_user_args():  # GFX-221: --lend=<npc_id>[,<id>...] shoots the "Helping" card mid-way
+		if a.begins_with("--lend="):
+			for id in a.substr(7).split(",", false):
+				_lend_shots(gs, id)
+			special = true
 	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
 		if a.begins_with("--spar="):
 			_spar_shots(gs, a.substr(7))
@@ -998,6 +1004,24 @@ func _spar_shots(gs: Node, npc_id: String) -> void:
 		gs.spar_with(npc_id)
 		var rep: Control = hud.get("_combat_report")
 		rep.call("skip"), "close": func() -> void: hud.get("_combat_report").call("close")})
+
+
+## GFX-221: the lend-a-hand card with the player beside the villager (lend_<id>.png).
+func _lend_shots(gs: Node, npc_id: String) -> void:
+	var skip: Control = hud.get("_time_skip")
+	shots.append({"name": "lend_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		var npc: Node2D = null
+		for n in world.get_tree().get_nodes_in_group("npc"):
+			if n.get("npc_id") == npc_id:
+				npc = n
+		if npc == null:
+			push_error("lend shot: no %s in the region" % npc_id)
+			return
+		_teleport_player(npc.position + Vector2(-120, 0))
+		gs.lend_a_hand(npc_id)
+		_teleport_player(world.get_node("Player").position),
+		"settle": 40, "close": skip.close})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).

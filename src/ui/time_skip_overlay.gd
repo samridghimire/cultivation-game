@@ -17,6 +17,9 @@ var _tween: Tween
 var _gather: QiGathering
 var _center: CenterContainer
 var _dim: ColorRect
+var _lend_npc: Node = null
+## GFX-221: one tile (px) between the helping player and the villager.
+const LEND_GAP := 40.0
 
 ## GFX-213: skips whose title is one of these show the qi gathering around the player.
 const QI_TITLES := ["Meditating", "In seclusion"]
@@ -80,6 +83,7 @@ func show_skip(summary: Dictionary, plays_cycle: bool = false) -> void:
 	else:
 		_gather.end()
 	_set_player_seated(seated)
+	_begin_lend(String(summary.get("lend_npc", "")))
 	if seated:
 		Audio.play("meditate_hum")  # WU-573
 	_tween = create_tween()
@@ -103,6 +107,7 @@ func close() -> void:
 	visible = false
 	_gather.end()
 	_set_player_seated(false)
+	_end_lend()
 	if QI_TITLES.has(_title.text.get_slice("...", 0)):
 		Audio.play("bell")  # WU-573
 	closed.emit()
@@ -131,3 +136,29 @@ func _set_player_seated(on: bool) -> void:
 	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
 	if p != null and p.has_method("set_seated"):
 		p.set_seated(on)
+
+
+## GFX-221: stand the player one tile beside the villager they help, both facing the prop (visual only).
+func _begin_lend(npc_id: String) -> void:
+	_end_lend()
+	if npc_id == "" or not is_inside_tree():
+		return
+	var p := get_tree().get_first_node_in_group("player")
+	if p == null or not p.has_method("begin_lend"):
+		return
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n.get("npc_id") == npc_id:
+			_lend_npc = n
+			n.set_lending(true)
+			p.begin_lend(n.position + Vector2(-LEND_GAP, 0.0), Vector2.RIGHT)
+			_center.offset_top = 260.0
+			return
+
+
+func _end_lend() -> void:
+	if is_instance_valid(_lend_npc):
+		_lend_npc.set_lending(false)
+	_lend_npc = null
+	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
+	if p != null and p.has_method("end_lend"):
+		p.end_lend()

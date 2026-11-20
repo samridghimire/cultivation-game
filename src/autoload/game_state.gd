@@ -102,6 +102,8 @@ var last_cultivate_density := 1.0
 ## Player numbers before the current long action (TimeSkip.snapshot), for the
 ## time-skip summary. Set by _start_time_skip(), read by _pass_time().
 var _skip_before: Dictionary = {}
+## GFX-221: {npc_id, name, verb} while a lend-a-hand day passes, so its card names the villager.
+var _skip_lend: Dictionary = {}
 ## The last 5+ day action's digest {days, lines} (DAY-001); never saved, cleared when a new action starts.
 var last_digest: Dictionary = {}
 ## Player hp at the end of the last fight_enemy() (carried between tournament bouts).
@@ -2423,7 +2425,9 @@ func lend_a_hand(npc_id: String) -> void:
 	_friend_scene(npc_id)
 	_note_teacher_seen(npc_id)
 	_teach_lessons(npc_id)
-	_pass_time(int(data.family.get("lend_a_hand", {}).get("days", 1)))
+	_start_time_skip()
+	_skip_lend = {"npc_id": npc_id, "name": npc.name, "verb": Folk.lend_verb(data, npc_id)}
+	_pass_time(int(data.family.get("lend_a_hand", {}).get("days", 1)), "Helping")
 
 
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
@@ -4873,7 +4877,10 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 	if skip_title != "" and _can_act() and not _skip_before.is_empty():
 		var summary := TimeSkip.summarize(skip_title, days, _skip_before, TimeSkip.snapshot(player),
 				Cultivation.realm_label(player, data), EventBus.posted_count - posted_before)
+		if not _skip_lend.is_empty():
+			summary = TimeSkip.lend_summary(summary, String(_skip_lend["name"]), String(_skip_lend["verb"]), String(_skip_lend["npc_id"]))
 		EventBus.time_skipped.emit(days, summary)
+	_skip_lend = {}
 	_skip_before = {}
 	EventBus.player_changed.emit()
 
