@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-20 [GFX-219] Villagers sweep, hoe, read and mind their stalls while they wait for you.
+- 2026-11-20 [C-402] Every chore a newcomer is offered is a fight they can win.
+- 2026-11-20 [PERF-026] The title music is prepared in the background, so the game starts faster.
+- 2026-11-20 [SIM-020] A marsh start has no empty weeks for a player who follows the hints.
+- 2026-11-20 [WU-578] Character creation and the title screen lose their last rough edges; the right stick steps attributes.
+- 2026-11-20 [WU-579] Next-steps hints are shortened at a word with an ellipsis instead of cut mid-sentence.
+- 2026-11-20 [GUIDE-274] Hard great-beast fights tell you the best way to raise your odds first.
+- 2026-11-20 [C-400] Forges, streams and ponds in every region have their own sound.
+- 2026-11-20 [GFX-218] Nights read as night: blue moonlight with lit windows, doors and lanterns.
+- 2026-11-20 [SIM-017] The first hour is measured in button presses.
+- 2026-11-20 [WU-576] Small sound and gamepad fixes: no coin on a failed trade, a Calendar button in the journal.
 - 2026-11-20 [WU-577] Waterfalls, forges and crowds sound louder as you walk up to them.
 - 2026-11-20 [C-385] Season tasks a newcomer can finish: spring petals are foraged in Qingshi, summer grass grows thicker, the autumn task asks for mugwort.
 - 2026-11-20 [PERF-023] Faster launch: sound effects are made the first time they play.

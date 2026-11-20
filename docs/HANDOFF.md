@@ -2,6 +2,12 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-20 12:10
+- PERF-026 landed without its before/after numbers (`--profile-startup`, region_load_times) because the headless run prints nothing;
+  they need a machine with a display. No task: the owner or a later local session can paste them.
+- Planner shots this run: all six start regions read well except Myriad Peaks Ridge (GFX-220) and the ridge's Next-steps card (WU-580).
+  The default screenshot run prints `Aborted` after its last shot (QA-238).
+
 ## First five minutes (WU-566)
 Shots at 1280x800 (title, creation, arrival card, hud_arrival, Elder Mo dialogue, explore menu, Wild Boar report, journal day 3). Observed:
 - Title: clear. Continue/Load greyed on a fresh install (good); the lower buttons sit over the pine silhouettes, readable.
