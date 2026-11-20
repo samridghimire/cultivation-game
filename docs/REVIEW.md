@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7b8a6c6
+Last reviewed commit: 155f0d4
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2294,3 +2294,18 @@ Last reviewed commit: 7b8a6c6
   - WU-572 (marker refresh on days_advanced, tested), PERF-021 (typed shared covers read in place; resolve never mutates
     `extra`; equivalence test), GFX-215 (glow sits at the place centre, freed with its place, hidden with Ambient effects)
     OK; I did not render GFX-214/215. C-398 test only. GUIDE-272, SIM-015, SIM-016 sim only.
+- 2026-11-20 (reviewer): reviewed 7b8a6c6..155f0d4 (PERF-017, WU-574, WU-565, GUIDE-273, C-399, GFX-216, SIM-018, PERF-022,
+  WU-575, GFX-217; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change, no new
+  binary assets. Nothing fixed, nothing filed.
+  - PERF-017/PERF-022 OK: GroundWarm.args_for builds the same arguments as world._draw (memory/disk keys match, test compares
+    baked pixels with a cold build); only pure pixel work and the tmp+rename write run on the worker. Notes: `_queued` is never
+    cleared, so a baked PNG later pruned (keep 120) is not re-warmed this session; a warm and a main-thread save of the same key
+    share one .tmp path (harmless, both write the same pixels). Next-season date math checked (days_left 0 = last day).
+  - GUIDE-273 OK: a reached layer goal keeps its plain label, so the HUD's done-goal banner (keyed by text) is not re-fired by
+    the changing day count. Only the unreached text varies.
+  - GFX-217 OK: time_skipped comes after days_advanced, and a running cycle suppresses the season tween and ends on the new
+    season's tint. Minor: the overlay uses the lighter 0.25 dim for any skip, even when the world plays no cycle (days < 1).
+  - WU-574 OK (A/B added to ui_accept/ui_cancel only when missing; real pad-driven tests). WU-575: the attribute "about" line
+    follows mouse hover only, so a gamepad player always sees the first attribute's text (cosmetic; focus never lands on
+    attribute rows). GFX-216 draw-only. C-399 data + test OK; its baseline refresh includes unexplained combat drift (worker
+    noted). WU-565, SIM-018 sim only. I did not render GFX-216/217 or WU-575.
