@@ -152,3 +152,50 @@ func test_lend_posts_a_thank_you_line() -> void:
 	assert_true(after.any(func(t: String) -> bool: return t.contains("You spend the day")), str(after))
 	for line: String in lines:
 		assert_false(after.has(line.replace("{player}", "")), line)
+
+
+func _liked_item(d: GameData, npc_id: String) -> String:
+	for item_id: String in d.items:
+		if Family.gift_taste(d, npc_id, item_id) == 1 and Family.gift_value(d, item_id) > 0:
+			return item_id
+	return ""
+
+
+func test_grow_closer_bag_shop_and_off() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var liked := _liked_item(d, "elder_mo")
+	assert_true(liked != "")
+	# No Friend yet: no line. A Friend with nothing liked in reach: no line.
+	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 30}), "")
+	var favor := {"elder_mo": 45}
+	var none := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor)
+	assert_true(none == "" or none.ends_with("/60)."), none)
+	c.add_item(liked, 1)
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor)
+	assert_true(line.begins_with("Grow closer: give "), line)
+	assert_true(line.contains(String(d.items[liked].get("name", liked))) and line.ends_with("(favor 45/60)."), line)
+	# Someone Close already: off.
+	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 45, _other_villager(d): 60}), "")
+
+
+func test_grow_closer_names_highest_friend() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var other := _other_villager(d)
+	for id: String in ["elder_mo", other]:
+		var item := _liked_item(d, id)
+		if item != "":
+			c.add_item(item, 1)
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 42, other: 52})
+	if line != "":
+		assert_true(line.contains(npcs[other].name) and line.ends_with("(favor 52/60)."), line)
+
+
+func _other_villager(d: GameData) -> String:
+	for id: String in d.npcs:
+		if id != "elder_mo":
+			return id
+	return ""

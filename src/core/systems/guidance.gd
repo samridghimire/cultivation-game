@@ -1156,6 +1156,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var friend := make_friend_hint(c, data, people, flags, region_id, today, favor)
 	if friend != "":
 		out.insert(mini(2, out.size()), friend)
+	else:
+		var closer := grow_closer_hint(c, data, people, region_id, favor)  # GUIDE-278
+		if closer != "":
+			out.insert(mini(2, out.size()), closer)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
@@ -2290,6 +2294,43 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 	if gift_best != "":
 		return "Become friends: give %s the %s they like (favor %d/%d)." % [people[gift_best].name, String(data.items[gift_item].get("name", gift_item)), gift_best_favor, goal]
 	return ""
+
+
+## GUIDE-278: once a villager is a Friend and nobody is a Close friend yet, "Grow closer: give X the Y they like (favor a/60)."
+## Names the highest-favor Friend (lending stops at lend_a_hand.max_favor) and a liked gift in the bag, else one the region's
+## merchant sells ("on sale here"). "" when no one is a Friend, someone is already Close, or no such gift is in reach.
+static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, favor: Dictionary) -> String:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	if tiers.size() < 3 or region_id == "":
+		return ""
+	var friend_min := int(tiers[1]["min"])
+	var close_min := int(tiers[2]["min"])
+	var best := ""
+	var best_favor := -1
+	for id: String in data.npcs:
+		var f := int(favor.get(id, 0))
+		if f >= close_min:
+			return ""
+		var npc: CharacterData = people.get(id)
+		if npc != null and npc.alive and f >= friend_min and f > best_favor:
+			best = id
+			best_favor = f
+	if best == "":
+		return ""
+	var npc: CharacterData = people[best]
+	var bag := ""
+	var shop := ""
+	for item_id: String in data.items:
+		if Family.gift_taste(data, best, item_id) != 1 or Family.gift_value(data, item_id) <= 0:
+			continue
+		if bag == "" and c.item_count(item_id) > 0 and Family.check_gift(c, npc, best_favor, item_id, data) == "":
+			bag = item_id
+		elif shop == "" and not merchant_place(data, region_id, item_id).is_empty():
+			shop = item_id
+	var item_id := bag if bag != "" else shop
+	if item_id == "":
+		return ""
+	return "Grow closer: give %s the %s they like%s (favor %d/%d)." % [npc.name, String(data.items[item_id].get("name", item_id)), "" if bag != "" else ", on sale here", best_favor, close_min]
 
 
 ## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
