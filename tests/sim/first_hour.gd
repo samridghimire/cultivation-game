@@ -180,7 +180,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2321,6 +2321,8 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		# SIM-016: the workshop is in the village; cook the cheapest dish the pack (or the stalls here) can fill.
 		_walk_to(gs, c, "qingshi_village")
 		return "cook" if gs.current_region == "qingshi_village" and _cook_cheapest(gs, c) else ""
+	if line.begins_with("Goal: Beat a great beast of your realm"):
+		return _hunt_great_beast(gs, c, day)
 	if line.begins_with("Goal: Walk to "):
 		# QA-237: the goal names the first hop out of the village; the player travels there.
 		_walk_to(gs, c, "misty_forest")
@@ -2391,6 +2393,51 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 
 
 const HINT_TEACHER_REACH_DAYS := 30
+## SIM-019: the Foundation road goal's beast is only walked to when it rates at least this and arrives within GREAT_WAIT_DAYS.
+const GREAT_MIN_ODDS := 0.7
+const GREAT_WAIT_DAYS := 30
+
+
+## SIM-019: acts on the great-beast road goal on its weekday: skips (like a player) when the fight rates under GREAT_MIN_ODDS or the
+## beast's day is too far; else waits, travels so as to arrive that day, fights it and walks home. "great_beast" when it was fought.
+static func _hunt_great_beast(gs: Node, c: CharacterData, day: int) -> String:
+	var clock: Node = gs.get_node("/root/GameClock")
+	var next := Guidance._next_great(c, gs.data, day, "", true)
+	var rid: String = next["region"]
+	if rid == "" or int(next["day"]) - day > GREAT_WAIT_DAYS:
+		return ""
+	var enemy_id := Wildlife.active_great_enemy(c, gs.data, rid)
+	if not gs.data.enemies.has(enemy_id) or Combat.win_chance(c, gs.data, gs.data.enemies[enemy_id]) < GREAT_MIN_ODDS:
+		return ""
+	var home: String = gs.current_region
+	var route := Guidance.route_days(c, gs.data, home, rid) if home != rid else 0
+	if route < 0 or route > int(next["day"]) - day:
+		return ""
+	var target: int = int(next["day"])
+	while c.alive and clock.total_days < target - route:
+		gs.cultivate(mini(7, target - route - clock.total_days), gs.hint_density())
+	if not c.alive:
+		return ""
+	if home != rid:
+		gs.travel(rid)
+		if gs.current_region != rid:
+			return ""
+	if gs.pending_encounter != "":
+		gs.choose_encounter(encounter_choice(c, gs.data, gs.data.encounters[gs.pending_encounter], gs.world_flags, gs.npcs))
+	if gs.pending_threat != "":
+		gs.face_threat(false)
+	if c.alive and clock.total_days < target:
+		gs.cultivate(target - clock.total_days, gs.hint_density())
+	var won := false
+	if c.alive:
+		for r: Dictionary in gs.roamers_here():
+			if int(r["slot"]) == Wildlife.GREAT_SLOT:
+				var held := c.great_beasts.size()
+				gs.engage_roamer(Wildlife.GREAT_SLOT)
+				won = c.great_beasts.size() > held
+	if c.alive and gs.current_region != home:
+		gs.travel(home)
+	return "great_beast" if won else "fight"
 
 
 ## SIM-016: cooks the cheapest known home meal the pack covers, buying missing ingredients from a merchant here. True when cooked.

@@ -24,6 +24,8 @@ func _run() -> void:
 	var seeds := int(args[0]) if args.size() > 0 and not args[0].begins_with("--") else 10
 	var days := int(args[1]) if args.size() > 1 and not args[1].begins_with("--") else 365
 	for a in args:
+		if a.begins_with("--days="):  # SIM-019: --days=N (default 365)
+			days = int(a.substr(7))
 		FirstHour.parse_start_arg(a)  # SIM-015: --start=<region_id> / --join=<sect_id>
 	var hints_only := args.has("--hints-only")
 	FirstHour.sect_report = true
@@ -117,7 +119,7 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 	var maxes: Array = []
 	print("Quiet stretches, %s policy, %d seeds, %d days" % ["hints" if FirstHour.hints_policy else ("curious" if curious else "default"), seeds, days])
 	for s in range(1, seeds + 1):
-		var log := {"day0": -1, "last_new": 0, "last": {}, "stretches": [], "new_days": []}
+		var log := {"checkpoints": {}, "day0": -1, "last_new": 0, "last": {}, "stretches": [], "new_days": []}
 		var on_days := func(n: int) -> void:
 			if gs.player == null or not gs.player.alive:
 				return
@@ -129,6 +131,9 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 				log["last"] = now
 				return
 			var rel: int = today - int(log["day0"])
+			for cp in [365, 730, 1095]:
+				if rel >= cp and not (log["checkpoints"] as Dictionary).has(cp):
+					log["checkpoints"][cp] = "%d.%d" % [gs.player.realm_index, gs.player.stage]
 			if rel > days:
 				return
 			if grew(log["last"], now):
@@ -164,6 +169,8 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 		print("  seed %2d: %3d new days, longest stretch %3d days" % [s, log["new_days"].size(), int(maxes[-1])])
 		var realm_now: String = "%d.%d" % [gs.player.realm_index, gs.player.stage] if gs.player != null else "?"
 		realms.append(realm_now)
+		if days > 365:
+			print("  seed %2d realm.stage at day: %s" % [s, str(log["checkpoints"])])
 		gs.end_session()
 	if FirstHour.hints_policy and not FirstHour.sect_log.is_empty():
 		var ms := 0

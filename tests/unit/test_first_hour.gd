@@ -311,3 +311,26 @@ func test_easy_fight_start_clause() -> void:
 	assert_eq(FirstHour.easy_fight_start("Easy fight: Wolves (mission board, Outer Hall)"), "mission")
 	assert_eq(FirstHour.easy_fight_start("Easy fight: Boar (explore Misty Forest)"), "explore")
 	assert_eq(FirstHour.easy_fight_start("Easy fight: Boar"), "")
+
+
+## SIM-019: the hints player acts on the great-beast road goal only when the fight rates >= 0.7, else skips like a player.
+func test_hints_player_hunts_great_beast_only_when_rated() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	var c: CharacterData = gs.player
+	c.realm_index = 2
+	var day: int = clock.total_days
+	var next := Guidance._next_great(c, gs.data, day, "", true)
+	assert_true(next["region"] != "", "a Foundation player has a beast to name")
+	var foe: Dictionary = gs.data.enemies[Wildlife.active_great_enemy(c, gs.data, String(next["region"]))]
+	var rated := Combat.win_chance(c, gs.data, foe)
+	var res: String = FirstHour._act_on_hint(gs, c, {}, "Goal: Beat a great beast of your realm: X walks Y on Z (today)", day)
+	if rated < FirstHour.GREAT_MIN_ODDS:
+		assert_eq(res, "", "a beast rated %.2f is skipped" % rated)
+		assert_eq(clock.total_days, day, "skipping spends no days")
+	else:
+		assert_true(res == "great_beast" or res == "fight", "a rated beast is fought: " + res)
+		assert_true(clock.total_days >= day, "the hunt moved the clock")
+	gs.end_session()
