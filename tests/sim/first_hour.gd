@@ -2273,11 +2273,11 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_talk_to_elder_mo(gs, "teach me how to cultivate")
 		var changed: bool = c.techniques.size() != before or bool(gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)) != flag_before
 		return "talk" if changed else ""
-	if line.begins_with("Make a friend: lend "):
+	if line.begins_with("Make a friend: lend ") or line.begins_with("Become friends: lend "):
 		# SIM-021: the line names the villager; lend them a hand (1 day) once the weekly cooldown allows.
 		for id: String in gs.data.npcs:
 			var npc: CharacterData = gs.npcs.get(id)
-			if npc != null and line.begins_with("Make a friend: lend %s a hand" % npc.name):
+			if npc != null and (line.begins_with("Make a friend: lend %s a hand" % npc.name) or line.begins_with("Become friends: lend %s a hand" % npc.name)):
 				var favor_before := int(gs.npc_favor.get(id, 0))
 				gs.lend_a_hand(id)
 				return "lend" if int(gs.npc_favor.get(id, 0)) > favor_before else ""

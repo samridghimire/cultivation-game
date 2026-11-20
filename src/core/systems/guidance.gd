@@ -1093,9 +1093,6 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var bitter := _bitter_rival_hint(c, data, people, flags, favor)
 	if bitter != "":
 		out.append(bitter)
-	var friend := make_friend_hint(c, data, people, flags, region_id, today, favor)  # FOLK-035
-	if friend != "":
-		out.append(friend)
 	if idle_nudge == "":
 		out.append(_cultivation_hint(c, data, density))
 	var method := _method_hint(c, data)
@@ -1153,6 +1150,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	for hint in [_dao_hint(c, data), _abode_hint(c, data, region_id, flags), _family_hint(c, data, people)]:
 		if hint != "":
 			out.append(hint)
+	# FOLK-036: the friend line sits in the first 4, after the leading goal/fight lines.
+	var friend := make_friend_hint(c, data, people, flags, region_id, today, favor)
+	if friend != "":
+		out.insert(mini(2, out.size()), friend)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
@@ -2241,27 +2242,52 @@ static func _workshop_hint(c: CharacterData, data: GameData) -> String:
 	return "Work at a workshop: about %d spirit stones a month as a Doctor, or learn a craft there." % income
 
 
-## FOLK-035: until any villager is an Acquaintance, name the best local villager to lend a hand to.
+## FOLK-035/FOLK-036: lead the player to a first Acquaintance ("Make a friend"), then to the Friend tier ("Become friends").
 static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary) -> String:
 	if today < 0 or region_id == "" or data.family.get("lend_a_hand", {}).is_empty():
 		return ""
-	var goal := int(data.family.get("acquaintance", {}).get("taste_hint_favor", 20))
-	var best := ""
-	var best_favor := -1
+	var acq_goal := int(data.family.get("acquaintance", {}).get("taste_hint_favor", 20))
+	var tiers: Array = data.family.get("folk_tiers", [])
+	var friend_goal := int(tiers[1]["min"]) if tiers.size() > 1 else acq_goal
+	var any_acq := false
 	for id: String in data.npcs:
 		var f := int(favor.get(id, 0))
-		if f >= goal:
+		if f >= friend_goal and friend_goal > acq_goal:
 			return ""
+		if f >= acq_goal:
+			any_acq = true
+	if friend_goal <= acq_goal:
+		if any_acq:
+			return ""
+		friend_goal = acq_goal
+	var goal := friend_goal if any_acq else acq_goal
+	var best := ""
+	var best_favor := -1
+	var gift_best := ""
+	var gift_best_favor := -1
+	var gift_item := ""
+	for id: String in data.npcs:
+		var f := int(favor.get(id, 0))
 		var npc: CharacterData = people.get(id)
-		if npc == null or Folk.lend_check(c, npc, data, flags, today, f, region_id) != "":
+		if npc == null or f >= goal:
 			continue
-		if f > best_favor:
-			best = id
-			best_favor = f
-	if best == "":
-		return ""
-	var days := int(data.family["lend_a_hand"].get("days", 1))
-	return "Make a friend: lend %s a hand (%s, %s, favor %d/%d)." % [people[best].name, Folk.lend_verb(data, best), Calendar.format_duration(days), best_favor, goal]
+		if Folk.lend_check(c, npc, data, flags, today, f, region_id) == "":
+			if f > best_favor:
+				best = id
+				best_favor = f
+		elif any_acq and f > gift_best_favor:
+			for item_id: String in c.inventory:
+				if Family.gift_taste(data, id, item_id) == 1 and Family.check_gift(c, npc, f, item_id, data) == "":
+					gift_best = id
+					gift_best_favor = f
+					gift_item = item_id
+					break
+	if best != "" and (not any_acq or best_favor >= gift_best_favor):
+		var days := int(data.family["lend_a_hand"].get("days", 1))
+		return "%s: lend %s a hand (%s, %s, favor %d/%d)." % ["Become friends" if any_acq else "Make a friend", people[best].name, Folk.lend_verb(data, best), Calendar.format_duration(days), best_favor, goal]
+	if gift_best != "":
+		return "Become friends: give %s the %s they like (favor %d/%d)." % [people[gift_best].name, String(data.items[gift_item].get("name", gift_item)), gift_best_favor, goal]
+	return ""
 
 
 ## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
