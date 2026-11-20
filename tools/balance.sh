@@ -55,6 +55,7 @@ fresh() {
 	run "first Foundation Establishment year, fighting sensed threats (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2 --threats=fight
 	run "first Core Formation year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 3
 	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
+	run "first_hour_presses (hints player, seeds 1-10, 12 months)" res://tests/sim/first_hour_presses.gd -- 10 12
 }
 CHECK=0
 while [[ $# -gt 0 ]]; do

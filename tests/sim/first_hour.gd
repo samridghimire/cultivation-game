@@ -176,6 +176,13 @@ static var body_art_log := {}
 static var far_qi_day := -1  # QA-151: day the current seed arrived at the far spot, -1 before
 static var far_qi_log := {"moved": 0, "month": [], "road_days": []}
 const FAR_QI_MIN_SAVED := 30
+## SIM-017: the hints player's menu presses (see PRESS_COST) and the first day and press count of each milestone, for
+## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
+static var press_log := {"presses": 0, "first": {}}
+## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
+const TRAVEL_PRESSES := 3
+const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "first_technique", "first_breakthrough", "sect_joined"]
 
 
 ## PERF-004: unit tests that only read a run's result share one run per (seed, months, curious, no_help, wait, flags).
@@ -211,6 +218,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 	bus.clear_history()
 	var out := {"layer_day": {}, "sect_day": -1, "rank_day": -1, "month_lines": [], "injuries": 0, "player": c, "kinds": [], "kind_sets": [], "stones": [], "realms": [], "first_win_day": -1, "first_style_day": -1, "first_win_enemy": "", "breaks": [], "bottleneck_day": {}, "waited_days": 0, "road": [], "contribution": [], "bottleneck_stones": -1, "month_days": []}
 	bounty_log["seen"] = {}
+	press_log = {"presses": 0, "first": {}}
 	_teach_rec = {"style_day": -1, "source": "", "bouts": 0, "mastered_day": -1, "chats": 0}
 	out["teacher"] = _teach_rec
 	far_qi_day = -1
@@ -2114,6 +2122,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		if not c.alive:
 			break
 		var day: int = gs.get_node("/root/GameClock").total_days
+		var region_before: String = gs.current_region
 		hints_log["weeks"] += 1
 		var acted := ""
 		var acted_line := ""
@@ -2149,11 +2158,27 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var acted_key := RegEx.create_from_string("\\d+").sub(acted_line, "N", true).substr(0, 70)
 			(hints_log.get_or_add("acted_lines", {}) as Dictionary)[acted_key] = int((hints_log["acted_lines"] as Dictionary).get(acted_key, 0)) + 1
 			kinds[acted] = true
+			press_log["presses"] = int(press_log["presses"]) + int(PRESS_COST.get(acted, 3)) + (TRAVEL_PRESSES if gs.current_region != region_before else 0)
 			# An action that took less than the week leaves the rest of it to meditation.
 			var left: int = 7 - (gs.get_node("/root/GameClock").total_days - day)
 			if left > 0 and c.alive:
 				gs.cultivate(left, density)
+		note_milestones(gs, c)
 	return kinds
+
+
+## SIM-017: records the day and press count of each milestone the first time it holds.
+static func note_milestones(gs: Node, c: CharacterData) -> void:
+	var first: Dictionary = press_log["first"]
+	var held := {"first_stage": c.realm_index * 100 + c.stage > 0, "first_win": LifeStats.get_stat(c, "fights_won") > 0,
+		"first_technique": not c.techniques.is_empty(), "first_breakthrough": c.realm_index >= 1, "sect_joined": not c.is_rogue(), "first_friend": false, "friend_tier2": false}
+	for npc_id: String in gs.npc_favor:
+		var tier := Folk.tier_index(gs.data, int(gs.npc_favor[npc_id]))
+		held["first_friend"] = held["first_friend"] or tier >= 0  # the first tier (Acquaintance)
+		held["friend_tier2"] = held["friend_tier2"] or tier >= 1  # the second (Friend)
+	for m: String in MILESTONES:
+		if held[m] and not first.has(m):
+			first[m] = {"day": gs.get_node("/root/GameClock").total_days, "presses": int(press_log["presses"])}
 
 
 ## SIM-014: where an easy-fight line says to start: "bounty", "mission", "explore" or "" (GUIDE-269 trailing clause).

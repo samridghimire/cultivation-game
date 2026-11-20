@@ -1865,3 +1865,16 @@ Curious practiser: 10 seeds, 12 months
     10        3        4         4           588   34     1  173
   Medians: iron_fist level m3 3, m6 4, m12 5; first wolf win day 480 (3 seeds never); fights won 34, lost 2; QR3 day 229 (10/10 reached)
 
+
+## first_hour_presses (hints player, seeds 1-10, 12 months)
+
+first hour in presses (hints player, seeds 1-10, 12 months)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             15             15             27             27
+  first_win              10/10              3             18             10             34
+  first_friend            9/10            130            141            328            362
+  friend_tier2            0/10          never              -          never              -
+  first_technique        10/10              3              3             10             10
+  first_breakthrough     10/10             15             15             27             27
+  sect_joined            10/10             15             15             27             27
+
