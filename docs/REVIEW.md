@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 294f182
+Last reviewed commit: b9b7f1a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2323,3 +2323,21 @@ Last reviewed commit: 294f182
   - WU-578 note: `_stick_held` is reset by any joypad motion event (e.g. left-stick drift) while the right stick is held,
     which can step more than one attribute per push. Cosmetic, not filed. C-385 data OK (balance --check not run by the
     worker; petal price 5 -> 2). SIM-017, SIM-020 sim only. I did not render GFX-218 or WU-578.
+- 2026-11-20 (reviewer, 3rd run): reviewed 294f182..b9b7f1a (PERF-026, C-402, GFX-219, SIM-019, QA-238, FOLK-035, WU-580,
+  WU-581, GUIDE-275, GUIDE-276; [PLAN]/[REVIEW] skipped). Main green (4464 tests). No BACKLOG/CHANGELOG edits by workers, no
+  SAVE_VERSION change (lend cooldowns live in world_flags `lend_<id>`), no new binary assets. One small fix, nothing filed.
+  - Fixed (FOLK-035): `make_friend_hint` was inserted under RIVAL-015's doc comment (moved back onto `_bitter_rival_hint`),
+    and its "1 day" was hard-coded instead of read from `lend_a_hand.days` like the NPC menu entry.
+  - FOLK-035 OK: lend_check covers family/region/cap/cooldown, gain clamped to max_favor, validation for verbs/yields.
+    Notes: lending skips chat's taste hint, letter visit bonus and renown greeting (chat still gives them); the spec's
+    sect-elder approachability check was not applied (worker noted).
+  - GUIDE-276 OK: prep clause only for Even (0.7-0.9) fights, added after `_keep_trial` so trimming/dedupe see plain text;
+    the buff probe restores `c.buffs`; no recursion (fighting_hint does not call fair_fights). Note: "practise X first" is
+    returned for nearly any player with an unmastered style, so most Even fights end in that clause.
+  - GUIDE-275 OK: `_with_manual_step` only touches the first-goals branch's HUD text; the done-goal banner reads the ladder,
+    not this text, so the changing "earn N more" does not re-fire it. Follow-up (d) left undone by the worker.
+  - GFX-219 OK (place `activity` reaches nodes through world.gd's generic `node.set`; working NPCs still follow daily spots
+    because `home` moves). WU-581 OK (pips from Folk.tier_index; redraw only on change). WU-580 OK (stick re-arm now needs
+    the right stick's Y axis back in the dead zone: resolves my WU-578 note). PERF-026 OK (title loop built on a worker,
+    `music_stream("calm")` waits for it; pruned ground bakes re-queued once done). C-402 test only; SIM-019, QA-238 sim only.
+    I did not render GFX-219 or WU-581.

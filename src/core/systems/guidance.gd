@@ -2241,7 +2241,6 @@ static func _workshop_hint(c: CharacterData, data: GameData) -> String:
 	return "Work at a workshop: about %d spirit stones a month as a Doctor, or learn a craft there." % income
 
 
-## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
 ## FOLK-035: until any villager is an Acquaintance, name the best local villager to lend a hand to.
 static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int, favor: Dictionary) -> String:
 	if today < 0 or region_id == "" or data.family.get("lend_a_hand", {}).is_empty():
@@ -2261,9 +2260,11 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 			best_favor = f
 	if best == "":
 		return ""
-	return "Make a friend: lend %s a hand (%s, 1 day, favor %d/%d)." % [people[best].name, Folk.lend_verb(data, best), best_favor, goal]
+	var days := int(data.family["lend_a_hand"].get("days", 1))
+	return "Make a friend: lend %s a hand (%s, %s, favor %d/%d)." % [people[best].name, Folk.lend_verb(data, best), Calendar.format_duration(days), best_favor, goal]
 
 
+## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.
 static func _bitter_rival_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, favor: Dictionary) -> String:
 	if c.rival == "" or not flags.get(Rivals.FIRST_MEETING_FLAG, false):
 		return ""
