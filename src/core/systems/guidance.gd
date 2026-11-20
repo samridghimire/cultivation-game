@@ -5979,7 +5979,9 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	prefer_fresh_foe(found, c)
 	_lift_away_fair(found)
 	_goal_way_fight(found, c, data, flags, today, region_id, rated < FAIR_FIGHT_MAX_RATED)
-	return _keep_trial(found, FAIR_FIGHTS_MAX)
+	var kept := _keep_trial(found, FAIR_FIGHTS_MAX)
+	_add_even_prep(kept, c, data, region_id, today, flags)
+	return kept
 
 
 ## GUIDE-271: true when `name` occurs in `text` as a whole name (not inside a longer word-name like "Mugwort Root").
@@ -6303,6 +6305,54 @@ static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameDa
 	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy), "label": label, "phrase": phrase})
 
 
+## GUIDE-276: an Even fight (FAIR_FIGHT_MIN_CHANCE <= chance < EASY_FIGHT_CHANCE) gets "prep", one short clause
+## naming the quickest way to tip it ("eat Boar Meat Stew first"), appended to its journal text; Easy fights and
+## fights with no step stay plain. The HUD appends "prep" to its short line (`with_worth`).
+static func _add_even_prep(entries: Array[Dictionary], c: CharacterData, data: GameData, region_id: String, today: int, flags: Dictionary) -> void:
+	for e: Dictionary in entries:
+		var chance := float(e.get("chance", 0.0))
+		if chance < FAIR_FIGHT_MIN_CHANCE or chance >= EASY_FIGHT_CHANCE or String(e.get("enemy_id", "")) == "":
+			continue
+		var clause := even_prep_clause(c, data, String(e["enemy_id"]), region_id, today, flags)
+		if clause != "":
+			e["prep"] = clause
+			e["text"] = "%s, %s" % [e["text"], clause]
+
+
+## GUIDE-276: "eat Boar Meat Stew first" | "buy Cloth Armor first" | "practise X first" | "learn a style first" for the
+## best step that tips a fight against `enemy_id`, "" when there is none (or the foe is unknown). At most 6 words.
+static func even_prep_clause(c: CharacterData, data: GameData, enemy_id: String, region_id: String, today: int, flags: Dictionary) -> String:
+	var foe: Dictionary = data.enemies.get(enemy_id, {})
+	if foe.is_empty():
+		return ""
+	if fighting_hint(c, data, region_id, {}, {}, flags, today) != "":
+		return "learn a style first"
+	var base := Combat.win_chance(c, data, foe)
+	var ids: Array = []
+	for m: Dictionary in Cooking.known_meals(c, data):
+		ids.append(String(m["output"]["item"]))
+	for item_id: String in ids:
+		if c.item_count(item_id) <= 0:
+			continue
+		var buff: Dictionary = data.items.get(item_id, {}).get("effects", {}).get("buff", {})
+		if buff.is_empty() or c.buffs.has(String(buff.get("id", ""))):
+			continue
+		var saved: Dictionary = c.buffs.duplicate(true)
+		Buffs.add_from_effect(c, buff)
+		var after := Combat.win_chance(c, data, foe)
+		c.buffs = saved
+		if after - base >= 0.02:
+			return "eat %s first" % data.items[item_id].get("name", item_id)
+	if c.realm_index == 1 and c.equipment.get("armor", "") == "":
+		var armor_id := affordable_armor(c, data, region_id)
+		if armor_id != "":
+			return "buy %s first" % data.items[armor_id]["name"]
+	var tech_id := Techniques.practice_target(c, data)
+	if tech_id != "" and Techniques.days_to_next(c, data, tech_id) > 0:
+		return "practise %s first" % data.techniques[tech_id].name
+	return ""
+
+
 ## GUIDE-274: a fight rated under this is told how to be won: the odds and the best next step (`prep_step`).
 const PREP_BELOW := 0.7
 
@@ -6389,10 +6439,12 @@ static func spoils_worth(data: GameData, enemy: Dictionary) -> String:
 ## GUIDE-240: the short HUD line plus " · hide 6" for a promoted fresh foe, when it stays within 60 characters.
 static func with_worth(short_line: String, entry: Dictionary) -> String:
 	var worth := String(entry.get("worth", ""))
-	if not bool(entry.get("fresh", false)) or worth == "":
-		return short_line
-	var full := "%s · %s" % [short_line, worth]
-	return full if full.length() <= 60 else short_line
+	var line := short_line
+	if bool(entry.get("fresh", false)) and worth != "":
+		var full := "%s · %s" % [short_line, worth]
+		line = full if full.length() <= 60 else short_line
+	var prep := String(entry.get("prep", ""))
+	return "%s, %s" % [line, prep] if prep != "" and short_line.begins_with("Fair fight") else line
 
 
 ## Spirit stones in a reward/effects dict's `items`, 0 when none.

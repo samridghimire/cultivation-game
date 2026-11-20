@@ -7855,3 +7855,47 @@ func test_walk_goal_skipped_when_first_hop_is_closed() -> void:
 	var d := data()
 	assert_true(not Guidance._walk_goal_blocked(c, d, d.start_region, "Walk to Misty Forest (3 days from Qingshi Village)"), "not at the start region")
 	assert_true(not Guidance._walk_goal_blocked(c, d, "myriad_peaks_ridge", "Cull the Mist Wolves"), "other goals are never blocked")
+
+
+## GUIDE-276: an Even fight gets one short step clause; Easy fights and "no step" fights stay plain.
+func _even_foe(c: CharacterData, d: GameData) -> String:
+	var ids: Array = d.enemies.keys()
+	ids.sort()
+	for id: String in ids:
+		var p := Combat.win_chance(c, d, d.enemies[id])
+		if p >= Guidance.FAIR_FIGHT_MIN_CHANCE and p < Guidance.EASY_FIGHT_CHANCE:
+			return id
+	return ""
+
+
+func test_even_fight_gets_prep_clause() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.equipment["armor"] = ""
+	c.add_item("spirit_stone", 500)
+	var foe := _even_foe(c, d)
+	if foe == "":
+		return
+	var clause := Guidance.even_prep_clause(c, d, foe, "fallen_star_market", 10, {})
+	if clause == "":
+		return
+	assert_true(clause.split(" ").size() <= 6, clause)
+	var entry := {"chance": Combat.win_chance(c, d, d.enemies[foe]), "enemy_id": foe, "text": "Fair fight: X (80 in 100)"}
+	var entries: Array[Dictionary] = [entry]
+	Guidance._add_even_prep(entries, c, d, "fallen_star_market", 10, {})
+	assert_eq(entry["prep"], clause)
+	assert_true(String(entry["text"]).ends_with(", " + clause), entry["text"])
+	assert_eq(Guidance.with_worth("Fair fight: X · 78%", entry), "Fair fight: X · 78%, " + clause)
+
+
+func test_easy_or_stepless_fight_gets_no_prep() -> void:
+	var d := data()
+	var c := new_character()
+	var easy := {"chance": 0.95, "enemy_id": "wild_boar", "text": "Easy fight: X (95 in 100)"}
+	var none := {"chance": 0.8, "enemy_id": "no_such_foe", "text": "Fair fight: Y (80 in 100)"}
+	var entries: Array[Dictionary] = [easy, none]
+	Guidance._add_even_prep(entries, c, d, "qingshi_village", 10, {})
+	assert_false(easy.has("prep"))
+	assert_false(none.has("prep"))
+	assert_eq(Guidance.with_worth("Easy fight: X · 95%", easy), "Easy fight: X · 95%")
