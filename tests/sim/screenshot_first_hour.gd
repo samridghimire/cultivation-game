@@ -255,6 +255,9 @@ func _start() -> void:
 				gs.last_travel_road_encounter = "road_lost_child"
 				hud.call("_on_encounter_choice_requested", "road_lost_child"), "close": func() -> void: pass})
 		return
+	if region_list.size() == 1 and OS.get_cmdline_user_args().has("--skip-dusk"):  # QA-238: works with one --region too
+		shots.append(_skip_night_shot(gs, region_list[0]))
+		special = true
 	if region_list.size() > 1:  # QA-187: one arrival shot per region, rebuilding the world between them
 		for id in region_list:
 			shots.append({"name": "region_" + id + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
@@ -270,13 +273,7 @@ func _start() -> void:
 				root.get_node("EventBus").clear_history()
 				_first_visit_card(gs, id), "close": func() -> void: pass})  # QA-203: no previous region's log lines
 			if OS.get_cmdline_user_args().has("--skip-dusk"):  # GFX-217
-				shots.append({"name": "skip_night_" + id, "open": func() -> void:
-					_rebuild_world(gs, id)
-					world.call("_on_time_skipped", 3, {})
-					world.get("_day_tween").kill()
-					world.call("_apply_day_phase", 0.5, 1.0)
-					hud.call("_show_time_skip", {"title": "Meditating", "days": 3, "lines": ["+0 qi"]})
-					, "settle": 20, "close": func() -> void: hud.get("_time_skip").close()})
+				shots.append(_skip_night_shot(gs, id))
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return
@@ -1081,3 +1078,14 @@ func _process(_d: float) -> bool:
 		opened = false
 		index += 1
 	return false
+
+
+## GFX-217: the world frozen at night behind a time-skip card.
+func _skip_night_shot(gs: Node, id: String) -> Dictionary:
+	return {"name": "skip_night_" + id, "open": func() -> void:
+		_rebuild_world(gs, id)
+		world.call("_on_time_skipped", 3, {})
+		world.get("_day_tween").kill()
+		world.call("_apply_day_phase", 0.5, 1.0)
+		hud.call("_show_time_skip", {"title": "Meditating", "days": 3, "lines": ["+0 qi"]})
+		, "settle": 20, "close": func() -> void: hud.get("_time_skip").close()}
