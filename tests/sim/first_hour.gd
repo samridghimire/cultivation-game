@@ -180,7 +180,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2209,6 +2209,11 @@ static func with_easy_fight_prefix(text: String) -> String:
 ## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
+	# SIM-021: the make-a-friend line sits past the HUD's 5-line cap; a player who knows the NPC menu's "Lend a hand" does it
+	# first each week it is on offer (a weekly kindness, 1 day), so the sim reads it uncapped and puts it first.
+	var friend := Guidance.make_friend_hint(c, gs.data, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor)
+	if friend != "":
+		lines.append(friend)
 	# GUIDE-275: the HUD's own goal text (GUIDE-271's skipped rows included), so a goal's named first step reaches the policy.
 	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
 	if goal != "":
@@ -2268,6 +2273,15 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_talk_to_elder_mo(gs, "teach me how to cultivate")
 		var changed: bool = c.techniques.size() != before or bool(gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)) != flag_before
 		return "talk" if changed else ""
+	if line.begins_with("Make a friend: lend "):
+		# SIM-021: the line names the villager; lend them a hand (1 day) once the weekly cooldown allows.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc != null and line.begins_with("Make a friend: lend %s a hand" % npc.name):
+				var favor_before := int(gs.npc_favor.get(id, 0))
+				gs.lend_a_hand(id)
+				return "lend" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
+		return ""
 	if line.begins_with("Use your"):
 		_use_qi_items(gs, c)
 		return "use_item" if c.inventory.size() != inv_before or c.item_count("spirit_stone") != stones_before else ""
