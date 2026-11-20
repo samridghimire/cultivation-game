@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-20 [WU-582] Explore menus open with a picture of the place you're about to search.
+- 2026-11-20 [C-403] More villagers are busy at their work in every start region.
+- 2026-11-20 [SIM-021] The test player follows the "Make a friend" hint (first acquaintance in about 6 weeks instead of 11 months).
+- 2026-11-20 [GFX-220] Myriad Peaks Ridge looks like a highland: alpine turf, warmer road, crags with shadow and light.
+- 2026-11-20 [GUIDE-276] Even fights tell you one thing to do first to tip the odds.
+- 2026-11-20 [GUIDE-275] Starting on the ridge, the hints always have something useful for you to do.
+- 2026-11-20 [WU-581] Heart pips beside a villager's name show how close a friend they are.
+- 2026-11-20 [WU-580] Goals in the Next steps card fit on two lines and end cleanly.
+- 2026-11-20 [FOLK-035] Lend villagers a hand with their work once a week to become friends.
+- 2026-11-20 [QA-238] Night screenshots work for a single region.
+- 2026-11-20 [SIM-019] The test player can now reach Foundation and fight its great beast.
 - 2026-11-20 [GFX-219] Villagers sweep, hoe, read and mind their stalls while they wait for you.
 - 2026-11-20 [C-402] Every chore a newcomer is offered is a fight they can win.
 - 2026-11-20 [PERF-026] The title music is prepared in the background, so the game starts faster.
