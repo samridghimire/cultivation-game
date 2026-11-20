@@ -1141,8 +1141,8 @@ static func _buy_qi_here(gs: Node, c: CharacterData) -> bool:
 	if spare <= 0:
 		return false
 	# Qi stops at the bottleneck, so only pills that fit in the room left are worth buying.
-	var realm: RealmDef = gs.data.realms[c.realm_index]
-	var room := realm.qi_required(realm.stage_count() - 1) - c.qi
+	# SIM-018: room to the bottleneck over every stage left (the offer's own measure), not just the last stage's cost.
+	var room := Cultivation.qi_to_bottleneck(c, gs.data)
 	var best_id := ""
 	var best_price := 0
 	var best_rate := 0.0
@@ -1155,6 +1155,9 @@ static func _buy_qi_here(gs: Node, c: CharacterData) -> bool:
 			if int(fx.get("qi", 0)) <= 0 or float(fx["qi"]) > room or fx.has("burn_lifespan") or int(fx.get("alignment", 0)) < 0 or not Items.merchant_sells(gs.data, item, p.get("stock_tags", []), int(p.get("max_price", 0))):
 				continue
 			var price := Guidance.merchant_price(c, gs.data, gs.current_region, item_id)
+			# SIM-018: only what the purse reaches and the character may use (the offer's own filters), else the best-rate pill hides the one the hint names.
+			if price > spare or Items.realm_block(c, gs.data, item_id) != "":
+				continue
 			var rate := float(fx["qi"]) / price
 			if rate > best_rate:
 				best_rate = rate
@@ -1347,6 +1350,43 @@ static func _take_listed_deed(gs: Node, c: CharacterData, done: Dictionary, fair
 				_fair_log(done)["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
 				kinds["deed_fight"] = true
 				return
+
+
+## SIM-018: the listed chore one short route away (<= FAR_DEED_MAX_DAYS, odds >= 0.7): travels there, does it, walks home.
+## True when the deed was done. The travel days pass on the clock like any other trip.
+const FAR_DEED_MAX_DAYS := 3
+
+
+static func _take_far_deed(gs: Node, c: CharacterData, done: Dictionary, fair: Array[Dictionary], kinds: Dictionary, today: int) -> bool:
+	if not c.alive:
+		return false
+	var home: String = gs.current_region
+	for f: Dictionary in fair:
+		if String(f["kind"]) != "deed" or float(f["chance"]) < 0.7 or int(f.get("days", 0)) < 1 or int(f["days"]) > FAR_DEED_MAX_DAYS:
+			continue
+		for route: Dictionary in gs.data.regions.get(home, {}).get("routes", []):
+			var away := String(route.get("to", ""))
+			if int(route.get("days", 1)) != int(f["days"]):
+				continue
+			for place: Dictionary in gs.data.regions.get(away, {}).get("places", []):
+				if String(place.get("type", "")) != "deed_giver" or String(place.get("deed_context", "")) == "":
+					continue
+				for deed in Deeds.available(gs.data, String(place["deed_context"]), gs.world_flags):
+					if not String(f.get("label", "")).begins_with("%s in " % place.get("display_name", "Chore")) or not String(f.get("label", "")).ends_with(": %s" % deed["name"]) or Deeds.check(c, gs.data, deed, gs.world_flags, today) != "":
+						continue
+					gs.travel(away)
+					if gs.current_region != away:
+						return false
+					var won_before := LifeStats.get_stat(c, "fights_won")
+					fight_origin = "deed"
+					gs.perform_deed(String(deed["id"]))
+					fight_origin = "other"
+					_fair_log(done)["taken"].append({"kind": "deed", "chance": float(f["chance"]), "won": LifeStats.get_stat(c, "fights_won") > won_before})
+					kinds["deed_fight"] = true
+					if c.alive:
+						_walk_to(gs, c, home)
+					return true
+	return false
 
 
 ## SIM-016: the fair-fight log in `done`, created on first use (the hints policy never reaches the curious player's setup).
@@ -2167,7 +2207,8 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_use_qi_items(gs, c)
 		return "use_item" if c.inventory.size() != inv_before or c.item_count("spirit_stone") != stones_before else ""
 	if line.begins_with("Buy ") and line.contains("spare stones"):
-		return "buy_qi" if _buy_qi_here(gs, c) else ""
+		var okq := _buy_qi_here(gs, c)
+		return "buy_qi" if okq else ""
 	if line.begins_with("Treat your injuries") and not c.injuries.is_empty():
 		var log := {"healed": 0}
 		_heal_before_fighting(gs, c, log)
@@ -2191,6 +2232,9 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 			var pick := Guidance.best_mission(c, gs.data, gs.world_flags)
 			if pick != "" and _mission_is_sane(gs, c, pick, done, day):
 				_take_one_mission(gs, c, done, kinds, [] as Array[Dictionary], pick, day)
+		# SIM-018: a chore listed "N days away" (N <= 3): travel there, do it, come home.
+		if kinds.is_empty() and _take_far_deed(gs, c, done, fair, kinds, day):
+			return "fight"
 		if not kinds.is_empty():
 			return "fight"
 		var won: int = LifeStats.get_stat(c, "fights_won")
