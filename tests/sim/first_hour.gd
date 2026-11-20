@@ -2150,6 +2150,10 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
+		if acted == "prepare":
+			# GUIDE-277: a week spent cultivating for a beast is a week with nothing else to do: idle, and counted apart.
+			hints_log["idle_weeks"] += 1
+			hints_log["prepare_weeks"] = int(hints_log.get("prepare_weeks", 0)) + 1
 		if acted == "":
 			hints_log["idle_weeks"] += 1
 			# GUIDE-272: what the Next-steps card said on an idle week (normalised), for --idle-dump.

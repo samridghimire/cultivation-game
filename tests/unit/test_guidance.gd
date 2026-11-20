@@ -7899,3 +7899,33 @@ func test_easy_or_stepless_fight_gets_no_prep() -> void:
 	assert_false(easy.has("prep"))
 	assert_false(none.has("prep"))
 	assert_eq(Guidance.with_worth("Easy fight: X · 95%", easy), "Easy fight: X · 95%")
+
+
+## GUIDE-277: with no great beast fit for a Qi Refining player, the row waits ("Later") and never shows as the HUD goal.
+func test_road_goal_great_beast_waits_when_none_fits_the_realm() -> void:
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var c := _after_ladder()
+	for rid: String in data().regions:
+		var def: Dictionary = data().regions[rid].get("roamers", {}).get("great", {})
+		if not def.is_empty() and not def.has("min_realm"):
+			c.great_beasts[String(def["enemy"])] = 1
+	c.great_beasts.clear()
+	var goals := Guidance.road_goals(c, data(), flags, 0)
+	for g in goals:
+		if String(g["text"]).contains("great beast"):
+			if String(g["text"]).begins_with("Later: "):
+				assert_true(bool(g.get("skip", false)))
+				assert_false(String(g["text"]).contains("Great "))
+				assert_true(String(g["text"]).contains(data().realms[2].name))
+
+
+## GUIDE-277: no listed fight is farther than FAR_FIGHT_MAX_DAYS while a nearer one is listed.
+func test_fair_fights_skip_far_fights() -> void:
+	var c := _fighter()
+	for rid: String in data().regions:
+		var fights := Guidance.fair_fights(c, data(), {}, c.age_days, rid)
+		var any_near := false
+		for f in fights:
+			any_near = any_near or (int(f["days"]) <= Guidance.FAR_FIGHT_MAX_DAYS and f["kind"] != "deed")
+		for f in fights:
+			assert_true(not any_near or int(f["days"]) <= Guidance.FAR_FIGHT_MAX_DAYS, String(f["text"]))

@@ -16,6 +16,8 @@ const ELDER_MO_FLAG := "talked_elder_mo"
 const BETTER_QI_RATIO := 1.5
 ## GUIDE-128: days a far meditation spot must save, net of the round trip, to lead the Gather line with the trip.
 const FAR_QI_LEAD_DAYS := 30
+## GUIDE-277: an easy fight more road days away than this is not listed.
+const FAR_FIGHT_MAX_DAYS := 3
 const FAIR_FIGHTS_MAX := 3
 const FAIR_FIGHT_MAX_RATED := 8
 ## GUIDE-250: ratings the away search may always spend when home has no Fair entry (each rating is 40 simulated fights).
@@ -4756,9 +4758,12 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 	var best := _best_great(c, data, today)
 	var skip_great := false
 	var rate_note := ""
+	var no_beast_yet := false
 	if best.is_empty():
 		best = _next_great(c, data, today)
 		best["chance"] = -1.0
+		# GUIDE-277: no great beast of this realm yet (before Foundation): a goal nobody can act on waits.
+		no_beast_yet = not vet and c.great_beasts.is_empty()
 	var best_rid: String = best["region"]
 	var best_day: int = best["day"]
 	if best_rid != "":
@@ -4778,6 +4783,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 		if rumor != "":
 			great_text += ". Hunters say: " + rumor
 		great_text += rate_note
+	if no_beast_yet:
+		great_text = "Later: beat a great beast once you reach %s" % data.realms[2].name
+		skip_great = true
 	rows.append([great_text, vet or not c.great_beasts.is_empty(), skip_great and not vet and c.great_beasts.is_empty()])
 	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
 	var found := false
@@ -6002,6 +6010,15 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	# GUIDE-249: nothing but easy fights here: the next fair fight one road away.
 	if region_id != "" and not _has_fair_entry(found):
 		rated += _away_explore_fights(found, c, data, flags, today, region_id, maxi(FAIR_FIGHT_MAX_RATED - rated, FAIR_FIGHT_AWAY_RESERVE))
+	# GUIDE-277: a fight farther than a far deed's road is not offered while a nearer non-chore one is (nothing else: the list stays non-empty).
+	var near_left := false
+	for e: Dictionary in found:
+		if int(e.get("days", 0)) <= FAR_FIGHT_MAX_DAYS and String(e.get("kind", "")) != "deed":
+			near_left = true
+	if near_left:
+		for i in range(found.size() - 1, -1, -1):
+			if int(found[i].get("days", 0)) > FAR_FIGHT_MAX_DAYS:
+				found.remove_at(i)
 	found.sort_custom(fair_fight_before)
 	prefer_fresh_foe(found, c)
 	_lift_away_fair(found)

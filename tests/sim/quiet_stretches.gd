@@ -43,7 +43,7 @@ func _run() -> void:
 ## SIM-010: what the hints player did, and the Next-steps lines it could not act on most often.
 func _print_hints_log() -> void:
 	var log: Dictionary = FirstHour.hints_log
-	print("Hints player: %d weeks, %d meditated with nothing to act on; acted: %s" % [log["weeks"], log["idle_weeks"], str(log["acted"])])
+	print("Hints player: %d weeks, %d meditated with nothing to act on (%d of them preparing for a beast); acted: %s" % [log["weeks"], log["idle_weeks"], int(log.get("prepare_weeks", 0)), str(log["acted"])])
 	var rows: Array = []
 	for k: String in log["unmatched"]:
 		rows.append([k, int(log["unmatched"][k])])
