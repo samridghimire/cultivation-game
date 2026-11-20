@@ -8,10 +8,15 @@ extends SceneTree
 ## meditation is one jump), so a jump with no change counts all its days as quiet.
 ## Prints per policy: median and max stretch, new-day counts per month (median over seeds) and the
 ## three longest stretches with the actions of the months they sit in.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/quiet_stretches.gd -- [seeds] [days]  [--profile]
+## SIM-022: --breakdown also prints, per seed and as medians, the days and qi per activity (from the GameState action on
+## the call stack) from day 0 to Foundation (or the end of the run) and the days stuck at the Qi Refining peak.
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/quiet_stretches.gd -- [seeds] [days] [--profile] [--breakdown]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const SKIPPED_STATS: Array[String] = ["days_in_seclusion", "qi_gathered", "stones_earned"]
+const BREAKDOWN_KINDS: Array[String] = ["cultivate", "travel", "fights", "chores/work", "lend/social", "crafting", "injured/resting", "practise", "breakthrough", "events/waiting"]
+var _breakdown := false
+var _breakdown_rows: Array[Dictionary] = []
 
 
 func _initialize() -> void:
@@ -28,6 +33,7 @@ func _run() -> void:
 			days = int(a.substr(7))
 		FirstHour.parse_start_arg(a)  # SIM-015: --start=<region_id> / --join=<sect_id>
 	var hints_only := args.has("--hints-only")
+	_breakdown = args.has("--breakdown")
 	FirstHour.sect_report = true
 	for policy in ["default", "curious", "hints"]:
 		if hints_only and policy != "hints":
@@ -44,6 +50,8 @@ func _run() -> void:
 			print("PROFILE %s: %d ms per seed in all; Next-steps sources (ms per seed): %s" % [policy, (Time.get_ticks_usec() - started) / 1000 / maxi(seeds, 1), ", ".join(parts)])
 		if policy == "hints":
 			_print_hints_log()
+			if _breakdown:
+				_print_breakdown()
 	quit(0)
 
 
@@ -71,6 +79,54 @@ func _print_hints_log() -> void:
 		for i in mini(15, idle_rows.size()):
 			print("  idle x%d: %s" % [idle_rows[i][1], idle_rows[i][0]])
 	print("")
+
+
+## SIM-022: the spec's activity groups from the GameState function that spent the days.
+func _bucket(kind: String, _gs: Node) -> String:
+	var fn := kind.trim_prefix("other:")
+	if kind == "meditation":
+		return "cultivate"
+	if kind == "travel":
+		return "travel"
+	if kind == "fights" or fn == "face_threat" or fn == "_die_violently":
+		return "fights"
+	if fn.contains("clinic") or fn.contains("rest") or fn.contains("heal") or fn.contains("treat") or fn.contains("recover"):
+		return "injured/resting"
+	if fn.contains("practice") or fn.contains("practise"):
+		return "practise"
+	if fn.contains("breakthrough"):
+		return "breakthrough"
+	if fn.contains("craft") or fn.contains("brew") or fn.contains("forge") or fn.contains("cook") or fn.contains("refine") or fn.contains("inscribe"):
+		return "crafting"
+	if fn.contains("lend") or fn.contains("gift") or fn.contains("dialogue") or fn.contains("lesson") or kind == "lectures":
+		return "lend/social"
+	if kind == "work" or kind == "missions" or fn.contains("chore") or fn.contains("sell") or fn.contains("buy"):
+		return "chores/work"
+	return "events/waiting"
+
+
+func _print_breakdown() -> void:
+	print("Time breakdown (SIM-022): hints player, day 0 to Foundation or end of run; days / qi gained per activity")
+	var days_by: Dictionary = {}
+	var qi_by: Dictionary = {}
+	var peaks: Array = []
+	var misc := {}
+	for r: Dictionary in _breakdown_rows:
+		var parts: Array[String] = []
+		for k in BREAKDOWN_KINDS:
+			parts.append("%s %d/%d" % [k, int(r["days"].get(k, 0)), roundi(float(r["qi"].get(k, 0.0)))])
+			days_by[k] = days_by.get(k, []) + [int(r["days"].get(k, 0))]
+			qi_by[k] = qi_by.get(k, []) + [roundi(float(r["qi"].get(k, 0.0)))]
+		peaks.append(int(r["peak_days"]))
+		if OS.get_cmdline_user_args().has("--breakdown-raw"):
+			print("    raw: %s" % str(r["raw"]))
+		print("  seed %2d: %s | days at QR peak %d" % [r["seed"], ", ".join(parts), r["peak_days"]])
+	var med: Array[String] = []
+	for k in BREAKDOWN_KINDS:
+		med.append("%s %.0f/%.0f" % [k, _median(days_by.get(k, [])), _median(qi_by.get(k, []))])
+	print("  medians (days/qi): %s; days at QR peak %.0f" % [", ".join(med), _median(peaks)])
+	print("")
+	_breakdown_rows.clear()
 
 
 static func _median(values: Array) -> float:
@@ -148,9 +204,26 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 				log["new_days"].append(rel)
 				log["last_new"] = rel
 			log["last"] = now
+		var row := {"seed": s, "days": {}, "qi": {}, "peak_days": 0, "done": false, "raw": {}}
+		var last_qi := [gs.player.qi if gs.player != null else 0.0]
+		var on_breakdown := func(n: int) -> void:
+			if _breakdown and gs.player != null and not bool(row["done"]):
+				var raw := String(FirstHour._activity_of(get_stack()))
+				var kind := _bucket(raw, gs)
+				row["raw"][raw] = int(row["raw"].get(raw, 0)) + n
+				row["days"][kind] = int(row["days"].get(kind, 0)) + n
+				row["qi"][kind] = float(row["qi"].get(kind, 0.0)) + maxf(0.0, gs.player.qi - float(last_qi[0]))
+				if gs.player.realm_index == 1 and Cultivation.is_at_bottleneck(gs.player, gs.data):
+					row["peak_days"] += n
+				last_qi[0] = gs.player.qi
+				if gs.player.realm_index >= 2 or (int(log["day0"]) >= 0 and int(clock.total_days) - int(log["day0"]) >= days):
+					row["done"] = true
 		clock.days_advanced.connect(on_days)
+		clock.days_advanced.connect(on_breakdown)
 		var out: Dictionary = FirstHour.play(gs, clock, s, months, curious)
 		clock.days_advanced.disconnect(on_days)
+		clock.days_advanced.disconnect(on_breakdown)
+		_breakdown_rows.append(row)
 		var end_day: int = mini(days, clock.total_days - int(log["day0"])) if log["day0"] >= 0 else 0
 		if end_day > int(log["last_new"]):
 			log["stretches"].append({"start": log["last_new"], "end": end_day})
