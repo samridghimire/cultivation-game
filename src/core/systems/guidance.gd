@@ -4825,8 +4825,9 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 			great_text += ". Hunters say: " + rumor
 		great_text += rate_note
 	if no_beast_yet:
-		great_text = "Later: beat a great beast once you reach %s" % data.realms[2].name
 		skip_great = true
+		if best_rid == "":  # REVIEW: only when no great beast meets this realm; a Qi Refining beast that is just far off keeps its name
+			great_text = "Later: beat a great beast once you reach %s" % data.realms[2].name
 	rows.append([great_text, vet or not c.great_beasts.is_empty(), skip_great and not vet and c.great_beasts.is_empty()])
 	rows.append(["Finish a bounty", vet or LifeStats.get_stat(c, "bounties_done") >= 1])
 	var found := false

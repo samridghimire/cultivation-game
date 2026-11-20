@@ -128,3 +128,25 @@ func test_place_strip_shows_for_explore_looks() -> void:
 		assert_true(EncounterScene.backdrop_for_look(look) != "", "%s maps to a backdrop" % look)
 	menu.free()
 	src.free()
+
+
+class LongStripSource extends FakeSource:
+	func menu_scene_look() -> String:
+		return "cave"
+
+
+## REVIEW (WU-582): a long explore-site menu keeps the place strip's height free, so the panel still fits the screen.
+func test_long_menu_with_strip_leaves_room_for_it() -> void:
+	var vp := SubViewport.new()
+	vp.size = Vector2i(1280, 800)
+	_tree().root.add_child(vp)
+	var menu := ChoiceMenu.new()
+	vp.add_child(menu)
+	var src := LongStripSource.new()
+	vp.add_child(src)
+	menu.open_for(src)
+	for i in 3:
+		await _tree().process_frame
+	assert_true(menu.strip_visible())
+	assert_eq(menu._scroll.custom_minimum_size.y, 800.0 - ChoiceMenu.MENU_MARGIN - ChoiceMenu.STRIP_HEIGHT - 6.0)
+	vp.free()

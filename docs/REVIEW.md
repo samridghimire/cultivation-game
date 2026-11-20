@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: b9b7f1a
+Last reviewed commit: a27933a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2341,3 +2341,19 @@ Last reviewed commit: b9b7f1a
     the right stick's Y axis back in the dead zone: resolves my WU-578 note). PERF-026 OK (title loop built on a worker,
     `music_stream("calm")` waits for it; pruned ground bakes re-queued once done). C-402 test only; SIM-019, QA-238 sim only.
     I did not render GFX-219 or WU-581.
+- 2026-11-20 (reviewer, 4th run): reviewed b9b7f1a..a27933a (GFX-220, SIM-021, C-403, WU-582, GFX-221, FOLK-036, C-401, GUIDE-277,
+  WU-583, GFX-222, C-404, PERF-027 partial, SIM-022; [PLAN]/[REVIEW] skipped). Main green (4482 tests). No BACKLOG/CHANGELOG edits by
+  workers, no SAVE_VERSION change (GFX-221's `_skip_lend` is not saved), no new binary assets. Two small fixes, nothing filed.
+  - Fixed (WU-582): ChoiceMenu's `_fit_scroll` did not reserve the 96 px place strip, so a long explore-site menu could run
+    96 px past the screen bottom. The strip's height is now taken off the scroll room; test added.
+  - Fixed (GUIDE-277): the "Later: beat a great beast once you reach Foundation" row replaced the text whenever `_best_great`
+    was empty, though Qi Refining has its own great beasts (Cloud Crane, Old Tusker); a far-off one would have been mislabelled.
+    The row is still skipped, but "Later" only shows when `_next_great` finds no beast this realm can meet. In practice the
+    weekly beasts keep `_best_great` non-empty, so part (1) rarely fires; its unit test asserts only when "Later" appears.
+  - GFX-221 OK (overlay "always" flag only for lend summaries; player position restored on close; `_skip_lend` cleared on every
+    `_pass_time`). C-404 OK (thank-you pick hashes npc/day, so the shared rng stream is untouched; 1-3 lines validated).
+  - FOLK-036 OK: friend line inserted at index 2 before the merges; continues to the Friend tier via lend or a liked gift.
+    Worker-measured first_win worst day 90 (target 40) and the first_hour_presses baseline not refreshed: planner follow-up.
+  - C-401 OK (descriptions/blurbs validated, creation line from dominant root). WU-583 OK (strip width counted in
+    spread_labels). GFX-222, GFX-220 draw-only (ridge_turf uses its own seeded rng; ground cache VERSION bumped). C-403 data +
+    guard test (pond fisher deferred to QA-239/C-405). SIM-021, PERF-027, SIM-022 sim only. I did not render GFX-220/221/222 or WU-583.

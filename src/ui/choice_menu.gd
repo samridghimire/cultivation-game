@@ -223,7 +223,7 @@ func _rebuild() -> void:
 func _fit_scroll() -> void:
 	if not is_inside_tree():
 		return
-	var room := get_viewport_rect().size.y - MENU_MARGIN
+	var room := get_viewport_rect().size.y - MENU_MARGIN - (STRIP_HEIGHT + 6.0 if _strip.visible else 0.0)  # REVIEW: WU-582's place strip takes screen height too
 	_scroll.custom_minimum_size.y = minf(_buttons.get_combined_minimum_size().y, maxf(room, 160.0))
 	reset_size()  # WU-485: size the panel to its content (a menu opened after a taller one shrinks back)
 
