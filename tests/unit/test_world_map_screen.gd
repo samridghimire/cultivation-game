@@ -211,8 +211,9 @@ func test_explore_options_describe_foes_in_misty_forest() -> void:
 
 func test_foes_bbcode_colors_each_danger() -> void:
 	var text := WorldMapScreen.foes_bbcode([{"name": "Wolf", "danger": "Weak"}, {"name": "Tiger", "danger": "Deadly"}])
-	assert_true(text.contains("Wolf (Weak)") and text.contains("Tiger (Deadly)"))
+	assert_true(text.contains("Wolf (threat: Weak)") and text.contains("Tiger (threat: Deadly)"))
 	assert_true(text.contains("[color=#%s]" % UIStyle.danger_color("Deadly").to_html(false)))
+	assert_true(WorldMapScreen.foes_bbcode([{"name": "Boar", "danger": "Weak", "chance": 0.99}]).contains("Boar (Easy for you, 99%)"))
 	assert_eq(WorldMapScreen.foes_bbcode([]), "")
 
 

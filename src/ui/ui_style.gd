@@ -57,7 +57,7 @@ static func odds_text(c: CharacterData, data: GameData, enemy: Dictionary, letha
 
 ## odds_text for a known win `chance` (0..1).
 static func odds_wording(chance: float, lethal: bool) -> String:
-	return "%s, %d in 100%s" % [Combat.label_for_chance(chance), roundi(chance * 100.0), ", to the death" if lethal else ""]
+	return "%s, %d in 100%s" % [Combat.odds_word(chance), roundi(chance * 100.0), ", to the death" if lethal else ""]
 
 
 ## The color for a Combat.danger_label rating (white for anything else).

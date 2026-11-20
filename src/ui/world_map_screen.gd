@@ -569,7 +569,10 @@ static func foes_bbcode(foes: Array) -> String:
 	var parts := PackedStringArray()
 	for foe: Dictionary in foes:
 		var danger := String(foe["danger"])
-		parts.append("[color=#%s]%s (%s)[/color]" % [UIStyle.danger_color(danger).to_html(false), foe["name"], danger])
+		var note := "threat: %s" % danger
+		if foe.has("chance"):
+			note = "%s for you, %d%%" % [Combat.odds_word(float(foe["chance"])), roundi(float(foe["chance"]) * 100.0)]
+		parts.append("[color=#%s]%s (%s)[/color]" % [UIStyle.danger_color(danger).to_html(false), foe["name"], note])
 	return "" if parts.is_empty() else "You may meet: " + ", ".join(parts)
 
 

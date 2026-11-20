@@ -566,6 +566,12 @@ static func danger_label(c: CharacterData, data: GameData, enemy: Dictionary) ->
 	return label_for_chance(win_chance(c, data, enemy))
 
 
+## WU-584: the word for your odds ("Easy" where the threat rank says "Weak"), used wherever a win chance is shown.
+static func odds_word(chance: float) -> String:
+	var w := label_for_chance(chance)
+	return "Easy" if w == "Weak" else w
+
+
 ## The rating for a win chance: Weak >= 90%, Even >= 70%, Risky >= 50%, Dangerous >= 15%, else Deadly.
 static func label_for_chance(chance: float) -> String:
 	if chance >= 0.9:
