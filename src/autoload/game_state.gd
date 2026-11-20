@@ -109,7 +109,9 @@ var last_fight_hp: int = -1
 
 
 func _ready() -> void:
+	StartupLaps.lap("before GameState")
 	data = GameData.load_from_dir()
+	StartupLaps.lap("GameData load+validate")
 	for err in data.load_errors:
 		push_error("Data error: " + err)
 	GameClock.days_advanced.connect(_on_days_advanced)

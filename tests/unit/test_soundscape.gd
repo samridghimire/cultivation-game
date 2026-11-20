@@ -41,8 +41,8 @@ func test_invalid_ambience_is_rejected() -> void:
 
 func test_sounds_build_and_loops_loop() -> void:
 	for name in Soundscape.ACCENTS + ["step_snow", "step_dirt", "meditate_hum", "coin", "rustle", "splash"]:
-		assert_true(Audio.streams.has(name), name)
-		assert_true((Audio.streams[name] as AudioStreamWAV).data.size() > 0, name)
+		assert_true(Audio.RECIPES.has(name), name)
+		assert_true(Audio.sfx_stream(name).data.size() > 0, name)
 	for name in Soundscape.LOOPS:
 		var wav := Audio.ambience_stream(name)
 		assert_true(wav.data.size() > 0, name)

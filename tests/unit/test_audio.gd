@@ -4,9 +4,9 @@ extends TestCase
 
 func test_every_sfx_stream_exists() -> void:
 	for sfx_name in Audio.RECIPES:
-		assert_true(Audio.streams.has(sfx_name), sfx_name)
-		var wav: AudioStreamWAV = Audio.streams[sfx_name]
+		var wav: AudioStreamWAV = Audio.sfx_stream(sfx_name)
 		assert_true(wav.data.size() > 0, sfx_name)
+		assert_eq(wav.data, Audio.synth(Audio.RECIPES[sfx_name]).data, "lazy equals eager: " + sfx_name)
 
 
 func test_synth_is_deterministic() -> void:
@@ -35,8 +35,8 @@ func test_a_chime_does_not_cut_off_a_big_sound() -> void:
 	var held: Array = []
 	for p: AudioStreamPlayer in Audio._players:
 		held.append(p.stream)
-	assert_true(held.has(Audio.streams["lightning"]), "lightning still on a voice")
-	assert_true(held.has(Audio.streams["chime_danger"]), "chime on another voice")
+	assert_true(held.has(Audio.sfx_stream("lightning")), "lightning still on a voice")
+	assert_true(held.has(Audio.sfx_stream("chime_danger")), "chime on another voice")
 
 
 func test_music_streams_loop_and_are_deterministic() -> void:

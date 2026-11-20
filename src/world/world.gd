@@ -117,7 +117,9 @@ func _lap(step: String) -> void:
 
 
 func _ready() -> void:
+	StartupLaps.lap("-> world _ready")
 	_lap_t = Time.get_ticks_usec()
+	(func() -> void: StartupLaps.lap("world _ready..first frame")).call_deferred()
 	if not GameState.has_session():
 		GameState.rng.randomize()
 		GameState.start_session(CharacterFactory.create("Debug Disciple", GameState.data, GameState.rng))

@@ -92,9 +92,9 @@ var _amb_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	StartupLaps.lap("before Audio")
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	for sfx_name in RECIPES:
-		streams[sfx_name] = synth(RECIPES[sfx_name])
+	StartupLaps.lap("Audio start (sfx are lazy)")
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		p.bus = BUS if AudioServer.get_bus_index(BUS) != -1 else "Master"
@@ -124,6 +124,7 @@ func _ready() -> void:
 	EventBus.combat_finished.connect(func(_n: String, win: bool, _l: PackedStringArray) -> void: play("combat_win" if win else "combat_loss"))
 	EventBus.tribulation_endured.connect(func(_r: String, _res: Dictionary) -> void: play("lightning"))
 	get_viewport().gui_focus_changed.connect(func(_c: Control) -> void: play("focus"))
+	StartupLaps.lap("Audio rest (music, buses)")
 
 
 func _notification(what: int) -> void:
@@ -141,11 +142,18 @@ func _notification(what: int) -> void:
 			_amb_timer.paused = not _focused
 
 
+## PERF-023: an SFX is synthesized on first use and cached in `streams` (byte-identical to the old eager build).
+func sfx_stream(sfx_name: String) -> AudioStreamWAV:
+	if not streams.has(sfx_name):
+		streams[sfx_name] = synth(RECIPES[sfx_name])
+	return streams[sfx_name]
+
+
 func play(sfx_name: String) -> void:
-	if not _focused or _players.is_empty() or not streams.has(sfx_name):
+	if not _focused or _players.is_empty() or not RECIPES.has(sfx_name):
 		return
 	var voice := _free_voice()
-	voice.stream = streams[sfx_name]
+	voice.stream = sfx_stream(sfx_name)
 	voice.play()
 
 
@@ -260,8 +268,8 @@ func _on_accent_timer() -> void:
 	if _amb_accents.is_empty():
 		return
 	var accent: String = _amb_accents[_amb_rng.randi_range(0, _amb_accents.size() - 1)]
-	if _focused and streams.has(accent):
-		_amb_accent_player.stream = streams[accent]
+	if _focused and RECIPES.has(accent):
+		_amb_accent_player.stream = sfx_stream(accent)
 		_amb_accent_player.play()
 	_amb_timer.start(_amb_rng.randf_range(_amb_gap.x, _amb_gap.y))
 
@@ -317,7 +325,7 @@ static func synth_ambience(recipe: Dictionary, seed_value: int) -> AudioStreamWA
 
 
 func _on_message(_text: String, category: String) -> void:
-	if streams.has("chime_" + category):
+	if RECIPES.has("chime_" + category):
 		play("chime_" + category)
 
 

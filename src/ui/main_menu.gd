@@ -38,7 +38,9 @@ func _ready() -> void:
 	gap.custom_minimum_size = Vector2(0, 6)
 	box.add_child(gap)
 
-	var new_game := UIStyle.button("New Game", func(): get_tree().change_scene_to_file(CHARACTER_CREATION))
+	var new_game := UIStyle.button("New Game", func():
+		StartupLaps.lap("New Game pressed")
+		get_tree().change_scene_to_file(CHARACTER_CREATION))
 	box.add_child(new_game)
 	var continue_button := UIStyle.button(continue_label(), _continue)
 	continue_button.disabled = SaveManager.most_recent_living_slot() == ""
@@ -85,6 +87,8 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_load_screen))
 
 	(continue_button if not continue_button.disabled else new_game).grab_focus.call_deferred()
+	StartupLaps.lap("title menu built")
+	(func() -> void: StartupLaps.lap("title interactive (1st frame)")).call_deferred()
 
 
 func _open_settings() -> void:

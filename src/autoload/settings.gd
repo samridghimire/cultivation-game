@@ -54,6 +54,7 @@ func _ready() -> void:
 	_ensure_buses()
 	load_settings()
 	apply_all()
+	StartupLaps.lap("Settings")
 
 
 func get_value(key: String) -> Variant:
