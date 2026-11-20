@@ -73,6 +73,8 @@ static func shows_manual_mark(c: CharacterData, data: GameData, region_id: Strin
 
 func _draw() -> void:
 	super._draw()
+	if WorkProps.is_valid(activity):  # GFX-219: a raised hand inside the stall's own body, clear of the label
+		WorkProps.draw(self, activity, _work_frame, Vector2(size.x / 2.0 - 12.0, -size.y / 2.0 + 16.0), float(Sprites.scale()))
 	if festival_only != "":  # GFX-083: scalloped festival trim along the awning
 		FestivalStall.draw_scallops(self, Vector2(0, -size.y / 2.0), size.x, color)
 	if GameState.player != null and shows_manual_mark(GameState.player, GameState.data, GameState.current_region, display_name):
@@ -81,6 +83,10 @@ func _draw() -> void:
 		_draw_market_mark()
 
 
+## GFX-219: optional WorkProps activity (the stallholder's hand).
+@export var activity := ""
+var _work_t := 0.0
+var _work_frame := 0
 var _twinkle_t := 0.0
 var _twinkle_a := 1.0
 
@@ -93,6 +99,12 @@ static func twinkle_alpha(t: float, reduced: bool) -> float:
 
 
 func _physics_process(delta: float) -> void:
+	if WorkProps.is_valid(activity):
+		_work_t += delta
+		var f := WorkProps.frame_at(_work_t, 0.0, MotionFx.reduced())
+		if f != _work_frame:
+			_work_frame = f
+			queue_redraw()
 	if not shows_market_mark(open_days, rotating_stock, GameClock.total_days) or MotionFx.reduced():
 		return
 	_twinkle_t += delta

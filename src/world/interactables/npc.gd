@@ -55,6 +55,9 @@ var _lesson_bubble: EmoteBubble = null
 var _on_screen := true
 var _dir := "down"
 var _walk_frame := 0
+## GFX-219: the WorkProps activity from the def ("" = none); the villager stays at home while working.
+var activity := ""
+var _work_frame := 0
 ## Muted robes for NPCs without a sect, picked by hash(npc_id) (GFX-011).
 const CIVILIAN_ROBES := [Color("7d6a55"), Color("5f7a6a"), Color("7a5f6a"), Color("6a6f8a"), Color("8a7a4f"), Color("5a6b78")]
 
@@ -78,6 +81,10 @@ func _ready() -> void:
 	_rng.seed = h
 	_phase = float(absi(h) % 628) / 100.0
 	_wait = _rng.randf_range(1.0, 4.0)
+	if GameState.data != null and GameState.data.npcs.has(npc_id):
+		activity = String((GameState.data.npcs[npc_id] as Dictionary).get("activity", ""))
+		if not WorkProps.is_valid(activity):
+			activity = ""
 	EventBus.ui_modal_changed.connect(_on_modal_changed)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	GameClock.days_advanced.connect(_on_day_redraw)  # WU-482: the birthday marker
@@ -176,6 +183,18 @@ func _physics_process(delta: float) -> void:
 func breathe(delta: float) -> void:
 	_time += delta
 	_wait -= delta
+	if activity != "":  # GFX-219: working villagers keep to their spot and swing the prop
+		_wander = Vector2.ZERO
+		_wander_target = Vector2.ZERO
+		position = home
+		person_label_tick(delta, home)
+		var wf := WorkProps.frame_at(_time, _phase, MotionFx.reduced())
+		if wf != _work_frame or _dir != "down" or _walk_frame != 0:
+			_work_frame = wf
+			_dir = "down"
+			_walk_frame = 0
+			queue_redraw()
+		return
 	if _wait <= 0.0:
 		_wait = _rng.randf_range(3.0, 8.0)
 		_wander_target = Vector2.ZERO if _wander_target != Vector2.ZERO and _rng.randf() < 0.5 else Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(3.0, WANDER_RADIUS)
@@ -282,6 +301,8 @@ func draw_generated_art() -> bool:
 	var sh := Scenery.figure_shadow(tex_size, winter)
 	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
 	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
+	if activity != "":
+		WorkProps.draw(self, activity, _work_frame, Vector2(tex_size.x / 2.0, size.y / 2.0 - tex_size.y * 0.45), s)
 	return true
 
 

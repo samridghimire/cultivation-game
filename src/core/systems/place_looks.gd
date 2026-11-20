@@ -11,6 +11,8 @@ const KINDS := ["figure", "camp"]
 ## Explore-place looks (regions.json `look` on explore places); PixelPlace draws one picture for each.
 ## WU-552: backdrops only an encounter can ask for (not an explore place's look).
 const ENCOUNTER_SCENES := ["river"]
+## GFX-219: villager work activities (drawn by WorkProps in src/world).
+const ACTIVITIES: Array = ["sweep", "hoe", "fish", "read", "hawk", "chop", "sit"]
 const EXPLORE_LOOKS := ["cave", "woods", "ruins", "reeds", "ridge", "trail"]
 ## WU-506: the scene an encounter happens in: its own `scene`, else the explore place's look, else the region's
 ## `map.wild_look`, else "village". Unknown values are skipped. Pure.

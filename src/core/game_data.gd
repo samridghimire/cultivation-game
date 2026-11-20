@@ -700,6 +700,8 @@ func _validate_world() -> void:
 					if place.get("type", "") != "deed_giver":
 						load_errors.append("%s: look is only for deed_giver, explore, gather and secret_realm places" % who)
 					load_errors.append_array(PlaceLooks.errors(place["look"], who))
+			if place.has("activity") and not PlaceLooks.ACTIVITIES.has(String(place["activity"])):
+				load_errors.append("Region '%s' place '%s': unknown activity '%s' (use %s)" % [region["id"], place.get("display_name", ""), place["activity"], ", ".join(PlaceLooks.ACTIVITIES)])
 			if place.get("type", "") == "fishing" and (place.get("catch_table", []) as Array).is_empty():
 				load_errors.append("Region '%s' fishing place '%s' needs a catch_table" % [region["id"], place.get("display_name", "")])
 			load_errors.append_array(Fishing.validate_table(self, place.get("catch_table", []), "Region '%s' fishing place '%s'" % [region["id"], place.get("display_name", "")]))
@@ -815,6 +817,8 @@ func _validate_world() -> void:
 		if realm_index_of(npc.get("realm", "mortal")) < 0:
 			load_errors.append("NPC '%s' has unknown realm '%s'" % [npc["id"], npc.get("realm", "")])
 		load_errors.append_array(Folk.validate_spots(npc, self))
+		if npc.has("activity") and not PlaceLooks.ACTIVITIES.has(String(npc["activity"])):
+			load_errors.append("NPC '%s' has unknown activity '%s' (use %s)" % [npc["id"], npc["activity"], ", ".join(PlaceLooks.ACTIVITIES)])
 		if npc.has("birthday"):
 			var bd: Variant = npc["birthday"]
 			if not (bd is Dictionary) or not (bd.get("month") is int or bd.get("month") is float) or not (bd.get("day") is int or bd.get("day") is float) \

@@ -6,6 +6,25 @@ extends Interactable
 @export var hidden_by_flag := ""
 ## Optional look from regions.json (GFX-018, see PlaceLooks).
 @export var look := {}
+## GFX-219: optional WorkProps activity played beside the figure.
+@export var activity := ""
+var _work_t := 0.0
+var _work_frame := 0
+
+
+func _ready() -> void:
+	super._ready()
+	_work_t = WorkProps.phase_of(display_name)
+
+
+func _physics_process(delta: float) -> void:
+	if activity == "" or not WorkProps.is_valid(activity):
+		return
+	_work_t += delta
+	var f := WorkProps.frame_at(_work_t, 0.0, MotionFx.reduced())
+	if f != _work_frame:
+		_work_frame = f
+		queue_redraw()
 
 
 ## Named sprite per deed context before the generic place art, once a pack lands.
@@ -40,6 +59,8 @@ func draw_generated_art() -> bool:
 	var sh := Scenery.figure_shadow(tex_size, winter)
 	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
 	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
+	if WorkProps.is_valid(activity):
+		WorkProps.draw(self, activity, _work_frame, Vector2(tex_size.x / 2.0, size.y / 2.0 - tex_size.y * 0.45), s)
 	return true
 
 
