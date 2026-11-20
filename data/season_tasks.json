@@ -103,7 +103,7 @@
         [
           {"id": "autumn_eel", "text": "Land 2 Marsh Eels for the harvest soup.", "kind": "catch", "target": "marsh_eel", "count": 2},
           {"id": "autumn_dew", "text": "Gather 3 Dew Grass before the first frost.", "kind": "gather", "target": "dew_grass", "count": 3},
-          {"id": "autumn_moon", "text": "Join the Mid-Autumn Festival contest.", "kind": "contest", "target": "mid_autumn_festival", "count": 1}
+          {"id": "autumn_moon", "text": "Gather 2 Village Mugwort for the Mid-Autumn cakes.", "kind": "gather", "target": "village_mugwort", "count": 2}
         ],
         [
           {"id": "autumn_fox_y2", "text": "Hunt the Mist Fox that raids the granaries.", "kind": "hunt", "target": "mist_fox", "count": 1},

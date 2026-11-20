@@ -59,6 +59,10 @@ func test_log_card_grows_with_lines() -> void:
 	root.add_child(hud)
 	await _frames()
 	var panel: Control = hud.get("_log_panel")
+	# Start from an empty log: the start-day lines (a long forage hint wraps) would otherwise already fill the card.
+	(hud.get("_log") as RichTextLabel).clear()
+	(hud.get("_log_lines") as Array).clear()
+	(hud.get("_log_ids") as Array).clear()
 	hud.call("_on_message", "First line.", "info")
 	await _frames()
 	var one := panel.size.y
