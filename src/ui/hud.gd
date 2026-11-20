@@ -1890,7 +1890,7 @@ func _on_time_skipped(days: int, summary: Dictionary) -> void:
 
 func _show_time_skip(summary: Dictionary) -> void:
 	_showing_skip = summary
-	_time_skip.show_skip(summary)
+	_time_skip.show_skip(summary, DayLight.plays_cycle(int(summary.get("days", 0)), MotionFx.reduced(), bool(Settings.get_value("ambient_effects"))))
 	_update_modal()
 
 

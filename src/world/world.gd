@@ -192,7 +192,7 @@ func _build_season_tint() -> void:
 
 ## GFX-217: a multi-day skip plays quick dusk-night-dawn cycles on the tint (none when reduced or ambient is off).
 func _on_time_skipped(days: int, _summary: Dictionary) -> void:
-	if days < 1 or MotionFx.reduced() or not bool(Settings.get_value("ambient_effects")) or _season_tint == null:
+	if not DayLight.plays_cycle(days, MotionFx.reduced(), bool(Settings.get_value("ambient_effects"))) or _season_tint == null:
 		return
 	var cycles := DayLight.cycles_for(days)
 	var total: float = [1.6, 2.0, 2.2][cycles - 1]
@@ -203,7 +203,7 @@ func _on_time_skipped(days: int, _summary: Dictionary) -> void:
 	if _night_glow == null:
 		_night_glow = NightGlow.new()
 		add_child(_night_glow)
-	_night_glow.setup(_region.get("map", {}).get("landmarks", []))
+	_night_glow.setup(_region.get("map", {}).get("landmarks", []), _region.get("places", []))
 	var cycle_len := total / cycles
 	_day_tween = create_tween()
 	_day_tween.tween_method(_apply_day_phase.bind(cycle_len), 0.0, float(cycles) * cycle_len, cycle_len * cycles)

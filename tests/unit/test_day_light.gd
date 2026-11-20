@@ -60,3 +60,47 @@ func test_reduce_motion_never_changes_tint() -> void:
 	assert_true(world._day_tween == null)
 	world.free()
 	settings.set_value("reduce_motion", false)
+
+
+func test_night_is_blue_dusk_is_warm() -> void:
+	var n := DayLight.tint_at(0.5, Color.WHITE)
+	assert_true(n.b > n.r + 0.3 and n.b > n.g + 0.25)
+	var d := DayLight.tint_at(0.35, Color.WHITE)
+	assert_true(d.r > d.b)
+
+
+func test_plays_cycle_rule() -> void:
+	assert_true(DayLight.plays_cycle(3, false, true))
+	assert_false(DayLight.plays_cycle(0, false, true))
+	assert_false(DayLight.plays_cycle(3, true, true))
+	assert_false(DayLight.plays_cycle(3, false, false))
+
+
+func _lm(kind: String) -> Dictionary:
+	return {"kind": kind, "pos": [100, 100], "size": [40, 40]}
+
+
+func _pl(type: String) -> Dictionary:
+	return {"type": type, "pos": [200, 200], "size": [70, 60]}
+
+
+func test_night_glow_places_and_cap() -> void:
+	var g := NightGlow.new()
+	g.setup([_lm("house")], [_pl("workshop"), _pl("merchant"), _pl("explore")])
+	assert_eq(g.spot_count(), 4)
+	var many: Array = []
+	for i in 60:
+		many.append(_pl("clinic"))
+	g.setup([], many)
+	assert_eq(g.spot_count(), 40)
+	g.free()
+
+
+func test_overlay_dim_follows_cycle() -> void:
+	var o := TimeSkipOverlay.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(o)
+	o.show_skip({"title": "Resting", "days": 3, "lines": []}, false)
+	assert_true(absf(o._dim.color.a - 0.45) < 0.001)
+	o.show_skip({"title": "Resting", "days": 3, "lines": []}, true)
+	assert_true(absf(o._dim.color.a - 0.25) < 0.001)
+	o.queue_free()

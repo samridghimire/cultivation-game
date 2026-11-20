@@ -276,7 +276,7 @@ func _start() -> void:
 					world.get("_day_tween").kill()
 					world.call("_apply_day_phase", 0.5, 1.0)
 					hud.call("_show_time_skip", {"title": "Meditating", "days": 3, "lines": ["+0 qi"]})
-					, "settle": 20, "close": hud.get("_time_skip").close})
+					, "settle": 20, "close": func() -> void: hud.get("_time_skip").close()})
 			if OS.get_cmdline_user_args().has("--great"):  # GFX-060: and a close-up of the great roamer
 				shots.append({"name": "great_" + id, "open": func() -> void: _great_closeup(id), "close": func() -> void: pass})
 		return

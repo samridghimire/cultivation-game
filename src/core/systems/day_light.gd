@@ -6,8 +6,8 @@ extends RefCounted
 ## [phase, multiply colour] keyframes, phase ascending.
 const KEYS: Array = [
 	[0.0, Color(1, 1, 1)],
-	[0.35, Color(1.0, 0.82, 0.68)],
-	[0.5, Color(0.45, 0.5, 0.75)],
+	[0.35, Color(1.0, 0.78, 0.6)],
+	[0.5, Color(0.38, 0.45, 0.78)],
 	[0.85, Color(0.95, 0.85, 0.85)],
 	[1.0, Color(1, 1, 1)],
 ]
@@ -40,3 +40,8 @@ static func is_night(phase: float) -> bool:
 ## 0..1 glow strength of lamps at `phase` (fades in at dusk, out at dawn).
 static func lamp_strength(phase: float) -> float:
 	return clampf(minf((phase - 0.3) / 0.15, (0.85 - phase) / 0.15), 0.0, 1.0)
+
+
+## GFX-218: whether a skip of `days` plays a day cycle at all (none when reduced motion or ambient effects are off).
+static func plays_cycle(days: int, reduced_motion: bool, ambient_effects: bool) -> bool:
+	return days >= 1 and not reduced_motion and ambient_effects

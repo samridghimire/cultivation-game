@@ -63,7 +63,7 @@ func _init() -> void:
 
 
 ## Show a TimeSkip.summarize() result: {title, days, lines}.
-func show_skip(summary: Dictionary) -> void:
+func show_skip(summary: Dictionary, plays_cycle: bool = false) -> void:
 	if _tween != null:
 		_tween.kill()
 	_title.text = "%s... %s" % [summary.get("title", "Time passes"), Calendar.format_duration(int(summary.get("days", 0)))]
@@ -72,7 +72,7 @@ func show_skip(summary: Dictionary) -> void:
 	_bar.value = 0.0
 	visible = true
 	# GFX-217: a lighter dim while the world plays its day cycle, so it shows through
-	_dim.color.a = 0.45 if (MotionFx.reduced() or not bool(Settings.get_value("ambient_effects"))) else 0.25
+	_dim.color.a = 0.25 if plays_cycle else 0.45
 	var seated := QI_TITLES.has(String(summary.get("title", "")))
 	_center.offset_top = 260.0 if seated else 0.0  # the panel drops below the meditating player
 	if seated:
