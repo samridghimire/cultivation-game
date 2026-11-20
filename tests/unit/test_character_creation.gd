@@ -126,3 +126,35 @@ func test_aura_matches_dominant_root_after_rerolls() -> void:
 		assert_true(scene._aura_colors.size() >= 1)
 		assert_eq(scene._aura_colors[0] in expected, true)
 	scene.queue_free()
+
+
+func test_grade_title_shows_element_count_word() -> void:
+	var cc: GDScript = load("res://src/ui/character_creation.gd")
+	var words := ["one", "two", "three", "four", "five"]
+	for g in data().root_grades:
+		var n := int(g["element_count"])
+		var t: String = cc.root_title_text(g)
+		assert_true(t.begins_with(String(g["name"]) + ": " + words[n - 1]), t)
+	assert_eq(cc.root_title_text({"name": "X", "element_count": 1}), "X: one element")
+
+
+func test_scroll_steps_highlighted_attribute_and_about() -> void:
+	var scene: Control = await _scene()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(scene._root_title.tooltip_text.contains("purer qi"), scene._root_title.tooltip_text)
+	assert_eq(scene._attr_index, 0)
+	var first_about: String = scene._attr_about.text
+	var ev := InputEventAction.new()
+	ev.action = "scroll_down"
+	ev.pressed = true
+	scene._unhandled_input(ev)
+	assert_eq(scene._attr_index, 1)
+	assert_true(scene._attr_about.text != first_about)
+	var up := InputEventAction.new()
+	up.action = "scroll_up"
+	up.pressed = true
+	scene._unhandled_input(up)
+	assert_eq(scene._attr_index, 0)
+	assert_eq(scene._attr_about.text, first_about)
+	assert_true(scene._begin_button.has_focus() or scene.get_viewport().gui_get_focus_owner() != null)
+	scene.queue_free()

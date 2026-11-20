@@ -28,10 +28,15 @@ const FIGURE_X := 158
 const ROCK_GROUND := 184
 ## Pines stay right of the menu column (backdrop x < 110 sits behind the plaque and buttons).
 const MENU_COLUMN_X := 110
+const FIGURE_H := 14
 const MOTE_COUNT := 5
 const MOTE_COLOR := Color("cfeeff")
-const ROBE := Color(0.82, 0.80, 0.70)
-const ROBE_FOLD := Color(0.62, 0.60, 0.53)
+const ROBE := Color(0.46, 0.52, 0.66)
+const ROBE_FOLD := Color(0.31, 0.36, 0.50)
+const ROBE_RIM := Color(0.74, 0.80, 0.92)
+const SKIN_RIM := Color(0.96, 0.88, 0.78)
+## Soft cloud ends: alpha ramps up over this many columns at each end of a cloud image (no hard edge when clipped).
+const CLOUD_FADE := 8
 const HAIR := Color(0.04, 0.04, 0.06)
 const SKIN := Color(0.88, 0.72, 0.58)
 const WINDOW_GLOW := Color(1.0, 0.80, 0.35)
@@ -138,6 +143,14 @@ static func cloud_image(index: int) -> Image:
 	for x in w:
 		if img.get_pixel(x, base_y).a > 0.0:
 			img.set_pixel(x, base_y + 1, Color(CLOUD.r * 0.8, CLOUD.g * 0.8, CLOUD.b * 0.9, 0.32))
+	# Fade both ends so a cloud sliding past the canvas edge never ends in a hard vertical bar.
+	for x in mini(CLOUD_FADE, w / 2):
+		var k := float(x + 1) / float(CLOUD_FADE + 1)
+		for y in h:
+			for xx in [x, w - 1 - x]:
+				var px := img.get_pixel(xx, y)
+				px.a *= k
+				img.set_pixel(xx, y, px)
 	return img
 
 
@@ -166,13 +179,16 @@ static func build_scene() -> Image:
 static func _paint_sky(img: Image) -> void:
 	for y in H:
 		for x in W:
-			# Three bands; a 4-row checker dither blends each boundary.
+			# Three bands; a 6-row in-between colour softens each boundary (no per-pixel checker, which read as scan lines).
 			var c := SKY_TOP
-			var d := (x + y) % 2 == 0
-			if y >= 100 or (y >= 96 and d):
+			if y >= 101:
 				c = SKY_LOW
-			elif y >= 52 or (y >= 48 and d):
+			elif y >= 95:
+				c = SKY_MID.lerp(SKY_LOW, 0.5)
+			elif y >= 53:
 				c = SKY_MID
+			elif y >= 47:
+				c = SKY_TOP.lerp(SKY_MID, 0.5)
 			img.set_pixel(x, y, c)
 
 
@@ -283,7 +299,7 @@ static func pavilion_floor_y() -> int:
 
 ## Top row of the seated figure (rock top is ROCK_GROUND - 7).
 static func figure_top() -> int:
-	return ROCK_GROUND - 7 - 10
+	return ROCK_GROUND - 7 - FIGURE_H
 
 
 ## A rock in the foreground (right of the menu column) with a cultivator seated in lotus pose, facing the pavilion.
@@ -294,17 +310,28 @@ static func _paint_rock_and_figure(img: Image) -> void:
 	_rect(img, fx - 9, ground - 2, 20, 4, rock)
 	_rect(img, fx - 6, ground - 5, 14, 3, rock)
 	_rect(img, fx - 3, ground - 7, 8, 2, rock)
-	var top := figure_top()
+	var top := figure_top()  # 11 wide x 14 tall, facing right (the moon side)
 	img.set_pixel(fx, top, HAIR)  # hair bun
 	_rect(img, fx - 1, top + 1, 3, 1, HAIR)
-	_rect(img, fx - 1, top + 2, 3, 1, SKIN)
-	_rect(img, fx - 2, top + 3, 5, 1, ROBE)  # shoulders
-	_rect(img, fx - 3, top + 4, 7, 4, ROBE)  # torso and folded arms
-	_rect(img, fx - 1, top + 5, 1, 3, ROBE_FOLD)  # robe fold
-	img.set_pixel(fx + 2, top + 2, HAIR)  # eye towards the pavilion
-	_rect(img, fx - 3, top + 8, 7, 1, ROBE_FOLD)  # crossed knees
-	_rect(img, fx - 3, top + 9, 7, 1, ROBE)  # wide base
-	img.set_pixel(fx, top + 8, ROBE)  # knot of the crossed legs
+	_rect(img, fx - 2, top + 2, 5, 1, HAIR)
+	_rect(img, fx - 2, top + 3, 1, 1, HAIR)
+	_rect(img, fx - 1, top + 3, 3, 1, SKIN)
+	img.set_pixel(fx + 2, top + 3, SKIN_RIM)
+	img.set_pixel(fx + 1, top + 3, HAIR)  # eye towards the pavilion
+	_rect(img, fx - 1, top + 4, 3, 1, SKIN)
+	img.set_pixel(fx + 2, top + 4, SKIN_RIM)
+	_rect(img, fx - 3, top + 5, 7, 1, ROBE)  # shoulders
+	img.set_pixel(fx + 4, top + 5, ROBE_RIM)
+	_rect(img, fx - 4, top + 6, 9, 4, ROBE)  # torso and sleeves
+	_rect(img, fx, top + 7, 1, 3, ROBE_FOLD)  # robe fold
+	for r in range(6, 10):
+		img.set_pixel(fx + 4, top + r, ROBE_RIM)  # 1-px moonlit rim
+	_rect(img, fx - 4, top + 10, 9, 1, ROBE_FOLD)  # hands in the lap
+	_rect(img, fx - 5, top + 11, 11, 2, ROBE)  # wide base
+	img.set_pixel(fx + 5, top + 11, ROBE_RIM)
+	img.set_pixel(fx + 5, top + 12, ROBE_RIM)
+	_rect(img, fx - 5, top + 13, 11, 1, ROBE_FOLD)  # crossed knees
+	img.set_pixel(fx, top + 12, ROBE_FOLD)  # knot of the crossed legs
 
 
 ## Positions (canvas pixels) of the rising qi motes after `time` seconds; fixed ones when `frozen`.
@@ -335,7 +362,13 @@ func _draw() -> void:
 		var tex := _cloud_images[i]
 		var y: int = _clouds[i]["y"]
 		var x := cloud_x(i, _cloud_shift)
-		draw_texture_rect(tex, Rect2(origin + Vector2(x, y) * s, Vector2(tex.get_size()) * s), false)
+		# Clip to the canvas so a cloud wrapping past the edge is cut cleanly (its faded end) instead of spilling over the margin.
+		var cw := tex.get_width()
+		var x0 := maxi(x, 0)
+		var x1 := mini(x + cw, W)
+		if x1 > x0:
+			var src := Rect2(x0 - x, 0, x1 - x0, tex.get_height())
+			draw_texture_rect_region(tex, Rect2(origin + Vector2(x0, y) * s, src.size * s), src)
 	# The pavilion window breathes (alpha 0.25-0.6 over 4 s; steady when motion is off).
 	var pulse := 0.4 if reduced_motion() else 0.425 + 0.175 * sin(_time * TAU / 4.0)
 	var wc := Vector2(PAVILION_X, pavilion_floor_y() - 3)

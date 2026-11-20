@@ -92,7 +92,7 @@ func test_pines_stay_right_of_the_menu_column() -> void:
 		assert_true(x >= TitleBackdrop.MENU_COLUMN_X, "pine at %d clear of the menu" % x)
 
 
-func test_seated_figure_is_at_least_7_by_10() -> void:
+func test_seated_figure_is_11_by_14() -> void:
 	var img := TitleBackdrop.build_scene()
 	var cols := [TitleBackdrop.ROBE, TitleBackdrop.ROBE_FOLD, TitleBackdrop.HAIR, TitleBackdrop.SKIN]
 	var r := Rect2i()
@@ -110,7 +110,7 @@ func test_seated_figure_is_at_least_7_by_10() -> void:
 					first = false
 				else:
 					r = r.expand(Vector2i(x, y))
-	assert_true(r.size.x + 1 >= 7 and r.size.y + 1 >= 10, "figure box %s" % str(r))
+	assert_true(r.size.x + 1 >= 11 and r.size.y + 1 >= 14, "figure box %s" % str(r))
 
 
 func test_motes_freeze_under_reduced_motion() -> void:
@@ -126,3 +126,31 @@ func test_motes_freeze_under_reduced_motion() -> void:
 	assert_eq(before.size(), TitleBackdrop.MOTE_COUNT)
 	Settings.set_value("reduce_motion", was)
 	bd.queue_free()
+
+
+## WU-578: no sky column flips colour every pixel for more than 2 consecutive rows (the old checker read as scan lines).
+func test_sky_boundaries_have_no_checker_dither() -> void:
+	var img := TitleBackdrop.build_scene()
+	var sky: Array[Color] = [TitleBackdrop.SKY_TOP, TitleBackdrop.SKY_MID, TitleBackdrop.SKY_LOW,
+		TitleBackdrop.SKY_TOP.lerp(TitleBackdrop.SKY_MID, 0.5), TitleBackdrop.SKY_MID.lerp(TitleBackdrop.SKY_LOW, 0.5)]
+	for x in TitleBackdrop.W:
+		for y in range(40, 108):
+			var a := img.get_pixel(x, y)
+			var b := img.get_pixel(x, y + 1)
+			var c := img.get_pixel(x, y + 2)
+			var all_sky := true
+			for px: Color in [a, b, c]:
+				var found := false
+				for k: Color in sky:
+					found = found or px.is_equal_approx(k)
+				all_sky = all_sky and found
+			if all_sky:
+				assert_false(a.is_equal_approx(c) and not a.is_equal_approx(b), "column %d row %d alternates" % [x, y])
+
+
+func test_cloud_ends_fade_out() -> void:
+	for i in TitleBackdrop.cloud_strips().size():
+		var img := TitleBackdrop.cloud_image(i)
+		for y in img.get_height():
+			assert_true(img.get_pixel(0, y).a <= 0.1, "left end of cloud %d is soft" % i)
+			assert_true(img.get_pixel(img.get_width() - 1, y).a <= 0.1, "right end of cloud %d is soft" % i)

@@ -15,6 +15,10 @@ var _root_box: VBoxContainer
 var _talent_box: HBoxContainer
 var _attr_box: GridContainer
 var _attr_about: Label  # WU-575: full description of the hovered/default attribute
+var _attr_rows: Array[Array] = []  # WU-578: per attribute, its 4 grid cells
+var _attr_descs: Array[String] = []
+var _stick_held: bool = false
+var _attr_index: int = 0  # the highlighted attribute row (mouse hover, right stick, PgUp/PgDn)
 var _aura: Control
 var _aura_colors: Array[Color] = []
 var _bars: Array[ProgressBar] = []
@@ -81,11 +85,15 @@ func _ready() -> void:
 	_attr_box.columns = 4
 	_attr_box.add_theme_constant_override("h_separation", 8)
 	_attr_box.add_theme_constant_override("v_separation", 4)
+	_attr_box.draw.connect(_draw_attr_highlight)
 	right.add_child(_attr_box)
 	_attr_about = UIStyle.label("", 13, Color(0.7, 0.7, 0.7))
 	_attr_about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_attr_about.custom_minimum_size = Vector2(0, 36)
 	right.add_child(_attr_about)
+	var pad_hint := UIStyle.label("(Right stick / PgUp-PgDn: read about each)", 12, Color(0.5, 0.5, 0.5))
+	pad_hint.name = "pad_hint"
+	right.add_child(pad_hint)
 
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
@@ -146,7 +154,10 @@ func _roll(animate: bool = true) -> void:
 	_candidate = CharacterFactory.create(_name_edit.text, data, GameState.rng, _selected_gender())
 	_bars.clear()
 	_refresh_portrait()
-	_root_title.text = String(SpiritualRoots.grade_for(_candidate.spiritual_roots, data).get("name", "Spiritual Root"))
+	var grade := SpiritualRoots.grade_for(_candidate.spiritual_roots, data)
+	_root_title.text = root_title_text(grade)
+	_root_title.tooltip_text = "Fewer elements, purer qi: %.1fx base" % float(grade.get("cultivation_multiplier", 1.0))
+	_root_title.mouse_filter = Control.MOUSE_FILTER_PASS
 	_clear(_root_box)
 	for e in data.root_elements:
 		var purity := int(_candidate.spiritual_roots.get(e["id"], 0))
@@ -186,6 +197,8 @@ func _roll(animate: bool = true) -> void:
 	_talent_box.add_child(badge)
 	_talent_box.add_child(UIStyle.label("%.2fx cultivation speed (average is 1.0x)" % mult, 14, Color(0.6, 0.6, 0.6)))
 	_clear(_attr_box)
+	_attr_rows.clear()
+	_attr_descs.clear()
 	for attr in data.attributes:
 		var desc := String(attr["description"])
 		var name_label := UIStyle.label(String(attr["name"]), 15)
@@ -201,19 +214,74 @@ func _roll(animate: bool = true) -> void:
 		hint.clip_text = true
 		hint.custom_minimum_size = Vector2(120, 0)
 		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for c: Control in [name_label, num, bar, hint]:
+		var idx := _attr_rows.size()
+		var cells: Array = [name_label, num, bar, hint]
+		for c: Control in cells:
 			c.tooltip_text = desc
 			c.mouse_filter = Control.MOUSE_FILTER_PASS
-			c.mouse_entered.connect(_show_about.bind(desc))
+			c.mouse_entered.connect(_select_attr.bind(idx))
 			_attr_box.add_child(c)
-	if data.attributes.size() > 0:
-		_show_about(String(data.attributes[0]["description"]))
+		_attr_rows.append(cells)
+		_attr_descs.append(desc)
+	_attr_index = clampi(_attr_index, 0, maxi(_attr_rows.size() - 1, 0))
+	_select_attr(_attr_index)
 	if animate:
 		_animate()
 
 
 func _show_about(text: String) -> void:
 	_attr_about.text = text
+
+
+## WU-578: "Earth Root: two elements" (the grade's element_count as a word).
+static func root_title_text(grade: Dictionary) -> String:
+	var words := ["", "one", "two", "three", "four", "five"]
+	var n := int(grade.get("element_count", 0))
+	var name := String(grade.get("name", "Spiritual Root"))
+	if n < 1 or n >= words.size():
+		return name
+	return "%s: %s element%s" % [name, words[n], "" if n == 1 else "s"]
+
+
+## Highlights attribute row `i` and shows its full description.
+func _select_attr(i: int) -> void:
+	if i < 0 or i >= _attr_descs.size():
+		return
+	_attr_index = i
+	_show_about(_attr_descs[i])
+	_attr_box.queue_redraw()
+
+
+func _draw_attr_highlight() -> void:
+	if _attr_index < 0 or _attr_index >= _attr_rows.size():
+		return
+	var cells: Array = _attr_rows[_attr_index]
+	var first: Control = cells[0]
+	var last: Control = cells[cells.size() - 1]
+	var r := Rect2(first.position - Vector2(4, 1), Vector2(last.position.x + last.size.x - first.position.x + 8, first.size.y + 2))
+	_attr_box.draw_rect(r, Color(UIStyle.ACCENT, 0.12))
+
+
+## Right stick / PageUp / PageDown step the highlighted attribute, so a pad player can read every "about" line.
+func _unhandled_input(event: InputEvent) -> void:
+	if _attr_rows.is_empty():
+		return
+	var step := 0
+	if event is InputEventJoypadMotion:  # one step per stick push, not one per motion event
+		var held := event.is_action_pressed("scroll_down") or event.is_action_pressed("scroll_up")
+		if not held:
+			_stick_held = false
+			return
+		if _stick_held:
+			return
+		_stick_held = true
+	if event.is_action_pressed("scroll_down"):
+		step = 1
+	elif event.is_action_pressed("scroll_up"):
+		step = -1
+	if step != 0:
+		_select_attr(clampi(_attr_index + step, 0, _attr_rows.size() - 1))
+		get_viewport().set_input_as_handled()
 
 
 ## WU-575: colour(s) of the strongest root(s): one colour, or two for two equal top roots.
