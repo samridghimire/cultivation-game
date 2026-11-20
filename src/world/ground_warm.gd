@@ -58,16 +58,19 @@ static func warm(region: Dictionary, rid: String, season: String) -> bool:
 		return false
 	var mem := key_of(a)
 	var disk_key := GroundCache.key([mem])
-	if _queued.has(disk_key) or GroundTiles.is_cached(mem) or GroundCache.has(disk_key):
+	# PERF-026: a queued bake blocks a repeat only while it runs; once done, a file the cache pruned is baked again.
+	if (_queued.has(disk_key) and not _queued[disk_key][0]) or GroundTiles.is_cached(mem) or GroundCache.has(disk_key):
 		return false
-	_queued[disk_key] = true
+	var done := [false]
+	_queued[disk_key] = done
 	GroundTiles._byte_to_float()  # lazy table: build it here, not racily on the worker
 	DirAccess.make_dir_recursive_absolute(GroundCache.dir)
 	var d := GroundCache.dir
 	GroundCache._reap()
 	GroundCache._tasks.append(WorkerThreadPool.add_task(func() -> void:
 		var img := GroundTiles.ground_image(a["base"], a["rid"], a["size_px"], a["flowers"], a["season"], a["style"], a["zones"], a["scree"], a["life"])
-		GroundCache._write(d, disk_key, img)))
+		GroundCache._write(d, disk_key, img)
+		done[0] = true))
 	return true
 
 

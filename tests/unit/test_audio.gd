@@ -98,3 +98,15 @@ func test_music_bus_follows_volume_setting() -> void:
 	Settings.set_value("music_volume", 0.4)
 	assert_almost_eq(AudioServer.get_bus_volume_db(idx), linear_to_db(0.4), 0.01)
 	Settings.set_value("music_volume", old)
+
+
+## PERF-026: the calm loop synthesized on a worker thread is byte-identical to the synchronous one, and the autoload's
+## own threaded start has been collected once the stream is asked for.
+func test_threaded_music_synthesis_matches_synchronous() -> void:
+	var out: Array = [null]
+	var recipe: Dictionary = Audio.MOODS["calm"]
+	var id := WorkerThreadPool.add_task(func() -> void: out[0] = Audio.synth_music(recipe, hash("calm")))
+	WorkerThreadPool.wait_for_task_completion(id)
+	assert_eq((out[0] as AudioStreamWAV).data, Audio.synth_music(recipe, hash("calm")).data)
+	assert_eq((Audio.music_stream("calm") as AudioStreamWAV).data, (out[0] as AudioStreamWAV).data)
+	assert_eq(Audio._music_task, -1)

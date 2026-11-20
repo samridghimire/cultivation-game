@@ -190,3 +190,22 @@ func test_warm_all_queues_next_season_only_near_its_end() -> void:
 	assert_true(not GroundWarm._queued.keys().has(winter_key), "20 days left: no Winter ground")
 	GroundCache.flush()
 	_end()
+
+
+## PERF-026: a baked PNG the cache pruned is baked again (the queued marker no longer blocks it once the task is done).
+func test_warm_rebakes_a_pruned_file() -> void:
+	_begin()
+	GroundWarm._queued.clear()
+	GroundTiles.clear_cache()
+	var d := data()
+	var rid := "fallen_star_market"
+	var region: Dictionary = d.regions[rid]
+	assert_true(GroundWarm.warm(region, rid, "Winter"))
+	GroundCache.flush()
+	assert_eq(_files().size(), 1)
+	for f in _files():
+		DirAccess.remove_absolute("%s/%s" % [TEST_DIR, f])  # what prune does
+	assert_true(GroundWarm.warm(region, rid, "Winter"), "re-queued after the file was pruned")
+	GroundCache.flush()
+	assert_eq(_files().size(), 1, "baked again")
+	_end()

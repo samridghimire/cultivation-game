@@ -112,7 +112,7 @@ func _ready() -> void:
 	_old_music_player = AudioStreamPlayer.new()
 	_old_music_player.bus = _music_player.bus
 	add_child(_old_music_player)
-	set_mood("calm")
+	_start_title_music()
 	_amb_rng.seed = 573
 	_amb_accent_player = AudioStreamPlayer.new()
 	_amb_accent_player.bus = AMBIENCE_BUS if AudioServer.get_bus_index(AMBIENCE_BUS) != -1 else "Master"
@@ -208,7 +208,39 @@ func set_mood(new_mood: String) -> void:
 	_fade_tween.chain().tween_callback(outgoing.stop)
 
 
+## PERF-026: the title's calm loop (~80 ms of synthesis) is built on a WorkerThreadPool task started at ready and starts
+## playing when done (silent for those ms, no hitch). Asking for the stream sooner (music_stream) waits for the task.
+var _music_task := -1
+var _music_task_out: Array = []
+
+
+func _start_title_music() -> void:
+	mood = "calm"
+	_music_task_out = [null]
+	var out := _music_task_out
+	var recipe: Dictionary = MOODS["calm"]
+	_music_task = WorkerThreadPool.add_task(func() -> void: out[0] = synth_music(recipe, hash("calm")))
+
+
+func _process(_delta: float) -> void:
+	if _music_task >= 0 and WorkerThreadPool.is_task_completed(_music_task):
+		_finish_title_music()
+
+
+func _finish_title_music() -> void:
+	WorkerThreadPool.wait_for_task_completion(_music_task)
+	_music_task = -1
+	_music_streams["calm"] = _music_task_out[0]
+	if mood == "calm" and _music_player != null and _music_player.stream == null and _old_music_player.stream == null:
+		_music_player.stream = _music_streams["calm"]
+		_music_player.volume_db = 0.0
+		_music_player.stream_paused = not _focused
+		_music_player.play()
+
+
 func music_stream(for_mood: String) -> AudioStreamWAV:
+	if _music_task >= 0 and for_mood == "calm":
+		_finish_title_music()
 	if not _music_streams.has(for_mood):
 		_music_streams[for_mood] = synth_music(MOODS[for_mood], hash(for_mood))
 	return _music_streams[for_mood]
