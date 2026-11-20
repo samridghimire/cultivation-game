@@ -20,7 +20,8 @@ func test_row_skipped_when_every_beast_deadly() -> void:
 	var row := rows[2]
 	assert_true(bool(row.get("skip", false)))
 	assert_false(bool(row["done"]))
-	assert_true(String(row["text"]).ends_with("now; come back stronger)"), row["text"])
+	# GUIDE-274: the note carries the odds word and a next step instead of "come back stronger".
+	assert_true(String(row["text"]).ends_with(")") and (String(row["text"]).contains("Deadly ") or String(row["text"]).contains("Dangerous ")), row["text"])
 	assert_false(Guidance.hud_goal_text(c, d, flags, "", 0).begins_with("Beat a great beast"))
 
 

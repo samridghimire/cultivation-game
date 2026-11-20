@@ -7745,3 +7745,74 @@ func test_wanted_item_folds_into_forage_line() -> void:
 	assert_true(kept, "a day where it is not")
 	assert_eq(Guidance.short_today_item("Mugwort by the path (the Stall buys it today), rain."), "Mugwort")
 	assert_eq(Guidance.short_today_item("Willow Branch and Mugwort by the path (the Stall buys Mugwort today)."), "Willow Branch +1")
+
+
+## GUIDE-274: prep_step names the best next step for a fight rated under PREP_BELOW.
+func _deadly_foe(c: CharacterData, d: GameData) -> String:
+	var ids: Array = d.enemies.keys()
+	ids.sort()
+	for id: String in ids:
+		if Combat.win_chance(c, d, d.enemies[id]) < 0.5:
+			return id
+	return ""
+
+
+func test_prep_step_none_when_odds_fine() -> void:
+	var d := data()
+	var c := new_character()
+	var weak := ""
+	var ids: Array = d.enemies.keys()
+	ids.sort()
+	for id: String in ids:
+		if Combat.win_chance(c, d, d.enemies[id]) >= Guidance.PREP_BELOW:
+			weak = id
+			break
+	assert_true(weak != "", "some foe is fair for a newcomer")
+	var step := Guidance.prep_step(c, d, weak, "qingshi_village", 10)
+	assert_eq(step["kind"], "")
+	assert_eq(step["text"], "")
+	assert_eq(Guidance.prep_step(c, d, "no_such_foe", "qingshi_village", 10)["kind"], "")
+
+
+func test_prep_step_styleless_player_gets_style_step() -> void:
+	var d := data()
+	var c := new_character()
+	c.realm_index = 1
+	c.techniques = {}
+	var foe := _deadly_foe(c, d)
+	assert_true(foe != "")
+	var step := Guidance.prep_step(c, d, foe, "fallen_star_market", 10)
+	var hint := Guidance.fighting_hint(c, d, "fallen_star_market")
+	if hint != "":
+		assert_eq(step["kind"], "style")
+		assert_true(String(step["text"]).contains(hint.trim_suffix(".")), step["text"])
+	assert_true(String(step["text"]).begins_with(Combat.label_for_chance(Combat.win_chance(c, d, d.enemies[foe]))), step["text"])
+
+
+func test_prep_step_meal_when_cookable() -> void:
+	var d := data()
+	var c := new_character()
+	var foe_name := _meal_foe_case(_village_data("clear"), c)
+	var foe := ""
+	for id: String in d.enemies:
+		if String(d.enemies[id].get("name", "")) == foe_name:
+			foe = id
+	assert_true(foe != "")
+	c.add_item("eel_congee", 1)
+	var step := Guidance.prep_step(c, d, foe, "qingshi_village", 10)
+	if Combat.win_chance(c, d, d.enemies[foe]) < Guidance.PREP_BELOW and Guidance.fighting_hint(c, d, "qingshi_village") == "":
+		assert_eq(step["kind"], "meal")
+		assert_true(String(step["text"]).contains("Eel Congee"), step["text"])
+
+
+func test_prep_step_is_pure_and_falls_back() -> void:
+	var d := data()
+	var c := new_character()
+	var foe := _deadly_foe(c, d)
+	var before := c.to_dict()
+	var a := Guidance.prep_step(c, d, foe, "qingshi_village", 10)
+	var b := Guidance.prep_step(c, d, foe, "qingshi_village", 10)
+	assert_eq(a, b)
+	assert_eq(c.to_dict(), before, "no side effects")
+	assert_true(["style", "meal", "armor", "practise", "meditate", "wait"].has(String(a["kind"])), str(a))
+	assert_true(String(a["text"]) != "")

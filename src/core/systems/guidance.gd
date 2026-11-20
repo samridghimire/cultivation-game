@@ -4717,7 +4717,8 @@ static func road_goals(c: CharacterData, data: GameData, flags: Dictionary, toda
 			odds = "; %s, %d in 100" % [Combat.label_for_chance(chance), roundi(chance * 100.0)]
 			if chance < 0.5:
 				skip_great = true
-				rate_note = " (%s now; come back stronger)" % Combat.label_for_chance(chance)
+				var prep := prep_step(c, data, Wildlife.active_great_enemy(c, data, best_rid), start, today, flags)
+				rate_note = " (%s)" % String(prep["text"]) if String(prep["text"]) != "" else " (%s now; come back stronger)" % Combat.label_for_chance(chance)
 				odds = ""
 		great_text += " (the next one: %s in %s, %s, %s%s)" % [Wildlife.display_name(data, Wildlife.active_great_enemy(c, data, best_rid), true), _region_name(data, best_rid), Calendar.weekday_name(best_day), when, odds]
 		var rumor := Wildlife.rumor_of(data, best_rid, c)
@@ -6247,6 +6248,50 @@ static func _rate_fight(found: Array[Dictionary], c: CharacterData, data: GameDa
 	if chance < FAIR_FIGHT_MIN_CHANCE:
 		return
 	found.append({"text": fight_text({"chance": chance}, label), "chance": chance, "kind": kind, "enemy": String(enemy.get("name", "")), "stones": stones, "short": short, "days": days, "walkup": kind == "roamer" and short.ends_with("roams here"), "enemy_id": String(enemy.get("id", "")), "worth": spoils_worth(data, enemy), "label": label, "phrase": phrase})
+
+
+## GUIDE-274: a fight rated under this is told how to be won: the odds and the best next step (`prep_step`).
+const PREP_BELOW := 0.7
+
+
+## GUIDE-274: the single best next step that raises the odds against `enemy_id`, as {kind, text, days}; kind "" (and no
+## text) when the odds are already >= PREP_BELOW or the foe is unknown. In order of preference: "style" (a fighting
+## style to learn here), "meal" (a buffing meal held or cookable now), "armor" (affordable here), "practise" (N days
+## to the next level of the combat style), "meditate" (N days to the next stage), else "wait" (an Easy fight to take
+## instead). `today` and `flags` (optional) let it see a bounty and today's wanderers. No side effects.
+static func prep_step(c: CharacterData, data: GameData, enemy_id: String, region_id: String, today: int = -1, flags: Dictionary = {}) -> Dictionary:
+	var foe: Dictionary = data.enemies.get(enemy_id, {})
+	if foe.is_empty():
+		return {"kind": "", "text": "", "days": 0}
+	var odds := Combat.win_chance(c, data, foe)
+	if odds >= PREP_BELOW:
+		return {"kind": "", "text": "", "days": 0}
+	var head := "%s %d" % [Combat.label_for_chance(odds), roundi(odds * 100.0)]
+	var style := fighting_hint(c, data, region_id, {}, {}, flags, today)
+	if style != "":
+		return {"kind": "style", "text": "%s: %s" % [head, style.trim_suffix(".")], "days": 0}
+	var meal := meal_before_fight(c, data, region_id, today, [{"enemy": String(foe.get("name", ""))}])
+	if meal != "":
+		return {"kind": "meal", "text": "%s: %s" % [head, meal.trim_suffix(".")], "days": 0}
+	if c.realm_index == 1 and c.equipment.get("armor", "") == "":
+		var armor_id := affordable_armor(c, data, region_id)
+		if armor_id != "":
+			return {"kind": "armor", "text": "%s: buy %s here for %d stones" % [head, data.items[armor_id]["name"], merchant_price(c, data, region_id, armor_id, _season_in(flags))], "days": 0}
+	var tech_id := Techniques.practice_target(c, data)
+	if tech_id != "":
+		var days := Techniques.days_to_next(c, data, tech_id)
+		if days > 0:
+			return {"kind": "practise", "text": "%s: practise %s for about %s" % [head, data.techniques[tech_id].name, Calendar.format_duration(days)], "days": days}
+	var stage_days := Cultivation.days_to_next_stage(c, data)
+	if stage_days > 0:
+		return {"kind": "meditate", "text": "%s: meditate to the next stage, about %s" % [head, Calendar.format_duration(stage_days)], "days": stage_days}
+	var easy := ""
+	if region_id != "" and today >= 0:
+		for f: Dictionary in fair_fights(c, data, flags, today, region_id):
+			if float(f.get("chance", 0.0)) >= EASY_FIGHT_CHANCE:
+				easy = String(f.get("short", "")) if String(f.get("short", "")) != "" else String(f.get("label", ""))
+				break
+	return {"kind": "wait", "text": "%s. Wait: an Easy fight is %s" % [head, easy] if easy != "" else "%s. Wait: come back stronger" % head, "days": 0}
 
 
 ## GUIDE-240: wins against one foe after which the HUD fight line looks for a fairer one.
