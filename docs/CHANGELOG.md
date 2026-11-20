@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-19 [WU-565] Shot pass: winter and summer villages render clean; a shot of the stall selling the first fighting manual.
+- 2026-11-19 [WU-574] Every HUD screen and Qingshi menu works on a gamepad; B now closes menus.
+- 2026-11-19 [PERF-017] The ground of regions one road away is prepared in the background, so first visits load faster.
+- 2026-11-19 [SIM-015] The hints sim plays sect disciples too (every month's duty met).
+- 2026-11-19 [GFX-214] Grass parts as you walk (petals in spring) and leaves fall from trees in autumn.
+- 2026-11-19 [GFX-215] Spirit springs and abodes with rich qi shimmer with rising motes and a breathing glow.
+- 2026-11-19 [PERF-021] Label placement shares one cover list per frame (partial).
+- 2026-11-19 [C-398] Guarded: there is an easy fight in every early region every day of the week after its chore.
+- 2026-11-19 [SIM-016] The hints sim takes bounties, easy fights, cooking and armor (idle weeks 34 -> 20 of 520).
+- 2026-11-19 [WU-573] The world has sound: wind, water, rain, marsh and market beds, birds, frogs and bells, footsteps, a meditation hum, and an Ambience volume slider.
 - 2026-11-19 [GUIDE-272] The hints sim finds half as many empty weeks (sim gaps fixed; no hint change needed).
 - 2026-11-19 [PERF-020] Label separation and crowd checks allocate nothing per frame (partial).
 - 2026-11-19 [WU-572] Goal markers drop a lapsed bounty or mission the morning it ends.
