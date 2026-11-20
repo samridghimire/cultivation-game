@@ -158,3 +158,35 @@ func test_warm_bakes_neighbour_ground_identical_to_cold() -> void:
 	assert_true(not GroundWarm.warm(region, rid, "Winter"), "disabled cache: no task")
 	GroundCache.enabled = true
 	_end()
+
+
+## PERF-022: near a season's end the next season's ground is queued after the current season's; far from it, not at all.
+func test_warm_all_queues_next_season_only_near_its_end() -> void:
+	_begin()
+	var d := data()
+	var rid := "qingshi_village"
+	var autumn_day := 7 * Calendar.DAYS_PER_MONTH + 5  # month 8, day 6: Autumn
+	var near := autumn_day + (Calendar.days_left_in_season(autumn_day) - 3)  # 3 days left
+	assert_eq(Calendar.days_left_in_season(near), 3)
+	GroundWarm._queued.clear()
+	GroundTiles.clear_cache()
+	GroundWarm.warm_all(d, rid, near)
+	var winter_key := GroundCache.key([GroundWarm.key_of(GroundWarm.args_for(d.regions[rid], rid, "Winter", float(Sprites.scale())))])
+	var keys := GroundWarm._queued.keys()
+	assert_true(keys.has(winter_key), "Winter ground of the current region is queued")
+	var autumn_key := GroundCache.key([GroundWarm.key_of(GroundWarm.args_for(d.regions[rid], rid, "Autumn", float(Sprites.scale())))])
+	for r: Dictionary in d.regions[rid].get("routes", []):
+		var to := str(r.get("to", ""))
+		var ak := GroundCache.key([GroundWarm.key_of(GroundWarm.args_for(d.regions[to], to, "Autumn", float(Sprites.scale())))])
+		if keys.has(ak):
+			assert_true(keys.find(ak) < keys.find(winter_key), "Autumn neighbours come before Winter")
+	assert_true(not keys.has(autumn_key), "the current region's current season is not queued")
+	GroundCache.flush()
+	GroundWarm._queued.clear()
+	GroundTiles.clear_cache()
+	var far := autumn_day + (Calendar.days_left_in_season(autumn_day) - 20)
+	assert_eq(Calendar.days_left_in_season(far), 20)
+	GroundWarm.warm_all(d, rid, far)
+	assert_true(not GroundWarm._queued.keys().has(winter_key), "20 days left: no Winter ground")
+	GroundCache.flush()
+	_end()

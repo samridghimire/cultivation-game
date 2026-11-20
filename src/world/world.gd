@@ -131,7 +131,7 @@ func _ready() -> void:
 	_build_decor()
 	_lap("props/decor")
 	_refresh_ambient()
-	get_tree().create_timer(2.0).timeout.connect(func() -> void: GroundWarm.warm_neighbours(GameState.data, GameState.current_region, _season))  # PERF-017
+	get_tree().create_timer(2.0).timeout.connect(func() -> void: GroundWarm.warm_all(GameState.data, GameState.current_region, GameClock.total_days))  # PERF-017
 	Settings.changed.connect(_on_setting_changed)
 	_lap("ambient")
 	_build_places()

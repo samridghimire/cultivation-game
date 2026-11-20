@@ -79,3 +79,19 @@ static func warm_neighbours(data: GameData, rid: String, season: String) -> int:
 		if data.regions.has(to) and warm(data.regions[to], to, season):
 			n += 1
 	return n
+
+
+## PERF-022: the season that follows the current one when it ends within this many days.
+const NEXT_SEASON_WITHIN := 7
+
+
+## Bakes the neighbours for the current season, then, when the season ends within NEXT_SEASON_WITHIN days, the next
+## season's ground of the current region and its neighbours (lowest priority: queued last). Returns tasks started.
+static func warm_all(data: GameData, rid: String, total_days: int) -> int:
+	var n := warm_neighbours(data, rid, Calendar.season_of(total_days))
+	if Calendar.days_left_in_season(total_days) > NEXT_SEASON_WITHIN:
+		return n
+	var next := Calendar.season_of(total_days + Calendar.days_left_in_season(total_days) + 1)
+	if data.regions.has(rid) and warm(data.regions[rid], rid, next):
+		n += 1
+	return n + warm_neighbours(data, rid, next)
