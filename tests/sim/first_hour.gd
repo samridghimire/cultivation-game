@@ -2371,6 +2371,22 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.contains("trial") and line.contains("open"):
 		_attempt_open_trial(gs, c, done, kinds)
 		return "trial" if kinds.has("trial") else ""
+	# SIM-020: lines a player reads and acts on that the policy ignored: sell what a stall would pay for, attend the elder's
+	# lecture at the hall, and meditate when the next stage is a few days of qi away.
+	if line.contains("would pay about") or line.begins_with("Good for trade"):
+		_sell_loot_here(gs, c, gs.current_region)
+		return "sell" if c.item_count("spirit_stone") > stones_before else ""
+	if line.contains("lectures this month") and not c.is_rogue():
+		var hall := Sects.home_region(gs.data, String(c.sect["id"]))
+		if hall != "":
+			_walk_to(gs, c, hall)
+		if Sects.check_lecture(c, gs.data, day) == "":
+			gs.attend_lecture()
+			return "lecture"
+		return ""
+	if line.begins_with("Gather ") and line.contains(" more qi to reach the next stage") and c.alive:
+		gs.cultivate(7, gs.hint_density())
+		return "meditate"
 	return "" if gs.get_node("/root/GameClock").total_days == day_before else "other"
 
 
