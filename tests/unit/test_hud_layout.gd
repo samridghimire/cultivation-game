@@ -141,7 +141,7 @@ func test_guide_card_caps_wrapped_lines() -> void:
 	var font: Font = (hud.get("_hint") as Label).get_theme_font("font")
 	var shown := HudScript.wrapped_lines((hud.get("_hint") as Label).text, font, 14, 316.0)
 	assert_true(shown.size() <= HudScript.GUIDE_MAX_LINES, str(shown))
-	assert_true((hud.get("_hint") as Label).text.contains("more in the journal (J)"))
+	assert_true((hud.get("_hint") as Label).text.contains("More in the Journal (J)"))
 	_done(hud)
 
 
@@ -169,16 +169,35 @@ func test_cut_entries_keeps_whole_entries() -> void:
 	var entries := PackedStringArray(["> Short one.", "> Look for the Manual: Iron Fist (Sold at Wandering Merchant stall near the old gate)", "> Third hint.", "> Fourth hint.", "> Fifth hint."])
 	var cut := HudScript.cut_entries(entries, font, 14, 316.0, 4)
 	assert_true(cut.size() <= 4 + 1)
-	assert_eq(cut[cut.size() - 1], "... more in the journal (J)")
+	assert_eq(cut[cut.size() - 1], "More in the Journal (J)")
 	assert_eq(cut[0], "> Short one.")
 	for e in cut:
 		assert_true(HudScript.wrapped_lines(e, font, 14, 316.0).size() <= 2, e)
 	var long := PackedStringArray(["> " + "alpha bravo charlie delta ".repeat(8), "> " + "echo foxtrot golf hotel ".repeat(8), "> third"])
 	var cut2 := HudScript.cut_entries(long, font, 14, 316.0, 3)
 	assert_true(cut2[0].ends_with("…"), cut2[0])
-	assert_eq(HudScript.wrapped_lines(cut2[0], font, 14, 316.0).size(), 1)
+	assert_true(HudScript.wrapped_lines(cut2[0], font, 14, 316.0).size() <= 2)
 	assert_true(cut2[0].trim_suffix("…").split(" ")[-1] in ["alpha", "bravo", "charlie", "delta"], "word boundary")
 	assert_eq(HudScript.cut_entries(PackedStringArray(["a", "b"]), font, 14, 316.0, 5), PackedStringArray(["a", "b"]))
+
+
+## WU-579: a trimmed entry ends at a word boundary with an ellipsis, never on a bare preposition; tiny leftovers drop.
+func test_cut_entries_trims_at_words_and_drops_scraps() -> void:
+	var font := ThemeDB.fallback_font
+	var three := PackedStringArray(["> Goal: reach the village gate before dusk falls.", "> Today: Headman Zhou has work today.", "> Headman Zhou has work today: Drive off the wolves that haunt the northern ridge and the old farm paths, then return to the headman for your reward and the gratitude of the whole village."])
+	var cut := HudScript.cut_entries(three, font, 14, 316.0, 5)
+	assert_true(HudScript.wrapped_lines(three[2], font, 14, 316.0).size() >= 4, "third entry wraps past the budget")
+	assert_true(cut.size() >= 3, str(cut))
+	var tail := cut[2]
+	assert_true(tail.ends_with("…") or tail.ends_with("..."), tail)
+	var last_word := tail.trim_suffix("…").trim_suffix("...").split(" ")[-1].to_lower()
+	assert_false(last_word in ["off", "to", "the", "of", "a"], last_word)
+	assert_true(three[2].begins_with(tail.trim_suffix("…").trim_suffix("...")), "a prefix at a word boundary")
+	var scrap := PackedStringArray(["> " + "alpha bravo charlie delta echo foxtrot golf hotel india juliet ".repeat(2), "> Two words but long enough to wrap onto a second line for sure yes indeed"])
+	var cut2 := HudScript.cut_entries(scrap, font, 14, 316.0, 3)
+	assert_eq(cut2[cut2.size() - 1], "More in the Journal (J)")
+	assert_eq(HudScript.trim_entry("> Go now", font, 14, 316.0, 1), "", "fewer than 3 words is dropped")
+	assert_false(HudScript.trim_entry("> Drive off the wolves from here", font, 14, 100.0, 1).ends_with("off…"))
 
 
 func test_key_bar_is_wide_enough_for_its_hints() -> void:  # GFX-065

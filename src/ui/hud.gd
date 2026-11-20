@@ -1118,6 +1118,7 @@ func _apply_line_cap() -> void:
 	var cut := cut_entries(_hint_full.split("\n"), font, 14, HINT_W, budget)
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
 		_hint.text = "\n".join(cut)
+		_hint.tooltip_text = "\n".join(_hint_lines)  # WU-579: a mouse player can still read the trimmed text
 	_sync_hint_icons()
 
 
@@ -1179,7 +1180,7 @@ func _sync_hint_icons() -> void:
 	if not _hint.visible and _hint.text == "":
 		return
 	var font := _hint.get_theme_font("font")
-	var line_h := font.get_height(14)
+	var line_h := maxf(font.get_height(14), _hint.get_line_height())
 	var y := 0.0
 	for e in _hint.text.split("\n"):
 		var icon := TextureRect.new()
@@ -2456,9 +2457,10 @@ static func overflow_cut(lines: PackedStringArray, max_lines: int) -> PackedStri
 	return out
 
 
-## WU-429: entry-aware cut. Whole entries only: one that does not fit entirely is dropped with everything after it
-## and the "... more" line closes the list. The first two entries always keep a first line (ellipsis at a word
-## boundary, never mid-word). Returns `entries` unchanged when everything fits in `max_lines`.
+## WU-429/WU-579: entry-aware cut. Whole entries are kept while they fit; the first entry that does not fit keeps
+## its leading wrapped lines when at least 3 words survive (ending "..." at a word boundary, never on a bare
+## preposition), else it is dropped, and so is everything after it. "More in the Journal (J)" closes a cut list
+## only when it fits `max_lines`. Returns `entries` unchanged when everything fits.
 static func cut_entries(entries: PackedStringArray, font: Font, font_size: int, width: float, max_lines: int) -> PackedStringArray:
 	var counts: Array[int] = []
 	var total := 0
@@ -2475,15 +2477,41 @@ static func cut_entries(entries: PackedStringArray, font: Font, font_size: int, 
 		if used + counts[i] <= room:
 			out.append(entries[i])
 			used += counts[i]
-		elif i < 2 and used < room:
-			out.append(ellipsize_first_line(entries[i], font, font_size, width))
-			used += 1
-		else:
-			break
-	if out.is_empty():
-		out.append(ellipsize_first_line(entries[0], font, font_size, width))
-	out.append("... more in the journal (J)")
+			continue
+		var left := room - used
+		if left >= 1:
+			var part := trim_entry(entries[i], font, font_size, width, left)
+			if part != "":
+				out.append(part)
+				used += maxi(1, wrapped_lines(part, font, font_size, width).size())
+		break
+	if used + 1 <= max_lines:
+		out.append("More in the Journal (J)")
+	elif out.is_empty():
+		out.append(trim_entry(entries[0], font, font_size, width, 1))
 	return out
+
+
+const _DANGLERS: PackedStringArray = ["a", "an", "the", "to", "of", "off", "on", "in", "at", "for", "from", "and", "or", "with", "by", "into", "up", "out", "your", "his", "her", "their", "is", "are", "be"]
+
+
+## The first `lines` wrapped lines of `text`, cut back to a word boundary and ended with "...". "" when fewer than
+## 3 words would remain (the leading "> " does not count as a word).
+static func trim_entry(text: String, font: Font, font_size: int, width: float, lines: int) -> String:
+	var ell := "…" if font.has_char(0x2026) else "..."
+	var wrapped := wrapped_lines(text, font, font_size, width)
+	var kept := " ".join(wrapped.slice(0, lines))
+	var words := Array(kept.split(" ", false))
+	while not words.is_empty():
+		var cand := " ".join(words).rstrip(",;:.-") + ell
+		var real := words.filter(func(w: String) -> bool: return w != ">" and w != "-")
+		if real.size() < 3:
+			return ""
+		var last := String(words[-1]).to_lower().rstrip(",;:.-")
+		if last not in _DANGLERS and wrapped_lines(cand, font, font_size, width).size() <= lines:
+			return cand
+		words.remove_at(words.size() - 1)
+	return ""
 
 
 ## First wrapped line of `text`, ended with "…" at a word boundary and still one line wide.
