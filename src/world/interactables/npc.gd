@@ -52,6 +52,9 @@ var _wait := 0.0
 var _modal_open := false
 var _bubble: EmoteBubble = null
 var _lesson_bubble: EmoteBubble = null
+const MAX_PIPS := 3
+var _pips := 0
+var _talk_dot := false
 var _on_screen := true
 var _dir := "down"
 var _walk_frame := 0
@@ -92,6 +95,8 @@ func _ready() -> void:
 	EventBus.ui_modal_changed.connect(_on_modal_for_bubble)
 	GameClock.days_advanced.connect(_on_day_for_bubble)
 	refresh_lesson_bubble.call_deferred()
+	EventBus.player_changed.connect(_on_player_for_pips)
+	refresh_pips.call_deferred()
 	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
 		GameClock.days_advanced.connect(_on_days_advanced)
 	var notifier := VisibleOnScreenNotifier2D.new()
@@ -155,6 +160,44 @@ func refresh_lesson_bubble() -> void:
 		_lesson_bubble = null
 	if _lesson_bubble != null and is_instance_valid(_lesson_bubble):
 		_lesson_bubble.visible = not has_bubble()
+
+
+## WU-581: heart pips (1-3) for a favor value: tier index + 1, capped at 3.
+static func pips_for(favor: int, data: GameData) -> int:
+	return clampi(Folk.tier_index(data, favor) + 1, 0, MAX_PIPS)
+
+
+## WU-581: re-reads pips and the speech dot; redraws the label only when they changed.
+func refresh_pips() -> void:
+	var pips := 0
+	var talk := false
+	if GameState.player != null and GameState.data != null:
+		var favor := int(GameState.npc_favor.get(npc_id, 0))
+		pips = pips_for(favor, GameState.data)
+		if pips > 0 and GameState.has_dialogue(npc_id) and not lesson_waiting():
+			talk = Npcs.talk_lesson_ready(Npcs.teachings(npc_id, GameState.player, GameState.data, favor))
+	if pips != _pips or talk != _talk_dot:
+		_pips = pips
+		_talk_dot = talk
+		_redraw_label()
+
+
+func _on_player_for_pips() -> void:
+	refresh_pips()
+
+
+func _draw_label_extras(at: Vector2, fade: float) -> void:
+	if _pips <= 0:
+		return
+	var px := 2
+	var tex := HudIcons.hearts(MAX_PIPS, _pips, px)
+	var h := float(5 * px)
+	var pos := Vector2(at.x, at.y - h - 1.0)
+	_label_node.draw_texture(tex, pos, Color(1, 1, 1, fade))
+	if _talk_dot and not has_bubble():
+		var c := pos + Vector2(tex.get_width() + 6.0, h / 2.0)
+		_label_node.draw_circle(c, 3.5, Color(0.95, 0.9, 0.8, fade))
+		_label_node.draw_arc(c, 3.5, 0.0, TAU, 12, Color(0.1, 0.08, 0.06, fade), 1.0)
 
 
 func _on_day_redraw(_days: int) -> void:

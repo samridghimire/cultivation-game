@@ -869,6 +869,11 @@ func _redraw_label() -> void:
 
 
 ## Draws the name label on the label layer (WU-278). Plate rule (WU-549): every label gets the soft plate.
+## WU-581: subclasses draw small markers after the name; `at` is the baseline just right of the name plate.
+func _draw_label_extras(_at: Vector2, _fade: float) -> void:
+	pass
+
+
 func _draw_label() -> void:
 	var font := ThemeDB.fallback_font
 	var text := label_text()
@@ -901,6 +906,7 @@ func _draw_label() -> void:
 	# A dark outline first so the name reads on any ground (GFX-015, GFX-052).
 	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 4, paint["outline"])
 	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, paint["fill"])
+	_draw_label_extras(Vector2(left + text_width + PLATE_PAD + 3.0, at.y), fade)
 
 
 ## Fill and outline colours of a name label at `fade` (0..1): a far label's fill moves toward a muted tone
