@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-20 [WU-577] Waterfalls, forges and crowds sound louder as you walk up to them.
+- 2026-11-20 [C-385] Season tasks a newcomer can finish: spring petals are foraged in Qingshi, summer grass grows thicker, the autumn task asks for mugwort.
+- 2026-11-20 [PERF-023] Faster launch: sound effects are made the first time they play.
+- 2026-11-20 [PERF-024] Name labels near pinned villagers are placed with less work per frame (partial).
+- 2026-11-20 [GFX-217] Long rests and meditation show days pass: dusk, a night with lit windows, dawn.
+- 2026-11-20 [WU-575] Character creation reads at a glance: aligned attribute rows and a glow in your root's colour.
+- 2026-11-20 [PERF-022] The next season's ground is prepared before the season turns.
+- 2026-11-20 [SIM-018] The hints sim finds no empty weeks in a default or sect start.
+- 2026-11-20 [GFX-216] A living title screen: drifting clouds, a meditating figure with rising qi, a glowing pavilion.
+- 2026-11-20 [C-399] Every early region has a simple home meal you can cook in your first week.
+- 2026-11-20 [GUIDE-273] Layer goals say what to do: meditate, about how many days.
 - 2026-11-19 [WU-565] Shot pass: winter and summer villages render clean; a shot of the stall selling the first fighting manual.
 - 2026-11-19 [WU-574] Every HUD screen and Qingshi menu works on a gamepad; B now closes menus.
 - 2026-11-19 [PERF-017] The ground of regions one road away is prepared in the background, so first visits load faster.
