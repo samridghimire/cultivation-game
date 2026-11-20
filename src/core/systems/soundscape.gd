@@ -35,13 +35,16 @@ static func validate(region: Dictionary) -> PackedStringArray:
 	return errs
 
 
-## WU-577: [{sound, pos: [x, y]}] for every place and landmark of a region that names a `sound`.
+## WU-577: [{sound, pos: [x, y]}] for every place and landmark of a region that names a `sound`. A timed place
+## (`open_days` / `festival_only`) is left out: it is heard only while it stands (the world adds its sound with it).
 static func place_sounds(region: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var entries: Array = []
 	entries.append_array(region.get("places", []))
 	entries.append_array(region.get("map", {}).get("landmarks", []))
 	for e: Dictionary in entries:
+		if e.has("open_days") or e.has("festival_only"):
+			continue
 		if e.has("sound") and PLACE_SOUNDS.has(String(e["sound"])) and e.has("pos"):
 			out.append({"sound": String(e["sound"]), "pos": e["pos"]})
 	return out

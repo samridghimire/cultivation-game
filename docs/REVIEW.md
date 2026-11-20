@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 155f0d4
+Last reviewed commit: 294f182
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2309,3 +2309,17 @@ Last reviewed commit: 155f0d4
     follows mouse hover only, so a gamepad player always sees the first attribute's text (cosmetic; focus never lands on
     attribute rows). GFX-216 draw-only. C-399 data + test OK; its baseline refresh includes unexplained combat drift (worker
     noted). WU-565, SIM-018 sim only. I did not render GFX-216/217 or WU-575.
+- 2026-11-20 (reviewer, 2nd run): reviewed 155f0d4..294f182 (PERF-024, PERF-023, C-385, WU-577, WU-576, SIM-017, GFX-218,
+  C-400, GUIDE-274, WU-579, WU-578, SIM-020; [PLAN]/[REVIEW] skipped). Main green (4439 -> 4440 tests). No BACKLOG/CHANGELOG edits by
+  workers, no SAVE_VERSION change, no new binary assets (amb_forge/amb_falls are synthesized). One fix, nothing filed.
+  - Fixed (WU-577 x C-400): `Soundscape.place_sounds` gave every place with a `sound` a permanent player, so the festival-only
+    Lantern Sweets Stall (amb_crowd) played crowd noise in Qingshi all year. Timed places (`open_days`/`festival_only`) are
+    now left out and get their sound as a child of the place node in `_make_place`, so it comes and goes with the stall.
+    Test added (fails on the old code).
+  - PERF-024 OK (rect cache refreshed for the moved label; golden-hash test). PERF-023 OK: no caller reads `streams`
+    directly any more; play/accents/chimes check RECIPES. WU-576 OK (coin only when stones or stock changed; storm keeps
+    one wind). GFX-218 OK (plays_cycle shared by HUD and World; also resolves my GFX-217 note). GUIDE-274 OK (prep_step is
+    pure; only used for chance < 0.5 great-beast notes). WU-579 OK (trim_entry keeps >= 3 words, no dangling preposition).
+  - WU-578 note: `_stick_held` is reset by any joypad motion event (e.g. left-stick drift) while the right stick is held,
+    which can step more than one attribute per push. Cosmetic, not filed. C-385 data OK (balance --check not run by the
+    worker; petal price 5 -> 2). SIM-017, SIM-020 sim only. I did not render GFX-218 or WU-578.

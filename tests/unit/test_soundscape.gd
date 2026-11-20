@@ -117,6 +117,28 @@ func test_world_builds_one_player_per_sounding_place() -> void:
 	gs.end_session()
 
 
+## REVIEW: a festival-only stall's sound plays only while the stall stands (not all year).
+func test_festival_stall_heard_only_during_its_festival() -> void:
+	var timed := {"id": "x", "places": [{"display_name": "S", "festival_only": "lantern_festival", "sound": "amb_crowd", "pos": [1, 1]}]}
+	assert_eq(Soundscape.place_sounds(timed).size(), 0)
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin Feng", gs.data, seeded_rng(), "male"))
+	gs.current_region = "qingshi_village"
+	var fixed := Soundscape.place_sounds(gs.data.regions["qingshi_village"]).size()
+	gs.world_events = []
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	assert_eq(root.get_tree().get_nodes_in_group("place_sound").size(), fixed, "no festival crowd off-festival")
+	world.free()
+	gs.world_events = [{"id": "lantern_festival", "region": "qingshi_village", "start_day": 0, "end_day": 99999, "done": false}]
+	world = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	assert_eq(root.get_tree().get_nodes_in_group("place_sound").size(), fixed + 1, "the stall's crowd while it stands")
+	world.free()
+	gs.end_session()
+
+
 func test_storm_on_a_mountain_has_one_wind_layer() -> void:
 	var layers: Array = Soundscape.ambience_for(_region("azure_peak"), "storm", "Summer")["layers"]
 	var winds := layers.filter(func(l: String) -> bool: return l.begins_with("amb_wind"))

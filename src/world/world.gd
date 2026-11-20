@@ -829,15 +829,20 @@ func _on_roamers_changed() -> void:
 ## WU-577: one positional loop per place/landmark that names a `sound`, on the Ambience bus.
 func _build_place_sounds() -> void:
 	for entry: Dictionary in Soundscape.place_sounds(_region):
-		var p := AudioStreamPlayer2D.new()
-		p.bus = Audio.AMBIENCE_BUS if AudioServer.get_bus_index(Audio.AMBIENCE_BUS) != -1 else "Master"
-		p.stream = Audio.ambience_stream(String(entry["sound"]))
+		var p := _new_place_sound(String(entry["sound"]))
 		p.position = _vec(entry["pos"])
-		p.max_distance = 320.0
-		p.attenuation = 1.5
-		p.add_to_group("place_sound")
 		add_child(p)
 		p.play()
+
+
+func _new_place_sound(sound: String) -> AudioStreamPlayer2D:
+	var p := AudioStreamPlayer2D.new()
+	p.bus = Audio.AMBIENCE_BUS if AudioServer.get_bus_index(Audio.AMBIENCE_BUS) != -1 else "Master"
+	p.stream = Audio.ambience_stream(sound)
+	p.max_distance = 320.0
+	p.attenuation = 1.5
+	p.add_to_group("place_sound")
+	return p
 
 
 func _build_places() -> void:
@@ -893,6 +898,10 @@ func _make_place(place: Dictionary) -> Interactable:
 		_merchant_spots.append(node.position + Vector2(node.size.x / 2.0 + 34.0, 12.0))
 	if place["type"] == "meditation":
 		_add_qi_glow(node, float(place.get("qi_density", 1.0)))
+	if (place.has("open_days") or place.has("festival_only")) and Soundscape.PLACE_SOUNDS.has(String(place.get("sound", ""))):
+		var snd := _new_place_sound(String(place["sound"]))  # REVIEW: a timed place is heard only while it stands
+		node.add_child(snd)
+		snd.play()
 	return node
 
 
