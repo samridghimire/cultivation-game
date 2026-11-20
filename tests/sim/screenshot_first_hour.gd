@@ -47,7 +47,7 @@ extends SceneTree
 ## QA-200: `-- --calendar-month=N` (calendar_month_N, month N of year 1).
 ## QA-215: `--focus=<id>` centres the camera on the villager whose npc_id is <id>, or the place whose display name slug is <id>
 ##   ("Reed Mat Scroll Seller" -> reed_mat_scroll_seller) for the arrival shot (hud_arrival / the region shot).
-## WU-582: `--explore=<place slug>[,<slug>...]` opens that explore place's menu (explore_<slug>.png; use --region= for its region).
+## WU-582: `--explore=<place slug>[,<slug>...]|all` (GFX-222: all = every explore place of the --region) opens that explore place's menu (explore_<slug>.png; use --region= for its region).
 ## WU-558: `--dialogue=<id>[,<id>...]` opens a story-event dialogue (dialogue_<id>.png), e.g. rival_first_meeting.
 ## WU-550: `--threat=<enemy_id>[,<id>...]` stages the sensed-foe prompt (threat_<id>.png; `--realm=<index>` sets the realm first);
 ##   `--encounter=<id>[,<id>...]` opens that encounter card (encounter_<id>.png) on the first day of its season (its `seasons`),
@@ -233,7 +233,10 @@ func _start() -> void:
 				hud.get("_choice_menu").close()})
 	for a in OS.get_cmdline_user_args():  # WU-582
 		if a.begins_with("--explore="):
-			for slug in a.substr(10).split(",", false):
+			var slugs: PackedStringArray = a.substr(10).split(",", false)
+			if slugs.has("all"):  # GFX-222: every explore place in the loaded region
+				slugs = _explore_slugs()
+			for slug in slugs:
 				var site := _find_explore_by_slug(slug)
 				if site == null:
 					push_warning("--explore: no explore place %s" % slug)
@@ -1053,6 +1056,17 @@ func _find_gather_site(site_name: String) -> Node:
 			return node
 	assert(false, "no %s in the world" % site_name)
 	return null
+
+
+func _explore_slugs() -> PackedStringArray:
+	var out := PackedStringArray()
+	var stack: Array[Node] = [world]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		stack.append_array(node.get_children())
+		if node.get_script() != null and String(node.get_script().resource_path).ends_with("explore_site.gd"):
+			out.append(String(node.get("display_name")).to_lower().replace(" ", "_").replace("'", ""))
+	return out
 
 
 func _find_explore_by_slug(slug: String) -> Node:

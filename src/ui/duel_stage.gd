@@ -898,6 +898,19 @@ static func cloud_shapes(rid: String, width: float, sky_h: float) -> Array:
 	return out
 
 
+## GFX-222: how far an explore place's backdrop kind pulls the strip's grass toward its own floor
+## (stone in a cave, mud among reeds, dust in ruins). Kinds not listed keep the region's grass.
+const LOOK_FLOORS := {"cave": [Color("585650"), 0.65], "reeds": [Color("3f4a36"), 0.5], "ruins": [Color("6a6558"), 0.45]}
+
+
+## The ground colour for a backdrop kind. Pure.
+static func ground_for_look(base: Color, kind: String) -> Color:
+	if not LOOK_FLOORS.has(kind):
+		return base
+	var f: Array = LOOK_FLOORS[kind]
+	return base.lerp(f[0], f[1])
+
+
 ## The current region's grass as a strip along the bottom (flat dark band when no region is loaded).
 func _draw_ground() -> void:
 	if size.x < 3.0:  # QA-232: drawn before the first layout, no ground texture to build yet
@@ -922,6 +935,7 @@ func _draw_ground() -> void:
 	var woods := look_kind == "pines"
 	if woods:  # GFX-182: leaf litter, not meadow
 		base = base.lerp(Color(String(LITTER_COLORS.get(gseason, "5f7a34"))), 0.3)
+	base = ground_for_look(base, look_kind)
 	var tex := GroundTiles.ground_texture(base, rid, Vector2i(ceili(size.x / 3.0), int(GROUND_BAND / 3.0)), false, gseason)
 	draw_texture_rect(tex, Rect2(band.position, Vector2(tex.get_size()) * 3.0), false)
 	draw_line(band.position, Vector2(size.x, band.position.y), base.darkened(0.5), 2.0)

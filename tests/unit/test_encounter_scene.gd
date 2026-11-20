@@ -102,3 +102,14 @@ func test_river_scene() -> void:
 	assert_eq(data.load_errors.size(), 0, str(data.load_errors))
 	assert_eq(String(data.encounters["road_spring_swollen_ford"].get("scene", "")), "river")
 	assert_true(DuelStage.river_water_color("Spring") != DuelStage.river_water_color("Summer"))
+
+
+## GFX-222: a cave, reed bed or ruin strip does not stand on meadow grass.
+func test_ground_for_look() -> void:
+	var grass := Color("4d6b3c")
+	assert_eq(DuelStage.ground_for_look(grass, "pines"), grass)
+	assert_eq(DuelStage.ground_for_look(grass, ""), grass)
+	for kind in ["cave", "reeds", "ruins"]:
+		var c := DuelStage.ground_for_look(grass, kind)
+		assert_true(c != grass, "%s changes the ground" % kind)
+		assert_true(c.g < grass.g + 0.01 or c.g < 0.5, "%s is not greener than grass" % kind)
