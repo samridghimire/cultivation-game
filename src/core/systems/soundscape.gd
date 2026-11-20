@@ -71,8 +71,10 @@ static func ambience_for(region: Dictionary, weather: String, season: String) ->
 		layers.append("amb_water")
 	if weather == "rain" or weather == "storm":
 		layers.append("amb_rain")
-	if weather == "storm":
-		layers.append("amb_wind_hard")
+	if weather == "storm":  # WU-576: one wind layer, the stronger
+		layers.erase("amb_wind_soft")
+		if not layers.has("amb_wind_hard"):
+			layers.append("amb_wind_hard")
 	var warm := s == "spring" or s == "summer"
 	if weather != "storm":
 		if warm and (weather == "clear" or weather == "cloudy") and ["village", "forest", "mountain"].has(bed):

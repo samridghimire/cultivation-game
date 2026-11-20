@@ -125,3 +125,15 @@ func test_first_hour_on_a_gamepad() -> void:
 
 	world.free()
 	gs.end_session()
+
+
+func test_calendar_reachable_from_journal_header() -> void:
+	var j := JournalScreen.new()
+	_tree().root.add_child(j)
+	var hit := [false]
+	j.calendar_requested.connect(func() -> void: hit[0] = true)
+	var b := j.find_child("CalendarTab", true, false) as Button
+	assert_true(b != null and b.focus_mode == Control.FOCUS_ALL, "Calendar sits in the header row")
+	b.pressed.emit()
+	assert_true(hit[0])
+	j.free()

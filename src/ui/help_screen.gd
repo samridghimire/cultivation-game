@@ -31,7 +31,7 @@ const JOY_AXIS_NAMES := {
 	JOY_AXIS_TRIGGER_LEFT: ["LT", "LT"],
 	JOY_AXIS_TRIGGER_RIGHT: ["RT", "RT"],
 }
-const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / B goes back.\nRebind keys and buttons in Settings > Controls."
+const MENU_HINT := "In menus: arrow keys / d-pad move, Enter / A chooses, Esc / B goes back.\nRebind keys and buttons in Settings > Controls.\nCalendar (no pad button): open the Journal, then pick Calendar next to its tabs."
 
 var _list: VBoxContainer
 var _title: Label

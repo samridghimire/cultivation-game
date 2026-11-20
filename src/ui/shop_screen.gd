@@ -799,11 +799,14 @@ func _show_details() -> void:
 func _trade() -> void:
 	if _selected == "" or _trade_button.disabled:
 		return
+	var before: int = GameState.player.item_count("spirit_stone")
+	var held: int = GameState.player.item_count(_selected)
 	if _selling:
 		GameState.sell_item(_selected, _quantity)
 	else:
 		GameState.buy_item(_selected, _faction, _quantity)
-	Audio.play("coin")
+	if GameState.player.item_count("spirit_stone") != before or GameState.player.item_count(_selected) != held:
+		Audio.play("coin")  # WU-576: only when the trade went through
 	_quantity = 1
 	_focus_selected.call_deferred()
 

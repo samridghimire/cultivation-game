@@ -93,6 +93,10 @@ var _amb_accent_player: AudioStreamPlayer
 var _amb_rng := RandomNumberGenerator.new()
 
 
+## Every play() call, heard or not (tests spy on it).
+signal sfx_requested(sfx_name: String)
+
+
 func _ready() -> void:
 	StartupLaps.lap("before Audio")
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -152,6 +156,7 @@ func sfx_stream(sfx_name: String) -> AudioStreamWAV:
 
 
 func play(sfx_name: String) -> void:
+	sfx_requested.emit(sfx_name)
 	if not _focused or _players.is_empty() or not RECIPES.has(sfx_name):
 		return
 	var voice := _free_voice()

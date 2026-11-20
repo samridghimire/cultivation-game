@@ -115,3 +115,9 @@ func test_world_builds_one_player_per_sounding_place() -> void:
 		world.free()
 		assert_eq(root.get_tree().get_nodes_in_group("place_sound").size(), 0, rid)
 	gs.end_session()
+
+
+func test_storm_on_a_mountain_has_one_wind_layer() -> void:
+	var layers: Array = Soundscape.ambience_for(_region("azure_peak"), "storm", "Summer")["layers"]
+	var winds := layers.filter(func(l: String) -> bool: return l.begins_with("amb_wind"))
+	assert_eq(winds, ["amb_wind_hard"], "WU-576: only the stronger wind")

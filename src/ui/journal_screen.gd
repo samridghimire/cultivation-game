@@ -41,6 +41,10 @@ func _init() -> void:
 		var tab := UIStyle.button(page.capitalize(), func() -> void: set_page(page))
 		tab.name = "Tab_" + page
 		_tabs.add_child(tab)
+	# WU-576: the calendar has no pad button, so it sits in the header row, one d-pad step from the tabs.
+	var cal_tab := UIStyle.button("Calendar", func() -> void: calendar_requested.emit())
+	cal_tab.name = "CalendarTab"
+	_tabs.add_child(cal_tab)
 	_scroll = ScrollContainer.new()
 	_scroll.custom_minimum_size = Vector2(736, 440)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -86,6 +90,8 @@ func set_page(page: String) -> void:
 	_today.visible = page == "today"
 	_cards.visible = page == "journal"
 	for tab in _tabs.get_children():
+		if tab.name == "CalendarTab":
+			continue
 		(tab as Button).modulate = Color.WHITE if tab.name == "Tab_" + page else DIM
 	_scroll.scroll_vertical = 0
 

@@ -493,3 +493,28 @@ func test_row_arrow_for_seasonal_item_only() -> void:
 	assert_true(flat_row.find_child("TrendArrow", true, false) == null)
 	assert_true(HudIcons.trend(0) == null)
 	assert_true(HudIcons.trend(1) != HudIcons.trend(-1))
+
+
+func test_failed_buy_plays_no_coin_and_a_good_one_does() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := new_character()
+	c.inventory = {"spirit_stone": 0}
+	gs.start_session(c)
+	var screen := ShopScreen.new()
+	root.add_child(screen)
+	screen.open("Herb Stall", 0, ["herb"])
+	var heard: Array = []
+	var audio := root.get_node("Audio")
+	audio.sfx_requested.connect(func(n: String) -> void: heard.append(n))
+	screen._select("spirit_herb")
+	screen._trade_button.disabled = false  # force the press past the disabled guard
+	screen._trade()
+	assert_false(heard.has("coin"), "too poor: no coin")
+	gs.player.inventory["spirit_stone"] = 1000
+	screen._rebuild()  # refresh the trade button now that you can pay
+	screen._trade()
+	assert_true(heard.has("coin"), "a bought herb clinks")
+	screen.close()
+	screen.free()
+	gs.end_session()
