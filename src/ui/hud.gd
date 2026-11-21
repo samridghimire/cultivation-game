@@ -2397,7 +2397,7 @@ func _update_modal() -> void:
 		_digest_card.dismiss()
 	_log_panel.visible = not blocking
 	_backdrop.visible = blocking
-	_prompt.visible = not blocking
+	_prompt.visible = not blocking and not _time_skip.visible  # GFX-228: no "[E] name" over a card
 	_place_prompt()
 	_update_guide_visibility()
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking

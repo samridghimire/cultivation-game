@@ -108,18 +108,27 @@ static func _px(canvas: CanvasItem, o: Vector2, s: float, x: float, y: float, w:
 	canvas.draw_rect(Rect2(o + Vector2(roundf(x), roundf(y)) * s, Vector2(w, h) * s), c)
 
 
-## GFX-226: a low table with a cup and two steam frames, centred on `c` (tea between two seated figures).
+## GFX-226/228: a low table (14x6 px: dark wood top with a lit edge, two legs), a cup on each side and steam
+## over one, centred on `c` (tea between two seated figures).
 static func draw_tea(canvas: CanvasItem, frame: int, c: Vector2, s: float) -> void:
-	_px(canvas, c, s, -5, 0, 10, 2, Color("c9a870"))
-	_px(canvas, c, s, -5, 2, 10, 1, Color("8a6b45"))
-	_px(canvas, c, s, -4, 3, 1, 2, Color("4a3a26"))
-	_px(canvas, c, s, 3, 3, 1, 2, Color("4a3a26"))
-	_px(canvas, c, s, -1, -3, 3, 3, Color("efe4c4"))  # the cup
-	_px(canvas, c, s, -1, -3, 3, 1, Color("6a8a4a"))
+	_px(canvas, c, s, -7, 0, 14, 3, Color("6a4a2a"))
+	_px(canvas, c, s, -7, 0, 14, 1, Color("c9a870"))  # the lit edge
+	_px(canvas, c, s, -6, 3, 1, 3, Color("3a2a1a"))
+	_px(canvas, c, s, 5, 3, 1, 3, Color("3a2a1a"))
+	for cx: float in [-4.0, 2.0]:  # a cup on each side
+		_px(canvas, c, s, cx, -3, 3, 3, Color("efe4c4"))
+		_px(canvas, c, s, cx, -3, 3, 1, Color("6a8a4a"))
 	var steam := Color(0.95, 0.95, 0.95, 0.75)
 	if frame == 0:
-		_px(canvas, c, s, 0, -5, 1, 1, steam)
-		_px(canvas, c, s, 1, -7, 1, 1, steam)
+		_px(canvas, c, s, 3, -5, 1, 1, steam)
+		_px(canvas, c, s, 4, -7, 1, 1, steam)
 	else:
-		_px(canvas, c, s, 1, -5, 1, 1, steam)
-		_px(canvas, c, s, 0, -7, 1, 1, steam)
+		_px(canvas, c, s, 4, -5, 1, 1, steam)
+		_px(canvas, c, s, 3, -7, 1, 1, steam)
+
+
+## GFX-228: a flat floor cushion under a seated figure, centred on `c` (its feet).
+static func draw_cushion(canvas: CanvasItem, c: Vector2, s: float) -> void:
+	_px(canvas, c, s, -7, -2, 14, 4, Color("8a3a3a"))
+	_px(canvas, c, s, -7, -2, 14, 1, Color("b05a50"))
+	_px(canvas, c, s, -7, 1, 14, 1, Color("5a2424"))

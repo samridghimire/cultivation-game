@@ -47,6 +47,14 @@ func test_backdrop_and_prompt_follow_modals() -> void:
 		hud.call("_update_modal")
 		assert_true(not backdrop.visible, action + " closed")
 		assert_true(prompt.visible)
+	# GFX-228: a time-skip card hides the interact prompt, closing it brings it back
+	var skip: Control = hud.get("_time_skip")
+	skip.show_skip({"title": "Tea", "days": 1, "lines": ["x"]})
+	hud.call("_update_modal")
+	assert_true(not prompt.visible, "a skip card hides the prompt")
+	skip.close()
+	hud.call("_update_modal")
+	assert_true(prompt.visible, "the prompt is back after the card")
 	hud.queue_free()
 	gs.end_session()
 

@@ -201,6 +201,11 @@ func is_tea() -> bool:
 	return _tea
 
 
+## GFX-228: sits (legs folded, body lower) for as long as the tea card is up.
+func is_seated() -> bool:
+	return _tea
+
+
 func _ready() -> void:
 	add_to_group("npc")
 	super._ready()
@@ -525,8 +530,16 @@ func draw_generated_art() -> bool:
 	var tex_size := Vector2(tex.get_size()) * s
 	var sh := Scenery.figure_shadow(tex_size, winter)
 	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
-	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
+	var drop := 3.0 * s if _tea else 0.0
+	if _tea:  # GFX-228: a cushion under each figure
+		WorkProps.draw_cushion(self, Vector2(0, size.y / 2.0 - 1.0), s)
+		WorkProps.draw_cushion(self, _tea_to + Vector2(0, size.y / 2.0 - 1.0), s)
+	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y + drop), tex_size), false)
 	if _tea:
+		var robe: Color = figure_look().get("robe", Color(0.4, 0.4, 0.5))
+		PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 2.0), Vector2(11.0, 4.5), robe.darkened(0.15))
+		PlaceArt.ellipse(self, Vector2(-3, size.y / 2.0 - 3.0), Vector2(6.0, 2.5), robe)
+		PlaceArt.ellipse(self, Vector2(3, size.y / 2.0 - 3.0), Vector2(6.0, 2.5), robe.lightened(0.1))
 		var mid := _tea_to.normalized() * minf(_tea_to.length(), 40.0) * 0.5 + Vector2(0, size.y / 2.0 - 5.0 * s)
 		WorkProps.draw_tea(self, _tea_frame, mid, s)
 	elif activity != "":

@@ -20,6 +20,7 @@ var _dim: ColorRect
 var _lend_npc: Node = null
 ## GFX-221: one tile (px) between the helping player and the villager.
 const LEND_GAP := 40.0
+var _tea_seated := false  ## GFX-228: the player sits for tea; _end_lend stands them up
 
 ## GFX-213: skips whose title is one of these show the qi gathering around the player.
 const QI_TITLES := ["Meditating", "In seclusion"]
@@ -160,6 +161,9 @@ func _begin_lend(npc_id: String, tea_id: String = "") -> void:
 			if tea_id != "":
 				n.set_tea(true, spot)
 			p.begin_lend(spot, (n.position - spot).normalized())
+			if tea_id != "" and p.has_method("set_seated"):
+				_tea_seated = true
+				p.set_seated(true)  # GFX-228: both sit for tea
 			# WU-585: the card drops below the pair, or rises above it when they stand in the lower half
 			var screen_y: float = (n as Node2D).get_global_transform_with_canvas().origin.y
 			_center.offset_top = -480.0 if screen_y > get_viewport_rect().size.y * 0.45 else 260.0
@@ -176,3 +180,6 @@ func _end_lend() -> void:
 	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
 	if p != null and p.has_method("end_lend"):
 		p.end_lend()
+		if p.has_method("set_seated") and _tea_seated:
+			p.set_seated(false)
+	_tea_seated = false
