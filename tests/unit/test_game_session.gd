@@ -4723,3 +4723,26 @@ func test_call_on_married_villager_never_mentions_proposing() -> void:
 	assert_true(text.contains(" friend)"), text)
 	assert_false(text.contains("propose") or text.contains("to court"), text)
 	gs.end_session()
+
+
+## FOLK-040: the first liked gift on a birthday takes a Close friend past the gift cap to a Sworn friend; a second is refused.
+func test_birthday_gift_makes_sworn_friend() -> void:
+	var c := _start()
+	var gs := _game_state()
+	gs.current_region = Npcs.region_of(gs.npcs["hunter_ma"], gs.data)
+	var ma: CharacterData = gs.npcs["hunter_ma"]
+	GameClock.total_days = Folk.birthday_day(ma, gs.data) + Calendar.DAYS_PER_YEAR * 2
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, "hunter_ma", item_id) > 0 and (liked == "" or Family.gift_value(gs.data, item_id) > Family.gift_value(gs.data, liked)):
+			liked = item_id
+	assert_true(liked != "")
+	c.add_item(liked, 3)
+	gs.npc_favor["hunter_ma"] = 82
+	gs.give_gift("hunter_ma", liked)
+	assert_true(int(gs.npc_favor["hunter_ma"]) >= 85, "sworn: %d" % int(gs.npc_favor["hunter_ma"]))
+	assert_true(int(gs.npc_favor["hunter_ma"]) <= 90)
+	var after := int(gs.npc_favor["hunter_ma"])
+	gs.give_gift("hunter_ma", liked)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), after, "second gift refused")
+	assert_eq(c.item_count(liked), 2)

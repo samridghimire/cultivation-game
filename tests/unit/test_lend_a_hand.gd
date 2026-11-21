@@ -335,3 +335,35 @@ func test_lend_spot_steps_aside_for_a_wall() -> void:
 	assert_eq(Scenery.lend_spot(region, Vector2(200, 200), 40.0), Vector2(240, 200), "left is a house: stand right")
 	var open := {"map": {"size": [400, 400], "landmarks": []}}
 	assert_eq(Scenery.lend_spot(open, Vector2(200, 200), 40.0), Vector2(160, 200), "open ground: left")
+
+
+## FOLK-040: a liked gift on the birthday goes past the gift cap, once; the hint names the birthday 14 days ahead.
+func test_birthday_gift_cap_and_hint() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var mo: CharacterData = npcs["elder_mo"]
+	var c := new_character()
+	var liked := _liked_item(d, "elder_mo")
+	c.add_item(liked, 3)
+	var cap := Family.gift_cap(d, false)
+	assert_eq(cap, int(d.family["acquaintance"]["gift_max_favor"]))
+	assert_eq(Family.gift_cap(d, true), 90)
+	assert_true(Family.check_gift(c, mo, 60, liked, d).contains("declines"), "refused without the birthday")
+	assert_eq(Family.check_gift(c, mo, 60, liked, d, true), "")
+	var r := Family.give_gift(c, mo, 85, liked, d, true)
+	assert_true(r["ok"] and int(r["favor"]) <= 5, "capped at 90")
+	var day := Folk.birthday_day(mo, d) + Calendar.DAYS_PER_YEAR
+	var flags := {}
+	assert_true(Folk.birthday_like(flags, mo, d, day, liked))
+	assert_false(Folk.birthday_like(flags, mo, d, day + 1, liked), "only on the day")
+	var sworn_min := int(d.family["folk_tiers"].back()["min"])
+	var favor := {"elder_mo": 60}
+	var line := Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day - 14)
+	assert_true(line.contains("birthday in 14 days"), line)
+	assert_true(Guidance.short_hint(line).length() <= 42 and Guidance.short_hint(line).begins_with("Birthday: "), Guidance.short_hint(line))
+	assert_eq(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day - 15), "", "15 days is too early")
+	assert_eq(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", {"elder_mo": 40}, flags, day - 3), "", "below the cap")
+	assert_eq(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", {"elder_mo": sworn_min}, flags, day - 3), "", "already sworn")
+	assert_true(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day).contains("is today"))
+	flags[Folk.BIRTHDAY_GIFT_PREFIX + "elder_mo"] = day / Calendar.DAYS_PER_YEAR
+	assert_eq(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day), "", "off once given")

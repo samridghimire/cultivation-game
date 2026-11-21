@@ -2577,12 +2577,13 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	if not _can_act():
 		return
 	var favor := int(npc_favor.get(npc_id, 0))
-	var result := Family.give_gift(player, npcs.get(npc_id), favor, item_id, data)
+	var birthday_like := Folk.birthday_like(world_flags, npcs.get(npc_id), data, GameClock.total_days, item_id)  # FOLK-040
+	var result := Family.give_gift(player, npcs.get(npc_id), favor, item_id, data, birthday_like)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 		EventBus.player_changed.emit()
 		return
-	var cap := int(data.family.get("acquaintance", {}).get("gift_max_favor", 0))
+	var cap := Family.gift_cap(data, birthday_like)
 	var festival := WorldEvents.favor_multiplier(data, world_events, current_region) > 1.0
 	var taste := int(result["taste"])
 	var gain := int(result["favor"])

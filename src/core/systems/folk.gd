@@ -1249,6 +1249,11 @@ static func birthday_gift_multiplier(flags: Dictionary, npc: CharacterData, data
 	return 2
 
 
+## FOLK-040: true when `item_id` would be the first liked gift to `npc` on their birthday this year.
+static func birthday_like(flags: Dictionary, npc: CharacterData, data: GameData, day: int, item_id: String) -> bool:
+	return npc != null and birthday_gift_multiplier(flags, npc, data, day, false) > 1 and Family.gift_taste(data, npc.id, item_id) > 0
+
+
 ## The multiplier for a gift to `npc_id` now: the type's gift_mult once per open celebration, else 1. `consume` marks it used.
 static func gift_multiplier(flags: Dictionary, npc_id: String, today: int, data: GameData, consume: bool) -> int:
 	if not celebration_open(flags, npc_id, today) or flags.has(GIFT_PREFIX + npc_id):

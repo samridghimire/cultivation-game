@@ -860,7 +860,7 @@ func _gift_options() -> Array[Dictionary]:
 		var suffix := " (liked)" if taste > 0 else (" (disliked)" if taste < 0 else (" (they are fond of these)" if fond else ""))
 		var favor_gain := Family.gift_favor_preview(data, item_id, taste)
 		var label := "%s x%d%s (%+d favor)" % [item_name, p.item_count(item_id), suffix, favor_gain]
-		var reason := Family.check_gift(p, npc, favor, item_id, data)
+		var reason := Family.check_gift(p, npc, favor, item_id, data, Folk.birthday_like(GameState.world_flags, npc, data, GameClock.total_days, item_id))
 		var entry := _entry(label, reason, GameState.give_gift.bind(npc_id, item_id))
 		if taste != 0:
 			entry["color"] = UIStyle.ACCENT if taste > 0 else UIStyle.CATEGORY_COLORS["danger"]

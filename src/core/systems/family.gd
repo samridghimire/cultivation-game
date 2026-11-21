@@ -282,15 +282,24 @@ static func taste_hint(data: GameData, npc_id: String, display_name: String = ""
 	return "%s is fond of %s." % [def.get("name", display_name if display_name != "" else npc_id), _taste_word(data, String(likes[0]))]
 
 
+## FOLK-040: the favor gifts can reach: `birthday_max_favor` for the first liked gift on a birthday, else `gift_max_favor`.
+static func gift_cap(data: GameData, birthday_like: bool) -> int:
+	var rules: Dictionary = data.family.get("acquaintance", {})
+	var base := int(rules.get("gift_max_favor", 0))
+	if birthday_like:
+		return maxi(base, int(rules.get("birthday_max_favor", base)))
+	return base
+
+
 ## Why `c` cannot give `item_id` to `other`, or "" if they can.
-static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> String:
+static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData, birthday_like: bool = false) -> String:
 	if other == null or not other.alive or other.id == c.id:
 		return "There is no one to give it to."
 	if c.item_count(item_id) < 1:
 		return "You do not have that."
 	if gift_value(data, item_id) <= 0:
 		return "%s has no use for that." % other.name
-	if favor >= int(data.family.get("acquaintance", {}).get("gift_max_favor", 0)) and gift_taste(data, other.id, item_id) >= 0:
+	if favor >= gift_cap(data, birthday_like) and gift_taste(data, other.id, item_id) >= 0:
 		return "%s politely declines. Gifts alone will not win more of their heart." % other.name
 	return ""
 
@@ -298,8 +307,8 @@ static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_
 ## Gives one `item_id` to `other` (removed from `c`'s inventory).
 ## Returns {ok, reason, favor (gain, never past gift_max_favor; negative for a
 ## disliked gift), days, taste (1 liked, -1 disliked, 0)}. `other.id` picks the tastes.
-static func give_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData) -> Dictionary:
-	var reason := check_gift(c, other, favor, item_id, data)
+static func give_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData, birthday_like: bool = false) -> Dictionary:
+	var reason := check_gift(c, other, favor, item_id, data, birthday_like)
 	if reason != "":
 		return {"ok": false, "reason": reason, "favor": 0, "days": 0, "taste": 0}
 	var rules: Dictionary = data.family.get("acquaintance", {})
@@ -308,7 +317,7 @@ static func give_gift(c: CharacterData, other: CharacterData, favor: int, item_i
 	var gain := gift_value(data, item_id)
 	if taste > 0:
 		gain = ceili(gain * float(rules.get("gift_like_mult", 1.0)))
-	gain = mini(gain, int(rules.get("gift_max_favor", 0)) - favor)
+	gain = mini(gain, gift_cap(data, birthday_like) - favor)
 	if taste < 0:
 		gain = int(rules.get("gift_dislike_favor", 0))
 	return {"ok": true, "reason": "", "favor": gain, "days": int(rules.get("gift_days", 0)), "taste": taste}
@@ -484,6 +493,8 @@ static func validate(data: GameData) -> PackedStringArray:
 				errors.append("family.json acquaintance needs %s >= 0" % key)
 		if int(acq.get("gift_price_per_favor", 0)) < 1 or int(acq.get("gift_max_per_item", 0)) < 1:
 			errors.append("family.json acquaintance needs gift_price_per_favor and gift_max_per_item >= 1")
+		if acq.has("birthday_max_favor") and (int(acq["birthday_max_favor"]) < int(acq.get("gift_max_favor", 0)) or int(acq["birthday_max_favor"]) > 100):
+			errors.append("family.json acquaintance birthday_max_favor must be gift_max_favor..100")
 		if float(acq.get("gift_like_mult", 1.0)) < 1.0:
 			errors.append("family.json acquaintance gift_like_mult must be >= 1")
 		if int(acq.get("gift_dislike_favor", 0)) > 0:

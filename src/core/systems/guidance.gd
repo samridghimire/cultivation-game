@@ -665,6 +665,15 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 		# Villager and item together are too long: the item alone, whole, beats a cut name.
 		var item_only := "Gift: %s" % gift.get_string(2)
 		return item_only if item_only.length() <= SHORT_HINT_CHARS else gift.get_string(2)
+	re.compile("^Grow closer: (.+?)'s birthday (?:in (\\d+) days?|is today); a (.+?) would mean a lot\\.|^Grow closer: (.+?)'s birthday is today: give the (.+?)\\.")
+	var bday := re.search(line)
+	if bday != null:
+		var who := bday.get_string(1) if bday.get_string(1) != "" else bday.get_string(4)
+		var what := bday.get_string(3) if bday.get_string(3) != "" else bday.get_string(5)
+		var days := ("%sd" % bday.get_string(2)) if bday.get_string(2) != "" else "today"
+		for t: String in ["Birthday: %s for %s (%s)" % [what, who, days], "Birthday: %s for %s" % [what, who], "Birthday gift: %s" % what, what]:
+			if t.length() <= SHORT_HINT_CHARS:
+				return t
 	re.compile("^Grow closer: share tea at (.+?)'s \\(favor (\\d+)/(\\d+)\\)")
 	var tea := re.search(line)
 	if tea != null:
@@ -1210,6 +1219,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var closer := grow_closer_hint(c, data, people, region_id, favor, flags, today)  # GUIDE-278
 		if closer != "":
 			out.insert(mini(2, out.size()), closer)
+	var birthday := birthday_gift_hint(c, data, people, region_id, favor, flags, today)  # FOLK-040
+	if birthday != "":
+		out.insert(mini(2, out.size()), birthday)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
@@ -2406,6 +2418,46 @@ static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionar
 	if item_id == "":
 		return ""
 	return "Grow closer: give %s the %s they like%s (favor %d/%d)." % [npc.name, String(data.items[item_id].get("name", item_id)), "" if bag != "" else ", on sale here", best_favor, close_min]
+
+
+## FOLK-040: a named villager past the gift cap but not yet a Sworn friend has a birthday within 14 days (or today) and a liked
+## item is in the bag or on sale here: "Grow closer: Mo's birthday in 5 days; a Dew Grass would mean a lot." "" otherwise.
+## Off once the year's birthday gift is given. Family members are skipped.
+static func birthday_gift_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, favor: Dictionary, flags: Dictionary, today: int) -> String:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	if tiers.is_empty() or region_id == "" or today < 0:
+		return ""
+	var cap := Family.gift_cap(data, false)
+	var sworn := int(tiers.back()["min"])
+	var best := ""
+	var best_days := 15
+	for id: String in data.npcs:
+		var f := int(favor.get(id, 0))
+		var npc: CharacterData = people.get(id)
+		if npc == null or not npc.alive or f < cap or f >= sworn or c.spouses.has(id) or c.children.has(id) or c.parents.has(id):
+			continue
+		var n := Folk.days_to_birthday(npc, data, today)
+		if n < 0 or n >= best_days or Folk.birthday_gift_multiplier(flags, npc, data, today + n, false) < 2:
+			continue
+		best = id
+		best_days = n
+	if best == "":
+		return ""
+	var item_id := ""
+	for iid: String in data.items:
+		if Family.gift_taste(data, best, iid) != 1 or Family.gift_value(data, iid) <= 0:
+			continue
+		if c.item_count(iid) > 0:
+			item_id = iid
+			break
+		if item_id == "" and not merchant_place(data, region_id, iid).is_empty():
+			item_id = iid
+	if item_id == "":
+		return ""
+	var item_name := String(data.items[item_id].get("name", item_id))
+	if best_days == 0:
+		return "Grow closer: %s's birthday is today: give the %s." % [people[best].name, item_name]
+	return "Grow closer: %s's birthday in %d day%s; a %s would mean a lot." % [people[best].name, best_days, "" if best_days == 1 else "s", item_name]
 
 
 ## RIVAL-015: a met, living, bitter rival refuses bouts; point at the amends in the NPC menu.

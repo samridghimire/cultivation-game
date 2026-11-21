@@ -2317,6 +2317,33 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				gs.lend_a_hand(id)
 				return "lend" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
 		return ""
+	if line.begins_with("Grow closer: ") and (line.contains("'s birthday in ") or line.contains("'s birthday is today")):
+		# FOLK-040: buy the liked item when it is on sale here, walk to the villager and give it on the day.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc == null or not line.begins_with("Grow closer: %s's birthday" % npc.name):
+				continue
+			var liked := ""
+			for item_id: String in gs.data.items:
+				if Family.gift_taste(gs.data, id, item_id) == 1 and Family.gift_value(gs.data, item_id) > 0 and line.contains(String(gs.data.items[item_id].get("name", item_id))):
+					liked = item_id
+					break
+			if liked == "":
+				return ""
+			if c.item_count(liked) < 1:
+				var before_stones := c.item_count("spirit_stone")
+				gs.buy_item(liked)
+				return "buy_gift" if c.item_count("spirit_stone") < before_stones else ""
+			if Folk.days_to_birthday(npc, gs.data, day) == 0:
+				var home := Npcs.region_of(npc, gs.data)
+				if gs.current_region != home:
+					_walk_to(gs, c, home)
+				if gs.current_region == home:
+					var favor_before := int(gs.npc_favor.get(id, 0))
+					gs.give_gift(id, liked)
+					return "birthday_gift" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
+			return ""
+		return ""
 	if line.begins_with("Grow closer: share tea at "):
 		# FOLK-037: the line names the villager; call on them for tea.
 		for id: String in gs.data.npcs:
