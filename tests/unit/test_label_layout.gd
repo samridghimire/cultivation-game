@@ -257,7 +257,7 @@ func test_pin_shift_pulls_a_far_label_back_to_the_body() -> void:  # GFX-208
 	var s := Interactable.pin_shift(far, 540.0, feet)
 	var moved := Rect2(far.position + s, far.size)
 	assert_true(absf(moved.get_center().x - 540.0) <= Interactable.PIN_SIDE + 0.01)
-	assert_true(moved.end.y >= feet - 32.0 - Interactable.PIN_ABOVE_HEAD - 0.01 and moved.end.y <= feet + Interactable.PIN_BELOW_FEET + 0.01)
+	assert_true(moved.end.y >= feet - Interactable.FIGURE_HEIGHT - Interactable.PIN_ABOVE_HEAD - 0.01 and moved.end.y <= feet + Interactable.PIN_BELOW_FEET + 0.01)
 	var fine := Rect2(Vector2(510, 262), Vector2(60, 20))
 	assert_eq(Interactable.pin_shift(fine, 540.0, feet), Vector2.ZERO)
 

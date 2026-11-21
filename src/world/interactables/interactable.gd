@@ -497,10 +497,14 @@ static func respread_due(clock: float, moved_px: float) -> bool:
 const GREAT_FIGURE := Vector2(48.0, 40.0)  ## GFX-071: a great beast's drawn body
 
 
-## WU-567: the drawn body of a standing person (about 16x28 above their feet), grown a little.
+## WU-591: a person's drawn sprite is 16x20 px at scale 2 = 32x40 above their feet; labels measure from this.
+const FIGURE_HEIGHT := 40.0
+
+
+## WU-567: the drawn body of a standing person (the full sprite above their feet), grown a little.
 static func person_figure_rect(node: Interactable) -> Rect2:
 	var feet := node.position.y + node.size.y / 2.0
-	return Rect2(node.position.x - 10.0, feet - 32.0, 20.0, 34.0)
+	return Rect2(node.position.x - 16.0, feet - FIGURE_HEIGHT, 32.0, FIGURE_HEIGHT + 2.0)
 
 
 
@@ -649,7 +653,7 @@ const PIN_SIDE := 12.0
 
 
 static func pin_shift(label: Rect2, body_x: float, feet_y: float) -> Vector2:
-	var head := feet_y - 32.0
+	var head := feet_y - FIGURE_HEIGHT
 	var dy := clampf(label.end.y, head - PIN_ABOVE_HEAD, feet_y + PIN_BELOW_FEET) - label.end.y
 	var dx := clampf(label.get_center().x, body_x - PIN_SIDE, body_x + PIN_SIDE) - label.get_center().x
 	return Vector2(dx, dy)
@@ -687,7 +691,7 @@ static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2
 		# Candidate spots inside the band, nearest to the current rect first: any that touches nothing wins.
 		var best := Vector2.INF
 		var best_cost := INF
-		var dy0 := feet - 32.0 - PIN_ABOVE_HEAD - r.end.y
+		var dy0 := feet - FIGURE_HEIGHT - PIN_ABOVE_HEAD - r.end.y
 		for dy: float in range(int(dy0), int(feet + PIN_BELOW_FEET - r.end.y) + 1, 4):
 			for dx: float in [0.0, -4.0, 4.0, -8.0, 8.0, -12.0, 12.0]:
 				var cx := r.get_center().x + want.x + dx
