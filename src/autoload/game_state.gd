@@ -3570,7 +3570,10 @@ func unmark_day(day: int) -> void:
 
 ## FOLK-009: who you know in the current region (Folk.people_entries).
 func people_entries() -> Array[Dictionary]:
-	return Folk.people_entries(npcs, data, current_region, npc_favor, world_flags, GameClock.total_days)
+	var rows := Folk.people_entries(npcs, data, current_region, npc_favor, world_flags, GameClock.total_days)
+	for e in rows:  # WU-588: the next thing that grows each friendship (read-only)
+		e["next_step"] = Folk.next_step(player, npcs.get(String(e["id"])), data, world_flags, GameClock.total_days, int(e["favor"]), current_region)
+	return rows
 
 
 ## Journal entries for the current session (Guidance.journal); no side effects.

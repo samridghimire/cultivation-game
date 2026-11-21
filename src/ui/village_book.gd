@@ -416,6 +416,10 @@ func _card(e: Dictionary) -> Button:
 	var tier := UIStyle.label(String(e["tier_name"]), 14)
 	tier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(tier)
+	if String(e.get("next_step", "")) != "":  # WU-588
+		var step := UIStyle.label(String(e["next_step"]), 13, UIStyle.ACCENT.darkened(0.15))
+		step.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(step)
 	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= 7  # WU-482: gold within a week
 	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE

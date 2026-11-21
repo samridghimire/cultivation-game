@@ -635,6 +635,41 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 	return out
 
 
+## WU-588: one short line on the next thing that grows the friendship with `npc` today, from state the game already has:
+## tea or a hand lent when ready, else whichever returns soonest, else a liked item, else the next tier. "" when nothing is left.
+static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int, region_id: String = "") -> String:
+	if npc == null or c == null:
+		return ""
+	var tea_wait := -1  # days until tea, -1 = not on offer
+	var tea_why := call_on_check(c, npc, data, flags, today, favor, region_id)
+	if tea_why == "":
+		return "Tea ready (weekly)"
+	if tea_why.begins_with("Again in "):
+		tea_wait = int(call_on_rules(data).get("cooldown_days", 7)) - (today - int(flags.get("tea_" + npc.id, -100000)))
+	var lend_wait := -1
+	var lend_why := lend_check(c, npc, data, flags, today, favor, region_id)
+	if lend_why == "":
+		return "Lend a hand today"
+	if lend_why.begins_with("Again in "):
+		lend_wait = int(data.family.get("lend_a_hand", {}).get("cooldown_days", 7)) - (today - int(flags.get("lend_" + npc.id, -100000)))
+	if lend_wait > 0 and (tea_wait < 0 or lend_wait < tea_wait):
+		return "Lend a hand: %ss" % Calendar.weekday_name(today + lend_wait)
+	if tea_wait > 0:
+		return "Tea again in %d day%s" % [tea_wait, "" if tea_wait == 1 else "s"]
+	var likes: Array[String] = []
+	for item_id: String in Family.known_tastes(flags, data, npc.id):
+		if int(Family.known_tastes(flags, data, npc.id)[item_id]) > 0:
+			likes.append(item_id)
+	likes.sort()
+	if not likes.is_empty():
+		return "Likes: %s" % String(data.items[likes[0]].get("name", likes[0]))
+	var tiers: Array = data.family.get("folk_tiers", [])
+	for t: Dictionary in tiers:
+		if favor < int(t["min"]):
+			return "%s at favor %d" % [String(t["name"]), int(t["min"])]
+	return ""
+
+
 ## "a friend", "an acquaintance": the tier name for the Look sentence. "" below the first tier.
 static func counts_you_line(data: GameData, npc_name: String, favor: int) -> String:
 	var tier := tier_name(data, favor).to_lower()

@@ -258,6 +258,26 @@ func test_call_on_check_and_gain() -> void:
 	assert_true(Folk.call_on_gain(c, d, 40) >= 3)
 
 
+## WU-588: the People card's next-step line.
+func test_next_step_line() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var mo: CharacterData = npcs["elder_mo"]
+	assert_eq(Folk.next_step(c, mo, d, {}, 0, 40, "qingshi_village"), "Tea ready (weekly)")
+	assert_eq(Folk.next_step(c, mo, d, {"tea_elder_mo": 10}, 13, 40, "qingshi_village"), "Lend a hand today")
+	var both := {"tea_elder_mo": 10, "lend_elder_mo": 10}
+	assert_eq(Folk.next_step(c, mo, d, both, 13, 40, "qingshi_village"), "Tea again in 4 days", "tea and lend tie: tea")
+	both["lend_elder_mo"] = 9
+	assert_eq(Folk.next_step(c, mo, d, both, 13, 40, "qingshi_village"), "Lend a hand: %ss" % Calendar.weekday_name(16))
+	var spent := {"tea_elder_mo": 0, "lend_elder_mo": 0}
+	assert_eq(Folk.next_step(c, mo, d, spent, 1, 50, "qingshi_village"), "Tea again in 6 days", "tea returns before lend only on a tie")
+	var capped := {"taste_elder_mo_moon_cake": 1}
+	assert_eq(Folk.next_step(c, mo, d, capped, 0, 90, "qingshi_village"), "Likes: %s" % String(d.items["moon_cake"]["name"]))
+	assert_eq(Folk.next_step(c, mo, d, {}, 0, 90, "qingshi_village"), "", "nothing left at the top")
+	assert_eq(Folk.next_step(c, mo, d, {}, 0, 85, "qingshi_village"), "", "sworn friend reached")
+
+
 func test_call_on_validation() -> void:
 	var d := data()
 	var old: Dictionary = d.family["folk_visits"]["call_on"].duplicate()
