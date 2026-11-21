@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-21 [PERF-029] Fight odds are remembered by your actual combat strength, so hints re-rate fights less often.
+- 2026-11-21 [WU-587] A villager's name is never hidden under a place label: the place label moves or fades.
+- 2026-11-21 [GUIDE-282] The test player traces how long a first friend takes (the weekly lend is the limit).
+- 2026-11-21 [GUIDE-281] The Myriad Peaks Ridge pedlar sells a cheap Iron Fist manual, so a ridge start learns a first style in its first week.
+- 2026-11-21 [GFX-228] Tea is taken seated: both of you on cushions at a low table with two cups.
+- 2026-11-21 [GFX-227] A friendship tier-up shows big pixel hearts rising over the villager and a "<name>: <tier>" banner.
+- 2026-11-21 [C-408] Every named villager in the six start regions has something to teach at the second and third friendship tiers.
+- 2026-11-21 [FOLK-038] Favor messages with elders, children and married villagers name the next friendship tier, not courtship.
+- 2026-11-21 [WU-586] A test makes sure the Next steps card never shows a half-cut line.
+- 2026-11-21 [PERF-018] Settings, Help and Load screens are built when first opened, so travel is a little quicker.
+- 2026-11-21 [PERF-025] Labels spread out a little faster in crowded villages.
 - 2026-11-21 [GFX-226] Sharing tea shows a "Tea with ..." card, the two of you beside a low table with a steaming cup.
 - 2026-11-21 [PERF-028] Fight odds are re-rated less often while a buff or injury ticks down (a first step to cheaper hints).
 - 2026-11-21 [SIM-023] The test player measures the first hour in every start region.
