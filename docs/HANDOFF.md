@@ -2,6 +2,13 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-21 06:10
+- Planner shots `--tea=hunter_ma` (card, pair and table render; the [E] prompt floats over them) and `--tier-up=elder_mo --tea=elder_mo`
+  in one run (no tea card shows when combined; hearts tiny). Filed WU-586 (Next steps clip mid-phrase), FOLK-038 ("to propose" with
+  any villager), GFX-227, GFX-228, WU-587. The shot run still exits 134 (QA-240, claimed).
+- A stray branch `claude/GUIDE-279-fight-before-friend` (06:06) re-claims a task already on main; ignore it, it expires.
+- Next planner: when GUIDE-281 lands, read its cause; if it is data (no affordable manual), the ridge/azure shop change needs a content follow-up.
+
 ## Planner 2026-11-21 00:10
 - Planner shot `--lend=hunter_ma`: the Helping card and the lend line read well; Hunter Ma's axe prop is invisible (GFX-224).
   The default shot run still exits 134 after the last PNG (QA-240), harmless for the PNGs.

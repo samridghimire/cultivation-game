@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-21 [GFX-226] Sharing tea shows a "Tea with ..." card, the two of you beside a low table with a steaming cup.
+- 2026-11-21 [PERF-028] Fight odds are re-rated less often while a buff or injury ticks down (a first step to cheaper hints).
+- 2026-11-21 [SIM-023] The test player measures the first hour in every start region.
+- 2026-11-21 [WU-585] Lending a hand in any start region puts you on open ground beside the villager, with the card out of the way.
+- 2026-11-21 [GFX-225] When a villager becomes a closer friend, hearts rise over them and their new heart pip flashes.
+- 2026-11-21 [FOLK-037] Once a villager is your Friend you can share tea at their home once a week to grow closer.
+- 2026-11-21 [GUIDE-279] Until you win your first fight, the easy fight comes first in Next steps.
+- 2026-11-21 [QA-241] Villagers' daily lives no longer depend on how many other villagers exist; tests no longer leak into each other.
+- 2026-11-21 [GFX-224] Villagers' work reads at a glance: a chopping stump and logs, furrows, a broom's dust, a reading table.
+- 2026-11-21 [C-355] The Creation Artifact has three dry remarks for each moment it whispers.
+- 2026-11-21 [GFX-223] Boulders have a firmer shadow and a lit top edge.
 - 2026-11-21 [QA-239] Adding a new villager no longer changes other villagers' spiritual roots in an existing world seed.
 - 2026-11-21 [WU-584] Fight odds use one word everywhere: "Easy for you, 99%" in menus, the threat rank labelled as "threat".
 - 2026-11-21 [GUIDE-278] Once you have a Friend, the hints show which gift brings you closer and where to buy it.
