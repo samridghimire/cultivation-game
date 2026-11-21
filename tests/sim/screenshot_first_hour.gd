@@ -1088,7 +1088,7 @@ func _tier_up_shots(gs: Node, npc_id: String) -> void:
 		gs.lend_a_hand(npc_id)
 		_teleport_player(world.get_node("Player").position)
 		skip.close()  # the card closes first, then the hearts play
-		await world.get_tree().create_timer(0.7).timeout,
+		await world.get_tree().create_timer(0.8).timeout,  # GFX-227: card closed, banner up, hearts rising
 		"settle": 20, "close": func() -> void: pass})
 
 

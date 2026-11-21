@@ -1817,10 +1817,9 @@ func _on_letter_arrived(npc_name: String) -> void:
 
 ## A villager became a closer friend (WU-418): a banner with their portrait.
 func _on_friendship_reached(npc_id: String, text: String) -> void:
-	var tex: Texture2D = null
-	if GameState.npcs.has(npc_id):
-		tex = PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("8a8a8a")), "down", 0)
-	_banner.announce("New friend", text, UIStyle.ACCENT, 2.5, false, tex)
+	# GFX-227: "<name>: <tier>" with the hearts as its icon; the banner waits behind any time-skip card.
+	var tex: Texture2D = HudIcons.hearts(GameState.friendship_tier_count(), GameState.friendship_hearts(npc_id), 3)
+	_banner.announce(text, "Your friendship grows", UIStyle.ACCENT, 2.0, false, tex)
 	Audio.play("chime_progress")
 
 

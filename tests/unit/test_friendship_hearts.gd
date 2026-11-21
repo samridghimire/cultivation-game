@@ -205,3 +205,24 @@ func test_lend_favor_text_names_next_tier() -> void:
 	assert_eq(NpcScript.lend_favor_text(data(), 36), "favor 36/40 Friend")
 	assert_eq(NpcScript.lend_favor_text(data(), 0), "favor 0/20 Acquaintance")
 	assert_eq(NpcScript.lend_favor_text(data(), 90), "favor 90")
+
+
+## GFX-227: the heart is 7 x 6 with an outline and one highlight; reduce_motion shows one still row for 0.8 s.
+func test_heart_shape_and_still_row() -> void:
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	assert_eq(node.HEART_ROWS.size(), 6)
+	var highlights := 0
+	for row: String in node.HEART_ROWS:
+		assert_eq(row.length(), 7)
+		highlights += row.count("H")
+	assert_eq(highlights, 1)
+	assert_true(node.HEART_TOP < -30.0)  # above the name strip
+	assert_eq(node.HEARTS_STILL, 0.8)
+	node.npc_id = "hunter_ma"
+	node.size = Vector2(32, 32)
+	node._on_friend_tier_up("hunter_ma", 1)
+	node.hearts_tick(0.4)
+	assert_true(node.hearts_playing())
+	node.hearts_tick(2.0)
+	assert_false(node.hearts_playing())  # the effect ends by itself
+	node.free()

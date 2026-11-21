@@ -83,7 +83,7 @@ func _on_modal_changed(is_open: bool) -> void:
 ## GFX-225: hearts rising over the villager after a friendship tier-up. Waits while any card is up.
 const HEARTS_COUNT := 4
 const HEARTS_LIFE := 1.2
-const HEARTS_STILL := 0.6
+const HEARTS_STILL := 0.8
 const HEARTS_DELAY := 0.3
 var _raw_modal := false
 var _hearts_pending := false
@@ -138,13 +138,19 @@ func _process(delta: float) -> void:
 	hearts_tick(delta)
 
 
-## One pixel heart (6 x 5 dots, 2 px each) at the top-left `at`.
-const HEART_SPANS := [[0, 1, 2], [0, 4, 5], [1, 0, 5], [2, 0, 5], [3, 1, 4], [4, 2, 3]]
+## GFX-227: one 7 x 6 pixel heart (outline, fill, 1 px highlight), 2 px per dot, at the top-left `at`.
+const HEART_ROWS: PackedStringArray = [".OO.OO.", "OHRRRRO", "ORRRRRO", ".ORRRO.", "..ORO..", "...O..."]
+const HEART_RISE := 28.0
+const HEART_TOP := -40.0  # above the name strip, not beside it
 
 
-func _draw_pixel_heart(at: Vector2, color: Color) -> void:
-	for sp: Array in HEART_SPANS:
-		draw_rect(Rect2(at + Vector2(int(sp[1]), int(sp[0])) * 2.0, Vector2(int(sp[2]) - int(sp[1]) + 1, 1) * 2.0), color)
+func _draw_pixel_heart(at: Vector2, alpha: float) -> void:
+	var colors := {"O": Color(0.55, 0.1, 0.2, alpha), "R": Color(0.93, 0.3, 0.4, alpha), "H": Color(1.0, 0.8, 0.85, alpha)}
+	for y in HEART_ROWS.size():
+		for x in 7:
+			var ch := HEART_ROWS[y].substr(x, 1)
+			if colors.has(ch):
+				draw_rect(Rect2(at + Vector2(x, y) * 2.0, Vector2(2, 2)), colors[ch])
 
 
 func _draw_hearts() -> void:
@@ -157,10 +163,10 @@ func _draw_hearts() -> void:
 		var t := (_hearts_t - start) / (life - start)
 		if t < 0.0 or t > 1.0:
 			continue
-		var rise := 0.0 if reduced else t * 22.0
+		var rise := 0.0 if reduced else t * HEART_RISE
 		var alpha := 1.0 if reduced else clampf(2.0 * (1.0 - t), 0.0, 1.0)
-		var x := size.x / 2.0 - float(HEARTS_COUNT) * 6.0 + float(i) * 12.0 + (0.0 if reduced else sin(t * 5.0 + float(i)) * 2.0)
-		_draw_pixel_heart(Vector2(roundf(x), roundf(-14.0 - rise)), Color(0.93, 0.3, 0.4, alpha))
+		var x := size.x / 2.0 - float(HEARTS_COUNT) * 8.0 + float(i) * 16.0 + (0.0 if reduced else sin(t * 5.0 + float(i)) * 2.0)
+		_draw_pixel_heart(Vector2(roundf(x), roundf(HEART_TOP - rise)), alpha)
 
 
 ## GFX-221: while the player helps this villager the prop keeps swinging under the modal card.
