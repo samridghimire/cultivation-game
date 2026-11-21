@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8ac4499
+Last reviewed commit: ebf14c6
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2386,3 +2386,15 @@ Last reviewed commit: 8ac4499
     GFX-227 banner now titled "<name>: <tier>". Not rendered by me: GFX-226/227/228 (workers also skipped the --tea and
     --tier-up shots; the planner should keep a visual pass for them). Nothing filed; open design follow-ups (azure first
     technique day 136, weekly lend cap vs first_friend) are in the GUIDE-281/282 commit messages for the planner.
+- 2026-11-21 (reviewer): reviewed 8ac4499..ebf14c6 (PERF-029 partial, GFX-229, FOLK-039 partial, WU-589, GUIDE-283, WU-590,
+  WU-588, C-409; [PLAN]/[REVIEW] skipped). Main green (4522 tests). No BACKLOG/CHANGELOG edits by workers, no new binary
+  assets, no SAVE_VERSION change (WU-589 reuses the saved `folk_tier_seen`). No bugs found; nothing fixed or filed.
+  - PERF-029 OK: a quiet `resolve` reads only `stats()` and `CombatTalismans.available`, and `rating_key` holds exactly those
+    (stats rounded to 0.01 + readied ids with count > 0), so sharing a cached rating cannot change a result.
+  - WU-589 OK: named villagers get the tier hearts and banner. Their favor is seeded at session start (npc_favor = def.favor),
+    so the silent first sighting never swallows a real tier-up. WU-588 OK: `Folk.next_step` is pure, and its cooldown maths
+    matches `call_on_check`/`lend_check`. GUIDE-283 OK: `_guard_names` only runs when a line is cut, and its result stays
+    under SHORT_HINT_CHARS.
+  - C-409 data-only (Cloud-Stair Pedlar, Iron Fist max 15). The worker did not run balance.sh --check. FOLK-039: Sworn friend
+    (85) cannot be reached by gifts (cap 50) or tea (cap 80); the worker left this as a balance call for the owner/planner.
+  - Not rendered by me: GFX-229, WU-590, WU-588's card line (the workers also left the close-up shots as follow-ups).
