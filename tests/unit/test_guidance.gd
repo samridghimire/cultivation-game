@@ -7180,7 +7180,7 @@ func test_far_teacher_hint_whole_on_the_card() -> void:
 	var npcs := _style_world()
 	var expect := {
 		# GUIDE-281: the ridge pedlar sells Iron Fist now, so its card names the manual, not the far teacher.
-		"azure_peak": "No fighting style: Hunter Ma, Qingshi (10d)",
+		"azure_peak": "No style: Iron Fist at Cloud-Stair Pedlar",  # C-409: Azure Peak sells it
 		"withered_bone_marsh": "No fighting style: Hunter Ma, Qingshi (9d)",
 	}
 	for region_id: String in expect:
@@ -7939,3 +7939,13 @@ func test_ridge_pedlar_sells_the_cheap_first_manual() -> void:
 	assert_eq(found.get("item", ""), "manual_iron_fist")
 	assert_eq(found.get("merchant", ""), "Scorched-Scroll Pedlar")
 	assert_eq(found.get("price", 0), 15)
+
+
+## C-409: Azure Peak has a cheap Iron Fist manual on sale, so a first style is reachable in the first week.
+func test_azure_peak_sells_a_cheap_first_style() -> void:
+	var d := data()
+	var found := false
+	for p: Dictionary in d.regions["azure_peak"].get("places", []):
+		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(d, d.items["manual_iron_fist"], p.get("stock_tags", []), int(p.get("max_price", 0))):
+			found = true
+	assert_true(found, "Azure Peak has a merchant selling manual_iron_fist")

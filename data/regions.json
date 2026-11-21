@@ -168,6 +168,7 @@
       "quiet_lines": ["Wind scours the ridge; far below, clouds roll like a slow white sea.", "You climb a switchback of wet stone and find only more switchback.", "A hawk hangs on the updraft, watching you, then slides away.", "Frost glitters on the rocks where the qi runs thin and sharp.", "Your breath smokes. The peak keeps its own counsel.", "Rockfall rattles in the distance, and then nothing.", "You rest in the lee of a boulder and watch the sun set the clouds on fire."], "encounter_tags": ["mountain", "wild", "azure_cliffs"],
       "places": [
         {"type": "merchant", "display_name": "Qingming Offering Stall", "festival_only": "qingming_festival", "pos": [740, 530], "size": [70, 60], "color": "9fbf7a", "stock_tags": ["sweet_rice_ball"]},
+        {"type": "merchant", "display_name": "Cloud-Stair Pedlar", "activity": "hawk", "pos": [1250, 470], "size": [70, 60], "color": "8fb0c8", "stock_tags": ["manual_iron_fist"], "max_price": 15},
         {"type": "sect_hall", "display_name": "Azure Cloud Hall", "sect": "azure_cloud_sect", "hall_ground": "terrace", "pos": [980, 730], "size": [160, 110], "color": "6f9fd0"},
         {"type": "deed_giver", "display_name": "Hall Steward Qiu", "pos": [960, 935], "size": [30, 30], "color": "3f6fb5", "look": {"robe": "3f6fb5"}, "deed_context": "azure_steward"},
         {"type": "meditation", "anchor_id": "azure_cliff", "display_name": "Cloud-Sea Cliff (5x qi)", "tags": ["ridge"], "pos": [1400, 180], "size": [120, 70], "color": "c9dceb", "qi_density": 2.0},
