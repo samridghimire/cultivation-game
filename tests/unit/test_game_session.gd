@@ -4701,3 +4701,25 @@ func test_lend_a_hand() -> void:
 	assert_eq(clock.total_days, day + 1, "second call changes nothing")
 	assert_eq(gs.npc_favor["elder_mo"], favor)
 	gs.end_session()
+
+
+func test_call_on_married_villager_never_mentions_proposing() -> void:
+	var gs := _root().get_node("GameState")
+	var p := new_character()
+	p.gender = "male"
+	gs.start_session(p)
+	gs.current_region = "qingshi_village"
+	var spouse := CharacterData.new()
+	spouse.id = "mo_wife"
+	spouse.name = "Mo Wife"
+	gs.npcs["mo_wife"] = spouse
+	gs.npcs["elder_mo"].spouses.append("mo_wife")
+	gs.npc_favor["elder_mo"] = 58
+	_zero_round_posts.clear()
+	EventBus.message_posted.connect(_collect_post)
+	gs.call_on("elder_mo")
+	EventBus.message_posted.disconnect(_collect_post)
+	var text := "\n".join(_zero_round_posts)
+	assert_true(text.contains(" friend)"), text)
+	assert_false(text.contains("propose") or text.contains("to court"), text)
+	gs.end_session()

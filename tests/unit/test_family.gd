@@ -382,3 +382,22 @@ func test_known_tastes() -> void:
 	assert_eq(t[ids[0]], 1)
 	assert_eq(t[ids[1]], -1)
 	assert_eq(Family.known_tastes(flags, data(), "li_wei").size(), 1)
+
+
+func test_favor_progress_for_names_friendship_steps_when_not_courtable() -> void:
+	var d := data()
+	var me := _person("male", "me")
+	var maid := _person("female", "maid")
+	assert_eq(Family.favor_progress_for(me, maid, 5, d), "favor 5; 15 to court", "courtable keeps courtship text")
+	assert_eq(Family.favor_progress_for(me, maid, 25, d), "favor 25; 35 to propose")
+	var wife := _person("female", "wife")
+	var wed := _person("female", "wed")
+	wed.spouses.append("wife")
+	var people := {"wife": wife, "wed": wed}
+	assert_eq(Family.favor_progress_for(me, wed, 48, d, people), "favor 48; 12 to Close friend", "married villager")
+	var kid := _person("female", "kid", 8)
+	assert_eq(Family.favor_progress_for(me, kid, 10, d), "favor 10; 10 to Acquaintance", "too young")
+	var aunt := _person("female", "aunt")
+	me.parents.append("aunt")
+	assert_true(Family.is_close_kin(me, aunt, {"aunt": aunt}))
+	assert_eq(Family.favor_progress_for(me, aunt, 90, d, {"aunt": aunt}), "favor 90", "past the last tier")

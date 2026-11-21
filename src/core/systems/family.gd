@@ -571,3 +571,16 @@ static func favor_progress(favor: int, data: GameData) -> String:
 		if needed > favor:
 			return "favor %d; %d to %s" % [favor, needed - favor, step[0]]
 	return "favor %d" % favor
+
+
+## FOLK-038: like `favor_progress`, but for someone `c` could not court (married,
+## kin, not interested...) it names the next friendship tier instead:
+## "favor 48; 12 to Close friend", or "favor 90" past the last tier.
+static func favor_progress_for(c: CharacterData, other: CharacterData, favor: int, data: GameData, people: Dictionary = {}) -> String:
+	if c == null or other == null or check_partner(c, other, data, people) == "":
+		return favor_progress(favor, data)
+	var tiers: Array = data.family.get("folk_tiers", [])
+	var next := Folk.tier_index(data, favor) + 1
+	if next >= tiers.size():
+		return "favor %d" % favor
+	return "favor %d; %d to %s" % [favor, int(tiers[next]["min"]) - favor, String(tiers[next]["name"])]

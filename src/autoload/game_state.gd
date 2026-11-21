@@ -2064,6 +2064,11 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 
 
 ## Spend time courting an NPC (needs some favor first); raises their favor.
+## FOLK-038: the "(favor N; M to ...)" text for `npc_id`: courtship steps only when they could be courted.
+func _favor_text(npc_id: String) -> String:
+	return Family.favor_progress_for(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, npcs)
+
+
 func court(npc_id: String) -> void:
 	EventBus.topic = "family"
 	if not _can_act():
@@ -2076,7 +2081,7 @@ func court(npc_id: String) -> void:
 	var courted := NpcClans.scaled_favor(npc_clans, data, npc_id, int(result["favor"]), int(result["favor"]))
 	var before := _rival_attitude()
 	npc_favor[npc_id] = int(npc_favor.get(npc_id, 0)) + courted
-	EventBus.post("You spend days in %s's company. They warm to you. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
+	EventBus.post("You spend days in %s's company. They warm to you. (%s)" % [npcs[npc_id].name, _favor_text(npc_id)], "progress")
 	_post_attitude_change(before)
 	_pass_time(result["days"])
 
@@ -2178,7 +2183,7 @@ func share_tea(npc_id: String) -> void:
 		neighbours.append(String(route.get("to", "")))
 	var season := Calendar.season_of(GameClock.total_days)
 	var tip := Folk.roll_tip(player, data, world_flags, current_region, neighbours, int(npc_favor[npc_id]), npc_id, GameClock.total_days, season, rng, float(rules.get("tip_chance", 0.0)))
-	EventBus.post(Folk.tea_line(data, String(npc.name), Family.favor_progress(int(npc_favor[npc_id]), data), GameClock.total_days, season, not tip.is_empty()), "progress")
+	EventBus.post(Folk.tea_line(data, String(npc.name), _favor_text(npc_id), GameClock.total_days, season, not tip.is_empty()), "progress")
 	if not tip.is_empty():
 		EventBus.post(Folk.tip_line(data, tip, String(npc.name), GameClock.total_days, Weather.of(data, current_region, GameClock.total_days)), "info")
 	EventBus.player_changed.emit()
@@ -2359,7 +2364,7 @@ func chat(npc_id: String) -> void:
 	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
 	var before := _rival_attitude()
 	npc_favor[npc_id] = favor + gain
-	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival else ""))
+	EventBus.post("You pass some time talking with %s. (%s)" % [npcs[npc_id].name, _favor_text(npc_id)] + (" The festival warms the mood." if festival else ""))
 	_post_attitude_change(before)
 	_greet_renowned(npc_id)
 	_friend_scene(npc_id)
@@ -2386,7 +2391,7 @@ func chat(npc_id: String) -> void:
 	var visit := Letters.take_visit_bonus(npc_id, data, world_flags)
 	if visit > 0:
 		npc_favor[npc_id] = mini(100, int(npc_favor[npc_id]) + visit)
-		EventBus.post("%s is glad you came when invited. (%s)" % [npcs[npc_id].name, Family.favor_progress(int(npc_favor[npc_id]), data)], "progress")
+		EventBus.post("%s is glad you came when invited. (%s)" % [npcs[npc_id].name, _favor_text(npc_id)], "progress")
 	if not data.npcs.has(npc_id) and not (player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id)):
 		var neighbours: Array = []
 		for route: Dictionary in data.regions.get(current_region, {}).get("routes", []):
@@ -2416,7 +2421,7 @@ func lend_a_hand(npc_id: String) -> void:
 	world_flags["lend_" + npc_id] = GameClock.total_days
 	var before := _rival_attitude()
 	npc_favor[npc_id] = favor + gain
-	var line := "You spend the day with %s, %s. (%s)" % [npc.name, Folk.lend_verb(data, npc_id), Family.favor_progress(int(npc_favor[npc_id]), data)]
+	var line := "You spend the day with %s, %s. (%s)" % [npc.name, Folk.lend_verb(data, npc_id), _favor_text(npc_id)]
 	var yielded := Folk.lend_yield(data, npc_id)
 	if not yielded.is_empty() and data.items.has(String(yielded.get("item", ""))):
 		player.add_item(String(yielded["item"]), int(yielded.get("count", 1)))
@@ -2454,7 +2459,7 @@ func call_on(npc_id: String) -> void:
 	var before := _rival_attitude()
 	npc_favor[npc_id] = favor + gain
 	var season := Calendar.season_of(GameClock.total_days)
-	EventBus.post(Folk.tea_line(data, String(npc.name), Family.favor_progress(int(npc_favor[npc_id]), data), GameClock.total_days, season, false), "progress")
+	EventBus.post(Folk.tea_line(data, String(npc.name), _favor_text(npc_id), GameClock.total_days, season, false), "progress")
 	_post_attitude_change(before)
 	_friend_scene(npc_id)
 	_note_teacher_seen(npc_id)
@@ -2601,7 +2606,7 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		Karma.on_kindness(player, data, npc_id, "gift")
 	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018
 	var item_name: String = data.items[item_id].get("name", item_id)
-	var accept_line := "%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, Family.favor_progress(int(npc_favor[npc_id]), data)] + (" The festival warms the mood." if festival and taste >= 0 else "")
+	var accept_line := "%s accepts your %s. (%s)" % [npcs[npc_id].name, item_name, _favor_text(npc_id)] + (" The festival warms the mood." if festival and taste >= 0 else "")
 	if taste > 0:  # LOG-004: one line, not two
 		accept_line += " %s is delighted." % npcs[npc_id].name
 	EventBus.post(accept_line, "progress" if taste > 0 else "info")
@@ -4879,7 +4884,7 @@ func answer_letter_request(npc_id: String) -> void:
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + int(result["favor"]), 0, 100)
 	_post_attitude_change(before)
-	var notes: PackedStringArray = [Family.favor_progress(int(npc_favor[npc_id]), data)]
+	var notes: PackedStringArray = [_favor_text(npc_id)]
 	notes.append_array(result["notes"])
 	if String(req.get("source", "letter")) == "folk":
 		EventBus.post("You give %s %d %s. (%s)" % [npcs[npc_id].name, int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), ", ".join(notes)], "progress")
