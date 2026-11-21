@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-21 [GFX-230] The marsh, ridge and Azure Peak starts look fuller: more trees, flowers and grass where the ground was bare.
+- 2026-11-21 [C-410] Seven villagers of the forest, marsh and market have their own friend scenes at the Friend and Close friend tiers.
+- 2026-11-21 [C-409] A pedlar on Azure Peak sells a cheap Iron Fist manual, so an Azure Peak start learns a first style in its first week.
+- 2026-11-21 [WU-588] The People page says what to do next with each person: tea, a hand to lend, what they like, the next tier.
+- 2026-11-21 [WU-590] Place labels keep clear of villagers' and your own figure, not only their names.
+- 2026-11-21 [GUIDE-283] Short hints never cut an item or a villager's name in half.
+- 2026-11-21 [WU-589] Elder Mo and Hunter Ma now show hearts and a banner when your friendship grows a tier.
+- 2026-11-21 [FOLK-039] The test player measures how often a Sworn friend is reached (never yet: gifts and tea stop short).
+- 2026-11-21 [GFX-229] Villagers' work props are drawn larger, readable from across the square.
 - 2026-11-21 [PERF-029] Fight odds are remembered by your actual combat strength, so hints re-rate fights less often.
 - 2026-11-21 [WU-587] A villager's name is never hidden under a place label: the place label moves or fades.
 - 2026-11-21 [GUIDE-282] The test player traces how long a first friend takes (the weekly lend is the limit).
