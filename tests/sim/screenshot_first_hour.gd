@@ -1097,7 +1097,7 @@ func _tier_up_shots(gs: Node, npc_id: String) -> void:
 		gs.world_flags.erase("lend_" + npc_id)
 		gs.check_friendships()
 		gs.player.folk_tier_seen[npc_id] = Folk.tier_index(gs.data, next_min - 1)
-		_teleport_player(npc.position + Vector2(-120, 0))
+		_teleport_player(npc.position + Vector2(-70, 0))  # GFX-231: beside the friend so hearts and banner share the frame
 		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)
 		if next_min - 1 >= int(gs.data.family["lend_a_hand"]["max_favor"]):
 			gs.call_on(npc_id)  # WU-589: a lend is capped below this tier; tea grows it instead

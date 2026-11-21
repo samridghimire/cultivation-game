@@ -141,16 +141,25 @@ func _process(delta: float) -> void:
 ## GFX-227: one 7 x 6 pixel heart (outline, fill, 1 px highlight), 2 px per dot, at the top-left `at`.
 const HEART_ROWS: PackedStringArray = [".OO.OO.", "OHRRRRO", "ORRRRRO", ".ORRRO.", "..ORO..", "...O..."]
 const HEART_RISE := 28.0
-const HEART_TOP := -40.0  # above the name strip, not beside it
+const HEART_TOP := -48.0  # above the name strip, not beside it
+## GFX-231: each dot is 4 px (2x the first hearts) and a heart pops from 0.6 to 1.0 over 0.15 s.
+const HEART_PX := 4.0
+const HEART_POP_FROM := 0.6
+const HEART_POP_TIME := 0.15
 
 
-func _draw_pixel_heart(at: Vector2, alpha: float) -> void:
+## GFX-231: the pop scale `age` seconds after a heart appears (0.6 at 0, 1.0 from 0.15 s on).
+static func heart_pop(age: float) -> float:
+	return lerpf(HEART_POP_FROM, 1.0, clampf(age / HEART_POP_TIME, 0.0, 1.0))
+
+
+func _draw_pixel_heart(at: Vector2, alpha: float, k: float = 1.0) -> void:
 	var colors := {"O": Color(0.55, 0.1, 0.2, alpha), "R": Color(0.93, 0.3, 0.4, alpha), "H": Color(1.0, 0.8, 0.85, alpha)}
 	for y in HEART_ROWS.size():
 		for x in 7:
 			var ch := HEART_ROWS[y].substr(x, 1)
 			if colors.has(ch):
-				draw_rect(Rect2(at + Vector2(x, y) * 2.0, Vector2(2, 2)), colors[ch])
+				draw_rect(Rect2(at + Vector2(x, y) * HEART_PX * k, Vector2(HEART_PX, HEART_PX) * k), colors[ch])
 
 
 func _draw_hearts() -> void:
@@ -165,8 +174,11 @@ func _draw_hearts() -> void:
 			continue
 		var rise := 0.0 if reduced else t * HEART_RISE
 		var alpha := 1.0 if reduced else clampf(2.0 * (1.0 - t), 0.0, 1.0)
-		var x := size.x / 2.0 - float(HEARTS_COUNT) * 8.0 + float(i) * 16.0 + (0.0 if reduced else sin(t * 5.0 + float(i)) * 2.0)
-		_draw_pixel_heart(Vector2(roundf(x), roundf(HEART_TOP - rise)), alpha)
+		var pitch := 9.0 * HEART_PX
+		var x := size.x / 2.0 - float(HEARTS_COUNT) * pitch / 2.0 + float(i) * pitch + (0.0 if reduced else sin(t * 5.0 + float(i)) * 2.0)
+		var k := 1.0 if reduced else heart_pop(_hearts_t - start)
+		var top := Vector2(roundf(x), roundf(HEART_TOP - rise))
+		_draw_pixel_heart(top + Vector2(7.0, 6.0) * HEART_PX * (1.0 - k) / 2.0, alpha, k)
 
 
 ## GFX-221: while the player helps this villager the prop keeps swinging under the modal card.
@@ -540,7 +552,7 @@ func draw_generated_art() -> bool:
 		PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 2.0), Vector2(11.0, 4.5), robe.darkened(0.15))
 		PlaceArt.ellipse(self, Vector2(-3, size.y / 2.0 - 3.0), Vector2(6.0, 2.5), robe)
 		PlaceArt.ellipse(self, Vector2(3, size.y / 2.0 - 3.0), Vector2(6.0, 2.5), robe.lightened(0.1))
-		var mid := _tea_to.normalized() * minf(_tea_to.length(), 40.0) * 0.5 + Vector2(0, size.y / 2.0 - 5.0 * s)
+		var mid := _tea_to.normalized() * _tea_to.length() * 0.5 + Vector2(0, size.y / 2.0 - 5.0 * s)
 		WorkProps.draw_tea(self, _tea_frame, mid, s)
 	elif activity != "":
 		WorkProps.draw(self, activity, _work_frame, Vector2(tex_size.x / 2.0, size.y / 2.0 - tex_size.y * 0.45), s)

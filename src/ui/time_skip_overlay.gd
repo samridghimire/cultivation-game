@@ -20,6 +20,12 @@ var _dim: ColorRect
 var _lend_npc: Node = null
 ## GFX-221: one tile (px) between the helping player and the villager.
 const LEND_GAP := 40.0
+
+
+## GFX-231: tea centres are a sprite's width plus the table's apart, so the seated pair never touch.
+static func tea_gap() -> float:
+	var s := float(Sprites.scale())
+	return 16.0 * s + 14.0 * WorkProps.prop_scale(s)
 var _tea_seated := false  ## GFX-228: the player sits for tea; _end_lend stands them up
 
 ## GFX-213: skips whose title is one of these show the qi gathering around the player.
@@ -157,7 +163,7 @@ func _begin_lend(npc_id: String, tea_id: String = "") -> void:
 			else:
 				n.set_lending(true)
 			var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
-			var spot := Scenery.lend_spot(region, n.position, LEND_GAP)
+			var spot := Scenery.lend_spot(region, n.position, tea_gap() if tea_id != "" else LEND_GAP)
 			if tea_id != "":
 				n.set_tea(true, spot)
 			p.begin_lend(spot, (n.position - spot).normalized())

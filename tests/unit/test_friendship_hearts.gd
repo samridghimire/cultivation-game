@@ -273,3 +273,16 @@ func test_friend_scenes_part_one_cover_seven_villagers() -> void:
 						assert_true(int(d.items[String(scene["gift"])].price) <= 15, "gift cheap")
 			assert_eq(found, 1, "%s has one scene at favor %d" % [npc_id, favor])
 	assert_true(gifts <= 3, "at most 3 gifts, got %d" % gifts)
+
+
+## GFX-231: hearts are 4 px dots, pop from 0.6 to 1.0 over 0.15 s, and the tea pair keep a sprite width apart.
+func test_heart_pop_curve_and_tea_gap() -> void:
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	assert_eq(node.HEART_PX, 4.0)
+	assert_eq(node.heart_pop(0.0), 0.6)
+	assert_eq(node.heart_pop(0.15), 1.0)
+	assert_eq(node.heart_pop(5.0), 1.0)
+	assert_true(node.HEARTS_LIFE >= 1.2)
+	node.free()
+	var w := 16.0 * float(Sprites.scale())
+	assert_true(TimeSkipOverlay.tea_gap() - w >= w, "a sprite width of table and air between the seated pair")
