@@ -296,7 +296,41 @@ func test_lesson_lines_reached_untaught() -> void:
 	gs.start_session(new_character())
 	var rows: Array[Dictionary] = gs.lessons_for("hunter_ma")
 	var lines: PackedStringArray = VillageBook.lesson_lines("hunter_ma", rows, gs.data, 99, "Hunter Ma")
-	assert_eq(lines[0], "Talk to Hunter Ma to learn something")
+	assert_eq(lines[0], VillageBook.LESSON_WAITING)
 	lines = VillageBook.lesson_lines("hunter_ma", rows, gs.data, -1, "Hunter Ma")
 	assert_true(String(lines[0]).ends_with(": ???"), "unreached keeps ???")
+	gs.end_session()
+
+
+## WU-592: every label on a people card fits the card's text column.
+func test_people_card_labels_fit() -> void:
+	var gs: Node = _tree().root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var people := Npcs.in_region(gs.npcs, gs.data, gs.current_region)
+	var favors := [10, 40, 80]
+	for i in mini(people.size(), 3):
+		gs.npc_favor[people[i].id] = favors[i]
+	var book := VillageBook.new()
+	_tree().root.add_child(book)
+	book.open()
+	book.set_page("people")
+	await _frames()
+	var grid := book.get("_grid") as GridContainer
+	assert_true(grid.get_child_count() >= 2, "cards built")
+	for card in grid.get_children():
+		for l in card.find_children("*", "Label", true, false):
+			var lab := l as Label
+			if lab.get_parent() is HBoxContainer:
+				continue  # the "?" taste markers
+			var font := lab.get_theme_font("font")
+			var fs := lab.get_theme_font_size("font_size")
+			var lines := lab.text.split("\n")
+			assert_eq(lab.autowrap_mode, TextServer.AUTOWRAP_WORD_SMART, "wraps: " + lab.text)
+			assert_true(lab.custom_minimum_size.x <= VillageBook.CARD_TEXT_WIDTH + 0.1)
+			for ln in lines:
+				var w := font.get_string_size(ln, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+				assert_true(w <= VillageBook.CARD_TEXT_WIDTH * 2.0, "line fits within two wrapped rows: " + ln)
+	book.queue_free()
+	await _frames()
 	gs.end_session()

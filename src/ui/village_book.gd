@@ -10,6 +10,10 @@ const COLUMNS := 6
 const PAGES: Array[String] = ["fish", "hunts", "herbs", "people", "festivals"]
 const PEOPLE_COLUMNS := 3
 const CARD_SIZE := Vector2(320, 120)
+## WU-592: the lesson-waiting line is short because the card already names the villager.
+const LESSON_WAITING := "Has a lesson for you"
+## Width of the text column inside a people card (card - margins - face - gap).
+const CARD_TEXT_WIDTH := 320.0 - 16.0 - 64.0 - 10.0
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const SLOT_SIZE := Vector2(150, 104)
 const SILHOUETTE := Color(0.1, 0.1, 0.12)
@@ -426,13 +430,18 @@ func _card(e: Dictionary) -> Button:
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
 	for line in lesson_lines(id, GameState.lessons_for(id), data, int(e["tier_index"]), String(e["name"])):
-		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else (UIStyle.ACCENT.darkened(0.3) if line.begins_with("Talk") else DIM))
+		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else (UIStyle.ACCENT.darkened(0.3) if line == LESSON_WAITING else DIM))
 		lesson_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(lesson_label)
 	if String(e.get("last_gift", "")) != "":
 		var gift_label := UIStyle.label(String(e["last_gift"]), 12, DIM)
 		gift_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(gift_label)
+	# WU-592: no line may run past the card; long ones wrap inside the text column.
+	for child in col.get_children():
+		if child is Label:
+			(child as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			(child as Label).custom_minimum_size.x = CARD_TEXT_WIDTH
 	# WU-480: the card grows to its content (never below CARD_SIZE) so no line spills out.
 	b.custom_minimum_size.y = maxf(CARD_SIZE.y, col.get_combined_minimum_size().y + 16.0)
 	var show := func() -> void: _detail.text = people_detail(e, data)
@@ -477,7 +486,7 @@ static func effect_short(effects: Dictionary, data: GameData) -> String:
 
 
 ## WU-477: one text line per lesson of `npc_id`: "Taught you: <effect>" or "At <tier>: ???".
-## WU-480: a lesson whose tier is reached (`tier_index` >= its tier) but not yet taught reads "Talk to <name> to learn something".
+## WU-480: a lesson whose tier is reached (`tier_index` >= its tier) but not yet taught reads LESSON_WAITING.
 static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData, tier_index: int = -1, npc_name: String = "") -> PackedStringArray:
 	var lines: PackedStringArray = []
 	var lessons := Folk.lessons_of(data, npc_id)
@@ -485,7 +494,7 @@ static func lesson_lines(npc_id: String, rows: Array[Dictionary], data: GameData
 		if bool(rows[i]["taught"]):
 			lines.append("Taught you: " + effect_short(lessons[i].get("effects", {}), data))
 		elif tier_index >= int(lessons[i].get("tier", 0)):
-			lines.append("Talk to %s to learn something" % (npc_name if npc_name != "" else "them"))
+			lines.append(LESSON_WAITING)
 		else:
 			lines.append("At %s: ???" % rows[i]["tier_name"])
 	return lines
