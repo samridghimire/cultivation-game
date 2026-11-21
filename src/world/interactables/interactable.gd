@@ -580,15 +580,20 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 	var roof_rects: Array[Rect2] = []
 	var figure_nodes: Array = []  # people's bodies a place's name never slides onto (WU-567)
 	var figure_rects: Array[Rect2] = []
+	var ranked_set := {}  # PERF-025: membership by hash, not by scanning the list
+	for node: Interactable in ranked:
+		ranked_set[node] = true
+	var roof_set := {}
 	var place_nodes: Array = []  # drawn place labels a villager's name never sits on (WU-511)
 	var place_rects: Array[Rect2] = []
 	for other: Interactable in nodes:
 		var is_p := other.is_person()
-		if not is_p and other in ranked and other.label_drawn():
+		if not is_p and ranked_set.has(other) and other.label_drawn():
 			place_nodes.append(other)
 			place_rects.append(other.drawn_label_rect(view))
 		if other.get("npc_id") == null and other.size.x >= 40.0 and other.size.y >= 40.0 and other.get("great") != true and other.art_kind != "travel":
 			roof_nodes.append(other)
+			roof_set[other] = true
 			roof_rects.append(Rect2(other.position - other.size / 2.0, other.size))
 		if is_p and other.visible and other.get("great") != true:
 			figure_nodes.append(other)
@@ -598,7 +603,7 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 	for i in ranked.size():
 		var me: Interactable = ranked[i]
 		if me.is_person():  # WU-483, WU-511: nor on the roof of a building behind them, nor on a place's name
-			if me in roof_nodes:
+			if roof_set.has(me):
 				var roofs: Array[Rect2] = place_rects.duplicate()
 				for j in roof_nodes.size():
 					if roof_nodes[j] != me:
