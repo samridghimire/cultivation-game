@@ -7179,7 +7179,7 @@ func test_far_teacher_hint_whole_on_the_card() -> void:
 	var d := data()
 	var npcs := _style_world()
 	var expect := {
-		"myriad_peaks_ridge": "No fighting style: Hunter Ma, Qingshi (20d)",
+		# GUIDE-281: the ridge pedlar sells Iron Fist now, so its card names the manual, not the far teacher.
 		"azure_peak": "No fighting style: Hunter Ma, Qingshi (10d)",
 		"withered_bone_marsh": "No fighting style: Hunter Ma, Qingshi (9d)",
 	}
@@ -7929,3 +7929,13 @@ func test_fair_fights_skip_far_fights() -> void:
 			any_near = any_near or (int(f["days"]) <= Guidance.FAR_FIGHT_MAX_DAYS and f["kind"] != "deed")
 		for f in fights:
 			assert_true(not any_near or int(f["days"]) <= Guidance.FAR_FIGHT_MAX_DAYS, String(f["text"]))
+
+
+## GUIDE-281: the ridge pedlar also sells the 15-stone Iron Fist manual, so the first technique is a first-month buy.
+func test_ridge_pedlar_sells_the_cheap_first_manual() -> void:
+	var c := _fresh()
+	c.techniques = {}
+	var found := Guidance.first_combat_manual(c, data(), "myriad_peaks_ridge")
+	assert_eq(found.get("item", ""), "manual_iron_fist")
+	assert_eq(found.get("merchant", ""), "Scorched-Scroll Pedlar")
+	assert_eq(found.get("price", 0), 15)

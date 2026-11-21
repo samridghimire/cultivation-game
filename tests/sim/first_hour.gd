@@ -2154,7 +2154,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
-		if trace_first_win and LifeStats.get_stat(c, "fights_won") < 1:
+		if trace_first_win and (LifeStats.get_stat(c, "fights_won") < 1 or c.techniques.is_empty()):  # GUIDE-281: traced on to the first technique
 			var shown: Array[String] = []
 			for line: String in _next_steps(gs, c, day).slice(0, 4):
 				shown.append(line.substr(0, 90))
@@ -2238,7 +2238,11 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var t1 := Time.get_ticks_usec()
 	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
 	if goal != "":
-		lines.append("Goal: " + goal)
+		# GUIDE-281: an affordable first-technique buy (once the first fight is won) goes before the weekly friend line, as the HUD's Goal row does.
+		if goal.begins_with("Learn your first technique: buy ") and LifeStats.get_stat(c, "fights_won") >= 1:
+			lines.insert(0, "Goal: " + goal)
+		else:
+			lines.append("Goal: " + goal)
 	var t2 := Time.get_ticks_usec()
 	for f: Dictionary in Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor):
 		lines.append(with_easy_fight_prefix(String(f.get("text", ""))))
