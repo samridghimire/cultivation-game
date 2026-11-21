@@ -88,3 +88,12 @@ func test_every_used_activity_draws_both_frames() -> void:
 			await (Engine.get_main_loop() as SceneTree).process_frame
 			assert_true(c.drawn > before, "%s frame %d drew" % [act, f])
 	c.free()
+
+
+## GFX-229: props draw about 1.5x larger in whole-pixel steps.
+func test_prop_scale_is_larger_and_whole() -> void:
+	for base: float in [1.0, 2.0, 3.0, 4.0]:
+		var s := WorkProps.prop_scale(base)
+		assert_true(s >= base, "not smaller")
+		assert_eq(s, roundf(s))
+	assert_eq(WorkProps.prop_scale(2.0), 3.0)

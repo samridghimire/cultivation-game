@@ -7,6 +7,8 @@ extends RefCounted
 const ACTIVITIES: Array = PlaceLooks.ACTIVITIES
 ## Seconds for a full 2-frame cycle (a frame change every 0.6 s).
 const PERIOD := 1.2
+## GFX-229: work vignettes draw this much larger than the figure's pixel scale (snapped to whole pixels).
+const PROP_SCALE := 1.5
 
 
 static func is_valid(activity: String) -> bool:
@@ -25,9 +27,15 @@ static func phase_of(id: String) -> float:
 	return float(absi(hash(id)) % 120) / 100.0
 
 
+## The pixel scale work props draw at: 1.5x the base, rounded to a whole pixel step (at least the base).
+static func prop_scale(base: float) -> float:
+	return maxf(base, roundf(base * PROP_SCALE))
+
+
 ## Draws the prop for `activity` on `canvas` (a CanvasItem inside its _draw). `o` is the local point
 ## beside the villager's body where the prop's origin sits (their hand), `s` the pixel scale.
-static func draw(canvas: CanvasItem, activity: String, frame: int, o: Vector2, s: float) -> void:
+static func draw(canvas: CanvasItem, activity: String, frame: int, o: Vector2, scale: float) -> void:
+	var s := prop_scale(scale)
 	var wood := Color("7a5a36")
 	var dark := Color("4a3a26")
 	var steel := Color("b8bcc2")
