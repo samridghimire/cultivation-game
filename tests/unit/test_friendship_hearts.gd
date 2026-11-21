@@ -152,3 +152,56 @@ func test_teaches_line_practice_day_ready() -> void:
 			assert_true(bool(l["ready"]))
 	assert_true(found, "practice day ready line")
 	node.free()
+
+
+## GFX-225: crossing a tier emits one friend_tier_up with the npc and tier; no crossing, no signal.
+func test_tier_up_signal_once_per_crossing() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var npc := Npcs.spawn(gs.npcs, gs.data, seeded_rng(3), {"age_years": 30, "region": "qingshi_village", "realm": "mortal"})
+	gs.check_friendships()  # seeds
+	var got: Array = []
+	var cb := func(id: String, tier: int) -> void: got.append([id, tier])
+	EventBus.friend_tier_up.connect(cb)
+	gs.check_friendships()
+	assert_eq(got.size(), 0)
+	gs.npc_favor[npc.id] = 20
+	gs.check_friendships()
+	gs.check_friendships()
+	EventBus.friend_tier_up.disconnect(cb)
+	assert_eq(got.size(), 1)
+	assert_eq(got[0][0], npc.id)
+	assert_eq(got[0][1], 0)
+
+
+## GFX-225: the hearts wait for a card to close, play ~1.2 s, and sit still (0.6 s) with reduce_motion.
+func test_hearts_wait_for_card_then_play() -> void:
+	var node: Node = load("res://src/world/interactables/npc.gd").new()
+	node.npc_id = "hunter_ma"
+	node.size = Vector2(32, 32)
+	node._on_friend_tier_up("someone_else", 0)
+	assert_false(node.hearts_pending())
+	node._on_friend_tier_up("hunter_ma", 1)
+	assert_true(node.hearts_pending())
+	node._on_modal_changed(true)
+	node.hearts_tick(1.0)
+	assert_true(node.hearts_pending())  # the card is up: queued
+	assert_false(node.hearts_playing())
+	node._on_modal_changed(false)
+	node.hearts_tick(0.1)
+	assert_false(node.hearts_playing())  # a short grace so the card can appear first
+	node.hearts_tick(0.3)
+	assert_true(node.hearts_playing())
+	node.hearts_tick(0.5)
+	assert_true(node.hearts_playing())
+	node.hearts_tick(1.0)
+	assert_false(node.hearts_playing())
+	node.free()
+
+
+## GFX-225: the lend row names the next tier and the favor still needed.
+func test_lend_favor_text_names_next_tier() -> void:
+	var NpcScript: GDScript = load("res://src/world/interactables/npc.gd")
+	assert_eq(NpcScript.lend_favor_text(data(), 36), "favor 36/40 Friend")
+	assert_eq(NpcScript.lend_favor_text(data(), 0), "favor 0/20 Acquaintance")
+	assert_eq(NpcScript.lend_favor_text(data(), 90), "favor 90")

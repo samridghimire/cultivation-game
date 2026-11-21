@@ -322,6 +322,10 @@ func _start() -> void:
 			for id in a.substr(7).split(",", false):
 				_lend_shots(gs, id)
 			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
+		if a.begins_with("--tier-up="):
+			_tier_up_shots(gs, a.substr(10))
+			special = true
 	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
 		if a.begins_with("--spar="):
 			_spar_shots(gs, a.substr(7))
@@ -1029,6 +1033,34 @@ func _lend_shots(gs: Node, npc_id: String) -> void:
 		gs.lend_a_hand(npc_id)
 		_teleport_player(world.get_node("Player").position),
 		"settle": 40, "close": skip.close})
+
+
+## GFX-225: favor just under the next tier, one lend, then the shot waits for the card to close and the hearts to rise.
+func _tier_up_shots(gs: Node, npc_id: String) -> void:
+	var skip: Control = hud.get("_time_skip")
+	shots.append({"name": "tier_up_" + npc_id, "open": func() -> void:
+		var npc: Node2D = null
+		for n in world.get_tree().get_nodes_in_group("npc"):
+			if n.get("npc_id") == npc_id:
+				npc = n
+		if npc == null:
+			push_error("tier-up shot: no %s in the region" % npc_id)
+			return
+		var favor := int(gs.npc_favor.get(npc_id, 0))
+		var next_min := 20
+		for t: Dictionary in gs.data.family["folk_tiers"]:
+			if int(t["min"]) > favor:
+				next_min = int(t["min"])
+				break
+		gs.npc_favor[npc_id] = next_min - 1
+		gs.check_friendships()
+		gs.player.folk_tier_seen[npc_id] = Folk.tier_index(gs.data, next_min - 1)
+		_teleport_player(npc.position + Vector2(-120, 0))
+		gs.lend_a_hand(npc_id)
+		_teleport_player(world.get_node("Player").position)
+		skip.close()  # the card closes first, then the hearts play
+		await world.get_tree().create_timer(0.7).timeout,
+		"settle": 20, "close": func() -> void: pass})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).

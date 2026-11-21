@@ -5133,6 +5133,7 @@ func check_friendships() -> void:
 		var tier: Dictionary = data.family["folk_tiers"][int(hit["tier"])]
 		var npc: CharacterData = npcs[hit["id"]]
 		player.folk_tier_seen[hit["id"]] = int(hit["tier"])
+		EventBus.friend_tier_up.emit(String(hit["id"]), int(hit["tier"]))  # GFX-225
 		if tier.has("line"):
 			EventBus.post(String(tier["line"]).replace("{name}", npc.name), "social")
 			EventBus.friendship_reached.emit(String(hit["id"]), "%s: %s" % [npc.name, String(tier["name"])])

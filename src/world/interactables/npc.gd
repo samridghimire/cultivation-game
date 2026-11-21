@@ -72,8 +72,92 @@ func sprite_keys() -> PackedStringArray:
 
 
 func _on_modal_changed(is_open: bool) -> void:
+	_raw_modal = is_open
 	_modal_open = is_open and not _lending
 	queue_redraw()
+
+
+## GFX-225: hearts rising over the villager after a friendship tier-up. Waits while any card is up.
+const HEARTS_COUNT := 4
+const HEARTS_LIFE := 1.2
+const HEARTS_STILL := 0.6
+const HEARTS_DELAY := 0.3
+var _raw_modal := false
+var _hearts_pending := false
+var _hearts_wait := 0.0
+var _hearts_t := -1.0
+
+
+func _on_friend_tier_up(id: String, _tier: int) -> void:
+	if id == npc_id and npc_id != "":
+		_hearts_pending = true
+		_hearts_wait = 0.0
+
+
+## Whether the hearts are waiting for a card to close, and whether they are playing (public for tests).
+func hearts_pending() -> bool:
+	return _hearts_pending
+
+
+func hearts_playing() -> bool:
+	return _hearts_t >= 0.0
+
+
+## Advances the hearts effect by delta seconds (public for tests).
+func hearts_tick(delta: float) -> void:
+	if _hearts_pending:
+		if not _raw_modal:
+			_hearts_wait += delta
+		if _hearts_wait >= HEARTS_DELAY and not _raw_modal:  # the lend card has had time to appear and close
+			_hearts_pending = false
+			_hearts_t = 0.0
+			_redraw_label()
+	elif _hearts_t >= 0.0:
+		var life := HEARTS_STILL if MotionFx.reduced() else HEARTS_LIFE
+		var flash_before := int(_hearts_t * 10.0)
+		_hearts_t += delta
+		if _hearts_t >= life:
+			_hearts_t = -1.0
+			_redraw_label()
+		elif int(_hearts_t * 10.0) != flash_before and _hearts_t < 0.4:
+			_redraw_label()
+	else:
+		return
+	queue_redraw()
+
+
+## The pip flash: bright on alternate tenths of a second for the first 0.4 s of the effect.
+func pip_flash() -> bool:
+	return _hearts_t >= 0.0 and _hearts_t < 0.4 and int(_hearts_t * 10.0) % 2 == 0
+
+
+func _process(delta: float) -> void:
+	hearts_tick(delta)
+
+
+## One pixel heart (6 x 5 dots, 2 px each) at the top-left `at`.
+const HEART_SPANS := [[0, 1, 2], [0, 4, 5], [1, 0, 5], [2, 0, 5], [3, 1, 4], [4, 2, 3]]
+
+
+func _draw_pixel_heart(at: Vector2, color: Color) -> void:
+	for sp: Array in HEART_SPANS:
+		draw_rect(Rect2(at + Vector2(int(sp[1]), int(sp[0])) * 2.0, Vector2(int(sp[2]) - int(sp[1]) + 1, 1) * 2.0), color)
+
+
+func _draw_hearts() -> void:
+	if _hearts_t < 0.0:
+		return
+	var reduced := MotionFx.reduced()
+	var life := HEARTS_STILL if reduced else HEARTS_LIFE
+	for i in HEARTS_COUNT:
+		var start := 0.0 if reduced else float(i) * 0.12
+		var t := (_hearts_t - start) / (life - start)
+		if t < 0.0 or t > 1.0:
+			continue
+		var rise := 0.0 if reduced else t * 22.0
+		var alpha := 1.0 if reduced else clampf(2.0 * (1.0 - t), 0.0, 1.0)
+		var x := size.x / 2.0 - float(HEARTS_COUNT) * 6.0 + float(i) * 12.0 + (0.0 if reduced else sin(t * 5.0 + float(i)) * 2.0)
+		_draw_pixel_heart(Vector2(roundf(x), roundf(-14.0 - rise)), Color(0.93, 0.3, 0.4, alpha))
 
 
 ## GFX-221: while the player helps this villager the prop keeps swinging under the modal card.
@@ -106,6 +190,7 @@ func _ready() -> void:
 	GameClock.days_advanced.connect(_on_day_for_bubble)
 	refresh_lesson_bubble.call_deferred()
 	EventBus.player_changed.connect(_on_player_for_pips)
+	EventBus.friend_tier_up.connect(_on_friend_tier_up)  # GFX-225
 	refresh_pips.call_deferred()
 	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):
 		GameClock.days_advanced.connect(_on_days_advanced)
@@ -241,7 +326,8 @@ func _draw_label_extras(at: Vector2, fade: float) -> void:
 	var tex := HudIcons.hearts(MAX_PIPS, _pips, PIP_PX)
 	var row_mid := at.y - Interactable.LABEL_FONT_SIZE * 0.3
 	var lay := strip_layout(_strip_pips_w(), _strip_marker_r())
-	_label_node.draw_texture(tex, Vector2(at.x, row_mid - tex.get_height() / 2.0), Color(1, 1, 1, fade))
+	var bright := 2.0 if pip_flash() else 1.0  # GFX-225: the new pip flashes
+	_label_node.draw_texture(tex, Vector2(at.x, row_mid - tex.get_height() / 2.0), Color(bright, bright, bright, fade))
 	if float(lay["marker_x"]) < 0.0:
 		return
 	var c := Vector2(at.x + float(lay["marker_x"]), row_mid)
@@ -438,6 +524,7 @@ static func visit_line(npc_name: String) -> String:
 ## Draws the tea tray (two cups and a pot) at the visitor's side in pixel blocks (WU-411).
 func _draw() -> void:
 	super._draw()
+	_draw_hearts()
 	if not _modal_open and is_birthday() and not has_bubble():  # WU-482: the cake glyph 18 px above the head
 		var tex := HudIcons.calendar_kind("birthday")
 		if tex != null:
@@ -648,7 +735,7 @@ func _acquaintance_options() -> Array[Dictionary]:
 		options.append(_entry(label, Family.check_chat(p, npc, favor, data), GameState.chat.bind(npc_id)))
 	if not data.family.get("lend_a_hand", {}).is_empty() and data.npcs.has(npc_id):
 		var lend_cfg: Dictionary = data.family["lend_a_hand"]
-		var lend_label := "Lend a hand (%s, %s, favor %d)" % [Folk.lend_verb(data, npc_id), Calendar.format_duration(int(lend_cfg.get("days", 1))), favor]
+		var lend_label := "Lend a hand (%s, %s, %s)" % [Folk.lend_verb(data, npc_id), Calendar.format_duration(int(lend_cfg.get("days", 1))), lend_favor_text(data, favor)]
 		options.append(_entry(lend_label, Folk.lend_check(p, npc, data, GameState.world_flags, GameClock.total_days, favor, GameState.current_region), GameState.lend_a_hand.bind(npc_id)))
 	if GameState.visitor_today() == npc_id:
 		options.append(_entry("Share tea with %s" % npc.name, GameState.check_tea(npc_id), GameState.share_tea.bind(npc_id)))
@@ -666,6 +753,15 @@ func _acquaintance_options() -> Array[Dictionary]:
 	var reason := "" if not p.inventory.is_empty() else "you carry nothing"
 	options.append(_entry("Give %s a gift%s" % [npc.name, festival_note(data, GameState.world_events, GameState.current_region)], reason, _set_gift_mode.bind(true)))
 	return options
+
+
+## GFX-225: "favor 36/40 Friend": favor toward the next friendship tier and its name; plain favor past the last tier.
+static func lend_favor_text(data: GameData, favor: int) -> String:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	for t: Dictionary in tiers:
+		if favor < int(t["min"]):
+			return "favor %d/%d %s" % [favor, int(t["min"]), String(t["name"])]
+	return "favor %d" % favor
 
 
 ## Attend the celebration; a confetti puff over the host unless motion is reduced (GFX-027).

@@ -99,6 +99,8 @@ signal bounty_claimed(enemy_name: String, stones: int)
 signal letter_arrived(npc_name: String)
 ## WU-418: a villager reached a new friendship tier (banner with their portrait).
 signal friendship_reached(npc_id: String, text: String)
+## GFX-225: a villager crossed into friendship tier `tier` (index); the world plays hearts over them.
+signal friend_tier_up(npc_id: String, tier: int)
 ## A secret realm is within its notice window (WU-114); the HUD shows a banner.
 signal secret_realm_notice(realm_id: String)
 ## A renown tier was crossed in a region (WU-084); the HUD shows a banner.
