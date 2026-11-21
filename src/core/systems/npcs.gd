@@ -273,16 +273,21 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 ## as [{npc_id, text, category}] (family events also carry a "kind").
 static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}, flags: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
+	# One base draw per call, then a stream per NPC (hash of base + id), so
+	# adding an NPC to the data does not shift anyone else's dice.
+	var base := rng.randi()
 	for npc_id in npcs:
 		var c: CharacterData = npcs[npc_id]
 		if not c.alive:
 			c.dead_days += days
 			continue
+		var npc_rng := RandomNumberGenerator.new()
+		npc_rng.seed = hash([base, str(npc_id)])
 		var remaining := days
 		while remaining > 0 and c.alive:
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
-			_live(c, data, step, rng, events, flags)
+			_live(c, data, step, npc_rng, events, flags)
 	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 

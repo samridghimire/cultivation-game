@@ -94,3 +94,25 @@ func test_hud_queues_card_behind_realm_card() -> void:
 	root.remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## QA-241: a time skip left showing by a freed HUD must not reappear in the HUD of the next session.
+func test_time_skip_does_not_leak_into_next_session() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	hud.call("_show_time_skip", {"title": "Meditating", "days": 30, "lines": PackedStringArray(["x"])})
+	root.remove_child(hud)
+	hud.free()
+	gs.end_session()
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(6), "male"))
+	var hud2: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud2)
+	await _frames()
+	assert_false((hud2.get("_time_skip") as Control).visible, "the old skip stays gone")
+	root.remove_child(hud2)
+	hud2.free()
+	gs.end_session()

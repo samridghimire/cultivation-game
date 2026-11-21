@@ -141,6 +141,7 @@ var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
 ## The time-skip summary on screen, kept across the scene reload that travel
 ## triggers so the new HUD can finish showing it ({} = none).
 static var _showing_skip: Dictionary = {}
+static var _skip_player: CharacterData = null  # QA-241: a skip never outlives its session (a freed HUD leaked it into the next one)
 var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
@@ -389,7 +390,7 @@ func _ready() -> void:
 	_open_pending_respawn.call_deferred()
 	# A fresh character opens with the artifact's intro event (ART-006b).
 	GameState.start_pending_event.call_deferred()
-	if not _showing_skip.is_empty():
+	if not _showing_skip.is_empty() and _skip_player == GameState.player:
 		_show_time_skip.call_deferred(_showing_skip)
 
 
@@ -1893,6 +1894,7 @@ func _on_time_skipped(days: int, summary: Dictionary) -> void:
 
 func _show_time_skip(summary: Dictionary) -> void:
 	_showing_skip = summary
+	_skip_player = GameState.player
 	_time_skip.show_skip(summary, DayLight.plays_cycle(int(summary.get("days", 0)), MotionFx.reduced(), bool(Settings.get_value("ambient_effects"))))
 	_update_modal()
 

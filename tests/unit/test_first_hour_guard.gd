@@ -7,8 +7,10 @@ const SEEDS := 5
 ## the test fails if a listed foe is no longer an offender, so it cannot go stale.
 ## Observed max over seeds 1-5 is 0 lost fights (+2).
 const MAX_FIGHTS_LOST := 2
-## Observed max over seeds 1-5 is 2 quiet lines in a year of meditation (+50%).
-const MAX_QUIET_LINES := 3
+## QA-241: measured over seeds 1-20 (per-NPC streams in Npcs.simulate): 0-3 quiet lines in a year of
+## meditation, max 3, so the limit is max + 1.
+const MAX_QUIET_LINES := 4
+const QUIET_SEEDS := 20
 const KNOWN_OFFENDERS: Array[String] = []
 
 
@@ -94,7 +96,7 @@ func _quiet_lines(seed_value: int) -> int:
 
 func test_meditating_a_year_posts_little_news() -> void:
 	var worst := 0
-	for s in range(1, SEEDS + 1):
+	for s in range(1, QUIET_SEEDS + 1):
 		worst = maxi(worst, _quiet_lines(s))
 	assert_true(worst <= MAX_QUIET_LINES, "%d non-cultivation, non-world log lines in 12 months of meditation (limit %d)" % [worst, MAX_QUIET_LINES])
 
