@@ -226,3 +226,31 @@ func test_heart_shape_and_still_row() -> void:
 	node.hearts_tick(2.0)
 	assert_false(node.hearts_playing())  # the effect ends by itself
 	node.free()
+
+
+## WU-589: a named villager crossing a tier raises hearts and the banner signal (no parcel); a first sighting is silent.
+func test_named_villager_tier_up() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.check_friendships()  # seeds
+	var ups: Array = []
+	var banners: Array = []
+	var cb := func(id: String, tier: int) -> void: ups.append([id, tier])
+	var cb2 := func(id: String, text: String) -> void: banners.append([id, text])
+	EventBus.friend_tier_up.connect(cb)
+	EventBus.friendship_reached.connect(cb2)
+	gs.player.folk_tier_seen.erase("hunter_ma")
+	gs.npc_favor["hunter_ma"] = 45
+	gs.check_friendships()  # first sighting: recorded, silent
+	assert_eq(ups.size(), 0)
+	gs.npc_favor["hunter_ma"] = 62
+	var bag_before: int = gs.player.inventory.size()
+	gs.check_friendships()
+	gs.check_friendships()
+	EventBus.friend_tier_up.disconnect(cb)
+	EventBus.friendship_reached.disconnect(cb2)
+	assert_eq(ups.size(), 1)
+	assert_eq(ups[0], ["hunter_ma", 2])
+	assert_eq(banners.size(), 1)
+	assert_true(String(banners[0][1]).begins_with("Hunter Ma: "))
+	assert_eq(gs.player.inventory.size(), bag_before)

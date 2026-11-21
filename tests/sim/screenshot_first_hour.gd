@@ -329,7 +329,8 @@ func _start() -> void:
 			special = true
 	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
 		if a.begins_with("--tier-up="):
-			_tier_up_shots(gs, a.substr(10))
+			for id in a.substr(10).split(",", false):  # WU-589: a comma list, like --lend/--tea
+				_tier_up_shots(gs, id)
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
 		if a.begins_with("--spar="):
@@ -1055,11 +1056,15 @@ func _tea_shots(gs: Node, npc_id: String) -> void:
 		if npc == null:
 			push_error("tea shot: no %s in the region" % npc_id)
 			return
+		gs.player.lessons_taught[npc_id + ":shot"] = int(gs.get_node("/root/GameClock").total_days)  # WU-589: no lesson card over the tea card
+		skip.close()  # WU-589: an earlier shot's card must be gone before this one opens
+		gs.world_flags.erase("tea_" + npc_id)  # and its cooldown must not refuse the visit
 		gs.npc_favor[npc_id] = 45
 		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)  # no friend-scene card over the pair
 		_teleport_player(npc.position + Vector2(-120, 0))
 		hud.get("_prompt").visible = false
 		gs.call_on(npc_id)
+		hud.get("_banner").visible = false  # WU-589: a queued banner would make the capture wait until the card is gone
 		_teleport_player(world.get_node("Player").position),
 		"settle": 40, "close": skip.close})
 
@@ -1068,6 +1073,10 @@ func _tea_shots(gs: Node, npc_id: String) -> void:
 func _tier_up_shots(gs: Node, npc_id: String) -> void:
 	var skip: Control = hud.get("_time_skip")
 	shots.append({"name": "tier_up_" + npc_id, "open": func() -> void:
+		var arrival: Control = hud.get("_banner")  # WU-589: the arrival banner must not queue the tier-up banner behind it
+		while arrival.queued_count() > 0:
+			arrival.finish_current()
+		arrival.finish_current()
 		var npc: Node2D = null
 		for n in world.get_tree().get_nodes_in_group("npc"):
 			if n.get("npc_id") == npc_id:
@@ -1075,21 +1084,29 @@ func _tier_up_shots(gs: Node, npc_id: String) -> void:
 		if npc == null:
 			push_error("tier-up shot: no %s in the region" % npc_id)
 			return
+		gs.player.lessons_taught[npc_id + ":shot"] = int(gs.get_node("/root/GameClock").total_days)  # WU-589: no lesson card over the hearts
+		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)
 		var favor := int(gs.npc_favor.get(npc_id, 0))
 		var next_min := 20
 		for t: Dictionary in gs.data.family["folk_tiers"]:
-			if int(t["min"]) > favor:
+			if int(t["min"]) > favor and t.has("line"):  # WU-589: only a tier with a line raises the banner
 				next_min = int(t["min"])
 				break
 		gs.npc_favor[npc_id] = next_min - 1
+		gs.world_flags.erase("tea_" + npc_id)  # WU-589: no cooldown from an earlier shot
+		gs.world_flags.erase("lend_" + npc_id)
 		gs.check_friendships()
 		gs.player.folk_tier_seen[npc_id] = Folk.tier_index(gs.data, next_min - 1)
 		_teleport_player(npc.position + Vector2(-120, 0))
-		gs.lend_a_hand(npc_id)
+		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)
+		if next_min - 1 >= int(gs.data.family["lend_a_hand"]["max_favor"]):
+			gs.call_on(npc_id)  # WU-589: a lend is capped below this tier; tea grows it instead
+		else:
+			gs.lend_a_hand(npc_id)
 		_teleport_player(world.get_node("Player").position)
 		skip.close()  # the card closes first, then the hearts play
 		await world.get_tree().create_timer(0.8).timeout,  # GFX-227: card closed, banner up, hearts rising
-		"settle": 20, "close": func() -> void: pass})
+		"settle": 20, "keep_banner": true, "close": func() -> void: pass})  # WU-589: the banner is what this shot is for
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).
@@ -1171,7 +1188,7 @@ func _process(_d: float) -> bool:
 		frames = 0
 		return false
 	# WU-386: after a fight a milestone banner is still fading; wait it out (at most ~3 s) so it never dims a screen shot.
-	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]) and not (OS.get_cmdline_user_args().has("--first-visit") and String(shot["name"]).begins_with("region_")):  # QA-182: queued notices covered the modals
+	if frames >= SETTLE_FRAMES and hud.get("_banner").visible and not shot.get("keep_banner", false) and (shot.get("wait_banner", false) or shot["name"] not in ["hud_arrival", "arrival_card"]) and not (OS.get_cmdline_user_args().has("--first-visit") and String(shot["name"]).begins_with("region_")):  # QA-182: queued notices covered the modals
 		if banner_wait_start < 0:
 			banner_wait_start = Time.get_ticks_msec()
 		if Time.get_ticks_msec() - banner_wait_start < BANNER_WAIT_MSEC:

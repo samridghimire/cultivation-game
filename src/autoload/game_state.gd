@@ -5149,6 +5149,24 @@ func check_friendships() -> void:
 			EventBus.friendship_reached.emit(String(hit["id"]), "%s: %s" % [npc.name, String(tier["name"])])
 		if tier.has("gift"):
 			player.add_item(String(tier["gift"]["item"]), int(tier["gift"]["count"]))
+	_check_named_tiers()
+
+
+## WU-589: named villagers (data/npcs.json) cross friendship tiers too: hearts and the "<name>: <tier>" banner,
+## no parcel or line (those are for generated villagers). A villager first seen here is recorded silently.
+func _check_named_tiers() -> void:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	for id: String in data.npcs:
+		var c: CharacterData = npcs.get(id)
+		if c == null or not npc_favor.has(id) or player.spouses.has(id) or player.children.has(id) or player.parents.has(id):
+			continue
+		var t := Folk.tier_index(data, int(npc_favor[id]))
+		if not player.folk_tier_seen.has(id):
+			player.folk_tier_seen[id] = t
+		elif t > int(player.folk_tier_seen[id]):
+			player.folk_tier_seen[id] = t
+			EventBus.friend_tier_up.emit(id, t)
+			EventBus.friendship_reached.emit(id, "%s: %s" % [c.name, String(tiers[t]["name"])])
 
 
 ## WU-418: number of friendship tiers (hearts shown in the villager menu).
