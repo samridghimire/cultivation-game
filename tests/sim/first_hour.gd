@@ -186,7 +186,7 @@ static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
 const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
 const TRAVEL_PRESSES := 3
-const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_technique", "first_breakthrough", "sect_joined"]
+const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_lesson", "first_friend_scene", "first_technique", "first_breakthrough", "sect_joined"]
 
 
 ## PERF-004: unit tests that only read a run's result share one run per (seed, months, curious, no_help, wait, flags).
@@ -2193,7 +2193,8 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 static func note_milestones(gs: Node, c: CharacterData) -> void:
 	var first: Dictionary = press_log["first"]
 	var held := {"first_stage": c.realm_index * 100 + c.stage > 0, "first_win": LifeStats.get_stat(c, "fights_won") > 0,
-		"first_technique": not c.techniques.is_empty(), "first_breakthrough": c.realm_index >= 1, "sect_joined": not c.is_rogue(), "first_friend": false, "friend_tier2": false, "close_friend": false, "sworn_friend": false}
+		"first_technique": not c.techniques.is_empty(), "first_breakthrough": c.realm_index >= 1, "sect_joined": not c.is_rogue(), "first_friend": false, "friend_tier2": false, "close_friend": false, "sworn_friend": false,
+		"first_lesson": not c.lessons_taught.is_empty(), "first_friend_scene": not c.scenes_seen.is_empty()}  # SIM-024: first FOLK-020 lesson taught / first FOLK-013 scene shown
 	for npc_id: String in gs.npc_favor:
 		var tier := Folk.tier_index(gs.data, int(gs.npc_favor[npc_id]))
 		held["first_friend"] = held["first_friend"] or tier >= 0  # the first tier (Acquaintance)

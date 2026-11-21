@@ -334,3 +334,28 @@ func test_hints_player_hunts_great_beast_only_when_rated() -> void:
 		assert_true(res == "great_beast" or res == "fight", "a rated beast is fought: " + res)
 		assert_true(clock.total_days >= day, "the hunt moved the clock")
 	gs.end_session()
+
+
+## SIM-024: the milestone recorder notes the first lesson taught and the first friend scene shown, once, with the day and presses.
+func test_note_milestones_records_lesson_and_friend_scene() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	var gs := _root().get_node("GameState")
+	gs.start_session(CharacterFactory.create("Sim", gs.data, seeded_rng(5)))
+	FirstHour.press_log = {"presses": 7, "first": {}}
+	FirstHour.note_milestones(gs, gs.player)
+	assert_false(FirstHour.press_log["first"].has("first_lesson"), "no lesson yet")
+	assert_false(FirstHour.press_log["first"].has("first_friend_scene"), "no scene yet")
+	gs.player.lessons_taught["some_npc:0"] = 3
+	FirstHour.press_log["presses"] = 9
+	FirstHour.note_milestones(gs, gs.player)
+	assert_eq(int(FirstHour.press_log["first"]["first_lesson"]["presses"]), 9, "the lesson is stamped with the presses so far")
+	assert_false(FirstHour.press_log["first"].has("first_friend_scene"), "a lesson is not a scene")
+	gs.player.scenes_seen.append("a_scene")
+	FirstHour.press_log["presses"] = 12
+	FirstHour.note_milestones(gs, gs.player)
+	gs.player.lessons_taught["some_npc:1"] = 5
+	FirstHour.note_milestones(gs, gs.player)
+	assert_eq(int(FirstHour.press_log["first"]["first_friend_scene"]["presses"]), 12, "the scene is stamped when first seen")
+	assert_eq(int(FirstHour.press_log["first"]["first_lesson"]["presses"]), 9, "the first stamp is kept")
+	gs.end_session()
+	FirstHour.press_log = {"presses": 0, "first": {}}
