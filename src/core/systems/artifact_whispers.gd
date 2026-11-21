@@ -8,15 +8,16 @@ const MOMENTS: Array[String] = ["first_breakthrough", "first_respawn", "first_se
 const MAX_LENGTH := 140
 
 
-## One whisper for `moment` (picked with `rng`), or "" if it has none or already spoke this life.
-static func speak(c: CharacterData, data: GameData, moment: String, rng: RandomNumberGenerator) -> String:
+## One whisper for `moment` (picked by character name, stable per life), or "" if it has none or already spoke this life.
+static func speak(c: CharacterData, data: GameData, moment: String, _rng: RandomNumberGenerator = null) -> String:
 	if c.artifact_spoke.has(moment):
 		return ""
 	var lines: Array = (data.artifact.get("whispers", {}) as Dictionary).get(moment, [])
 	if lines.is_empty():
 		return ""
 	c.artifact_spoke[moment] = true
-	return String(lines[rng.randi_range(0, lines.size() - 1)])
+	# Picked from the name and moment, not the shared rng: a whisper must not shift the world's random stream.
+	return String(lines[absi(hash("%s/%s" % [c.name, moment])) % lines.size()])
 
 
 ## Load errors for the optional `whispers` block.
