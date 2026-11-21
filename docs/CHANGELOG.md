@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-21 [QA-239] Adding a new villager no longer changes other villagers' spiritual roots in an existing world seed.
+- 2026-11-21 [WU-584] Fight odds use one word everywhere: "Easy for you, 99%" in menus, the threat rank labelled as "threat".
+- 2026-11-21 [GUIDE-278] Once you have a Friend, the hints show which gift brings you closer and where to buy it.
+- 2026-11-21 [SIM-022] The test player measures where the first three years go (cultivating, chores, travel, fights).
+- 2026-11-21 [PERF-027] The long test sim shows where its time goes (the Next-steps hints are most of it).
+- 2026-11-21 [C-404] Villagers thank you in their own words when you lend them a hand.
+- 2026-11-21 [GFX-222] Caves, reed beds and ruins have stone, mud and dusty floors in their explore pictures.
+- 2026-11-21 [WU-583] A villager's name, heart pips and quest marker sit in one tidy row and never overlap.
+- 2026-11-21 [GUIDE-277] Goals you can't act on yet (a great beast before Foundation, a far-off easy fight) step aside for ones you can.
+- 2026-11-21 [C-401] Character creation tells you what your strongest element is good at.
+- 2026-11-21 [FOLK-036] The "Make a friend" hint shows up early and carries on until you have a real Friend.
+- 2026-11-21 [GFX-221] Lending a hand shows you working beside the villager under a "Helping ..." card.
 - 2026-11-20 [WU-582] Explore menus open with a picture of the place you're about to search.
 - 2026-11-20 [C-403] More villagers are busy at their work in every start region.
 - 2026-11-20 [SIM-021] The test player follows the "Make a friend" hint (first acquaintance in about 6 weeks instead of 11 months).

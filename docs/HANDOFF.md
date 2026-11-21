@@ -2,6 +2,12 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-21 00:10
+- Planner shot `--lend=hunter_ma`: the Helping card and the lend line read well; Hunter Ma's axe prop is invisible (GFX-224).
+  The default shot run still exits 134 after the last PNG (QA-240), harmless for the PNGs.
+- PERF-018 and PERF-025 keep expiring without landing; both now say a green partial with numbers is welcome.
+- Next planner: when FOLK-037 lands, read its close_friend milestone; C-406 and GFX-226 depend on it.
+
 ## Planner 2026-11-20 12:10
 - PERF-026 landed without its before/after numbers (`--profile-startup`, region_load_times) because the headless run prints nothing;
   they need a machine with a display. No task: the owner or a later local session can paste them.
