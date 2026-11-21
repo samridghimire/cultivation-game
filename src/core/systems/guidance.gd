@@ -655,6 +655,22 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 	if fight != "":
 		return fight
 	var re := RegEx.new()
+	# GUIDE-283: GUIDE-278's friendship lines keep the whole item and villager name.
+	re.compile("^Grow closer: give (.+?) the (.+?) they like(?:, on sale here)? \\(favor (\\d+)/(\\d+)\\)")
+	var gift := re.search(line)
+	if gift != null:
+		for t: String in ["Grow closer: %s for %s" % [gift.get_string(2), gift.get_string(1)], "Gift for %s: %s" % [gift.get_string(1), gift.get_string(2)], "Gift %s: %s" % [gift.get_string(1), gift.get_string(2)]]:
+			if t.length() <= SHORT_HINT_CHARS:
+				return t
+		# Villager and item together are too long: the item alone, whole, beats a cut name.
+		var item_only := "Gift: %s" % gift.get_string(2)
+		return item_only if item_only.length() <= SHORT_HINT_CHARS else gift.get_string(2)
+	re.compile("^Grow closer: share tea at (.+?)'s \\(favor (\\d+)/(\\d+)\\)")
+	var tea := re.search(line)
+	if tea != null:
+		for t: String in ["Tea at %s's (%s/%s)" % [tea.get_string(1), tea.get_string(2), tea.get_string(3)], "Tea at %s's" % tea.get_string(1), "Tea: %s" % tea.get_string(1)]:
+			if t.length() <= SHORT_HINT_CHARS:
+				return t
 	# GUIDE-229: "Short on stones: fish at Village Pond Jetty, about 2 a day." -> "Fish at Village Pond Jetty: ~2 a day"
 	re.compile("^Short on stones: (\\w+) at (.+?), about (\\d+) a day")
 	var purse := re.search(line)
@@ -730,7 +746,41 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 	var cut := first.substr(0, SHORT_HINT_CHARS + 1)
 	var space := cut.rfind(" ")
 	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_HINT_CHARS)
-	return drop_trailing_stop_words(cut.rstrip(" .:;,-("))
+	return _guard_names(first, drop_trailing_stop_words(cut.rstrip(" .:;,-(")), data)
+
+
+## GUIDE-283: verbs a cut must not end on besides STOP_WORDS.
+const DANGLING_WORDS: PackedStringArray = ["give", "grow", "ask", "buy", "sell", "visit", "talk", "see"]
+
+## GUIDE-283: `cut` (a prefix of `full`) never ends inside an item or villager name: if it does, drop the partial
+## name and any dangling words; under ~20 chars, fall back to the first clause up to ':' plus the whole name.
+static func _guard_names(full: String, cut: String, data: GameData) -> String:
+	if data == null or cut.length() >= full.length():
+		return cut
+	var names: Array[String] = []
+	for id: String in data.items:
+		names.append(String(data.items[id].get("name", id)))
+	for id: String in data.npcs:
+		names.append(String(data.npcs[id].get("name", id)))
+	for n in names:
+		if n.length() < 3:
+			continue
+		var at := full.find(n)
+		while at >= 0:
+			if cut.length() > at and cut.length() < at + n.length():
+				var before := drop_trailing_stop_words(full.substr(0, at).rstrip(" .:;,-("))
+				while true:
+					var sp := before.rfind(" ")
+					if sp <= 0 or not DANGLING_WORDS.has(before.substr(sp + 1).to_lower()):
+						break
+					before = drop_trailing_stop_words(before.substr(0, sp))
+				if before.length() >= 20:
+					return before
+				var colon := full.find(":")
+				var alone := (full.substr(0, colon + 1) + " " + n) if colon > 0 else n
+				return alone if alone.length() <= SHORT_HINT_CHARS else n
+			at = full.find(n, at + 1)
+	return cut
 
 
 ## GUIDE-223: words a shortened line must not end on.
