@@ -936,6 +936,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_celebrations(data))
 	errors.append_array(validate_tips(data))
 	errors.append_array(validate_visits(data))
+	errors.append_array(validate_drop_by(data))
 	errors.append_array(validate_companions(data))
 	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
@@ -2100,3 +2101,53 @@ static func lend_yield(data: GameData, npc_id: String) -> Dictionary:
 	var activity := String(data.npcs.get(npc_id, {}).get("activity", ""))
 	var y: Dictionary = data.family.get("lend_a_hand", {}).get("yields", {}).get(activity, {})
 	return y.duplicate() if not y.is_empty() else {}
+
+
+## FOLK-041: a Close friend who lives where you arrive may leave something from their work. Rolled once per cooldown
+## (the flag `drop_by_<id>` is set on a miss too). Returns {item, count, line} or {}. The gift is the yield of their
+## lend-a-hand work, else one of their own liked items worth <= max_price stones. Family never.
+static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, rng: RandomNumberGenerator, favor: int) -> Dictionary:
+	var rules: Dictionary = visit_rules(data).get("drop_by", {})
+	if rules.is_empty() or not npc.alive or favor < int(rules.get("min_favor", 60)) or _is_player_family(c, npc.id):
+		return {}
+	var key := "drop_by_" + npc.id
+	if today - int(flags.get(key, -100000)) < int(rules.get("cooldown_days", 30)):
+		return {}
+	flags[key] = today
+	if rng.randf() >= float(rules.get("chance", 0.5)):
+		return {}
+	var gift := lend_yield(data, npc.id)
+	if gift.is_empty():
+		var options: Array = []
+		for like: Variant in data.npcs.get(npc.id, {}).get("likes", []):
+			var item: Dictionary = data.items.get(String(like), {})
+			if not item.is_empty() and int(item.get("price", 99)) <= int(rules.get("max_price", 10)):
+				options.append(String(like))
+		if options.is_empty():
+			return {}
+		gift = {"item": options[rng.randi_range(0, options.size() - 1)], "count": 1}
+	var lines: Array = data.npcs.get(npc.id, {}).get("drop_by_lines", [])
+	if lines.is_empty():
+		lines = rules.get("lines", [])
+	var line := "" if lines.is_empty() else String(lines[rng.randi_range(0, lines.size() - 1)])
+	return {"item": String(gift["item"]), "count": int(gift.get("count", 1)), "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
+
+
+static func validate_drop_by(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r: Dictionary = visit_rules(data).get("drop_by", {})
+	if r.is_empty():
+		return errors
+	if float(r.get("chance", 0)) <= 0.0 or float(r.get("chance", 0)) > 1.0:
+		errors.append("family.json folk_visits.drop_by: chance must be in (0, 1]")
+	for key in ["min_favor", "cooldown_days", "max_price"]:
+		if not (r.get(key, -1) is int or r.get(key, -1) is float) or int(r.get(key, -1)) < 0:
+			errors.append("family.json folk_visits.drop_by: %s must be a whole number >= 0" % key)
+	var lines: Variant = r.get("lines", [])
+	if not (lines is Array) or (lines as Array).is_empty():
+		errors.append("family.json folk_visits.drop_by: lines must be a non-empty array")
+	else:
+		for l: Variant in lines:
+			if not l is String or String(l) == "" or String(l).length() > 140:
+				errors.append("family.json folk_visits.drop_by: lines must be strings of 1-140 chars")
+	return errors

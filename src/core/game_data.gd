@@ -840,6 +840,14 @@ func _validate_world() -> void:
 				for l in ll:
 					if not l is String or String(l) == "" or String(l).length() > 140:
 						load_errors.append("NPC '%s' lend_lines entries must be strings of 1-140 chars" % npc["id"])
+		if npc.has("drop_by_lines"):
+			var dl: Variant = npc["drop_by_lines"]
+			if not (dl is Array) or (dl as Array).is_empty() or (dl as Array).size() > 3:
+				load_errors.append("NPC '%s' drop_by_lines needs 1-3 strings" % npc["id"])
+			else:
+				for l in dl:
+					if not l is String or String(l) == "" or String(l).length() > 140:
+						load_errors.append("NPC '%s' drop_by_lines entries must be strings of 1-140 chars" % npc["id"])
 		if npc.has("graduation_line") and (not npc["graduation_line"] is String or String(npc["graduation_line"]) == "" or String(npc["graduation_line"]).length() > 160):
 			load_errors.append("NPC '%s' graduation_line must be a string of 1..160 characters" % npc["id"])
 		if npc.has("birthday_line") and (not npc["birthday_line"] is String or String(npc["birthday_line"]) == "" or String(npc["birthday_line"]).length() > 160):

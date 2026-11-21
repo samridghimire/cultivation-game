@@ -870,6 +870,7 @@ func _post_arrival_line() -> void:
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")
+	receive_drop_by_gifts()
 	# WILD-013 / TODAY-002: the in-season line once a season per region.
 	var season_line := Wildlife.season_clause(data, current_region, day)
 	var season_key := "%d-%s" % [Calendar.year_of(day), Calendar.season_of(day)]
@@ -879,6 +880,21 @@ func _post_arrival_line() -> void:
 		world_flags["season_line_seen"] = seen
 		if not line.contains(season_line):  # WU-464: the arrival line may already say it
 			EventBus.post(season_line, "travel")
+
+
+## FOLK-041: named Close friends who live in this region may leave something from their work (once a month each).
+## Only villagers already at the favor bar draw from `rng`.
+func receive_drop_by_gifts() -> void:
+	var min_favor := int(Folk.visit_rules(data).get("drop_by", {}).get("min_favor", 60))
+	for id: String in npcs:
+		var npc: CharacterData = npcs[id]
+		if not data.npcs.has(id) or int(npc_favor.get(id, 0)) < min_favor or Npcs.region_of(npc, data) != current_region:
+			continue
+		var gift := Folk.drop_by_gift(player, npc, data, world_flags, GameClock.total_days, rng, int(npc_favor.get(id, 0)))
+		if gift.is_empty():
+			continue
+		player.add_item(String(gift["item"]), int(gift["count"]))
+		EventBus.post(String(gift["line"]), "progress")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a
