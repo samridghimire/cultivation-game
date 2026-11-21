@@ -4134,7 +4134,9 @@ func _screen(label: String, action: String) -> void:
 
 
 func _modal(label: String, field: String, args: Array = []) -> void:
-	var s: Control = hud.get(field)
+	# PERF-018: Settings/Help/Load are built on first use, so go through the HUD's lazy accessors
+	var lazy := {"_settings": "_settings_screen", "_help": "_help_screen", "_load_screen": "_load_screen_node"}
+	var s: Control = hud.call(lazy[field]) if lazy.has(field) else hud.get(field)
 	shots.append({"name": label, "open": Callable(s, "open").bindv(args), "close": s.close})
 
 

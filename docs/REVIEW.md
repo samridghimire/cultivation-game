@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: d4b379f
+Last reviewed commit: 8ac4499
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2371,3 +2371,18 @@ Last reviewed commit: d4b379f
   - GFX-225 OK (hearts wait for any modal; reduce_motion still variant; lend row 'favor 36/40 Friend'). WU-585 OK (lend_spot
     unit-tested over every worker spot). WU-584 OK ("Easy" only in odds wording; threat ranks still say Weak).
     GFX-223/224 draw-only (ground cache VERSION 6). I did not render GFX-223/224/225 or WU-585.
+- 2026-11-21 (reviewer): reviewed d4b379f..8ac4499 (SIM-023, PERF-028 partial, GFX-226, PERF-025 partial, PERF-018 partial,
+  WU-586, FOLK-038, C-408, GFX-227, GFX-228, GUIDE-281, GUIDE-282 partial; [PLAN]/[REVIEW] skipped). Main green before and
+  after (4510 tests). No BACKLOG/CHANGELOG edits by workers, no new binary assets, no persistent-state or SAVE_VERSION change
+  (`_skip_tea` is session-only).
+  - Fixed in one [REVIEW] commit: (1) PERF-018 made `_settings`/`_help`/`_load_screen` lazy, but screenshot_screens.gd's
+    `_modal("help"/"settings")` still read the raw fields (null -> the screens shot run would crash); it now goes through the
+    HUD accessors. (2) FOLK-038 inserted `_favor_text` between `court()` and its doc comment; moved back. (3) GUIDE-281
+    changed shop data and the hints-player policy without refreshing the baseline: refreshed "first_hour_presses" (Qingshi
+    first_technique day 10 -> 7, first_friend 46 -> 45) and "first hour in every start" (ridge first_technique 165 -> 7).
+  - PERF-028 OK: Buffs.multiplier only reads validated STAT_KEYS, injuries act by id; miss keys carry their bounds.
+    GFX-226/228 OK (tea card always shown, player seated/stood back up, prompt hidden under the card via
+    `_on_time_skip_closed` -> `_update_modal`). FOLK-038 OK (spouses/kin/minors get folk tiers). C-408 data-only.
+    GFX-227 banner now titled "<name>: <tier>". Not rendered by me: GFX-226/227/228 (workers also skipped the --tea and
+    --tier-up shots; the planner should keep a visual pass for them). Nothing filed; open design follow-ups (azure first
+    technique day 136, weekly lend cap vs first_friend) are in the GUIDE-281/282 commit messages for the planner.

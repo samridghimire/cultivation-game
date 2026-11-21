@@ -2063,12 +2063,12 @@ func _dialogue_ctx(npc_id: String) -> Dictionary:
 	return {"player": player, "npc": npcs.get(npc_id), "data": data, "flags": world_flags, "favor": int(npc_favor.get(npc_id, 0)), "today": GameClock.total_days, "rival": Rivals.rival_of(player, npcs)}
 
 
-## Spend time courting an NPC (needs some favor first); raises their favor.
 ## FOLK-038: the "(favor N; M to ...)" text for `npc_id`: courtship steps only when they could be courted.
 func _favor_text(npc_id: String) -> String:
 	return Family.favor_progress_for(player, npcs.get(npc_id), int(npc_favor.get(npc_id, 0)), data, npcs)
 
 
+## Spend time courting an NPC (needs some favor first); raises their favor.
 func court(npc_id: String) -> void:
 	EventBus.topic = "family"
 	if not _can_act():
