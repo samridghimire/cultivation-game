@@ -2097,6 +2097,7 @@ func _draw_relief(map: Dictionary) -> void:
 					var rad := rng.randf_range(8.0, 16.0)
 					var c := r.position + Vector2(rng.randf_range(rad, maxf(r.size.x - rad, rad)), rng.randf_range(rad, maxf(r.size.y - rad, rad)))
 					var rsd := rng.randi()
+					draw_colored_polygon(Scenery.shadow_blob(Vector2(c.x + 1.0, c.y + rad * 0.55), Vector2(rad * 1.0, 3.5), rsd), Color(0, 0, 0, 0.34))  # GFX-223: firmer contact shadow
 					draw_colored_polygon(Scenery.flat_stone(c + Vector2(1.0, 3.0), rad, rsd), Color(0, 0, 0, 0.3))
 					var body := Scenery.flat_stone(c, rad, rsd)  # GFX-166: flat irregular slate stones with a dark foot, not balls
 					draw_colored_polygon(Scenery.flat_stone(c + Vector2(0, 2.0), rad, rsd), rock.darkened(0.55))
@@ -2108,6 +2109,12 @@ func _draw_relief(map: Dictionary) -> void:
 					var ring := body.duplicate()
 					ring.append(body[0])
 					draw_polyline(ring, rock.darkened(0.45), 1.0)
+					var edge := PackedVector2Array()  # GFX-223: a lit top-left edge, as on the crags
+					for q in body:
+						if q.y <= c.y and q.x <= c.x + rad * 0.3:
+							edge.append(q + Vector2(0.0, 1.0))
+					if edge.size() >= 2:
+						draw_polyline(edge, rock.lightened(0.28), 1.0)
 					if winter:
 						draw_colored_polygon(Scenery.flat_stone(c + Vector2(0, -rad * 0.25), rad * 0.55, rsd + 1), snow_col)
 					bi += 1
@@ -3526,6 +3533,7 @@ func _draw_peak_ledge(rock: Color, winter: bool) -> void:
 		var rad: float = b["r"]
 		draw_rect(Rect2(p.x - rad, p.y + rad * 0.5, rad * 2.0, 3.0), Color(0.08, 0.1, 0.13, 0.35))
 		draw_circle(p, rad, rock.darkened(0.3))
+		draw_arc(p, rad - 0.5, PI * 1.05, PI * 1.75, 10, Color(0.97, 0.99, 1.0) if winter else rock.lightened(0.3), 1.0)  # GFX-223: lit top edge
 		draw_circle(p + Vector2(-rad * 0.25, -rad * 0.3), rad * 0.6, Color(0.93, 0.96, 0.98) if winter else rock.lightened(0.12))
 
 
