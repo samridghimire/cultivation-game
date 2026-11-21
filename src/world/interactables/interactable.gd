@@ -722,7 +722,7 @@ static func _final_separate(ranked: Array, view: Rect2) -> void:
 	var fixed: Array[bool] = []
 	for node: Interactable in shown:
 		rects.append(node.drawn_label_rect(view).grow(PLATE_PAD))  # GFX-202: the dark plate counts
-		fixed.append(not node.is_person())
+		fixed.append(node.get("npc_id") != null)  # WU-587: people before places: a named villager's row stays, a place name yields
 	var res := LabelLayout.separate(rects, fixed)
 	for i in shown.size():
 		var node: Interactable = shown[i]
