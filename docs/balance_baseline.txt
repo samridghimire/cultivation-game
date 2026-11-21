@@ -1917,3 +1917,106 @@ Time breakdown (SIM-022): hints player, day 0 to Foundation or end of run; days 
   medians (days/qi): cultivate 466/17161, travel 78/0, fights 74/1960, chores/work 206/740, lend/social 19/300, crafting 1/0, injured/resting 12/0, practise 70/0, breakthrough 21/0, events/waiting 72/1205; days at QR peak 14
 
 
+## first hour in every start (hints player, seeds 1-10, 12 months)
+
+seed 1 first_win day 8
+seed 2 first_win day 8
+seed 3 first_win day 8
+seed 4 first_win day 8
+seed 5 first_win day 8
+seed 6 first_win day 8
+seed 7 first_win day 8
+seed 8 first_win day 8
+seed 9 first_win day 8
+seed 10 first_win day 8
+first hour in presses (hints player, seeds 1-10, 12 months, start qingshi_village)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             15             62             27            135
+  first_win              10/10              3              3              8              8
+  first_friend           10/10             21             24             41             48
+  friend_tier2           10/10             36             45             76             97
+  close_friend           10/10             57             72            125            160
+  first_technique        10/10             12             12             13             13
+  first_breakthrough     10/10             15             62             27            135
+  sect_joined            10/10             15             62             27            135
+seed 1 first_win day 8
+seed 2 first_win day 8
+seed 3 first_win day 8
+seed 4 first_win day 8
+seed 5 first_win day 8
+seed 6 first_win day 8
+seed 7 first_win day 8
+seed 8 first_win day 8
+seed 9 first_win day 8
+seed 10 first_win day 8
+first hour in presses (hints player, seeds 1-10, 12 months, start withered_bone_marsh)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             18             18             36             36
+  first_win              10/10              3              3              8              8
+  first_friend           10/10             24             27             50             57
+  friend_tier2           10/10             39             48             85            106
+  close_friend           10/10             57             75            127            169
+  first_technique        10/10             12             12             21             21
+  first_breakthrough     10/10             18             18             36             36
+  sect_joined            10/10             18             18             36             36
+seed 1 first_win day 8
+seed 2 first_win day 8
+seed 3 first_win day 8
+seed 4 first_win day 8
+seed 5 first_win day 8
+seed 6 first_win day 8
+seed 7 first_win day 8
+seed 8 first_win day 8
+seed 9 first_win day 8
+seed 10 first_win day 8
+first hour in presses (hints player, seeds 1-10, 12 months, start myriad_peaks_ridge)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             15             27             25             46
+  first_win              10/10              3              3              8              8
+  first_friend           10/10             30             30             46             60
+  friend_tier2           10/10             42             51             81            109
+  close_friend           10/10             60             78            130            172
+  first_technique        10/10             75             93            165            206
+  first_breakthrough     10/10             15             27             25             46
+  sect_joined            10/10             15             27             25             46
+seed 1 first_win day 8
+seed 2 first_win day 8
+seed 3 first_win day 8
+seed 4 first_win day 8
+seed 5 first_win day 8
+seed 6 first_win day 8
+seed 7 first_win day 8
+seed 8 first_win day 8
+seed 9 first_win day 8
+seed 10 first_win day 8
+first hour in presses (hints player, seeds 1-10, 12 months, start azure_peak)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             15             39             25             77
+  first_win              10/10              3              3              8              8
+  first_friend           10/10             27             30             46             60
+  friend_tier2           10/10             39             48             81            102
+  close_friend           10/10             57             78            123            172
+  first_technique        10/10             63             84            136            185
+  first_breakthrough     10/10             15             39             25             77
+  sect_joined            10/10             15             39             25             77
+seed 1 first_win day 8
+seed 2 first_win day 8
+seed 3 first_win day 8
+seed 4 first_win day 8
+seed 5 first_win day 8
+seed 6 first_win day 8
+seed 7 first_win day 8
+seed 8 first_win day 8
+seed 9 first_win day 8
+seed 10 first_win day 8
+first hour in presses (hints player, seeds 1-10, 12 months, start fallen_star_market)
+  milestone            reached    presses med  presses worst       days med     days worst
+  first_stage            10/10             15             39             24             67
+  first_win              10/10              3              3              8              8
+  first_friend           10/10             24             30             45             59
+  friend_tier2           10/10             39             51             80            108
+  close_friend           10/10             60             78            129            171
+  first_technique        10/10             12             12             10             10
+  first_breakthrough     10/10             15             39             24             67
+  sect_joined            10/10             15             39             24             67
+

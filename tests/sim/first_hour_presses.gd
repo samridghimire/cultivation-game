@@ -3,6 +3,7 @@ extends SceneTree
 ## action it takes (PRESS_COST: open + choose + confirm, plus travel); this prints, per milestone, the median and worst of N
 ## seeds for presses and in-game days. A milestone held at day 0 counts as 0. "never" = not reached in the run.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/first_hour_presses.gd -- [seeds] [months] [--trace=<seed>]
+## SIM-023: --start=<region_id> plays from that region; --starts=a,b,c prints one table per start (the baseline's "first hour in every start").
 ## (--trace: one seed, each week's top 4 hint lines and the action taken until its first win; every run prints each seed's first_win day.)
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
@@ -21,9 +22,21 @@ func _run() -> void:
 	var clock: Node = root.get_node("GameClock")
 	FirstHour.hints_policy = true
 	var trace_seed := -1
+	var starts: Array = [""]
 	for a in args:
 		if a.begins_with("--trace="):
 			trace_seed = int(a.substr(8))
+		if a.begins_with("--starts="):
+			starts = Array(a.substr(9).split(","))
+		FirstHour.parse_start_arg(a)
+	for st in starts:
+		if st != "":
+			FirstHour.start_region = st
+		_measure(gs, clock, seeds, months, trace_seed)
+	quit(0)
+
+
+func _measure(gs: Node, clock: Node, seeds: int, months: int, trace_seed: int) -> void:
 	var presses := {}
 	var days := {}
 	for m in FirstHour.MILESTONES:
@@ -45,7 +58,7 @@ func _run() -> void:
 				presses[m].append(int(first[m]["presses"]))
 				days[m].append(int(first[m]["day"]) - start_day if start_day <= int(first[m]["day"]) else int(first[m]["day"]))
 		gs.end_session()
-	print("first hour in presses (hints player, seeds 1-%d, %d months)" % [seeds, months])
+	print("first hour in presses (hints player, seeds 1-%d, %d months%s)" % [seeds, months, (", start " + FirstHour.start_region) if FirstHour.start_region != "" else ""])
 	print("  %-20s %7s %14s %14s %14s %14s" % ["milestone", "reached", "presses med", "presses worst", "days med", "days worst"])
 	for m in FirstHour.MILESTONES:
 		var p: Array = presses[m]
@@ -57,4 +70,3 @@ func _run() -> void:
 			print("  %-20s %7s %14s %14s %14s %14s" % [m, reached, "never", "-", "never", "-"])
 		else:
 			print("  %-20s %7s %14d %14d %14d %14d" % [m, reached, p[p.size() / 2], p[-1], d[d.size() / 2], d[-1]])
-	quit(0)
