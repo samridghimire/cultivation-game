@@ -80,3 +80,28 @@ func test_log_card_grows_with_lines() -> void:
 	assert_true(panel.size.y > one, "three lines make a taller card than one (%s vs %s)" % [panel.size.y, one])
 	hud.queue_free()
 	gs.end_session()
+
+
+## PERF-031: no modal is built until it is first opened; opening builds it once.
+func test_modals_build_on_first_use() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	assert_eq((hud.get("_built_screens") as Dictionary).size(), 0)
+	assert_true(hud.get("_shop_n") == null and hud.get("_village_book_n") == null)
+	var inv: Control = hud.call("_screen", "toggle_inventory")
+	assert_true(inv == hud.call("_screen", "toggle_inventory"), "built once")
+	assert_eq((hud.get("_built_screens") as Dictionary).size(), 1)
+	assert_true(not hud.call("_any_screen_open"))
+	inv.open()
+	assert_true(hud.call("_any_screen_open"))
+	hud.call("_close_screens")
+	assert_true(not hud.call("_any_screen_open"))
+	hud.call("_on_shop_requested", "Vendor", 100, [], "", [])
+	assert_true(hud.get("_shop_n") != null and hud.call("_any_screen_open"))
+	hud.queue_free()
+	await _frames()

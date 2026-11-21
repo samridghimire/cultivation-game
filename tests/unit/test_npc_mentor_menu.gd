@@ -131,5 +131,5 @@ func test_foundation_menu_is_stable_and_cheap() -> void:
 	var warm: Array = labels.call(r[0].get_options())
 	var warm_ms := (Time.get_ticks_usec() - t0) / 1000.0
 	assert_eq(warm, cold, "labels do not change between calls")
-	assert_true(String(cold.filter(func(l: String) -> bool: return l.begins_with("Spar with"))[0]).contains(" in 100)"), "spar odds shown")
+	assert_true(cold.any(func(l: String) -> bool: return l.begins_with("Spar with") and l.contains(" in 100)")), "spar odds shown")
 	assert_true(warm_ms < 50.0, "warm get_options took %.1f ms" % warm_ms)

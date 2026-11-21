@@ -96,8 +96,23 @@ var _choice_menu: ChoiceMenu
 var _threat_prompt: ThreatPrompt
 ## Toggleable modal screens keyed by the input action that opens them. Each
 ## must have open(), close() and a `closed` signal.
-var _screens: Dictionary = {}
-var _village_book: VillageBook
+var _built_screens: Dictionary = {}
+## PERF-031: action -> Callable building that screen (and wiring it) on first use.
+var _screen_makers: Dictionary = {}
+## Every toggleable screen, built on demand (tests and shots read this; the game itself goes through _screen()).
+var _screens: Dictionary:
+	get:
+		for action: String in _screen_makers:
+			_screen(action)
+		return _built_screens
+var _village_book_n: VillageBook
+var _village_book: VillageBook:  # PERF-031: this and the modals below build on first use
+	get:
+		if _village_book_n == null:
+			_village_book_n = VillageBook.new()  # WU-414: no key of its own, opens from the journal
+			_village_book_n.closed.connect(_on_book_closed)
+			add_child(UIStyle.centered(_village_book_n))
+		return _village_book_n
 var _book_from: String = ""
 var _combat_report: CombatReport
 var _fight_rating: String = ""
@@ -115,14 +130,62 @@ var _settings: SettingsScreen
 var _load_screen: LoadScreen
 var _help: HelpScreen
 var _help_from_key := false
-var _crafting: CraftingScreen
-var _shop: ShopScreen
-var _mission_board: MissionBoard
-var _auction: AuctionScreen
-var _sect_balance: SectBalanceWindow
-var _gossip: GossipWindow
-var _family: FamilyScreen
-var _child_training: ChildTrainingScreen
+var _crafting_n: CraftingScreen
+var _crafting: CraftingScreen:
+	get:
+		if _crafting_n == null:
+			_crafting_n = CraftingScreen.new()
+			_crafting_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_crafting_n))
+		return _crafting_n
+var _shop_n: ShopScreen
+var _shop: ShopScreen:
+	get:
+		if _shop_n == null:
+			_shop_n = ShopScreen.new()
+			_shop_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_shop_n))
+		return _shop_n
+var _mission_board_n: MissionBoard
+var _mission_board: MissionBoard:
+	get:
+		if _mission_board_n == null:
+			_mission_board_n = MissionBoard.new()
+			_mission_board_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_mission_board_n))
+		return _mission_board_n
+var _auction_n: AuctionScreen
+var _auction: AuctionScreen:
+	get:
+		if _auction_n == null:
+			_auction_n = AuctionScreen.new()
+			_auction_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_auction_n))
+		return _auction_n
+var _sect_balance_n: SectBalanceWindow
+var _sect_balance: SectBalanceWindow:
+	get:
+		if _sect_balance_n == null:
+			_sect_balance_n = SectBalanceWindow.new()
+			_sect_balance_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_sect_balance_n))
+		return _sect_balance_n
+var _gossip_n: GossipWindow
+var _gossip: GossipWindow:
+	get:
+		if _gossip_n == null:
+			_gossip_n = GossipWindow.new()
+			_gossip_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_gossip_n))
+		return _gossip_n
+var _child_training_n: ChildTrainingScreen
+var _child_training: ChildTrainingScreen:
+	get:
+		if _child_training_n == null:
+			_child_training_n = ChildTrainingScreen.new()
+			_child_training_n.closed.connect(_update_modal)
+			add_child(UIStyle.centered(_child_training_n))
+		return _child_training_n
 var _banner: Banner
 var _digest_card: DigestCard
 ## WU-416: the last_digest waiting for a quiet moment to show.
@@ -192,46 +255,23 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_choice_menu))
 	_threat_prompt = ThreatPrompt.new()
 	add_child(_threat_prompt)
-	var sheet := CharacterSheet.new()
-	_add_screen("toggle_character_sheet", sheet)
-	sheet.book_requested.connect(_open_village_book.bind("toggle_character_sheet"))
-	_add_screen("toggle_inventory", InventoryScreen.new())
-	_add_screen("toggle_techniques", TechniquesScreen.new())
-	_add_screen("toggle_artifact", ArtifactScreen.new())
-	_add_screen("toggle_map", WorldMapScreen.new())
-	_add_screen("toggle_message_log", MessageLogScreen.new())
-	_add_screen("toggle_clan", ClanScreen.new())
-	var journal := JournalScreen.new()
-	_add_screen("toggle_journal", journal)
-	_village_book = VillageBook.new()  # WU-414: no key of its own, opens from the journal
-	_village_book.closed.connect(_on_book_closed)
-	add_child(UIStyle.centered(_village_book))
-	journal.book_requested.connect(_open_village_book.bind("toggle_journal"))
-	_add_screen("open_calendar", CalendarScreen.new())  # WU-419
-	journal.calendar_requested.connect(_open_calendar_from_journal)
-	_crafting = CraftingScreen.new()
-	_crafting.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_crafting))
-	_shop = ShopScreen.new()
-	_shop.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_shop))
-	_mission_board = MissionBoard.new()
-	_mission_board.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_mission_board))
-	_auction = AuctionScreen.new()
-	_auction.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_auction))
-	_sect_balance = SectBalanceWindow.new()
-	_sect_balance.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_sect_balance))
-	_gossip = GossipWindow.new()
-	_gossip.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_gossip))
-	_family = FamilyScreen.new()
-	_add_screen("toggle_family", _family)
-	_child_training = ChildTrainingScreen.new()
-	_child_training.closed.connect(_update_modal)
-	add_child(UIStyle.centered(_child_training))
+	_screen_makers["toggle_character_sheet"] = func() -> Control:
+		var sheet := CharacterSheet.new()
+		sheet.book_requested.connect(_open_village_book.bind("toggle_character_sheet"))
+		return sheet
+	_screen_makers["toggle_inventory"] = func() -> Control: return InventoryScreen.new()
+	_screen_makers["toggle_techniques"] = func() -> Control: return TechniquesScreen.new()
+	_screen_makers["toggle_artifact"] = func() -> Control: return ArtifactScreen.new()
+	_screen_makers["toggle_map"] = func() -> Control: return WorldMapScreen.new()
+	_screen_makers["toggle_message_log"] = func() -> Control: return MessageLogScreen.new()
+	_screen_makers["toggle_clan"] = func() -> Control: return ClanScreen.new()
+	_screen_makers["toggle_journal"] = func() -> Control:
+		var journal := JournalScreen.new()
+		journal.book_requested.connect(_open_village_book.bind("toggle_journal"))
+		journal.calendar_requested.connect(_open_calendar_from_journal)
+		return journal
+	_screen_makers["open_calendar"] = func() -> Control: return CalendarScreen.new()  # WU-419
+	_screen_makers["toggle_family"] = func() -> Control: return FamilyScreen.new()
 	_combat_report = CombatReport.new()
 	_combat_report.closed.connect(_update_modal)
 	_combat_report.closed.connect(_flush_year_review, CONNECT_DEFERRED)  # WU-495
@@ -401,10 +441,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_help_screen().open()
 		_update_modal()
 		return
-	for action in _screens:
+	for action: String in _screen_makers:
 		if event.is_action_pressed(action):
 			get_viewport().set_input_as_handled()
-			var screen: Control = _screens[action]
+			var screen: Control = _screen(action)
 			if screen.visible:
 				screen.close()
 			else:
@@ -414,10 +454,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 
-func _add_screen(action: String, screen: Control) -> void:
-	_screens[action] = screen
-	screen.closed.connect(_update_modal)
-	add_child(UIStyle.centered(screen))
+## The screen for an input action, built on first use.
+func _screen(action: String) -> Control:
+	if not _built_screens.has(action):
+		var screen: Control = _screen_makers[action].call()
+		_built_screens[action] = screen
+		screen.closed.connect(_update_modal)
+		add_child(UIStyle.centered(screen))
+	return _built_screens[action]
 
 ## PERF-018: the big rarely-used modals are built on first use, not on every region load.
 func _up(c: Control) -> bool:
@@ -451,18 +495,14 @@ func _load_screen_node() -> LoadScreen:
 
 
 func _close_screens() -> void:
-	for screen in _screens.values():
+	for screen: Control in _built_screens.values():
 		screen.close()
 	_book_from = ""
-	_village_book.close()
+	# PERF-031: only screens that exist can be open.
+	for node: Control in [_village_book_n, _crafting_n, _shop_n, _mission_board_n, _auction_n, _sect_balance_n, _gossip_n, _child_training_n]:
+		if node != null:
+			node.close()
 	_breakthrough.close()
-	_crafting.close()
-	_shop.close()
-	_mission_board.close()
-	_auction.close()
-	_sect_balance.close()
-	_gossip.close()
-	_child_training.close()
 
 
 func _on_crafting_requested(prof_id: String) -> void:
@@ -503,7 +543,7 @@ func _on_auction_requested(house_id: String) -> void:
 
 func _on_family_requested() -> void:
 	_close_screens()
-	_family.open()
+	_screen("toggle_family").open()
 	_update_modal()
 
 
@@ -514,7 +554,10 @@ func _on_child_training_requested() -> void:
 
 
 func _any_screen_open() -> bool:
-	return _breakthrough.visible or _crafting.visible or _shop.visible or _mission_board.visible or _auction.visible or _sect_balance.visible or _gossip.visible or _child_training.visible or _village_book.visible or _screens.values().any(func(s): return s.visible)
+	for node: Control in [_crafting_n, _shop_n, _mission_board_n, _auction_n, _sect_balance_n, _gossip_n, _child_training_n, _village_book_n]:
+		if _up(node):
+			return true
+	return _breakthrough.visible or _built_screens.values().any(func(s): return s.visible)
 
 
 func _build_status_panel() -> void:
@@ -2218,7 +2261,7 @@ func _open_help() -> void:
 ## The journal opens from the pause menu (no free gamepad button), closing it first.
 func _open_journal() -> void:
 	_pause_menu.close()
-	var journal: Control = _screens["toggle_journal"]
+	var journal: Control = _screen("toggle_journal")
 	journal.open()
 	_update_modal()
 
@@ -2226,7 +2269,7 @@ func _open_journal() -> void:
 ## WU-419: the calendar replaces the journal while open.
 func _open_calendar_from_journal() -> void:
 	_close_screens()
-	_screens["open_calendar"].open()
+	_screen("open_calendar").open()
 	_update_modal()
 
 
@@ -2234,7 +2277,7 @@ func _open_calendar_from_journal() -> void:
 ## closing it returns to that screen so focus lands back on the button.
 func _open_village_book(from: String = "toggle_journal") -> void:
 	_book_from = from
-	_screens[from].close()
+	_screen(from).close()
 	_village_book.open()
 	_update_modal()
 
@@ -2243,7 +2286,7 @@ func _on_book_closed() -> void:
 	var from := _book_from
 	_book_from = ""
 	if from == "toggle_character_sheet" and GameState.has_session() and GameState.player.alive:
-		_screens[from].open()
+		_screen(from).open()
 	_update_modal()
 
 
