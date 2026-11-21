@@ -636,6 +636,7 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 		if changed:
 			node._redraw_label()
 	_final_separate(ranked, view)
+	_clear_of_bodies(ranked, view, player_pos)
 	_pin_person_labels(ranked, view, occupied)
 
 
@@ -733,6 +734,44 @@ static func _final_separate(ranked: Array, view: Rect2) -> void:
 		if res[i]["faded"]:
 			node.label_covered = true
 			node._redraw_label()
+
+
+## WU-590: a place label never sits over a villager's or the player's body (sprite top to feet, 2 px wider each side):
+## it moves up, then down, by its own height, else fades to 40% while overlapped.
+static func _clear_of_bodies(ranked: Array, view: Rect2, player_pos: Vector2) -> void:
+	var bodies: Array[Rect2] = []
+	for node: Interactable in ranked:
+		if node.is_person() and node.visible:
+			bodies.append(person_figure_rect(node).grow_individual(2.0, 0.0, 2.0, 0.0))
+	if player_pos != Vector2.ZERO:
+		bodies.append(Rect2(player_pos.x - 12.0, player_pos.y - 22.0, 24.0, 34.0))
+	if bodies.is_empty():
+		return
+	for node: Interactable in ranked:
+		if node.get("npc_id") != null or node.is_person() or not node.label_drawn():
+			continue
+		var r := node.drawn_label_rect(view).grow(PLATE_PAD)
+		if not _hits_any(r, bodies):
+			continue
+		var h := r.size.y
+		var moved := false
+		for dy: float in [-h, h]:
+			var cand := Rect2(r.position + Vector2(0, dy), r.size)
+			if view.encloses(cand) and not _hits_any(cand, bodies):
+				node.screen_lift += dy
+				node._redraw_label()
+				moved = true
+				break
+		if not moved:
+			node.label_covered = true
+			node._redraw_label()
+
+
+static func _hits_any(r: Rect2, rects: Array[Rect2]) -> bool:
+	for o in rects:
+		if o.intersects(r):
+			return true
+	return false
 
 
 ## GFX-073: whether a label's anchor is off screen or under a HUD panel (its label is then not drawn).

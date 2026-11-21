@@ -24,3 +24,23 @@ func test_person_row_stays_over_place_label() -> void:
 	assert_true(npc.label_drawn() and not npc.label_covered, "the person's row is neither faded nor hidden")
 	place.free()
 	npc.free()
+
+
+func test_place_label_avoids_person_body() -> void:
+	var npc: Interactable = NPC_SCRIPT.new()
+	npc.npc_id = "elder_mo"
+	npc.display_name = "Elder Mo"
+	npc.size = Vector2(28, 28)
+	npc.position = Vector2(400, 300)
+	var place := Interactable.new()
+	place.display_name = "Meditation Rock"
+	place.size = Vector2(20, 20)
+	place.position = Vector2(400, 300)
+	var nodes: Array = [place, npc]
+	Interactable.spread_on_screen(nodes, VIEW, [] as Array[Rect2], Vector2(900, 600))
+	if place.label_drawn():
+		var body := Interactable.person_figure_rect(npc)
+		var lr := place.drawn_label_rect(VIEW)
+		assert_true(place.label_covered or not body.intersects(lr), "place label moved off or faded over the body")
+	place.free()
+	npc.free()

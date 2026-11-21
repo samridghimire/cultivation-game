@@ -3,7 +3,7 @@ extends TestCase
 
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const VIEW := Rect2(0, 0, 1280, 800)
-const GOLDEN := "acbb16d61ba2c98be49d37b4d7d9705b"
+const GOLDEN := "c8db28ae7c33cd6ebde678c236cd5539"
 
 
 func _scene_hash() -> String:
