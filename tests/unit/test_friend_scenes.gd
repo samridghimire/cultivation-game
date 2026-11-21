@@ -135,7 +135,9 @@ func test_any_villager_scene_needs_a_real_villager() -> void:
 	elder.id = "broker_qian"
 	elder.home_region = "qingshi_village"
 	assert_false(Folk.is_villager(elder, data(), "qingshi_village"))
-	assert_true(Folk.scene_due(c, data(), "broker_qian", 90, elder, "qingshi_village").is_empty())
+	# C-410: Broker Qian has scenes of his own now, but never the shared any_villager ones.
+	var qian_scene: Dictionary = Folk.scene_due(c, data(), "broker_qian", 90, elder, "qingshi_village")
+	assert_true(qian_scene.is_empty() or String(qian_scene.get("npc", "")) == "broker_qian", "no any_villager scene for a named NPC")
 	assert_true(Folk.scene_due(c, data(), v.id, 90, v, "misty_forest").is_empty())
 
 

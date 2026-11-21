@@ -254,3 +254,22 @@ func test_named_villager_tier_up() -> void:
 	assert_eq(banners.size(), 1)
 	assert_true(String(banners[0][1]).begins_with("Hunter Ma: "))
 	assert_eq(gs.player.inventory.size(), bag_before)
+
+
+## C-410: the forest, marsh and market villagers each have their own friend scenes at favor 40 and 60, and at most 3 gifts among them.
+func test_friend_scenes_part_one_cover_seven_villagers() -> void:
+	var d := data()
+	var ids := ["herbalist_lan", "blood_lotus_xue", "peddler_hei", "old_monster_gui", "broker_qian", "alchemist_hua", "broker_shen"]
+	var gifts := 0
+	for npc_id: String in ids:
+		for favor: int in [40, 60]:
+			var found := 0
+			for scene: Dictionary in d.scenes:
+				if String(scene.get("npc", "")) == npc_id and int(scene.get("min_favor", 0)) == favor:
+					found += 1
+					assert_true(String(scene["text"]).contains("{name}"), "%s %d text has {name}" % [npc_id, favor])
+					if scene.has("gift"):
+						gifts += 1
+						assert_true(int(d.items[String(scene["gift"])].price) <= 15, "gift cheap")
+			assert_eq(found, 1, "%s has one scene at favor %d" % [npc_id, favor])
+	assert_true(gifts <= 3, "at most 3 gifts, got %d" % gifts)
