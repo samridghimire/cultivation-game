@@ -468,9 +468,27 @@ static func fight_fingerprint(c: CharacterData) -> String:
 	return "|".join([
 		str(c.realm_index), str(c.stage), str(c.attributes), ",".join(techs), c.main_method, str(c.dao),
 		str(c.spiritual_roots), str(c.equipment), str(c.bound_artifacts), str(c.alignment),
-		str(c.buffs), str(c.injuries), ",".join(talismans), str(c.companions), str(c.companion_xp),
+		_buff_key(c), _injury_key(c), ",".join(talismans), str(c.companions), str(c.companion_xp),
 		c.bloodline, str(c.bloodline_awakened), str(c.body_stage),
 	])
+
+
+## PERF-028: a fight only reads each buff's stat multipliers (Buffs.multiplier), not its days left, so the key holds those:
+## a buff ticking down a day must not look like a new fighter.
+static func _buff_key(c: CharacterData) -> String:
+	if c.buffs.is_empty():
+		return ""
+	var parts: Array = []
+	for key in Buffs.STAT_KEYS:
+		parts.append("%s=%s" % [key, Buffs.multiplier(c, key)])
+	return ",".join(parts)
+
+
+## PERF-028: injuries act by id (Injuries.combat_multiplier), not by days left.
+static func _injury_key(c: CharacterData) -> String:
+	var ids: Array = c.injuries.keys()
+	ids.sort()
+	return ",".join(PackedStringArray(ids))
 
 
 ## Sample count behind every player-facing fight rating.
@@ -511,6 +529,10 @@ static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Diction
 	var key := "%d|%d|%s|%s" % [data.get_instance_id(), samples, str(enemy), fight_fingerprint(c)]
 	if _chance_cache.has(key):
 		return _chance_cache[key]
+	# PERF-028: a rejection is deterministic for these exact arguments, so it is remembered too (same -1.0 as the run gives).
+	var miss_key := "%s|<%s|%s" % [key, floor_chance, quick_margin]
+	if _chance_cache.has(miss_key):
+		return -1.0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	var wins := 0
@@ -520,8 +542,10 @@ static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Diction
 		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:
 			wins += 1
 		elif float(samples - (i + 1 - wins)) / samples < floor_chance:
+			_remember_miss(miss_key)
 			return -1.0
 		if quick_margin > 0.0 and i + 1 == QUICK_SAMPLES and float(wins) / QUICK_SAMPLES < floor_chance - quick_margin:
+			_remember_miss(miss_key)
 			return -1.0
 	_sim_count += 1
 	var chance := float(wins) / samples
@@ -531,6 +555,13 @@ static func win_chance_at_least(c: CharacterData, data: GameData, enemy: Diction
 	return chance
 
 
+## PERF-028: remembers that a bounded rating gave up (value unused; the key carries the arguments).
+static func _remember_miss(miss_key: String) -> void:
+	if _chance_cache.size() >= CHANCE_CACHE_MAX:
+		_chance_cache.clear()
+	_chance_cache[miss_key] = -1.0
+
+
 ## GUIDE-259: win_chance for a caller that only wants fights with a chance in [low, high): the first QUICK_SAMPLES
 ## fights (a prefix of the full rating's rng stream) decide whether the full rating runs. Returns the exact full-rating
 ## chance when the quick win rate lies within `margin` of the band, else -1.0 (not cached; the exact one if cached).
@@ -538,6 +569,9 @@ static func win_chance_in_band(c: CharacterData, data: GameData, enemy: Dictiona
 	var key := "%d|%d|%s|%s" % [data.get_instance_id(), RATING_SAMPLES, str(enemy), fight_fingerprint(c)]
 	if _chance_cache.has(key):
 		return _chance_cache[key]
+	var miss_key := "%s|band%s|%s|%s" % [key, low, high, margin]  # PERF-028: see win_chance_at_least
+	if _chance_cache.has(miss_key):
+		return -1.0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	var pre_p := stats(c, data)
@@ -548,6 +582,7 @@ static func win_chance_in_band(c: CharacterData, data: GameData, enemy: Dictiona
 			wins += 1
 	var quick := float(wins) / QUICK_SAMPLES
 	if quick < low - margin or quick >= high + margin:
+		_remember_miss(miss_key)
 		return -1.0
 	for i in range(QUICK_SAMPLES, RATING_SAMPLES):
 		if resolve(c, data, enemy, rng, [], -1, true, pre_p, pre_e)["victory"]:

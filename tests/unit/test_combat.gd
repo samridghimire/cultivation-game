@@ -368,6 +368,49 @@ func test_fight_fingerprint_changes_with_technique_level() -> void:
 	assert_true(Combat.fight_fingerprint(c) != before)
 
 
+func test_fingerprint_ignores_days_left_but_not_buff_strength_or_injury_kind() -> void:
+	# PERF-028: a buff or injury ticking down a day is the same fighter; a different buff or injury is not.
+	var c := new_character()
+	Buffs.add(c, "rage", "Rage", 10, {"attack": 0.4})
+	c.injuries = {"broken_ribs": 12}
+	var before := Combat.fight_fingerprint(c)
+	Buffs.pass_days(c, 3)
+	c.injuries["broken_ribs"] = 9
+	assert_eq(Combat.fight_fingerprint(c), before)
+	Buffs.add(c, "rage", "Rage", 10, {"attack": 0.8})
+	assert_true(Combat.fight_fingerprint(c) != before)
+	Buffs.add(c, "rage", "Rage", 10, {"attack": 0.4})
+	assert_eq(Combat.fight_fingerprint(c), before)
+	c.injuries["cracked_skull"] = 5
+	assert_true(Combat.fight_fingerprint(c) != before)
+
+
+func test_buff_days_ticking_does_not_rerate_a_fight() -> void:
+	var c := new_character()
+	var enemy: Dictionary = data().enemies["mountain_bandit"]
+	Buffs.add(c, "rage", "Rage", 10, {"attack": 0.4})
+	var first := Combat.win_chance(c, data(), enemy)
+	var sims := Combat._sim_count
+	Buffs.pass_days(c, 1)
+	assert_eq(Combat.win_chance(c, data(), enemy), first)
+	assert_eq(Combat._sim_count, sims, "a buff losing a day must not simulate again")
+
+
+func test_rejected_bounded_ratings_are_remembered() -> void:
+	# PERF-028: a rating that gave up returns -1.0 again without simulating, and the exact chance is unchanged.
+	var c := new_character()
+	var enemy: Dictionary = data().enemies["mountain_bandit"]
+	var d := data()
+	var exact := Combat.win_chance(c, d, enemy)
+	Combat._chance_cache.clear()
+	var floor_chance := minf(1.0, exact + 0.2)
+	assert_eq(Combat.win_chance_at_least(c, d, enemy, floor_chance), -1.0)
+	var resolves := Combat._chance_cache.size()
+	assert_eq(Combat.win_chance_at_least(c, d, enemy, floor_chance), -1.0)
+	assert_eq(Combat._chance_cache.size(), resolves)
+	assert_eq(Combat.win_chance(c, d, enemy), exact)
+
+
 func test_win_chance_cache_clears_past_limit() -> void:
 	var c := new_character()
 	var enemy: Dictionary = data().enemies["mountain_bandit"]
