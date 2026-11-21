@@ -1385,7 +1385,7 @@ func _start_help_shot(gs: Node) -> void:
 	root.add_child(world)
 	hud = world.get_node("HUD")
 	var size_tag := "%dx%d" % [root.size.x, root.size.y]
-	var help: Control = hud.get("_help")
+	var help: Control = hud.call("_help_screen")
 	for id: String in help.call("page_ids"):
 		shots.append({"name": "help_%s_%s" % [id, size_tag], "open": func() -> void:
 			help.open()

@@ -253,18 +253,8 @@ func _ready() -> void:
 	_pause_menu = PauseMenu.new()
 	_pause_menu.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_pause_menu))
-	_settings = SettingsScreen.new()
-	_settings.closed.connect(_on_settings_closed)
-	add_child(UIStyle.centered(_settings))
 	_pause_menu.settings_requested.connect(_open_settings)
-	_load_screen = LoadScreen.new()
-	_load_screen.closed.connect(_on_load_closed)
-	_load_screen.slot_chosen.connect(_on_slot_chosen)
-	add_child(UIStyle.centered(_load_screen))
 	_pause_menu.load_requested.connect(_open_load)
-	_help = HelpScreen.new()
-	_help.closed.connect(_on_help_closed)
-	add_child(UIStyle.centered(_help))
 	_pause_menu.help_requested.connect(_open_help)
 	_pause_menu.journal_requested.connect(_open_journal)
 	_respawn = RespawnScreen.new()
@@ -395,7 +385,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -408,7 +398,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_close_screens()
 		_help_from_key = true
-		_help.open()
+		_help_screen().open()
 		_update_modal()
 		return
 	for action in _screens:
@@ -428,6 +418,36 @@ func _add_screen(action: String, screen: Control) -> void:
 	_screens[action] = screen
 	screen.closed.connect(_update_modal)
 	add_child(UIStyle.centered(screen))
+
+## PERF-018: the big rarely-used modals are built on first use, not on every region load.
+func _up(c: Control) -> bool:
+	return c != null and c.visible
+
+
+func _settings_screen() -> SettingsScreen:
+	if _settings == null:
+		_settings = SettingsScreen.new()
+		_settings.closed.connect(_on_settings_closed)
+		add_child(UIStyle.centered(_settings))
+	return _settings
+
+
+func _help_screen() -> HelpScreen:
+	if _help == null:
+		_help = HelpScreen.new()
+		_help.closed.connect(_on_help_closed)
+		add_child(UIStyle.centered(_help))
+	return _help
+
+
+func _load_screen_node() -> LoadScreen:
+	if _load_screen == null:
+		_load_screen = LoadScreen.new()
+		_load_screen.closed.connect(_on_load_closed)
+		_load_screen.slot_chosen.connect(_on_slot_chosen)
+		add_child(UIStyle.centered(_load_screen))
+	return _load_screen
+
 
 
 func _close_screens() -> void:
@@ -1484,7 +1504,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1516,9 +1536,12 @@ func _on_player_died(cause: String) -> void:
 	_quarrel.close()
 	_cast_bar.close()
 	_pause_menu.close()
-	_settings.close()
-	_help.close()
-	_load_screen.close()
+	if _settings != null:
+		_settings.close()
+	if _help != null:
+		_help.close()
+	if _load_screen != null:
+		_load_screen.close()
 	_time_skip.close()
 	(_death_screen.find_child("Cause", true, false) as Label).text = cause
 	(_death_screen.find_child("Epilogue", true, false) as Label).text = "\n".join(LifeStats.epilogue(GameState.player, GameState.data, GameState.clan, 8, GameState.npcs, GameState.world_flags))
@@ -2183,14 +2206,14 @@ func _show_contest_card(result: Dictionary) -> void:
 ## Settings replaces the pause menu while open, then returns to it.
 func _open_settings() -> void:
 	_pause_menu.visible = false
-	_settings.open()
+	_settings_screen().open()
 
 
 ## Help replaces the pause menu while open, then returns to it.
 func _open_help() -> void:
 	_help_from_key = false
 	_pause_menu.visible = false
-	_help.open()
+	_help_screen().open()
 
 
 ## The journal opens from the pause menu (no free gamepad button), closing it first.
@@ -2228,7 +2251,7 @@ func _on_book_closed() -> void:
 ## Load replaces the pause menu while open, then returns to it.
 func _open_load() -> void:
 	_pause_menu.visible = false
-	_load_screen.open()
+	_load_screen_node().open()
 
 
 func _on_load_closed() -> void:
@@ -2241,7 +2264,7 @@ func _on_slot_chosen(slot: String) -> void:
 	if SaveManager.load_game(slot):
 		get_tree().reload_current_scene()
 	else:
-		_load_screen.open()
+		_load_screen_node().open()
 
 
 ## Help opened with its key returns to the world; from the pause menu, back to it.
@@ -2361,7 +2384,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _settings.visible or _help.visible or _load_screen.visible or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
 
 
 func _update_modal() -> void:

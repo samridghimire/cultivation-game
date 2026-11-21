@@ -149,9 +149,9 @@ func test_help_key_opens_help_and_close_returns_to_world() -> void:
 	ev.action = "toggle_help"
 	ev.pressed = true
 	hud._unhandled_input(ev)
-	assert_true(hud._help.visible)
-	hud._help.close()
-	assert_false(hud._help.visible)
+	assert_true(hud._help_screen().visible)
+	hud._help_screen().close()
+	assert_false(hud._help_screen().visible)
 	assert_false(hud._pause_menu.visible, "help from its key does not open the pause menu")
 	hud.free()
 

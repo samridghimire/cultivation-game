@@ -105,12 +105,12 @@ func test_every_hud_screen_has_focus_and_closes_on_cancel() -> void:
 	var pause: Control = hud.get("_pause_menu")
 	await _check(pause, "pause menu")
 
-	var settings: Control = hud.get("_settings")
+	var settings: Control = hud.call("_settings_screen")
 	settings.open()
 	await _check(settings, "settings")
 	pause.close()
 
-	var load_screen: Control = hud.get("_load_screen")
+	var load_screen: Control = hud.call("_load_screen_node")
 	load_screen.open()
 	await _check(load_screen, "load")
 	pause.close()
@@ -183,7 +183,7 @@ func test_late_screens_have_focus_and_close_on_cancel() -> void:
 	await _check(auction, "auction")
 	clock.total_days = day
 
-	var help: Control = hud.get("_help")
+	var help: Control = hud.call("_help_screen")
 	hud.set("_help_from_key", true)  # opened by its key it returns to the world, not the pause menu
 	help.open()
 	await _check(help, "help")
@@ -293,7 +293,7 @@ func test_newer_windows_have_focus_and_close_on_cancel() -> void:
 	gs.data.encounters.erase("audit_encounter")
 
 	# The Controls page of the settings screen.
-	var settings: SettingsScreen = hud.get("_settings")
+	var settings: SettingsScreen = hud.call("_settings_screen")
 	settings.open()
 	settings._show_controls(true)
 	await _frames()

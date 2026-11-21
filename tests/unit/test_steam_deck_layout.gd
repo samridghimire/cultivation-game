@@ -101,7 +101,7 @@ func _check_all_screens(scale: float) -> void:
 	shop._set_tab(true)
 	await _assert_fits(shop, "shop (sell)")
 	shop.close()
-	var settings: SettingsScreen = hud.get("_settings")
+	var settings: SettingsScreen = hud.call("_settings_screen")
 	settings.open()
 	settings._show_controls(true)
 	await _assert_fits(settings, "settings (controls)")
@@ -112,7 +112,7 @@ func _check_all_screens(scale: float) -> void:
 	await _assert_fits(board, "mission board (rank)")
 	board.close()
 	for name: String in ["_mission_board", "_child_training", "_family", "_pause_menu", "_settings", "_help", "_load_screen"]:
-		var screen: Control = hud.get(name)
+		var screen: Control = hud.call("_settings_screen") if name == "_settings" else hud.call("_help_screen") if name == "_help" else hud.call("_load_screen_node") if name == "_load_screen" else hud.get(name)
 		screen.open()
 		await _assert_fits(screen, name)
 		screen.close()
