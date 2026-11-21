@@ -655,6 +655,19 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 	if fight != "":
 		return fight
 	var re := RegEx.new()
+	# GUIDE-284: "Ask Elder Mo in Qingshi Village where to begin; he also teaches ..." -> "Ask Elder Mo in Qingshi where to begin"
+	re.compile("^Ask (.+?) in (.+?) where to begin[.;]")
+	var begin := re.search(line)
+	if begin != null:
+		var town := begin.get_string(2)
+		if data != null:
+			for id: String in data.regions:
+				if String(data.regions[id].get("name", "")) == town:
+					town = Places.short_region_name(data, id)
+					break
+		var begin_short := "Ask %s in %s where to begin" % [begin.get_string(1), town]
+		if begin_short.length() <= SHORT_HINT_CHARS:
+			return begin_short
 	# GUIDE-283: GUIDE-278's friendship lines keep the whole item and villager name.
 	re.compile("^Grow closer: give (.+?) the (.+?) they like(?:, on sale here)? \\(favor (\\d+)/(\\d+)\\)")
 	var gift := re.search(line)
@@ -759,7 +772,8 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 
 
 ## GUIDE-283: verbs a cut must not end on besides STOP_WORDS.
-const DANGLING_WORDS: PackedStringArray = ["give", "grow", "ask", "buy", "sell", "visit", "talk", "see"]
+## GUIDE-284: also interrogatives and prepositions ("Ask Elder Mo in Qingshi Village where").
+const DANGLING_WORDS: PackedStringArray = ["give", "grow", "ask", "buy", "sell", "visit", "talk", "see", "where", "what", "how", "who", "when", "why", "on", "from", "into", "about", "your", "his", "her", "their"]
 
 ## GUIDE-283: `cut` (a prefix of `full`) never ends inside an item or villager name: if it does, drop the partial
 ## name and any dangling words; under ~20 chars, fall back to the first clause up to ':' plus the whole name.
@@ -1036,6 +1050,9 @@ static func short_goal(goal_line: String, data: GameData) -> String:
 			line = line.replace(full, Places.short_region_name(data, id))
 	line = line.replace("Goal: Talk to ", "Goal: See ")
 	if line.length() <= SHORT_GOAL_CHARS:
+		return line
+	# GUIDE-284: a closed road's "(opens at Core Formation)" is the point of the line: keep it whole (the goal row wraps to two rows).
+	if line.length() <= SHORT_GOAL_CHARS + 14 and line.ends_with(")") and line.contains(" (opens at "):
 		return line
 	var cut := line.substr(0, SHORT_GOAL_CHARS)  # one char short of the limit's end: the ellipsis takes the last
 	var space := cut.rfind(" ")
