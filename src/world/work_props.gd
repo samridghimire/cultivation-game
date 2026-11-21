@@ -106,3 +106,20 @@ static func _px(canvas: CanvasItem, o: Vector2, s: float, x: float, y: float, w:
 	if c.a <= 0.0:
 		return
 	canvas.draw_rect(Rect2(o + Vector2(roundf(x), roundf(y)) * s, Vector2(w, h) * s), c)
+
+
+## GFX-226: a low table with a cup and two steam frames, centred on `c` (tea between two seated figures).
+static func draw_tea(canvas: CanvasItem, frame: int, c: Vector2, s: float) -> void:
+	_px(canvas, c, s, -5, 0, 10, 2, Color("c9a870"))
+	_px(canvas, c, s, -5, 2, 10, 1, Color("8a6b45"))
+	_px(canvas, c, s, -4, 3, 1, 2, Color("4a3a26"))
+	_px(canvas, c, s, 3, 3, 1, 2, Color("4a3a26"))
+	_px(canvas, c, s, -1, -3, 3, 3, Color("efe4c4"))  # the cup
+	_px(canvas, c, s, -1, -3, 3, 1, Color("6a8a4a"))
+	var steam := Color(0.95, 0.95, 0.95, 0.75)
+	if frame == 0:
+		_px(canvas, c, s, 0, -5, 1, 1, steam)
+		_px(canvas, c, s, 1, -7, 1, 1, steam)
+	else:
+		_px(canvas, c, s, 1, -5, 1, 1, steam)
+		_px(canvas, c, s, 0, -7, 1, 1, steam)

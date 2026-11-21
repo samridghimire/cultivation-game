@@ -104,6 +104,7 @@ var last_cultivate_density := 1.0
 var _skip_before: Dictionary = {}
 ## GFX-221: {npc_id, name, verb} while a lend-a-hand day passes, so its card names the villager.
 var _skip_lend: Dictionary = {}
+var _skip_tea: Dictionary = {}
 ## The last 5+ day action's digest {days, lines} (DAY-001); never saved, cleared when a new action starts.
 var last_digest: Dictionary = {}
 ## Player hp at the end of the last fight_enemy() (carried between tournament bouts).
@@ -2459,6 +2460,7 @@ func call_on(npc_id: String) -> void:
 	_note_teacher_seen(npc_id)
 	_teach_lessons(npc_id)
 	_start_time_skip()
+	_skip_tea = {"npc_id": npc_id, "name": npc.name}
 	_pass_time(int(rules.get("days", 1)), "Tea")
 
 
@@ -4911,8 +4913,11 @@ func _pass_time(days: int, skip_title: String = "") -> void:
 				Cultivation.realm_label(player, data), EventBus.posted_count - posted_before)
 		if not _skip_lend.is_empty():
 			summary = TimeSkip.lend_summary(summary, String(_skip_lend["name"]), String(_skip_lend["verb"]), String(_skip_lend["npc_id"]))
+		if not _skip_tea.is_empty():
+			summary = TimeSkip.tea_summary(summary, String(_skip_tea["name"]), String(_skip_tea["npc_id"]))
 		EventBus.time_skipped.emit(days, summary)
 	_skip_lend = {}
+	_skip_tea = {}
 	_skip_before = {}
 	EventBus.player_changed.emit()
 

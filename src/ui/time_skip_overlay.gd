@@ -83,7 +83,7 @@ func show_skip(summary: Dictionary, plays_cycle: bool = false) -> void:
 	else:
 		_gather.end()
 	_set_player_seated(seated)
-	_begin_lend(String(summary.get("lend_npc", "")))
+	_begin_lend(String(summary.get("lend_npc", "")), String(summary.get("tea_npc", "")))
 	if seated:
 		Audio.play("meditate_hum")  # WU-573
 	_tween = create_tween()
@@ -139,8 +139,10 @@ func _set_player_seated(on: bool) -> void:
 
 
 ## GFX-221: stand the player one tile beside the villager they help, both facing the prop (visual only).
-func _begin_lend(npc_id: String) -> void:
+func _begin_lend(npc_id: String, tea_id: String = "") -> void:
 	_end_lend()
+	if tea_id != "":
+		npc_id = tea_id
 	if npc_id == "" or not is_inside_tree():
 		return
 	var p := get_tree().get_first_node_in_group("player")
@@ -149,9 +151,14 @@ func _begin_lend(npc_id: String) -> void:
 	for n in get_tree().get_nodes_in_group("npc"):
 		if n.get("npc_id") == npc_id:
 			_lend_npc = n
-			n.set_lending(true)
+			if tea_id != "":
+				n.set_tea(true, n.position)
+			else:
+				n.set_lending(true)
 			var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
 			var spot := Scenery.lend_spot(region, n.position, LEND_GAP)
+			if tea_id != "":
+				n.set_tea(true, spot)
 			p.begin_lend(spot, (n.position - spot).normalized())
 			# WU-585: the card drops below the pair, or rises above it when they stand in the lower half
 			var screen_y: float = (n as Node2D).get_global_transform_with_canvas().origin.y
@@ -161,7 +168,10 @@ func _begin_lend(npc_id: String) -> void:
 
 func _end_lend() -> void:
 	if is_instance_valid(_lend_npc):
-		_lend_npc.set_lending(false)
+		if _lend_npc.has_method("is_tea") and _lend_npc.is_tea():
+			_lend_npc.set_tea(false)
+		else:
+			_lend_npc.set_lending(false)
 	_lend_npc = null
 	var p := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
 	if p != null and p.has_method("end_lend"):

@@ -40,6 +40,22 @@ static func lend_summary(summary: Dictionary, name: String, verb: String, npc_id
 	return out
 
 
+## GFX-226: turns a summary into the "Tea with {name}" card (always shown; the overlay seats both figures).
+static func tea_summary(summary: Dictionary, name: String, npc_id: String) -> Dictionary:
+	var out := summary.duplicate(true)
+	out["title"] = "Tea with %s" % name
+	var lines: Array = []
+	for l in summary.get("lines", []):
+		if String(l) != "Nothing of note happened.":
+			lines.append(l)
+	if lines.is_empty():
+		lines.append("You sit a while over tea.")
+	out["lines"] = lines
+	out["always"] = true
+	out["tea_npc"] = npc_id
+	return out
+
+
 ## Overlay content: {title, days, lines}. `realm_label` is the realm after the
 ## skip (Cultivation.realm_label); `news` counts log lines posted while time passed.
 static func summarize(title: String, days: int, before: Dictionary, after: Dictionary, realm_label: String, news: int) -> Dictionary:

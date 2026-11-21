@@ -287,3 +287,45 @@ func test_lend_card_moves_player_and_restores() -> void:
 	overlay.free()
 	npc.free()
 	player.free()
+
+
+## GFX-226: a tea day emits a card that names the villager, even for 1 day.
+func test_tea_card_names_villager() -> void:
+	_start()
+	var gs := _gs()
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["elder_mo"] = 45
+	var got := _capture(func(): gs.call_on("elder_mo"))
+	assert_eq(got.size(), 1)
+	var summary: Dictionary = got[0][1]
+	assert_eq(summary["title"], "Tea with " + String(gs.npcs["elder_mo"].name))
+	assert_true(summary["always"])
+	assert_eq(summary["tea_npc"], "elder_mo")
+	assert_false(summary.has("lend_npc"))
+	gs.end_session()
+
+
+## GFX-226: both figures sit by a table during the card; the player is back where they were afterwards.
+func test_tea_card_seats_and_restores() -> void:
+	for stale in (Engine.get_main_loop() as SceneTree).get_nodes_in_group("player"):
+		stale.remove_from_group("player")
+	for stale in (Engine.get_main_loop() as SceneTree).get_nodes_in_group("npc"):
+		stale.remove_from_group("npc")
+	var player := Player.new()
+	player.position = Vector2(500, 300)
+	var npc: Node = load("res://src/world/interactables/npc.gd").new()
+	npc.npc_id = "elder_mo"
+	npc.position = Vector2(200, 200)
+	_root().add_child(player)
+	_root().add_child(npc)
+	var overlay := TimeSkipOverlay.new()
+	_root().add_child(overlay)
+	overlay.show_skip({"title": "Tea with Elder Mo", "days": 1, "lines": ["x"], "tea_npc": "elder_mo"})
+	assert_true(npc.is_tea())
+	assert_true(player.position != Vector2(500, 300))
+	overlay.close()
+	assert_false(npc.is_tea())
+	assert_eq(player.position, Vector2(500, 300))
+	overlay.free()
+	npc.free()
+	player.free()

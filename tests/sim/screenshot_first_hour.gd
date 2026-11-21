@@ -322,6 +322,11 @@ func _start() -> void:
 			for id in a.substr(7).split(",", false):
 				_lend_shots(gs, id)
 			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-226: --tea=<npc_id>[,<id>...] shoots the "Tea with" card (favor 45 first)
+		if a.begins_with("--tea="):
+			for id in a.substr(6).split(",", false):
+				_tea_shots(gs, id)
+			special = true
 	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
 		if a.begins_with("--tier-up="):
 			_tier_up_shots(gs, a.substr(10))
@@ -1033,6 +1038,28 @@ func _lend_shots(gs: Node, npc_id: String) -> void:
 		_teleport_player(npc.position + Vector2(-120, 0))
 		hud.get("_prompt").visible = false
 		gs.lend_a_hand(npc_id)
+		_teleport_player(world.get_node("Player").position),
+		"settle": 40, "close": skip.close})
+
+
+## GFX-226: tea with a friend: the card, both figures seated either side of the table (tea_<id>.png).
+func _tea_shots(gs: Node, npc_id: String) -> void:
+	var skip: Control = hud.get("_time_skip")
+	shots.append({"name": "tea_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		_clear_bubble()
+		var npc: Node2D = null
+		for n in world.get_tree().get_nodes_in_group("npc"):
+			if n.get("npc_id") == npc_id:
+				npc = n
+		if npc == null:
+			push_error("tea shot: no %s in the region" % npc_id)
+			return
+		gs.npc_favor[npc_id] = 45
+		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)  # no friend-scene card over the pair
+		_teleport_player(npc.position + Vector2(-120, 0))
+		hud.get("_prompt").visible = false
+		gs.call_on(npc_id)
 		_teleport_player(world.get_node("Player").position),
 		"settle": 40, "close": skip.close})
 

@@ -51,6 +51,9 @@ var _wander_target := Vector2.ZERO
 var _wait := 0.0
 var _modal_open := false
 var _lending := false
+var _tea := false
+var _tea_to := Vector2.LEFT
+var _tea_frame := 0
 var _bubble: EmoteBubble = null
 var _lesson_bubble: EmoteBubble = null
 const MAX_PIPS := 3
@@ -166,6 +169,30 @@ func set_lending(on: bool) -> void:
 	if on:
 		_modal_open = false
 	queue_redraw()
+
+
+## GFX-226: tea with the player at `toward` (a world point): the villager keeps still at home, and a low table
+## with a steaming cup is drawn between them (two steam frames; reduce_motion keeps the first).
+func set_tea(on: bool, toward: Vector2 = Vector2.ZERO) -> void:
+	_tea = on
+	if on:
+		set_lending(true)
+		var d := toward - position
+		_tea_to = d if d.length() > 1.0 else Vector2.LEFT
+		_wander = Vector2.ZERO
+		_wander_target = Vector2.ZERO
+		position = home
+		_dir = "right" if _tea_to.x > 0.0 else "left"
+		_walk_frame = 0
+	else:
+		_dir = "down"
+		set_lending(false)
+	_tea_frame = 0
+	queue_redraw()
+
+
+func is_tea() -> bool:
+	return _tea
 
 
 func _ready() -> void:
@@ -368,6 +395,13 @@ func _physics_process(delta: float) -> void:
 func breathe(delta: float) -> void:
 	_time += delta
 	_wait -= delta
+	if _tea:  # GFX-226: still, facing the player; the steam rises on a two-frame beat
+		var tf := 0 if MotionFx.reduced() else int(floorf(_time / 0.6)) % 2
+		position = home
+		if tf != _tea_frame:
+			_tea_frame = tf
+			queue_redraw()
+		return
 	if activity != "":  # GFX-219: working villagers keep to their spot and swing the prop
 		_wander = Vector2.ZERO
 		_wander_target = Vector2.ZERO
@@ -486,7 +520,10 @@ func draw_generated_art() -> bool:
 	var sh := Scenery.figure_shadow(tex_size, winter)
 	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
 	draw_texture_rect(tex, Rect2(Vector2(-tex_size.x / 2.0, size.y / 2.0 - tex_size.y), tex_size), false)
-	if activity != "":
+	if _tea:
+		var mid := _tea_to.normalized() * minf(_tea_to.length(), 40.0) * 0.5 + Vector2(0, size.y / 2.0 - 5.0 * s)
+		WorkProps.draw_tea(self, _tea_frame, mid, s)
+	elif activity != "":
 		WorkProps.draw(self, activity, _work_frame, Vector2(tex_size.x / 2.0, size.y / 2.0 - tex_size.y * 0.45), s)
 	return true
 
