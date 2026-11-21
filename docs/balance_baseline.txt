@@ -1870,13 +1870,14 @@ Curious practiser: 10 seeds, 12 months
 
 first hour in presses (hints player, seeds 1-10, 12 months)
   milestone            reached    presses med  presses worst       days med     days worst
-  first_stage            10/10             15             15             27             27
-  first_win              10/10              3             36              8             76
+  first_stage            10/10             15             62             27            135
+  first_win              10/10              3              3              8              8
   first_friend           10/10             21             24             41             48
-  friend_tier2            0/10          never              -          never              -
+  friend_tier2           10/10             36             45             76             97
+  close_friend           10/10             57             72            125            160
   first_technique        10/10             12             12             13             13
-  first_breakthrough     10/10             15             15             27             27
-  sect_joined            10/10             15             15             27             27
+  first_breakthrough     10/10             15             62             27            135
+  sect_joined            10/10             15             62             27            135
 
 ## time breakdown (hints player, seeds 1-4, 1095 days)
 

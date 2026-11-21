@@ -652,6 +652,8 @@ func _acquaintance_options() -> Array[Dictionary]:
 		options.append(_entry(lend_label, Folk.lend_check(p, npc, data, GameState.world_flags, GameClock.total_days, favor, GameState.current_region), GameState.lend_a_hand.bind(npc_id)))
 	if GameState.visitor_today() == npc_id:
 		options.append(_entry("Share tea with %s" % npc.name, GameState.check_tea(npc_id), GameState.share_tea.bind(npc_id)))
+	elif not Folk.call_on_rules(data).is_empty() and data.npcs.has(npc_id) and favor >= int(data.family["folk_tiers"][int(Folk.call_on_rules(data).get("min_tier", 1))]["min"]):
+		options.append(_entry("Share tea at %s's (%s, favor %d)" % [npc.name, Calendar.format_duration(int(Folk.call_on_rules(data).get("days", 1))), favor], Folk.call_on_check(p, npc, data, GameState.world_flags, GameClock.total_days, favor, GameState.current_region), GameState.call_on.bind(npc_id)))
 	if not Folk.companion_rules(data).is_empty() and npc.realm_index >= 1:
 		options.append(_entry("Come exploring with me", GameState.check_companion(npc_id), GameState.invite_companion.bind(npc_id)))
 	var quarrel := GameState.quarrel_of(npc_id)

@@ -2433,6 +2433,35 @@ func lend_a_hand(npc_id: String) -> void:
 	_pass_time(int(data.family.get("lend_a_hand", {}).get("days", 1)), "Helping")
 
 
+## FOLK-037: call on a Friend for tea (once a week, 1 day, favor up to call_on.max_favor). No rng draw.
+func call_on(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	var favor := int(npc_favor.get(npc_id, 0))
+	var reason := Folk.call_on_check(player, npc, data, world_flags, GameClock.total_days, favor, current_region)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var rules := Folk.call_on_rules(data)
+	var cap := int(rules.get("max_favor", 0))
+	var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, Folk.call_on_gain(player, data, favor)), cap - favor)
+	var gain: int = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+	world_flags["tea_" + npc_id] = GameClock.total_days
+	var before := _rival_attitude()
+	npc_favor[npc_id] = favor + gain
+	var season := Calendar.season_of(GameClock.total_days)
+	EventBus.post(Folk.tea_line(data, String(npc.name), Family.favor_progress(int(npc_favor[npc_id]), data), GameClock.total_days, season, false), "progress")
+	_post_attitude_change(before)
+	_friend_scene(npc_id)
+	_note_teacher_seen(npc_id)
+	_teach_lessons(npc_id)
+	_start_time_skip()
+	_pass_time(int(rules.get("days", 1)), "Tea")
+
+
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
 func _greet_renowned(npc_id: String) -> void:
 	if player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id):

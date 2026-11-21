@@ -1306,6 +1306,26 @@ static func _tea_pool(entries: Variant, season: String) -> Array:
 	return pool
 
 
+## FOLK-037: load errors in folk_visits.call_on.
+static func _validate_call_on(data: GameData, co: Variant) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	if not co is Dictionary:
+		errors.append("family.json folk_visits.call_on must be an object")
+		return errors
+	for key in ["days", "cooldown_days", "favor", "min_tier", "max_favor"]:
+		if not (co.get(key) is int or co.get(key) is float):
+			errors.append("family.json folk_visits.call_on: %s must be a number" % key)
+			return errors
+	var tiers: Array = data.family.get("folk_tiers", [])
+	if int(co["days"]) < 1 or int(co["cooldown_days"]) < 1 or int(co["favor"]) < 1:
+		errors.append("family.json folk_visits.call_on: days, cooldown_days and favor must be >= 1")
+	if int(co["min_tier"]) < 0 or int(co["min_tier"]) >= tiers.size():
+		errors.append("family.json folk_visits.call_on: min_tier is not a folk_tiers index")
+	elif int(co["max_favor"]) < int(tiers[int(co["min_tier"])]["min"]) or int(co["max_favor"]) > 100:
+		errors.append("family.json folk_visits.call_on: max_favor must be between the tier minimum and 100")
+	return errors
+
+
 ## Load errors in folk_visits: chance in (0, 1], tip_chance in [0, 1], whole numbers >= 0, min_favor not below folk_tips.min_favor.
 static func validate_visits(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
@@ -1321,6 +1341,8 @@ static func validate_visits(data: GameData) -> PackedStringArray:
 	for key in ["min_favor", "cooldown_days", "tea_favor"]:
 		if not (r.get(key, -1) is int or r.get(key, -1) is float) or int(r.get(key, -1)) < 0:
 			errors.append("family.json folk_visits: %s must be a whole number >= 0" % key)
+	if r.has("call_on"):
+		errors.append_array(_validate_call_on(data, r["call_on"]))
 	if int(r.get("min_favor", 0)) < int(tip_rules(data).get("min_favor", 0)):
 		errors.append("family.json folk_visits: min_favor must be at least folk_tips.min_favor")
 	for key in ["tea_lines", "tip_tea_lines"]:
@@ -1988,6 +2010,40 @@ static func lend_check(c: CharacterData, npc: CharacterData, data: GameData, fla
 	if wait > 0:
 		return "Again in %d day%s." % [wait, "" if wait == 1 else "s"]
 	return ""
+
+
+## FOLK-037: data/family.json folk_visits.call_on ({} = off).
+static func call_on_rules(data: GameData) -> Dictionary:
+	return visit_rules(data).get("call_on", {})
+
+
+## FOLK-037: why `c` cannot call on `npc` for tea today ("" when they can). `flags` holds the tea_<id> days.
+static func call_on_check(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int, region_id: String = "") -> String:
+	var rules: Dictionary = call_on_rules(data)
+	var tiers: Array = data.family.get("folk_tiers", [])
+	if rules.is_empty() or npc == null or not npc.alive or npc.id == c.id or not data.npcs.has(npc.id):
+		return "There is no one to call on."
+	if c.spouses.has(npc.id) or c.children.has(npc.id) or c.parents.has(npc.id):
+		return "Family has its own ways of spending the day."
+	if region_id != "" and Npcs.region_of(npc, data) != region_id:
+		return "%s is not here." % npc.name
+	if favor < int(tiers[int(rules.get("min_tier", 1))]["min"]):
+		return "%s does not know you well enough to have you over." % npc.name
+	if favor >= int(rules.get("max_favor", 0)):
+		return "%s is always glad to see you; only something you share can bring you closer now." % npc.name
+	var wait := int(rules.get("cooldown_days", 7)) - (today - int(flags.get("tea_" + npc.id, -100000)))
+	if wait > 0:
+		return "Again in %d day%s." % [wait, "" if wait == 1 else "s"]
+	return ""
+
+
+## FOLK-037: favor of a call for tea before festival/clan/karma scaling (Charisma bonus like lend).
+static func call_on_gain(c: CharacterData, data: GameData, favor: int) -> int:
+	var rules: Dictionary = call_on_rules(data)
+	var step := maxi(1, int(data.family.get("acquaintance", {}).get("charisma_step", 4)))
+	@warning_ignore("integer_division")
+	var bonus := (c.attribute("charisma") - 10) / step
+	return clampi(maxi(1, int(rules.get("favor", 3)) + bonus), 0, maxi(0, int(rules.get("max_favor", 0)) - favor))
 
 
 ## FOLK-035: favor of a helping day before festival/clan/karma scaling (Charisma bonus like chat).

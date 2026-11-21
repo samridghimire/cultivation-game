@@ -1157,7 +1157,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if friend != "":
 		out.insert(mini(2, out.size()), friend)
 	else:
-		var closer := grow_closer_hint(c, data, people, region_id, favor)  # GUIDE-278
+		var closer := grow_closer_hint(c, data, people, region_id, favor, flags, today)  # GUIDE-278
 		if closer != "":
 			out.insert(mini(2, out.size()), closer)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
@@ -2321,7 +2321,7 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 ## GUIDE-278: once a villager is a Friend and nobody is a Close friend yet, "Grow closer: give X the Y they like (favor a/60)."
 ## Names the highest-favor Friend (lending stops at lend_a_hand.max_favor) and a liked gift in the bag, else one the region's
 ## merchant sells ("on sale here"). "" when no one is a Friend, someone is already Close, or no such gift is in reach.
-static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, favor: Dictionary) -> String:
+static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, favor: Dictionary, flags: Dictionary = {}, today: int = 0) -> String:
 	var tiers: Array = data.family.get("folk_tiers", [])
 	if tiers.size() < 3 or region_id == "":
 		return ""
@@ -2340,6 +2340,9 @@ static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionar
 	if best == "":
 		return ""
 	var npc: CharacterData = people[best]
+	# FOLK-037: a weekly cup of tea at their door comes first.
+	if Folk.call_on_check(c, npc, data, flags, today, best_favor, region_id) == "":
+		return "Grow closer: share tea at %s's (favor %d/%d)." % [npc.name, best_favor, close_min]
 	var bag := ""
 	var shop := ""
 	for item_id: String in data.items:

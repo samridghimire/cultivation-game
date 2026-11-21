@@ -2,6 +2,10 @@ extends TestCase
 ## FOLK-035: lending a hand (Folk.lend_*, GameState.lend_a_hand, Guidance.make_friend_hint).
 
 
+## FOLK-037: every villager just had tea, so the Grow closer hint falls through to gifts.
+const TEA_RESTING := {"tea_elder_mo": 0, "tea_hunter_ma": 0}
+
+
 func _npcs(d: GameData) -> Dictionary:
 	var npcs := {}
 	Npcs.ensure_all(npcs, d, seeded_rng(3))
@@ -203,10 +207,10 @@ func test_grow_closer_bag_shop_and_off() -> void:
 	# No Friend yet: no line. A Friend with nothing liked in reach: no line.
 	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 30}), "")
 	var favor := {"elder_mo": 45}
-	var none := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor)
+	var none := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, TEA_RESTING, 0)
 	assert_true(none == "" or none.ends_with("/60)."), none)
 	c.add_item(liked, 1)
-	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor)
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, TEA_RESTING, 0)
 	assert_true(line.begins_with("Grow closer: give "), line)
 	assert_true(line.contains(String(d.items[liked].get("name", liked))) and line.ends_with("(favor 45/60)."), line)
 	# Someone Close already: off.
@@ -222,7 +226,7 @@ func test_grow_closer_names_highest_friend() -> void:
 		var item := _liked_item(d, id)
 		if item != "":
 			c.add_item(item, 1)
-	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 42, other: 52})
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 42, other: 52}, TEA_RESTING, 0)
 	if line != "":
 		assert_true(line.contains(npcs[other].name) and line.ends_with("(favor 52/60)."), line)
 
@@ -232,3 +236,54 @@ func _other_villager(d: GameData) -> String:
 		if id != "elder_mo":
 			return id
 	return ""
+
+
+## FOLK-037: call_on_check / call_on_gain.
+func test_call_on_check_and_gain() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var mo: CharacterData = npcs["elder_mo"]
+	assert_eq(Folk.call_on_check(c, mo, d, {}, 0, 40, "qingshi_village"), "")
+	assert_true(Folk.call_on_check(c, mo, d, {}, 0, 39, "qingshi_village").contains("well enough"))
+	assert_true(Folk.call_on_check(c, mo, d, {}, 0, 80, "qingshi_village").contains("always glad"))
+	assert_true(Folk.call_on_check(c, mo, d, {}, 0, 50, "misty_forest").contains("not here"))
+	c.parents.append("elder_mo")
+	assert_true(Folk.call_on_check(c, mo, d, {}, 0, 50, "qingshi_village").contains("Family"))
+	c.parents.clear()
+	var flags := {"tea_elder_mo": 10}
+	assert_eq(Folk.call_on_check(c, mo, d, flags, 13, 50, "qingshi_village"), "Again in 4 days.")
+	assert_eq(Folk.call_on_check(c, mo, d, flags, 17, 50, "qingshi_village"), "")
+	assert_eq(Folk.call_on_gain(c, d, 79), 1, "capped at max_favor")
+	assert_true(Folk.call_on_gain(c, d, 40) >= 3)
+
+
+func test_call_on_validation() -> void:
+	var d := data()
+	var old: Dictionary = d.family["folk_visits"]["call_on"].duplicate()
+	d.family["folk_visits"]["call_on"]["max_favor"] = 10
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("max_favor"))
+	d.family["folk_visits"]["call_on"] = old.duplicate()
+	d.family["folk_visits"]["call_on"].erase("favor")
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("favor must be a number"))
+	d.family["folk_visits"]["call_on"] = old
+	d.load_errors.clear()
+	d._validate()
+	assert_true(d.load_errors.is_empty(), "\n".join(d.load_errors))
+
+
+func test_grow_closer_prefers_tea_then_gift() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var liked := _liked_item(d, "elder_mo")
+	var favor := {"elder_mo": 45}
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, {}, 100)
+	assert_true(line.begins_with("Grow closer: share tea at ") and line.ends_with("(favor 45/60)."), line)
+	c.add_item(liked, 1)
+	line = Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, {"tea_elder_mo": 99}, 100)
+	assert_true(line.begins_with("Grow closer: give "), line)

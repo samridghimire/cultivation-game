@@ -4662,6 +4662,29 @@ func test_teacher_favor_errands_raise_favor_once() -> void:
 		assert_eq(int(gs.npc_favor[npc_id]), gained, "%s once only" % deed_id)
 
 
+## FOLK-037: calling on a Friend for tea costs a day, raises favor, once a week, and crossing 60 is a tier line.
+func test_call_on_for_tea() -> void:
+	var gs := _root().get_node("GameState")
+	var clock := _root().get_node("GameClock")
+	gs.start_session(new_character())
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["elder_mo"] = 58
+	var day: int = clock.total_days
+	gs.call_on("elder_mo")
+	assert_eq(clock.total_days, day + 1)
+	assert_true(int(gs.npc_favor["elder_mo"]) >= 61)
+	assert_eq(gs.world_flags["tea_elder_mo"], day)
+	var favor: int = gs.npc_favor["elder_mo"]
+	gs.call_on("elder_mo")
+	assert_eq(clock.total_days, day + 1, "cooldown passes no time")
+	assert_eq(gs.npc_favor["elder_mo"], favor)
+	gs.npc_favor["elder_mo"] = 10
+	gs.world_flags.erase("tea_elder_mo")
+	gs.call_on("elder_mo")
+	assert_eq(gs.npc_favor["elder_mo"], 10, "strangers cannot be called on")
+	gs.end_session()
+
+
 ## FOLK-035: lending a hand costs a day, raises favor, and is once a week per villager.
 func test_lend_a_hand() -> void:
 	var gs := _root().get_node("GameState")
