@@ -1022,6 +1022,7 @@ func _lend_shots(gs: Node, npc_id: String) -> void:
 	var skip: Control = hud.get("_time_skip")
 	shots.append({"name": "lend_" + npc_id, "open": func() -> void:
 		hud.get("_banner").visible = false
+		_clear_bubble()
 		var npc: Node2D = null
 		for n in world.get_tree().get_nodes_in_group("npc"):
 			if n.get("npc_id") == npc_id:
@@ -1030,6 +1031,7 @@ func _lend_shots(gs: Node, npc_id: String) -> void:
 			push_error("lend shot: no %s in the region" % npc_id)
 			return
 		_teleport_player(npc.position + Vector2(-120, 0))
+		hud.get("_prompt").visible = false
 		gs.lend_a_hand(npc_id)
 		_teleport_player(world.get_node("Player").position),
 		"settle": 40, "close": skip.close})

@@ -150,8 +150,12 @@ func _begin_lend(npc_id: String) -> void:
 		if n.get("npc_id") == npc_id:
 			_lend_npc = n
 			n.set_lending(true)
-			p.begin_lend(n.position + Vector2(-LEND_GAP, 0.0), Vector2.RIGHT)
-			_center.offset_top = 260.0
+			var region: Dictionary = GameState.data.regions.get(GameState.current_region, {})
+			var spot := Scenery.lend_spot(region, n.position, LEND_GAP)
+			p.begin_lend(spot, (n.position - spot).normalized())
+			# WU-585: the card drops below the pair, or rises above it when they stand in the lower half
+			var screen_y: float = (n as Node2D).get_global_transform_with_canvas().origin.y
+			_center.offset_top = -480.0 if screen_y > get_viewport_rect().size.y * 0.45 else 260.0
 			return
 
 

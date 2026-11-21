@@ -385,6 +385,29 @@ static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Arra
 	return out
 
 
+## WU-585: where the player stands while helping the villager at `npc_pos`: one `gap` to their left (facing the prop),
+## else right, below, above, then two gaps out; a spot is free when the player's body (`radius`) misses every solid
+## landmark and the map edge. Falls back to the left spot when nothing is free.
+static func lend_spot(region: Dictionary, npc_pos: Vector2, gap: float = 40.0, radius: float = 14.0) -> Vector2:
+	var sz: Array = region.get("map", {}).get("size", [1600, 1000])
+	var bounds := Rect2(Vector2.ZERO, Vector2(float(sz[0]), float(sz[1]))).grow(-radius)
+	var solids := landmark_rects(region, true)
+	for k in [1.0, 2.0]:
+		for dir: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.DOWN, Vector2.UP]:
+			var p: Vector2 = npc_pos + dir * gap * k
+			if not bounds.has_point(p):
+				continue
+			var body := Rect2(p - Vector2(radius, radius), Vector2(radius, radius) * 2.0)
+			var hit := false
+			for r in solids:
+				if r.intersects(body):
+					hit = true
+					break
+			if not hit:
+				return p
+	return npc_pos + Vector2.LEFT * gap
+
+
 ## WU-494: how much of the Village Pond Jetty is built at project `stage` (0..3; -1 = a jetty that is not the project's): the fraction of planks laid from the shore,
 ## whether the planks still have gaps, and whether the lantern post stands.
 static func jetty_stage_look(stage: int) -> Dictionary:

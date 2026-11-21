@@ -287,3 +287,31 @@ func test_grow_closer_prefers_tea_then_gift() -> void:
 	c.add_item(liked, 1)
 	line = Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, {"tea_elder_mo": 99}, 100)
 	assert_true(line.begins_with("Grow closer: give "), line)
+
+## WU-585: the helping player never stands in a wall, a stall, a house or off the map beside any working villager.
+func test_lend_spot_is_free_for_every_working_villager() -> void:
+	var d := data()
+	var checked := 0
+	for id in d.npcs:
+		var def: Dictionary = d.npcs[id]
+		if String(def.get("activity", "")) == "" or not def.get("spots", {}).has("work"):
+			continue
+		var region: Dictionary = d.regions[String(def.get("region", ""))]
+		var w: Array = def["spots"]["work"]
+		var npc_pos := Vector2(float(w[0]), float(w[1]))
+		var spot := Scenery.lend_spot(region, npc_pos, 40.0)
+		var body := Rect2(spot - Vector2(14, 14), Vector2(28, 28))
+		for r in Scenery.landmark_rects(region, true):
+			assert_false(r.intersects(body), "%s: the lend spot %s is inside a solid landmark" % [id, spot])
+		var sz: Array = region["map"]["size"]
+		assert_true(Rect2(Vector2.ZERO, Vector2(float(sz[0]), float(sz[1]))).encloses(body), "%s: the lend spot %s is off the map" % [id, spot])
+		assert_true(spot.distance_to(npc_pos) <= 80.1, "%s: the lend spot is beside the villager" % id)
+		checked += 1
+	assert_true(checked >= 12, "checked %d working villagers" % checked)
+
+
+func test_lend_spot_steps_aside_for_a_wall() -> void:
+	var region := {"map": {"size": [400, 400], "landmarks": [{"kind": "house", "pos": [160, 200], "size": [60, 60]}]}}
+	assert_eq(Scenery.lend_spot(region, Vector2(200, 200), 40.0), Vector2(240, 200), "left is a house: stand right")
+	var open := {"map": {"size": [400, 400], "landmarks": []}}
+	assert_eq(Scenery.lend_spot(open, Vector2(200, 200), 40.0), Vector2(160, 200), "open ground: left")
