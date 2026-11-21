@@ -526,3 +526,38 @@ func test_win_chance_at_least_matches_win_chance() -> void:
 				assert_eq(early, full, "%s build %d" % [id, build])
 			else:
 				assert_true(early < 0.7, "%s build %d" % [id, build])
+
+
+func test_rating_key_ignores_stat_neutral_fields_but_not_attack() -> void:
+	# PERF-029
+	var a := new_character()
+	var b := new_character()
+	b.alignment = a.alignment + 5
+	b.dao = {"sword": 3}
+	assert_eq(Combat.rating_key(a, data()), Combat.rating_key(b, data()))
+	b.attributes["constitution"] = int(b.attributes.get("constitution", 10)) + 5
+	assert_true(Combat.rating_key(a, data()) != Combat.rating_key(b, data()), "a stat change must change the key")
+
+
+func test_cached_rating_matches_uncached_for_random_fights() -> void:
+	# PERF-029: the stats-keyed cache never changes a rating's value.
+	var rng := seeded_rng(29)
+	var ids: Array = data().enemies.keys()
+	ids.sort()
+	for i in 20:
+		var c := new_character()
+		c.realm_index = rng.randi_range(0, 2)
+		c.attributes["constitution"] = rng.randi_range(3, 30)
+		var enemy: Dictionary = data().enemies[ids[rng.randi_range(0, ids.size() - 1)]]
+		Combat._chance_cache.clear()
+		var fresh := Combat.win_chance(c, data(), enemy)
+		var sims := Combat._sim_count
+		assert_eq(Combat.win_chance(c, data(), enemy), fresh)
+		assert_eq(Combat._sim_count, sims)
+		var wins := 0
+		var r := RandomNumberGenerator.new()
+		r.seed = 1
+		for k in Combat.RATING_SAMPLES:
+			if Combat.resolve(c, data(), enemy, r, [], -1, true)["victory"]:
+				wins += 1
+		assert_eq(fresh, float(wins) / Combat.RATING_SAMPLES)
