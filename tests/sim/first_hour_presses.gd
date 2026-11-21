@@ -4,7 +4,7 @@ extends SceneTree
 ## seeds for presses and in-game days. A milestone held at day 0 counts as 0. "never" = not reached in the run.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/first_hour_presses.gd -- [seeds] [months] [--trace=<seed>]
 ## SIM-023: --start=<region_id> plays from that region; --starts=a,b,c prints one table per start (the baseline's "first hour in every start").
-## (--trace: one seed, each week's top 4 hint lines and the action taken until its first win; every run prints each seed's first_win day.)
+## (--trace: one seed, each week's top 4 hint lines and the action taken until its first win, first technique and first friend; every run prints each seed's first_win day.)
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 

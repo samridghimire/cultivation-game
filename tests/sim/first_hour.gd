@@ -2154,7 +2154,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
-		if trace_first_win and (LifeStats.get_stat(c, "fights_won") < 1 or c.techniques.is_empty()):  # GUIDE-281: traced on to the first technique
+		if trace_first_win and (LifeStats.get_stat(c, "fights_won") < 1 or c.techniques.is_empty() or not press_log["first"].has("first_friend")):  # GUIDE-281/282: traced on to the first technique and the first friend
 			var shown: Array[String] = []
 			for line: String in _next_steps(gs, c, day).slice(0, 4):
 				shown.append(line.substr(0, 90))
