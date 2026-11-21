@@ -1163,11 +1163,33 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
+	out = _fight_before_friend(out, c)
 	if home_gated:
 		out.append(home_hint)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-279: until the first fight is won, an Easy fight line in reach outranks the make-friend / grow-closer lines (the
+## hints player and a new player alike took the friend line every week and won their first fight on day 90). After the first
+## win the FOLK-036 order is unchanged.
+static func _fight_before_friend(out: PackedStringArray, c: CharacterData) -> PackedStringArray:
+	if LifeStats.get_stat(c, "fights_won") >= 1:
+		return out
+	var friend := -1
+	var fight := -1
+	for i in out.size():
+		if friend < 0 and (out[i].begins_with("Make a friend:") or out[i].begins_with("Become friends:") or out[i].begins_with("Grow closer")):
+			friend = i
+		elif fight < 0 and out[i].begins_with("Easy fight:"):
+			fight = i
+	if friend < 0 or fight < friend:
+		return out
+	var moved := out.duplicate()
+	moved.remove_at(fight)
+	moved.insert(friend, out[fight])
+	return moved
 
 
 ## CAL-012: what today's almanac omen is good for and where, "" on a plain day or when nothing here fits.

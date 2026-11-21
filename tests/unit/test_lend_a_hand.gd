@@ -98,6 +98,39 @@ func test_friend_line_in_first_four() -> void:
 	assert_true(idx >= 0 and idx < 4, "friend line index %d in %s" % [idx, lines])
 
 
+## GUIDE-279: before the first win an Easy fight line outranks the friend line; after a win the order is unchanged.
+func test_easy_fight_before_friend_until_first_win() -> void:
+	var c := new_character()
+	var lines := PackedStringArray(["Goal: x", "Make a friend: lend Mo a hand (1 day).", "Easy fight: Boar (98 in 100)", "Cultivate."])
+	var out := Guidance._fight_before_friend(lines, c)
+	assert_eq(out[1], "Easy fight: Boar (98 in 100)")
+	assert_eq(out[2], "Make a friend: lend Mo a hand (1 day).")
+	LifeStats.add(c, "fights_won")
+	var after := Guidance._fight_before_friend(lines, c)
+	assert_eq(after[1], "Make a friend: lend Mo a hand (1 day).")
+	assert_eq(after[2], "Easy fight: Boar (98 in 100)")
+
+
+func test_fight_before_friend_in_hints_then_friend_at_index_two() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var lines := Guidance.hints(c, d, 1.0, 8, npcs, {}, "qingshi_village", 0, {})
+	var f := -1
+	var m := -1
+	for i in lines.size():
+		if f < 0 and lines[i].begins_with("Easy fight:"):
+			f = i
+		if m < 0 and lines[i].begins_with("Make a friend:"):
+			m = i
+	assert_true(m >= 0, str(lines))
+	if f >= 0:
+		assert_true(f < m, "fight before friend: %s" % [lines])
+	LifeStats.add(c, "fights_won")
+	var won := Guidance.hints(c, d, 1.0, 8, npcs, {}, "qingshi_village", 0, {})
+	assert_true(won.find("") == -1 and String(won[mini(2, won.size() - 1)]).begins_with("Make a friend:") or won.size() < 3, str(won))
+
+
 ## C-404: validation of lend_lines.
 func test_lend_lines_validation() -> void:
 	var d := data()

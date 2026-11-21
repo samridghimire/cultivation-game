@@ -2,7 +2,8 @@ extends SceneTree
 ## SIM-017: the first hour measured in menu presses. The hints player (tests/sim/first_hour.gd) counts the presses of every
 ## action it takes (PRESS_COST: open + choose + confirm, plus travel); this prints, per milestone, the median and worst of N
 ## seeds for presses and in-game days. A milestone held at day 0 counts as 0. "never" = not reached in the run.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/first_hour_presses.gd -- [seeds] [months]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/first_hour_presses.gd -- [seeds] [months] [--trace=<seed>]
+## (--trace: one seed, each week's top 4 hint lines and the action taken until its first win; every run prints each seed's first_win day.)
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 
@@ -19,6 +20,10 @@ func _run() -> void:
 	var gs: Node = root.get_node("GameState")
 	var clock: Node = root.get_node("GameClock")
 	FirstHour.hints_policy = true
+	var trace_seed := -1
+	for a in args:
+		if a.begins_with("--trace="):
+			trace_seed = int(a.substr(8))
 	var presses := {}
 	var days := {}
 	for m in FirstHour.MILESTONES:
@@ -27,8 +32,14 @@ func _run() -> void:
 	for s in range(1, seeds + 1):
 		FirstHour.hints_log = {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 		var start_day: int = clock.total_days
+		if trace_seed >= 0 and s != trace_seed:
+			continue
+		FirstHour.trace_first_win = trace_seed >= 0
 		FirstHour.play(gs, clock, s, months)
 		var first: Dictionary = FirstHour.press_log["first"]
+		if first.has("first_win"):
+			var fw := int(first["first_win"]["day"])
+			print("seed %d first_win day %d" % [s, fw - start_day if start_day <= fw else fw])
 		for m in FirstHour.MILESTONES:
 			if first.has(m):
 				presses[m].append(int(first[m]["presses"]))

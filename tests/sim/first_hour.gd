@@ -145,6 +145,8 @@ const HINT_MAX_TRIES := 3
 ## PERF-027: microseconds spent per Next-steps source (see _next_steps), printed by quiet_stretches.gd --profile.
 static var step_usec: Dictionary = {}
 static var hints_policy := false
+## GUIDE-279: print each week's top 4 hint lines and the action taken, until the first win (first_hour_presses.gd --trace=<seed>).
+static var trace_first_win := false
 static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
@@ -2152,6 +2154,11 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
+		if trace_first_win and LifeStats.get_stat(c, "fights_won") < 1:
+			var shown: Array[String] = []
+			for line: String in _next_steps(gs, c, day).slice(0, 4):
+				shown.append(line.substr(0, 90))
+			print("  day %3d | acted %-9s on %s\n           top4: %s" % [day, acted if acted != "" else "(idle)", acted_line.substr(0, 70), "\n                 ".join(shown)])
 		if acted == "prepare":
 			# GUIDE-277: a week spent cultivating for a beast is a week with nothing else to do: idle, and counted apart.
 			hints_log["idle_weeks"] += 1
@@ -2231,6 +2238,9 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 		lines.append(with_easy_fight_prefix(String(f.get("text", ""))))
 		break
 	var t3 := Time.get_ticks_usec()
+	# GUIDE-279: until the first win, the Easy fight in reach goes before the friend and manual lines (as Guidance.hints orders them).
+	if LifeStats.get_stat(c, "fights_won") < 1 and lines.size() > 0 and lines[-1].begins_with("Easy fight:"):
+		lines.insert(0, lines.pop_back())
 	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor):
 		lines.append(h)
 	var t4 := Time.get_ticks_usec()
