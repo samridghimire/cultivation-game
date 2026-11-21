@@ -53,3 +53,38 @@ func test_working_npc_stays_home() -> void:
 		frames[n._work_frame] = true
 	assert_eq(frames.size(), 2, "the prop frame alternates")
 	n.free()
+
+
+## GFX-224: every activity used in data/npcs.json draws both frames without error.
+class _Canvas extends Node2D:
+	var activity := ""
+	var frame := 0
+	var drawn := 0
+
+	func _draw() -> void:
+		WorkProps.draw(self, activity, frame, Vector2(40, 40), 2.0)
+		drawn += 1
+
+
+func test_every_used_activity_draws_both_frames() -> void:
+	var data := GameData.load_from_dir()
+	var used := {"sit": true}
+	for npc: Dictionary in data.npcs.values():
+		if npc.has("activity"):
+			used[String(npc["activity"])] = true
+	for r: Dictionary in data.regions.values():
+		for p: Dictionary in r.get("places", []):
+			if p.has("activity"):
+				used[String(p["activity"])] = true
+	var c := _Canvas.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(c)
+	for act: String in used.keys():
+		assert_true(WorkProps.is_valid(act), act)
+		for f in 2:
+			c.activity = act
+			c.frame = f
+			var before := c.drawn
+			c.queue_redraw()
+			await (Engine.get_main_loop() as SceneTree).process_frame
+			assert_true(c.drawn > before, "%s frame %d drew" % [act, f])
+	c.free()
