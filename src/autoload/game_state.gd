@@ -891,10 +891,13 @@ func receive_drop_by_gifts() -> void:
 		if not data.npcs.has(id) or int(npc_favor.get(id, 0)) < min_favor or Npcs.region_of(npc, data) != current_region:
 			continue
 		var gift := Folk.drop_by_gift(player, npc, data, world_flags, GameClock.total_days, rng, int(npc_favor.get(id, 0)))
-		if gift.is_empty():
+		if gift.is_empty() or not data.items.has(String(gift["item"])):
 			continue
 		player.add_item(String(gift["item"]), int(gift["count"]))
-		EventBus.post(String(gift["line"]), "progress")
+		# REVIEW: the shared lines say "left this for you"; name what "this" is.
+		var count := int(gift["count"])
+		var what := String(data.items[gift["item"]].get("name", gift["item"])) + (" x%d" % count if count > 1 else "")
+		EventBus.post(("%s (%s)" % [String(gift["line"]), what]).strip_edges(), "progress")
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a

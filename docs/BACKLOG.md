@@ -8,9 +8,10 @@ Long specs live in docs/specs/<id>.md. Tasks finished before 2026-10-07 are in d
 Many leftover `claude/*` branches from the old PR flow point at tasks already done; they are not claims on any open task.
 
 ## P0: Reviewer fixes
-Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role. (2026-11-21 18:10: none open; the review of 8ac4499..ebf14c6 found no bugs and filed nothing.)
+Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-FOLK041 | qa | todo | **FOLK-041 drop-by gifts were landed without `tools/balance.sh --check`.** `GameState.receive_drop_by_gifts()` (called from `_post_arrival_line` on every arrival) draws from the shared `GameState.rng` (`Folk.drop_by_gift`: one `randf()` per friend per 30 days, plus picks) for every non-family villager at favor >= 60 in the region, and adds items. SIM-024 shows every sim start reaches close_friend (favor 60) in 10/10 seeds by day ~125-171, so the 24-month hints/balance sections after that day can drift. Fix: either make the roll rng-free like C-404's lend lines (`hash("%s/%d" % [npc_id, day])`), or run `tools/balance.sh --check`, refresh the affected sections, and explain the diff in the commit. Keep `tests/unit/test_folk_drop_by.gd` green. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-11-21 18:10): 9 landed (GUIDE-283, WU-589, C-409, WU-590, C-410, GFX-229, WU-588, GFX-230, FOLK-039 partial);

@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: ebf14c6
+Last reviewed commit: 82c9e33
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2398,3 +2398,17 @@ Last reviewed commit: ebf14c6
   - C-409 data-only (Cloud-Stair Pedlar, Iron Fist max 15). The worker did not run balance.sh --check. FOLK-039: Sworn friend
     (85) cannot be reached by gifts (cap 50) or tea (cap 80); the worker left this as a balance call for the owner/planner.
   - Not rendered by me: GFX-229, WU-590, WU-588's card line (the workers also left the close-up shots as follow-ups).
+- 2026-11-21 (reviewer): reviewed ebf14c6..82c9e33 (PERF-031, SIM-024, WU-591, FOLK-040 partial, GUIDE-284, GFX-231, WU-592,
+  FOLK-041; [PLAN] skipped). Main green (4536 tests). No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION change
+  (FOLK-041's `drop_by_<id>` cooldowns live in world_flags), no new binary assets.
+  - FOLK-041 (fixed): the arrival log said "{name} ... left this for you" without ever naming the item, so the gift was
+    invisible unless you opened the bag; the line now ends "(<item name>[ xN])". A gift id missing from items.json is
+    skipped (lend_a_hand already guarded this). Test extended.
+  - FOLK-041 (filed RV-FOLK041, qa): the drop-by roll draws from the shared GameState.rng on arrival once any friend is at
+    favor 60, which every sim seed reaches by day ~125-171; no balance check was run.
+  - FOLK-040 (partial, worker-flagged, sim 0/10): code matches spec. Math note for the planner: a liked gift is at most
+    gift_max_per_item 10 x like_mult 2 = 20 (x birthday multiplier) and tea stops at 80, so Sworn (85) needs tea to ~80 first
+    *and* the exact birthday day; the weekly-stepping sim likely misses one of these. Not a code bug.
+  - PERF-031: lazy screens checked; no leftover eager `_screens` use in hud.gd (only the test accessor), _close_screens and
+    _any_screen_open only touch built nodes. GUIDE-284, GFX-231, WU-591, WU-592, SIM-024: match specs, tests present;
+    several skipped their screenshot checks (noted in their Follow-ups).

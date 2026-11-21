@@ -56,9 +56,17 @@ func test_arrival_hook_gives_once() -> void:
 	gs.current_region = "qingshi_village"
 	gs.npc_favor["hunter_ma"] = 70
 	var before: int = gs.player.inventory.size()
+	var before_inv: Dictionary = gs.player.inventory.duplicate()
 	gs.receive_drop_by_gifts()
 	var flag: int = int(gs.world_flags.get("drop_by_hunter_ma", -1))
 	assert_true(flag >= 0)
+	# REVIEW: the log line names the gift.
+	var got := ""
+	for id: String in gs.player.inventory:
+		if not before_inv.has(id) or int(gs.player.inventory[id]) > int(before_inv[id]):
+			got = String(gs.data.items[id].get("name", id))
+	assert_true(got != "", "a gift arrived")
+	assert_true(EventBus.history.any(func(e: Dictionary) -> bool: return String(e["text"]).contains("(" + got)), "the line names the gift")
 	var snapshot: Dictionary = gs.player.inventory.duplicate()
 	gs.receive_drop_by_gifts()
 	assert_eq(gs.player.inventory, snapshot, "no second gift within the cooldown")
