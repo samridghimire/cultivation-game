@@ -98,3 +98,16 @@ func test_respawn_speaks_and_low_lives() -> void:
 	gs._die_violently("Test death.")
 	assert_eq(_spoken("first_respawn").size() + _spoken("low_lives").size(), 3, "the low-lives line is not repeated")
 	gs.end_session()
+
+
+## C-355: the pick comes from the name and moment, so it never moves the shared rng and is stable per character.
+func test_speak_leaves_rng_alone_and_is_stable() -> void:
+	var rng := seeded_rng(5)
+	var state := rng.state
+	var a := new_character()
+	var line := ArtifactWhispers.speak(a, data(), "first_breakthrough", rng)
+	assert_eq(rng.state, state, "no draw from the shared rng")
+	assert_true((data().artifact["whispers"]["first_breakthrough"] as Array).has(line))
+	var b := new_character()
+	b.name = a.name
+	assert_eq(ArtifactWhispers.speak(b, data(), "first_breakthrough", seeded_rng(9)), line, "same name, same line")

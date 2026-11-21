@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: a27933a
+Last reviewed commit: d4b379f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2357,3 +2357,17 @@ Last reviewed commit: a27933a
   - C-401 OK (descriptions/blurbs validated, creation line from dominant root). WU-583 OK (strip width counted in
     spread_labels). GFX-222, GFX-220 draw-only (ridge_turf uses its own seeded rng; ground cache VERSION bumped). C-403 data +
     guard test (pond fisher deferred to QA-239/C-405). SIM-021, PERF-027, SIM-022 sim only. I did not render GFX-220/221/222 or WU-583.
+- 2026-11-21 (reviewer): reviewed a27933a..d4b379f (GUIDE-278, WU-584, QA-239, GFX-223, C-355, GFX-224, QA-241, GUIDE-279, FOLK-037,
+  GFX-225, WU-585; [PLAN]/[REVIEW] skipped). Main green (4499 tests). No BACKLOG/CHANGELOG edits by workers, no SAVE_VERSION
+  change (FOLK-037's `tea_<id>` days live in world_flags), no new binary assets. No bugs found; one test added, nothing filed.
+  - Added (C-355): the whisper pick moved from the shared rng to hash(name/moment) with no test; a test now checks the rng
+    state is untouched and the pick is stable per name.
+  - QA-239 / QA-241 OK: named NPC roots from hash(seed, id); Npcs.simulate takes one base draw per call then per-NPC streams
+    (NpcFamilies still uses the shared rng). Hud `_skip_player` stops a freed HUD's time-skip from re-showing in the next
+    session. Worker did not run balance.sh --check after the stream shift (follow-up noted).
+  - FOLK-037 OK: call_on validated, weekly cooldown, cap 80, family/region gates; tea row only from the Friend tier; Grow
+    closer hint offers tea first. GUIDE-278/279 OK (`_fight_before_friend` matches the "Make a friend"/"Become friends"/
+    "Grow closer" and "Easy fight:" prefixes as emitted). Worker-noted regression: first_technique worst day 13 -> 89 (seed 8).
+  - GFX-225 OK (hearts wait for any modal; reduce_motion still variant; lend row 'favor 36/40 Friend'). WU-585 OK (lend_spot
+    unit-tested over every worker spot). WU-584 OK ("Easy" only in odds wording; threat ranks still say Weak).
+    GFX-223/224 draw-only (ground cache VERSION 6). I did not render GFX-223/224/225 or WU-585.
