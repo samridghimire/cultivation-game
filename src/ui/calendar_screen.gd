@@ -445,7 +445,7 @@ func _show_day(d: int) -> void:
 		if total >= GameClock.total_days:
 			lines.append(_next_text(total))
 	for e: Dictionary in entries:
-		lines.append("- " + String(e["text"]))
+		lines.append(Folk.birthday_detail(e))  # WU-593
 	var omen := GameState.today_omen(total - GameClock.total_days)
 	if not omen.is_empty() and not Almanac.is_plain(omen):
 		lines.append("Almanac: " + String(omen.get("name", "")))

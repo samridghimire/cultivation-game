@@ -345,14 +345,6 @@ func _build_festivals() -> void:
 		_grid.add_child(b)
 
 
-func _birthday_line(e: Dictionary) -> String:
-	if String(e["birthday_text"]) == "":
-		return ""
-	var d := int(e["birthday_in"])
-	var when := "today" if d == 0 else ("tomorrow" if d == 1 else "in %d days" % d)
-	return "Birthday: %s (%s)" % [e["birthday_text"], when]
-
-
 ## Tastes as small item icons: known likes, then "?" for the ones not yet learned.
 static func taste_row(data: GameData, known: Array, total: int, tint: Color = Color.WHITE) -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -424,8 +416,8 @@ func _card(e: Dictionary) -> Button:
 		var step := UIStyle.label(String(e["next_step"]), 13, UIStyle.ACCENT.darkened(0.15))
 		step.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(step)
-	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= 7  # WU-482: gold within a week
-	var bday := UIStyle.label(_birthday_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
+	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= Folk.BIRTHDAY_SOON_DAYS  # WU-482/593: gold within two weeks
+	var bday := UIStyle.label(Folk.birthday_card_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
 	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))

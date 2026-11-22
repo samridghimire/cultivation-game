@@ -1162,3 +1162,35 @@ func test_greeting_is_side_effect_free() -> void:
 	assert_eq(a, b)
 	assert_eq(rng.state, before, "no rng draw")
 	d.almanac["omens"] = saved
+
+
+## WU-593: the People card's birthday line at 14, 15 and 0 days, and after the gift.
+func test_birthday_card_line() -> void:
+	var e := {"birthday_text": "Month 3, Day 4", "birthday_in": 14, "birthday_gifted": false}
+	assert_eq(Folk.birthday_card_line(e), "Birthday in 14 days: a liked gift counts double")
+	e["birthday_in"] = 1
+	assert_eq(Folk.birthday_card_line(e), "Birthday in 1 day: a liked gift counts double")
+	e["birthday_in"] = 15
+	assert_eq(Folk.birthday_card_line(e), "Birthday: Month 3, Day 4 (in 15 days)")
+	e["birthday_in"] = 0
+	assert_eq(Folk.birthday_card_line(e), "Birthday today!")
+	e["birthday_gifted"] = true
+	assert_eq(Folk.birthday_card_line(e), "Birthday gift given")
+	assert_eq(Folk.birthday_card_line({"birthday_text": "", "birthday_in": -1}), "")
+
+
+## WU-593: people_entries flags a given birthday gift; the calendar detail notes the double gift for known villagers only.
+func test_birthday_gifted_entry_and_calendar_detail() -> void:
+	var npc := new_character()
+	npc.id = "hunter_ma"
+	var day := Folk.birthday_day(npc, data())
+	var flags := {}
+	assert_false(Folk.birthday_gift_given(flags, npc, day))
+	Folk.birthday_gift_multiplier(flags, npc, data(), day, true)
+	assert_true(Folk.birthday_gift_given(flags, npc, day))
+	assert_false(Folk.birthday_gift_given(flags, npc, day + Calendar.DAYS_PER_YEAR), "next year it is open again")
+	var known := {"kind": "birthday", "text": "Hunter Ma's birthday", "npc_id": "hunter_ma"}
+	assert_eq(Folk.birthday_detail(known), "- Hunter Ma's birthday (a liked gift counts double)")
+	assert_eq(Folk.birthday_detail({"kind": "birthday", "text": "Your birthday"}), "- Your birthday")
+	assert_eq(Folk.birthday_detail({"kind": "birthday", "text": "Mei's birthday", "npc_id": "mei", "family": true}), "- Mei's birthday")
+	assert_eq(Folk.birthday_detail({"kind": "market", "text": "Market"}), "- Market")

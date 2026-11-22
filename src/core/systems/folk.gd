@@ -625,7 +625,7 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 		dislikes.sort()
 		out.append({"id": c.id, "name": c.name, "favor": f, "tier_index": tier_index(data, f), "tier_name": tier_name(data, f),
 			"birthday_text": "" if b < 0 else "Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)],
-			"birthday_in": days_to_birthday(c, data, today), "likes_known": likes, "dislikes_known": dislikes,
+			"birthday_in": days_to_birthday(c, data, today), "birthday_gifted": birthday_gift_given(flags, c, today), "likes_known": likes, "dislikes_known": dislikes,
 			"likes_total": (Family.taste_lists(data, c.id)["likes"] as Array).size(),
 			"last_gift": last_gift_text(flags, c.id, data)})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -1248,6 +1248,33 @@ static func birthday_gift_multiplier(flags: Dictionary, npc: CharacterData, data
 	if consume:
 		flags[BIRTHDAY_GIFT_PREFIX + npc.id] = year
 	return 2
+
+
+## WU-593: true once `npc`'s birthday gift for the year of `day` has been given.
+static func birthday_gift_given(flags: Dictionary, npc: CharacterData, day: int) -> bool:
+	return npc != null and int(flags.get(BIRTHDAY_GIFT_PREFIX + npc.id, -1)) == day / Calendar.DAYS_PER_YEAR
+
+
+## WU-593: the People card's birthday line from a people_entries entry. Within BIRTHDAY_SOON_DAYS it names the days and the
+## double gift; on the day it says so, and "Birthday gift given" once the gift went out. "" when no birthday is known.
+const BIRTHDAY_SOON_DAYS := 14
+static func birthday_card_line(e: Dictionary) -> String:
+	if String(e["birthday_text"]) == "":
+		return ""
+	var d := int(e["birthday_in"])
+	if d == 0:
+		return "Birthday gift given" if bool(e.get("birthday_gifted", false)) else "Birthday today!"
+	if d <= BIRTHDAY_SOON_DAYS:
+		return "Birthday in %d day%s: a liked gift counts double" % [d, "" if d == 1 else "s"]
+	return "Birthday: %s (in %d days)" % [e["birthday_text"], d]
+
+
+## WU-593: the calendar detail line for a birthday entry: the double-gift note for a villager you know, once.
+static func birthday_detail(e: Dictionary) -> String:
+	var text := "- " + String(e["text"])
+	if String(e["kind"]) == "birthday" and e.has("npc_id") and not bool(e.get("family", false)):
+		text += " (a liked gift counts double)"
+	return text
 
 
 ## FOLK-040: true when `item_id` would be the first liked gift to `npc` on their birthday this year.
