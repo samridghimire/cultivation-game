@@ -39,7 +39,7 @@ extends SceneTree
 ## GFX-110: add `--edge` to stand at the bottom map edge in the multi-region shots.
 ## QA-187: `--region=a,b,...` renders only the arrival shot of each region as region_<id>.png (one world build per
 ## region); with one id the normal shot set is rendered in that region and the arrival shot is also named region_<id>.png.
-## FOLK-016: append `-- --friend-scene` for friend_scene.png (a friend scene card with a gift line).
+## FOLK-016: append `-- --friend-scene` for friend_scene.png (a friend scene card with a gift line).  GFX-234: `--friend-scene=<npc_id>[,<favor>]` stages that villager's scene (favor default 60), e.g. old_monster_gui.
 ## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
 ## field_menu.png (the rented field's menu with the tool icons).
 ## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
@@ -364,16 +364,30 @@ func _start() -> void:
 	if friend_arg:  # WU-418: a Qingshi villager at favor 65 and their menu
 		_friend_shots(gs)
 		special = true
-	if OS.get_cmdline_user_args().has("--friend-scene"):  # FOLK-016: Xiao Ling's scene card with its gift line
+	var fs_npc := ""  # FOLK-016 / GFX-234: --friend-scene[=<npc_id>[,<favor>]] (default xiao_ling at 45)
+	var fs_favor := 45
+	for a in OS.get_cmdline_user_args():
+		if a == "--friend-scene":
+			fs_npc = "xiao_ling"
+		elif a.begins_with("--friend-scene="):
+			var fs_parts := a.substr(15).split(",")
+			fs_npc = fs_parts[0]
+			fs_favor = int(fs_parts[1]) if fs_parts.size() > 1 else 60
+	if fs_npc != "":  # the villager's scene card with its gift line, in their own region
 		shots.append({"name": "friend_scene", "open": func() -> void:
 			hud.get("_banner").visible = false
-			gs.current_region = "qingshi_village"
-			gs.npc_favor["xiao_ling"] = 45
+			var fs_cd: CharacterData = gs.npcs[fs_npc]
+			gs.current_region = String(gs.data.npcs[fs_npc].get("region", "qingshi_village")) if gs.data.npcs.has(fs_npc) else "qingshi_village"
+			gs.npc_favor[fs_npc] = fs_favor
 			c.scene_day = -1
 			var gclock: Node = gs.get_node("/root/GameClock")  # autoloads are not compile-time names in a -s script
-			while Weather.of(gs.data, "qingshi_village", gclock.total_days) != "rain":  # FOLK-021
+			var fs_scene := {}
+			for _i in 40:  # FOLK-021: advance to a day the scene's weather allows
+				fs_scene = Folk.scene_due(c, gs.data, fs_npc, fs_favor, fs_cd, gs.current_region, Weather.of(gs.data, gs.current_region, gclock.total_days))
+				if not fs_scene.is_empty():
+					break
 				gclock.total_days += 1
-			gs._friend_scene("xiao_ling"), "close": func() -> void: hud.get("_friend_card").close()})
+			gs._friend_scene(fs_npc), "close": func() -> void: hud.get("_friend_card").close()})
 		special = true
 	if OS.get_cmdline_user_args().has("--cast"):  # QA-182: the CastBar on the jetty, marker frozen mid-sweep
 		_cast_shots(gs)
