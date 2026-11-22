@@ -409,6 +409,14 @@ func _card(e: Dictionary) -> Button:
 	h.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	h.stretch_mode = TextureRect.STRETCH_KEEP
 	col.add_child(h)
+	if Folk.is_sworn(data, GameState.player, String(e["id"]), int(e["favor"])):  # GFX-238
+		var cord := TextureRect.new()
+		cord.texture = HudIcons.cord(2)
+		cord.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cord.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		cord.stretch_mode = TextureRect.STRETCH_KEEP
+		cord.name = "SwornCord"
+		col.add_child(cord)
 	var tier := UIStyle.label(String(e["tier_name"]), 14)
 	tier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(tier)

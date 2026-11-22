@@ -937,6 +937,16 @@ func _draw_label_extras(_at: Vector2, _fade: float) -> void:
 	pass
 
 
+## GFX-238: width (px) of a mark drawn before the name inside the plate (0 = none).
+func name_mark_width() -> float:
+	return 0.0
+
+
+## GFX-238: draws that mark with its left edge at `at.x`, vertically centred on `at.y`.
+func _draw_name_mark(_at: Vector2, _fade: float) -> void:
+	pass
+
+
 ## WU-583: width (px) of the strip after the name plate (pips, marker); 0 = none. spread_labels counts it.
 func strip_extras_width() -> float:
 	return 0.0
@@ -975,10 +985,15 @@ func _draw_label() -> void:
 	# WU-549: one rule everywhere: every name gets the soft dark plate, whatever the ground.
 	var h := font.get_height(LABEL_FONT_SIZE)
 	var plate := Rect2(Vector2(left, at.y - h * 0.8), Vector2(text_width, h)).grow(PLATE_PAD)
+	var mark_w := name_mark_width()
+	if mark_w > 0.0:
+		plate = plate.grow_individual(mark_w + 2.0, 0.0, 0.0, 0.0)
 	_label_node.draw_rect(plate, Color(0.05, 0.05, 0.07, 0.4 * fade))
 	# A dark outline first so the name reads on any ground (GFX-015, GFX-052).
 	_label_node.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, 4, paint["outline"])
 	_label_node.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, paint["fill"])
+	if mark_w > 0.0:
+		_draw_name_mark(Vector2(left - PLATE_PAD - mark_w - 1.0, at.y - h * 0.3), fade)
 	_draw_label_extras(Vector2(left + text_width + PLATE_PAD + 3.0, at.y), fade)
 
 

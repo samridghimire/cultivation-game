@@ -2258,6 +2258,13 @@ static func tend_injury(c: CharacterData, npc: CharacterData, data: GameData, fl
 	return {"npc": npc.id, "days_healed": healed, "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
 
 
+## GFX-238: whether `npc_id` is a Sworn friend of the player: favor >= tend.min_favor (default 85) and not family. Pure.
+static func is_sworn(data: GameData, player: CharacterData, npc_id: String, favor: int) -> bool:
+	var rules: Dictionary = visit_rules(data).get("tend", {})
+	var min_favor := int(rules.get("min_favor", 85)) if not rules.is_empty() else 85
+	return favor >= min_favor and player != null and not _is_player_family(player, npc_id)
+
+
 ## WU-599: the summary the time-skip card shows when a Sworn friend tends the player's wounds (2.5 s in all).
 static func tend_card(name: String, days_healed: int, line: String, npc_id: String) -> Dictionary:
 	var lines: Array = []

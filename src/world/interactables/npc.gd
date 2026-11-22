@@ -61,6 +61,7 @@ var _bubble: EmoteBubble = null
 var _lesson_bubble: EmoteBubble = null
 const MAX_PIPS := 3
 var _pips := 0
+var _sworn := false  # GFX-238
 var _talk_dot := false
 var _on_screen := true
 var _dir := "down"
@@ -349,12 +350,15 @@ static func pips_for(favor: int, data: GameData) -> int:
 func refresh_pips() -> void:
 	var pips := 0
 	var talk := false
+	var sworn := false
 	if GameState.player != null and GameState.data != null:
 		var favor := int(GameState.npc_favor.get(npc_id, 0))
+		sworn = Folk.is_sworn(GameState.data, GameState.player, npc_id, favor)
 		pips = pips_for(favor, GameState.data)
 		if pips > 0 and GameState.has_dialogue(npc_id) and not lesson_waiting():
 			talk = Npcs.talk_lesson_ready(Npcs.teachings(npc_id, GameState.player, GameState.data, favor))
-	if pips != _pips or talk != _talk_dot:
+	if pips != _pips or talk != _talk_dot or sworn != _sworn:
+		_sworn = sworn
 		_pips = pips
 		_talk_dot = talk
 		_redraw_label()
@@ -401,6 +405,20 @@ func strip_extras_width() -> float:
 	if _pips <= 0:
 		return 0.0
 	return PLATE_PAD + 3.0 + float(strip_layout(_strip_pips_w(), _strip_marker_r())["width"])
+
+
+## GFX-238: a Sworn friend's name plate starts with a tiny red knot.
+func is_sworn_mark() -> bool:
+	return _sworn
+
+
+func name_mark_width() -> float:
+	return 10.0 if _sworn else 0.0
+
+
+func _draw_name_mark(at: Vector2, fade: float) -> void:
+	var tex := HudIcons.knot(2)
+	_label_node.draw_texture(tex, Vector2(at.x, at.y - tex.get_height() / 2.0), Color(1, 1, 1, fade))
 
 
 func _draw_label_extras(at: Vector2, fade: float) -> void:

@@ -254,6 +254,50 @@ static func hearts(count: int, filled: int, px: int = 2) -> Texture2D:
 	return _cache[key]
 
 
+## GFX-238: the Sworn friend's mark. cord(): a red cord tied in a knot with two tails, 10x6 art px, scaled by `px`.
+const CORD: Array[String] = [
+	"..........",
+	"rr..rr..rr",
+	".rrrRRrrr.",
+	"rr.rRRr.rr",
+	"....rr....",
+	"...r..r...",
+]
+const CORD_RED := Color("c4302b")
+const CORD_KNOT := Color("e8574f")
+
+
+static func cord(px: int = 2) -> Texture2D:
+	px = maxi(px, 1)
+	var key := "cord_%d" % px
+	if not _cache.has(key):
+		var img := Image.create(10 * px, 6 * px, false, Image.FORMAT_RGBA8)
+		for y in 6:
+			var row: String = CORD[y]
+			for x in 10:
+				var ch := row.substr(x, 1)
+				if ch != ".":
+					img.fill_rect(Rect2i(x * px, y * px, px, px), CORD_KNOT if ch == "R" else CORD_RED)
+		_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
+
+
+## The knot glyph before a name on a world plate: 5x5 art px.
+static func knot(px: int = 2) -> Texture2D:
+	px = maxi(px, 1)
+	var key := "knot_%d" % px
+	if not _cache.has(key):
+		var rows: Array[String] = [".r.r.", "rrRrr", ".rRr.", "rr.rr", "r...r"]
+		var img := Image.create(5 * px, 5 * px, false, Image.FORMAT_RGBA8)
+		for y in 5:
+			for x in 5:
+				var ch := rows[y].substr(x, 1)
+				if ch != ".":
+					img.fill_rect(Rect2i(x * px, y * px, px, px), CORD_KNOT if ch == "R" else CORD_RED)
+		_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
+
+
 static func _glyph(key: String, defs: Dictionary, name: String) -> Texture2D:
 	if not defs.has(name):
 		return null
