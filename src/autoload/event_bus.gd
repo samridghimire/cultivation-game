@@ -123,6 +123,12 @@ signal npc_reaction(npc_id: String, kind: String)
 ## FOLK-021: a friend taught a lesson; effect_line is the effect notes joined by ", " (may be empty).
 @warning_ignore("unused_signal")
 signal lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String)
+## FOLK-044: a Sworn friend tended your injuries on arrival (days_healed = days of healing taken off).
+@warning_ignore("unused_signal")
+signal friend_tended(npc_id: String, days_healed: int)
+## FOLK-044: a Close friend left a gift on arrival (`line` is the posted log line).
+@warning_ignore("unused_signal")
+signal friend_gift_left(npc_id: String, item_id: String, count: int, line: String)
 ## Id of the notice being announced by `feature_unlocked` ("" when unknown); the HUD titles the banner by it (WU-409).
 var last_notice_id: String = ""
 

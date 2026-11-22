@@ -58,3 +58,66 @@ func test_arrival_hook_tends_once() -> void:
 	gs.receive_sworn_tending()
 	assert_eq(int(gs.player.injuries["internal_injury"]), 15, "no second tending within the cooldown")
 	gs.end_session()
+
+
+func _sworn_setup(gs: Node) -> void:
+	gs.start_session(new_character())
+	gs.current_region = "withered_bone_marsh"
+	gs.npc_favor["hunter_ma"] = 88
+	gs.player.injuries["internal_injury"] = 30
+
+
+func test_sworn_tend_hint() -> void:
+	var gs := _root().get_node("GameState")
+	_sworn_setup(gs)
+	var ma: CharacterData = gs.npcs["hunter_ma"]
+	var day := 500
+	var line := Guidance.sworn_tend_hint(gs.player, gs.data, gs.current_region, gs.npcs, gs.npc_favor, gs.world_flags, day)
+	var days := Guidance.route_days(gs.player, gs.data, gs.current_region, Npcs.region_of(ma, gs.data))
+	if days >= 1 and days <= 3:
+		assert_true(line.begins_with("Rest with %s in " % ma.name), line)
+		assert_true(line.ends_with("a sworn friend tends your wounds"), line)
+		assert_true(Guidance.short_hint(line, gs.data).contains(ma.name), "short form keeps the name")
+		gs.npc_favor["hunter_ma"] = 84
+		assert_eq(Guidance.sworn_tend_hint(gs.player, gs.data, gs.current_region, gs.npcs, gs.npc_favor, gs.world_flags, day), "", "favor 84")
+		gs.npc_favor["hunter_ma"] = 88
+		gs.world_flags["tended_hunter_ma"] = day - 10
+		assert_eq(Guidance.sworn_tend_hint(gs.player, gs.data, gs.current_region, gs.npcs, gs.npc_favor, gs.world_flags, day), "", "cooldown")
+		gs.world_flags.erase("tended_hunter_ma")
+		gs.player.parents.append("hunter_ma")
+		assert_eq(Guidance.sworn_tend_hint(gs.player, gs.data, gs.current_region, gs.npcs, gs.npc_favor, gs.world_flags, day), "", "family")
+		gs.player.parents.erase("hunter_ma")
+	gs.player.injuries.clear()
+	assert_eq(Guidance.sworn_tend_hint(gs.player, gs.data, gs.current_region, gs.npcs, gs.npc_favor, gs.world_flags, day), "", "uninjured")
+	gs.player.injuries["internal_injury"] = 30
+	assert_eq(Guidance.sworn_tend_hint(gs.player, gs.data, "qingshi_village", gs.npcs, gs.npc_favor, gs.world_flags, day), "", "friend is in the current region")
+	gs.end_session()
+
+
+func test_friend_signals_fire_once() -> void:
+	var gs := _root().get_node("GameState")
+	_sworn_setup(gs)
+	gs.current_region = "qingshi_village"
+	var tended: Array = []
+	var cb := func(id: String, days: int) -> void: tended.append([id, days])
+	EventBus.friend_tended.connect(cb)
+	gs.receive_sworn_tending()
+	gs.receive_sworn_tending()
+	EventBus.friend_tended.disconnect(cb)
+	assert_eq(tended.size(), 1)
+	assert_eq(tended[0][0], "hunter_ma")
+	assert_eq(int(tended[0][1]), 15)
+	var gifts: Array = []
+	var gcb := func(id: String, item: String, count: int, text: String) -> void: gifts.append([id, item, count, text])
+	EventBus.friend_gift_left.connect(gcb)
+	gs.npc_favor["hunter_ma"] = 70
+	for d in range(0, 400, 30):
+		gs.world_flags.erase("drop_by_hunter_ma")
+		gs.receive_drop_by_gifts()
+		if not gifts.is_empty():
+			break
+	EventBus.friend_gift_left.disconnect(gcb)
+	if not gifts.is_empty():
+		assert_eq(gifts[0][0], "hunter_ma")
+		assert_true(int(gifts[0][2]) >= 1)
+	gs.end_session()

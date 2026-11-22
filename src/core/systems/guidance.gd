@@ -687,6 +687,13 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 		for t: String in ["Birthday: %s for %s (%s)" % [what, who, days], "Birthday: %s for %s" % [what, who], "Birthday gift: %s" % what, what]:
 			if t.length() <= SHORT_HINT_CHARS:
 				return t
+	# FOLK-044: never cut the friend's name; _with_route_days adds the days.
+	re.compile("^Rest with (.+?) in (.+?) \\(\\d+ (?:day|month|year)s?\\): a sworn friend")
+	var rest := re.search(line)
+	if rest != null:
+		for t: String in ["Rest with %s in %s" % [rest.get_string(1), rest.get_string(2)], "Rest with %s" % rest.get_string(1)]:
+			if t.length() <= SHORT_HINT_CHARS:
+				return t
 	re.compile("^Grow closer: share tea at (.+?)'s \\(favor (\\d+)/(\\d+)\\)")
 	var tea := re.search(line)
 	if tea != null:
@@ -1101,6 +1108,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			cost = " Left alone they cost about %s of cultivation%s." % [Calendar.format_duration(lost), " and weaken you in fights" if Injuries.combat_multiplier(c, data) < 1.0 else ""]
 		var injuries := Injuries.describe(c, data)
 		out.append("Treat your injuries: %s %s %s your cultivation to x%s.%s" % [heal, ", ".join(injuries), "slows" if injuries.size() == 1 else "slow", String.num(Injuries.cultivation_multiplier(c, data), 2), cost])
+		var sworn := sworn_tend_hint(c, data, region_id, people, favor, flags, today)  # FOLK-044
+		if sworn != "":
+			out.append(sworn)
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
 		var duty := duty_hint(c, data, flags, region_id, today)
 		if duty != "":
@@ -2400,6 +2410,34 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 	if gift_best != "":
 		return "Become friends: give %s the %s they like (favor %d/%d)." % [people[gift_best].name, String(data.items[gift_item].get("name", gift_item)), gift_best_favor, goal]
 	return ""
+
+
+## FOLK-044: an injured player with a ready Sworn friend living within 3 route days of here:
+## "Rest with Mo in Qingshi Village (2 days): a sworn friend tends your wounds". "" when uninjured, the friend is in
+## this region (arriving already ran the tend), family, dead, on cooldown, below the tend favor, or too far.
+static func sworn_tend_hint(c: CharacterData, data: GameData, region_id: String, people: Dictionary, favor: Dictionary, flags: Dictionary, today: int) -> String:
+	var rules: Dictionary = Folk.visit_rules(data).get("tend", {})
+	if rules.is_empty() or c.injuries.is_empty() or region_id == "" or today < 0:
+		return ""
+	var best_id := ""
+	var best_days := 4
+	for id: String in data.npcs:
+		var npc: CharacterData = people.get(id)
+		if npc == null or not npc.alive or int(favor.get(id, 0)) < int(rules.get("min_favor", 85)) or Folk._is_player_family(c, id):
+			continue
+		if today - int(flags.get("tended_" + id, -100000)) < int(rules.get("cooldown_days", 90)):
+			continue
+		var home := Npcs.region_of(npc, data)
+		if home == "" or home == region_id:
+			continue
+		var days := route_days(c, data, region_id, home)
+		if days >= 1 and days < best_days:
+			best_days = days
+			best_id = id
+	if best_id == "":
+		return ""
+	var friend: CharacterData = people[best_id]
+	return "Rest with %s in %s (%s): a sworn friend tends your wounds" % [friend.name, String(data.regions[Npcs.region_of(friend, data)].get("name", "")), Calendar.format_duration(best_days)]
 
 
 ## GUIDE-278: once a villager is a Friend and nobody is a Close friend yet, "Grow closer: give X the Y they like (favor a/60)."

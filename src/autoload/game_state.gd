@@ -898,7 +898,9 @@ func receive_drop_by_gifts() -> void:
 		# REVIEW: the shared lines say "left this for you"; name what "this" is.
 		var count := int(gift["count"])
 		var what := String(data.items[gift["item"]].get("name", gift["item"])) + (" x%d" % count if count > 1 else "")
-		EventBus.post(("%s (%s)" % [String(gift["line"]), what]).strip_edges(), "progress")
+		var gift_line := ("%s (%s)" % [String(gift["line"]), what]).strip_edges()
+		EventBus.post(gift_line, "progress")
+		EventBus.friend_gift_left.emit(id, String(gift["item"]), count, gift_line)
 
 
 ## FOLK-043: a Sworn friend who lives where you arrive tends your injuries (once per 90 days each).
@@ -915,6 +917,7 @@ func receive_sworn_tending() -> void:
 			continue
 		var text := String(res["line"])
 		EventBus.post(("%s (%d days of healing)" % [text, int(res["days_healed"])]).strip_edges(), "progress")
+		EventBus.friend_tended.emit(id, int(res["days_healed"]))
 		if player.injuries.is_empty():
 			break
 

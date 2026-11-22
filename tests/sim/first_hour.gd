@@ -2388,6 +2388,17 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.begins_with("Buy ") and line.contains("spare stones"):
 		var okq := _buy_qi_here(gs, c)
 		return "buy_qi" if okq else ""
+	if line.begins_with("Rest with ") and line.contains("a sworn friend tends") and not c.injuries.is_empty():
+		# FOLK-044: walk to the named friend's region; arriving runs the tend.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc != null and line.begins_with("Rest with %s in " % npc.name):
+				var home := Npcs.region_of(npc, gs.data)
+				if home != "" and home != gs.current_region:
+					var hurt := c.injuries.duplicate()
+					gs.travel(home)
+					return "sworn_tend" if c.injuries != hurt else ""
+		return ""
 	if line.begins_with("Treat your injuries") and not c.injuries.is_empty():
 		var log := {"healed": 0}
 		_heal_before_fighting(gs, c, log)
