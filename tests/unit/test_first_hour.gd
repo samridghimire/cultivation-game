@@ -359,3 +359,15 @@ func test_note_milestones_records_lesson_and_friend_scene() -> void:
 	assert_eq(int(FirstHour.press_log["first"]["first_lesson"]["presses"]), 9, "the first stamp is kept")
 	gs.end_session()
 	FirstHour.press_log = {"presses": 0, "first": {}}
+
+
+## SIM-026: the craft line's item and seller parse; a far seller or a missing price is a line to skip.
+func test_parse_needs_line() -> void:
+	var FirstHour := preload("res://tests/sim/first_hour.gd")
+	var d: GameData = data()
+	var line := "Your Qi Pill needs %s: the Wandering Merchant sells them for 4 stones each." % Items.item_plural(d, "dew_grass", 2)
+	var info: Dictionary = FirstHour.parse_needs_line(d, line)
+	assert_eq(String(info.get("item_id", "")), "dew_grass", "item parsed from its plural")
+	assert_eq(int(info.get("price", 0)), 4, "price parsed")
+	assert_eq(String(info.get("region_id", "x")), "", "no region means here")
+	assert_true(FirstHour.parse_needs_line(d, "Gather 3 more qi").is_empty(), "other lines do not parse")

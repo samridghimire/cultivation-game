@@ -189,7 +189,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_lesson", "first_friend_scene", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2163,6 +2163,8 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			if acted != "":
 				skipped.erase(acted_line)
 		for line in skipped:
+			if is_informational(c, gs.data, gs.world_flags, line):
+				continue
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
@@ -2283,6 +2285,71 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	for pair: Array in [["make_friend_hint", t1 - t0], ["hud_goal_text", t2 - t1], ["fair_fights", t3 - t2], ["hints", t4 - t3]]:
 		step_usec[pair[0]] = int(step_usec.get(pair[0], 0)) + int(pair[1])
 	return lines
+
+
+## SIM-026: lines that only inform (the almanac's fishing omen with no fishing goal open): a player reads them and moves on.
+static func is_informational(c: CharacterData, data: GameData, flags: Dictionary, line: String) -> bool:
+	return line.begins_with("Good for fishing") and bool(Guidance.first_goals(c, data, flags)[3]["done"])
+
+
+## SIM-026: parses "Your <X> needs <items>: the <Seller> [in <Region> (Nd...)] sells them for N stones each."
+## Returns {item_id, region_id ("" = where you stand), price} or {} when the line is not that shape.
+static func parse_needs_line(data: GameData, line: String) -> Dictionary:
+	var a := line.find(" needs ")
+	var b := line.find(": the ", a)
+	var e := line.find(" sells them for ", b)
+	if a < 0 or b < 0 or e < 0:
+		return {}
+	var plural := line.substr(a + 7, b - a - 7)
+	var item_id := ""
+	for id: String in data.items:
+		if Items.item_plural(data, id, 2) == plural:
+			item_id = id
+			break
+	if item_id == "":
+		return {}
+	var seller := line.substr(b + 6, e - b - 6)
+	var region_id := ""
+	for rid: String in data.regions:
+		if seller.contains(" in %s (" % Exploration.region_name(data, rid)):
+			region_id = rid
+			break
+	var price := int(line.substr(e + 16).get_slice(" ", 0))
+	return {"item_id": item_id, "region_id": region_id, "price": price}
+
+
+## SIM-026: buys what a craft line says is missing (up to 5, as many as the stones allow); a seller beyond 3 days or
+## too few stones marks the line handled for 30 days.
+static func _buy_needed_items(gs: Node, c: CharacterData, done: Dictionary, line: String, day: int) -> String:
+	var skips: Dictionary = done.get_or_add("buy_skip", {})
+	if int(skips.get(line, -1)) > day:
+		return ""
+	var info := parse_needs_line(gs.data, line)
+	if info.is_empty():
+		return ""
+	var item_id := String(info["item_id"])
+	var price := int(info["price"])
+	var target := String(info["region_id"])
+	if target != "" and target != gs.current_region:
+		var days := int(Guidance.route_days(c, gs.data, gs.current_region, target))
+		if days < 0 or days > 3:
+			skips[line] = day + 30
+			return ""
+	if price <= 0 or c.item_count("spirit_stone") < price:
+		skips[line] = day + 30
+		return ""
+	if target != "":
+		_walk_to(gs, c, target)
+		if gs.current_region != target:
+			return ""
+	var held := c.item_count(item_id)
+	var want := mini(5, c.item_count("spirit_stone") / price)
+	for _i in want:
+		gs.buy_item(item_id)
+	if c.item_count(item_id) > held:
+		return "buy"
+	skips[line] = day + 30
+	return ""
 
 
 ## SIM-010: acts on one Next-steps line when a known action fits it; returns the action's name, "" when none did anything.
@@ -2532,6 +2599,11 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		var made := LifeStats.get_stat(c, "items_crafted")
 		gs.refine(recipe_id)
 		return "craft" if LifeStats.get_stat(c, "items_crafted") > made else ""
+	if line.begins_with("Your ") and line.contains(" needs ") and line.contains(" sells them for "):
+		# SIM-026: the craft line names the missing item and its seller; walk there when it is near and buy what is missing.
+		return _buy_needed_items(gs, c, done, line, day)
+	if line.begins_with("Good for fishing") and not Guidance.first_goals(c, gs.data, gs.world_flags)[3]["done"]:
+		return _act_on_hint(gs, c, done, "Goal: Catch a fish", day)
 	if line.begins_with("Your sect treasury sells ") or line.contains("from your sect treasury"):
 		var claim := Guidance._body_manual_treasury(c, gs.data)
 		if claim.is_empty():
