@@ -198,6 +198,7 @@ var _goals_ladder: String = ""  # Guidance.goal_ladder_id when _goals_done was t
 var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
+var _sworn_oath: SwornOath  ## GFX-235
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
 var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
@@ -345,6 +346,8 @@ func _ready() -> void:
 	_time_skip = TimeSkipOverlay.new()
 	_time_skip.closed.connect(_on_time_skip_closed)
 	add_child(_time_skip)
+	_sworn_oath = SwornOath.new()
+	add_child(_sworn_oath)
 	_build_death_screen()
 	_show_load_recap()
 	_show_start_arrival()
@@ -1860,6 +1863,14 @@ func _on_letter_arrived(npc_name: String) -> void:
 
 ## A villager became a closer friend (WU-418): a banner with their portrait.
 func _on_friendship_reached(npc_id: String, text: String) -> void:
+	# GFX-235: the top tier gets the staged oath instead of the banner.
+	if SwornOath.is_oath_tier(GameState.friendship_hearts(npc_id), GameState.friendship_tier_count()):
+		var tiers: Array = GameState.data.family.get("folk_tiers", [])
+		var npc: CharacterData = GameState.npcs.get(npc_id)
+		if npc != null and not tiers.is_empty():
+			_sworn_oath.begin(npc.name, tiers.back())
+			Audio.play("chime_progress")
+			return
 	# GFX-227: "<name>: <tier>" with the hearts as its icon; the banner waits behind any time-skip card.
 	var tex: Texture2D = HudIcons.hearts(GameState.friendship_tier_count(), GameState.friendship_hearts(npc_id), 3)
 	_banner.announce(text, "Your friendship grows", UIStyle.ACCENT, 2.0, false, tex)

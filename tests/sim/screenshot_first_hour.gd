@@ -336,6 +336,11 @@ func _start() -> void:
 			for id in a.substr(14).split(",", false):
 				_tier_up_shots(gs, id, true)
 			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-235: --sworn=<npc_id> shoots the Sworn-friend oath at its bow
+		if a.begins_with("--sworn="):
+			for id in a.substr(8).split(",", false):
+				_sworn_shots(gs, id)
+			special = true
 	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
 		if a.begins_with("--spar="):
 			_spar_shots(gs, a.substr(7))
@@ -1114,6 +1119,17 @@ func _tier_up_shots(gs: Node, npc_id: String, far: bool) -> void:
 		skip.close()  # the card closes first, then the hearts play
 		await world.get_tree().create_timer(0.3 if not far else 0.2).timeout,  # GFX-233: capture at the hearts' peak / the pulse's peak
 		"settle": 20, "keep_banner": true, "close": func() -> void: pass})  # WU-589: the banner is what this shot is for
+
+
+## GFX-235: the oath at the bow (about 0.8 s in).
+func _sworn_shots(gs: Node, npc_id: String) -> void:
+	var oath: Control = hud.get("_sworn_oath")
+	shots.append({"name": "sworn_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		var def: CharacterData = gs.npcs.get(npc_id)
+		oath.begin(def.name if def != null else npc_id, gs.data.family["folk_tiers"].back())
+		oath.set("_time", 0.8),
+		"settle": 2, "close": func() -> void: oath.end()})
 
 
 ## QA-182: the cast bar with the marker held mid-sweep (processing off so it stays put).
