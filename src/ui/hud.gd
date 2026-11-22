@@ -1918,7 +1918,7 @@ func _drain_moments() -> void:
 		"oath":
 			_play_oath(String(m["npc_id"]))
 		"tend":
-			_play_tend(String(m["npc_id"]), int(m["days_healed"]))
+			_play_tend(String(m["npc_id"]), int(m["days_healed"]), String(m.get("line", "")))
 		"gift":
 			_gift_left.enqueue(String(m["name"]), String(m["item_id"]), int(m["count"]), String(m["line"]))
 	if not _pending_moments.is_empty():
@@ -2041,14 +2041,15 @@ func _on_friend_gift_left(npc_id: String, item_id: String, count: int, line: Str
 ## WU-599: a Sworn friend tends the player: the tea card pattern, skippable, never pausing time.
 func _on_friend_tended(npc_id: String, days_healed: int) -> void:
 	if _moments_must_wait() or _encounter.visible:
-		_pending_moments.append({"kind": "tend", "npc_id": npc_id, "days_healed": days_healed})
+		# the line is captured now: a second tending on the same arrival overwrites last_tend_line
+		_pending_moments.append({"kind": "tend", "npc_id": npc_id, "days_healed": days_healed, "line": GameState.last_tend_line})
 		return
-	_play_tend(npc_id, days_healed)
+	_play_tend(npc_id, days_healed, GameState.last_tend_line)
 
 
-func _play_tend(npc_id: String, days_healed: int) -> void:
+func _play_tend(npc_id: String, days_healed: int, line: String) -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
-	_show_time_skip(Folk.tend_card(npc.name if npc != null else npc_id, days_healed, GameState.last_tend_line, npc_id))
+	_show_time_skip(Folk.tend_card(npc.name if npc != null else npc_id, days_healed, line, npc_id))
 
 
 func _show_time_skip(summary: Dictionary) -> void:

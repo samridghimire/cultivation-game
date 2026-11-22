@@ -104,3 +104,22 @@ func test_return_to_menu_empties_queue() -> void:
 	assert_eq(hud.get("_pending_moments").size(), 0)
 	hud.call("_help_screen").close()
 	await _finish(hud)
+
+
+func test_queued_tend_keeps_its_own_line() -> void:
+	# [REVIEW] two tendings queued on one arrival: each card shows its own friend's line, not the last one written.
+	var hud: CanvasLayer = await _make_hud()
+	var gs: Node = _tree().root.get_node("GameState")
+	var bus: Node = _tree().root.get_node("EventBus")
+	var skip: Control = hud.get("_time_skip")
+	_open_help(hud)
+	gs.last_tend_line = "first line"
+	bus.friend_tended.emit("hunter_ma", 2)
+	gs.last_tend_line = "second line"
+	bus.friend_tended.emit("hunter_ma", 3)
+	await _close_help(hud)
+	assert_true(skip.visible)
+	assert_eq(String(skip.call("summary_text")).split("\n")[0], "first line")
+	skip.close()
+	gs.last_tend_line = ""
+	await _finish(hud)

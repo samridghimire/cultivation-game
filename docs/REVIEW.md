@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7dd423c
+Last reviewed commit: 2dcbabd
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2441,3 +2441,17 @@ Last reviewed commit: 7dd423c
   - WU-594/WU-596 (pure Folk helpers + card text), WU-597 (NPC names fade under the chip), C-413 (data + test), PERF-032 (docs): OK.
   - Note: Folk.sworn_tend_line says "tends your wounds" on a family member's card too, though tending skips family; cosmetic.
   - Not rendered by me: GFX-236, WU-596, WU-597 (workers report shots).
+- 2026-11-22 (reviewer): reviewed 7dd423c..2dcbabd (SIM-025, WU-599, WU-600, C-415, GFX-238, WU-601, GUIDE-287, SECT-031,
+  GFX-240, C-414; [PLAN]/[REVIEW] skipped). Main green before and after. No BACKLOG/CHANGELOG edits by workers; no save-format
+  changes (`last_tend_line` is session-only); no new binary assets (GFX-238 cord/knot are code-drawn).
+  - WU-601 bug (fixed): a queued tend card read `GameState.last_tend_line` when it finally played, so two Sworn friends tending
+    on one arrival behind an open screen both showed the second friend's line. The line is now captured into the queued
+    moment; test `test_queued_tend_keeps_its_own_line` added.
+  - SECT-031 gap (filed RV-SECT031, before WU-603): sect_promoted fires only from `_post_promotion()`; promotions from
+    `contribution` in any effects dict (Effects.apply: deeds, encounters, dialogue, letters, mission rewards) emit nothing,
+    so the WU-603 card would miss them.
+  - GFX-238 note: worker could not render a Sworn plate (the --favor=hunter_ma=90 shot showed "Close friend"); tiers in
+    family.json agree with tend.min_favor 85, so it is likely a shot-flag ordering issue. Not rendered by me.
+  - C-414 OK (dialogue teachers for 5 starts, Iron Fist manual at two stalls; Misty Forest still lacks a local mortal style,
+    worker-flagged). GUIDE-287 OK (past_elder_mo; sworn_tend_line skips family, closing the last review's note). WU-599/WU-600
+    OK (gift card skips on confirm only while visible, never takes focus). GFX-240, C-415, SIM-025: OK.

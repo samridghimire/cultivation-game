@@ -11,6 +11,7 @@ Many leftover `claude/*` branches from the old PR flow point at tasks already do
 Filed by the reviewer (see docs/REVIEW.md). Take these before other work for your role.
 | id | role | status | task |
 |---|---|---|---|
+| RV-SECT031 | systems | todo | (Reviewer, before WU-603.) **Every promotion emits sect_promoted.** SECT-031 emits `EventBus.sect_promoted` only from `GameState._post_promotion()`, but contribution from any `effects` dict (`Effects.apply` ~113: deeds, encounters, dialogue, letters, world events, mission rewards via `Sects.do_mission`...) can promote too; those only add "Your sect promotes you to X" to the notes, so WU-603's card would never show for them. Fix in GameState (core stays signal-free): keep `_announced_rank: Array = [sect_id, rank]`, set it in `_post_promotion()`, on session start/load and on join; add `_check_sect_rank()` called where `EventBus.player_changed` is emitted after an action (or connect it once to player_changed) that emits `sect_promoted(id, rank)` once when the player is in the same sect at a higher rank than announced, then updates it. Leaving/changing sect just resets it. Tests in test_sect_moments.gd: a deed/dialogue effect with enough `contribution` to promote emits sect_promoted exactly once; a `_post_promotion` promotion still emits once (no double); loading a save at rank 2 emits nothing. |
 
 ## P0: Playable and fun (the first hours)
 Next (planner 2026-11-22 12:10): 11 landed (GFX-236, C-413, RV-FOLK041, FOLK-044, WU-597, WU-596, PERF-032, SIM-025, WU-599,
