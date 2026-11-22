@@ -982,6 +982,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_tips(data))
 	errors.append_array(validate_visits(data))
 	errors.append_array(validate_drop_by(data))
+	errors.append_array(validate_item_token(data))
 	errors.append_array(validate_tend(data))
 	errors.append_array(validate_companions(data))
 	errors.append_array(validate_quarrels(data))
@@ -2206,7 +2207,8 @@ static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, f
 	if lines.is_empty():
 		lines = rules.get("lines", [])
 	var line := "" if lines.is_empty() else String(lines[absi(hash("%s/%d/line" % [npc.id, today])) % lines.size()])
-	return {"item": String(gift["item"]), "count": int(gift.get("count", 1)), "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
+	var item_name := String(data.items.get(String(gift["item"]), {}).get("name", "something"))
+	return {"item": String(gift["item"]), "count": int(gift.get("count", 1)), "line": line.replace("{player}", c.name).replace("{name}", npc.name).replace("{item}", item_name)}
 
 
 static func validate_drop_by(data: GameData) -> PackedStringArray:
@@ -2226,6 +2228,22 @@ static func validate_drop_by(data: GameData) -> PackedStringArray:
 		for l: Variant in lines:
 			if not l is String or String(l) == "" or String(l).length() > 140:
 				errors.append("family.json folk_visits.drop_by: lines must be strings of 1-140 chars")
+	return errors
+
+
+## FOLK-045: `{item}` (the gift's name) is only meaningful in drop_by lines; flag it anywhere else in an NPC's line lists.
+static func validate_item_token(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	for npc_id: Variant in data.npcs:
+		var def: Dictionary = data.npcs[npc_id]
+		for key in ["lend_lines", "tend_lines"]:
+			for l: Variant in def.get(key, []):
+				if String(l).contains("{item}"):
+					errors.append("NPC '%s' %s may not use {item} (only drop_by lines)" % [npc_id, key])
+	for key in ["tend", "birthday"]:
+		for l: Variant in visit_rules(data).get(key, {}).get("lines", []):
+			if String(l).contains("{item}"):
+				errors.append("family.json folk_visits.%s: lines may not use {item}" % key)
 	return errors
 
 

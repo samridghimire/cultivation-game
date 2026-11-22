@@ -84,3 +84,41 @@ func test_arrival_hook_gives_once() -> void:
 	assert_eq(gs.player.inventory, snapshot, "no second gift within the cooldown")
 	assert_true(gs.player.inventory.size() >= before)
 	gs.end_session()
+
+
+func test_item_token_and_yield_first() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	_always(gs)
+	var lan: CharacterData = gs.npcs["herbalist_lan"]
+	gs.data.npcs["herbalist_lan"]["activity"] = "hoe"
+	var y := Folk.lend_yield(gs.data, "herbalist_lan")
+	assert_false(y.is_empty(), "Lan has a work yield")
+	gs.data.npcs["herbalist_lan"]["drop_by_lines"] = ["Lan leaves {item} for you."]
+	var rng_state: int = gs.rng.state
+	var gift: Dictionary = Folk.drop_by_gift(gs.player, lan, gs.data, gs.world_flags, 100, 60)
+	assert_eq(String(gift["item"]), String(y["item"]), "the gift is their yield")
+	assert_eq(String(gift["line"]), "Lan leaves %s for you." % gs.data.items[y["item"]]["name"])
+	assert_eq(gs.rng.state, rng_state, "rng untouched")
+	gs.end_session()
+
+
+func test_like_fallback_without_yield() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	_always(gs)
+	var ma: CharacterData = gs.npcs["hunter_ma"]
+	gs.data.family["lend_a_hand"]["yields"].erase(String(gs.data.npcs["hunter_ma"]["activity"]))
+	var gift: Dictionary = Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 100, 60)
+	assert_false(gift.is_empty())
+	assert_true((gs.data.npcs["hunter_ma"]["likes"] as Array).has(gift["item"]), "falls back to a like")
+	gs.end_session()
+
+
+func test_item_token_rejected_outside_drop_by() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	assert_true(Folk.validate_item_token(gs.data).is_empty())
+	gs.data.npcs["hunter_ma"]["tend_lines"] = ["{item} here"]
+	assert_false(Folk.validate_item_token(gs.data).is_empty())
+	gs.end_session()
