@@ -7,6 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
+## WU-602: `-- --sect-join=<sect_id>` renders sect_join.png (the joining card, e.g. azure_cloud_sect).
 ## WU-495: append `-- --season-end` for the season card (season_card.png).
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
 ## WU-502: append `-- --terraces=N` (0..3) for the Herb Slope terrace stage.
@@ -386,6 +387,16 @@ func _start() -> void:
 			Engine.get_main_loop().root.get_node("EventBus").season_began.emit("Winter", 1, PackedStringArray(["Winter tasks are up at the village board.", "The Lantern Festival is coming."]))
 			hud.call("_flush_year_review"), "close": scard.close})
 		special = true
+	for a in OS.get_cmdline_user_args():  # WU-602: the sect joining card
+		if a.begins_with("--sect-join="):
+			var jid := a.substr(12)
+			var jcard: Control = hud.get("_sect_card")
+			shots.append({"name": "sect_join", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(jid), "close": jcard.close})
+			special = true
 	if OS.get_cmdline_user_args().has("--season-board"):  # WU-466: the village board's season task card
 		var sboard: Control = hud.get("_season_board")
 		shots.append({"name": "season_board", "open": func() -> void:
