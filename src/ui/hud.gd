@@ -336,6 +336,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_sect_card))
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
+	EventBus.sect_reported.connect(_on_sect_reported)  # WU-604
 	_friend_card.closed.connect(_flush_year_review)
 	_contest_card.closed.connect(_flush_year_review)
 	_season_board = SeasonBoard.new()
@@ -1927,6 +1928,10 @@ func _drain_moments() -> void:
 			_play_tend(String(m["npc_id"]), int(m["days_healed"]), String(m.get("line", "")))
 		"gift":
 			_gift_left.enqueue(String(m["name"]), String(m["item_id"]), int(m["count"]), String(m["line"]))
+		"sect_join":
+			_play_sect_join(String(m["sect_id"]))
+		"sect_report":
+			_play_sect_report(String(m["sect_id"]), String(m.get("line", "")), m.get("items", {}))
 	if not _pending_moments.is_empty():
 		_drain_moments.call_deferred()
 
@@ -2132,15 +2137,45 @@ func _flush_year_review() -> void:
 
 
 ## WU-495: true while another card or dialogue is up; the season card waits for it.
-## WU-602: the joining card, once per join.
+## WU-602: the joining card, once per join; WU-604: queued so it waits for the hall menu to close.
 func _on_sect_joined(sect_id: String) -> void:
 	if not GameState.data.sects.has(sect_id):
 		return
-	var color := UIStyle.ACCENT
+	_pending_moments.append({"kind": "sect_join", "sect_id": sect_id})
+	_update_modal()
+
+
+func _sect_color(sect_id: String) -> Color:
 	var def: SectDef = GameState.data.sects[sect_id]
-	if String(def.robe_color) != "":
-		color = Color(String(def.robe_color))
-	_sect_card.open(Guidance.sect_welcome(GameState.player, GameState.data, sect_id, GameState.current_region), color)
+	return Color(String(def.robe_color)) if String(def.robe_color) != "" else UIStyle.ACCENT
+
+
+func _play_sect_join(sect_id: String) -> void:
+	if GameState.player.is_rogue():
+		return
+	_sect_card.open(Guidance.sect_welcome(GameState.player, GameState.data, sect_id, GameState.current_region), _sect_color(sect_id))
+	_update_modal()
+
+
+## WU-604: the welcome card after reporting at the hall.
+func _on_sect_reported(sect_id: String, items: Dictionary) -> void:
+	if not GameState.data.sects.has(sect_id):
+		return
+	_pending_moments.append({"kind": "sect_report", "sect_id": sect_id, "line": GameState.last_report_line, "items": items.duplicate()})
+	_update_modal()
+
+
+func _play_sect_report(sect_id: String, line: String, items: Dictionary) -> void:
+	var p := GameState.player
+	if p.is_rogue():
+		return
+	var rows: Array = []
+	for item_id: String in items:
+		var nm: String = GameState.data.items[item_id].name if GameState.data.items.has(item_id) else item_id
+		rows.append([item_id, "%d x %s" % [int(items[item_id]), nm]])
+	var def: SectDef = GameState.data.sects[sect_id]
+	_sect_card.open_report(def.name, def.rank_name(int(p.sect["rank"])), line, rows,
+		Guidance.hall_services(p, GameState.data, GameState.current_region, GameClock.total_days, GameState.world_flags), GameState.data, _sect_color(sect_id))
 	_update_modal()
 
 

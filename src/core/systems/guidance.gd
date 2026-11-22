@@ -1763,6 +1763,36 @@ static func sect_welcome(c: CharacterData, data: GameData, sect_id: String, regi
 		"home_days": days, "duty": "Monthly duty: %d contribution" % duty if duty > 0 else "No monthly duty at this rank", "perks": perks, "first_step": step}
 
 
+## WU-604: up to 4 short rows on what the hall offers `c` ("Mission board: 3 open now", "Lecture: ...", "Treasury: ...",
+## "Next rank: ..."); rows that do not apply are left out. Empty for rogues.
+static func hall_services(c: CharacterData, data: GameData, _region_id: String, total_days: int, flags: Dictionary = {}) -> PackedStringArray:
+	var out := PackedStringArray()
+	if c.is_rogue() or not data.sects.has(String(c.sect["id"])):
+		return out
+	var ready := 0
+	for id in Sects.available_missions(c, data, flags):
+		if Sects.check_mission(c, data, id, flags) == "":
+			ready += 1
+	if ready > 0:
+		out.append("Mission board: %d open now" % ready)
+	var lecture := Sects.lecture_def(c, data)
+	if not lecture.is_empty():
+		var when := "today" if Sects.check_lecture(c, data, total_days) == "" else "next month"
+		out.append("Lecture: %s, %s" % [String(lecture.get("name", "the elder's lecture")), when])
+	var cheapest := {}
+	for entry in Sects.shop_items(c, data):
+		if cheapest.is_empty() or int(entry["contribution"]) < int(cheapest["contribution"]):
+			cheapest = entry
+	if not cheapest.is_empty() and data.items.has(String(cheapest["item_id"])):
+		out.append("Treasury: %s for %d contribution" % [String(data.items[String(cheapest["item_id"])].name), int(cheapest["contribution"])])
+	var needs := Sects.rank_needs(c, data)
+	if not needs.is_empty():
+		out.append("Next rank: %s" % ", ".join(needs))
+	while out.size() > 4:
+		out.remove_at(out.size() - 1)
+	return out
+
+
 ## SECT-032: the hint for a new disciple who has not reported at the hall yet ("" otherwise).
 static func report_hint(c: CharacterData, data: GameData, region_id: String) -> String:
 	if not Sects.needs_report(c):

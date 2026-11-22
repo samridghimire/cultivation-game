@@ -64,7 +64,7 @@ func _confirm_options() -> Array[Dictionary]:
 		{"label": "No", "action": _ask.bind(""), "keep_open": true, "description": text},
 		{"label": yes_label, "action": func() -> void:
 			_pending = ""
-			yes.call(), "keep_open": true, "description": text},
+			yes.call(), "description": text},
 	]
 
 

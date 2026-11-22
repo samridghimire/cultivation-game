@@ -8,6 +8,7 @@ extends SceneTree
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
+## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
 ## WU-602: `-- --sect-join=<sect_id>` renders sect_join.png (the joining card, e.g. azure_cloud_sect).
 ## WU-495: append `-- --season-end` for the season card (season_card.png).
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
@@ -397,6 +398,21 @@ func _start() -> void:
 				c.alignment = 0
 				c.realm_index = maxi(c.realm_index, 1)
 				gs.join_sect(jid), "close": jcard.close})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
+		if a.begins_with("--sect-report="):
+			var rid := a.substr(14)
+			var rcard: Control = hud.get("_sect_card")
+			shots.append({"name": "sect_report", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(rid)
+				hud.call("_drain_moments")
+				rcard.close()
+				gs.current_region = Sects.home_region(gs.data, rid)
+				gs.report_to_sect()
+				hud.call("_drain_moments"), "close": rcard.close})
 			special = true
 	if OS.get_cmdline_user_args().has("--sect-promote"):  # WU-603: join azure_cloud_sect, then promote one rank
 		var pcard: Control = hud.get("_sect_card")

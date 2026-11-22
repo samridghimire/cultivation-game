@@ -661,6 +661,7 @@ func report_to_sect() -> void:
 	var result := Sects.report(player, data, current_region)
 	if result["ok"]:
 		EventBus.post(String(result["line"]), "dialogue")
+		last_report_line = String(result["line"])
 		var names: PackedStringArray = []
 		for item_id: String in result["items"]:
 			names.append("%d %s" % [int(result["items"][item_id]), data.items[item_id].name] if data.items.has(item_id) else item_id)
@@ -962,6 +963,7 @@ func receive_drop_by_gifts() -> void:
 
 ## WU-599: the line of the latest friend tending (read by the HUD when friend_tended fires).
 var last_tend_line: String = ""
+var last_report_line: String = ""  ## WU-604: the steward's line from the last hall report
 
 
 ## FOLK-043: a Sworn friend who lives where you arrive tends your injuries (once per 90 days each).
