@@ -432,9 +432,13 @@ func label_drawn_ignoring_target() -> bool:
 	return visible and label_text() != ""
 
 
+## GFX-236: set while the Sworn-friend oath plays: no place label or name plate is drawn.
+static var labels_suppressed := false
+
+
 ## Whether the name label is drawn at all (unavailable places and the current target hide it).
 func label_drawn() -> bool:
-	return visible and not label_offscreen and not crowd_hidden and label_visible(highlighted) and label_fade > 0.0
+	return visible and not labels_suppressed and not label_offscreen and not crowd_hidden and label_visible(highlighted) and label_fade > 0.0
 
 
 ## How visible the name label is for a player standing at `player_pos` (parent coordinates).
@@ -961,7 +965,7 @@ func _draw_label() -> void:
 		_label_node.draw_arc(center, 10.0, 0.0, TAU, 24, Color(0.1, 0.08, 0.04), 1.5)
 		var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		_label_node.draw_string(font, center + Vector2(-mw / 2.0, 6.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.1, 0.08, 0.04))
-	if not label_visible(highlighted) or crowd_hidden:
+	if not label_visible(highlighted) or crowd_hidden or labels_suppressed:
 		return
 	var fade := minf(label_fade, PLACE_FAR_ALPHA) if label_covered else label_fade
 	if fade <= 0.0:

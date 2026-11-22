@@ -28,3 +28,34 @@ func test_card_lines() -> void:
 	var lines := SwornOath.card_lines("Wei", tiers.back())
 	assert_eq(lines[0], "Wei: Sworn friend")
 	assert_true(lines[1].begins_with("Wei takes"))
+
+
+func test_layout_uses_player_position() -> void:
+	var l := SwornOath.layout(Vector2(300, 200), SwornOath.GAP)
+	assert_eq((l["friend"] as Vector2).x - (l["player"] as Vector2).x, SwornOath.GAP)
+
+
+func test_begin_without_world_node_finishes() -> void:
+	var o := SwornOath.new()
+	var got := [false]
+	o.finished.connect(func() -> void: got[0] = true)
+	var tiers: Array = data().family["folk_tiers"]
+	o.begin("nobody", "Wei", tiers.back())
+	assert_false(Interactable.labels_suppressed)
+	o.end()
+	assert_true(got[0])
+	o.free()
+
+
+func test_skip_clears_labels_and_oath_state() -> void:
+	var o := SwornOath.new()
+	var npc: Variant = load("res://src/world/interactables/npc.gd").new()
+	o._npc = npc as Node2D
+	npc.set_oath(true, Vector2(100, 0))
+	Interactable.labels_suppressed = true
+	o.visible = true
+	o.end()
+	assert_false(Interactable.labels_suppressed)
+	assert_false(npc.is_oath())
+	npc.free()
+	o.free()

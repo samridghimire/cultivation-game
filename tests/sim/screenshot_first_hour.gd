@@ -1131,7 +1131,7 @@ func _sworn_shots(gs: Node, npc_id: String) -> void:
 	shots.append({"name": "sworn_" + npc_id, "open": func() -> void:
 		hud.get("_banner").visible = false
 		var def: CharacterData = gs.npcs.get(npc_id)
-		oath.begin(def.name if def != null else npc_id, gs.data.family["folk_tiers"].back())
+		oath.begin(npc_id, def.name if def != null else npc_id, gs.data.family["folk_tiers"].back())
 		oath.set("_time", 0.8),
 		"settle": 2, "close": func() -> void: oath.end()})
 

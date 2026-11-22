@@ -52,6 +52,9 @@ var _wait := 0.0
 var _modal_open := false
 var _lending := false
 var _tea := false
+var _oath := false  ## GFX-236: standing at the Sworn-friend oath beside a burner
+var _bow := false
+var _oath_to := Vector2.LEFT
 var _tea_to := Vector2.LEFT
 var _tea_frame := 0
 var _bubble: EmoteBubble = null
@@ -207,6 +210,36 @@ func set_tea(on: bool, toward: Vector2 = Vector2.ZERO) -> void:
 		set_lending(false)
 	_tea_frame = 0
 	queue_redraw()
+
+
+## GFX-236: the oath with the player at `toward` (a world point): still, facing them, a burner between.
+func set_oath(on: bool, toward: Vector2 = Vector2.ZERO) -> void:
+	_oath = on
+	_bow = false
+	if on:
+		set_lending(true)
+		var d := toward - position
+		_oath_to = d if d.length() > 1.0 else Vector2.LEFT
+		_wander = Vector2.ZERO
+		_wander_target = Vector2.ZERO
+		position = home
+		_dir = "right" if _oath_to.x > 0.0 else "left"
+		_walk_frame = 0
+	else:
+		_dir = "down"
+		set_lending(false)
+	queue_redraw()
+
+
+func is_oath() -> bool:
+	return _oath
+
+
+## GFX-236: lowers the body 2 art px for the oath bow.
+func set_bow(on: bool) -> void:
+	if _bow != on:
+		_bow = on
+		queue_redraw()
 
 
 func is_tea() -> bool:
@@ -418,6 +451,9 @@ func _physics_process(delta: float) -> void:
 func breathe(delta: float) -> void:
 	_time += delta
 	_wait -= delta
+	if _oath:
+		position = home
+		return
 	if _tea:  # GFX-226: still, facing the player; the steam rises on a two-frame beat
 		var tf := 0 if MotionFx.reduced() else int(floorf(_time / 0.6)) % 2
 		position = home
@@ -542,7 +578,7 @@ func draw_generated_art() -> bool:
 	var tex_size := Vector2(tex.get_size()) * s
 	var sh := Scenery.figure_shadow(tex_size, winter)
 	PlaceArt.ellipse(self, Vector2(0, size.y / 2.0 - 1.0), sh.size / 2.0, Scenery.figure_shadow_color(winter))
-	var drop := 3.0 * s if _tea else 0.0
+	var drop := 3.0 * s if _tea else (2.0 * s if _bow else 0.0)
 	if _tea:  # GFX-228: a cushion under each figure
 		WorkProps.draw_cushion(self, Vector2(0, size.y / 2.0 - 1.0), s)
 		WorkProps.draw_cushion(self, _tea_to + Vector2(0, size.y / 2.0 - 1.0), s)
@@ -554,6 +590,8 @@ func draw_generated_art() -> bool:
 		PlaceArt.ellipse(self, Vector2(3, size.y / 2.0 - 3.0), Vector2(6.0, 2.5), robe.lightened(0.1))
 		var mid := _tea_to.normalized() * _tea_to.length() * 0.5 + Vector2(0, size.y / 2.0 - 5.0 * s)
 		WorkProps.draw_tea(self, _tea_frame, mid, s)
+	elif _oath:
+		WorkProps.draw_burner(self, _oath_to * 0.5 + Vector2(0, size.y / 2.0 - 1.0), s)
 	elif activity != "":
 		WorkProps.draw(self, activity, _work_frame, Vector2(tex_size.x / 2.0, size.y / 2.0 - tex_size.y * 0.45), s)
 	return true

@@ -135,6 +135,16 @@ static func draw_tea(canvas: CanvasItem, frame: int, c: Vector2, s: float) -> vo
 		_px(canvas, c, s, 3, -7, 1, 1, steam)
 
 
+## GFX-236: a squat bronze incense burner (12x10 art px: tripod feet, dark rim, a glowing ember), feet at `c`.
+static func draw_burner(canvas: CanvasItem, c: Vector2, s: float) -> void:
+	_px(canvas, c, s, -5, -2, 1, 2, Color("3a2a1a"))
+	_px(canvas, c, s, 4, -2, 1, 2, Color("3a2a1a"))
+	_px(canvas, c, s, -6, -8, 12, 6, Color("8a6a30"))
+	_px(canvas, c, s, -6, -8, 12, 1, Color("c9a050"))
+	_px(canvas, c, s, -6, -9, 12, 1, Color("3a2a1a"))  # the dark rim
+	_px(canvas, c, s, -1, -9, 2, 1, Color("ff8a30"))  # the ember
+
+
 ## GFX-228: a flat floor cushion under a seated figure, centred on `c` (its feet).
 static func draw_cushion(canvas: CanvasItem, c: Vector2, s: float) -> void:
 	_px(canvas, c, s, -7, -2, 14, 4, Color("8a3a3a"))

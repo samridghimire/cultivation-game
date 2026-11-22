@@ -24,6 +24,7 @@ var _celebrate_left := 0.0
 var _celebrate_ok := true
 var _camera_shake_left := 0.0
 var _seated := false
+var _bow := false  ## GFX-236
 var _lend_saved := false
 var _lend_from := Vector2.ZERO
 
@@ -102,6 +103,13 @@ func end_lend() -> void:
 	if _lend_saved:
 		position = _lend_from
 		_lend_saved = false
+		queue_redraw()
+
+
+## GFX-236: lowers the body 2 art px for the oath bow.
+func set_bow(on: bool) -> void:
+	if _bow != on:
+		_bow = on
 		queue_redraw()
 
 
@@ -220,6 +228,8 @@ func _draw() -> void:
 	var o := Vector2(shake, bob)
 	if _seated:
 		o = Vector2(0, 3.0)  # lowered, no bob
+	elif _bow:
+		o = Vector2(0, 2.0 * float(Sprites.scale()))
 	_draw_cake(o)
 	if _draw_sprite(o, sash):
 		_draw_folded_legs()

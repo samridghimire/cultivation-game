@@ -347,6 +347,7 @@ func _ready() -> void:
 	_time_skip.closed.connect(_on_time_skip_closed)
 	add_child(_time_skip)
 	_sworn_oath = SwornOath.new()
+	_sworn_oath.visibility_changed.connect(func() -> void: _prompt.visible = not _sworn_oath.visible)  # GFX-236
 	add_child(_sworn_oath)
 	_build_death_screen()
 	_show_load_recap()
@@ -1868,7 +1869,7 @@ func _on_friendship_reached(npc_id: String, text: String) -> void:
 		var tiers: Array = GameState.data.family.get("folk_tiers", [])
 		var npc: CharacterData = GameState.npcs.get(npc_id)
 		if npc != null and not tiers.is_empty():
-			_sworn_oath.begin(npc.name, tiers.back())
+			_sworn_oath.begin(npc_id, npc.name, tiers.back())
 			Audio.play("chime_progress")
 			return
 	# GFX-227: "<name>: <tier>" with the hearts as its icon; the banner waits behind any time-skip card.
@@ -2465,7 +2466,7 @@ func _update_modal() -> void:
 		_digest_card.dismiss()
 	_log_panel.visible = not blocking
 	_backdrop.visible = blocking
-	_prompt.visible = not blocking and not _time_skip.visible  # GFX-228: no "[E] name" over a card
+	_prompt.visible = not blocking and not _time_skip.visible and not _sworn_oath.visible  # GFX-228: no "[E] name" over a card
 	_place_prompt()
 	_update_guide_visibility()
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
