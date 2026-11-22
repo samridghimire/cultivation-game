@@ -336,6 +336,11 @@ func _start() -> void:
 			for id in a.substr(7).split(",", false):
 				_tend_shots(gs, id)
 			special = true
+	for a in OS.get_cmdline_user_args():  # WU-600: --drop-by=<npc_id> shoots the "From <Name>" gift card (favor 70, cooldown cleared)
+		if a.begins_with("--drop-by="):
+			for id in a.substr(10).split(",", false):
+				_drop_by_shots(gs, id)
+			special = true
 	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
 		if a.begins_with("--tier-up="):
 			for id in a.substr(10).split(",", false):  # WU-589: a comma list, like --lend/--tea
@@ -1109,6 +1114,25 @@ func _tend_shots(gs: Node, npc_id: String) -> void:
 		gs.receive_sworn_tending()
 		hud.get("_banner").visible = false,
 		"settle": 40, "close": skip.close})
+
+
+## WU-600: a friend left a gift for the player on arrival (drop_by_<id>.png).
+func _drop_by_shots(gs: Node, npc_id: String) -> void:
+	var card: Control = hud.get("_gift_left")
+	shots.append({"name": "drop_by_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		_clear_bubble()
+		gs.npc_favor[npc_id] = 70
+		var clock: Node = gs.get_node("/root/GameClock")
+		for i in 40:  # the roll is a stable hash of the day: step the day until this friend leaves something
+			gs.world_flags.erase("drop_by_" + npc_id)
+			gs.receive_drop_by_gifts()
+			if card.visible:
+				break
+			clock.total_days += 1
+		if card.queued_count() == 0 and not card.visible:
+			push_error("drop-by shot: %s left no gift (try another day/friend)" % npc_id),
+		"settle": 30, "close": func() -> void: card.skip()})
 
 
 ## GFX-225: favor just under the next tier, one lend, then the shot waits for the card to close and the hearts to rise.

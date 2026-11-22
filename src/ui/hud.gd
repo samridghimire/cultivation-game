@@ -198,6 +198,7 @@ var _goals_ladder: String = ""  # Guidance.goal_ladder_id when _goals_done was t
 var _season := ""
 var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
+var _gift_left: GiftLeftCard  # WU-600
 var _sworn_oath: SwornOath  ## GFX-235
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
@@ -336,6 +337,7 @@ func _ready() -> void:
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.friend_scene.connect(_on_friend_scene)
 	EventBus.friend_tended.connect(_on_friend_tended)
+	EventBus.friend_gift_left.connect(_on_friend_gift_left)
 	EventBus.lesson_taught.connect(_on_lesson_taught)
 	_banner = Banner.new()
 	add_child(_banner)
@@ -347,6 +349,8 @@ func _ready() -> void:
 	_time_skip = TimeSkipOverlay.new()
 	_time_skip.closed.connect(_on_time_skip_closed)
 	add_child(_time_skip)
+	_gift_left = GiftLeftCard.new()  # WU-600
+	add_child(_gift_left)
 	_sworn_oath = SwornOath.new()
 	_sworn_oath.visibility_changed.connect(func() -> void: _prompt.visible = not _sworn_oath.visible)  # GFX-236
 	add_child(_sworn_oath)
@@ -1982,6 +1986,12 @@ func _on_time_skipped(days: int, summary: Dictionary) -> void:
 	if _combat_report.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
 		return
 	_show_time_skip(summary)
+
+
+## WU-600: a friend left a gift on arrival: a small card, queued, never pausing time.
+func _on_friend_gift_left(npc_id: String, item_id: String, count: int, line: String) -> void:
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	_gift_left.enqueue(npc.name if npc != null else npc_id, item_id, count, line)
 
 
 ## WU-599: a Sworn friend tends the player: the tea card pattern, skippable, never pausing time.
