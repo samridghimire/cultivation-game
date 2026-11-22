@@ -1631,7 +1631,7 @@ static func _body_manual_treasury(c: CharacterData, data: GameData) -> Dictionar
 	for entry: Dictionary in Sects.shop_items(c, data):
 		var item_id := String(entry["item_id"])
 		var tech_id := Items.manual_technique(data, item_id)
-		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) and Sects.check_purchase(c, data, item_id) == "":
+		if tech_id != "" and data.techniques[tech_id].kind == "body" and not Techniques.knows(c, tech_id) and c.item_count(item_id) == 0 and Sects.check_purchase(c, data, item_id) == "":
 			return entry
 	return {}
 
@@ -4661,7 +4661,12 @@ static func treasury_body_art_hint(c: CharacterData, data: GameData) -> String:
 	for entry: Dictionary in Sects.shop_items(c, data):
 		var item_id := String(entry["item_id"])
 		var tech_id := Items.manual_technique(data, item_id)
-		if tech_id == "" or data.techniques[tech_id].kind != "body" or Sects.check_purchase(c, data, item_id) != "":
+		if tech_id == "" or data.techniques[tech_id].kind != "body":
+			continue
+		# GUIDE-288: a manual already in the bag is studied, not bought again.
+		if c.item_count(item_id) > 0:
+			return "Study %s from your bag: a body art makes you harder to hurt." % data.items[item_id]["name"]
+		if Sects.check_purchase(c, data, item_id) != "":
 			continue
 		return "Your sect treasury sells %s for %d contribution (you have %d): a body art makes you harder to hurt." % [data.items[item_id]["name"], int(entry["contribution"]), Sects.contribution_balance(c)]
 	return ""

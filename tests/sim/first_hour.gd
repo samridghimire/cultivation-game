@@ -189,7 +189,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "study": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_lesson", "first_friend_scene", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2611,6 +2611,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		var held := c.item_count(String(claim["item_id"]))
 		gs.buy_with_contribution(String(claim["item_id"]))
 		return "treasury" if c.item_count(String(claim["item_id"])) > held else ""
+	if line.begins_with("Study ") and line.contains(" from your bag"):
+		# GUIDE-288: read the body-art manual the treasury hint points at.
+		for item_id: String in c.inventory.keys():
+			if Items.manual_technique(gs.data, item_id) != "" and line.contains(String(gs.data.items[item_id]["name"])):
+				var known := c.techniques.size()
+				gs.use_item(item_id)
+				return "study" if c.techniques.size() > known else ""
+		return ""
 	if line.begins_with("Unseal "):
 		var ready := ArtifactFunctions.ready_to_unseal(c, gs.data, gs.world_flags)
 		if not ready.is_empty():

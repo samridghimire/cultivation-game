@@ -3492,6 +3492,11 @@ func test_treasury_body_art_hint() -> void:
 	c.sect["contribution"] = 10
 	assert_eq(Guidance.treasury_body_art_hint(c, d), "")
 	c.sect["contribution"] = 100
+	# GUIDE-288: an owned manual is studied, never bought again, and the buy line never shows unaffordable.
+	c.add_item("manual_stone_skin", 1)
+	var study := Guidance.treasury_body_art_hint(c, d)
+	assert_true(study.begins_with("Study ") and study.contains("from your bag") and not study.contains("treasury sells"), study)
+	c.inventory.erase("manual_stone_skin")
 	c.techniques["stone_skin"] = {"level": 1, "xp": 0.0}
 	assert_eq(Guidance.treasury_body_art_hint(c, d), "")
 	c.techniques.erase("stone_skin")
