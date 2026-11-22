@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 82c9e33
+Last reviewed commit: 701078a
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2412,3 +2412,19 @@ Last reviewed commit: 82c9e33
   - PERF-031: lazy screens checked; no leftover eager `_screens` use in hud.gd (only the test accessor), _close_screens and
     _any_screen_open only touch built nodes. GUIDE-284, GFX-231, WU-591, WU-592, SIM-024: match specs, tests present;
     several skipped their screenshot checks (noted in their Follow-ups).
+- 2026-11-22 (reviewer): reviewed 82c9e33..701078a (GFX-232, WU-593, GUIDE-280 partial, C-407, GFX-233, FOLK-042, GUIDE-285,
+  WU-595, GFX-235, FOLK-043; [PLAN] skipped). Main green (4556 tests). No BACKLOG/CHANGELOG edits by workers (FOLK-042 added
+  its "built" line under the DESIGN.md planner defaults), no SAVE_VERSION change (FOLK-043's `tended_<id>` cooldowns live in
+  world_flags), no new binary assets. No bugs found; nothing fixed or filed.
+  - FOLK-042 OK: `birthday_min_gain` (validated 0..30, in _doc) floors only a liked birthday gift, applied before the cap;
+    grow_closer_hint keeps tea for a Close friend under call_on.max_favor 80. Sim now waits for the birthday; baseline
+    sworn_friend 0/10 -> 7-10/10 in all six starts. Worker skipped balance.sh --check (friendship-only rule).
+  - FOLK-043 OK: tend_injury is pure (hash-picked line, no rng), skips family/dead/under-85, cooldown 90 days, 1-day injuries
+    heal. tend/tend_lines validated. Unreached by most sims before day ~170, so no balance check.
+  - GUIDE-285 OK: `elder_mo_walkable` (route_days to start region <= 3, -1 when closed) gates the Elder Mo goal row (index 0
+    of first_goals) and newcomer hints; tests moved from fallen_star_market (10 days) to misty_forest.
+  - GFX-235 note for the planner: the SwornOath overlay starts at once and does not wait behind an open modal the way the
+    tier banner does (GFX-225/227); it eats confirm/cancel presses for <= 3 s. Only the birthday gift reaches Sworn today, so
+    it is low risk; worth a check in the next --sworn shot. GFX-233 friend_on_screen uses the "npc" group (npc.gd adds it).
+  - WU-593, GUIDE-280 (hint after explored/outgrown lines; target not met, worker-flagged), WU-595 (pin golden re-pinned),
+    C-407 / GFX-232 data-only: OK. Not rendered by me: GFX-233, GFX-235, WU-593, WU-595 (WU-595's worker also skipped shots).
