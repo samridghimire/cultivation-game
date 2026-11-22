@@ -1429,3 +1429,9 @@ Viewed at 1280x800 under xvfb: `--field` (field plot, fence, labels), `--season=
 
 ## Shot pass (QA-203), partial
 Fixed in `screenshot_first_hour.gd`: `--hud-panel` crop now scales by window/viewport ratio (viewed at 1280x720: whole panel, no clipping); multi-region `--region=a,b` clears the log per region (viewed qingshi_village,misty_forest at 1280x720: only that region's lines). Misty Forest arrival shot: no clipping or overlap. Not yet viewed: --season-board, --regular, calendar months, --festival, --contest, --season=Winter, --critters, --lesson flag, GFX-096 crop shots.
+
+## Hints cost measured (PERF-032)
+`quiet_stretches.gd -- 1 1095 --profile --hints-only` (seed 1, 1095 days), ms per seed:
+- 3f34bcb (before PERF-029): 9538 total; hints 3252, fair_fights 2179, hud_goal_text 426, make_friend_hint 3; 779 full win-chance ratings.
+- origin/main 42442e9 (after PERF-029 and later): 7541 total; hints 2535, fair_fights 1396, hud_goal_text 284, make_friend_hint 7; 214 ratings.
+Hints are 2.5 s per long seed, under the 5 s bar, so no cache was added. Top remaining: hints (2.5 s), fair_fights (1.4 s).
