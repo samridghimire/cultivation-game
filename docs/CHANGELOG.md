@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-22 [C-415] Sworn friends tend your wounds in their own words.
+- 2026-11-22 [WU-600] A gift a friend leaves you shows as a small card with the item and their note.
+- 2026-11-22 [WU-599] When a Sworn friend tends your wounds you see it: both of you seated, their words, the days of healing.
+- 2026-11-22 [SIM-025] Balance tooling: the test player now crafts and takes open sect trials.
+- 2026-11-22 [PERF-032] Measured the hint cost per day; it is low enough that no cache is needed.
+- 2026-11-22 [WU-596] People cards say how to learn a villager's likes and what a Sworn friend can do for you.
+- 2026-11-22 [WU-597] A name under the [E] prompt fades so the prompt stays readable.
+- 2026-11-22 [FOLK-044] A hint reminds you that a Sworn friend nearby can tend your wounds.
+- 2026-11-22 [C-413] Friends who leave you gifts now do it in their own words.
+- 2026-11-22 [RV-FOLK041] Gifts from friends no longer change the rest of the game's random rolls.
+- 2026-11-22 [GFX-236] The Sworn-friend oath plays where you and your friend stand, before an incense burner.
 - 2026-11-22 [WU-594] A Close friend's People card says what still brings them closer: tea until a point, then a liked gift on their birthday.
 - 2026-11-22 [FOLK-043] A Sworn friend tends your wounds when you arrive in their region injured, once a season.
 - 2026-11-22 [GFX-235] Becoming Sworn friends plays a short oath: both bow before an incense burner and a card names the bond.
