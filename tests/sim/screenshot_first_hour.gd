@@ -98,8 +98,12 @@ func _start() -> void:
 					push_warning("--region: unknown region %s" % id)
 	for arg in OS.get_cmdline_user_args():  # WU-583: --favor=<n> gives every villager that favor (pips, markers)
 		if arg.begins_with("--favor="):
-			for nid in gs.data.npcs:
-				gs.npc_favor[String(nid)] = int(arg.substr(8))
+			var spec := arg.substr(8)
+			if spec.contains("="):  # WU-594: --favor=<npc_id>=<n> sets one villager
+				gs.npc_favor[spec.get_slice("=", 0)] = int(spec.get_slice("=", 1))
+			else:
+				for nid in gs.data.npcs:
+					gs.npc_favor[String(nid)] = int(spec)
 	if not region_list.is_empty():
 		gs.current_region = region_list[0]
 	for arg in OS.get_cmdline_user_args():  # GFX-081: --shrine=N sets the old shrine's restoration stage (0..4)

@@ -378,3 +378,14 @@ func test_close_friend_tea_hint_until_the_cap() -> void:
 	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 65}, {}, 100)
 	assert_true(line.begins_with("Grow closer: share tea at ") and line.ends_with("(favor 65/80)."), line)
 	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 80}, {}, 100), "", "tea stops at the cap")
+
+
+## WU-594: the road to Sworn friend on a Close friend's card.
+func test_road_to_sworn_line() -> void:
+	var d := data()
+	var mo: CharacterData = _npcs(d)["elder_mo"]
+	assert_eq(Folk.road_to_sworn(d, mo, 62), "Tea until favor 80, then a liked gift on their birthday")
+	assert_true(Folk.road_to_sworn(d, mo, 80).begins_with("Only their birthday gift is left (Month "))
+	assert_eq(Folk.road_to_sworn(d, mo, 85), "")
+	assert_eq(Folk.road_to_sworn(d, mo, 40), "")
+	assert_eq(Folk.next_step(new_character(), mo, d, {}, 1, 80, "qingshi_village"), Folk.road_to_sworn(d, mo, 80), "tea is capped at 80")

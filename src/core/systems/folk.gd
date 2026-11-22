@@ -661,6 +661,9 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 		if int(Family.known_tastes(flags, data, npc.id)[item_id]) > 0:
 			likes.append(item_id)
 	likes.sort()
+	var road := road_to_sworn(data, npc, favor)
+	if road != "":
+		return road
 	if not likes.is_empty():
 		return "Likes: %s" % String(data.items[likes[0]].get("name", likes[0]))
 	var tiers: Array = data.family.get("folk_tiers", [])
@@ -668,6 +671,24 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 		if favor < int(t["min"]):
 			return "%s at favor %d" % [String(t["name"]), int(t["min"])]
 	return ""
+
+
+## WU-594: what still moves a Close friend (the tier just below the last) toward the last tier: tea while it still works
+## (call_on max_favor, read from data), then only their birthday gift. "" for any other favor. Pure.
+static func road_to_sworn(data: GameData, npc: CharacterData, favor: int) -> String:
+	var tiers: Array = data.family.get("folk_tiers", [])
+	if tiers.size() < 2:
+		return ""
+	var top := int(tiers[tiers.size() - 1]["min"])
+	if favor < int(tiers[tiers.size() - 2]["min"]) or favor >= top:
+		return ""
+	var tea_cap := int(call_on_rules(data).get("max_favor", 0))
+	if favor < tea_cap:
+		return "Tea until favor %d, then a liked gift on their birthday" % tea_cap
+	var b := birthday_day(npc, data) if npc != null else -1
+	if b < 0:
+		return "Only a liked gift on their birthday is left"
+	return "Only their birthday gift is left (%s)" % ("Month %d, Day %d" % [Calendar.month_of(b), Calendar.day_of(b)])
 
 
 ## "a friend", "an acquaintance": the tier name for the Look sentence. "" below the first tier.
