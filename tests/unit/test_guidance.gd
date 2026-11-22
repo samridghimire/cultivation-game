@@ -7866,12 +7866,10 @@ func test_first_technique_goal_names_the_ridge_manual() -> void:
 	var flags := {Guidance.ELDER_MO_FLAG: true}
 	var found := Guidance.first_combat_manual(c, d, "myriad_peaks_ridge")
 	assert_true(not found.is_empty() and String(found["merchant"]) != "", "the ridge pedlar sells a combat manual")
+	# GUIDE-286: C-414 gave the ridge a free local teacher, which the goal prefers over the manual.
 	c.inventory = {}
 	var poor := Guidance.hud_goal_text(c, d, flags, "myriad_peaks_ridge", 10)
-	assert_true(poor.begins_with("Learn your first technique: ") and poor.contains(String(found["merchant"])) and poor.contains("earn "), "too poor: %s" % poor)
-	c.inventory = {"spirit_stone": 1000}
-	var rich := Guidance.hud_goal_text(c, d, flags, "myriad_peaks_ridge", 10)
-	assert_true(rich.contains(": buy ") and rich.contains(String(d.items[found["item"]]["name"])), "rich: %s" % rich)
+	assert_true(poor.begins_with("Learn your first technique: ask ") and poor.ends_with("(free)"), "teacher first: %s" % poor)
 	assert_eq(Guidance.hud_goal_text(c, d, flags, d.start_region, 10), "Learn your first technique", "the start region keeps the plain goal")
 
 

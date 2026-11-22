@@ -40,3 +40,23 @@ func test_every_start_region_has_a_mortal_fighting_style() -> void:
 		if not found and JSON.stringify(data().regions[region]).contains("manual_iron_fist"):
 			found = true
 		assert_true(found, "%s has no local mortal fighting style" % region)
+
+
+## GUIDE-286: outside Qingshi the first-technique goal names the local teacher (free), not a manual purchase.
+func test_goal_names_the_local_teacher() -> void:
+	var c := CharacterData.new()
+	c.realm_index = 1
+	c.techniques = {}
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	var names := {"withered_bone_marsh": "Old Monster Gui", "myriad_peaks_ridge": "Wen Qingxu", "azure_peak": "Hermit Gu"}
+	for region: String in names:
+		assert_eq(Guidance.local_first_teacher(c, data(), region, flags), names[region], region)
+		assert_eq(Guidance.hud_goal_text(c, data(), flags, region, 10), "Learn your first technique: ask %s (free)" % names[region], region)
+	assert_eq(Guidance.hud_goal_text(c, data(), flags, data().start_region, 10), "Learn your first technique", "Qingshi unchanged")
+
+
+func test_known_breathing_gets_the_old_line() -> void:
+	var c := CharacterData.new()
+	c.realm_index = 1
+	c.techniques = {"basic_breathing": {"level": 1, "xp": 0.0}}
+	assert_eq(Guidance.local_first_teacher(c, data(), "myriad_peaks_ridge", {}), "")

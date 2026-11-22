@@ -6412,12 +6412,50 @@ static func _walk_goal_blocked(c: CharacterData, data: GameData, region_id: Stri
 	return hop == "" or not bool(Exploration.check_travel(c, data, region_id, hop)["ok"])
 
 
+## GUIDE-286: the name of the first named NPC (by id) in `region_id` whose dialogue teaches a technique the player lacks
+## through a choice whose own `if` passes (and whose entry choice's `if` passes), "" when none. Scans data.dialogues.
+static func local_first_teacher(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
+	if region_id == "":
+		return ""
+	var ctx := {"player": c, "npc": null, "data": data, "flags": flags, "favor": 0, "today": -1}
+	var ids: Array = data.npcs.keys()
+	ids.sort()
+	for npc_id: String in ids:
+		var def: Dictionary = data.npcs[npc_id]
+		if String(def.get("region", "")) != region_id or not data.dialogues.has(String(def.get("dialogue", ""))):
+			continue
+		var nodes: Dictionary = data.dialogues[String(def["dialogue"])].get("nodes", {})
+		for node_id: String in nodes:
+			for choice: Dictionary in nodes[node_id].get("choices", []):
+				var tech_id := String(choice.get("effects", {}).get("learn_technique", ""))
+				if tech_id == "" or c.techniques.has(tech_id) or not data.techniques.has(tech_id):
+					continue
+				if Dialogue.unmet_reason(choice.get("if", {}), ctx) != "" or not _entry_choice_open(nodes, node_id, ctx):
+					continue
+				return String(def.get("name", npc_id))
+	return ""
+
+
+## GUIDE-286: true when `node_id` is reachable: a choice elsewhere links to it with passing `if`, or it is an entry node.
+static func _entry_choice_open(nodes: Dictionary, node_id: String, ctx: Dictionary) -> bool:
+	for other_id: String in nodes:
+		if other_id == node_id:
+			continue
+		for choice: Dictionary in nodes[other_id].get("choices", []):
+			if String(choice.get("next", "")) == node_id and Dialogue.unmet_reason(choice.get("if", {}), ctx) == "":
+				return true
+	return false
+
+
 ## GUIDE-275: "Learn your first technique" away from the start region, where a merchant sells a combat manual: the goal
 ## names the step ("Buy Cloud-Parting Palm at the Scorched-Scroll Pedlar, 40 stones", or how many stones to earn first).
 ## `text` unchanged otherwise (the start region's Elder Mo teaches for free).
 static func _with_manual_step(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, text: String) -> String:
 	if text != "Learn your first technique" or region_id == "" or region_id == data.start_region:
 		return text
+	var teacher := local_first_teacher(c, data, region_id, flags)
+	if teacher != "":
+		return "%s: ask %s (free)" % [text, teacher]
 	var found := first_combat_manual(c, data, region_id)
 	if found.is_empty() or String(found["merchant"]) == "":
 		return text

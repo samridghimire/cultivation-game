@@ -2399,6 +2399,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_talk_to_elder_mo(gs, "teach me how to cultivate")
 		var changed: bool = c.techniques.size() != before or bool(gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)) != flag_before
 		return "talk" if changed else ""
+	if line.contains("Learn your first technique: ask "):
+		# GUIDE-286: the goal names the local teacher; open their dialogue and take the teaching choice.
+		var who := line.get_slice("ask ", 1).get_slice(" (free)", 0)
+		for id: String in gs.data.npcs:
+			if String(gs.data.npcs[id].get("name", "")) == who and String(gs.data.npcs[id].get("region", "")) == gs.current_region:
+				var known := c.techniques.size()
+				_talk_to_elder_mo(gs, "teach", id)
+				return "talk" if c.techniques.size() != known else ""
 	if line.begins_with("Make a friend: lend ") or line.begins_with("Become friends: lend "):
 		# SIM-021: the line names the villager; lend them a hand (1 day) once the weekly cooldown allows.
 		for id: String in gs.data.npcs:
@@ -2790,8 +2798,8 @@ static func _buy_armor_trip(gs: Node, c: CharacterData) -> void:
 		_walk_to(gs, c, home)
 
 
-static func _talk_to_elder_mo(gs: Node, prefer: String = "") -> void:
-	gs.start_dialogue("elder_mo")
+static func _talk_to_elder_mo(gs: Node, prefer: String = "", npc_id: String = "elder_mo") -> void:
+	gs.start_dialogue(npc_id)
 	var guard := 0
 	while gs.in_dialogue() and guard < 20:
 		var view: Dictionary = gs.dialogue_view()
@@ -2799,7 +2807,7 @@ static func _talk_to_elder_mo(gs: Node, prefer: String = "") -> void:
 		for choice: Dictionary in view.get("choices", []):
 			if not choice.get("disabled", false) and String(choice.get("label", "")).begins_with("I am new"):
 				pick = int(choice["index"])
-			if prefer != "" and not choice.get("disabled", false) and String(choice.get("label", "")).contains(prefer):
+			if prefer != "" and not choice.get("disabled", false) and (String(choice.get("label", "")).contains(prefer) or (npc_id != "elder_mo" and String(choice.get("label", "")).contains("(Learn "))):
 				pick = int(choice["index"])
 				break
 		if pick < 0:
