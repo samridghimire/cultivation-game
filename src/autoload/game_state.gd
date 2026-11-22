@@ -654,6 +654,24 @@ func join_sect(sect_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+func report_to_sect() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var result := Sects.report(player, data, current_region)
+	if result["ok"]:
+		EventBus.post(String(result["line"]), "dialogue")
+		var names: PackedStringArray = []
+		for item_id: String in result["items"]:
+			names.append("%d %s" % [int(result["items"][item_id]), data.items[item_id].name] if data.items.has(item_id) else item_id)
+		if not names.is_empty():
+			EventBus.post("Received: %s" % ", ".join(names), "progress")
+		EventBus.sect_reported.emit(String(player.sect["id"]), result["items"])
+	else:
+		EventBus.post(result["reason"], "warning")
+	EventBus.player_changed.emit()
+
+
 func leave_sect() -> void:
 	EventBus.topic = "sect"
 	if not _can_act():

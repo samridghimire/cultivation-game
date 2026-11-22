@@ -25,6 +25,8 @@ var lecture: Dictionary = {}
 var home_region := ""
 ## GFX-241: {count, form} of disciples drilling on the hall court; {} = none.
 var court_drill: Dictionary = {}
+## SECT-032: what the steward gives a new disciple at the home hall: {line, items}; {} = none.
+var welcome: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -47,6 +49,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.shop.assign(d.get("shop", []))
 	s.lecture = d.get("lecture", {})
 	s.home_region = String(d.get("home_region", ""))
+	s.welcome = d.get("welcome", {})
 	return s
 
 

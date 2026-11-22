@@ -1132,6 +1132,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			due_urgent = Commissions.days_left(due_order["order"], today) <= DUE_URGENT_DAYS
 	if due_urgent:
 		out.append(due)
+	var report := report_hint(c, data, region_id)
+	if report != "":
+		out.append(report)
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
@@ -1758,6 +1761,23 @@ static func sect_welcome(c: CharacterData, data: GameData, sect_id: String, regi
 		step = "Find the road to %s and report at the hall" % home_name
 	return {"name": sect.name, "rank_name": sect.rank_name(int(c.sect["rank"])), "home_region_name": home_name,
 		"home_days": days, "duty": "Monthly duty: %d contribution" % duty if duty > 0 else "No monthly duty at this rank", "perks": perks, "first_step": step}
+
+
+## SECT-032: the hint for a new disciple who has not reported at the hall yet ("" otherwise).
+static func report_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if not Sects.needs_report(c):
+		return ""
+	var home := Sects.home_region(data, String(c.sect["id"]))
+	var hall := Sects.hall_name(data, home if home != "" else region_id, c)
+	if hall == "":
+		hall = "sect hall"
+	if home == "" or home == region_id:
+		return "Report at the %s: new disciples get their issue there." % hall
+	var home_name := String(data.regions[home].name)
+	var days := route_days(c, data, region_id, home)
+	if days < 0:
+		return "Find the road to %s and report at the %s: new disciples get their issue there." % [home_name, hall]
+	return "Report at the %s in %s (%dd): new disciples get their issue there." % [hall, home_name, days]
 
 
 ## GUIDE-264: what closes the road `from_id` -> `to_id` for `c`: {} when it is walkable now (or never), else

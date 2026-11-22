@@ -482,6 +482,8 @@ func _validate() -> void:
 		for prof_id in def.favored_professions:
 			if not professions.has(prof_id):
 				load_errors.append("Sect '%s' favors unknown profession '%s'" % [def.id, prof_id])
+	for def: SectDef in sects.values():
+		_validate_welcome(def)
 	load_errors.append_array(Deeds.validate(self))
 	_validate_world()
 	_validate_combat()
@@ -1304,3 +1306,26 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 		if pos.distance_to(Vector2(float(pp[0]), float(pp[1]))) < 80.0:
 			errors.append("Region '%s' festival_square is within 80 px of '%s'" % [rid, place.get("display_name", "")])
 	return errors
+
+
+## SECT-032: a sect's optional `welcome` {line, items}: non-empty line <= 160 chars, 1-2 known items of 1-5 each, worth <= 60 stones.
+func _validate_welcome(def: SectDef) -> void:
+	if def.welcome.is_empty():
+		return
+	var line := String(def.welcome.get("line", ""))
+	if line == "" or line.length() > 160:
+		load_errors.append("Sect '%s' welcome line must be 1-160 characters" % def.id)
+	var items: Dictionary = def.welcome.get("items", {})
+	if items.size() > 2:
+		load_errors.append("Sect '%s' welcome has more than 2 item kinds" % def.id)
+	var value := 0
+	for item_id: String in items:
+		if not self.items.has(item_id):
+			load_errors.append("Sect '%s' welcome has unknown item '%s'" % [def.id, item_id])
+			continue
+		var n := int(items[item_id])
+		if n < 1 or n > 5:
+			load_errors.append("Sect '%s' welcome item '%s' count must be 1-5" % [def.id, item_id])
+		value += int(self.items[item_id].get("price", 0)) * n
+	if value > 60:
+		load_errors.append("Sect '%s' welcome items are worth %d stones (max 60)" % [def.id, value])

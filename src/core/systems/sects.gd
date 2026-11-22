@@ -34,8 +34,35 @@ static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dic
 static func join(c: CharacterData, data: GameData, sect_id: String) -> Dictionary:
 	var check := check_join(c, data, sect_id)
 	if check["ok"]:
-		c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0}
+		c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
 	return check
+
+
+## SECT-032: a new disciple who has not yet reported at the hall. A missing key means reported (old saves, NPCs).
+static func needs_report(c: CharacterData) -> bool:
+	return not c.is_rogue() and c.sect.get("reported", true) == false
+
+
+## SECT-032: report at the sect's home hall: {ok, reason, items, line}. Grants the sect's welcome items once.
+static func report(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	var fail := {"ok": false, "reason": "", "items": {}, "line": ""}
+	if not needs_report(c):
+		fail["reason"] = "You have already reported to the hall."
+		return fail
+	var sect_id := String(c.sect["id"])
+	var home := home_region(data, sect_id)
+	if home != "" and region_id != home:
+		var hall := hall_name(data, home, c)
+		fail["reason"] = "Report at the %s in %s." % [hall if hall != "" else "sect hall", String(data.regions[home].name) if data.regions.has(home) else home]
+		return fail
+	var welcome: Dictionary = (data.sects[sect_id] as SectDef).welcome
+	var items := {}
+	for item_id: String in welcome.get("items", {}):
+		items[item_id] = int(welcome["items"][item_id])
+		c.add_item(item_id, int(items[item_id]))
+	c.sect["reported"] = true
+	var line := String(welcome.get("line", "The steward records your name in the disciple roll.")).replace("{player}", c.name)
+	return {"ok": true, "reason": "", "items": items, "line": line}
 
 
 ## Returns the id of the sect left, or "" if the character was already rogue.

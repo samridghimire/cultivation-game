@@ -27,6 +27,8 @@ func get_options() -> Array[Dictionary]:
 		options.append({"label": "Mission board (not your sect's hall)", "disabled": true, "action": func() -> void: pass,
 			"reason": "This is the %s's hall. Your board: %s" % [own.name if own != null else "another sect", board.trim_prefix("The mission board is at ")]})
 	elif not player.is_rogue():
+		if Sects.needs_report(player):
+			options.append({"label": "Report as a new disciple", "action": GameState.report_to_sect})
 		var ids := Sects.available_missions(player, GameState.data, GameState.world_flags)
 		var ready := ids.filter(func(id: String) -> bool: return Sects.check_mission(player, GameState.data, id, GameState.world_flags) == "").size()
 		options.append({"label": "Mission board (%d of %d available)" % [ready, ids.size()], "action": EventBus.mission_board_requested.emit})

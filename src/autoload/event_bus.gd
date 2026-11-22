@@ -205,5 +205,7 @@ func clear_history() -> void:
 ## SECT-031: joining a sect, and each promotion (after the log line).
 @warning_ignore("unused_signal")
 signal sect_joined(sect_id: String)
+## SECT-032: the new disciple reported at the hall; items is {item_id: count} (may be empty).
+signal sect_reported(sect_id: String, items: Dictionary)
 @warning_ignore("unused_signal")
 signal sect_promoted(sect_id: String, rank: int)
