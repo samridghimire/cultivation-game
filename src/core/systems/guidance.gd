@@ -1736,6 +1736,30 @@ static func route_days(c: CharacterData, data: GameData, from_id: String, to_id:
 	return int(days[to_id]) if days.has(to_id) else -1
 
 
+## SECT-031: the joining card for `sect_id` as seen from `region_id`:
+## {name, rank_name, home_region_name, home_days (0 at home, -1 closed), duty (never empty), perks (max 3), first_step}.
+static func sect_welcome(c: CharacterData, data: GameData, sect_id: String, region_id: String) -> Dictionary:
+	var sect: SectDef = data.sects[sect_id]
+	var home := Sects.home_region(data, sect_id)
+	var home_name := String(data.regions[home].name) if data.regions.has(home) else ""
+	var days := route_days(c, data, region_id, home) if home != "" else -1
+	var duty := Sects.monthly_duty(c, data)
+	var perks := PackedStringArray()
+	for perk in Sects.membership_perks(c, data, sect_id):
+		if perks.size() < 3:
+			perks.append(perk)
+	var step := ""
+	if days > 0:
+		step = "Walk to %s (%dd) and report at the hall" % [home_name, days]
+	elif days == 0:
+		var missions := Sects.available_missions(c, data)
+		step = "Take the mission '%s' at the hall" % String(data.sect_missions[missions[0]].get("name", missions[0])) if not missions.is_empty() else "Take a mission at the hall"
+	else:
+		step = "Find the road to %s and report at the hall" % home_name
+	return {"name": sect.name, "rank_name": sect.rank_name(int(c.sect["rank"])), "home_region_name": home_name,
+		"home_days": days, "duty": "Monthly duty: %d contribution" % duty if duty > 0 else "No monthly duty at this rank", "perks": perks, "first_step": step}
+
+
 ## GUIDE-264: what closes the road `from_id` -> `to_id` for `c`: {} when it is walkable now (or never), else
 ## {"realm_index", "realm_name", "days"} for the lowest realm at which it opens.
 static func route_gate(c: CharacterData, data: GameData, from_id: String, to_id: String) -> Dictionary:

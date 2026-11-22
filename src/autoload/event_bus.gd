@@ -200,3 +200,10 @@ func fold_row(index: int, text: String, category: String = "info") -> void:
 func clear_history() -> void:
 	history.clear()
 	topic = ""
+
+
+## SECT-031: joining a sect, and each promotion (after the log line).
+@warning_ignore("unused_signal")
+signal sect_joined(sect_id: String)
+@warning_ignore("unused_signal")
+signal sect_promoted(sect_id: String, rank: int)

@@ -270,6 +270,23 @@ static func _set_rank(c: CharacterData, rank: int) -> void:
 	c.sect["duty_grace"] = true  # no duty is owed for the month you were promoted
 
 
+## SECT-031: what the current rank of `c` means: {rank_name, perks_new (shop items this rank unlocks), next_needs}.
+static func promotion_summary(c: CharacterData, data: GameData) -> Dictionary:
+	var out := {"rank_name": "", "perks_new": PackedStringArray(), "next_needs": ""}
+	if c.is_rogue():
+		return out
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var rank := int(c.sect["rank"])
+	out["rank_name"] = sect.rank_name(rank)
+	var perks := PackedStringArray()
+	for entry: Dictionary in sect.shop:
+		if int(entry.get("min_rank", 0)) == rank and rank > 0:
+			perks.append("can buy %s" % String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
+	out["perks_new"] = perks
+	out["next_needs"] = ", ".join(rank_needs(c, data))
+	return out
+
+
 ## Contribution `c` owes each month at their rank (0 = none).
 static func monthly_duty(c: CharacterData, data: GameData) -> int:
 	if c.is_rogue():

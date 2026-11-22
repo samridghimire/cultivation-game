@@ -562,7 +562,7 @@ func work_profession(prof_id: String, days: int) -> void:
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
-			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+			_post_promotion()
 	if not wake.is_empty():
 		EventBus.post(String(wake["text"]).replace("You open your eyes", "You put down your tools"))
 	_pass_time(days, "Working as %s" % Text.a(def.name))
@@ -598,9 +598,15 @@ func deliver_commission(index: int) -> void:
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
-			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+			_post_promotion()
 	_gain_renown("commission")
 	EventBus.player_changed.emit()
+
+
+## SECT-031: the one promotion log line (`prefix` leads it) plus the sect_promoted signal.
+func _post_promotion(prefix: String = "") -> void:
+	EventBus.post("%sYour sect promotes you to %s." % [prefix, Sects.describe(player, data)], "progress")
+	EventBus.sect_promoted.emit(String(player.sect["id"]), int(player.sect["rank"]))
 
 
 func join_sect(sect_id: String) -> void:
@@ -610,6 +616,7 @@ func join_sect(sect_id: String) -> void:
 	var result := Sects.join(player, data, sect_id)
 	if result["ok"]:
 		EventBus.post("You are accepted into the %s." % data.sects[sect_id].name, "progress")
+		EventBus.sect_joined.emit(sect_id)
 	else:
 		EventBus.post(result["reason"], "warning")
 	EventBus.player_changed.emit()
@@ -3425,7 +3432,7 @@ func refine(recipe_id: String) -> void:
 	if not player.is_rogue():
 		var contribution := int(result["xp"] / (1.0 if Sects.is_favored_profession(player, data, prof_id) else 2.0))
 		if Sects.add_contribution(player, data, contribution):
-			EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+			_post_promotion()
 	if not had_profession and player.professions.has(prof_id):
 		_commissions_month(prof_id)
 	_pass_time(result["days"])
@@ -3476,7 +3483,7 @@ func take_mission(mission_id: String) -> void:
 	notes.insert(0, "+%d contribution" % result["contribution"])
 	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
 	if result["promoted"]:
-		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+		_post_promotion()
 	_pass_time(result["days"], "On a sect mission")
 
 
@@ -3497,7 +3504,7 @@ func attempt_promotion_trial() -> void:
 	EventBus.post("You step into the trial arena to earn the rank of %s." % rank_name)
 	if fight_enemy(enemy):
 		Sects.pass_trial(player, data)
-		EventBus.post("You pass the trial. Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+		_post_promotion("You pass the trial. ")
 		EventBus.player_changed.emit()
 	elif _can_act():
 		EventBus.post("You fail the trial for %s. You may try again." % rank_name, "warning")
@@ -5589,7 +5596,7 @@ func _sect_month_end() -> void:
 	elif result["skipped"]:
 		EventBus.post("You fell short of your sect duty (%d/%d contribution), so this month's stipend is withheld." % [earned, duty], "warning")
 	if result["promoted"]:
-		EventBus.post("Your sect promotes you to %s." % Sects.describe(player, data), "progress")
+		_post_promotion()
 
 
 ## Pregnancies of the player and of spouses carrying the player's child
