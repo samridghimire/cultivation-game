@@ -1885,6 +1885,9 @@ first hour in presses (hints player, seeds 1-10, 12 months)
   first_friend           10/10             21             24             41             48
   friend_tier2           10/10             36             45             76             97
   close_friend           10/10             57             72            125            160
+  sworn_friend            0/10          never              -          never              -
+  first_lesson           10/10             57             72            125            160
+  first_friend_scene     10/10             36             45             76             97
   first_technique        10/10             12             12             13             13
   first_breakthrough     10/10             15             62             27            135
   sect_joined            10/10             15             62             27            135
@@ -1892,39 +1895,39 @@ first hour in presses (hints player, seeds 1-10, 12 months)
 ## time breakdown (hints player, seeds 1-4, 1095 days)
 
 Quiet stretches, hints policy, 4 seeds, 1095 days
-  seed  1: 233 new days, longest stretch  49 days
-  seed  1 realm.stage at day: { 365: "1.4", 730: "1.7", 1095: "1.8" }
-  seed  2: 156 new days, longest stretch  49 days
-  seed  2 realm.stage at day: { 365: "1.4", 730: "1.8", 1095: "2.3" }
-  seed  3: 204 new days, longest stretch  49 days
-  seed  3 realm.stage at day: { 365: "1.4", 730: "1.7", 1095: "2.0" }
-  seed  4: 175 new days, longest stretch  69 days
-  seed  4 realm.stage at day: { 365: "1.3", 730: "1.6", 1095: "2.0" }
-SIM-015 sect: 148 sect months over 4 seeds, 18 stipends skipped for missed duty (duty met 130 months); realms at end: ["1.8", "2.3", "2.0", "2.0"]
-Stretch (days between new things): median 4, max 69; median of per-seed medians 4, of per-seed maxes 49
-New days per month (median over seeds): 9 0 5 8 10 6 6 7 8 4 2 1 3 4 6 7 4 7 6 5 4 6 11 7 10 12 6 4 4 5 6 9 5 9 10 4 4
-  longest 1: seed 4, days 559-628 (69 days), months 19-21, actions: meditate,explore,fight,buy_qi,treasury
-  longest 2: seed 4, days 756-822 (66 days), months 26-28, actions: meditate,explore,treasury,fight,chore
-  longest 3: seed 4, days 826-890 (64 days), months 28-30, actions: meditate,explore,treasury,chore,spar
+  seed  1: 165 new days, longest stretch  63 days
+  seed  1 realm.stage at day: { 365: "1.3", 730: "1.8", 1095: "2.1" }
+  seed  2: 230 new days, longest stretch  42 days
+  seed  2 realm.stage at day: { 365: "1.5", 730: "1.8" }
+  seed  3: 186 new days, longest stretch  61 days
+  seed  3 realm.stage at day: { 365: "1.3", 730: "1.8", 1095: "2.1" }
+  seed  4: 154 new days, longest stretch  65 days
+  seed  4 realm.stage at day: { 365: "1.3", 730: "1.6" }
+SIM-015 sect: 146 sect months over 4 seeds, 17 stipends skipped for missed duty (duty met 129 months); realms at end: ["2.1", "2.0", "2.2", "1.7"]
+Stretch (days between new things): median 4, max 65; median of per-seed medians 4, of per-seed maxes 63
+New days per month (median over seeds): 9 2 1 2 0 4 7 8 7 7 6 1 1 3 11 6 12 7 6 7 9 10 6 7 4 7 8 8 8 7 5 7 5 3 4 1 1
+  longest 1: seed 4, days 994-1059 (65 days), months 34-36, actions: meditate,explore,prepare
+  longest 2: seed 1, days 1020-1083 (63 days), months 35-37, actions: meditate,explore,mission,unseal
+  longest 3: seed 3, days 933-994 (61 days), months 32-34, actions: meditate,explore,mission,lecture,fight
 
-Hints player: 592 weeks, 24 meditated with nothing to act on (0 of them preparing for a beast); acted: { "lend": 44, "talk": 4, "forage": 17, "fish": 4, "cook": 3, "teacher": 4, "fight": 191, "travel": 5, "sect_home": 4, "unseal": 13, "buy_qi": 17, "practise": 41, "treasury": 133, "heal": 11, "armor": 5, "chore": 3, "trial": 6, "use_item": 5, "mission": 23, "bounty": 4, "meditate": 25, "lecture": 4, "spar": 2 }
-  unactionable x211: Goal: Reach the Nth Layer of Qi Refining: meditate (Cultivate on the a
-  unactionable x126: Goal: Beat a great beast (the next one: Great Old Tusker in Misty Fore
-  unactionable x119: Easy fight: Hall Steward Qiu: Drive the crag goats off the cloud-stair
-  unactionable x63: Your Creation Artifact holds N life. Recharge it for N spirit stones b
-  unactionable x49: Goal: Finish a bounty
-  acted x133: Your sect treasury sells Manual: Stone Skin Tempering for N contributi
+Hints player: 592 weeks, 29 meditated with nothing to act on (15 of them preparing for a beast); acted: { "lend": 44, "talk": 4, "tea": 49, "forage": 13, "teacher": 4, "travel": 10, "bounty": 4, "fight": 148, "sect_home": 4, "unseal": 13, "buy_qi": 17, "practise": 42, "treasury": 120, "birthday_gift": 4, "armor": 4, "use_item": 8, "chore": 4, "trial": 3, "mission": 32, "meditate": 28, "prepare": 15, "heal": 2, "craft": 3, "lecture": 1, "fish": 1, "sell": 1 }
+  unactionable x223: Goal: Reach the Nth Layer of Qi Refining: meditate (Cultivate on the a
+  unactionable x90: Your Creation Artifact holds N life. Recharge it for N spirit stones b
+  unactionable x88: Goal: Beat a great beast (the next one: Great Old Tusker in Misty Fore
+  unactionable x76: Easy fight: Fair fight: Explore Misty Forest: Mist Fox (N in N)
+  unactionable x63: Goal: Reach Foundation Establishment Middle
+  acted x120: Your sect treasury sells Manual: Stone Skin Tempering for N contributi
+  acted x49: Grow closer: share tea at Elder Mo's (favor N/N).
   acted x32: Practise Iron Fist on the Techniques screen: level N in about N days (
-  acted x26: Easy fight: Fair fight: Sect mission: Patrol the Misty Peaks (mission 
-  acted x23: Easy fight: Fair fight: Sect mission: Cull the Mist Wolves (mission bo
-  acted x20: Become friends: lend Elder Mo a hand (sorting scrolls, N day, favor N/
+  acted x18: Become friends: lend Elder Mo a hand (sorting scrolls, N day, favor N/
+  acted x17: Easy fight: Sect mission: Drive Off the Den Wolves (mission board, Sec
 
 Time breakdown (SIM-022): hints player, day 0 to Foundation or end of run; days / qi gained per activity
-  seed  1: cultivate 466/12505, travel 78/10, fights 87/5530, chores/work 219/900, lend/social 19/300, crafting 1/0, injured/resting 15/0, practise 70/0, breakthrough 21/0, events/waiting 124/3600 | days at QR peak 14
-  seed  2: cultivate 346/23560, travel 96/0, fights 48/1600, chores/work 157/440, lend/social 19/300, crafting 0/0, injured/resting 12/0, practise 63/0, breakthrough 42/0, events/waiting 31/80 | days at QR peak 29
-  seed  3: cultivate 406/17161, travel 70/0, fights 72/1880, chores/work 179/740, lend/social 19/300, crafting 1/0, injured/resting 3/0, practise 70/0, breakthrough 14/0, events/waiting 72/1131 | days at QR peak 14
-  seed  4: cultivate 547/14702, travel 75/0, fights 74/1960, chores/work 206/680, lend/social 19/300, crafting 1/0, injured/resting 3/0, practise 84/160, breakthrough 14/0, events/waiting 53/1205 | days at QR peak 2
-  medians (days/qi): cultivate 466/17161, travel 78/0, fights 74/1960, chores/work 206/740, lend/social 19/300, crafting 1/0, injured/resting 12/0, practise 70/0, breakthrough 21/0, events/waiting 72/1205; days at QR peak 14
+  seed  1: cultivate 420/12191, travel 79/80, fights 53/2040, chores/work 153/780, lend/social 19/300, crafting 0/0, injured/resting 0/0, practise 70/0, breakthrough 21/0, events/waiting 59/730 | days at QR peak 5
+  seed  2: cultivate 474/20656, travel 73/0, fights 66/2417, chores/work 201/820, lend/social 19/300, crafting 0/0, injured/resting 3/0, practise 70/0, breakthrough 35/0, events/waiting 117/1379 | days at QR peak 41
+  seed  3: cultivate 332/11287, travel 91/65, fights 53/1480, chores/work 103/480, lend/social 19/300, crafting 0/0, injured/resting 0/0, practise 70/550, breakthrough 21/0, events/waiting 93/1470 | days at QR peak 0
+  seed  4: cultivate 606/12046, travel 75/0, fights 57/812, chores/work 162/400, lend/social 19/300, crafting 4/0, injured/resting 3/0, practise 84/0, breakthrough 7/0, events/waiting 77/795 | days at QR peak 0
+  medians (days/qi): cultivate 474/12191, travel 79/65, fights 57/2040, chores/work 162/780, lend/social 19/300, crafting 0/0, injured/resting 3/0, practise 70/0, breakthrough 21/0, events/waiting 93/1379; days at QR peak 5
 
 
 ## first hour in every start (hints player, seeds 1-10, 24 months)
@@ -1946,7 +1949,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start qingshi_villag
   first_friend           10/10             21             24             41             48
   friend_tier2           10/10             36             45             76             97
   close_friend           10/10             57             72            125            160
-  sworn_friend           10/10            172            178            431            431
+  sworn_friend            9/10            172            178            431            431
   first_lesson           10/10             57             72            125            160
   first_friend_scene     10/10             36             45             76             97
   first_technique        10/10             12             12             13             13
@@ -1969,7 +1972,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start withered_bone_
   first_friend           10/10             24             27             50             57
   friend_tier2           10/10             39             48             85            106
   close_friend           10/10             57             75            127            169
-  sworn_friend           10/10            169            178            431            431
+  sworn_friend           10/10            166            178            431            431
   first_lesson           10/10             57             75            127            169
   first_friend_scene     10/10             39             48             85            106
   first_technique        10/10             12             12             21             21
@@ -2015,7 +2018,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start azure_peak)
   first_friend           10/10             24             30             45             59
   friend_tier2           10/10             39             48             80            101
   close_friend           10/10             57             78            122            171
-  sworn_friend            7/10            156            156            397            397
+  sworn_friend           10/10            156            159            397            397
   first_lesson           10/10             57             78            122            171
   first_friend_scene      0/10          never              -          never              -
   first_technique        10/10              3              3              7              7
@@ -2038,7 +2041,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start fallen_star_ma
   first_friend           10/10             24             30             45             59
   friend_tier2           10/10             39             51             80            108
   close_friend           10/10             60             78            129            171
-  sworn_friend           10/10            150            156            376            376
+  sworn_friend           10/10            152            156            376            376
   first_lesson           10/10             60             78            129            171
   first_friend_scene     10/10             39             51             80            108
   first_technique        10/10              3              3              7              7
@@ -2061,7 +2064,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start misty_forest)
   first_friend           10/10             24             27             44             51
   friend_tier2           10/10             39             48             79            100
   close_friend           10/10             60             75            128            163
-  sworn_friend           10/10            172            284            431            791
+  sworn_friend            9/10            172            178            431            431
   first_lesson           10/10             60             75            128            163
   first_friend_scene     10/10             39             48             79            100
   first_technique        10/10             12             12             15             15

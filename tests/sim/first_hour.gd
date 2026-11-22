@@ -2504,6 +2504,34 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 			return ""
 		gs.practice_technique(practise_id, 7)
 		return "practise" if gs.get_node("/root/GameClock").total_days != day_before else ""
+	if (line.begins_with("The trial for ") or (line.begins_with("The ") and line.contains(" trial is too hard"))) and not c.is_rogue():
+		# SIM-025: take an open trial when its odds are Even or better (the same rule as the curious policy).
+		var tk := {}
+		var td := {}
+		_attempt_open_trial(gs, c, td, tk)
+		return "trial" if not tk.is_empty() else ""
+	if line.begins_with("You have what ") and line.contains(" needs: craft it at ") or line.begins_with("You know a recipe: craft it"):
+		# SIM-025: craft the recipe the line names (or the first craftable one) once at the workshop region.
+		var recipe_id := ""
+		for rid: String in Guidance.craftable_now(c, gs.data):
+			if line.contains(String(gs.data.recipes[rid].get("name", rid))) or recipe_id == "":
+				recipe_id = rid
+				if line.contains(String(gs.data.recipes[rid].get("name", rid))):
+					break
+		if recipe_id == "":
+			return ""
+		var shop := ""
+		var order: Array = [gs.current_region]
+		order.append_array(gs.data.regions.keys())
+		for rid: String in order:
+			for place: Dictionary in gs.data.regions.get(rid, {}).get("places", []):
+				if shop == "" and String(place.get("type", "")) == "workshop":
+					shop = rid
+		if shop != "":
+			_walk_to(gs, c, shop)
+		var made := LifeStats.get_stat(c, "items_crafted")
+		gs.refine(recipe_id)
+		return "craft" if LifeStats.get_stat(c, "items_crafted") > made else ""
 	if line.begins_with("Your sect treasury sells ") or line.contains("from your sect treasury"):
 		var claim := Guidance._body_manual_treasury(c, gs.data)
 		if claim.is_empty():
