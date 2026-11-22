@@ -2,6 +2,14 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-22 00:10
+- Planner shots: WU-591 (names above heads) and WU-592 (People cards fit) both look right. `--tier-up=hunter_ma` still shows a
+  "Milestone: First Catch" banner instead of the tier-up (GFX-233); Elder Mo's talk marker crosses his name (WU-595).
+- The ridge start tells a Mortal to see Elder Mo behind a road closed until Core Formation (GUIDE-285). If GUIDE-285 finds no ridge
+  NPC who can start a Mortal cultivating, the next planner files a content task for one.
+- Next planner: when FOLK-042 lands, read its named cause; GFX-235, WU-594 and FOLK-043 wait on it. If it used the
+  `birthday_min_gain` default, note it in DESIGN.md "Current systems".
+
 ## Planner 2026-11-21 06:10
 - Planner shots `--tea=hunter_ma` (card, pair and table render; the [E] prompt floats over them) and `--tier-up=elder_mo --tea=elder_mo`
   in one run (no tea card shows when combined; hearts tiny). Filed WU-586 (Next steps clip mid-phrase), FOLK-038 ("to propose" with

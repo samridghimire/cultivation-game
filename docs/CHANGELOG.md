@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-22 [GFX-232] Withered Bone Marsh's empty lower-left corner now has bog pools and dead trees.
+- 2026-11-22 [FOLK-041] Close friends in the region you arrive in sometimes leave you a gift from their work, with a note.
+- 2026-11-22 [WU-592] Every line on the People cards fits inside its card.
+- 2026-11-22 [GFX-231] Friendship hearts are bigger and pop in; tea is taken seated across a table.
+- 2026-11-22 [GUIDE-284] The first hints of every start read as whole sentences, never cut mid-phrase.
+- 2026-11-22 [FOLK-040] The first liked gift on a friend's birthday counts past the usual gift limit, and a hint reminds you two weeks ahead.
+- 2026-11-22 [WU-591] Villagers' names float above their heads in every region, not across their bodies.
+- 2026-11-22 [SIM-024] The test player measures friendship milestones in all six starts.
+- 2026-11-22 [PERF-031] Travelling no longer rebuilds every HUD screen; each is built the first time you open it.
 - 2026-11-21 [GFX-230] The marsh, ridge and Azure Peak starts look fuller: more trees, flowers and grass where the ground was bare.
 - 2026-11-21 [C-410] Seven villagers of the forest, marsh and market have their own friend scenes at the Friend and Close friend tiers.
 - 2026-11-21 [C-409] A pedlar on Azure Peak sells a cheap Iron Fist manual, so an Azure Peak start learns a first style in its first week.
