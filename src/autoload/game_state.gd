@@ -122,6 +122,7 @@ func _ready() -> void:
 	EventBus.player_changed.connect(check_milestones)
 	EventBus.player_changed.connect(check_friendships)
 	EventBus.player_changed.connect(_announce_tier)
+	EventBus.player_changed.connect(_check_sect_rank)
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
@@ -138,6 +139,7 @@ func start_session(character: CharacterData) -> void:
 	_forecast_seen = {}
 	player = character
 	_announced_tier = Alignment.tier_name(player.alignment, data)
+	_sync_announced_rank()
 	CreationArtifact.ensure(player, data)
 	_reset_artifact_line()
 	world_flags = {}
@@ -174,6 +176,7 @@ func start_session(character: CharacterData) -> void:
 	_store_year_snapshot()
 	_store_season_snapshot()
 	_announced_tier = Alignment.tier_name(player.alignment, data)
+	_sync_announced_rank()
 	EventBus.clear_history()
 	EventBus.session_started.emit()
 	EventBus.post("%s sets out on the path of cultivation." % player.name, "progress")
@@ -606,7 +609,35 @@ func deliver_commission(index: int) -> void:
 ## SECT-031: the one promotion log line (`prefix` leads it) plus the sect_promoted signal.
 func _post_promotion(prefix: String = "") -> void:
 	EventBus.post("%sYour sect promotes you to %s." % [prefix, Sects.describe(player, data)], "progress")
+	_sync_announced_rank()
 	EventBus.sect_promoted.emit(String(player.sect["id"]), int(player.sect["rank"]))
+
+
+## RV-SECT031: [sect_id, rank] the player last saw announced; [] outside a sect.
+var _announced_rank: Array = []
+
+
+func _sync_announced_rank() -> void:
+	if player != null and not player.sect.is_empty():
+		_announced_rank = [String(player.sect["id"]), int(player.sect["rank"])]
+	else:
+		_announced_rank = []
+
+
+## Any effects dict can promote (deeds, dialogue, letters...); announce those once too.
+func _check_sect_rank() -> void:
+	if player == null:
+		return
+	if player.sect.is_empty():
+		_announced_rank = []
+		return
+	var id := String(player.sect["id"])
+	var rank := int(player.sect["rank"])
+	if _announced_rank.size() == 2 and _announced_rank[0] == id and rank > int(_announced_rank[1]):
+		_announced_rank = [id, rank]
+		EventBus.sect_promoted.emit(id, rank)
+	else:
+		_sync_announced_rank()
 
 
 func join_sect(sect_id: String) -> void:
@@ -616,6 +647,7 @@ func join_sect(sect_id: String) -> void:
 	var result := Sects.join(player, data, sect_id)
 	if result["ok"]:
 		EventBus.post("You are accepted into the %s." % data.sects[sect_id].name, "progress")
+		_sync_announced_rank()
 		EventBus.sect_joined.emit(sect_id)
 	else:
 		EventBus.post(result["reason"], "warning")
@@ -4851,6 +4883,7 @@ func load_save_dict(d: Dictionary) -> void:
 	_forecast_seen = {}
 	player = CharacterData.from_dict(d.get("player", {}))
 	_announced_tier = Alignment.tier_name(player.alignment, data)
+	_sync_announced_rank()
 	if not d.get("player", {}).has("known_recipes"):
 		Alchemy.grant_rank_recipes(player, data)  # saves from before recipe learning
 	CreationArtifact.ensure(player, data)

@@ -87,3 +87,39 @@ func test_promotion_summary_top_rank() -> void:
 	assert_eq(String(s["rank_name"]), sect.rank_name(sect.ranks.size() - 1))
 	c.sect["rank"] = 1
 	assert_true(String(Sects.promotion_summary(c, d)["next_needs"]) != "")
+
+
+## RV-SECT031: a promotion from any effects dict is announced once; a _post_promotion one is not doubled.
+func test_effects_promotion_announced_once() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.join_sect("blood_lotus_sect")
+	_promoted.clear()
+	_bus().sect_promoted.connect(_on_promoted)
+	c.sect["rank"] = 1  # what a promoting effects dict does (Effects.apply -> Sects.add_contribution)
+	_bus().player_changed.emit()
+	_bus().player_changed.emit()
+	assert_eq(_promoted.size(), 1)
+	assert_eq(_promoted[0][1], int(c.sect["rank"]))
+	# _post_promotion path: no double emit on the next player_changed
+	_promoted.clear()
+	c.sect["rank"] = int(c.sect["rank"]) + 1
+	gs._post_promotion()
+	_bus().player_changed.emit()
+	assert_eq(_promoted.size(), 1)
+	_bus().sect_promoted.disconnect(_on_promoted)
+	gs.end_session()
+
+
+func test_loading_at_higher_rank_emits_nothing() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.join_sect("blood_lotus_sect")
+	c.sect["rank"] = 2
+	gs._sync_announced_rank()  # what start/load does
+	_promoted.clear()
+	_bus().sect_promoted.connect(_on_promoted)
+	_bus().player_changed.emit()
+	assert_true(_promoted.is_empty())
+	_bus().sect_promoted.disconnect(_on_promoted)
+	gs.end_session()
