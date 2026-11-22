@@ -87,3 +87,15 @@ func test_prompt_rect_stays_near_figure_in_a_crowd() -> void:
 	var r: Rect2 = HUD.prompt_rect(label, screen, avoid, Vector2(300, 30), figure)
 	assert_true(r.get_center().distance_to(figure) <= HUD.PROMPT_MAX_FROM_FIGURE + 1.0, "near the figure")
 	assert_true(r.position.y > 100.0, "not at the top")
+
+
+## GFX-240: a sprite rect in the avoid list sends the chip to the slot below the label.
+func test_prompt_rect_keeps_off_a_sprite_rect() -> void:
+	var label := Rect2(Vector2(300, 300), Vector2(120, 20))
+	var screen := Rect2(0, 0, 1280, 800)
+	var chip := Vector2(180, 30)
+	var free: Rect2 = HUD.prompt_rect(label, screen, [], chip)
+	var sprite := Rect2(free.position + Vector2(10, 5), Vector2(60, 40))
+	var r: Rect2 = HUD.prompt_rect(label, screen, [sprite], chip)
+	assert_false(r.intersects(sprite), "chip clear of the sprite")
+	assert_true(r.position.y > label.position.y, "uses the slot below the label")

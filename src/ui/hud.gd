@@ -1140,6 +1140,11 @@ func _place_prompt() -> void:
 		var cr: Rect2 = (stall as FestivalStall).caption_screen_rect()
 		if cr.size != Vector2.ZERO:
 			avoid.append(cr)
+	for other: Node in parent.get_children():  # GFX-240: the chip keeps off other places' sprites
+		var oi := other as Interactable
+		if oi == null or oi == target or oi.is_person():
+			continue
+		avoid.append(xf * Rect2(oi.position - oi.size / 2.0, oi.size))
 	var rect := prompt_rect(label_rect, screen, avoid, chip, figure)
 	if _prompt_floating == false:
 		_prompt.set_anchors_preset(Control.PRESET_TOP_LEFT)
