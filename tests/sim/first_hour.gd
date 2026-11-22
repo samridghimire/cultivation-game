@@ -147,6 +147,8 @@ static var step_usec: Dictionary = {}
 static var hints_policy := false
 ## GUIDE-279: print each week's top 4 hint lines and the action taken, until the first win (first_hour_presses.gd --trace=<seed>).
 static var trace_first_win := false
+## FOLK-042: --trace-friend=<seed>: one line per week from Close friend until Sworn friend (see _trace_friend_week).
+static var trace_friend := false
 ## GUIDE-280: when set, every hints week appends {day, acted, line, top} here (quiet_stretches.gd --weeks prints the longest stretch's weeks).
 static var week_trace: Array = []
 static var record_weeks := false
@@ -2129,6 +2131,13 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		if not c.alive:
 			break
 		var day: int = gs.get_node("/root/GameClock").total_days
+		# FOLK-042: a player sees a friend's birthday line the day it appears (14 days ahead), not on a weekly step: wait for it.
+		if hints_policy and c.alive and Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day) == "":
+			for k in range(1, 7):
+				if Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day + k) != "":
+					gs.cultivate(k, gs.hint_density())
+					day = gs.get_node("/root/GameClock").total_days
+					break
 		var region_before: String = gs.current_region
 		hints_log["weeks"] += 1
 		var acted := ""
@@ -2167,6 +2176,8 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			for line: String in _next_steps(gs, c, day).slice(0, 4):
 				shown.append(line.substr(0, 90))
 			print("  day %3d | acted %-9s on %s\n           top4: %s" % [day, acted if acted != "" else "(idle)", acted_line.substr(0, 70), "\n                 ".join(shown)])
+		if trace_friend:
+			_trace_friend_week(gs, c, day, acted, acted_line)
 		if acted == "prepare":
 			# GUIDE-277: a week spent cultivating for a beast is a week with nothing else to do: idle, and counted apart.
 			hints_log["idle_weeks"] += 1
@@ -2244,6 +2255,11 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 		var closer := Guidance.grow_closer_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)
 		if closer.begins_with("Grow closer: share tea at "):
 			lines.append(closer)
+	# FOLK-042: a friend's birthday is once a year and the line shows 14 days ahead: the player keeps the day, so it goes first
+	# (the HUD's 5-line cap and the fight lines above it hid it from the sim in every seed).
+	var birthday := Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)
+	if birthday != "":
+		lines.insert(0, birthday)
 	# GUIDE-275: the HUD's own goal text (GUIDE-271's skipped rows included), so a goal's named first step reaches the policy.
 	var t1 := Time.get_ticks_usec()
 	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
@@ -2342,11 +2358,16 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				var before_stones := c.item_count("spirit_stone")
 				gs.buy_item(liked)
 				return "buy_gift" if c.item_count("spirit_stone") < before_stones else ""
-			if Folk.days_to_birthday(npc, gs.data, day) == 0:
+			var to_b := Folk.days_to_birthday(npc, gs.data, day)
+			if to_b >= 0 and to_b <= 14:
 				var home := Npcs.region_of(npc, gs.data)
 				if gs.current_region != home:
 					_walk_to(gs, c, home)
-				if gs.current_region == home:
+				# FOLK-042: the line shows 14 days ahead, so the player waits beside the friend for the day (the weekly step used to miss it).
+				var wait: int = Folk.days_to_birthday(npc, gs.data, gs.get_node("/root/GameClock").total_days)
+				if gs.current_region == home and wait > 0 and wait <= 14 and c.alive:
+					gs.cultivate(wait, gs.hint_density())
+				if gs.current_region == home and Folk.days_to_birthday(npc, gs.data, gs.get_node("/root/GameClock").total_days) == 0:
 					var favor_before := int(gs.npc_favor.get(id, 0))
 					gs.give_gift(id, liked)
 					return "birthday_gift" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
@@ -2808,3 +2829,23 @@ static func _heal_far(gs: Node, c: CharacterData) -> void:
 		if not c.injuries.has(injury_id):
 			heal_far_log["treated"] += 1
 		gs.travel(home)
+
+
+## FOLK-042: the weeks after Close friend: best friend, favor, days to birthday, liked item in the bag, top hints, action taken.
+static func _trace_friend_week(gs: Node, c: CharacterData, day: int, acted: String, acted_line: String) -> void:
+	var best := ""
+	for id: String in gs.npc_favor:
+		if best == "" or int(gs.npc_favor[id]) > int(gs.npc_favor[best]):
+			best = id
+	if best == "" or int(gs.npc_favor[best]) < 60 or Folk.tier_index(gs.data, int(gs.npc_favor[best])) >= 3:
+		return
+	var npc: CharacterData = gs.npcs.get(best)
+	var liked := "-"
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, best, item_id) == 1 and c.item_count(item_id) > 0:
+			liked = item_id
+			break
+	var top: Array[String] = []
+	for line: String in _next_steps(gs, c, day).slice(0, 5):
+		top.append(line.substr(0, 60))
+	print("  day %4d | %s favor %d | birthday in %d | liked in bag %s | acted %s (%s)\n           top5: %s" % [day, best, int(gs.npc_favor[best]), Folk.days_to_birthday(npc, gs.data, day) if npc != null else -1, liked, acted if acted != "" else "(idle)", acted_line.substr(0, 50), " | ".join(top)])

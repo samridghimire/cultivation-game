@@ -4725,6 +4725,29 @@ func test_call_on_married_villager_never_mentions_proposing() -> void:
 	gs.end_session()
 
 
+## FOLK-042: a cheap liked gift on the birthday gives at least birthday_min_gain: a friend at tea's cap (80) ends at 90.
+func test_birthday_min_gain_floor() -> void:
+	var c := _start()
+	var gs := _game_state()
+	assert_eq(Family.birthday_min_gain(gs.data), 10)
+	var ma: CharacterData = gs.npcs["hunter_ma"]
+	gs.current_region = Npcs.region_of(ma, gs.data)
+	GameClock.total_days = Folk.birthday_day(ma, gs.data) + Calendar.DAYS_PER_YEAR * 2
+	var liked := ""
+	for item_id: String in gs.data.items:
+		if Family.gift_taste(gs.data, "hunter_ma", item_id) > 0 and Family.gift_value(gs.data, item_id) > 0 and (liked == "" or Family.gift_value(gs.data, item_id) < Family.gift_value(gs.data, liked)):
+			liked = item_id
+	c.add_item(liked, 3)
+	gs.npc_favor["hunter_ma"] = 80
+	gs.give_gift("hunter_ma", liked)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 90, "80 + the floor, capped at 90")
+	gs.npc_favor["hunter_ma"] = 88
+	GameClock.total_days += Calendar.DAYS_PER_YEAR
+	gs.give_gift("hunter_ma", liked)
+	assert_eq(int(gs.npc_favor["hunter_ma"]), 90, "at 88 it ends at 90")
+	gs.end_session()
+
+
 ## FOLK-040: the first liked gift on a birthday takes a Close friend past the gift cap to a Sworn friend; a second is refused.
 func test_birthday_gift_makes_sworn_friend() -> void:
 	var c := _start()

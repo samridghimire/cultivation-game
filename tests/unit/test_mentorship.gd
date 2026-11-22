@@ -519,7 +519,7 @@ func _mortal_spar_setup(taught_by: String) -> Dictionary:
 
 func _spar_hint_names(s: Dictionary) -> bool:
 	var lines := Guidance.hints(s["c"], data(), 1.0, 99, s["people"], s["flags"], "qingshi_village", 400, s["favor"])
-	return _any_contains(lines, "Hunter Ma")
+	return _any_contains(lines, "Hunter Ma will") or _any_contains(lines, "Hunter Ma (")  # a spar line; FOLK-042 tea lines say "Hunter Ma's"
 
 
 func test_spar_hint_follows_self_taught_flag() -> void:

@@ -2408,14 +2408,20 @@ static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionar
 		return ""
 	var friend_min := int(tiers[1]["min"])
 	var close_min := int(tiers[2]["min"])
+	var tea_max := int(data.family.get("folk_visits", {}).get("call_on", {}).get("max_favor", close_min))
 	var best := ""
 	var best_favor := -1
+	var has_close := false
+	for id: String in data.npcs:
+		if int(favor.get(id, 0)) >= close_min:
+			has_close = true
+	# FOLK-042: tea goes on to the call_on cap once someone is a Close friend (still worth a cup); gifts stop at Close friend.
+	var limit := maxi(close_min, tea_max) if has_close else close_min
+	var lowest := close_min if has_close else friend_min
 	for id: String in data.npcs:
 		var f := int(favor.get(id, 0))
-		if f >= close_min:
-			return ""
 		var npc: CharacterData = people.get(id)
-		if npc != null and npc.alive and f >= friend_min and f > best_favor:
+		if npc != null and npc.alive and f >= lowest and f < limit and f > best_favor:
 			best = id
 			best_favor = f
 	if best == "":
@@ -2423,7 +2429,9 @@ static func grow_closer_hint(c: CharacterData, data: GameData, people: Dictionar
 	var npc: CharacterData = people[best]
 	# FOLK-037: a weekly cup of tea at their door comes first.
 	if Folk.call_on_check(c, npc, data, flags, today, best_favor, region_id) == "":
-		return "Grow closer: share tea at %s's (favor %d/%d)." % [npc.name, best_favor, close_min]
+		return "Grow closer: share tea at %s's (favor %d/%d)." % [npc.name, best_favor, limit]
+	if has_close:
+		return ""
 	var bag := ""
 	var shop := ""
 	for item_id: String in data.items:

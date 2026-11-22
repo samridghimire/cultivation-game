@@ -2619,6 +2619,8 @@ func give_gift(npc_id: String, item_id: String) -> void:
 				EventBus.post(String(thanks[absi(hash(npc_id + str(GameClock.total_days))) % thanks.size()]).replace("{name}", npcs[npc_id].name).replace("{item}", item_label), "progress")
 		var base := NpcClans.scaled_favor(npc_clans, data, npc_id, WorldEvents.scaled_favor(data, world_events, current_region, gain), cap - favor)
 		gain = base + Karma.favor_bonus(player, data, npc_id, base, cap - favor - base)
+		if birthday_gift and taste > 0 and birthday_like:
+			gain = maxi(gain, Family.birthday_min_gain(data))  # FOLK-042
 		gain = mini(gain + Almanac.gift_favor(today_omen()), maxi(0, cap - favor))  # CAL-010
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)

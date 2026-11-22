@@ -213,8 +213,9 @@ func test_grow_closer_bag_shop_and_off() -> void:
 	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", favor, TEA_RESTING, 0)
 	assert_true(line.begins_with("Grow closer: give "), line)
 	assert_true(line.contains(String(d.items[liked].get("name", liked))) and line.ends_with("(favor 45/60)."), line)
-	# Someone Close already: off.
-	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 45, _other_villager(d): 60}), "")
+	# Someone Close already: no gift line (FOLK-042: tea for the Close friend under tea's cap, never a gift for the Friend).
+	assert_false(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 45, _other_villager(d): 60}).begins_with("Grow closer: give "))
+	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 45, _other_villager(d): 80}), "")
 
 
 func test_grow_closer_names_highest_friend() -> void:
@@ -367,3 +368,13 @@ func test_birthday_gift_cap_and_hint() -> void:
 	assert_true(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day).contains("is today"))
 	flags[Folk.BIRTHDAY_GIFT_PREFIX + "elder_mo"] = day / Calendar.DAYS_PER_YEAR
 	assert_eq(Guidance.birthday_gift_hint(c, d, npcs, "qingshi_village", favor, flags, day), "", "off once given")
+
+
+## FOLK-042: a Close friend under tea's cap still gets the tea line (80 is where tea stops); the birthday gift floor takes them on.
+func test_close_friend_tea_hint_until_the_cap() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var c := new_character()
+	var line := Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 65}, {}, 100)
+	assert_true(line.begins_with("Grow closer: share tea at ") and line.ends_with("(favor 65/80)."), line)
+	assert_eq(Guidance.grow_closer_hint(c, d, npcs, "qingshi_village", {"elder_mo": 80}, {}, 100), "", "tea stops at the cap")

@@ -1946,7 +1946,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start qingshi_villag
   first_friend           10/10             21             24             41             48
   friend_tier2           10/10             36             45             76             97
   close_friend           10/10             57             72            125            160
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend           10/10            172            178            431            431
   first_lesson           10/10             57             72            125            160
   first_friend_scene     10/10             36             45             76             97
   first_technique        10/10             12             12             13             13
@@ -1969,7 +1969,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start withered_bone_
   first_friend           10/10             24             27             50             57
   friend_tier2           10/10             39             48             85            106
   close_friend           10/10             57             75            127            169
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend           10/10            169            178            431            431
   first_lesson           10/10             57             75            127            169
   first_friend_scene     10/10             39             48             85            106
   first_technique        10/10             12             12             21             21
@@ -1992,7 +1992,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start myriad_peaks_r
   first_friend           10/10             24             30             45             59
   friend_tier2           10/10             39             51             80            108
   close_friend           10/10             60             78            129            171
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend            7/10             81             84            178            182
   first_lesson           10/10             60             78            129            171
   first_friend_scene      0/10          never              -          never              -
   first_technique        10/10              3              3              7              7
@@ -2015,7 +2015,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start azure_peak)
   first_friend           10/10             24             30             45             59
   friend_tier2           10/10             39             48             80            101
   close_friend           10/10             57             78            122            171
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend            7/10            156            156            397            397
   first_lesson           10/10             57             78            122            171
   first_friend_scene      0/10          never              -          never              -
   first_technique        10/10              3              3              7              7
@@ -2038,7 +2038,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start fallen_star_ma
   first_friend           10/10             24             30             45             59
   friend_tier2           10/10             39             51             80            108
   close_friend           10/10             60             78            129            171
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend           10/10            150            156            376            376
   first_lesson           10/10             60             78            129            171
   first_friend_scene     10/10             39             51             80            108
   first_technique        10/10              3              3              7              7
@@ -2061,7 +2061,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start misty_forest)
   first_friend           10/10             24             27             44             51
   friend_tier2           10/10             39             48             79            100
   close_friend           10/10             60             75            128            163
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend           10/10            172            284            431            791
   first_lesson           10/10             60             75            128            163
   first_friend_scene     10/10             39             48             79            100
   first_technique        10/10             12             12             15             15

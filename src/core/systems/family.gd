@@ -291,6 +291,12 @@ static func gift_cap(data: GameData, birthday_like: bool) -> int:
 	return base
 
 
+## FOLK-042: the least a liked gift gives on the villager's birthday (`acquaintance.birthday_min_gain`, default 10), so a cheap
+## herb on the day still carries a friend from tea's cap (80) to the 90 cap. The caller still caps the favor at gift_cap.
+static func birthday_min_gain(data: GameData) -> int:
+	return int(data.family.get("acquaintance", {}).get("birthday_min_gain", 10))
+
+
 ## Why `c` cannot give `item_id` to `other`, or "" if they can.
 static func check_gift(c: CharacterData, other: CharacterData, favor: int, item_id: String, data: GameData, birthday_like: bool = false) -> String:
 	if other == null or not other.alive or other.id == c.id:
@@ -495,6 +501,8 @@ static func validate(data: GameData) -> PackedStringArray:
 			errors.append("family.json acquaintance needs gift_price_per_favor and gift_max_per_item >= 1")
 		if acq.has("birthday_max_favor") and (int(acq["birthday_max_favor"]) < int(acq.get("gift_max_favor", 0)) or int(acq["birthday_max_favor"]) > 100):
 			errors.append("family.json acquaintance birthday_max_favor must be gift_max_favor..100")
+		if acq.has("birthday_min_gain") and (not (acq["birthday_min_gain"] is int or acq["birthday_min_gain"] is float) or int(acq["birthday_min_gain"]) < 0 or int(acq["birthday_min_gain"]) > 30):
+			errors.append("family.json acquaintance birthday_min_gain must be an int 0..30")
 		if float(acq.get("gift_like_mult", 1.0)) < 1.0:
 			errors.append("family.json acquaintance gift_like_mult must be >= 1")
 		if int(acq.get("gift_dislike_favor", 0)) > 0:

@@ -26,6 +26,9 @@ func _run() -> void:
 	for a in args:
 		if a.begins_with("--trace="):
 			trace_seed = int(a.substr(8))
+		if a.begins_with("--trace-friend="):
+			trace_seed = int(a.substr(15))
+			FirstHour.trace_friend = true
 		if a.begins_with("--starts="):
 			starts = Array(a.substr(9).split(","))
 		FirstHour.parse_start_arg(a)
@@ -47,7 +50,7 @@ func _measure(gs: Node, clock: Node, seeds: int, months: int, trace_seed: int) -
 		var start_day: int = clock.total_days
 		if trace_seed >= 0 and s != trace_seed:
 			continue
-		FirstHour.trace_first_win = trace_seed >= 0
+		FirstHour.trace_first_win = trace_seed >= 0 and not FirstHour.trace_friend
 		FirstHour.play(gs, clock, s, months)
 		var first: Dictionary = FirstHour.press_log["first"]
 		if first.has("first_win"):
