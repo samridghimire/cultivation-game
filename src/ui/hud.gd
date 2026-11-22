@@ -200,6 +200,7 @@ var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _gift_left: GiftLeftCard  # WU-600
 var _sworn_oath: SwornOath  ## GFX-235
+var _pending_moments: Array[Dictionary] = []  ## WU-601: friendship moments waiting for a free screen (FIFO)
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
 var _pending_season: Array = []  # [season, year, lines] (SEASON-012)
@@ -353,6 +354,7 @@ func _ready() -> void:
 	add_child(_gift_left)
 	_sworn_oath = SwornOath.new()
 	_sworn_oath.visibility_changed.connect(func() -> void: _prompt.visible = not _sworn_oath.visible)  # GFX-236
+	_sworn_oath.finished.connect(_update_modal)  # WU-601: the next queued moment plays
 	add_child(_sworn_oath)
 	_build_death_screen()
 	_show_load_recap()
@@ -1874,8 +1876,10 @@ func _on_friendship_reached(npc_id: String, text: String) -> void:
 		var tiers: Array = GameState.data.family.get("folk_tiers", [])
 		var npc: CharacterData = GameState.npcs.get(npc_id)
 		if npc != null and not tiers.is_empty():
-			_sworn_oath.begin(npc_id, npc.name, tiers.back())
-			Audio.play("chime_progress")
+			if _moments_must_wait():
+				_pending_moments.append({"kind": "oath", "npc_id": npc_id})
+				return
+			_play_oath(npc_id)
 			return
 	# GFX-227: "<name>: <tier>" with the hearts as its icon; the banner waits behind any time-skip card.
 	var tex: Texture2D = HudIcons.hearts(GameState.friendship_tier_count(), GameState.friendship_hearts(npc_id), 3)
@@ -1883,6 +1887,37 @@ func _on_friendship_reached(npc_id: String, text: String) -> void:
 	if not friend_on_screen(npc_id):
 		_banner.pulse_icon_for(text)  # GFX-233: no hearts to see, so the banner's icon pulses once
 	Audio.play("chime_progress")
+
+
+## WU-601: the Sworn oath at once (the caller has checked nothing is up).
+func _play_oath(npc_id: String) -> void:
+	var tiers: Array = GameState.data.family.get("folk_tiers", [])
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	if npc == null or tiers.is_empty():
+		return
+	_sworn_oath.begin(npc_id, npc.name, tiers.back())
+	Audio.play("chime_progress")
+
+
+## WU-601: true while a friendship moment must queue (a modal, time-skip card or the oath is up).
+func _moments_must_wait() -> bool:
+	return _is_blocking() or _time_skip.visible or _sworn_oath.visible
+
+
+## WU-601: plays the next queued moment once nothing blocks; one at a time, in order.
+func _drain_moments() -> void:
+	if _pending_moments.is_empty() or _moments_must_wait():
+		return
+	var m: Dictionary = _pending_moments.pop_front()
+	match String(m.get("kind", "")):
+		"oath":
+			_play_oath(String(m["npc_id"]))
+		"tend":
+			_play_tend(String(m["npc_id"]), int(m["days_healed"]))
+		"gift":
+			_gift_left.enqueue(String(m["name"]), String(m["item_id"]), int(m["count"]), String(m["line"]))
+	if not _pending_moments.is_empty():
+		_drain_moments.call_deferred()
 
 
 ## GFX-233: true when the villager `npc_id` is inside the visible screen rect (so their hearts are seen).
@@ -1991,13 +2026,22 @@ func _on_time_skipped(days: int, summary: Dictionary) -> void:
 ## WU-600: a friend left a gift on arrival: a small card, queued, never pausing time.
 func _on_friend_gift_left(npc_id: String, item_id: String, count: int, line: String) -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
-	_gift_left.enqueue(npc.name if npc != null else npc_id, item_id, count, line)
+	var nm: String = npc.name if npc != null else npc_id
+	if _moments_must_wait():
+		_pending_moments.append({"kind": "gift", "name": nm, "item_id": item_id, "count": count, "line": line})
+		return
+	_gift_left.enqueue(nm, item_id, count, line)
 
 
 ## WU-599: a Sworn friend tends the player: the tea card pattern, skippable, never pausing time.
 func _on_friend_tended(npc_id: String, days_healed: int) -> void:
-	if _combat_report.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
+	if _moments_must_wait() or _encounter.visible:
+		_pending_moments.append({"kind": "tend", "npc_id": npc_id, "days_healed": days_healed})
 		return
+	_play_tend(npc_id, days_healed)
+
+
+func _play_tend(npc_id: String, days_healed: int) -> void:
 	var npc: CharacterData = GameState.npcs.get(npc_id)
 	_show_time_skip(Folk.tend_card(npc.name if npc != null else npc_id, days_healed, GameState.last_tend_line, npc_id))
 
@@ -2491,6 +2535,8 @@ func _update_modal() -> void:
 	_key_bar.visible = bool(Settings.get_value("key_help")) and not blocking
 	EventBus.ui_modal_changed.emit(blocking or _time_skip.visible)
 	_hold_banners()
+	if not _pending_moments.is_empty() and not blocking and not _time_skip.visible and not _sworn_oath.visible:
+		_drain_moments.call_deferred()  # WU-601
 	if not blocking and (not _pending_kickoff.is_empty() or not _pending_season.is_empty()):
 		_flush_year_review.call_deferred()  # WU-534: a season card queued behind an open screen
 
@@ -2502,6 +2548,7 @@ func _hold_banners() -> void:
 
 func _return_to_menu() -> void:
 	_showing_skip = {}
+	_pending_moments.clear()  # WU-601
 	GameState.end_session()
 	get_tree().change_scene_to_file(MAIN_MENU)
 
