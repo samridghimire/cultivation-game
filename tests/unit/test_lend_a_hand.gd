@@ -274,9 +274,8 @@ func test_next_step_line() -> void:
 	var spent := {"tea_elder_mo": 0, "lend_elder_mo": 0}
 	assert_eq(Folk.next_step(c, mo, d, spent, 1, 50, "qingshi_village"), "Tea again in 6 days", "tea returns before lend only on a tie")
 	var capped := {"taste_elder_mo_moon_cake": 1}
-	assert_eq(Folk.next_step(c, mo, d, capped, 0, 90, "qingshi_village"), "Likes: %s" % String(d.items["moon_cake"]["name"]))
-	assert_eq(Folk.next_step(c, mo, d, {}, 0, 90, "qingshi_village"), "", "nothing left at the top")
-	assert_eq(Folk.next_step(c, mo, d, {}, 0, 85, "qingshi_village"), "", "sworn friend reached")
+	assert_eq(Folk.next_step(c, mo, d, capped, 0, 90, "qingshi_village"), "Sworn friend: tends your wounds once a season (ready)")
+	assert_eq(Folk.next_step(c, mo, d, {}, 0, 85, "qingshi_village"), "Sworn friend: tends your wounds once a season (ready)")
 
 
 func test_call_on_validation() -> void:
@@ -389,3 +388,20 @@ func test_road_to_sworn_line() -> void:
 	assert_eq(Folk.road_to_sworn(d, mo, 85), "")
 	assert_eq(Folk.road_to_sworn(d, mo, 40), "")
 	assert_eq(Folk.next_step(new_character(), mo, d, {}, 1, 80, "qingshi_village"), Folk.road_to_sworn(d, mo, 80), "tea is capped at 80")
+
+
+## WU-596: Sworn friend tend line, the likes clause and the dated birthday row.
+func test_sworn_tend_and_likes_text() -> void:
+	var d := data()
+	var mo: CharacterData = _npcs(d)["elder_mo"]
+	assert_eq(Folk.sworn_tend_line(d, mo, {}, 500, 90), "Sworn friend: tends your wounds once a season (ready)")
+	assert_eq(Folk.sworn_tend_line(d, mo, {"tended_elder_mo": 500 - 90}, 500, 90), "Sworn friend: tends your wounds once a season (ready)")
+	assert_eq(Folk.sworn_tend_line(d, mo, {"tended_elder_mo": 470}, 500, 90), "Sworn friend: tends your wounds once a season (in 60 days)")
+	assert_eq(Folk.sworn_tend_line(d, mo, {}, 500, 80), "", "not sworn yet")
+	assert_eq(Folk.road_likes_clause("Tea until favor 80, then a liked gift on their birthday", 0), Folk.LIKES_UNKNOWN_CLAUSE)
+	assert_eq(Folk.road_likes_clause("Only their birthday gift is left (Month 1, Day 2)", 1), "", "a like is known")
+	assert_eq(Folk.road_likes_clause("Tea ready (weekly)", 0), "")
+	var e := {"birthday_text": "Month 10, Day 21", "birthday_in": 290, "birthday_gifted": false}
+	assert_eq(Folk.birthday_card_line(e, false), "Birthday in 290 days")
+	e["birthday_in"] = 10
+	assert_eq(Folk.birthday_card_line(e, false), "Birthday in 10 days: a liked gift counts double")

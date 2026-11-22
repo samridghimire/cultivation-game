@@ -159,7 +159,7 @@ func test_people_page_cards_and_unknown_tastes() -> void:
 	var row := VillageBook.taste_row(gs.data, [], 2)
 	assert_eq(row.get_child_count(), 2, "unknown tastes are two ?")
 	assert_eq((row.get_child(0) as Label).text, "?")
-	assert_true(VillageBook.people_detail(entry, gs.data).contains("not yet learned"), "unknown likes worded")
+	assert_true(VillageBook.people_detail(entry, gs.data).contains("give a gift to learn"), "unknown likes worded")
 	book.queue_free()
 	await _frames()
 

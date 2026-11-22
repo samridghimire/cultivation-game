@@ -664,6 +664,9 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 	var road := road_to_sworn(data, npc, favor)
 	if road != "":
 		return road
+	var tend := sworn_tend_line(data, npc, flags, today, favor)  # WU-596
+	if tend != "":
+		return tend
 	if not likes.is_empty():
 		return "Likes: %s" % String(data.items[likes[0]].get("name", likes[0]))
 	var tiers: Array = data.family.get("folk_tiers", [])
@@ -671,6 +674,25 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 		if favor < int(t["min"]):
 			return "%s at favor %d" % [String(t["name"]), int(t["min"])]
 	return ""
+
+
+## WU-596: what a Sworn friend (favor >= tend.min_favor) does for you: "Sworn friend: tends your wounds once a season (ready)"
+## or "(in N days)", from folk_visits.tend. "" for anyone else or when the visit is off. Pure.
+static func sworn_tend_line(data: GameData, npc: CharacterData, flags: Dictionary, today: int, favor: int) -> String:
+	var rules: Dictionary = visit_rules(data).get("tend", {})
+	if rules.is_empty() or npc == null or favor < int(rules.get("min_favor", 85)):
+		return ""
+	var wait := int(rules.get("cooldown_days", 90)) - (today - int(flags.get("tended_" + npc.id, -100000)))
+	var tail := "ready" if wait <= 0 else "in %d day%s" % [wait, "" if wait == 1 else "s"]
+	return "Sworn friend: tends your wounds once a season (%s)" % tail
+
+
+## WU-596: the clause a road line gains while no taste of the friend is known. "" for any other line. Pure.
+const LIKES_UNKNOWN_CLAUSE := " (likes unknown: try a gift)"
+static func road_likes_clause(step: String, likes_known: int) -> String:
+	if likes_known > 0 or not (step.begins_with("Tea until favor") or step.begins_with("Only ")):
+		return ""
+	return LIKES_UNKNOWN_CLAUSE
 
 
 ## WU-594: what still moves a Close friend (the tier just below the last) toward the last tier: tea while it still works
@@ -1280,7 +1302,7 @@ static func birthday_gift_given(flags: Dictionary, npc: CharacterData, day: int)
 ## WU-593: the People card's birthday line from a people_entries entry. Within BIRTHDAY_SOON_DAYS it names the days and the
 ## double gift; on the day it says so, and "Birthday gift given" once the gift went out. "" when no birthday is known.
 const BIRTHDAY_SOON_DAYS := 14
-static func birthday_card_line(e: Dictionary) -> String:
+static func birthday_card_line(e: Dictionary, dated: bool = true) -> String:
 	if String(e["birthday_text"]) == "":
 		return ""
 	var d := int(e["birthday_in"])
@@ -1288,6 +1310,8 @@ static func birthday_card_line(e: Dictionary) -> String:
 		return "Birthday gift given" if bool(e.get("birthday_gifted", false)) else "Birthday today!"
 	if d <= BIRTHDAY_SOON_DAYS:
 		return "Birthday in %d day%s: a liked gift counts double" % [d, "" if d == 1 else "s"]
+	if not dated:  # WU-596: the next-step line already names the date
+		return "Birthday in %d days" % d
 	return "Birthday: %s (in %d days)" % [e["birthday_text"], d]
 
 

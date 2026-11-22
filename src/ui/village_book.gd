@@ -413,14 +413,24 @@ func _card(e: Dictionary) -> Button:
 	tier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(tier)
 	if String(e.get("next_step", "")) != "":  # WU-588
-		var step := UIStyle.label(String(e["next_step"]), 13, UIStyle.ACCENT.darkened(0.15))
+		var step_text := String(e["next_step"])
+		var clause := Folk.road_likes_clause(step_text, (e["likes_known"] as Array).size())
+		if clause != "" and UIStyle.label(step_text + clause, 13).get_theme_font("font").get_string_size(step_text + clause, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x <= CARD_TEXT_WIDTH * 2.0 - 24.0:
+			step_text += clause  # WU-596: only while it fits the two wrapped rows
+		var step := UIStyle.label(step_text, 13, UIStyle.ACCENT.darkened(0.15))
 		step.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(step)
 	var soon := String(e["birthday_text"]) != "" and int(e["birthday_in"]) <= Folk.BIRTHDAY_SOON_DAYS  # WU-482/593: gold within two weeks
-	var bday := UIStyle.label(Folk.birthday_card_line(e).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
+	var dated := String(e["birthday_text"]) == "" or not String(e.get("next_step", "")).contains(String(e["birthday_text"]))
+	var bday := UIStyle.label(Folk.birthday_card_line(e, dated).replace("Birthday: ", "Birthday ").replace("Month ", "M").replace(", Day ", " D"), 13, UIStyle.ACCENT.darkened(0.3) if soon else DIM)
 	bday.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(bday)
-	col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
+	if (e["likes_known"] as Array).is_empty():  # WU-596: say how to learn a like instead of "????"
+		var learn := UIStyle.label("Likes: give a gift to learn", 13, DIM)
+		learn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(learn)
+	else:
+		col.add_child(taste_row(data, e["likes_known"], int(e["likes_total"])))
 	for line in lesson_lines(id, GameState.lessons_for(id), data, int(e["tier_index"]), String(e["name"])):
 		var lesson_label := UIStyle.label(line, 12, UIStyle.ACCENT if line.begins_with("Taught") else (UIStyle.ACCENT.darkened(0.3) if line == LESSON_WAITING else DIM))
 		lesson_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -448,7 +458,7 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 	var names := func(ids: Array) -> String:
 		return ", ".join(PackedStringArray(ids.map(func(i: String) -> String: return String(data.items.get(i, {}).get("name", i)))))
 	var likes: Array = e["likes_known"]
-	parts.append("Likes: %s." % (names.call(likes) if not likes.is_empty() else "not yet learned"))
+	parts.append("Likes: %s." % (names.call(likes) if not likes.is_empty() else "give a gift to learn"))
 	var dislikes: Array = e["dislikes_known"]
 	if not dislikes.is_empty():
 		parts.append("Dislikes: %s." % names.call(dislikes))
