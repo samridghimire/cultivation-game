@@ -82,6 +82,38 @@ func open(welcome: Dictionary, color: Color = UIStyle.ACCENT) -> void:
 		l.custom_minimum_size = Vector2(WRAP_WIDTH, 0)
 		_rows.add_child(l)
 	_step.text = "First step: %s" % String(welcome.get("first_step", ""))
+	_step.visible = true
+	visible = true
+	_button.grab_focus.call_deferred()
+
+
+## WU-603: promotion mode. `summary` is Sects.promotion_summary; `sect_name` leads the card; `has_next` is false at the top rank.
+func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, color: Color = UIStyle.ACCENT) -> void:
+	_title.text = sect_name
+	_title.add_theme_color_override("font_color", color)
+	_banner.color = color
+	_banner.queue_redraw()
+	_subtitle.text = "Promoted: %s" % String(summary.get("rank_name", ""))
+	for c in _rows.get_children():
+		_rows.remove_child(c)
+		c.free()
+	var perks: PackedStringArray = summary.get("perks_new", PackedStringArray())
+	var lines := PackedStringArray()
+	if perks.is_empty():
+		lines.append("Your standing in the sect rises")
+	for perk in perks:
+		lines.append("- %s" % perk)
+	for line in lines:
+		var l := UIStyle.label(line, 16)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(WRAP_WIDTH, 0)
+		_rows.add_child(l)
+	var needs := String(summary.get("next_needs", ""))
+	if has_next:
+		_step.text = "Next rank: %s" % (needs if needs != "" else "a trial awaits")
+	else:
+		_step.text = ""
+	_step.visible = has_next
 	visible = true
 	_button.grab_focus.call_deferred()
 

@@ -335,6 +335,7 @@ func _ready() -> void:
 	_sect_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_sect_card))
 	EventBus.sect_joined.connect(_on_sect_joined)
+	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
 	_friend_card.closed.connect(_flush_year_review)
 	_contest_card.closed.connect(_flush_year_review)
 	_season_board = SeasonBoard.new()
@@ -2140,6 +2141,19 @@ func _on_sect_joined(sect_id: String) -> void:
 	if String(def.robe_color) != "":
 		color = Color(String(def.robe_color))
 	_sect_card.open(Guidance.sect_welcome(GameState.player, GameState.data, sect_id, GameState.current_region), color)
+	_update_modal()
+
+
+## WU-603: the promotion card reuses the sect card.
+func _on_sect_promoted(sect_id: String, _rank: int) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	var def: SectDef = GameState.data.sects[sect_id]
+	var color := UIStyle.ACCENT
+	if String(def.robe_color) != "":
+		color = Color(String(def.robe_color))
+	var summary := Sects.promotion_summary(GameState.player, GameState.data)
+	_sect_card.open_promotion(def.name, summary, Sects.next_rank(GameState.player, GameState.data) >= 0, color)
 	_update_modal()
 
 

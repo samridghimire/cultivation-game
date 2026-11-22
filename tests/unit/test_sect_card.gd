@@ -39,3 +39,31 @@ func test_hud_opens_card_on_join() -> void:
 	gs.end_session()
 	root.remove_child(hud)
 	hud.free()
+
+
+func test_promotion_card() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var card: SectCard = hud.get("_sect_card")
+	gs.player.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0}
+	EventBus.sect_promoted.emit("azure_cloud_sect", 1)
+	await _frames()
+	assert_true(card.visible)
+	assert_true(card.all_text().contains("Promoted: "))
+	assert_true(card.all_text().contains("Next rank:"), "a next rank is shown mid-ladder")
+	assert_true(card.button().has_focus())
+	card.close()
+	var top: int = gs.data.sects["azure_cloud_sect"].ranks.size() - 1
+	gs.player.sect = {"id": "azure_cloud_sect", "rank": top, "contribution": 0}
+	EventBus.sect_promoted.emit("azure_cloud_sect", top)
+	await _frames()
+	assert_true(card.visible)
+	assert_false(card.all_text().contains("Next rank:") or card._step.visible, "no Next rank row at the top")
+	card.close()
+	gs.end_session()
+	root.remove_child(hud)
+	hud.free()
