@@ -34,6 +34,7 @@ func _run() -> void:
 		FirstHour.parse_start_arg(a)  # SIM-015: --start=<region_id> / --join=<sect_id>
 	var hints_only := args.has("--hints-only")
 	_breakdown = args.has("--breakdown")
+	FirstHour.record_weeks = args.has("--weeks")  # GUIDE-280: print the hint lines and action of each week of the longest stretch
 	FirstHour.sect_report = true
 	for policy in ["default", "curious", "hints"]:
 		if hints_only and policy != "hints":
@@ -225,6 +226,9 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 		clock.days_advanced.disconnect(on_days)
 		clock.days_advanced.disconnect(on_breakdown)
 		_breakdown_rows.append(row)
+		if FirstHour.record_weeks and FirstHour.hints_policy:
+			_print_longest_weeks(log, s)
+		FirstHour.week_trace.clear()
 		var end_day: int = mini(days, clock.total_days - int(log["day0"])) if log["day0"] >= 0 else 0
 		if end_day > int(log["last_new"]):
 			log["stretches"].append({"start": log["last_new"], "end": end_day})
@@ -272,6 +276,25 @@ func _policy(seeds: int, days: int, curious: bool) -> void:
 		var w: Dictionary = worst[i]
 		print("  longest %d: seed %d, days %d-%d (%d days), months %s, actions: %s" % [i + 1, w["seed"], w["start"], w["end"], w["length"], str(w["months"] if w.has("months") else _month_range(w)), w["kinds"]])
 	print("")
+
+
+## GUIDE-280: the weeks of the seed's longest quiet stretch: the day, the action the hints player took and the top hint lines.
+func _print_longest_weeks(log: Dictionary, seed_n: int) -> void:
+	var best := {"start": 0, "end": 0}
+	for st: Dictionary in log["stretches"]:
+		if int(st["end"]) - int(st["start"]) > int(best["end"]) - int(best["start"]):
+			best = st
+	print("  seed %d longest stretch days %d-%d, week by week (action | line acted on):" % [seed_n, best["start"], best["end"]])
+	var first_week := true
+	for w: Dictionary in FirstHour.week_trace:
+		var rel: int = int(w["day"]) - int(log["day0"])
+		if rel < int(best["start"]) - 6 or rel > int(best["end"]):
+			continue
+		print("    day %4d | %-9s | %s" % [rel, w["acted"], w["line"]])
+		if first_week:
+			for l: String in w["top"]:
+				print("        shown: %s" % l)
+			first_week = false
 
 
 static func _month_range(st: Dictionary) -> String:

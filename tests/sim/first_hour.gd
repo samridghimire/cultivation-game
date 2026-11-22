@@ -147,6 +147,9 @@ static var step_usec: Dictionary = {}
 static var hints_policy := false
 ## GUIDE-279: print each week's top 4 hint lines and the action taken, until the first win (first_hour_presses.gd --trace=<seed>).
 static var trace_first_win := false
+## GUIDE-280: when set, every hints week appends {day, acted, line, top} here (quiet_stretches.gd --weeks prints the longest stretch's weeks).
+static var week_trace: Array = []
+static var record_weeks := false
 static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
@@ -2154,6 +2157,11 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var key := RegEx.create_from_string("\\d+").sub(line, "N", true)
 			key = key.substr(0, 70)
 			hints_log["unmatched"][key] = int(hints_log["unmatched"].get(key, 0)) + 1
+		if record_weeks:
+			var top: Array[String] = []
+			for line: String in _next_steps(gs, c, day).slice(0, 5):
+				top.append(line.substr(0, 80))
+			week_trace.append({"day": day, "acted": acted if acted != "" else "(idle)", "line": acted_line.substr(0, 80), "top": top})
 		if trace_first_win and (LifeStats.get_stat(c, "fights_won") < 1 or c.techniques.is_empty() or not press_log["first"].has("first_friend")):  # GUIDE-281/282: traced on to the first technique and the first friend
 			var shown: Array[String] = []
 			for line: String in _next_steps(gs, c, day).slice(0, 4):
@@ -2477,6 +2485,13 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 			gs.unlock_artifact_function(ready[0])
 			return "unseal" if ArtifactFunctions.is_unlocked(c, ready[0]) else ""
 		return ""
+	if line.begins_with("You have never been to "):
+		# GUIDE-280: the hint names the nearest region never visited; the player travels there like the map's Travel button.
+		var unseen := Guidance.hinted_region(gs.data, line, gs.current_region)
+		if unseen == "":
+			return ""
+		_walk_to(gs, c, unseen)
+		return "travel" if gs.current_region == unseen else ""
 	if line.begins_with("Goal: Visit "):
 		# SIM-013: the goal names a place (the market); the player travels there like the map's Travel button.
 		var visit := "fallen_star_market" if line.contains("Fallen Star") else ""

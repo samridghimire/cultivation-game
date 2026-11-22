@@ -5425,6 +5425,33 @@ func test_explored_out_hint_points_at_a_region_with_unmet_happenings() -> void:
 	assert_false(line.contains(" 1 happenings"), line)
 
 
+func test_unvisited_region_hint_names_the_nearest_unseen_region() -> void:
+	var c := _qr(3, 0)
+	c.visited_regions = ["qingshi_village"]
+	var line := Guidance.unvisited_region_hint(c, data(), "qingshi_village")
+	assert_true(line.begins_with("You have never been to "), line)
+	assert_true(line.length() <= 90, line)
+	assert_eq(Guidance.hinted_region(data(), line, "qingshi_village") != "", true, "names a real region: " + line)
+	# Once every region in reach was visited, or a Mortal, or no region: silent.
+	for r: String in data().regions.keys():
+		c.visited_regions.append(r)
+	assert_eq(Guidance.unvisited_region_hint(c, data(), "qingshi_village"), "")
+	var m := _qr(3, 0)
+	m.realm_index = 0
+	assert_eq(Guidance.unvisited_region_hint(m, data(), "qingshi_village"), "")
+	assert_eq(Guidance.unvisited_region_hint(c, data(), ""), "")
+
+
+func test_unvisited_region_hint_shows_in_hints_only_after_the_other_region_lines() -> void:
+	var c := _qr(3, 0)
+	c.visited_regions = ["qingshi_village"]
+	var all := Guidance.hints(c, data(), 1.0, 99, {}, {}, "qingshi_village", 400)
+	var seen := false
+	for l: String in all:
+		seen = seen or l.begins_with("You have never been to ") or l.begins_with("You know Qingshi Village through") or l.begins_with("Nothing here tests you")
+	assert_true(seen, "a region line shows: " + str(all))
+
+
 func test_explored_out_hint_is_silent_when_not_mastered_or_mortal() -> void:
 	var c := _qr(3, 0)
 	assert_eq(Guidance.explored_out_hint(c, data(), "qingshi_village", {}), "")

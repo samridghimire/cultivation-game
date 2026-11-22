@@ -1184,6 +1184,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(outgrown)
 	else:
 		var explored := explored_out_hint(c, data, region_id, flags)
+		if explored == "":
+			explored = unvisited_region_hint(c, data, region_id)  # GUIDE-280
 		if explored != "":
 			out.append(explored)
 	if c.realm_index > NEWCOMER_MAX_REALM:
@@ -4644,6 +4646,19 @@ static func explored_out_hint(c: CharacterData, data: GameData, region_id: Strin
 		var progress := Exploration.region_progress(c, data, r, flags)
 		if int(progress["met"]) < int(progress["total"]):
 			return "You know %s through and through: %s (%s) holds %d %s you have not met." % [_region_name(data, region_id), _region_name(data, r), Calendar.format_duration(int(best_days[r])), int(progress["total"]) - int(progress["met"]), Text.plural("happening", int(progress["total"]) - int(progress["met"]))]
+	return ""
+
+
+## GUIDE-280: a Qi Refining player or better who has never set foot in a region within 3 hops (realm gates respected) is told
+## where the nearest one is, so a long stretch of cultivating has a place to go. "" when every region in reach was visited.
+static func unvisited_region_hint(c: CharacterData, data: GameData, region_id: String) -> String:
+	if c.realm_index < 1 or region_id == "" or not data.regions.has(region_id):
+		return ""
+	var map := _route_day_map(c, data, region_id, 3)
+	var best_days: Dictionary = map["days"]
+	for r: String in map["order"]:
+		if r != region_id and not c.visited_regions.has(r):
+			return "You have never been to %s (%s): see what it holds." % [_region_name(data, r), Calendar.format_duration(int(best_days[r]))]
 	return ""
 
 
