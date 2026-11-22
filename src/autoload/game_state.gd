@@ -871,6 +871,7 @@ func _post_arrival_line() -> void:
 	if line != "":
 		EventBus.post(line, "travel")
 	receive_drop_by_gifts()
+	receive_sworn_tending()
 	# WILD-013 / TODAY-002: the in-season line once a season per region.
 	var season_line := Wildlife.season_clause(data, current_region, day)
 	var season_key := "%d-%s" % [Calendar.year_of(day), Calendar.season_of(day)]
@@ -898,6 +899,24 @@ func receive_drop_by_gifts() -> void:
 		var count := int(gift["count"])
 		var what := String(data.items[gift["item"]].get("name", gift["item"])) + (" x%d" % count if count > 1 else "")
 		EventBus.post(("%s (%s)" % [String(gift["line"]), what]).strip_edges(), "progress")
+
+
+## FOLK-043: a Sworn friend who lives where you arrive tends your injuries (once per 90 days each).
+func receive_sworn_tending() -> void:
+	if player.injuries.is_empty():
+		return
+	var min_favor := int(Folk.visit_rules(data).get("tend", {}).get("min_favor", 85))
+	for id: String in npcs:
+		var npc: CharacterData = npcs[id]
+		if not data.npcs.has(id) or int(npc_favor.get(id, 0)) < min_favor or Npcs.region_of(npc, data) != current_region:
+			continue
+		var res := Folk.tend_injury(player, npc, data, world_flags, GameClock.total_days, int(npc_favor.get(id, 0)))
+		if res.is_empty():
+			continue
+		var text := String(res["line"])
+		EventBus.post(("%s (%d days of healing)" % [text, int(res["days_healed"])]).strip_edges(), "progress")
+		if player.injuries.is_empty():
+			break
 
 
 ## After a journey, an NPC with a strong grudge may ambush the player, and a

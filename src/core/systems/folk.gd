@@ -937,6 +937,7 @@ static func validate(data: GameData) -> PackedStringArray:
 	errors.append_array(validate_tips(data))
 	errors.append_array(validate_visits(data))
 	errors.append_array(validate_drop_by(data))
+	errors.append_array(validate_tend(data))
 	errors.append_array(validate_companions(data))
 	errors.append_array(validate_quarrels(data))
 	errors.append_array(validate_gifts(data))
@@ -2177,4 +2178,53 @@ static func validate_drop_by(data: GameData) -> PackedStringArray:
 		for l: Variant in lines:
 			if not l is String or String(l) == "" or String(l).length() > 140:
 				errors.append("family.json folk_visits.drop_by: lines must be strings of 1-140 chars")
+	return errors
+
+
+## FOLK-043: a Sworn friend (favor >= tend.min_favor, non-family) who lives where you arrive tends your injuries once per
+## tend.cooldown_days: every injury's days left are halved (round down; 0 heals it). Sets flag `tended_<id>` = today.
+## Returns {npc, line, days_healed} or {}. Deterministic: the line is picked by a stable hash of npc id and day, never rng.
+static func tend_injury(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int) -> Dictionary:
+	var rules: Dictionary = visit_rules(data).get("tend", {})
+	if rules.is_empty() or not npc.alive or favor < int(rules.get("min_favor", 85)) or _is_player_family(c, npc.id):
+		return {}
+	if c.injuries.is_empty():
+		return {}
+	var key := "tended_" + npc.id
+	if today - int(flags.get(key, -100000)) < int(rules.get("cooldown_days", 90)):
+		return {}
+	flags[key] = today
+	var healed := 0
+	for id: String in c.injuries.keys():
+		var left := int(c.injuries[id])
+		var rest := left / 2
+		healed += left - rest
+		if rest <= 0:
+			c.injuries.erase(id)
+		else:
+			c.injuries[id] = rest
+	var lines: Array = data.npcs.get(npc.id, {}).get("tend_lines", [])
+	if lines.is_empty():
+		lines = rules.get("lines", [])
+	var line := ""
+	if not lines.is_empty():
+		line = String(lines[absi(hash("%s:%d" % [npc.id, today])) % lines.size()])
+	return {"npc": npc.id, "days_healed": healed, "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
+
+
+static func validate_tend(data: GameData) -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var r: Dictionary = visit_rules(data).get("tend", {})
+	if r.is_empty():
+		return errors
+	for key in ["min_favor", "cooldown_days"]:
+		if not (r.get(key, -1) is int or r.get(key, -1) is float) or int(r.get(key, -1)) < 1:
+			errors.append("family.json folk_visits.tend: %s must be a whole number >= 1" % key)
+	var lines: Variant = r.get("lines", [])
+	if not (lines is Array) or (lines as Array).is_empty():
+		errors.append("family.json folk_visits.tend: lines must be a non-empty array")
+	else:
+		for l: Variant in lines:
+			if not l is String or String(l) == "" or String(l).length() > 140:
+				errors.append("family.json folk_visits.tend: lines must be strings of 1-140 chars")
 	return errors
