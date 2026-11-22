@@ -7208,7 +7208,7 @@ func test_far_teacher_hint_whole_on_the_card() -> void:
 	var expect := {
 		# GUIDE-281: the ridge pedlar sells Iron Fist now, so its card names the manual, not the far teacher.
 		"azure_peak": "No style: Iron Fist at Cloud-Stair Pedlar",  # C-409: Azure Peak sells it
-		"withered_bone_marsh": "No fighting style: Hunter Ma, Qingshi (9d)",
+		"withered_bone_marsh": "No fighting style: Iron Fist",  # C-414: the Reed-Mat Scroll Seller stocks the manual
 	}
 	for region_id: String in expect:
 		var full := Guidance.fighting_hint(c, d, region_id, npcs, {})

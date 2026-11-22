@@ -17,6 +17,8 @@
         {"label": "Ask if she needs a hand with her stock.", "next": "errand_ask", "if": {"not_flag": "errand_hua_asked"}},
         {"label": "Bring the four Qi Gathering Pills Hua asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_gathering_pill": 4}, "flag": "errand_hua_asked", "not_flag": "errand_hua_done"}, "effects": {"items": {"qi_gathering_pill": -4, "recipe_meridian_mending_pill": 1}, "set_flag": "errand_hua_done"}, "favor": 15},
         {"label": "Ask whether the furnace likes you today.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_alchemist_hua"}, "effects": {"items": {"clear_well_tea": 1}, "set_flag": "secret_alchemist_hua"}},
+        {"label": "Hua, could you teach me the first method of cultivation?", "next": "teach_breathing", "if": {"not_knows_technique": "basic_breathing"}},
+        {"label": "I am new to all this. Where should I begin?", "next": "begin", "if": {"max_realm": "qi_refining"}, "effects": {"set_flag": "talked_alchemist_hua"}},
         {"label": "Farewell.", "next": "end"}
       ]},
     "greet_friend": {"text": "{player}! Sit, sit. The furnace has been sulking all morning; perhaps it likes you better than me.",
@@ -28,6 +30,8 @@
         {"label": "Ask if she needs a hand with her stock.", "next": "errand_ask", "if": {"not_flag": "errand_hua_asked"}},
         {"label": "Bring the four Qi Gathering Pills Hua asked for.", "next": "errand_thanks", "if": {"has_items": {"qi_gathering_pill": 4}, "flag": "errand_hua_asked", "not_flag": "errand_hua_done"}, "effects": {"items": {"qi_gathering_pill": -4, "recipe_meridian_mending_pill": 1}, "set_flag": "errand_hua_done"}, "favor": 15},
         {"label": "Ask whether the furnace likes you today.", "next": "first_secret", "if": {"min_favor": 10, "not_flag": "secret_alchemist_hua"}, "effects": {"items": {"clear_well_tea": 1}, "set_flag": "secret_alchemist_hua"}},
+        {"label": "Hua, could you teach me the first method of cultivation?", "next": "teach_breathing", "if": {"not_knows_technique": "basic_breathing"}},
+        {"label": "I am new to all this. Where should I begin?", "next": "begin", "if": {"max_realm": "qi_refining"}, "effects": {"set_flag": "talked_alchemist_hua"}},
         {"label": "Farewell.", "next": "end"}
       ]},
     "craft": {"text": "Patience, a nose for scorched qi, and never trusting a pill you did not refine yourself. Learn the Alchemist profession at a workshop; formulas come from scrolls, and the good ones from friends.",
@@ -40,6 +44,10 @@
       "choices": [{"label": "Copy the formula. (3 days)", "next": "end", "days": 3, "favor": 5, "effects": {"items": {"recipe_meridian_mending_pill": 1}, "set_flag": "hua_formula"}}]},
     "commission": {"text": "Three days and three nights, and only one pill out of the batch survived. It is yours. Break through well, {player}; I like having friends who live long.",
       "choices": [{"label": "Thank you, Master Hua.", "next": "end", "days": 3, "favor": 3}]},
+    "teach_breathing": {"text": "Hua rolls her eyes but sets down the tongs. \"Every pill starts with a steady breath. In to the furnace behind your navel, out through the crown, and no staring at my herbs. The Basic Breathing Method. Do it ten days before you ask for a pill.\"",
+      "choices": [{"label": "Thank you. (Learn Basic Breathing Method)", "next": "greet", "days": 3, "favor": 5, "effects": {"learn_technique": "basic_breathing"}}]},
+    "begin": {"text": "\"Cultivate first, buy pills after,\" Hua says, stirring. \"Learn the breath, bring me herbs the market sells cheap, and watch what I do with them. Alchemy is only patience with a fire under it. Do not take a pill you cannot name.\"",
+      "choices": [{"label": "I see.", "next": "greet"}]},
     "errand_ask": {"text": "A buyer wants a dozen cheap pills and my furnace is busy with better things. Bring me four Qi Gathering Pills made with your own hands, and I will trade you a formula I do not use. The base recipe is easy; even you cannot ruin it.",
       "choices": [{"label": "I will make them.", "next": "end", "effects": {"set_flag": "errand_hua_asked"}}]},
     "errand_thanks": {"text": "Even, clean, no scorch. Not bad. Take this: Meridian Mending, a mild formula. Do not sell it to that rat Qian.",
