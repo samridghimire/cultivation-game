@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-22 [WU-602] Joining a sect opens a card: the sect's banner, your rank, its home, duty, perks and your first step.
+- 2026-11-22 [GUIDE-288] The sect treasury hint stops once you own the manual and tells you to study it instead.
+- 2026-11-22 [SIM-026] Balance tooling: the test player buys the ingredients a craft needs.
+- 2026-11-22 [C-414] Every start region has a villager who will teach you your first breathing method, and two more stalls sell the Iron Fist manual.
+- 2026-11-22 [GFX-240] Qingshi's pond jetty label sits beside the water, and the [E] prompt no longer covers a stall.
+- 2026-11-22 [SECT-031] Joining a sect and promotions now announce themselves to the UI (groundwork for sect cards).
+- 2026-11-22 [GUIDE-287] Once you join a sect or start cultivating, the "Talk to Elder Mo" goal moves on.
+- 2026-11-22 [WU-601] Friendship moments (the oath, a friend tending you, a gift left for you) wait until open screens close.
+- 2026-11-22 [GFX-238] Sworn friends are marked with a red cord on their People card and a red knot by their name.
 - 2026-11-22 [C-415] Sworn friends tend your wounds in their own words.
 - 2026-11-22 [WU-600] A gift a friend leaves you shows as a small card with the item and their note.
 - 2026-11-22 [WU-599] When a Sworn friend tends your wounds you see it: both of you seated, their words, the days of healing.
