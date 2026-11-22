@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-22 [WU-594] A Close friend's People card says what still brings them closer: tea until a point, then a liked gift on their birthday.
+- 2026-11-22 [FOLK-043] A Sworn friend tends your wounds when you arrive in their region injured, once a season.
+- 2026-11-22 [GFX-235] Becoming Sworn friends plays a short oath: both bow before an incense burner and a card names the bond.
+- 2026-11-22 [WU-595] The goal marker sits above a person's name instead of across it, and names keep off your own figure.
+- 2026-11-22 [GUIDE-285] The first goal always points somewhere you can walk to; Elder Mo is only suggested when Qingshi is near.
+- 2026-11-22 [FOLK-042] Sworn friend can now actually be reached: a liked birthday gift counts for a lot, and tea keeps helping a Close friend.
+- 2026-11-22 [GFX-233] When a friend you can't see grows closer, the banner's hearts pulse once.
+- 2026-11-22 [C-407] Saint Lan on the ridge now likes a flower you can pick there, so every start-region villager has a gift you can get.
+- 2026-11-22 [GUIDE-280] A new hint points to nearby places you have never been.
+- 2026-11-22 [WU-593] People cards count down to a friend's birthday, when a liked gift counts double.
 - 2026-11-22 [GFX-232] Withered Bone Marsh's empty lower-left corner now has bog pools and dead trees.
 - 2026-11-22 [FOLK-041] Close friends in the region you arrive in sometimes leave you a gift from their work, with a note.
 - 2026-11-22 [WU-592] Every line on the People cards fits inside its card.
