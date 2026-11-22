@@ -2153,9 +2153,9 @@ static func lend_yield(data: GameData, npc_id: String) -> Dictionary:
 
 
 ## FOLK-041: a Close friend who lives where you arrive may leave something from their work. Rolled once per cooldown
-## (the flag `drop_by_<id>` is set on a miss too). Returns {item, count, line} or {}. The gift is the yield of their
+## (the flag `drop_by_<id>` is set on a miss too). Rng-free: stable hashes of npc id and day. Returns {item, count, line} or {}. The gift is the yield of their
 ## lend-a-hand work, else one of their own liked items worth <= max_price stones. Family never.
-static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, rng: RandomNumberGenerator, favor: int) -> Dictionary:
+static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int) -> Dictionary:
 	var rules: Dictionary = visit_rules(data).get("drop_by", {})
 	if rules.is_empty() or not npc.alive or favor < int(rules.get("min_favor", 60)) or _is_player_family(c, npc.id):
 		return {}
@@ -2163,7 +2163,8 @@ static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, f
 	if today - int(flags.get(key, -100000)) < int(rules.get("cooldown_days", 30)):
 		return {}
 	flags[key] = today
-	if rng.randf() >= float(rules.get("chance", 0.5)):
+	var h := absi(hash("%s/%d/drop" % [npc.id, today]))
+	if float(h % 1000) / 1000.0 >= float(rules.get("chance", 0.5)):
 		return {}
 	var gift := lend_yield(data, npc.id)
 	if gift.is_empty():
@@ -2174,11 +2175,11 @@ static func drop_by_gift(c: CharacterData, npc: CharacterData, data: GameData, f
 				options.append(String(like))
 		if options.is_empty():
 			return {}
-		gift = {"item": options[rng.randi_range(0, options.size() - 1)], "count": 1}
+		gift = {"item": options[absi(hash("%s/%d/pick" % [npc.id, today])) % options.size()], "count": 1}
 	var lines: Array = data.npcs.get(npc.id, {}).get("drop_by_lines", [])
 	if lines.is_empty():
 		lines = rules.get("lines", [])
-	var line := "" if lines.is_empty() else String(lines[rng.randi_range(0, lines.size() - 1)])
+	var line := "" if lines.is_empty() else String(lines[absi(hash("%s/%d/line" % [npc.id, today])) % lines.size()])
 	return {"item": String(gift["item"]), "count": int(gift.get("count", 1)), "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
 
 

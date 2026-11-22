@@ -884,14 +884,14 @@ func _post_arrival_line() -> void:
 
 
 ## FOLK-041: named Close friends who live in this region may leave something from their work (once a month each).
-## Only villagers already at the favor bar draw from `rng`.
+## Rng-free (stable hashes), so it never shifts the shared rng.
 func receive_drop_by_gifts() -> void:
 	var min_favor := int(Folk.visit_rules(data).get("drop_by", {}).get("min_favor", 60))
 	for id: String in npcs:
 		var npc: CharacterData = npcs[id]
 		if not data.npcs.has(id) or int(npc_favor.get(id, 0)) < min_favor or Npcs.region_of(npc, data) != current_region:
 			continue
-		var gift := Folk.drop_by_gift(player, npc, data, world_flags, GameClock.total_days, rng, int(npc_favor.get(id, 0)))
+		var gift := Folk.drop_by_gift(player, npc, data, world_flags, GameClock.total_days, int(npc_favor.get(id, 0)))
 		if gift.is_empty() or not data.items.has(String(gift["item"])):
 			continue
 		player.add_item(String(gift["item"]), int(gift["count"]))

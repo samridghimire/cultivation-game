@@ -16,7 +16,7 @@ func test_close_friend_gives_item_and_sets_flag() -> void:
 	_always(gs)
 	gs.current_region = "qingshi_village"
 	gs.npc_favor["hunter_ma"] = 60
-	var gift: Dictionary = Folk.drop_by_gift(gs.player, gs.npcs["hunter_ma"], gs.data, gs.world_flags, 100, seeded_rng(1), 60)
+	var gift: Dictionary = Folk.drop_by_gift(gs.player, gs.npcs["hunter_ma"], gs.data, gs.world_flags, 100, 60)
 	assert_false(gift.is_empty())
 	assert_true(gs.data.items.has(gift["item"]))
 	assert_true(String(gift["line"]) != "")
@@ -29,12 +29,12 @@ func test_friend_below_bar_cooldown_and_family() -> void:
 	gs.start_session(new_character())
 	_always(gs)
 	var ma: CharacterData = gs.npcs["hunter_ma"]
-	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 100, seeded_rng(1), 40).is_empty(), "a Friend (40) does not")
-	assert_false(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 100, seeded_rng(1), 60).is_empty())
-	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 120, seeded_rng(1), 60).is_empty(), "within 30 days")
-	assert_false(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 130, seeded_rng(1), 60).is_empty(), "cooldown over")
+	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 100, 40).is_empty(), "a Friend (40) does not")
+	assert_false(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 100, 60).is_empty())
+	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 120, 60).is_empty(), "within 30 days")
+	assert_false(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 130, 60).is_empty(), "cooldown over")
 	gs.player.spouses.append("hunter_ma")
-	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 400, seeded_rng(1), 90).is_empty(), "family excluded")
+	assert_true(Folk.drop_by_gift(gs.player, ma, gs.data, gs.world_flags, 400, 90).is_empty(), "family excluded")
 	gs.end_session()
 
 
@@ -43,9 +43,21 @@ func test_seeded_rng_reproducible() -> void:
 	gs.start_session(new_character())
 	_always(gs)
 	var ma: CharacterData = gs.npcs["hunter_ma"]
-	var a: Dictionary = Folk.drop_by_gift(gs.player, ma, gs.data, {}, 100, seeded_rng(5), 70)
-	var b: Dictionary = Folk.drop_by_gift(gs.player, ma, gs.data, {}, 100, seeded_rng(5), 70)
+	var a: Dictionary = Folk.drop_by_gift(gs.player, ma, gs.data, {}, 100, 70)
+	var b: Dictionary = Folk.drop_by_gift(gs.player, ma, gs.data, {}, 100, 70)
 	assert_eq(a, b)
+	gs.end_session()
+
+
+func test_arrival_hook_leaves_rng_untouched() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	_always(gs)
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["hunter_ma"] = 70
+	var state: int = gs.rng.state
+	gs.receive_drop_by_gifts()
+	assert_eq(gs.rng.state, state, "no rng draws")
 	gs.end_session()
 
 
