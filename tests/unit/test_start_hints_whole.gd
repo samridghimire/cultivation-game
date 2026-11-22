@@ -48,3 +48,23 @@ func test_elder_mo_short_forms() -> void:
 func test_interrogative_cut_is_dangling() -> void:
 	for w in ["where", "what", "how", "who", "when", "why", "on", "from", "into", "about", "your", "his", "her", "their"]:
 		assert_true(Guidance.DANGLING_WORDS.has(w) or Guidance.STOP_WORDS.has(w), w)
+
+
+## GUIDE-285: the first goal and hint never send a newcomer to Elder Mo when his region is closed or over 3 days away.
+func test_first_goal_is_walkable() -> void:
+	for region in STARTS:
+		var got := _lines_for(region)
+		var gs: Node = _root().get_node("GameState")
+		var c: CharacterData = gs.player
+		var near := Guidance.elder_mo_walkable(c, gs.data, region)
+		if near:
+			continue
+		var texts: Array = [String(got["raw_goal"])]
+		texts.append_array(got["hints"])
+		for line: String in texts:
+			assert_false(line.contains("Elder Mo"), "%s: names unreachable Elder Mo: %s" % [region, line])
+		assert_false(String(got["raw_goal"]).contains("opens at"), "%s: goal says opens at: %s" % [region, got["raw_goal"]])
+	var gs2: Node = _root().get_node("GameState")
+	var c2 := CharacterFactory.create("Newcomer", gs2.data, seeded_rng(7))
+	assert_true(Guidance.elder_mo_walkable(c2, gs2.data, gs2.data.start_region))
+	assert_true(Guidance.elder_mo_walkable(c2, gs2.data, ""))

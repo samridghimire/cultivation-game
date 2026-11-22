@@ -7532,7 +7532,8 @@ func test_journal_drops_teacher_errand_once_done() -> void:
 ## GUIDE-260: a fight in the goal's region within 2 days of the nearest one leads the fight list.
 func test_goal_region_names_the_first_goal_region() -> void:
 	var c := CharacterData.new()
-	assert_eq(Guidance.goal_region(c, data(), {}, "fallen_star_market"), "qingshi_village")
+	assert_eq(Guidance.goal_region(c, data(), {}, "misty_forest"), "qingshi_village")
+	assert_eq(Guidance.goal_region(c, data(), {}, "fallen_star_market"), "", "Elder Mo is 10 days away: not the goal (GUIDE-285)")
 	assert_eq(Guidance.goal_region(c, data(), {}, "qingshi_village"), "", "already there")
 	assert_eq(Guidance.goal_region(c, data(), {}, ""), "", "no region")
 	var vet := _fighter()
@@ -7568,9 +7569,9 @@ func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
 	var d := data()
 	var far_roamer := {"text": "Easy fight: A Wild Boar roams Misty Forest today, 9 days away (99 in 100)", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "stones": 0, "short": "Wild Boar in Misty Forest (9 days)", "days": 9}
 	var found: Array[Dictionary] = [far_roamer.duplicate()]
-	var days := Guidance.route_days(c, d, "fallen_star_market", "qingshi_village")
+	var days := Guidance.route_days(c, d, "misty_forest", "qingshi_village")
 	found[0]["days"] = days - 1  # within FAIR_FIGHT_GOAL_EXTRA_DAYS of the goal region
-	Guidance._goal_way_fight(found, c, d, {}, c.age_days, "fallen_star_market", true)
+	Guidance._goal_way_fight(found, c, d, {}, c.age_days, "misty_forest", true)
 	assert_eq(found.size(), 2, "the goal-region fight joined")
 	assert_eq(String(found[0]["kind"]), "goal_way")
 	assert_true("Qingshi Village, on the way to Elder Mo (" in String(found[0]["text"]), String(found[0]["text"]))
@@ -7581,12 +7582,12 @@ func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
 	# A nearer fight (more than 2 days closer) keeps the lead.
 	var near: Array[Dictionary] = [far_roamer.duplicate()]
 	near[0]["days"] = 0
-	Guidance._goal_way_fight(near, c, d, {}, c.age_days, "fallen_star_market", true)
+	Guidance._goal_way_fight(near, c, d, {}, c.age_days, "misty_forest", true)
 	assert_eq(near.size(), 1)
 	# Rating budget spent: nothing added.
 	var spent: Array[Dictionary] = [far_roamer.duplicate()]
 	spent[0]["days"] = days
-	Guidance._goal_way_fight(spent, c, d, {}, c.age_days, "fallen_star_market", false)
+	Guidance._goal_way_fight(spent, c, d, {}, c.age_days, "misty_forest", false)
 	assert_eq(spent.size(), 1)
 
 
@@ -7594,13 +7595,13 @@ func test_goal_way_fight_replaces_the_same_away_entry() -> void:
 	# REVIEW (GUIDE-260): an away-explore line for the goal-region foe is not listed twice.
 	var c := _fighter()
 	var d := data()
-	var days := Guidance.route_days(c, d, "fallen_star_market", "qingshi_village")
+	var days := Guidance.route_days(c, d, "misty_forest", "qingshi_village")
 	var probe: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "days": days}]
-	Guidance._goal_way_fight(probe, c, d, {}, c.age_days, "fallen_star_market", true)
+	Guidance._goal_way_fight(probe, c, d, {}, c.age_days, "misty_forest", true)
 	assert_eq(String(probe[0]["kind"]), "goal_way")
 	var dup := {"text": "Fair fight: same foe", "chance": 0.6, "kind": "explore", "enemy_id": String(probe[0]["enemy_id"]), "days": days}
 	var found: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "days": days}, dup]
-	Guidance._goal_way_fight(found, c, d, {}, c.age_days, "fallen_star_market", true)
+	Guidance._goal_way_fight(found, c, d, {}, c.age_days, "misty_forest", true)
 	assert_eq(found.size(), 2, "goal line replaced the away line")
 	assert_eq(String(found[0]["kind"]), "goal_way")
 	assert_eq(String(found[1]["kind"]), "roamer")
@@ -7612,7 +7613,7 @@ func test_goal_way_fight_unchanged_when_in_goal_region_or_goal_done() -> void:
 		assert_false("on the way to" in String(f["text"]))
 	var vet := _fighter()
 	vet.realm_index = 2
-	for f: Dictionary in Guidance.fair_fights(vet, data(), {}, vet.age_days, "fallen_star_market"):
+	for f: Dictionary in Guidance.fair_fights(vet, data(), {}, vet.age_days, "misty_forest"):
 		assert_false("on the way to" in String(f["text"]))
 
 

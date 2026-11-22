@@ -1051,6 +1051,9 @@ static func short_goal(goal_line: String, data: GameData) -> String:
 	line = line.replace("Goal: Talk to ", "Goal: See ")
 	if line.length() <= SHORT_GOAL_CHARS:
 		return line
+	# GUIDE-285: the manual step ("...: buy Cloud-Parting Palm at the Pedlar, 40 stones") lives in the hints; the row keeps the goal whole.
+	if line.contains("Learn your first technique: "):
+		return line.get_slice("Learn your first technique", 0) + "Learn your first technique"
 	# GUIDE-284: a closed road's "(opens at Core Formation)" is the point of the line: keep it whole (the goal row wraps to two rows).
 	if line.length() <= SHORT_GOAL_CHARS + 14 and line.ends_with(")") and line.contains(" (opens at "):
 		return line
@@ -4781,7 +4784,8 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 	var out: PackedStringArray = []
 	var breathing := c.techniques.is_empty() and data.techniques.has("basic_breathing")
 	var technique_done := false
-	if not flags.get(ELDER_MO_FLAG, false):
+	var mo_near := elder_mo_walkable(c, data, region_id)
+	if not flags.get(ELDER_MO_FLAG, false) and mo_near:
 		if breathing:
 			out.append("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.")
 			technique_done = true
@@ -4828,7 +4832,7 @@ static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary,
 		if work != "":
 			out.append(work)
 	if c.techniques.is_empty() and not technique_done:
-		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing else TECHNIQUE_HINT)
+		out.append("Elder Mo in Qingshi Village teaches a breathing technique for free." if breathing and mo_near else TECHNIQUE_HINT)
 	var sect := _sect_hint(c, data, region_id)
 	if sect != "":
 		out.append(sect)
@@ -6282,10 +6286,28 @@ static func hud_goal_text(c: CharacterData, data: GameData, flags: Dictionary, r
 				return String(row["text"])
 		var lines := goals(c, data, flags, clan, density, region_id, today)
 		return lines[0] if not lines.is_empty() else ""
-	for goal in first_goals(c, data, flags):
-		if not goal["done"]:
-			return _with_manual_step(c, data, flags, region_id, String(goal["text"]))
+	var goal_rows := first_goals(c, data, flags)
+	for i in goal_rows.size():
+		if goal_rows[i]["done"]:
+			continue
+		# GUIDE-285: never send a Mortal to Elder Mo when the road there is closed or long; show the next reachable goal.
+		if i == 0 and not elder_mo_walkable(c, data, region_id):
+			continue
+		return _with_manual_step(c, data, flags, region_id, String(goal_rows[i]["text"]))
 	return ""
+
+
+## GUIDE-285: how many travel days away Elder Mo's region may be for goals and hints to send the player to him.
+const ELDER_MO_MAX_DAYS := 3
+
+
+## GUIDE-285: true when the player can walk from `region_id` to Elder Mo's region now, in at most ELDER_MO_MAX_DAYS
+## (always true at home, or when no region is known).
+static func elder_mo_walkable(c: CharacterData, data: GameData, region_id: String) -> bool:
+	if region_id == "" or region_id == data.start_region or not data.regions.has(region_id):
+		return true
+	var days := route_days(c, data, region_id, data.start_region)
+	return days >= 0 and days <= ELDER_MO_MAX_DAYS
 
 
 ## GUIDE-275: the road goal "Walk to Misty Forest" is skipped for a wanderer away from the start region whose first hop toward it is
