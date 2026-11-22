@@ -314,6 +314,75 @@ static func promotion_summary(c: CharacterData, data: GameData) -> Dictionary:
 	return out
 
 
+## SECT-033: one row per rank of the player's sect: {name, current, reached, needs, perks}. `needs` lists what
+## the rank asks (contribution, realm, "trial vs <foe>"); `perks` its stipend, duty and treasury unlocks. [] for rogues.
+static func ladder(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if c.is_rogue() or not data.sects.has(c.sect["id"]):
+		return out
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var current := int(c.sect["rank"])
+	for i in sect.ranks.size():
+		var def: Dictionary = sect.ranks[i]
+		var needs := PackedStringArray()
+		if i > current:
+			var need := int(def.get("contribution", 0))
+			if need > 0:
+				needs.append("earn %d contribution" % need)
+			var min_realm := data.realm_index_of(String(def.get("min_realm", "mortal")))
+			var min_stage := int(def.get("min_stage", 0)) if min_realm > 0 else 0
+			if min_realm > 0:
+				needs.append("reach %s" % (data.realms[min_realm].stage_label(min_stage) if min_stage > 0 else data.realms[min_realm].name))
+			var trial := String(def.get("trial", ""))
+			if trial != "":
+				needs.append("trial vs %s" % String(data.enemies.get(trial, {}).get("name", trial)))
+		var perks := PackedStringArray()
+		var pay: Dictionary = def.get("stipend", {})
+		var pay_parts := PackedStringArray()
+		if int(pay.get("spirit_stones", 0)) > 0:
+			pay_parts.append("%d spirit stones" % int(pay["spirit_stones"]))
+		for item_id: String in pay.get("items", {}):
+			pay_parts.append("%d %s" % [int(pay["items"][item_id]), String(data.items.get(item_id, {}).get("name", item_id))])
+		if not pay_parts.is_empty():
+			perks.append("stipend: %s a month" % ", ".join(pay_parts))
+		if int(def.get("monthly_duty", 0)) > 0:
+			perks.append("duty: %d contribution a month" % int(def["monthly_duty"]))
+		for entry: Dictionary in sect.shop:
+			if int(entry.get("min_rank", 0)) == i and i > 0:
+				perks.append("can buy %s" % String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
+		out.append({"name": sect.rank_name(i), "current": i == current, "reached": i <= current, "needs": needs, "perks": perks})
+	return out
+
+
+## SECT-033: this month at a glance: {duty, progress, days_left, stipend, lecture, missions_ready, missions_total,
+## balance, claimable}. `lecture` is "" with none, else its name + " today" or " attended"; `claimable` the cheapest
+## (max 3) treasury items the balance covers now. {} for rogues.
+static func month_status(c: CharacterData, data: GameData, total_days: int, flags: Dictionary = {}) -> Dictionary:
+	if c.is_rogue() or not data.sects.has(c.sect["id"]):
+		return {}
+	var lecture := lecture_def(c, data)
+	var lecture_text := ""
+	if not lecture.is_empty():
+		var name := String(lecture.get("name", "the lecture"))
+		lecture_text = "%s attended" % name if check_lecture(c, data, total_days) != "" else "%s today" % name
+	var ids := available_missions(c, data, flags)
+	var ready := 0
+	for id in ids:
+		if check_mission(c, data, id, flags) == "":
+			ready += 1
+	var balance := contribution_balance(c)
+	var options: Array[Dictionary] = []
+	for entry: Dictionary in shop_items(c, data):
+		if check_purchase(c, data, String(entry["item_id"])) == "":
+			options.append(entry)
+	options.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["contribution"]) < int(b["contribution"]))
+	var claimable := PackedStringArray()
+	for entry: Dictionary in options.slice(0, 3):
+		claimable.append(String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
+	return {"duty": monthly_duty(c, data), "progress": duty_progress(c), "days_left": duty_days_left(c), "stipend": stipend(c, data),
+		"lecture": lecture_text, "missions_ready": ready, "missions_total": ids.size(), "balance": balance, "claimable": claimable}
+
+
 ## Contribution `c` owes each month at their rank (0 = none).
 static func monthly_duty(c: CharacterData, data: GameData) -> int:
 	if c.is_rogue():
