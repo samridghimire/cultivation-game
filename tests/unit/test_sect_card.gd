@@ -71,6 +71,33 @@ func test_promotion_card() -> void:
 	hud.free()
 
 
+## Review: a promotion from the mission board (which stays open) waits for it to close, then takes focus.
+func test_promotion_waits_for_open_menu() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var card: SectCard = hud.get("_sect_card")
+	var menu: Control = hud.get("_choice_menu")
+	gs.player.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0}
+	menu.visible = true
+	EventBus.sect_promoted.emit("azure_cloud_sect", 1)
+	await _frames()
+	assert_false(card.visible, "the promotion card waits while a menu is open")
+	menu.visible = false
+	hud.call("_update_modal")
+	await _frames()
+	assert_true(card.visible, "it plays once the menu closes")
+	assert_true(card.button().has_focus())
+	card.close()
+	gs.end_session()
+	root.remove_child(hud)
+	hud.free()
+
+
 func test_perk_line() -> void:
 	assert_eq(SectCard.perk_line("gather qi x1.5"), "Gather qi 1.5x faster")
 	assert_eq(SectCard.perk_line("hear Elder Feng's lecture each month"), "Hear Elder Feng's lecture each month")

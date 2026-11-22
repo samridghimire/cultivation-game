@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 2dcbabd
+Last reviewed commit: 3c79a6e
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2455,3 +2455,19 @@ Last reviewed commit: 2dcbabd
   - C-414 OK (dialogue teachers for 5 starts, Iron Fist manual at two stalls; Misty Forest still lacks a local mortal style,
     worker-flagged). GUIDE-287 OK (past_elder_mo; sworn_tend_line skips family, closing the last review's note). WU-599/WU-600
     OK (gift card skips on confirm only while visible, never takes focus). GFX-240, C-415, SIM-025: OK.
+- 2026-11-22 (reviewer): reviewed 2dcbabd..3c79a6e (SIM-026, GUIDE-288, WU-602, WU-603, RV-SECT031, GFX-241, SECT-032,
+  GUIDE-286, GFX-242, WU-604; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no new binary
+  assets (court drill is code-drawn); no SAVE_VERSION bump needed (`sect.reported` rides in the saved sect dict, a missing
+  key means already reported, from_dict reads it).
+  - WU-603 bug (fixed): the promotion card opened at once on `sect_promoted`. Promotions mostly come from `take_mission`,
+    and the mission board stays open after a mission and re-grabs focus, so the card sat over the board without focus
+    (gamepad presses went to the board). Promotions now go through the WU-601 moments queue like the WU-604 join/report
+    cards, with the summary captured at emit time. Test `test_promotion_waits_for_open_menu`. The `--sect-promote` shot
+    clears the queued join card first (WU-604 had queued it, so its `pcard.close()` no longer skipped it).
+  - RV-SECT031 OK: `_check_sect_rank` on player_changed emits once for any rank rise; synced on join, start and load.
+  - SECT-032 OK (validation, hall option, hint, tests). Note: the report hint is appended after the due-commission line,
+    not first as the spec asked; the hints-player sim has no 'report' branch (worker Follow-up).
+  - GUIDE-286 note: `_entry_choice_open`'s doc says entry nodes count, but the code only accepts nodes linked from another
+    node; no teaching choice sits on an entry node today, so latent only.
+  - WU-602, WU-604, GUIDE-288, GFX-241, GFX-242, SIM-026: OK. Not rendered by me: WU-604 Blood Lotus report card (worker
+    Follow-up), GFX-241, GFX-242.

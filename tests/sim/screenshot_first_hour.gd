@@ -435,6 +435,7 @@ func _start() -> void:
 			c.alignment = 0
 			c.realm_index = maxi(c.realm_index, 1)
 			gs.join_sect("azure_cloud_sect")
+			(hud.get("_pending_moments") as Array).clear()  # skip the queued join card (WU-604)
 			pcard.close()
 			Sects.add_contribution(c, gs.data, 100000)
 			gs.call("_post_promotion"), "close": pcard.close})

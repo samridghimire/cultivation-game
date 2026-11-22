@@ -1932,6 +1932,8 @@ func _drain_moments() -> void:
 			_play_sect_join(String(m["sect_id"]))
 		"sect_report":
 			_play_sect_report(String(m["sect_id"]), String(m.get("line", "")), m.get("items", {}))
+		"sect_promoted":
+			_play_sect_promoted(String(m["sect_id"]), m.get("summary", {}), bool(m.get("has_next", false)))
 	if not _pending_moments.is_empty():
 		_drain_moments.call_deferred()
 
@@ -2183,12 +2185,19 @@ func _play_sect_report(sect_id: String, line: String, items: Dictionary) -> void
 func _on_sect_promoted(sect_id: String, _rank: int) -> void:
 	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
 		return
+	# Review: queued like the join card, so it never opens over the still-open mission board (which keeps focus).
+	# The summary is captured now so two queued promotions each show their own rank.
+	_pending_moments.append({"kind": "sect_promoted", "sect_id": sect_id,
+		"summary": Sects.promotion_summary(GameState.player, GameState.data),
+		"has_next": Sects.next_rank(GameState.player, GameState.data) >= 0})
+	_update_modal()
+
+
+func _play_sect_promoted(sect_id: String, summary: Dictionary, has_next: bool) -> void:
+	if GameState.player.is_rogue():
+		return
 	var def: SectDef = GameState.data.sects[sect_id]
-	var color := UIStyle.ACCENT
-	if String(def.robe_color) != "":
-		color = Color(String(def.robe_color))
-	var summary := Sects.promotion_summary(GameState.player, GameState.data)
-	_sect_card.open_promotion(def.name, summary, Sects.next_rank(GameState.player, GameState.data) >= 0, color)
+	_sect_card.open_promotion(def.name, summary, has_next, _sect_color(sect_id))
 	_update_modal()
 
 
