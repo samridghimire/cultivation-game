@@ -1283,6 +1283,8 @@ func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 				over_pos.append(node.position)
 			if not is_npc and not node.highlighted and LabelFade.hidden_by_chip(r, chip):
 				a = 0.0
+			if is_npc and not node.highlighted:  # WU-597: a name under the [E] chip fades too
+				a = minf(a, LabelFade.chip_alpha(r, chip))
 			if not is_npc:
 				place_nodes.append(node)
 		alphas[node] = a

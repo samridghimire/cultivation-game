@@ -21,6 +21,11 @@ static func hidden_by_chip(label_rect: Rect2, chip_rect: Rect2) -> bool:
 	return chip_rect.size != Vector2.ZERO and label_rect.intersects(chip_rect)
 
 
+## WU-597: a walking or standing person's name under the [E] chip fades to 35% (place labels hide, see above).
+static func chip_alpha(label_rect: Rect2, chip_rect: Rect2) -> float:
+	return OVER_PLAYER_ALPHA if hidden_by_chip(label_rect, chip_rect) else 1.0
+
+
 ## WU-529: alphas for a set of labels. A label clear of the player's body stays 1; of those over the body only the
 ## one whose owner is nearest the player shows (faded), the rest hide until they clear.
 static func keep_nearest(rects: Array[Rect2], owner_pos: Array[Vector2], player_pos: Vector2) -> Array[float]:

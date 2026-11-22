@@ -51,3 +51,13 @@ func test_labels_draw_above_the_player() -> void:
 	node.queue_free()
 	player.queue_free()
 	assert_true(z > player.z_index, "label z %d above the player" % z)
+
+
+## WU-597: a label overlapping the [E] chip rect fades (people) or hides (places); one 4 px away is untouched.
+func test_chip_fades_overlapping_names_only() -> void:
+	var chip := Rect2(100, 100, 190, 30)
+	assert_eq(LabelFade.chip_alpha(Rect2(120, 90, 80, 16), chip), 0.35)
+	assert_eq(LabelFade.chip_alpha(Rect2(120, 80, 80, 16), chip), 1.0)  # ends 4 px above the chip
+	assert_eq(LabelFade.chip_alpha(Rect2(120, 90, 80, 16), Rect2()), 1.0)
+	assert_true(LabelFade.hidden_by_chip(Rect2(120, 90, 80, 16), chip))
+	assert_false(LabelFade.hidden_by_chip(Rect2(120, 80, 80, 16), chip))
