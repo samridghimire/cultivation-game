@@ -2258,6 +2258,15 @@ static func tend_injury(c: CharacterData, npc: CharacterData, data: GameData, fl
 	return {"npc": npc.id, "days_healed": healed, "line": line.replace("{player}", c.name).replace("{name}", npc.name)}
 
 
+## WU-599: the summary the time-skip card shows when a Sworn friend tends the player's wounds (2.5 s in all).
+static func tend_card(name: String, days_healed: int, line: String, npc_id: String) -> Dictionary:
+	var lines: Array = []
+	if line != "":
+		lines.append(line)
+	lines.append("%d day%s of healing" % [days_healed, "" if days_healed == 1 else "s"])
+	return {"card_title": "%s tends your wounds" % name, "days": 0, "lines": lines, "tea_npc": npc_id, "hold": 1.75}
+
+
 static func validate_tend(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var r: Dictionary = visit_rules(data).get("tend", {})

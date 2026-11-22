@@ -76,10 +76,14 @@ func _init() -> void:
 func show_skip(summary: Dictionary, plays_cycle: bool = false) -> void:
 	if _tween != null:
 		_tween.kill()
-	_title.text = "%s... %s" % [summary.get("title", "Time passes"), Calendar.format_duration(int(summary.get("days", 0)))]
+	if summary.has("card_title"):  # WU-599: a card with its own title and no duration
+		_title.text = String(summary["card_title"])
+	else:
+		_title.text = "%s... %s" % [summary.get("title", "Time passes"), Calendar.format_duration(int(summary.get("days", 0)))]
 	_lines.text = "\n".join(PackedStringArray(summary.get("lines", [])))
 	_lines.modulate.a = 0.0
 	_bar.value = 0.0
+	_bar.visible = not summary.has("card_title")
 	visible = true
 	# GFX-217: a lighter dim while the world plays its day cycle, so it shows through
 	_dim.color.a = 0.25 if plays_cycle else 0.45
@@ -96,7 +100,7 @@ func show_skip(summary: Dictionary, plays_cycle: bool = false) -> void:
 	_tween = create_tween()
 	_tween.tween_property(_bar, "value", 1.0, FILL_SECONDS)
 	_tween.tween_property(_lines, "modulate:a", 1.0, 0.15)
-	_tween.tween_interval(HOLD_SECONDS)
+	_tween.tween_interval(float(summary.get("hold", HOLD_SECONDS)))
 	_tween.tween_callback(close)
 
 

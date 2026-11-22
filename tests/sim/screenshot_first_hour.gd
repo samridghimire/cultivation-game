@@ -331,6 +331,11 @@ func _start() -> void:
 			for id in a.substr(6).split(",", false):
 				_tea_shots(gs, id)
 			special = true
+	for a in OS.get_cmdline_user_args():  # WU-599: --tend=<npc_id> shoots the "tends your wounds" card (favor 90, injured)
+		if a.begins_with("--tend="):
+			for id in a.substr(7).split(",", false):
+				_tend_shots(gs, id)
+			special = true
 	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
 		if a.begins_with("--tier-up="):
 			for id in a.substr(10).split(",", false):  # WU-589: a comma list, like --lend/--tea
@@ -1079,6 +1084,30 @@ func _tea_shots(gs: Node, npc_id: String) -> void:
 		gs.call_on(npc_id)
 		hud.get("_banner").visible = false  # WU-589: a queued banner would make the capture wait until the card is gone
 		_teleport_player(world.get_node("Player").position),
+		"settle": 40, "close": skip.close})
+
+
+## WU-599: a Sworn friend tends the player's wounds: the card with the pair seated (tend_<id>.png).
+func _tend_shots(gs: Node, npc_id: String) -> void:
+	var skip: Control = hud.get("_time_skip")
+	shots.append({"name": "tend_" + npc_id, "open": func() -> void:
+		hud.get("_banner").visible = false
+		_clear_bubble()
+		var npc: Node2D = null
+		for n in world.get_tree().get_nodes_in_group("npc"):
+			if n.get("npc_id") == npc_id:
+				npc = n
+		if npc == null:
+			push_error("tend shot: no %s in the region" % npc_id)
+			return
+		skip.close()
+		gs.npc_favor[npc_id] = 90
+		gs.player.injuries["broken_ribs"] = 20
+		gs.world_flags.erase("tended_" + npc_id)
+		_teleport_player(npc.position + Vector2(-120, 0))
+		hud.get("_prompt").visible = false
+		gs.receive_sworn_tending()
+		hud.get("_banner").visible = false,
 		"settle": 40, "close": skip.close})
 
 

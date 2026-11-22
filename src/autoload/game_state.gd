@@ -903,6 +903,10 @@ func receive_drop_by_gifts() -> void:
 		EventBus.friend_gift_left.emit(id, String(gift["item"]), count, gift_line)
 
 
+## WU-599: the line of the latest friend tending (read by the HUD when friend_tended fires).
+var last_tend_line: String = ""
+
+
 ## FOLK-043: a Sworn friend who lives where you arrive tends your injuries (once per 90 days each).
 func receive_sworn_tending() -> void:
 	if player.injuries.is_empty():
@@ -917,6 +921,7 @@ func receive_sworn_tending() -> void:
 			continue
 		var text := String(res["line"])
 		EventBus.post(("%s (%d days of healing)" % [text, int(res["days_healed"])]).strip_edges(), "progress")
+		last_tend_line = text  # WU-599: the card shows the friend's line
 		EventBus.friend_tended.emit(id, int(res["days_healed"]))
 		if player.injuries.is_empty():
 			break

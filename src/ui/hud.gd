@@ -335,6 +335,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.friend_scene.connect(_on_friend_scene)
+	EventBus.friend_tended.connect(_on_friend_tended)
 	EventBus.lesson_taught.connect(_on_lesson_taught)
 	_banner = Banner.new()
 	add_child(_banner)
@@ -1981,6 +1982,14 @@ func _on_time_skipped(days: int, summary: Dictionary) -> void:
 	if _combat_report.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
 		return
 	_show_time_skip(summary)
+
+
+## WU-599: a Sworn friend tends the player: the tea card pattern, skippable, never pausing time.
+func _on_friend_tended(npc_id: String, days_healed: int) -> void:
+	if _combat_report.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _dialogue.visible or _respawn.visible or _death_screen.visible:
+		return
+	var npc: CharacterData = GameState.npcs.get(npc_id)
+	_show_time_skip(Folk.tend_card(npc.name if npc != null else npc_id, days_healed, GameState.last_tend_line, npc_id))
 
 
 func _show_time_skip(summary: Dictionary) -> void:
