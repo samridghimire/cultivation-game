@@ -4817,13 +4817,18 @@ static func headman_work_hint(c: CharacterData, data: GameData, flags: Dictionar
 	return "Headman Zhou has work today: %s (%s)." % [String(best["name"]), terms]
 
 
+## GUIDE-287: the Elder Mo goal and hint are over once you talked to him, reached Qi Refining or joined a sect. Pure.
+static func past_elder_mo(c: CharacterData, flags: Dictionary) -> bool:
+	return bool(flags.get(ELDER_MO_FLAG, false)) or c.realm_index >= 1 or not c.is_rogue()
+
+
 ## First-steps pointers for Mortal and Qi Refining players, most useful first.
 static func _newcomer_hints(c: CharacterData, data: GameData, flags: Dictionary, region_id: String, today: int = -1, people: Dictionary = {}, favor: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
 	var breathing := c.techniques.is_empty() and data.techniques.has("basic_breathing")
 	var technique_done := false
 	var mo_near := elder_mo_walkable(c, data, region_id)
-	if not flags.get(ELDER_MO_FLAG, false) and mo_near:
+	if not past_elder_mo(c, flags) and mo_near:
 		if breathing:
 			out.append("Ask Elder Mo in Qingshi Village where to begin; he also teaches a breathing technique.")
 			technique_done = true
@@ -4930,7 +4935,7 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 	var cook_where := workshop_place(data, "qingshi_village")
 	var fish_or_farm := "Catch a fish" + (" at %s" % fish_where if fish_where != "" else "") + ", or bring in a harvest" + (" at %s" % field_where if field_where != "" else "")
 	var rows: Array = [
-		["Talk to Elder Mo in Qingshi Village", bool(flags.get(ELDER_MO_FLAG, false))],
+		["Talk to Elder Mo in Qingshi Village", past_elder_mo(c, flags)],
 		["Learn your first technique", not c.techniques.is_empty()],
 		["Pick something by the path (herbs grow along the Qingshi roads)", stage_3 or LifeStats.get_stat(c, "foraged") >= 1],
 		[fish_or_farm, stage_3 or not c.catch_log.is_empty() or LifeStats.get_stat(c, "harvests") >= 1],

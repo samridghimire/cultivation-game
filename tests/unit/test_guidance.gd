@@ -7566,6 +7566,9 @@ func test_goal_way_fight_works_for_a_later_goal() -> void:
 
 func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
 	var c := _fighter()
+	c.sect = {}  # GUIDE-287: Elder Mo's goal only stands for a mortal rogue
+	c.realm_index = 0
+	c.stage = 0
 	var d := data()
 	var far_roamer := {"text": "Easy fight: A Wild Boar roams Misty Forest today, 9 days away (99 in 100)", "chance": 0.99, "kind": "roamer", "enemy": "Wild Boar", "stones": 0, "short": "Wild Boar in Misty Forest (9 days)", "days": 9}
 	var found: Array[Dictionary] = [far_roamer.duplicate()]
@@ -7594,6 +7597,9 @@ func test_goal_way_fight_prefers_the_goal_region_boar() -> void:
 func test_goal_way_fight_replaces_the_same_away_entry() -> void:
 	# REVIEW (GUIDE-260): an away-explore line for the goal-region foe is not listed twice.
 	var c := _fighter()
+	c.sect = {}  # GUIDE-287: Elder Mo's goal only stands for a mortal rogue
+	c.realm_index = 0
+	c.stage = 0
 	var d := data()
 	var days := Guidance.route_days(c, d, "misty_forest", "qingshi_village")
 	var probe: Array[Dictionary] = [{"text": "x", "chance": 0.99, "kind": "roamer", "days": days}]
@@ -7977,3 +7983,17 @@ func test_azure_peak_sells_a_cheap_first_style() -> void:
 		if String(p.get("type", "")) == "merchant" and Items.merchant_sells(d, d.items["manual_iron_fist"], p.get("stock_tags", []), int(p.get("max_price", 0))):
 			found = true
 	assert_true(found, "Azure Peak has a merchant selling manual_iron_fist")
+
+
+## GUIDE-287: a sect disciple or Qi Refining rogue is not sent back to Elder Mo.
+func test_past_elder_mo() -> void:
+	var c := _fresh()
+	assert_false(Guidance.first_goals(c, data(), {})[0]["done"])
+	assert_true(_has(Guidance._newcomer_hints(c, data(), {}, "qingshi_village"), "where to begin"))
+	c.sect = {"id": data().sects.keys()[0], "rank": 0, "contribution": 0, "spent": 0}
+	assert_true(Guidance.first_goals(c, data(), {})[0]["done"], "sect mortal")
+	assert_false(_has(Guidance._newcomer_hints(c, data(), {}, "qingshi_village"), "where to begin"))
+	assert_false(Guidance.first_goals(c, data(), {})[1]["done"], "technique row unchanged")
+	c.sect = {}
+	c.realm_index = 1
+	assert_true(Guidance.first_goals(c, data(), {})[0]["done"], "Qi Refining rogue")

@@ -123,3 +123,14 @@ func test_friend_signals_fire_once() -> void:
 	assert_true(int(gifts[0][2]) >= 1)
 	assert_true(String(gifts[0][3]) != "")
 	gs.end_session()
+
+
+## GUIDE-287: family is never tended, so the People card does not promise it.
+func test_sworn_tend_line_skips_family() -> void:
+	var gs := _root().get_node("GameState")
+	gs.start_session(new_character())
+	var ma: CharacterData = gs.npcs["hunter_ma"]
+	assert_true(Folk.sworn_tend_line(gs.data, ma, {}, 500, 90, gs.player) != "")
+	gs.player.parents.append("hunter_ma")
+	assert_eq(Folk.sworn_tend_line(gs.data, ma, {}, 500, 90, gs.player), "")
+	gs.end_session()

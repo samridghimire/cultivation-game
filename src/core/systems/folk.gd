@@ -664,7 +664,7 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 	var road := road_to_sworn(data, npc, favor)
 	if road != "":
 		return road
-	var tend := sworn_tend_line(data, npc, flags, today, favor)  # WU-596
+	var tend := sworn_tend_line(data, npc, flags, today, favor, c)  # WU-596
 	if tend != "":
 		return tend
 	if not likes.is_empty():
@@ -678,9 +678,11 @@ static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flag
 
 ## WU-596: what a Sworn friend (favor >= tend.min_favor) does for you: "Sworn friend: tends your wounds once a season (ready)"
 ## or "(in N days)", from folk_visits.tend. "" for anyone else or when the visit is off. Pure.
-static func sworn_tend_line(data: GameData, npc: CharacterData, flags: Dictionary, today: int, favor: int) -> String:
+static func sworn_tend_line(data: GameData, npc: CharacterData, flags: Dictionary, today: int, favor: int, player: CharacterData = null) -> String:
 	var rules: Dictionary = visit_rules(data).get("tend", {})
 	if rules.is_empty() or npc == null or favor < int(rules.get("min_favor", 85)):
+		return ""
+	if player != null and _is_player_family(player, npc.id):  # GUIDE-287: tending skips family
 		return ""
 	var wait := int(rules.get("cooldown_days", 90)) - (today - int(flags.get("tended_" + npc.id, -100000)))
 	var tail := "ready" if wait <= 0 else "in %d day%s" % [wait, "" if wait == 1 else "s"]
