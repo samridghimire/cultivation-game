@@ -330,7 +330,11 @@ func _start() -> void:
 	for a in OS.get_cmdline_user_args():  # GFX-225: --tier-up=<npc_id> shoots the hearts after a lend crosses a tier
 		if a.begins_with("--tier-up="):
 			for id in a.substr(10).split(",", false):  # WU-589: a comma list, like --lend/--tea
-				_tier_up_shots(gs, id)
+				_tier_up_shots(gs, id, false)
+			special = true
+		elif a.begins_with("--tier-up-far="):  # GFX-233: the friend 700 px away (off screen): the banner icon pulses instead of hearts
+			for id in a.substr(14).split(",", false):
+				_tier_up_shots(gs, id, true)
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-553: --spar=<npc_id> shoots a friendly spar with that NPC
 		if a.begins_with("--spar="):
@@ -1070,10 +1074,11 @@ func _tea_shots(gs: Node, npc_id: String) -> void:
 
 
 ## GFX-225: favor just under the next tier, one lend, then the shot waits for the card to close and the hearts to rise.
-func _tier_up_shots(gs: Node, npc_id: String) -> void:
+func _tier_up_shots(gs: Node, npc_id: String, far: bool) -> void:
 	var skip: Control = hud.get("_time_skip")
-	shots.append({"name": "tier_up_" + npc_id, "open": func() -> void:
+	shots.append({"name": ("tier_up_far_" if far else "tier_up_") + npc_id, "open": func() -> void:
 		var arrival: Control = hud.get("_banner")  # WU-589: the arrival banner must not queue the tier-up banner behind it
+		gs.check_milestones()  # GFX-233: announce every milestone already earned now, so none is queued behind the tier-up banner
 		while arrival.queued_count() > 0:
 			arrival.finish_current()
 		arrival.finish_current()
@@ -1084,7 +1089,8 @@ func _tier_up_shots(gs: Node, npc_id: String) -> void:
 		if npc == null:
 			push_error("tier-up shot: no %s in the region" % npc_id)
 			return
-		gs.player.lessons_taught[npc_id + ":shot"] = int(gs.get_node("/root/GameClock").total_days)  # WU-589: no lesson card over the hearts
+		for i in Folk.lessons_of(gs.data, npc_id).size():  # GFX-233: every lesson counts as taught (the lend passes days, so a per-day mark is not enough)
+			gs.player.lessons_taught["%s:%d" % [npc_id, i]] = 0
 		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)
 		var favor := int(gs.npc_favor.get(npc_id, 0))
 		var next_min := 20
@@ -1097,15 +1103,16 @@ func _tier_up_shots(gs: Node, npc_id: String) -> void:
 		gs.world_flags.erase("lend_" + npc_id)
 		gs.check_friendships()
 		gs.player.folk_tier_seen[npc_id] = Folk.tier_index(gs.data, next_min - 1)
-		_teleport_player(npc.position + Vector2(-70, 0))  # GFX-231: beside the friend so hearts and banner share the frame
+		_teleport_player(npc.position + Vector2(-700 if far else -70, 0))  # GFX-231: beside the friend so hearts and banner share the frame
 		gs.player.scene_day = int(gs.get_node("/root/GameClock").total_days)
 		if next_min - 1 >= int(gs.data.family["lend_a_hand"]["max_favor"]):
 			gs.call_on(npc_id)  # WU-589: a lend is capped below this tier; tea grows it instead
 		else:
 			gs.lend_a_hand(npc_id)
-		_teleport_player(world.get_node("Player").position)
+		if not far:
+			_teleport_player(world.get_node("Player").position)
 		skip.close()  # the card closes first, then the hearts play
-		await world.get_tree().create_timer(0.8).timeout,  # GFX-227: card closed, banner up, hearts rising
+		await world.get_tree().create_timer(0.3 if not far else 0.2).timeout,  # GFX-233: capture at the hearts' peak / the pulse's peak
 		"settle": 20, "keep_banner": true, "close": func() -> void: pass})  # WU-589: the banner is what this shot is for
 
 

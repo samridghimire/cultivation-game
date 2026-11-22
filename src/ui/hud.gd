@@ -1863,7 +1863,21 @@ func _on_friendship_reached(npc_id: String, text: String) -> void:
 	# GFX-227: "<name>: <tier>" with the hearts as its icon; the banner waits behind any time-skip card.
 	var tex: Texture2D = HudIcons.hearts(GameState.friendship_tier_count(), GameState.friendship_hearts(npc_id), 3)
 	_banner.announce(text, "Your friendship grows", UIStyle.ACCENT, 2.0, false, tex)
+	if not friend_on_screen(npc_id):
+		_banner.pulse_icon_for(text)  # GFX-233: no hearts to see, so the banner's icon pulses once
 	Audio.play("chime_progress")
+
+
+## GFX-233: true when the villager `npc_id` is inside the visible screen rect (so their hearts are seen).
+func friend_on_screen(npc_id: String) -> bool:
+	if not is_inside_tree():
+		return false
+	var xf := get_viewport().get_canvas_transform()
+	var screen := get_viewport().get_visible_rect()
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n.get("npc_id") == npc_id and n is Node2D:
+			return screen.has_point(xf * (n as Node2D).global_position)
+	return false
 
 
 ## A secret realm will open soon (WU-114): a banner and a chime.

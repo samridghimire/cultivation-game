@@ -14,6 +14,9 @@ const SLIM_RIGHT := 0.718
 const SLIM_TEXT_WIDTH := 540.0
 const FADE_SECONDS := 0.6
 const MAX_QUEUE := 4
+## GFX-233: the icon pulse for a friend who is off screen: 1.0 -> 1.3 -> 1.0 over this long.
+const PULSE_SECONDS := 0.4
+const PULSE_PEAK := 1.3
 
 var _flash: ColorRect
 var _ribbon: PanelContainer
@@ -29,6 +32,8 @@ var _played_msec: int = 0
 var _holder: HBoxContainer
 ## WU-510: the slim banner (arrival card) is showing; the first movement input dismisses it.
 var slim_showing: bool = false
+## GFX-233: the title whose icon pulses once when it plays ("" = none).
+var _pulse_title: String = ""
 
 
 func _init() -> void:
@@ -175,6 +180,29 @@ func dismiss_titled(title: String) -> void:
 		finish_current()
 
 
+## GFX-233: scale of the banner icon `t` seconds into its pulse: 1.0 at 0 and PULSE_SECONDS, PULSE_PEAK halfway. Pure.
+static func icon_pulse_scale(t: float) -> float:
+	if t <= 0.0 or t >= PULSE_SECONDS:
+		return 1.0
+	var half := PULSE_SECONDS * 0.5
+	return 1.0 + (PULSE_PEAK - 1.0) * (1.0 - absf(t - half) / half)
+
+
+## GFX-233: the banner titled `title` pulses its icon once when it plays (a friend off screen cannot show hearts).
+func pulse_icon_for(title: String) -> void:
+	_pulse_title = title
+	if not _current.is_empty() and str(_current[0]) == title:
+		_start_pulse()
+
+
+func _start_pulse() -> void:
+	_pulse_title = ""
+	_portrait.pivot_offset = _portrait.size * 0.5
+	var tw := create_tween()
+	tw.tween_method(func(t: float) -> void: _portrait.scale = Vector2.ONE * icon_pulse_scale(t), 0.0, PULSE_SECONDS, PULSE_SECONDS)
+	tw.tween_callback(func() -> void: _portrait.scale = Vector2.ONE)
+
+
 func queued_count() -> int:
 	return _queue.size()
 
@@ -269,3 +297,5 @@ func _play(title: String, subtitle: String, color: Color, hold: float, portrait:
 	var instant: bool = slim and Settings.get_value("reduce_motion") == true
 	_tween.tween_property(self, "modulate:a", 0.0, 0.0 if instant else FADE_SECONDS)
 	_tween.tween_callback(finish_current)
+	if _pulse_title != "" and _pulse_title == title:
+		_start_pulse()
