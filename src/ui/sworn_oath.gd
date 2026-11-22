@@ -146,6 +146,11 @@ func end() -> void:
 	finished.emit()
 
 
+## REVIEW: the HUD freed mid-oath (quit to menu) must not leave every label hidden in the next session (static flag).
+func _exit_tree() -> void:
+	Interactable.labels_suppressed = false
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return

@@ -111,13 +111,15 @@ func test_friend_signals_fire_once() -> void:
 	var gcb := func(id: String, item: String, count: int, text: String) -> void: gifts.append([id, item, count, text])
 	EventBus.friend_gift_left.connect(gcb)
 	gs.npc_favor["hunter_ma"] = 70
-	for d in range(0, 400, 30):
-		gs.world_flags.erase("drop_by_hunter_ma")
-		gs.receive_drop_by_gifts()
-		if not gifts.is_empty():
-			break
+	var drop: Dictionary = gs.data.family["folk_visits"]["drop_by"]
+	var chance: Variant = drop["chance"]
+	drop["chance"] = 1.0
+	gs.receive_drop_by_gifts()
+	gs.receive_drop_by_gifts()
+	drop["chance"] = chance
 	EventBus.friend_gift_left.disconnect(gcb)
-	if not gifts.is_empty():
-		assert_eq(gifts[0][0], "hunter_ma")
-		assert_true(int(gifts[0][2]) >= 1)
+	assert_eq(gifts.size(), 1, "one gift, then the cooldown")
+	assert_eq(gifts[0][0], "hunter_ma")
+	assert_true(int(gifts[0][2]) >= 1)
+	assert_true(String(gifts[0][3]) != "")
 	gs.end_session()

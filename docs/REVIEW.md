@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 701078a
+Last reviewed commit: 7dd423c
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2428,3 +2428,16 @@ Last reviewed commit: 701078a
     it is low risk; worth a check in the next --sworn shot. GFX-233 friend_on_screen uses the "npc" group (npc.gd adds it).
   - WU-593, GUIDE-280 (hint after explored/outgrown lines; target not met, worker-flagged), WU-595 (pin golden re-pinned),
     C-407 / GFX-232 data-only: OK. Not rendered by me: GFX-233, GFX-235, WU-593, WU-595 (WU-595's worker also skipped shots).
+- 2026-11-22 (reviewer): reviewed 701078a..7dd423c (WU-594, GFX-236, C-413, RV-FOLK041, FOLK-044, WU-597, WU-596, PERF-032;
+  [PLAN] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no save-format changes; no new binary assets.
+  - GFX-236 bug: `Interactable.labels_suppressed` is a static flag set while the oath plays and only cleared by `end()`. Quitting
+    to the menu mid-oath frees the HUD without `end()`, so every place label and name plate stayed hidden in the next session.
+    Fixed: SwornOath._exit_tree clears the flag.
+  - FOLK-044 weak test: `test_friend_signals_fire_once`'s drop-by loop never changed the day (rng-free hash of id+day), so it
+    either always or never gave, and every assert sat behind `if not gifts.is_empty()`. Now forces chance 1.0 (restored after)
+    and asserts exactly one gift with id, count and line. `test_sworn_tend_hint`'s main asserts are still conditional on the
+    route being 1-3 days (it is today, marsh -> Qingshi); acceptable.
+  - RV-FOLK041: rng-free via String.hash (stable across runs); test checks rng.state unchanged. OK.
+  - WU-594/WU-596 (pure Folk helpers + card text), WU-597 (NPC names fade under the chip), C-413 (data + test), PERF-032 (docs): OK.
+  - Note: Folk.sworn_tend_line says "tends your wounds" on a family member's card too, though tending skips family; cosmetic.
+  - Not rendered by me: GFX-236, WU-596, WU-597 (workers report shots).
