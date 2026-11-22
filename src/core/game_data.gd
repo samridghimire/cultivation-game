@@ -471,6 +471,12 @@ func _validate() -> void:
 			load_errors.append("Sect '%s' has no ranks" % def.id)
 		if def.robe_color != "" and not Color.html_is_valid(def.robe_color):
 			load_errors.append("Sect '%s' has an invalid robe_color '%s'" % [def.id, def.robe_color])
+		if not def.court_drill.is_empty():
+			var cnt := int(def.court_drill.get("count", 0))
+			if cnt < 2 or cnt > 6:
+				load_errors.append("Sect '%s' court_drill.count %d is not 2-6" % [def.id, cnt])
+			if not ["sword", "fist", "ledger"].has(String(def.court_drill.get("form", ""))):
+				load_errors.append("Sect '%s' has unknown court_drill.form" % def.id)
 		if def.home_region != "" and not regions.has(def.home_region):
 			load_errors.append("Sect '%s' has unknown home_region '%s'" % [def.id, def.home_region])
 		for prof_id in def.favored_professions:

@@ -23,6 +23,8 @@ var shop: Array[Dictionary] = []
 var lecture: Dictionary = {}
 ## Region the sect calls home (TRAV-004); "" = none (any hall serves).
 var home_region := ""
+## GFX-241: {count, form} of disciples drilling on the hall court; {} = none.
+var court_drill: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> SectDef:
@@ -38,6 +40,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.favored_professions = PackedStringArray(d.get("favored_professions", []))
 	s.ranks.assign(d.get("ranks", []))
 	s.robe_color = String(d.get("robe_color", ""))
+	s.court_drill = d.get("court_drill", {})
 	var rep: Dictionary = d.get("reputation", {})
 	s.reputation_min_join = int(rep.get("min_join", s.reputation_min_join))
 	s.reputation_deed_scale = float(rep.get("deed_scale", 0))

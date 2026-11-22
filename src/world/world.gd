@@ -67,6 +67,7 @@ var _cloud_wisps: CloudWisps  # GFX-113: drifting wisps over a mountain region (
 var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
+var _court_drill: CourtDrill  # GFX-241
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
 var _rain_eaves: RainEaves  ## GFX-190
@@ -292,6 +293,7 @@ func _refresh_ambient() -> void:
 	_refresh_mist_bands()
 	_refresh_cloud_wisps()
 	_refresh_market_life()
+	_refresh_court_drill()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -313,6 +315,35 @@ func _refresh_ambient() -> void:
 		_ambient = Ambient.make_emitter(kind, map_size, _mist_strength())
 	add_child(_ambient)
 	_start_lightning()
+
+
+## GFX-241: disciples drilling on the court of the home sect hall (none in rain/storm or at a festival).
+func _refresh_court_drill() -> void:
+	if _court_drill == null:
+		_court_drill = CourtDrill.new()
+		_court_drill.name = "CourtDrill"
+		add_child(_court_drill)
+		move_child(_court_drill, 0)
+	_court_drill.visible = false
+	_court_drill.set_process(false)
+	var rid := String(_region.get("id", GameState.current_region))
+	var festival := false
+	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, rid):
+		festival = festival or WorldEvents.is_festival(GameState.data, String(instance["id"]))
+	if not CourtDrill.drill_today(_weather_kind, festival):
+		return
+	for place: Dictionary in _region.get("places", []):
+		if not SectCourt.is_sect_hall(place):
+			continue
+		var def: SectDef = GameState.data.sects.get(String(place["sect"]))
+		if def == null or def.home_region != rid or def.court_drill.is_empty():
+			continue
+		var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
+		var blockers: Array[Vector2] = []
+		for spot: Array in _region.get("npc_spots", []):  # people's stands stay uncovered
+			blockers.append(Vector2(float(spot[0]), float(spot[1])))
+		_court_drill.setup(def, SectCourt.court_rect(place, _region), hall, blockers, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
+		return
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.
