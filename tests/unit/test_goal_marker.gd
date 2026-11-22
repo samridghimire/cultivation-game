@@ -105,3 +105,45 @@ func test_marker_refreshes_on_day_advance() -> void:
 		assert_true(marker.target.get("place", "") != "Stale Hall")
 	world.free()
 	_root().get_node("GameState").end_session()
+
+
+func test_marker_clears_the_marked_persons_name_label() -> void:
+	var world := _build()
+	var marker: GoalMarker = null
+	for child in world.get_children():
+		if child is GoalMarker:
+			marker = child
+	marker.refresh()
+	var mo: Interactable = marker._node
+	assert_true(mo != null, "Elder Mo is marked")
+	if mo != null:
+		var nodes: Array = world.get_children().filter(func(n: Node) -> bool: return n is Interactable)
+		var view := Rect2(Vector2.ZERO, world.map_size)
+		Interactable.spread_on_screen(nodes, view, [], Vector2.ZERO)
+		if mo.label_drawn():
+			var tip := GoalMarker.tip_for(mo, view)
+			var chevron := Rect2(tip.x - GoalMarker.SIZE.x / 2.0 - 1.5, tip.y - GoalMarker.SIZE.y - 1.0 - 2.0, GoalMarker.SIZE.x + 3.0, GoalMarker.SIZE.y + 3.5 + 2.0)
+			var label := mo.drawn_label_rect(view).grow(Interactable.PLATE_PAD)
+			assert_false(chevron.intersects(label), "marker %s vs label %s" % [chevron, label])
+			assert_true(chevron.end.y <= label.position.y - 2.0 + 0.01, "at least 2 px above the label")
+	world.free()
+	_root().get_node("GameState").end_session()
+
+
+func test_person_labels_keep_off_the_players_figure() -> void:
+	var world := _build()
+	var nodes: Array = world.get_children().filter(func(n: Node) -> bool: return n is Interactable)
+	var view := Rect2(Vector2.ZERO, world.map_size)
+	var bad: Array[String] = []
+	for n: Interactable in nodes:
+		if n.get("npc_id") == null:
+			continue
+		# the player stands right under each villager in turn (the worst case)
+		var pp := n.position + Vector2(6.0, 8.0)
+		Interactable.spread_on_screen(nodes, view, [], pp)
+		var body := Interactable.player_body_rect(pp)
+		if n.label_drawn() and not n.label_covered and n.drawn_label_rect(view).intersects(body):
+			bad.append(n.display_name)
+	assert_eq(bad.size(), 0, "labels on the player: " + ", ".join(bad))
+	world.free()
+	_root().get_node("GameState").end_session()

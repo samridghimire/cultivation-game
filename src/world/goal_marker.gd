@@ -73,10 +73,20 @@ static func find_node(nodes: Array, goal: Dictionary) -> Interactable:
 	return null
 
 
-## The chevron's tip position above `node` (a person's head, a place's top edge).
-static func tip_for(node: Interactable) -> Vector2:
+## WU-595: px between the chevron's lowest point (outline + bob) and the top of a name label's plate.
+const LABEL_GAP := 2.0
+
+
+## The chevron's tip position above `node` (a person's head, a place's top edge). WU-595: when the person's name
+## label is drawn (`view` = the visible area in the node's parent coordinates) the chevron sits above the label's plate.
+static func tip_for(node: Interactable, view: Rect2 = Rect2()) -> Vector2:
 	if node.is_person():
-		return Vector2(node.position.x, node.position.y + node.size.y / 2.0 - 40.0)
+		var tip := Vector2(node.position.x, node.position.y + node.size.y / 2.0 - 40.0)
+		if view.size != Vector2.ZERO and node.label_drawn():
+			var r := node.drawn_label_rect(view).grow(Interactable.PLATE_PAD)
+			if absf(r.get_center().x - tip.x) < r.size.x / 2.0 + SIZE.x and r.position.y < tip.y + 2.0 and r.end.y > tip.y - SIZE.y - 2.0:
+				tip.y = minf(tip.y, r.position.y - LABEL_GAP - 1.5 - 2.0)
+		return tip
 	return Vector2(node.position.x, node.position.y - node.size.y / 2.0 - 6.0)
 
 
@@ -142,6 +152,14 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## The visible area in the parent's coordinates.
+func _view() -> Rect2:
+	var p := get_parent() as Node2D
+	if p == null:
+		return Rect2()
+	return p.get_canvas_transform().affine_inverse() * get_viewport_rect()
+
+
 func _bob() -> float:
 	return 0.0 if MotionFx.reduced() else roundf(sin(_t * 4.0) * 2.0)
 
@@ -149,7 +167,7 @@ func _bob() -> float:
 func _draw() -> void:
 	if _node == null or not _node.visible:
 		return
-	var tip := tip_for(_node) + Vector2(0, _bob())
+	var tip := tip_for(_node, _view()) + Vector2(0, _bob())
 	var pts := PackedVector2Array([tip, tip + Vector2(-SIZE.x / 2.0, -SIZE.y), tip + Vector2(SIZE.x / 2.0, -SIZE.y)])
 	draw_colored_polygon(PackedVector2Array([tip + Vector2(0, 1.5), tip + Vector2(-SIZE.x / 2.0 - 1.5, -SIZE.y - 1.0), tip + Vector2(SIZE.x / 2.0 + 1.5, -SIZE.y - 1.0)]), OUTLINE)
 	draw_colored_polygon(pts, SILVER if silver else GOLD)

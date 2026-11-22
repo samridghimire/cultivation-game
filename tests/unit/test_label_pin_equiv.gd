@@ -3,7 +3,7 @@ extends TestCase
 
 const NPC_SCRIPT := preload("res://src/world/interactables/npc.gd")
 const VIEW := Rect2(0, 0, 1280, 800)
-const GOLDEN := "bec5d803766dba1583a715d6e8c37a85"  # WU-591: re-pinned after the figure grew to the sprite's real 40 px
+const GOLDEN := "1a22ffe72489f5036e6ba9e0ebd7b144"  # WU-595: re-pinned, a person's label also keeps off the player's figure
 
 
 func _scene_hash() -> String:

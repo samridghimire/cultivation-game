@@ -641,7 +641,7 @@ static func spread_on_screen(nodes: Array, view: Rect2, occupied: Array[Rect2] =
 			node._redraw_label()
 	_final_separate(ranked, view)
 	_clear_of_bodies(ranked, view, player_pos)
-	_pin_person_labels(ranked, view, occupied)
+	_pin_person_labels(ranked, view, occupied, player_pos)
 
 
 ## GFX-208: the band a named villager's label must stay in, relative to their body (so the name reads as theirs):
@@ -659,10 +659,17 @@ static func pin_shift(label: Rect2, body_x: float, feet_y: float) -> Vector2:
 	return Vector2(dx, dy)
 
 
+## WU-595: the player's drawn body (sprite top to feet), or an empty rect when the player's position is unknown.
+static func player_body_rect(player_pos: Vector2) -> Rect2:
+	if player_pos == Vector2.ZERO:
+		return Rect2()
+	return Rect2(player_pos.x - 12.0, player_pos.y - 22.0, 24.0, 34.0)
+
+
 ## GFX-208: the last pass: a named villager's label that the lifts, slides and separations carried away from them
 ## is pulled back into `pin_shift`'s band, and a place label it now touches yields (up if the person is below it,
 ## else down), like GFX-206's rule.
-static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2] = []) -> void:
+static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2] = [], player_pos: Vector2 = Vector2.ZERO) -> void:
 	var gap := PLATE_PAD * 2.0 + 1.0
 	# PERF-024: every other label's grown rect and every body rect is built once; a pinned label only refreshes its own entry.
 	var label_rects: Array = []  # Rect2 per ranked index, or null when not drawn
@@ -677,9 +684,13 @@ static func _pin_person_labels(ranked: Array, view: Rect2, occupied: Array[Rect2
 		var r := node.drawn_label_rect(view)
 		var feet := node.position.y + node.size.y / 2.0
 		var want := pin_shift(r, node.position.x, feet)
-		if want == Vector2.ZERO:
+		var body := player_body_rect(player_pos)  # WU-595: a person's name never sits across the player's figure
+		var on_player := body.size != Vector2.ZERO and r.grow(gap / 2.0).intersects(body)
+		if want == Vector2.ZERO and not on_player:
 			continue
 		var obstacles: Array[Rect2] = occupied.duplicate()
+		if body.size != Vector2.ZERO:
+			obstacles.append(body)
 		for oi in ranked.size():
 			if oi == ni:
 				continue
