@@ -333,9 +333,10 @@ func _refresh_court_drill() -> void:
 	if not CourtDrill.drill_today(_weather_kind, festival):
 		return
 	for place: Dictionary in _region.get("places", []):
-		if not SectCourt.is_sect_hall(place):
+		var drill_id := SectCourt.drill_sect_id(place, rid, GameState.data.sects)  # GFX-247
+		if drill_id == "":
 			continue
-		var def: SectDef = GameState.data.sects.get(String(place["sect"]))
+		var def: SectDef = GameState.data.sects.get(drill_id)
 		if def == null or def.home_region != rid or def.court_drill.is_empty():
 			continue
 		var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))

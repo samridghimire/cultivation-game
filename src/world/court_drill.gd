@@ -11,6 +11,7 @@ const DOOR_CLEAR := 48.0  ## the free column down to the hall door
 const MIN_GAP := 22.0
 const BLOCKER_CLEAR := 24.0  ## from a person's stand or a place's anchor
 const SLOT := 30.0
+const FLANK_TOP := 36.0  ## first flank slot, below the hall's top edge
 const FORMS: Array[String] = ["sword", "fist", "ledger"]
 
 var _figures: Array[Dictionary] = []  # {pos, row, look}
@@ -91,7 +92,7 @@ static func _flank_slots(court: Rect2, hall: Rect2, blockers: Array[Vector2], ta
 	var xs: Array[float] = [hall.position.x - SLOT, hall.end.x + SLOT]
 	for c in 2:
 		var x := clampf(xs[c], court.position.x + EDGE, court.end.x - EDGE)
-		var y := hall.position.y + 16.0
+		var y := hall.position.y + FLANK_TOP  # GFX-247: heads clear of the hall's name plate
 		while y <= court.end.y - EDGE:
 			var p := Vector2(x, y)
 			var ok := _clear_of(p, blockers)

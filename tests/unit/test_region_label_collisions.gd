@@ -103,3 +103,60 @@ func test_blossom_crack_label_clears_the_workshop() -> void:
 
 func test_hunter_ma_label_clears_the_bounty_board() -> void:
 	assert_false(await _label_hits_sprite("qingshi_village", "Hunter Ma", "Hunters' Bounty Board"))
+
+
+## GFX-247: a named villager's plate clears every other sprite and plate in their region (Lin at the Azure hall, Gui on the marsh isle).
+func _plate_hits(region: String, who: String) -> Array[String]:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.current_region = region
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	tree.root.add_child(world)
+	for i in 4:
+		await tree.process_frame
+	world.call("_spread_on_screen")
+	var me: Interactable
+	for node in world.get_children():
+		if node is Interactable and node.display_name.begins_with(who):
+			me = node
+	var out: Array[String] = []
+	if me != null:
+		var plate := me.label_rect()
+		for node in world.get_children():
+			if node is Interactable and node != me:
+				var o := node as Interactable
+				if plate.intersects(Rect2(o.position - o.size / 2.0, o.size)):
+					out.append("sprite of " + o.display_name)
+				if o.label_drawn() and plate.intersects(o.label_rect()):
+					out.append("plate of " + o.display_name)
+	else:
+		out.append("%s not found" % who)
+	world.queue_free()
+	gs.end_session()
+	return out
+
+
+func test_patriarch_lin_plate_is_clear() -> void:
+	var hits := await _plate_hits("azure_peak", "Patriarch Lin")
+	assert_true(hits.is_empty(), "Lin's plate hits %s" % [hits])
+
+
+func test_old_monster_gui_plate_is_clear() -> void:
+	var hits := await _plate_hits("withered_bone_marsh", "Old Monster Gui")
+	assert_true(hits.is_empty(), "Gui's plate hits %s" % [hits])
+
+
+## GFX-247: an open recruitment hall (no `sect` key) drills the one sect whose home region it stands in.
+func test_drill_sect_for_a_hall_without_a_sect_key() -> void:
+	var d := data()
+	var hall := {"type": "sect_hall"}
+	assert_eq(SectCourt.drill_sect_id(hall, "fallen_star_market", d.sects), "myriad_treasure_pavilion")
+	assert_eq(SectCourt.drill_sect_id(hall, "qingshi_village", d.sects), "")
+	assert_eq(SectCourt.drill_sect_id({"type": "sect_hall", "sect": "blood_lotus_sect"}, "x", d.sects), "blood_lotus_sect")
+	assert_eq(SectCourt.drill_sect_id({"type": "shop"}, "fallen_star_market", d.sects), "")
+	var twin: SectDef = d.sects["azure_cloud_sect"]
+	var rival := SectDef.new()
+	rival.home_region = twin.home_region
+	var two := {"a": twin, "b": rival}
+	assert_eq(SectCourt.drill_sect_id(hall, twin.home_region, two), "", "two sects claim one region")

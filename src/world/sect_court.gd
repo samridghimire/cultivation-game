@@ -23,6 +23,23 @@ static func is_sect_hall(place: Dictionary) -> bool:
 	return String(place.get("type", "")) == "sect_hall" and String(place.get("sect", "")) != ""
 
 
+## GFX-247: the sect whose court drills at `place`: its own `sect`, else (an open recruitment hall) the one sect whose
+## home_region is `region_id`; "" when none or when two sects claim the region. `sects` is GameData.sects (id -> SectDef).
+static func drill_sect_id(place: Dictionary, region_id: String, sects: Dictionary) -> String:
+	if String(place.get("type", "")) != "sect_hall":
+		return ""
+	var own := String(place.get("sect", ""))
+	if own != "":
+		return own
+	var found := ""
+	for id: String in sects:
+		if (sects[id] as SectDef).home_region == region_id:
+			if found != "":
+				return ""
+			found = id
+	return found
+
+
 ## GFX-070: the court under `hall`: the hall stands in its north half (22 px of grass above it for the label),
 ## the rest of the court lies south of it. Inside the map and clear of every path and other place.
 ## Tries smaller scales until one is clear; the hall's own rect is the last resort.

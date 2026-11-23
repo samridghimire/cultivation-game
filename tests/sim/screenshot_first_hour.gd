@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
@@ -74,6 +75,7 @@ var frames := 0
 var banner_wait_start := -1
 var started := false
 var region_list: Array[String] = []  ## QA-187: --region= ids
+var member_shot := ""  ## GFX-247: --member=<sect_id>
 var opened := false
 
 
@@ -172,6 +174,16 @@ func _start() -> void:
 		var open_day: int = SecretRealms.next_open_day_in_region(gs.data, gs.current_region, clock_r.total_days)
 		if open_day >= 0:
 			clock_r.total_days = open_day
+	for arg in OS.get_cmdline_user_args():  # GFX-247: a member of the sect, standing in its home region
+		if arg.begins_with("--member="):
+			var mid := arg.substr(9)
+			if gs.data.sects.has(mid):
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(mid)
+				gs.current_region = Sects.home_region(gs.data, mid)
+				region_list = [gs.current_region]
+				member_shot = mid
 	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
 		_drop_start_line()
@@ -587,7 +599,7 @@ func _start() -> void:
 		_walk_along()
 		_focus_on(), "close": func() -> void: pass})
 	if region_list.size() == 1:
-		shots.append({"name": "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
+		shots.append({"name": ("member_" + member_shot) if member_shot != "" else "region_" + region_list[0] + ("_open" if OS.get_cmdline_user_args().has("--realm-open") else ""), "open": func() -> void:
 			_first_visit_card(gs, region_list[0])
 			_focus_on(), "close": func() -> void: pass})
 	# WU-406: a generated villager's greeting bubble, and one with the gold "!" for a folk request.
