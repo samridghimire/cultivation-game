@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
@@ -451,6 +452,25 @@ func _start() -> void:
 					gs.attend_lecture()
 				ts.visible = false
 				hud.call("_update_modal"), "close": lcard.close})
+			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-249: a pending news bubble, then the talk that plays it
+		if a.begins_with("--news="):
+			var nid := a.substr(7)
+			shots.append({"name": "news_bubble", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.npc_favor[nid] = 60
+				gs.join_sect("azure_cloud_sect")
+				(hud.get("_pending_moments") as Array).clear()
+				(hud.get("_sect_card") as Control).close()
+				(hud.get("_friend_card") as Control).close()
+				c.scene_day = int(Engine.get_main_loop().root.get_node("GameClock").total_days)  # no friend-scene card over the shot
+				gs.current_region = String(gs.data.npcs[nid].get("region", "qingshi_village"))
+				Engine.get_main_loop().root.get_node("EventBus").player_changed.emit(), "close": func() -> void: pass})
+			shots.append({"name": "news_talk", "open": func() -> void:
+				(hud.get("_friend_card") as Control).close()
+				gs.start_dialogue(nid), "close": func() -> void: pass})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-609: the staged promotion trial card
 		if a.begins_with("--sect-trial="):

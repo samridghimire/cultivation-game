@@ -23,6 +23,11 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 	return n
 
 
+## GFX-249: true while `npc_id` holds a pending news reaction (the world shows a bubble over them).
+static func has_pending(player: CharacterData, npc_id: String) -> bool:
+	return player != null and npc_id != "" and player.folk_news.has(npc_id)
+
+
 ## The reaction line for `npc_id` ("" when none pending); clears it. Tokens {player} {sect} {rank}.
 static func take(player: CharacterData, data: GameData, npc_id: String) -> String:
 	if not player.folk_news.has(npc_id):

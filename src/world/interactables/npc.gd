@@ -325,13 +325,23 @@ func lesson_waiting() -> bool:
 	return not Folk.due_lessons(GameState.data, npc_id, tier, GameState.player.lessons_taught).is_empty()
 
 
+## GFX-249: this villager holds a pending FOLK-046 news reaction (cleared by the talk that plays it).
+func news_waiting() -> bool:
+	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id)
+
+
 ## WU-486: keep the persistent "!" bubble in step with lesson_waiting() (hidden while a modal is open).
 func refresh_lesson_bubble() -> void:
 	if not is_inside_tree():
 		return
-	var want := not _modal_open and lesson_waiting()
+	var news := news_waiting()
+	var want := not _modal_open and (news or lesson_waiting())
+	var kind := "news" if news else "lesson"
+	if _lesson_bubble != null and is_instance_valid(_lesson_bubble) and _lesson_bubble.kind != kind:
+		_lesson_bubble.queue_free()
+		_lesson_bubble = null
 	if want and (_lesson_bubble == null or not is_instance_valid(_lesson_bubble)):
-		_lesson_bubble = EmoteBubble.make("lesson", 0.0)
+		_lesson_bubble = EmoteBubble.make(kind, 0.0)
 		_lesson_bubble.base_position = Vector2(size.x / 2.0, -22.0 + 16.0)
 		add_child(_lesson_bubble)
 	elif not want and _lesson_bubble != null and is_instance_valid(_lesson_bubble):
@@ -366,6 +376,7 @@ func refresh_pips() -> void:
 
 func _on_player_for_pips() -> void:
 	refresh_pips()
+	refresh_lesson_bubble()
 
 
 ## WU-583: the strip after a name is [pips][marker] with STRIP_GAP px between; offsets are from `at.x`.

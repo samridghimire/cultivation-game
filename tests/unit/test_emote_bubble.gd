@@ -63,3 +63,24 @@ func test_npc_shows_bubble_and_hides_cake() -> void:
 	EventBus.npc_reaction.emit("bubble_a", "sweat")
 	assert_true(n.has_bubble())
 	n.free()
+
+
+func test_news_bubble_follows_pending_news() -> void:
+	GameState.start_session(CharacterFactory.create("Tester", GameState.data, seeded_rng(5)))
+	var id := "xiao_ling"
+	var n: Node = preload("res://src/world/interactables/npc.gd").new()
+	n.npc_id = id
+	_root().add_child(n)
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(not n.news_waiting(), "no news at first")
+	GameState.player.folk_news[id] = "sect_join"
+	assert_true(FolkNews.has_pending(GameState.player, id))
+	EventBus.player_changed.emit()
+	assert_true(n.news_waiting())
+	assert_eq(n._lesson_bubble.kind, "news", "news bubble shows")
+	FolkNews.take(GameState.player, GameState.data, id)
+	EventBus.player_changed.emit()
+	await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(not n.news_waiting())
+	assert_true(n._lesson_bubble == null or n._lesson_bubble.kind != "news", "news bubble clears")
+	n.free()
