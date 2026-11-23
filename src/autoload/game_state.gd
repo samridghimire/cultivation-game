@@ -3643,8 +3643,10 @@ func enter_sect_contest() -> void:
 			break
 		won += 1
 		var prize: Dictionary = round_def["prize"]
-		Sects.pay_contest_prize(player, data, prize)
+		var promoted := Sects.pay_contest_prize(player, data, prize)
 		EventBus.post("Round %d won against %s. (+%d contribution, +%d spirit stones)" % [index + 1, foe.get("name", "your foe"), int(prize.get("contribution", 0)), int(prize.get("spirit_stones", 0))], "progress")
+		if promoted:
+			_post_promotion()  # RV-SECT038: a prize that crosses a rank threshold is announced like a mission's
 		index += 1
 	if won == 0:
 		EventBus.post("You fall in the first round of the contest. Next year, perhaps.", "warning")

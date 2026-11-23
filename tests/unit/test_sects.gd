@@ -397,3 +397,17 @@ func test_contest_prize_pays_stones_and_contribution() -> void:
 	Sects.pay_contest_prize(c, data(), {"contribution": 12, "spirit_stones": 7})
 	assert_eq(c.item_count("spirit_stone"), stones_before + 7)
 	assert_eq(int(c.sect["contribution"]), 12)
+
+
+## RV-SECT038: a prize that crosses a trial-free rank threshold reports the promotion so GameState can announce it.
+func test_contest_prize_reports_a_promotion() -> void:
+	var c := _contest_member()
+	assert_false(Sects.pay_contest_prize(c, data(), {"contribution": 10, "spirit_stones": 0}), "rank 1 needs its trial")
+	var ranks: Array = data().sects["azure_cloud_sect"].ranks
+	var had_trial: Variant = ranks[1].get("trial")
+	ranks[1].erase("trial")
+	c.sect["contribution"] = int(ranks[1]["contribution"]) - 5
+	var promoted := Sects.pay_contest_prize(c, data(), {"contribution": 10, "spirit_stones": 0})
+	ranks[1]["trial"] = had_trial
+	assert_true(promoted)
+	assert_eq(int(c.sect["rank"]), 1)

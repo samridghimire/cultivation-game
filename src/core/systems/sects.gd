@@ -800,14 +800,15 @@ static func enter_contest(c: CharacterData, total_days: int) -> void:
 	c.sect["contest_year"] = Calendar.year_of(total_days)
 
 
-## Pays one round's prize (contribution may promote). Returns the prize dictionary.
-static func pay_contest_prize(c: CharacterData, data: GameData, prize: Dictionary) -> void:
+## Pays one round's prize. Returns true when its contribution promoted `c` (the caller announces it).
+static func pay_contest_prize(c: CharacterData, data: GameData, prize: Dictionary) -> bool:
 	var stones := int(prize.get("spirit_stones", 0))
 	if stones > 0:
 		c.add_item("spirit_stone", stones)
 	var contribution := int(prize.get("contribution", 0))
 	if contribution > 0:
-		add_contribution(c, data, contribution)
+		return add_contribution(c, data, contribution)
+	return false
 
 
 ## Load errors for the sects.json `contest` blocks.

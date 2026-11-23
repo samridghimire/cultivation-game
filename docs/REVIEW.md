@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7404ead
+Last reviewed commit: f24a0e6
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2520,3 +2520,17 @@ Last reviewed commit: 7404ead
     commit Follow-ups. SECT-040: the spec's "Trial for <rank>: <word> odds" hint was not applied (worker Follow-up).
   - Notes (not filed): GFX-249's news bubble also shows for stale sect news that `take` will drop after leaving a sect (one
     empty talk clears it). SECT-037, WU-610, WU-613 (tab focus follows the page), GUIDE-290: OK. Not rendered by me.
+- 2026-11-23 (reviewer, 4th run): reviewed 7404ead..f24a0e6 (SIM-029, C-417, WU-614, SECT-038, WU-615, FOLK-048, GUIDE-291,
+  QA-246, GFX-251, WU-616, SIM-030; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no new binary
+  assets; no SAVE_VERSION change (SECT-038's `sect.contest_year` defaults to "never entered").
+  - SECT-038 fix: `pay_contest_prize` dropped `add_contribution`'s promoted flag, so a prize crossing a trial-free rank would
+    promote silently (no log line; today every rank 1-3 has a trial, so latent). It now returns it and
+    `enter_sect_contest` calls `_post_promotion`; test `test_contest_prize_reports_a_promotion`. Notes (not filed): the contest
+    foes' 40-90 in 100 odds were not measured (worker Follow-up); leaving and rejoining resets `contest_year`, so a second
+    entry in the same year is possible at the cost of the leave penalty.
+  - WU-615 found the real cause (FolkNews.queue matched `player.home_region`, which is never set; no news ever queued in play).
+  - FOLK-048 follows the spec's fallback order; Elder Mo and Hunter Ma have no `_demonic` lines yet, so they still use their
+    plain (warm) join line for Blood Lotus until C-421 lands.
+  - GUIDE-291 and SIM-030 are sim-only fixes (hints player branches); SIM-030 notes training weeks now count as quiet.
+  - WU-614/WU-616 OK (the card only opens via the trial card path, so the arena's sect/look are set). QA-246 audit OK.
+    C-417/GFX-251 data only. Not rendered by me (workers report shots).
