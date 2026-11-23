@@ -2,6 +2,14 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-23 [WU-610] The journal Sect page shows how close the next rank is, its trial foe, and what the treasury sells and at what price.
+- 2026-11-23 [SECT-037] Joining a sect reveals its home on the map at once; the lecture only mentions a bottleneck when you hit one.
+- 2026-11-23 [GFX-247] Sect homes: name plates no longer overlap, and the Pavilion court has disciples drilling.
+- 2026-11-23 [GFX-248] The lecture hall is drawn large: the elder on the dais, rows of disciples, you in front.
+- 2026-11-23 [SECT-036] A new disciple is told to report at the hall first, ahead of every other goal.
+- 2026-11-23 [C-418] Elder Mo, Xiao Ling and Hunter Ma each have their own words when you join a sect or rise in it.
+- 2026-11-23 [WU-609] The promotion trial is a card: the examiner, your odds, what the rank brings, and a choice to step in or wait.
+- 2026-11-23 [GFX-246] Joining, reporting at and rising in a sect now open with a small picture in the sect colour.
 - 2026-11-23 [WU-608] A reported disciple's hall menu opens with a Sect overview, and the month-end digest shows the stipend in one row.
 - 2026-11-23 [SIM-028] Balance tooling: a sect year in numbers for each start-region sect.
 - 2026-11-23 [FOLK-046] Village friends react the next time you talk after you join a sect or rise in rank.
