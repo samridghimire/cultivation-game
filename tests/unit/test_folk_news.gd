@@ -61,3 +61,15 @@ func test_save_round_trip() -> void:
 	var old := c.to_dict()
 	old.erase("folk_news")
 	assert_eq(CharacterData.from_dict(old).folk_news, {})
+
+
+func test_qingshi_friends_have_own_voices() -> void:
+	var data: GameData = _gs().data
+	var first_lines: Array = []
+	for id: String in ["elder_mo", "xiao_ling", "hunter_ma"]:
+		var nl: Dictionary = data.npcs[id].get("news_lines", {})
+		assert_true((nl.get("sect_join", []) as Array).size() >= 2, id + " sect_join lines")
+		assert_true((nl.get("promotion", []) as Array).size() >= 1, id + " promotion line")
+		first_lines.append(String(nl["sect_join"][0]))
+	assert_eq(first_lines.size(), 3)
+	assert_true(first_lines[0] != first_lines[1] and first_lines[1] != first_lines[2], "each villager sounds different")
