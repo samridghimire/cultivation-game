@@ -124,6 +124,8 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_safe.text = SAFE_LINE
 	_perks.text = _perk_text(c, data, sect, next)
 	_perks.visible = _perks.text != ""
+	_step_button.visible = true
+	_wait_button.text = "Not yet"
 	visible = true
 	if default_to_wait(chance):
 		_wait_button.grab_focus.call_deferred()
@@ -141,6 +143,40 @@ static func _perk_text(c: CharacterData, data: GameData, sect: SectDef, rank: in
 	if perks.is_empty():
 		return "%s: your standing in the sect rises." % sect.rank_name(rank)
 	return "%s brings: %s." % [sect.rank_name(rank), ", ".join(perks)]
+
+
+## WU-614: the result mode after a lost trial: the examiner lowers the wooden sword, what you lacked, any injury,
+## the odds now and one "Back" button (focused). `info` is the promotion_trial_lost payload.
+func open_lost(sect_name: String, info: Dictionary, color: Color = UIStyle.ACCENT) -> void:
+	_title.text = sect_name
+	_title.add_theme_color_override("font_color", color)
+	_banner.color = color
+	_banner.queue_redraw()
+	_subtitle.text = "Trial for %s: not yet" % String(info.get("rank", "the next rank"))
+	arena.color = color
+	arena.queue_redraw()
+	var lines := lost_lines(info)
+	_foe.text = lines[0]
+	_odds.text = lines[1]
+	_odds.remove_theme_color_override("font_color")
+	_safe.text = lines[2]
+	_perks.text = lines[3]
+	_perks.visible = _perks.text != ""
+	_step_button.visible = false
+	_wait_button.text = "Back"
+	visible = true
+	_wait_button.grab_focus.call_deferred()
+
+
+## [examiner line, what you lacked, injury line, odds now]; "" entries are empty. Pure.
+static func lost_lines(info: Dictionary) -> Array[String]:
+	var injuries: PackedStringArray = info.get("injuries", PackedStringArray())
+	var out: Array[String] = []
+	out.append("%s lowers the wooden sword." % String(info.get("examiner", "The examiner")))
+	out.append(String(info.get("advice", "")))
+	out.append("Your injury: %s." % ", ".join(injuries) if not injuries.is_empty() else "You come away unhurt.")
+	out.append(odds_line(float(info["chance"])).replace("Your odds", "Your odds now") if info.has("chance") else "")
+	return out
 
 
 func _on_step() -> void:

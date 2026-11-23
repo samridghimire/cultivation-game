@@ -155,3 +155,41 @@ func test_news_opens_the_dialogue() -> void:
 	assert_eq(gs.pending_greeting, "", "read once")
 	assert_false(gs.player.folk_news.has("elder_mo"), "news consumed")
 	_teardown(gs, hud)
+
+
+## WU-614: a lost trial is told on the card (examiner, what you lacked, injury, odds now) with one focused Back button.
+func test_lost_lines_pure() -> void:
+	var lines := TrialCard.lost_lines({"examiner": "Elder Wen", "advice": "Heal first: you are injured.",
+		"injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.25})
+	assert_eq(lines[0], "Elder Wen lowers the wooden sword.")
+	assert_eq(lines[1], "Heal first: you are injured.")
+	assert_true(lines[2].contains("Bruised ribs"), lines[2])
+	assert_eq(lines[3], "Your odds now: Unlikely (25 in 100)".replace("Unlikely", Combat.odds_word(0.25)))
+	var unhurt := TrialCard.lost_lines({"examiner": "X", "chance": 0.6})
+	assert_eq(unhurt[2], "You come away unhurt.")
+
+
+func test_lost_trial_opens_result_card_with_back_focus() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: TrialCard = hud.get("_trial_card")
+	EventBus.promotion_trial_lost.emit("azure_cloud_sect", {"examiner": "Elder Wen", "rank": "Outer Disciple",
+		"advice": "Close: train a few more days and try again.", "injuries": PackedStringArray(), "chance": 0.4})
+	await _frames()
+	assert_true(card.visible)
+	var t := card.all_text()
+	assert_true(t.contains("lowers the wooden sword"), t)
+	assert_true(t.contains("Close: train"), t)
+	assert_true(t.contains("Your odds now"), t)
+	assert_false(card.step_button().visible)
+	assert_eq(card.wait_button().text, "Back")
+	assert_true(card.wait_button().has_focus(), "Back holds focus")
+	card.wait_button().pressed.emit()
+	assert_false(card.visible)
+	# the card goes back to trial mode on the next open
+	assert_true(card.open(gs.player, gs.data))
+	assert_true(card.step_button().visible)
+	assert_eq(card.wait_button().text, "Not yet")
+	_teardown(gs, hud)

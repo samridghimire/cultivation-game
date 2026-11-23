@@ -11,7 +11,7 @@ extends SceneTree
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
-## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card).
+## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card). With `--lose` it also renders sect_trial_lost.png (WU-614).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
 ## WU-606: `-- --sect-lecture=<sect_id> [--insight]` renders sect_lecture.png (the monthly lecture card; --insight forces a Dao glimpse).
@@ -486,6 +486,12 @@ func _start() -> void:
 				gs.current_region = Sects.home_region(gs.data, tid)
 				Sects.add_contribution(c, gs.data, int((gs.data.sects[tid] as SectDef).ranks[1].get("contribution", 0)))
 				gs.offer_promotion_trial(), "close": tcard.close})
+			if OS.get_cmdline_user_args().has("--lose"):  # WU-614: the lost-trial result card
+				shots.append({"name": "sect_trial_lost", "open": func() -> void:
+					tcard.close()
+					Engine.get_main_loop().root.get_node("EventBus").promotion_trial_lost.emit(tid, {"examiner": "Azure Cloud Sword Examiner", "rank": "Outer Disciple",
+						"advice": Sects.trial_advice(c, gs.data), "injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.35})
+					hud.call("_drain_moments"), "close": tcard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
 		if a.begins_with("--sect-report="):

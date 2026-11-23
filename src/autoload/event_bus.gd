@@ -214,5 +214,7 @@ signal sect_promoted(sect_id: String, rank: int)
 ## WU-609: the hall or mission board asks the HUD to stage the promotion trial card.
 @warning_ignore("unused_signal")
 signal promotion_trial_offered(sect_id: String)
+## WU-614: a promotion trial was lost; `info` has examiner, advice, injuries (PackedStringArray) and chance (float).
+signal promotion_trial_lost(sect_id: String, info: Dictionary)
 ## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
 signal sect_lecture_attended(sect_id: String, result: Dictionary)

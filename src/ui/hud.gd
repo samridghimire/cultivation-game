@@ -342,6 +342,7 @@ func _ready() -> void:
 	_trial_card.confirmed.connect(_on_trial_confirmed)
 	add_child(UIStyle.centered(_trial_card))
 	EventBus.promotion_trial_offered.connect(_on_promotion_trial_offered)
+	EventBus.promotion_trial_lost.connect(_on_promotion_trial_lost)
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
 	EventBus.sect_lecture_attended.connect(_on_sect_lecture_attended)  # WU-606
@@ -1969,6 +1970,10 @@ func _drain_moments() -> void:
 			_play_sect_promoted(String(m["sect_id"]), m.get("summary", {}), bool(m.get("has_next", false)))
 		"sect_lecture":
 			_play_sect_lecture(String(m["sect_id"]), m.get("result", {}))
+		"trial_lost":
+			var lost_sect := String(m["sect_id"])
+			_trial_card.open_lost(GameState.data.sects[lost_sect].name, m.get("info", {}), _sect_color(lost_sect))
+			_update_modal()
 		"trial_return":
 			_return_from_trial(String(m.get("to", "")))
 	if not _pending_moments.is_empty():
@@ -2231,6 +2236,14 @@ func _on_promotion_trial_offered(sect_id: String) -> void:
 	_close_screens()
 	_trial_stepped = false
 	_trial_card.open(GameState.player, GameState.data, _sect_color(sect_id))
+	_update_modal()
+
+
+## WU-614: a lost trial is told on the card, through the moments queue (ahead of the return to the board/hall).
+func _on_promotion_trial_lost(sect_id: String, info: Dictionary) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	_pending_moments.append({"kind": "trial_lost", "sect_id": sect_id, "info": info})
 	_update_modal()
 
 
