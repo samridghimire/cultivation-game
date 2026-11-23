@@ -320,6 +320,30 @@ static func trial_opponent(data: GameData, enemy_id: String) -> Dictionary:
 	return enemy
 
 
+## SECT-040: ONE line naming the biggest gap between `c` and the examiner of the open trial. Order: injured, realm or
+## stage below the foe, no combat technique known, otherwise "Close". "" when no trial is open. Pure.
+static func trial_advice(c: CharacterData, data: GameData) -> String:
+	var enemy_id := trial_enemy(c, data)
+	if c.is_rogue() or enemy_id == "" or not data.enemies.has(enemy_id):
+		return ""
+	if Injuries.has_any(c):
+		return "Heal first: you are injured."
+	var enemy: Dictionary = data.enemies[enemy_id]
+	var foe_realm := data.realm_index_of(String(enemy.get("realm", "mortal")))
+	var foe_stage := int(enemy.get("stage", 0))
+	if c.realm_index < foe_realm or (c.realm_index == foe_realm and c.stage < foe_stage):
+		var realm: RealmDef = data.realms[foe_realm]
+		var label: String = realm.stage_label(foe_stage) if foe_stage > 0 else realm.name
+		return "The examiner is at %s; reach it first." % label
+	if not Techniques.knows_kind(c, data, "combat"):
+		var techs: Array = enemy.get("techniques", [])
+		var tech_name := "an attack technique"
+		if not techs.is_empty() and data.techniques.has(String(techs[0])):
+			tech_name = String(data.techniques[String(techs[0])].name)
+		return "Learn an attack technique; the examiner uses %s." % tech_name
+	return "Close: train a few more days and try again."
+
+
 ## Promotes `c` one rank after a won trial (then through any trial-free ranks
 ## that follow). Returns false if `c` could not attempt the trial.
 static func pass_trial(c: CharacterData, data: GameData) -> bool:

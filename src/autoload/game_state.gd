@@ -3602,7 +3602,7 @@ func attempt_promotion_trial() -> void:
 		_post_promotion("You pass the trial. ")
 		EventBus.player_changed.emit()
 	elif _can_act():
-		EventBus.post("You fail the trial for %s. You may try again." % rank_name, "warning")
+		EventBus.post("You fail the trial for %s. %s You may try again." % [rank_name, Sects.trial_advice(player, data)], "warning")
 
 
 ## Buy an item from your sect's contribution shop (sects.json `shop`).

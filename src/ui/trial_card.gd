@@ -115,6 +115,10 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_foe.text = foe_line(data, enemy)
 	_odds.text = odds_line(chance)
 	_odds.add_theme_color_override("font_color", odds_color(chance))
+	if chance < 0.5:  # SECT-040: the biggest gap, under the odds
+		var advice := Sects.trial_advice(c, data)
+		if advice != "":
+			_odds.text += "\n" + advice
 	_safe.text = SAFE_LINE
 	_perks.text = _perk_text(c, data, sect, next)
 	_perks.visible = _perks.text != ""

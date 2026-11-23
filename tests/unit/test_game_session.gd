@@ -734,6 +734,25 @@ func test_deed_with_enemy_needs_a_win() -> void:
 	assert_gt(c.alignment, alignment_before)
 
 
+func test_lost_trial_log_names_the_advice() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var ranks := (gs.data.sects["blood_lotus_sect"] as SectDef).ranks
+	ranks[1]["trial"] = "azure_sword_examiner"
+	c.alignment = -300
+	gs.join_sect("blood_lotus_sect")
+	c.sect["contribution"] = 400
+	c.realm_index = 0
+	var log: Array = []
+	EventBus.message_posted.connect(func(text: String, _cat: String) -> void: log.append(text))
+	gs.attempt_promotion_trial()
+	ranks[1].erase("trial")
+	var joined := "\n".join(log)
+	assert_true(joined.contains("You fail the trial"), joined)
+	assert_true(joined.contains(Sects.trial_advice(c, gs.data)) or joined.contains("Heal first") or joined.contains("examiner is at"), joined)
+	gs.end_session()
+
+
 func test_promotion_trial_and_stipend() -> void:
 	var c := _start()
 	var gs := _game_state()

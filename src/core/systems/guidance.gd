@@ -3662,7 +3662,7 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 			if not payoff.is_empty():
 				line += " A loss only injures you." + _payoff_sentence(payoff, not c.injuries.is_empty())
 			elif lever == "":
-				line += " A loss only injures you."
+				line += " A loss only injures you. %s" % Sects.trial_advice(c, data)  # SECT-040
 			elif _thin_defence_missing(c, data) != "":
 				line += " A loss only injures you; %s first%s." % [lever, _trial_lever_source(c, data, region_id)]
 			else:

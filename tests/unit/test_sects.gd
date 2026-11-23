@@ -316,3 +316,33 @@ func test_mission_max_realm_validation() -> void:
 	d.load_errors.clear()
 	d._validate()
 	assert_true(d.load_errors.size() > 0)
+
+
+## SECT-040: the trial advice names the biggest gap, in a fixed order.
+func test_trial_advice_branches() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Sects.trial_advice(c, d), "", "rogue: no trial")
+	c.alignment = -300
+	Sects.join(c, d, "blood_lotus_sect")
+	var ranks := (d.sects["blood_lotus_sect"] as SectDef).ranks
+	var had_trial = ranks[1].get("trial")
+	ranks[1]["trial"] = "azure_sword_examiner"
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.stage = 0
+	c.injuries = {"broken_ribs": 5}
+	assert_eq(Sects.trial_advice(c, d), "Heal first: you are injured.")
+	c.injuries.clear()
+	c.realm_index = 0
+	assert_true(Sects.trial_advice(c, d).begins_with("The examiner is at "), "below the foe's realm")
+	assert_true(Sects.trial_advice(c, d).ends_with("reach it first."))
+	c.realm_index = d.realm_index_of("qi_refining")
+	c.techniques.clear()
+	var line := Sects.trial_advice(c, d)
+	assert_true(line.begins_with("Learn an attack technique; the examiner uses "), line)
+	c.techniques = {"metal_edge_sword": {"level": 1, "xp": 0.0}}
+	assert_eq(Sects.trial_advice(c, d), "Close: train a few more days and try again.")
+	if had_trial == null:
+		ranks[1].erase("trial")
+	else:
+		ranks[1]["trial"] = had_trial
