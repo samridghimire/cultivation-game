@@ -6472,6 +6472,10 @@ static func current_goal_text(c: CharacterData, data: GameData, flags: Dictionar
 ## GUIDE-266: exactly the text the HUD's Goal line shows after "Goal: " ("" = none): the first unfinished first goal,
 ## then the realm ladder's next step, then the first generic goal. The HUD calls this; the goal-way fight reads it too.
 static func hud_goal_text(c: CharacterData, data: GameData, flags: Dictionary, region_id: String = "", today: int = -1, clan: ClanData = null, density: float = 1.0) -> String:
+	# SECT-036: a new disciple's first step is the report at the hall; it leads the Goal row, ahead of every routine goal.
+	var report := report_hint(c, data, region_id)
+	if report != "":
+		return report
 	if first_goals_done(c, data, flags) or c.realm_index >= 2:
 		for row in active_goal_ladder(c, data, flags, clan, maxi(today, 0)):
 			if not row["done"] and not row.get("skip", false) and not _walk_goal_blocked(c, data, region_id, String(row["text"])):

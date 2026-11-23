@@ -79,6 +79,20 @@ func test_game_state_report_and_hint() -> void:
 	_bus().sect_reported.disconnect(_on_reported)
 
 
+## SECT-036: an unreported member's Goal row is the report line (it leads every routine goal); reported, it is gone.
+func test_goal_row_leads_with_report() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.realm_index = 1
+	gs.join_sect("azure_cloud_sect")
+	var d := gs.data as GameData
+	var goal := Guidance.hud_goal_text(c, d, {}, "azure_peak", 0)
+	assert_true(goal.begins_with("Report at the"), goal)
+	gs.current_region = "azure_peak"
+	gs.report_to_sect()
+	assert_false(Guidance.hud_goal_text(c, d, {}, "azure_peak", 0).begins_with("Report at the"))
+
+
 func test_validate_rejects_bad_item() -> void:
 	var d := GameData.new()
 	d.items = data().items

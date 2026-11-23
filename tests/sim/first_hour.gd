@@ -2144,7 +2144,22 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		var acted_line := ""
 		var skipped: Array[String] = []
 		var tries: Dictionary = done.get_or_add("hint_tries", {})
-		for line: String in _next_steps(gs, c, day):
+		# SECT-036: a member whose contribution is met takes the rank trial when it rates at least 50 in 100, else keeps training.
+		if hints_policy and sect_report and c.alive and not c.is_rogue() and Sects.needs_trial(c, gs.data) and Sects.check_promotion(c, gs.data) == "":
+			var foe := Sects.trial_opponent(gs.data, Sects.trial_enemy(c, gs.data))
+			var odds := Combat.win_chance(c, gs.data, foe)
+			if not done.has("trial_odds_shown"):
+				done["trial_odds_shown"] = true
+				print("  [SECT-036] day %d: trial odds %d in 100" % [day, roundi(odds * 100.0)])
+			if odds >= 0.5:
+				_attempt_open_trial(gs, c, done, kinds)
+				if kinds.has("trial"):
+					acted = "trial"
+					acted_line = "Sect rank trial"
+		var steps: Array[String] = []
+		if acted == "":
+			steps = _next_steps(gs, c, day)
+		for line: String in steps:
 			# A line acted on HINT_MAX_TRIES times that is still there is one the policy cannot finish: a player moves on.
 			if int(tries.get(line, 0)) < HINT_MAX_TRIES:
 				acted = _act_on_hint(gs, c, done, line, day)
@@ -2267,7 +2282,9 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var goal := Guidance.hud_goal_text(c, gs.data, gs.world_flags, gs.current_region, day, null, gs.hint_density())
 	if goal != "":
 		# GUIDE-281: an affordable first-technique buy (once the first fight is won) goes before the weekly friend line, as the HUD's Goal row does.
-		if goal.begins_with("Learn your first technique: buy ") and LifeStats.get_stat(c, "fights_won") >= 1:
+		if goal.begins_with("Report at the"):  # SECT-036: the report leads the Goal row, so it goes first
+			lines.insert(0, "Goal: " + goal)
+		elif goal.begins_with("Learn your first technique: buy ") and LifeStats.get_stat(c, "fights_won") >= 1:
 			lines.insert(0, "Goal: " + goal)
 		else:
 			lines.append("Goal: " + goal)
@@ -2519,7 +2536,7 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		spar_hint = was
 		return "spar" if int(spar_log["bouts"]) > spar_before else ""
 	# GUIDE-289: a new disciple walks to the hall and reports (the welcome items count as something new).
-	if line.begins_with("Report at the") and not c.is_rogue():
+	if (line.begins_with("Report at the") or line.begins_with("Goal: Report at the")) and not c.is_rogue():
 		var hall_region := Sects.home_region(gs.data, String(c.sect["id"]))
 		if hall_region != "":
 			_walk_to(gs, c, hall_region)
@@ -2680,7 +2697,8 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.contains("would pay about") or line.begins_with("Good for trade"):
 		_sell_loot_here(gs, c, gs.current_region)
 		return "sell" if c.item_count("spirit_stone") > stones_before else ""
-	if line.contains("lectures this month") and not c.is_rogue():
+	# SECT-036: SECT-034 reworded the line ("Lecture: <name>: open this month"); decide by the rule, not the wording.
+	if (line.begins_with("Lecture:") or line.contains("lectures this month")) and not c.is_rogue():
 		var hall := Sects.home_region(gs.data, String(c.sect["id"]))
 		if hall != "":
 			_walk_to(gs, c, hall)
