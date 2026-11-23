@@ -5038,6 +5038,18 @@ static func first_goals(c: CharacterData, data: GameData, flags: Dictionary) -> 
 ## WU-567: who or where the first unfinished first goal points at: {"npc": id} or {"place": display name}, `{}` when
 ## it has no target or the ladder is done. The fighting-style row names the teacher `style_teacher` finds (needs `npcs`).
 static func goal_target(c: CharacterData, data: GameData, flags: Dictionary, npcs: Dictionary = {}, region_id: String = "", favor: Dictionary = {}) -> Dictionary:
+	if goal_ladder_id(c, data, flags) == "sect":  # SECT-035: report and mission rows point at the hall
+		var rows := sect_goals(c, data, flags)
+		var home := String(data.sects[c.sect["id"]].home_region)
+		for i in rows.size():
+			if bool(rows[i]["done"]):
+				continue
+			var text := String(rows[i]["text"])
+			if (text.begins_with("Report") or text.begins_with("Finish")) and home != "" and region_id == home:
+				var hall := Sects.hall_name(data, home, c)
+				return {"place": hall} if hall != "" else {}
+			return {}
+		return {}
 	var goals := first_goals(c, data, flags)
 	for i in goals.size():
 		if bool(goals[i]["done"]):
@@ -5314,6 +5326,45 @@ static func road_goal_region(c: CharacterData, data: GameData, flags: Dictionary
 	return ""
 
 
+## SECT-035: the new disciple's first goals (report, lecture, mission, first promotion). [] for rogues.
+static func sect_goals(c: CharacterData, data: GameData, _flags: Dictionary, _today: int = 0) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if c.is_rogue() or not data.sects.has(c.sect["id"]):
+		return out
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var home := String(sect.home_region)
+	var hall := Sects.hall_name(data, home, c) if home != "" else ""
+	var where := "the sect hall"
+	if hall != "":
+		where = hall
+	if home != "":
+		where += " in " + _region_name(data, home)
+	out.append({"text": "Report at %s" % where, "done": not Sects.needs_report(c)})
+	var lecture := Sects.lecture_def(c, data)
+	if not lecture.is_empty():
+		out.append({"text": "Attend %s" % String(lecture.get("name", "the lecture")), "done": LifeStats.get_stat(c, "lectures_attended") >= 1})
+	var board := "the sect hall" if hall == "" else hall
+	var mission_done := LifeStats.get_stat(c, "missions_done") >= 1 or int(c.sect.get("contribution", 0)) > 0
+	out.append({"text": "Finish a sect mission (board at %s)" % board, "done": mission_done})
+	if sect.ranks.size() > 1:
+		var summary := Sects.promotion_summary(c, data)
+		var text := "Rise to %s" % sect.rank_name(1)
+		if String(summary["next_needs"]) != "" and int(c.sect["rank"]) == 0:
+			text += ": " + String(summary["next_needs"])
+		out.append({"text": text, "done": int(c.sect["rank"]) >= 1})
+	return out
+
+
+## SECT-035: a sect member before Foundation with a sect goal still open.
+static func sect_goals_active(c: CharacterData, data: GameData, flags: Dictionary) -> bool:
+	if c.is_rogue() or c.realm_index > 1:
+		return false
+	for goal in sect_goals(c, data, flags):
+		if not goal["done"]:
+			return true
+	return false
+
+
 static func _first_route_from(data: GameData, from_id: String, to_id: String) -> String:
 	for r: Dictionary in data.regions.get(from_id, {}).get("routes", []):
 		if String(r.get("to", "")) == to_id:
@@ -5547,7 +5598,9 @@ static func tribulation_goals_active(c: CharacterData, data: GameData, flags: Di
 ## The goal ladder the HUD announces from: "first" up to Qi Refining, "foundation" in Foundation
 ## Establishment, "core" in Core Formation, "nascent" in Nascent Soul, "soul" in Soul Formation, "void" in Void Refinement, "body" in Body Integration, "mahayana" in Mahayana, "tribulation" in Tribulation Transcendence, else "". Unlike active_goal_ladder it stays put once every goal is done, so the
 ## last goal ticked off is still announced.
-static func goal_ladder_id(c: CharacterData) -> String:
+static func goal_ladder_id(c: CharacterData, data: GameData = null, flags: Dictionary = {}) -> String:
+	if data != null and c.realm_index <= 1 and first_goals_done(c, data, flags) and sect_goals_active(c, data, flags):
+		return "sect"  # SECT-035
 	if c.realm_index <= 1:
 		return "first"
 	if c.realm_index == 2:
@@ -5568,6 +5621,8 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 		return first_goals(c, data, flags)
 	if id == "road":
 		return road_goals(c, data, flags, today)
+	if id == "sect":
+		return sect_goals(c, data, flags, today)
 	if id == "foundation":
 		return foundation_goals(c, data, flags, clan)
 	if id == "core":
@@ -5588,6 +5643,8 @@ static func goal_ladder(id: String, c: CharacterData, data: GameData, flags: Dic
 static func active_goal_ladder(c: CharacterData, data: GameData, flags: Dictionary, clan: ClanData = null, today: int = 0) -> Array[Dictionary]:
 	if c.realm_index <= 1 and not first_goals_done(c, data, flags):
 		return first_goals(c, data, flags)
+	if sect_goals_active(c, data, flags) and first_goals_done(c, data, flags):
+		return sect_goals(c, data, flags, today)
 	if foundation_goals_active(c, data, flags, clan):
 		return foundation_goals(c, data, flags, clan)
 	if road_goals_active(c, data, flags):
@@ -5870,7 +5927,16 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 				tone = "normal" if flagged else "warning"
 				flagged = true
 			_add(out, "First goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), tone)
-	if road_goals_active(c, data, flags) and not foundation_goals_active(c, data, flags, clan):
+	var sect_block := sect_goals_active(c, data, flags) and first_goals_done(c, data, flags)
+	if sect_block:
+		var sect_flagged := false
+		for goal in sect_goals(c, data, flags, today):
+			var sect_tone := "dim"
+			if not goal["done"]:
+				sect_tone = "normal" if sect_flagged else "warning"
+				sect_flagged = true
+			_add(out, "Sect goals", ("[x] " if goal["done"] else "[ ] ") + String(goal["text"]), sect_tone)
+	if road_goals_active(c, data, flags) and not foundation_goals_active(c, data, flags, clan) and not sect_block:
 		var road_flagged := false
 		for goal in road_goals(c, data, flags, today):
 			var road_tone := "dim"

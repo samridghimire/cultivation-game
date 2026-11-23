@@ -6155,6 +6155,7 @@ func _after_ladder() -> CharacterData:
 func test_road_goals_follow_the_first_ladder() -> void:
 	var flags := {Guidance.ELDER_MO_FLAG: true}
 	var c := _after_ladder()
+	_finish_sect_goals(c)  # SECT-035: a sect member sees the sect goals before the road
 	assert_true(Guidance.first_goals_done(c, data(), flags))
 	assert_true(Guidance.road_goals_active(c, data(), flags))
 	var goals := Guidance.road_goals(c, data(), flags)
@@ -7554,6 +7555,7 @@ func test_goal_region_names_the_first_goal_region() -> void:
 func test_goal_way_fight_works_for_a_later_goal() -> void:
 	# [REVIEW] past the first goals the HUD shows the road ladder ("Walk to <region> ..."); GUIDE-260 returned "" here.
 	var c := _fighter()
+	_finish_sect_goals(c)  # SECT-035: a sect member sees the sect goals before the road
 	var d := data()
 	var flags := {Guidance.ELDER_MO_FLAG: true}
 	LifeStats.add(c, "fights_won", 1)
@@ -8002,3 +8004,10 @@ func test_past_elder_mo() -> void:
 	c.sect = {}
 	c.realm_index = 1
 	assert_true(Guidance.first_goals(c, data(), {})[0]["done"], "Qi Refining rogue")
+
+
+func _finish_sect_goals(c: CharacterData) -> void:
+	c.sect["reported"] = true
+	c.sect["rank"] = maxi(1, int(c.sect.get("rank", 0)))
+	LifeStats.add(c, "lectures_attended")
+	LifeStats.add(c, "missions_done")

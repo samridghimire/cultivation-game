@@ -1801,7 +1801,7 @@ func _done_goal_texts() -> Array[String]:
 
 
 func _sync_goals_done() -> void:
-	_goals_ladder = Guidance.goal_ladder_id(GameState.player) if GameState.player != null else ""
+	_goals_ladder = Guidance.goal_ladder_id(GameState.player, GameState.data, GameState.world_flags) if GameState.player != null else ""
 	_goals_done = _done_goal_texts()
 
 
@@ -1811,7 +1811,7 @@ func _announce_goals_done() -> void:
 	var c: CharacterData = GameState.player
 	if c == null:
 		return
-	if Guidance.goal_ladder_id(c) == _goals_ladder:
+	if Guidance.goal_ladder_id(c, GameState.data, GameState.world_flags) == _goals_ladder:
 		var goals := Guidance.goal_ladder(_goals_ladder, c, GameState.data, GameState.world_flags, GameState.clan, GameClock.total_days)
 		var text := goals_done_banner(_goals_done, goals, _goals_ladder, InputConfig.current_label("toggle_journal"))
 		if text != "":
