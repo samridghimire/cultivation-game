@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 5d32a82
+Last reviewed commit: 8a4ad07
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2487,3 +2487,20 @@ Last reviewed commit: 5d32a82
     (2 of 6 seeds <= 45 quiet days, target 5) and asks for a design call on tea weeks. Both are worker Follow-ups for the planner.
   - SECT-033, FOLK-045 (`{item}` token validated), C-416, WU-605 (tab hidden for rogues, paging skips it), GFX-243, GFX-244,
     GFX-234: OK. Not rendered by me: WU-605, WU-606, WU-607, GFX-243 (workers report shots).
+- 2026-11-23 (reviewer, 2nd run): reviewed 5d32a82..8a4ad07 (FOLK-046, SIM-028, WU-608, GFX-246, WU-609, C-418, SECT-036,
+  GFX-248, GFX-247; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no new binary assets (sect
+  card/arena/lecture vignettes are code-drawn); no SAVE_VERSION bump needed (`folk_news` defaults to {}, round-trip tested).
+  - FOLK-046 bug (fixed): a reaction queued on joining stayed pending after leaving the sect, then read "...the ," with an
+    empty {sect}. `FolkNews.take` now drops news when the player is rogue. Also the test only covered `greeting_for`, which in
+    play is only called for generated villagers (world.gd skips named NPCs); the real path is `_greet_renowned` from
+    start_dialogue/chat. Added `test_chat_delivers_the_reaction` (dialogue path) and `test_stale_news_after_leaving_is_dropped`.
+    Moved the SECT-032 doc comment back onto `_validate_welcome`.
+  - FOLK-046 note (not filed): the reaction is posted to the message log as the dialogue opens, so it sits behind the dialogue
+    modal; showing it as the dialogue's opening line would read better. C-418: only 3 Qingshi NPCs have favor; no
+    demonic-sect split (Xiao Ling is "delighted" about Blood Lotus too). Both are worker Follow-ups for the planner.
+  - SECT-036: only part 1 (report leads the Goal row; the hints list's copy is dropped by drop_goal_echoes; sim trial/lecture
+    branches). The balance half (rank-1 thresholds, examiner strength) is NOT done; sect_year still shows no promotion in year 1.
+  - WU-609 OK (trial card in every HUD blocking list, so queued moments wait; Not yet focused under 30 in 100; B closes).
+    Note: the mission board closes when the card opens (worker Follow-up).
+  - WU-608 OK (overview row only for reported members; journal close returns to the hall menu). GFX-246, GFX-247
+    (drill_sect_id has a test), GFX-248, SIM-028, C-418: OK. Not rendered by me (workers report shots for GFX-246/247/248, WU-609).

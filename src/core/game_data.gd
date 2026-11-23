@@ -1321,8 +1321,8 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 	return errors
 
 
-## SECT-032: a sect's optional `welcome` {line, items}: non-empty line <= 160 chars, 1-2 known items of 1-5 each, worth <= 60 stones.
-func _validate_folk_news() -> void:  # FOLK-046
+## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion}}: each pool 1+ strings of 1-160 chars.
+func _validate_folk_news() -> void:
 	var cfg: Dictionary = family.get("folk_news", {})
 	if cfg.is_empty():
 		return
@@ -1339,6 +1339,7 @@ func _validate_folk_news() -> void:  # FOLK-046
 				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
 
 
+## SECT-032: a sect's optional `welcome` {line, items}: non-empty line <= 160 chars, 1-2 known items of 1-5 each, worth <= 60 stones.
 func _validate_welcome(def: SectDef) -> void:
 	if def.welcome.is_empty():
 		return

@@ -29,6 +29,8 @@ static func take(player: CharacterData, data: GameData, npc_id: String) -> Strin
 		return ""
 	var kind := String(player.folk_news[npc_id])
 	player.folk_news.erase(npc_id)
+	if player.is_rogue() or not data.sects.has(String(player.sect.get("id", ""))):
+		return ""  # RV-FOLK046: news of a sect the player has since left is stale; drop it
 	var def: Dictionary = data.npcs.get(npc_id, {})
 	var own: Dictionary = def.get("news_lines", {})
 	var pool: Array = own.get(kind, [])
@@ -37,10 +39,5 @@ static func take(player: CharacterData, data: GameData, npc_id: String) -> Strin
 	if pool.is_empty():
 		return ""
 	var line := String(pool[absi(("%s|%s|%d" % [npc_id, kind, player.age_days]).hash()) % pool.size()])
-	var sect_name := ""
-	var rank_name := ""
-	if not player.sect.is_empty():
-		var sect: SectDef = data.sects[String(player.sect["id"])]
-		sect_name = sect.name
-		rank_name = sect.rank_name(int(player.sect["rank"]))
-	return line.replace("{player}", player.name).replace("{sect}", sect_name).replace("{rank}", rank_name)
+	var sect: SectDef = data.sects[String(player.sect["id"])]
+	return line.replace("{player}", player.name).replace("{sect}", sect.name).replace("{rank}", sect.rank_name(int(player.sect["rank"])))

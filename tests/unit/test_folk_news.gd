@@ -73,3 +73,26 @@ func test_qingshi_friends_have_own_voices() -> void:
 		first_lines.append(String(nl["sect_join"][0]))
 	assert_eq(first_lines.size(), 3)
 	assert_true(first_lines[0] != first_lines[1] and first_lines[1] != first_lines[2], "each villager sounds different")
+
+
+## RV-FOLK046: in play a named villager's reaction arrives when you speak with them (_greet_renowned), not the bubble greeting.
+func test_chat_delivers_the_reaction() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["elder_mo"] = 60
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
+	EventBus.sect_joined.emit("azure_cloud_sect")
+	assert_true(c.folk_news.has("elder_mo"))
+	gs.start_dialogue("elder_mo")
+	gs.end_dialogue()
+	assert_false(c.folk_news.has("elder_mo"), "talking used the reaction")
+
+
+## RV-FOLK046: news of a sect you have since left is dropped, never "joined the ." with an empty name.
+func test_stale_news_after_leaving_is_dropped() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.sect = {}
+	c.folk_news["elder_mo"] = "sect_join"
+	assert_eq(FolkNews.take(c, gs.data, "elder_mo"), "")
+	assert_false(c.folk_news.has("elder_mo"))
