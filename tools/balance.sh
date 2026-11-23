@@ -52,6 +52,7 @@ fresh() {
 	run "crafter crafts: beast_tamer (seeds 1-5, 365 days)" res://tests/sim/crafter_start.gd -- 5 365 --prof=beast_tamer
 	run "quiet stretches (seeds 1-10, 365 days)" res://tests/sim/quiet_stretches.gd -- 10 365
 	run "time breakdown (hints player, seeds 1-4, 1095 days)" res://tests/sim/quiet_stretches.gd -- 4 1095 --hints-only --breakdown
+	run "sect year (hints player, seeds 1-3, 365 days)" res://tests/sim/sect_year.gd -- 3 365
 	run "first Foundation Establishment year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2
 	run "first Foundation Establishment year, fighting sensed threats (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 2 --threats=fight
 	run "first Core Formation year (seeds 1-10)" res://tests/sim/simulate_foundation_year.gd -- 10 3

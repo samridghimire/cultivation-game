@@ -2071,3 +2071,27 @@ first hour in presses (hints player, seeds 1-10, 24 months, start misty_forest)
   first_breakthrough     10/10             18             18             30             30
   sect_joined            10/10             18             18             30             30
 
+## sect year (hints player, seeds 1-3, 365 days)
+
+Sect year: azure_cloud_sect (home azure_peak), hints player, 365 days
+  seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
+  1         183         0         7          455         0         0        12/0         0      35
+  2         193         0         6          340         0         0        13/0         0      18
+  3         173         0         7          420         0         0        12/0         0      35
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [-1, -1, -1]
+
+Sect year: blood_lotus_sect (home withered_bone_marsh), hints player, 365 days
+  seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
+  1         212         0        10          420         0         0        13/0         0      18
+  2         217         0        10          420         0         0        13/0         0      18
+  3         217         0        10          420         0         0        13/0         0      18
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [-1, -1, -1]
+
+Sect year: myriad_treasure_pavilion (home fallen_star_market), hints player, 365 days
+  seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
+  1         175         0         6          345         0         0        11/0         0      60
+  2         223         0         5          310         0         0        13/0         0      17
+  3         259         0         4          265         0         0        13/0         0      17
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [-1, -1, -1]
+
+
