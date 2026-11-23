@@ -233,16 +233,18 @@ func _unhandled_input(event: InputEvent) -> void:
 ## A small pole with a hanging pennant, drawn in code at BANNER_SCALE.
 class SectBanner extends Control:
 	var color := Color.WHITE
+	var px := SectCard.BANNER_SCALE  ## WU-607: art-pixel size (3 on cards, 2 on the map)
 
 	func _draw() -> void:
-		var s := SectCard.BANNER_SCALE
-		var pole := Color(0.45, 0.32, 0.2)
-		draw_rect(Rect2(0, 0, s, 11 * s), pole)
-		draw_rect(Rect2(0, 0, 2 * s, s), Color(0.9, 0.75, 0.3))
-		draw_rect(Rect2(s, s, 7 * s, 7 * s), color)
-		draw_rect(Rect2(s, 8 * s, 7 * s, s), color.darkened(0.25))  # swallow-tail
-		draw_rect(Rect2(4 * s, 8 * s, s, s), Color(0, 0, 0, 0))
-		draw_rect(Rect2(3 * s, 3 * s, 3 * s, 3 * s), color.lightened(0.5))
+		paint(self, color, px)
+
+	## Draws the banner with its pole top at the canvas origin (WU-607: the map reuses it at px 2).
+	static func paint(ci: CanvasItem, col: Color, s: int) -> void:
+		ci.draw_rect(Rect2(0, 0, s, 11 * s), Color(0.45, 0.32, 0.2))
+		ci.draw_rect(Rect2(0, 0, 2 * s, s), Color(0.9, 0.75, 0.3))
+		ci.draw_rect(Rect2(s, s, 7 * s, 7 * s), col)
+		ci.draw_rect(Rect2(s, 8 * s, 7 * s, s), col.darkened(0.25))  # swallow-tail
+		ci.draw_rect(Rect2(3 * s, 3 * s, 3 * s, 3 * s), col.lightened(0.5))
 
 
 ## WU-606: the lecture hall, drawn in code: the elder on a dais, seated disciples in two rows, scrolls either side.

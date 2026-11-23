@@ -8,6 +8,7 @@ extends SceneTree
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
+## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
 ## WU-606: `-- --sect-lecture=<sect_id> [--insight]` renders sect_lecture.png (the monthly lecture card; --insight forces a Dao glimpse).
@@ -466,6 +467,20 @@ func _start() -> void:
 			jscreen.open()
 			jscreen.set_page("sect"), "close": jscreen.close})
 		special = true
+	for a in OS.get_cmdline_user_args():  # WU-607: the world map as a sect member
+		if a.begins_with("--map-sect="):
+			var msect := a.substr(11)
+			var mscreen: Control = hud.get("_screens")["toggle_map"]
+			shots.append({"name": "map_sect", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0 if msect == "azure_cloud_sect" else c.alignment
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(msect)
+				(hud.get("_pending_moments") as Array).clear()
+				(hud.get("_sect_card") as Control).close()
+				mscreen.open()
+				mscreen._select(Sects.home_region(gs.data, msect)), "close": mscreen.close})
+			special = true
 	if OS.get_cmdline_user_args().has("--sect-promote"):  # WU-603: join azure_cloud_sect, then promote one rank
 		var pcard: Control = hud.get("_sect_card")
 		shots.append({"name": "sect_promote", "open": func() -> void:

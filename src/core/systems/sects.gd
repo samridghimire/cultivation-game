@@ -12,6 +12,44 @@ static func home_region(data: GameData, sect_id: String) -> String:
 	return def.home_region if def != null else ""
 
 
+## WU-607: the sect's own hall place in its home region ({} when none): the hall naming the sect, else any hall there.
+static func home_hall(data: GameData, sect_id: String) -> Dictionary:
+	var region: Dictionary = data.regions.get(home_region(data, sect_id), {})
+	var any: Dictionary = {}
+	for p: Dictionary in region.get("places", []):
+		if String(p.get("type", "")) != "sect_hall":
+			continue
+		if String(p.get("sect", "")) == sect_id:
+			return p
+		if any.is_empty() and String(p.get("sect", "")) == "":
+			any = p
+	return any
+
+
+## WU-607: y of the home region's main road (the first wide-and-flat path's centre line); the map's middle when it has none.
+static func road_y(data: GameData, region_id: String) -> float:
+	var map: Dictionary = data.regions.get(region_id, {}).get("map", {})
+	for path: Array in map.get("paths", []):
+		if path.size() == 4 and float(path[2]) >= float(path[3]):
+			return float(path[1]) + float(path[3]) / 2.0
+	var size: Array = map.get("size", [1600, 1000])
+	return float(size[1]) / 2.0
+
+
+## WU-607: the first arrival line at a member's home region ("" for rogues, other regions, no hall).
+static func home_arrival_line(c: CharacterData, data: GameData, region_id: String) -> String:
+	if c.is_rogue() or home_region(data, String(c.sect["id"])) != region_id:
+		return ""
+	var hall := home_hall(data, String(c.sect["id"]))
+	if hall.is_empty():
+		return ""
+	var pos: Array = hall.get("pos", [0, 0])
+	var dy := float(pos[1]) - road_y(data, region_id)
+	var where := "beside the road" if absf(dy) < 40.0 else ("north of the road" if dy < 0.0 else "south of the road")
+	var sect_name := (data.sects[c.sect["id"]] as SectDef).name
+	return "%s: home of the %s. The %s stands %s." % [Exploration.region_name(data, region_id), sect_name, hall.get("display_name", "hall"), where]
+
+
 ## Returns {ok: bool, reason: String}.
 static func check_join(c: CharacterData, data: GameData, sect_id: String) -> Dictionary:
 	if not data.sects.has(sect_id):

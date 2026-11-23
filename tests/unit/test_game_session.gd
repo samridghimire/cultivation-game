@@ -4782,3 +4782,19 @@ func test_birthday_gift_makes_sworn_friend() -> void:
 	gs.give_gift("hunter_ma", liked)
 	assert_eq(int(gs.npc_favor["hunter_ma"]), after, "second gift refused")
 	assert_eq(c.item_count(liked), 2)
+
+
+func test_sect_home_arrival_line_fires_once() -> void:  # WU-607
+	var gs := _game_state()
+	var c := _start()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	gs.current_region = "azure_peak"
+	var seen: Array[String] = []
+	var grab := func(text: String, _cat: String) -> void: seen.append(text)
+	EventBus.message_posted.connect(grab)
+	gs.call("_post_sect_home_arrival")
+	gs.call("_post_sect_home_arrival")
+	EventBus.message_posted.disconnect(grab)
+	var homes := seen.filter(func(t: String) -> bool: return t.contains("home of the Azure Cloud Sect"))
+	assert_eq(homes.size(), 1, "once per sect")
+	assert_true(gs.world_flags.get("sect_home_seen_azure_cloud_sect", false))

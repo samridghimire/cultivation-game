@@ -507,3 +507,29 @@ func test_merchant_goods_list_matches_text() -> void:
 	var p := {"stock_tags": ["herb", "ore", "herb"]}
 	assert_eq(Guidance.merchant_goods_list(p), PackedStringArray(["herbs", "ore"]))
 	assert_eq(Guidance.merchant_goods(p), "herbs, ore")
+
+
+## WU-607: a member's sect home carries the banner data; a rogue's regions have none.
+func test_sect_home_data() -> void:
+	var d := data()
+	var c := new_character()
+	assert_true(WorldMapScreen.sect_home(c, d, "azure_peak").is_empty(), "a rogue has no sect home")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "reported": false}
+	var home := WorldMapScreen.sect_home(c, d, "azure_peak")
+	assert_eq(home["sect_id"], "azure_cloud_sect")
+	assert_eq(home["lines"][0], "Home of Azure Cloud Sect")
+	assert_eq(home["lines"][1], "Report at Azure Cloud Hall")
+	assert_true(WorldMapScreen.sect_home(c, d, "qingshi_village").is_empty(), "only the home region")
+	c.sect["reported"] = true
+	assert_eq(WorldMapScreen.sect_home(c, d, "azure_peak")["lines"].size(), 1, "no report line once reported")
+
+
+## WU-607: the home arrival line names the hall and which side of the road it stands.
+func test_home_arrival_line() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Sects.home_arrival_line(c, d, "azure_peak"), "")
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var line := Sects.home_arrival_line(c, d, "azure_peak")
+	assert_true(line.contains("home of the Azure Cloud Sect") and line.contains("Azure Cloud Hall stands"), line)
+	assert_eq(Sects.home_arrival_line(c, d, "qingshi_village"), "")

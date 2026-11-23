@@ -42,6 +42,7 @@ var _name: Label
 var _info: Label
 var _description: Label
 var _hint_note: Label
+var _sect_note: Label  ## WU-607: "Home of <sect>" / "Report at <hall>"
 var _goal_region := ""  # WU-439: the region the first unfinished road goal points to
 var _hint_region := ""  # WU-316: the region the HUD's first hint points to
 var _places: Label
@@ -97,6 +98,8 @@ func _init() -> void:
 	details.add_child(_info)
 	_hint_note = _wrapped(UIStyle.label("", 16, UIStyle.ACCENT))
 	details.add_child(_hint_note)
+	_sect_note = _wrapped(UIStyle.label("", 16, Color("6fa8e8")))  # WU-607
+	details.add_child(_sect_note)
 	_description = _wrapped(UIStyle.label("", 16))
 	details.add_child(_description)
 	_today = _block(details, "Today", Color(0.8, 0.9, 0.8))
@@ -252,6 +255,21 @@ static func layout(data: GameData) -> Dictionary:
 		var angle := TAU * float(i) / unplaced.size() - PI / 2.0
 		result[unplaced[i]] = Vector2(0.5, 0.5) + Vector2(cos(angle) * 0.4, sin(angle) * 0.38)
 	return result
+
+
+## WU-607: a member's sect home on the map: {sect_id, name, color, lines} or {} (rogues, other regions).
+## `lines` are "Home of <sect>" and, while the member still owes a report, "Report at <hall>".
+static func sect_home(c: CharacterData, data: GameData, region_id: String) -> Dictionary:
+	if c.is_rogue() or Sects.home_region(data, String(c.sect["id"])) != region_id:
+		return {}
+	var def: SectDef = data.sects[c.sect["id"]]
+	var lines := PackedStringArray(["Home of %s" % def.name])
+	if Sects.needs_report(c):
+		var hall := Sects.home_hall(data, def.id)
+		if not hall.is_empty():
+			lines.append("Report at %s" % hall.get("display_name", "the hall"))
+	var color := Color(def.robe_color) if def.robe_color != "" else UIStyle.ACCENT
+	return {"sect_id": def.id, "name": def.name, "color": color, "lines": lines}
 
 
 ## GFX-059: the box of a region node, wide enough for the whole name (min 110 wide, 40 high).
@@ -632,6 +650,8 @@ func _rebuild() -> void:
 			b.text += "\nUnexplored"
 			b.add_theme_font_size_override("font_size", 14)
 		b.clip_text = true
+		if not sect_home(GameState.player, data, region_id).is_empty():
+			b.tooltip_text = "Your sect"
 		b.position = rect.position
 		b.size = rect.size
 		b.toggle_mode = true
@@ -896,6 +916,12 @@ func _draw_map() -> void:
 		for kind in kinds:
 			_canvas.draw_circle(Vector2(pip_x + row.y / 2.0, y + GLYPH_SIZE / 2.0), minf(5.0, row.y / 2.0 - 0.5), MARK_COLORS[kind])
 			pip_x += row.y
+	var home_id := Sects.home_region(data, String(GameState.player.sect["id"])) if not GameState.player.is_rogue() else ""
+	if home_id != "" and _rects.has(home_id) and not sect_home(GameState.player, data, home_id).is_empty():
+		var hb: Rect2 = _rects[home_id]
+		_canvas.draw_set_transform(Vector2(hb.end.x + 7.0, hb.position.y - 2.0))
+		SectCard.SectBanner.paint(_canvas, sect_home(GameState.player, data, home_id)["color"], 2)
+		_canvas.draw_set_transform(Vector2.ZERO)
 	if _hint_region != "" and _rects.has(_hint_region):
 		var hr: Rect2 = _rects[_hint_region]
 		var hm := hint_marker_rect(hr)
@@ -943,7 +969,9 @@ func _show_details() -> void:
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
 		_hint_note.text = "Your road goal points here."
-	_hint_note.visible = _hint_note.text != ""
+	var home := sect_home(GameState.player, data, _selected)
+	_sect_note.text = "\n".join(home["lines"]) if not home.is_empty() else ""
+	_sect_note.visible = _sect_note.text != ""
 	var unexplored := is_unexplored(GameState.player, _selected, GameState.current_region)
 	_description.text = String(region.get("description", ""))
 	if unexplored:

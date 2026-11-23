@@ -928,6 +928,7 @@ func _post_arrival_line() -> void:
 	world_flags["arrival_line"] = line
 	if line != "":
 		EventBus.post(line, "travel")
+	_post_sect_home_arrival()
 	receive_drop_by_gifts()
 	receive_sworn_tending()
 	# WILD-013 / TODAY-002: the in-season line once a season per region.
@@ -939,6 +940,20 @@ func _post_arrival_line() -> void:
 		world_flags["season_line_seen"] = seen
 		if not line.contains(season_line):  # WU-464: the arrival line may already say it
 			EventBus.post(season_line, "travel")
+
+
+## WU-607: once per sect, the first arrival at a member's sect home says where the hall stands.
+func _post_sect_home_arrival() -> void:
+	if player.is_rogue():
+		return
+	var key := "sect_home_seen_%s" % player.sect["id"]
+	if world_flags.get(key, false):
+		return
+	var text := Sects.home_arrival_line(player, data, current_region)
+	if text == "":
+		return
+	world_flags[key] = true
+	EventBus.post(text, "travel")
 
 
 ## FOLK-041: named Close friends who live in this region may leave something from their work (once a month each).
