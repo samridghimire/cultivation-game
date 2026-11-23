@@ -189,7 +189,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "study": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "sect_report": 3, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "study": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_lesson", "first_friend_scene", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2518,6 +2518,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_follow_spar_hint(gs, c, day)
 		spar_hint = was
 		return "spar" if int(spar_log["bouts"]) > spar_before else ""
+	# GUIDE-289: a new disciple walks to the hall and reports (the welcome items count as something new).
+	if line.begins_with("Report at the") and not c.is_rogue():
+		var hall_region := Sects.home_region(gs.data, String(c.sect["id"]))
+		if hall_region != "":
+			_walk_to(gs, c, hall_region)
+			if gs.current_region == hall_region and Sects.needs_report(c):
+				gs.report_to_sect()
+		return "sect_report" if not Sects.needs_report(c) else ""
 	# GUIDE-272: before the generic mission branch (the line says "your sect's own missions").
 	if line.begins_with("Your sect's home") and not c.is_rogue():
 		var home := Sects.home_region(gs.data, String(c.sect["id"]))
