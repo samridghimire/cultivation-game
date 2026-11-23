@@ -127,7 +127,7 @@ func trial_option() -> Dictionary:
 	var enemy: Dictionary = data.enemies[enemy_id]
 	var label := "Attempt the trial for %s (vs %s, %s)" % [sect.rank_name(Sects.next_rank(player, data)), enemy["name"], UIStyle.fight_label(player, data, enemy)]
 	var reason := Sects.check_promotion(player, data)
-	return {"label": label, "action": GameState.attempt_promotion_trial, "disabled": reason != "", "reason": reason}
+	return {"label": label, "action": GameState.offer_promotion_trial, "disabled": reason != "", "reason": reason}
 
 
 ## One "Claim <item>" entry per item in the player's sect shop; unavailable

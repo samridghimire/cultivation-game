@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
 ## WU-606: `-- --sect-lecture=<sect_id> [--insight]` renders sect_lecture.png (the monthly lecture card; --insight forces a Dao glimpse).
@@ -438,6 +439,21 @@ func _start() -> void:
 					gs.attend_lecture()
 				ts.visible = false
 				hud.call("_update_modal"), "close": lcard.close})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-609: the staged promotion trial card
+		if a.begins_with("--sect-trial="):
+			var tid := a.substr(13)
+			var tcard: Control = hud.get("_trial_card")
+			shots.append({"name": "sect_trial", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(tid)
+				(hud.get("_pending_moments") as Array).clear()
+				(hud.get("_sect_card") as Control).close()
+				gs.current_region = Sects.home_region(gs.data, tid)
+				Sects.add_contribution(c, gs.data, int((gs.data.sects[tid] as SectDef).ranks[1].get("contribution", 0)))
+				gs.offer_promotion_trial(), "close": tcard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
 		if a.begins_with("--sect-report="):

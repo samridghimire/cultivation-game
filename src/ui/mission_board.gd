@@ -633,7 +633,7 @@ func _act() -> void:
 	if _tab == "shop":
 		_buy()
 	elif _tab == "rank":
-		GameState.attempt_promotion_trial()
+		GameState.offer_promotion_trial()  # WU-609: the HUD stages the trial card
 		if visible:
 			_focus_selected.call_deferred()
 	else:

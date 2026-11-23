@@ -214,6 +214,7 @@ var _contest_card: ContestCard  # WU-454
 var _friend_card: FriendSceneCard  # WU-467
 var _season_card: SeasonCard  # WU-495
 var _sect_card: SectCard  # WU-602
+var _trial_card: TrialCard  # WU-609
 var _pending_friend_scenes: Array = []
 var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
@@ -334,6 +335,11 @@ func _ready() -> void:
 	_sect_card = SectCard.new()  # WU-602
 	_sect_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_sect_card))
+	_trial_card = TrialCard.new()  # WU-609
+	_trial_card.closed.connect(_update_modal)
+	_trial_card.confirmed.connect(_on_trial_confirmed)
+	add_child(UIStyle.centered(_trial_card))
+	EventBus.promotion_trial_offered.connect(_on_promotion_trial_offered)
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
 	EventBus.sect_lecture_attended.connect(_on_sect_lecture_attended)  # WU-606
@@ -445,7 +451,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1593,7 +1599,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -2208,6 +2214,21 @@ func _play_sect_report(sect_id: String, line: String, items: Dictionary) -> void
 	_update_modal()
 
 
+## WU-609: the hall or mission board asked for the trial; stage the card over a cleared screen.
+func _on_promotion_trial_offered(sect_id: String) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	_choice_menu.close()
+	_close_screens()
+	_trial_card.open(GameState.player, GameState.data, _sect_color(sect_id))
+	_update_modal()
+
+
+func _on_trial_confirmed() -> void:
+	_update_modal()
+	GameState.attempt_promotion_trial()
+
+
 ## WU-603: the promotion card reuses the sect card.
 func _on_sect_promoted(sect_id: String, _rank: int) -> void:
 	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
@@ -2253,7 +2274,7 @@ func _season_card_blocked() -> bool:
 		_dialogue.closed.connect(_flush_year_review, CONNECT_ONE_SHOT)
 	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
 		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
-	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _sect_card.visible or _encounter.visible or _combat_report.visible \
+	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _encounter.visible or _combat_report.visible \
 			or _realm_card.visible or _tribulation.visible or _any_screen_open()
 
 
@@ -2643,7 +2664,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
 
 
 func _update_modal() -> void:

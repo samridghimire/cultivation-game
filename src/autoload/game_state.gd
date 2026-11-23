@@ -3563,6 +3563,20 @@ func take_mission(mission_id: String) -> void:
 	_pass_time(result["days"], "On a sect mission")
 
 
+## WU-609: the hall/board entry for the trial: asks the HUD for the trial card (it calls
+## attempt_promotion_trial on "Step into the arena"). Posts the reason instead when no trial can be attempted.
+func offer_promotion_trial() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var reason := Sects.check_promotion(player, data)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.promotion_trial_offered.emit(String(player.sect["id"]))
+
+
 ## Fight your sect's promotion trial (sects.json rank `trial`) for the next
 ## rank. A sparring match: losing can injure you but never kills or robs you.
 func attempt_promotion_trial() -> void:
