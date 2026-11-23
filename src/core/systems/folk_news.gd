@@ -14,9 +14,10 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 		return 0
 	var min_favor: int = int(cfg.get("min_favor", 40))
 	var n := 0
+	var home := player.home_region if player.home_region != "" else data.start_region  # WU-615: players never get a home_region; their friends are in the start village
 	for id: String in data.npcs:
 		var def: Dictionary = data.npcs[id]
-		if String(def.get("region", "")) != player.home_region:
+		if String(def.get("region", "")) != home:
 			continue
 		if int(favor.get(id, int(def.get("favor", 0)))) < min_favor:
 			continue

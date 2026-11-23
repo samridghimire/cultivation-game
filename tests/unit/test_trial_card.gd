@@ -193,3 +193,29 @@ func test_lost_trial_opens_result_card_with_back_focus() -> void:
 	assert_true(card.step_button().visible)
 	assert_eq(card.wait_button().text, "Not yet")
 	_teardown(gs, hud)
+
+
+## WU-615: a sect-join news line reaches Xiao Ling's talk (window) and is gone afterwards, however the talk is opened.
+func test_news_reaches_xiao_ling_talk() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	gs.end_session()
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.pending_event = ""
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.current_region = "qingshi_village"
+	gs.npc_favor["xiao_ling"] = 60
+	gs.join_sect("azure_cloud_sect")
+	assert_true(FolkNews.has_pending(gs.player, "xiao_ling"), "news pending after joining")
+	var win: Control = hud.get("_dialogue")
+	gs.start_dialogue("xiao_ling")
+	await _frames()
+	assert_true(win.visible, "dialogue open")
+	assert_false(FolkNews.has_pending(gs.player, "xiao_ling"), "consumed by the talk")
+	var line: String = win.line_text()
+	assert_true(line.contains("\n\n"), "news leads the talk: " + line)
+	assert_eq(gs.pending_greeting, "", "read once")
+	_teardown(gs, hud)
