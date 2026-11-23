@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-23 [WU-608] A reported disciple's hall menu opens with a Sect overview, and the month-end digest shows the stipend in one row.
+- 2026-11-23 [SIM-028] Balance tooling: a sect year in numbers for each start-region sect.
+- 2026-11-23 [FOLK-046] Village friends react the next time you talk after you join a sect or rise in rank.
+- 2026-11-23 [SECT-035] New disciples get a short list of sect goals: report, attend the lecture, finish a mission, rise a rank.
+- 2026-11-23 [WU-607] The world map marks your sect's home, and arriving there tells you where the hall stands.
+- 2026-11-23 [GFX-244] In Qingshi, the Blossom Crack label and Hunter Ma's name no longer sit on a roof or the bounty board.
+- 2026-11-23 [SECT-034] The promotion card names the new rank's perks and the next trial; the lecture says how many days are left this month.
+- 2026-11-23 [GFX-243] Disciples drill beside the hall where the court is shallow, at Azure Peak and the Blood Lotus reeds.
+- 2026-11-23 [WU-606] The monthly sect lecture is a scene: the elder on the dais, what you learned, any insight glimpsed.
+- 2026-11-23 [GUIDE-289] Hints no longer leave a new disciple meditating for months before reporting at the hall.
+- 2026-11-23 [WU-605] Sect members get a Sect page in the journal: rank, contribution, this month's duties and the rank ladder.
 - 2026-11-23 [C-416] Hua, Xue and Patriarch Lin now have a cheap favourite thing, so they too can leave you a gift.
 - 2026-11-23 [FOLK-045] A friend's drop-by gift comes from their own work (a fisher's fish, a hunter's meat), and the note can name it.
 - 2026-11-23 [GFX-234] Shot check of the market and Qingshi close up; shot tooling can stage any villager's friend scene.

@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-23 12:10
+- 11 landed (the sect is now surfaced end to end); PERF-030 dropped. Planner shots: journal_sect OK; sect_lecture works but its
+  figures are 1x dots (GFX-248); sect_promote shows "Promoted: Outer Disciple" only because the flag skips the trial (QA-245).
+- Big finding (SIM-028): nobody reaches sect rank 1 in year 1 -> SECT-036 (docs/specs/SECT-036.md) is the top systems task;
+  WU-609 (docs/specs/WU-609.md) stages the rank trial with odds.
+- New sect follow-ons: SECT-037 loose ends, SIM-029 ladder measured, SECT-038 yearly outer-sect contest (+ WU-611), FOLK-047 +
+  C-419 more news kinds, GFX-249 news bubble, WU-610 Sect page progress.
+- Next planner: read SECT-036's before/after table and balance diff; if the first promotion still misses day 180, decide
+  whether it is a pacing question for the owner (F-005d) before more sect features.
+
 ## Planner 2026-11-23 06:10
 - 11 landed; the sect has join/report/promotion cards and Azure drills. Planner shots (sect_promote, sect_report blood lotus,
   Qingshi/Azure/marsh arrivals) -> SECT-034, WU-606, GFX-243, GFX-244 spec'd (docs/specs/), SECT-035 spec'd after SECT-034.
