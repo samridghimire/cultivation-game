@@ -453,6 +453,8 @@ func attempt_breakthrough() -> void:
 		EventBus.post("Breakthrough! You have entered the %s realm." % result["realm_name"], "progress")
 		_artifact_whisper("first_breakthrough")
 		Folk.record_news(world_flags, "breakthrough", String(result["realm_name"]), current_region, GameClock.total_days)
+		if player.realm_index >= 2:
+			FolkNews.queue(player, data, npc_favor, "breakthrough")  # FOLK-047: a major realm, not a stage
 		var lifespan_gain := Cultivation.lifespan_years(player, data) - lifespan_before
 		if lifespan_gain > 0:
 			EventBus.post("Your lifespan grows to %d years (+%d)." % [Cultivation.lifespan_years(player, data), lifespan_gain], "progress")
@@ -2240,7 +2242,7 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
-	var news := FolkNews.take(player, data, npc_id)  # FOLK-046
+	var news := FolkNews.take(player, data, npc_id, npcs)  # FOLK-046
 	if news != "":
 		return news
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region, rng, Almanac.salt_of(player)).replace("{player}", player.name)
@@ -2601,7 +2603,7 @@ func call_on(npc_id: String) -> void:
 
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
 func _greet_renowned(npc_id: String) -> void:
-	var news := FolkNews.take(player, data, npc_id)  # FOLK-046: a friend's reaction replaces the greeting, once
+	var news := FolkNews.take(player, data, npc_id, npcs)  # FOLK-046: a friend's reaction replaces the greeting, once
 	if news != "":
 		EventBus.post("%s: %s" % [String(npcs[npc_id].name), news], "people")
 		return
@@ -2783,6 +2785,7 @@ func propose(npc_id: String, rank: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	EventBus.post("%s accepts your proposal and becomes your %s." % [npcs[npc_id].name, Family.rank_name(data, player.gender, rank).to_lower()], "progress")
+	FolkNews.queue(player, data, npc_favor, "wedding")  # FOLK-047
 	_pass_time(result["days"])
 
 

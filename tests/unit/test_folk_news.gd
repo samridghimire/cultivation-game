@@ -96,3 +96,55 @@ func test_stale_news_after_leaving_is_dropped() -> void:
 	c.folk_news["elder_mo"] = "sect_join"
 	assert_eq(FolkNews.take(c, gs.data, "elder_mo"), "")
 	assert_false(c.folk_news.has("elder_mo"))
+
+
+func test_breakthrough_news_major_realm_only() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["elder_mo"] = 60
+	c.realm_index = 2
+	FolkNews.queue(c, gs.data, gs.npc_favor, "breakthrough")
+	assert_eq(String(c.folk_news.get("elder_mo", "")), "breakthrough")
+	var line := FolkNews.take(c, gs.data, "elder_mo", gs.npcs)
+	assert_true(line != "", "a rogue still hears breakthrough news")
+	assert_true(line.find("Foundation Establishment") >= 0 and line.find("{") < 0, line)
+
+
+func test_wedding_news_uses_spouse_name_and_replaces_older_kind() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["elder_mo"] = 60
+	var mate := CharacterFactory.create("Lian Hua", gs.data, seeded_rng(5))
+	gs.npcs[mate.id] = mate
+	c.spouses.append(mate.id)
+	c.folk_news["elder_mo"] = "breakthrough"
+	FolkNews.queue(c, gs.data, gs.npc_favor, "wedding")
+	assert_eq(String(c.folk_news["elder_mo"]), "wedding", "newer kind replaces an unheard older one")
+	var line := FolkNews.take(c, gs.data, "elder_mo", gs.npcs)
+	assert_true(line.find("Lian Hua") >= 0 and line.find("{") < 0, line)
+
+
+func test_stale_sect_news_still_dropped_for_rogue() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.folk_news["elder_mo"] = "promotion"
+	assert_eq(FolkNews.take(c, gs.data, "elder_mo", gs.npcs), "")
+
+
+func test_propose_queues_wedding_news() -> void:
+	var gs := _gs()
+	var c := _start()
+	c.gender = "male"
+	c.alignment = 0
+	gs.npc_favor["elder_mo"] = 60
+	var mate := CharacterFactory.create("Lian Hua", gs.data, seeded_rng(6))
+	mate.gender = "female"
+	mate.realm_index = c.realm_index
+	mate.age_days = 20 * Calendar.DAYS_PER_YEAR
+	gs.npcs[mate.id] = mate
+	gs.npc_favor[mate.id] = 100
+	gs.propose(mate.id, "wife")
+	if c.spouses.has(mate.id):
+		assert_eq(String(c.folk_news.get("elder_mo", "")), "wedding")
+	else:
+		assert_false(c.folk_news.has("elder_mo"), "no marriage, no news")

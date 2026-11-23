@@ -863,8 +863,8 @@ func _validate_world() -> void:
 				load_errors.append("NPC '%s' news_lines must be an object" % npc["id"])
 			else:
 				for k in nl:
-					if not ["sect_join", "promotion"].has(String(k)) or not nl[k] is Array or (nl[k] as Array).is_empty() or (nl[k] as Array).size() > 3:
-						load_errors.append("NPC '%s' news_lines.%s needs 1-3 strings under sect_join/promotion" % [npc["id"], k])
+					if not ["sect_join", "promotion", "breakthrough", "wedding"].has(String(k)) or not nl[k] is Array or (nl[k] as Array).is_empty() or (nl[k] as Array).size() > 3:
+						load_errors.append("NPC '%s' news_lines.%s needs 1-3 strings under sect_join/promotion/breakthrough/wedding" % [npc["id"], k])
 					else:
 						for l in nl[k]:
 							if not l is String or String(l) == "" or String(l).length() > 160:
@@ -1321,7 +1321,7 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 	return errors
 
 
-## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion}}: each pool 1+ strings of 1-160 chars.
+## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion, breakthrough, wedding}}: each pool 1+ strings of 1-160 chars.
 func _validate_folk_news() -> void:
 	var cfg: Dictionary = family.get("folk_news", {})
 	if cfg.is_empty():
@@ -1329,7 +1329,7 @@ func _validate_folk_news() -> void:
 	var mf: int = int(cfg.get("min_favor", -1))
 	if mf < -100 or mf > 100:
 		load_errors.append("family.folk_news.min_favor must be -100..100")
-	for kind in ["sect_join", "promotion"]:
+	for kind in ["sect_join", "promotion", "breakthrough", "wedding"]:
 		var pool: Variant = cfg.get("lines", {}).get(kind, [])
 		if not pool is Array or (pool as Array).is_empty():
 			load_errors.append("family.folk_news.lines.%s needs at least one line" % kind)
