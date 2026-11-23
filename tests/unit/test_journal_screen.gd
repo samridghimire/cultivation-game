@@ -58,3 +58,40 @@ func test_cards_one_per_section_with_goal_boxes() -> void:
 	var first: Node = j._cards.get_child(0).get_child(0)
 	assert_true(first.get_child(1).get_child(0) is JournalScreen.CheckBox_pixel, "goal row has a pixel box")
 	j.free()
+
+
+## WU-605: the Sect tab exists for a member only; the page names the rank and the next rank's needs.
+func test_sect_tab_for_members_only() -> void:
+	var root: Node = Engine.get_main_loop().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await root.get_tree().process_frame
+	var journal: JournalScreen = hud.get("_screens").get("toggle_journal")
+	journal.open()
+	assert_false((journal._tabs.get_node("Tab_sect") as Button).visible, "rogues never see the tab")
+	journal.close()
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.join_sect("azure_cloud_sect")
+	(hud.get("_pending_moments") as Array).clear()
+	(hud.get("_sect_card") as Control).close()
+	journal.open()
+	assert_true((journal._tabs.get_node("Tab_sect") as Button).visible)
+	journal.set_page("sect")
+	assert_true(journal._sect.visible)
+	var def: SectDef = gs.data.sects["azure_cloud_sect"]
+	var ladder := Sects.ladder(gs.player, gs.data)
+	var texts := PackedStringArray()
+	for n in journal._sect.find_children("*", "Label", true, false):
+		texts.append((n as Label).text)
+	var all := "\n".join(texts)
+	assert_true(all.contains(def.rank_name(int(gs.player.sect["rank"]))))
+	for r: Dictionary in ladder:
+		if not bool(r["reached"]) and not (r["needs"] as PackedStringArray).is_empty():
+			assert_true(all.contains(String((r["needs"] as PackedStringArray)[0])), "next rank's needs shown")
+			break
+	journal.close()
+	hud.queue_free()

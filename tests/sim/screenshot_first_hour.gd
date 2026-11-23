@@ -7,6 +7,7 @@ extends SceneTree
 ## journal Commissions, Deliver) as crafter_*.png.
 ## WU-487: add `-- --realm-open` (with --region=) to jump to a day the region's secret realm is open; shots are named region_<id>_open.png.
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
+## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
 ## WU-602: `-- --sect-join=<sect_id>` renders sect_join.png (the joining card, e.g. azure_cloud_sect).
@@ -428,6 +429,19 @@ func _start() -> void:
 				gs.report_to_sect()
 				hud.call("_drain_moments"), "close": rcard.close})
 			special = true
+	if OS.get_cmdline_user_args().has("--journal-sect"):  # WU-605: join azure_cloud_sect, earn some contribution, open the Sect page
+		var jscreen: Control = hud.get("_screens")["toggle_journal"]
+		shots.append({"name": "journal_sect", "open": func() -> void:
+			hud.get("_banner").visible = false
+			c.alignment = 0
+			c.realm_index = maxi(c.realm_index, 1)
+			gs.join_sect("azure_cloud_sect")
+			(hud.get("_pending_moments") as Array).clear()
+			(hud.get("_sect_card") as Control).close()
+			Sects.add_contribution(c, gs.data, 60)
+			jscreen.open()
+			jscreen.set_page("sect"), "close": jscreen.close})
+		special = true
 	if OS.get_cmdline_user_args().has("--sect-promote"):  # WU-603: join azure_cloud_sect, then promote one rank
 		var pcard: Control = hud.get("_sect_card")
 		shots.append({"name": "sect_promote", "open": func() -> void:

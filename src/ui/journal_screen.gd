@@ -16,9 +16,10 @@ var _scroll: ScrollContainer
 var _cards: VBoxContainer
 ## WU-458: the Today page (first) and which page shows.
 const BLOCK_CAP := 5  ## WU-517: rows per Today block
-const PAGES: Array[String] = ["today", "journal"]
+const PAGES: Array[String] = ["today", "sect", "journal"]  # WU-605: "sect" only shows for members
 var _page := "today"
 var _today: VBoxContainer
+var _sect: VBoxContainer  ## WU-605: the Sect page
 var _almanac := PackedStringArray()  ## WU-513: the almanac lines shown under the Today date
 var _tabs: HBoxContainer
 ## Every card's text joined, for tests and search.
@@ -40,6 +41,7 @@ func _init() -> void:
 	for page: String in PAGES:
 		var tab := UIStyle.button(page.capitalize(), func() -> void: set_page(page))
 		tab.name = "Tab_" + page
+		tab.visible = page != "sect"
 		_tabs.add_child(tab)
 	# WU-576: the calendar has no pad button, so it sits in the header row, one d-pad step from the tabs.
 	var cal_tab := UIStyle.button("Calendar", func() -> void: calendar_requested.emit())
@@ -59,6 +61,9 @@ func _init() -> void:
 	_today = VBoxContainer.new()
 	_today.add_theme_constant_override("separation", 8)
 	pages.add_child(_today)
+	_sect = VBoxContainer.new()
+	_sect.add_theme_constant_override("separation", 8)
+	pages.add_child(_sect)
 	_cards = VBoxContainer.new()
 	_cards.add_theme_constant_override("separation", 8)
 	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -80,7 +85,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
 		get_viewport().set_input_as_handled()
 		var step := 1 if event.is_action_pressed("ui_focus_next") else -1
-		set_page(PAGES[posmod(PAGES.find(_page) + step, PAGES.size())])
+		var i := PAGES.find(_page)
+		for _n in PAGES.size():
+			i = posmod(i + step, PAGES.size())
+			if (_tabs.get_node("Tab_" + PAGES[i]) as Button).visible:
+				break
+		set_page(PAGES[i])
 		(_tabs.get_node("Tab_" + _page) as Button).grab_focus()
 
 
@@ -88,6 +98,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func set_page(page: String) -> void:
 	_page = page
 	_today.visible = page == "today"
+	_sect.visible = page == "sect"
 	_cards.visible = page == "journal"
 	for tab in _tabs.get_children():
 		if tab.name == "CalendarTab":
@@ -110,9 +121,119 @@ func open() -> void:
 	_text.append_text(format_entries(list))
 	_build_cards(list)
 	_build_today(GameState.today_lines(), GameState.season_tasks(), GameState.season_reward_line(), GameState.earning_lines_here(), GameState.people_today_lines(), GameState.almanac_lines())
+	_build_sect()
 	set_page("today")
 	visible = true
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
+
+
+## WU-605: the Sect page: banner header, this month, the rank ladder. Members only; the tab hides for rogues.
+func _build_sect() -> void:
+	for c in _sect.get_children():
+		_sect.remove_child(c)
+		c.queue_free()
+	var p := GameState.player
+	var member := not p.is_rogue() and GameState.data.sects.has(p.sect["id"])
+	(_tabs.get_node("Tab_sect") as Button).visible = member
+	if not member:
+		return
+	var def: SectDef = GameState.data.sects[p.sect["id"]]
+	var color := Color(String(def.robe_color)) if String(def.robe_color) != "" else UIStyle.ACCENT
+	var status := Sects.month_status(p, GameState.data, GameClock.total_days, GameState.world_flags)
+	var head := UIStyle.panel()
+	head.name = "SectHeader"
+	var hrow := HBoxContainer.new()
+	hrow.add_theme_constant_override("separation", 12)
+	head.add_child(hrow)
+	var banner := SectCard.SectBanner.new()
+	banner.custom_minimum_size = Vector2(26, 34)
+	banner.color = color
+	hrow.add_child(banner)
+	var htext := VBoxContainer.new()
+	hrow.add_child(htext)
+	htext.add_child(UIStyle.label(def.name, 22, color))
+	htext.add_child(UIStyle.label("%s · %d contribution to spend" % [def.rank_name(int(p.sect["rank"])), int(status["balance"])], 16))
+	_sect.add_child(head)
+	var month := UIStyle.panel()
+	month.name = "SectMonth"
+	var mbox := VBoxContainer.new()
+	mbox.add_theme_constant_override("separation", 6)
+	month.add_child(mbox)
+	mbox.add_child(UIStyle.label("This month", 18, UIStyle.ACCENT))
+	for line in month_lines(status):
+		mbox.add_child(UIStyle.label(line, 15))
+	var duty := int(status["duty"])
+	if duty > 0:
+		var bar := ProgressBar.new()
+		bar.name = "DutyBar"
+		bar.max_value = duty
+		bar.value = mini(int(status["progress"]), duty)
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(300, 14)
+		bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		mbox.add_child(bar)
+	_sect.add_child(month)
+	var lad := UIStyle.panel()
+	lad.name = "SectLadder"
+	var lbox := VBoxContainer.new()
+	lbox.add_theme_constant_override("separation", 4)
+	lad.add_child(lbox)
+	lbox.add_child(UIStyle.label("Ranks", 18, UIStyle.ACCENT))
+	var seen_next := false
+	for r: Dictionary in Sects.ladder(p, GameState.data):
+		var needs := ", ".join(r["needs"] as PackedStringArray)
+		var text := String(r["name"])
+		var col := Color.WHITE
+		if bool(r["current"]):
+			text += "  (you)"
+			col = color
+		elif bool(r["reached"]):
+			text = "[x] " + text
+			col = DIM
+		else:
+			if needs != "":
+				text += ": " + needs
+			if not seen_next:
+				seen_next = true
+				text = "Next: " + text
+		var l := UIStyle.label(text, 15, col)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(700, 0)
+		lbox.add_child(l)
+		if bool(r["current"]) or seen_next and text.begins_with("Next: "):
+			var perks := ", ".join(r["perks"] as PackedStringArray)
+			if perks != "":
+				var pl := UIStyle.label("    " + perks, 14, DIM)
+				pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				pl.custom_minimum_size = Vector2(700, 0)
+				lbox.add_child(pl)
+	_sect.add_child(lad)
+
+
+## WU-605: the This month text lines for a Sects.month_status. Pure.
+static func month_lines(status: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var duty := int(status.get("duty", 0))
+	if duty > 0:
+		out.append("Duty: %d / %d contribution, %d days left" % [int(status["progress"]), duty, int(status["days_left"])])
+	else:
+		out.append("No duty this month")
+	var pay: Dictionary = status.get("stipend", {})
+	var parts := PackedStringArray()
+	if int(pay.get("spirit_stones", 0)) > 0:
+		parts.append("%d spirit stones" % int(pay["spirit_stones"]))
+	for id: String in pay.get("items", {}):
+		parts.append("%d %s" % [int(pay["items"][id]), String(GameState.data.items.get(id, {}).get("name", id))])
+	if not parts.is_empty():
+		out.append("Stipend: %s" % ", ".join(parts))
+	if String(status.get("lecture", "")) != "":
+		out.append("Lecture: %s" % String(status["lecture"]))
+	if int(status.get("missions_total", 0)) > 0:
+		out.append("Missions: %d of %d ready" % [int(status["missions_ready"]), int(status["missions_total"])])
+	var claim: PackedStringArray = status.get("claimable", PackedStringArray())
+	if not claim.is_empty():
+		out.append("Treasury, within reach: %s" % ", ".join(claim))
+	return out
 
 
 ## The journal for the current session.
