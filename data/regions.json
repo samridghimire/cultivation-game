@@ -99,7 +99,7 @@
         {"type": "deed_giver", "display_name": "Lost Traveller", "pos": [1300, 700], "size": [30, 30], "color": "c9a27a", "look": {"style": "hood", "robe": "7a6a52"}, "deed_context": "traveller", "hidden_by_flag": "traveller_gone"},
         {"type": "inheritance", "display_name": "Mossy Cairn", "pos": [1400, 140], "size": [100, 70], "color": "6f7d5c"},
         {"type": "deed_giver", "display_name": "Woodcutter Bai", "activity": "chop", "tags": ["elder"], "pos": [330, 470], "size": [30, 30], "color": "8a6a3c", "look": {"hair": "grey"}, "deed_context": "woodcutter"},
-        {"type": "merchant", "display_name": "Charcoal Burner's Stall", "activity": "hawk", "pos": [1200, 780], "size": [70, 60], "color": "4a3f36", "stock_tags": ["manual_iron_fist", "silver_carp", "boar_meat", "sweet_rice_ball"], "max_price": 15},
+        {"type": "merchant", "display_name": "Charcoal Burner's Stall", "activity": "hawk", "pos": [570, 548], "size": [70, 60], "color": "4a3f36", "stock_tags": ["manual_iron_fist", "silver_carp", "boar_meat", "sweet_rice_ball"], "max_price": 15},
         {"type": "travel", "display_name": "Forest Trail", "pos": [40, 500], "size": [40, 120], "color": "5c4630"}
       ]
     },
