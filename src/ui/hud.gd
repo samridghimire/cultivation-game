@@ -2265,7 +2265,7 @@ func _play_sect_lecture(sect_id: String, result: Dictionary) -> void:
 	var line := String(result.get("line", ""))
 	if line == "":
 		line = "You attend %s." % name
-	_sect_card.open_lecture(def.name, name, line, int(result.get("qi", 0)), String(result.get("insight_name", "")), _sect_color(sect_id))
+	_sect_card.open_lecture(def.name, name, line, int(result.get("qi", 0)), String(result.get("insight_name", "")), _sect_color(sect_id), bool(result.get("qi_capped", false)))
 	_update_modal()
 
 

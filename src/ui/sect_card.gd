@@ -169,7 +169,7 @@ func open_report(sect_name: String, rank_name: String, line: String, items: Arra
 
 
 ## WU-606: lecture mode: a drawn hall vignette, the elder's line, the qi gained and any insight.
-func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int, insight_name: String, color: Color = UIStyle.ACCENT) -> void:
+func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int, insight_name: String, color: Color = UIStyle.ACCENT, qi_capped: bool = true) -> void:
 	_title.text = sect_name
 	_title.add_theme_color_override("font_color", color)
 	_banner.color = color
@@ -190,7 +190,7 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 	_add_row(line)
 	if qi > 0:
 		_add_row("+%d qi" % qi)
-	else:
+	elif qi_capped:
 		_add_row("Your qi is at a bottleneck: the words settle in your mind")
 	if insight_name != "":
 		var l := UIStyle.label("Insight glimpsed: %s" % insight_name, 17, UIStyle.ACCENT)

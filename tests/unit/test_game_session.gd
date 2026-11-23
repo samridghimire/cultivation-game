@@ -207,6 +207,52 @@ func test_attend_lecture_at_bottleneck_message() -> void:
 	gs.end_session()
 
 
+## SECT-037: joining from afar marks the sect's home region known.
+func test_join_sect_marks_home_region_visited() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.alignment = 0
+	var home := Sects.home_region(gs.data, "blood_lotus_sect")
+	c.visited_regions.erase(home)
+	gs.join_sect("blood_lotus_sect")
+	assert_true(Exploration.visited(c, home), "home region known after joining")
+	gs.end_session()
+
+
+## SECT-037: joining while standing in the home region posts the arrival line at once, and only once.
+func test_join_sect_in_home_region_posts_arrival_line() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.alignment = 0
+	gs.current_region = Sects.home_region(gs.data, "blood_lotus_sect")
+	var seen: Array[String] = []
+	var grab := func(text: String, _cat: String) -> void: seen.append(text)
+	EventBus.message_posted.connect(grab)
+	gs.join_sect("blood_lotus_sect")
+	gs.call("_post_sect_home_arrival")
+	EventBus.message_posted.disconnect(grab)
+	var homes := seen.filter(func(t: String) -> bool: return t.contains("home of the"))
+	assert_eq(homes.size(), 1, "posted at join, never repeated")
+	gs.end_session()
+
+
+## SECT-037: qi_capped is true only when a bottleneck stopped the qi.
+func test_lecture_qi_capped_only_at_bottleneck() -> void:
+	var c := _start()
+	var gs := _game_state()
+	c.alignment = 0
+	gs.join_sect("blood_lotus_sect")
+	var free := Sects.attend_lecture(c, gs.data, seeded_rng(), 0)
+	assert_false(bool(free["qi_capped"]))
+	c.sect["lecture_month"] = -1
+	var realm: RealmDef = gs.data.realms[c.realm_index]
+	c.stage = realm.stage_count() - 1
+	c.qi = realm.qi_required(c.stage)
+	var capped := Sects.attend_lecture(c, gs.data, seeded_rng(), 0)
+	assert_true(bool(capped["qi_capped"]))
+	gs.end_session()
+
+
 func test_join_sect_rejects_wrong_alignment() -> void:
 	var c := _start()
 	var gs := _game_state()

@@ -650,6 +650,11 @@ func join_sect(sect_id: String) -> void:
 	if result["ok"]:
 		EventBus.post("You are accepted into the %s." % data.sects[sect_id].name, "progress")
 		_sync_announced_rank()
+		# SECT-037: a sect's home region is known once you belong, and standing in it says so now.
+		var home := Sects.home_region(data, sect_id)
+		if home != "":
+			Exploration.visit(player, home)
+		_post_sect_home_arrival()
 		EventBus.sect_joined.emit(sect_id)
 	else:
 		EventBus.post(result["reason"], "warning")
@@ -3626,10 +3631,12 @@ func attend_lecture() -> void:
 	_start_time_skip()
 	var result := Sects.attend_lecture(player, data, rng, GameClock.total_days, _cultivation_density(1.0))
 	var scene: String = result["line"] if result["line"] != "" else "You attend %s." % result["name"]
-	if int(result["qi"]) == 0:
+	if bool(result.get("qi_capped", false)):
 		EventBus.post("%s Your qi is at a bottleneck; the words settle in your mind instead." % scene, "progress")
-	else:
+	elif int(result["qi"]) > 0:
 		EventBus.post("%s (+%d qi)" % [scene, int(result["qi"])], "progress")
+	else:
+		EventBus.post(scene, "progress")
 	var insight_name := ""
 	if result["insight_id"] != "":
 		var insight: Dictionary = Dao.def_of(data, result["insight_id"])

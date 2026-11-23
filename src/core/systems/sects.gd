@@ -664,9 +664,13 @@ static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGe
 	c.sect["lecture_month"] = _month_index(total_days)
 	LifeStats.add(c, "lectures_attended")
 	var qi := 0
+	var qi_capped := false  # SECT-037: true only when a bottleneck stopped the qi
 	var qi_days := int(lecture.get("qi_days", 0))
-	if qi_days > 0 and not Cultivation.is_at_bottleneck(c, data):
-		qi = int(Cultivation.cultivate(c, data, qi_days, density)["qi_gained"])
+	if qi_days > 0:
+		if Cultivation.is_at_bottleneck(c, data):
+			qi_capped = true
+		else:
+			qi = int(Cultivation.cultivate(c, data, qi_days, density)["qi_gained"])
 	var chance := float(lecture.get("insight_chance", 0.0)) + 0.005 * maxf(0.0, c.attribute("comprehension") - 10.0)
 	var insight_id := ""
 	if rng.randf() < chance:
@@ -674,7 +678,7 @@ static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGe
 			if Dao.level(c, id) <= 0 and Dao.gain_levels(c, data, id) > 0:
 				insight_id = id
 				break
-	return {"ok": true, "reason": "", "line": lecture_line(lecture, _month_index(total_days)), "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "insight_id": insight_id}
+	return {"ok": true, "reason": "", "line": lecture_line(lecture, _month_index(total_days)), "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "qi_capped": qi_capped, "insight_id": insight_id}
 
 
 ## The scene line of `lecture` for `month_index` (C-270): `lines[month % size]` with
