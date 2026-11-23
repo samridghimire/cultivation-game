@@ -70,3 +70,36 @@ func test_elder_mo_label_hugs_him() -> void:
 	var gaps := await _named_label_gaps("qingshi_village", "elder_mo")
 	for g: float in gaps:
 		assert_true(g <= 24.0, "Elder Mo's label is %s px from him" % g)
+
+
+## GFX-244: a place's name label stays off other places' sprites (Blossom Crack vs the Workshop, Ma vs the bounty board).
+func _label_hits_sprite(region: String, label_of: String, sprite_of: String) -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	gs.current_region = region
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	tree.root.add_child(world)
+	for i in 4:
+		await tree.process_frame
+	world.call("_spread_on_screen")
+	var label: Rect2
+	var body: Rect2
+	for node in world.get_children():
+		if node is Interactable:
+			var n := node as Interactable
+			if n.display_name.begins_with(label_of):
+				label = n.label_rect()
+			if n.display_name.begins_with(sprite_of):
+				body = Rect2(n.position - n.size / 2.0, n.size)
+	world.queue_free()
+	gs.end_session()
+	return label.intersects(body)
+
+
+func test_blossom_crack_label_clears_the_workshop() -> void:
+	assert_false(await _label_hits_sprite("qingshi_village", "Blossom Crack", "Village Workshop"))
+
+
+func test_hunter_ma_label_clears_the_bounty_board() -> void:
+	assert_false(await _label_hits_sprite("qingshi_village", "Hunter Ma", "Hunters' Bounty Board"))
