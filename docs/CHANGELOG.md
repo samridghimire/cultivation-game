@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-23 [WU-614] A lost promotion trial gets its own card: what you lacked, your injury and your odds now.
+- 2026-11-23 [C-417] Misty Forest gets a Charcoal Burner's Stall that sells the Iron Fist manual and food.
+- 2026-11-23 [SIM-029] Balance tooling: the day each sect goal is first reached, per seed and sect.
+- 2026-11-23 [FOLK-047] Village friends react when you reach a new great realm or marry.
+- 2026-11-23 [WU-613] The journal's Sect page is tidier: the tab highlight follows the page and the treasury is one list.
+- 2026-11-23 [SECT-040] Losing a promotion trial tells you what you lacked: realm, a combat technique, rest, or just luck.
+- 2026-11-23 [SECT-039] The first sect promotion comes within the first year: lectures are pointed out, ranks need less contribution, missions pay more, examiners are fairer.
+- 2026-11-23 [GFX-250] Joining, reporting, promotion and the trial arena now show real figures and sect props.
+- 2026-11-23 [WU-612] The trial card takes you back to the board or hall; a friend's news opens their talk.
+- 2026-11-23 [GUIDE-290] Balance tooling: quiet-week measuring counts friendships, friend scenes and lectures.
+- 2026-11-23 [GFX-249] A villager with news for you shows a small banner over their head until you talk.
 - 2026-11-23 [WU-610] The journal Sect page shows how close the next rank is, its trial foe, and what the treasury sells and at what price.
 - 2026-11-23 [SECT-037] Joining a sect reveals its home on the map at once; the lecture only mentions a bottleneck when you hit one.
 - 2026-11-23 [GFX-247] Sect homes: name plates no longer overlap, and the Pavilion court has disciples drilling.
