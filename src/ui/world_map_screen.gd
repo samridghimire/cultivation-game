@@ -969,6 +969,7 @@ func _show_details() -> void:
 	_hint_note.text = "Your hint points here." if _selected == _hint_region and _selected != GameState.current_region else ""
 	if _selected == _goal_region and _selected != GameState.current_region and _hint_note.text == "":
 		_hint_note.text = "Your road goal points here."
+	_hint_note.visible = _hint_note.text != ""
 	var home := sect_home(GameState.player, data, _selected)
 	_sect_note.text = "\n".join(home["lines"]) if not home.is_empty() else ""
 	_sect_note.visible = _sect_note.text != ""

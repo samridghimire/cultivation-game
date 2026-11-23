@@ -533,3 +533,21 @@ func test_home_arrival_line() -> void:
 	var line := Sects.home_arrival_line(c, d, "azure_peak")
 	assert_true(line.contains("home of the Azure Cloud Sect") and line.contains("Azure Cloud Hall stands"), line)
 	assert_eq(Sects.home_arrival_line(c, d, "qingshi_village"), "")
+
+
+## REVIEW (WU-607): the empty hint note hides again, so it leaves no blank line above the sect note.
+func test_empty_hint_note_hides() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(new_character())
+	var screen := WorldMapScreen.new()
+	root.add_child(screen)
+	screen.open()
+	screen._hint_region = "fallen_star_market"
+	screen._select("fallen_star_market")
+	assert_true(screen._hint_note.visible, "the hinted region shows the note")
+	screen._select(gs.current_region)
+	assert_false(screen._hint_note.visible, "no note, no blank line")
+	screen.close()
+	screen.free()
+	gs.end_session()

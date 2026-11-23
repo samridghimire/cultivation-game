@@ -1806,12 +1806,14 @@ func _sync_goals_done() -> void:
 
 
 ## A goal of the current ladder ticked off (WU-131, FOUND-004): one banner per refresh, naming the next goal.
-## Moving to another ladder (the Foundation breakthrough) only takes a fresh snapshot.
+## Moving to another ladder (the Foundation breakthrough) only takes a fresh snapshot, except to or from the
+## SECT-035 sect ladder: it starts and ends mid-realm, so the goal that flips it is still announced from the old ladder.
 func _announce_goals_done() -> void:
 	var c: CharacterData = GameState.player
 	if c == null:
 		return
-	if Guidance.goal_ladder_id(c, GameState.data, GameState.world_flags) == _goals_ladder:
+	var now := Guidance.goal_ladder_id(c, GameState.data, GameState.world_flags)
+	if now == _goals_ladder or now == "sect" or _goals_ladder == "sect":
 		var goals := Guidance.goal_ladder(_goals_ladder, c, GameState.data, GameState.world_flags, GameState.clan, GameClock.total_days)
 		var text := goals_done_banner(_goals_done, goals, _goals_ladder, InputConfig.current_label("toggle_journal"))
 		if text != "":
@@ -1825,7 +1827,7 @@ static func goals_done_banner(before: Array[String], goals: Array[Dictionary], l
 	var fresh := newly_done_goals(before, goals)
 	if fresh.is_empty():
 		return ""
-	var next := "  Your %s goals are done; the journal (%s) has more." % [{"foundation": "Foundation", "core": "Core Formation", "nascent": "Nascent Soul", "soul": "Soul Formation", "void": "Void Refinement", "body": "Body Integration", "mahayana": "Mahayana", "tribulation": "Tribulation Transcendence"}.get(ladder, "first"), journal_key]
+	var next := "  Your %s goals are done; the journal (%s) has more." % [{"sect": "sect", "foundation": "Foundation", "core": "Core Formation", "nascent": "Nascent Soul", "soul": "Soul Formation", "void": "Void Refinement", "body": "Body Integration", "mahayana": "Mahayana", "tribulation": "Tribulation Transcendence"}.get(ladder, "first"), journal_key]
 	for goal in goals:
 		if not goal["done"]:
 			next = "  Next: " + str(goal["text"])

@@ -69,3 +69,53 @@ func test_ladder_id_and_lookup() -> void:
 	assert_eq(Guidance.goal_ladder("sect", c, d, {}).size(), 4)
 	# first goals still open for a newcomer: the first ladder keeps the row
 	assert_eq(Guidance.goal_ladder_id(c, d, {}), "first")
+
+
+## REVIEW: the goal that flips the HUD onto or off the sect ladder is still announced (from the old ladder).
+func test_hud_announces_across_the_sect_ladder() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var c := CharacterFactory.create("Goals", gs.data, seeded_rng(3))
+	gs.start_session(c)
+	c.techniques = {"basic_breathing": {"level": 1}, "iron_fist": {"level": 1, "xp": 0.0}}
+	c.realm_index = 1
+	c.stage = 1
+	c.cooked_meals["x"] = 1
+	LifeStats.add(c, "fights_won")
+	LifeStats.add(c, "foraged")
+	LifeStats.add(c, "harvests")
+	c.alignment = 50
+	Sects.join(c, gs.data, "azure_cloud_sect")
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var banner: Banner = hud.get("_banner")
+	hud.call("_sync_goals_done")
+	assert_eq(hud.get("_goals_ladder"), "first")
+	banner.visible = false
+	banner.set("_queue", [])
+	c.stage = 2  # the last first goal: the HUD moves to the sect ladder
+	hud.call("_announce_goals_done")
+	assert_eq(hud.get("_goals_ladder"), "sect")
+	var texts := _banner_texts(banner)
+	assert_true(texts.contains("Reach the 3rd Layer"), "last first goal announced: " + texts)
+	banner.visible = false
+	banner.set("_queue", [])
+	c.sect["reported"] = true
+	LifeStats.add(c, "lectures_attended")
+	LifeStats.add(c, "missions_done")
+	hud.call("_sync_goals_done")
+	c.sect["rank"] = 1  # the last sect goal: the HUD leaves the sect ladder
+	hud.call("_announce_goals_done")
+	assert_eq(hud.get("_goals_ladder"), "first")
+	texts = _banner_texts(banner)
+	assert_true(texts.contains("Rise to"), "last sect goal announced: " + texts)
+	assert_true(texts.contains("sect goals are done"), texts)
+	hud.free()
+	gs.end_session()
+
+
+func _banner_texts(banner: Banner) -> String:
+	var out := banner.subtitle_text() if banner.visible else ""
+	for q: Array in banner.get("_queue"):
+		out += " | " + String(q[1])
+	return out

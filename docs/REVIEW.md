@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3c79a6e
+Last reviewed commit: 5d32a82
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2471,3 +2471,19 @@ Last reviewed commit: 3c79a6e
     node; no teaching choice sits on an entry node today, so latent only.
   - WU-602, WU-604, GUIDE-288, GFX-241, GFX-242, SIM-026: OK. Not rendered by me: WU-604 Blood Lotus report card (worker
     Follow-up), GFX-241, GFX-242.
+- 2026-11-23 (reviewer): reviewed 3c79a6e..5d32a82 (SECT-033, GFX-234, FOLK-045, C-416, WU-605, GUIDE-289, WU-606, GFX-243,
+  SECT-034, GFX-244, WU-607, SECT-035; [PLAN]/[REVIEW] skipped). Main green. No BACKLOG/CHANGELOG edits by workers; no new
+  binary assets (lecture vignette and map banner are code-drawn); no save-format changes (`sect_home_seen_<id>` is a world flag).
+  - SECT-035 bug (fixed): the HUD's goal banner only announces when `goal_ladder_id` is unchanged, and the new "sect" ladder
+    starts and ends mid-realm. A member whose last first goal was "Reach the 3rd Layer" (ladder flips first -> sect), and the
+    last sect goal "Rise to <rank 1>" (sect -> first), were never announced. `_announce_goals_done` now announces from the
+    old ladder when the sect ladder is entered or left; "sect" added to the done-banner names. Test
+    `test_hud_announces_across_the_sect_ladder` (fails without the fix).
+  - WU-607 bug (fixed): replacing the hint-note block dropped `_hint_note.visible = ...`, so the map's empty hint label stayed
+    visible as a blank line. Restored; test `test_empty_hint_note_hides`.
+  - Notes (not filed): WU-606's card shows the bottleneck line whenever qi is 0, also for a lecture with qi_days 0 (none today);
+    WU-607's home arrival line waits for the next arrival when you joined while already in the home region.
+  - SECT-034 worker did not produce the before/after sim numbers or the --sect-promote shot; GUIDE-289 missed its target
+    (2 of 6 seeds <= 45 quiet days, target 5) and asks for a design call on tea weeks. Both are worker Follow-ups for the planner.
+  - SECT-033, FOLK-045 (`{item}` token validated), C-416, WU-605 (tab hidden for rogues, paging skips it), GFX-243, GFX-244,
+    GFX-234: OK. Not rendered by me: WU-605, WU-606, WU-607, GFX-243 (workers report shots).
