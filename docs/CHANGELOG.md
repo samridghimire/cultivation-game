@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-23 [C-416] Hua, Xue and Patriarch Lin now have a cheap favourite thing, so they too can leave you a gift.
+- 2026-11-23 [FOLK-045] A friend's drop-by gift comes from their own work (a fisher's fish, a hunter's meat), and the note can name it.
+- 2026-11-23 [GFX-234] Shot check of the market and Qingshi close up; shot tooling can stage any villager's friend scene.
+- 2026-11-23 [SECT-033] The sect's ranks and this month's duties, stipend, lecture and treasury are gathered for the coming Sect page.
+- 2026-11-22 [WU-604] Reporting at your sect's hall opens a welcome card: the steward's words, your starter items and what the hall offers.
+- 2026-11-22 [GFX-242] At Azure Peak the elders' name plates no longer sit on the hall stairs or the court gate.
+- 2026-11-22 [GUIDE-286] Outside Qingshi the first goal names the villager who will teach you a technique for free.
+- 2026-11-22 [SECT-032] A new disciple reports at the sect hall for a welcome and a few starter items.
+- 2026-11-22 [GFX-241] Disciples drill in formation on the court before Azure Cloud Hall.
+- 2026-11-22 [RV-SECT031] Promotions earned from deeds, letters or missions announce themselves like any other.
+- 2026-11-22 [WU-603] A promotion opens a card with your new rank, its perks and what the next rank needs.
 - 2026-11-22 [WU-602] Joining a sect opens a card: the sect's banner, your rank, its home, duty, perks and your first step.
 - 2026-11-22 [GUIDE-288] The sect treasury hint stops once you own the manual and tells you to study it instead.
 - 2026-11-22 [SIM-026] Balance tooling: the test player buys the ingredients a craft needs.

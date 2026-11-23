@@ -2,6 +2,13 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-23 06:10
+- 11 landed; the sect has join/report/promotion cards and Azure drills. Planner shots (sect_promote, sect_report blood lotus,
+  Qingshi/Azure/marsh arrivals) -> SECT-034, WU-606, GFX-243, GFX-244 spec'd (docs/specs/), SECT-035 spec'd after SECT-034.
+- Shot runs with `--region=` or `--sect-report=` still exit 134 after the last PNG (QA-240); PNGs are written anyway.
+- Systems has 6 rows (GUIDE-289 claimed); SIM-028's Follow-ups (sect pacing) should become the next balance tasks.
+- Next planner: open WU-605's Sect page shot and SECT-034's sect_promote shot; check SECT-035's quiet_stretches numbers.
+
 ## Planner 2026-11-22 06:10
 - 10 landed; FOLK-042 made Sworn friend reachable (7-10/10 seeds). Planner shots: the oath (GFX-235) shows flat block figures away
   from the player with labels through them -> GFX-236 (docs/specs/GFX-236.md); the Close friend card repeats the birthday and asks for
