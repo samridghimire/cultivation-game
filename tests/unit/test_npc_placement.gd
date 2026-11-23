@@ -171,7 +171,13 @@ func test_rain_and_snow_send_villagers_indoors_clear_does_not() -> void:
 
 
 func test_region_without_shelter_keeps_outdoor_pick() -> void:
-	var region: Dictionary = data().regions["misty_forest"]
+	# C-417: Misty Forest now has a stall, so drop its sheltered places to keep the case.
+	var region: Dictionary = (data().regions["misty_forest"] as Dictionary).duplicate()
+	var open_air: Array = []
+	for place: Dictionary in region["places"]:
+		if not Npcs.HAUNT_SHELTER_PLACES.has(String(place.get("type", ""))):
+			open_air.append(place)
+	region["places"] = open_air
 	assert_eq(_outdoor_swapped(region, "rain"), 0)
 
 

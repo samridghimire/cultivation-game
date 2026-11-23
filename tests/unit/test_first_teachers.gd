@@ -1,8 +1,6 @@
 ## C-414: every start region has a local basic_breathing teacher and a mortal fighting style, both in dialogue.
 extends TestCase
 
-## Misty Forest has no merchant and a second Iron Fist teacher would break the one-teacher mentorship tests (follow-up).
-const NO_MORTAL_STYLE_YET: Array = ["misty_forest"]
 const START_REGIONS: Array = ["qingshi_village", "misty_forest", "withered_bone_marsh", "fallen_star_market", "azure_peak", "myriad_peaks_ridge"]
 
 
@@ -29,8 +27,6 @@ func test_every_start_region_has_a_breathing_teacher() -> void:
 
 func test_every_start_region_has_a_mortal_fighting_style() -> void:
 	for region: String in START_REGIONS:
-		if NO_MORTAL_STYLE_YET.has(region):
-			continue
 		var found := false
 		for tech_id: String in _taught_in(region):
 			var tech: Variant = data().techniques.get(tech_id)
@@ -60,3 +56,16 @@ func test_known_breathing_gets_the_old_line() -> void:
 	c.realm_index = 1
 	c.techniques = {"basic_breathing": {"level": 1, "xp": 0.0}}
 	assert_eq(Guidance.local_first_teacher(c, data(), "myriad_peaks_ridge", {}), "")
+
+
+## C-417: Misty Forest's charcoal burner sells the Iron Fist manual (15 stones) beside cheap forest goods.
+func test_misty_forest_stall_sells_the_fist_manual() -> void:
+	var stall: Dictionary = {}
+	for place: Dictionary in data().regions["misty_forest"].get("places", []):
+		if String(place.get("display_name", "")) == "Charcoal Burner's Stall":
+			stall = place
+	assert_false(stall.is_empty(), "stall exists")
+	var ids: Array = Items.shop_stock(data(), int(stall.get("max_price", 0)), stall.get("stock_tags", []))
+	assert_true(ids.has("manual_iron_fist"), "sells the manual")
+	assert_eq(int(data().items["manual_iron_fist"]["price"]), 15)
+	assert_true(ids.size() >= 3, "also cheap goods")
