@@ -123,6 +123,8 @@ func _ready() -> void:
 	EventBus.player_changed.connect(check_friendships)
 	EventBus.player_changed.connect(_announce_tier)
 	EventBus.player_changed.connect(_check_sect_rank)
+	EventBus.sect_joined.connect(func(_id: String) -> void: FolkNews.queue(player, data, npc_favor, "sect_join"))
+	EventBus.sect_promoted.connect(func(_id: String, _rank: int) -> void: FolkNews.queue(player, data, npc_favor, "promotion"))
 	EventBus.player_changed.connect(check_unlock_notices)
 	EventBus.player_changed.connect(Platform.refresh_presence)
 	EventBus.region_changed.connect(func(_id: String) -> void: Platform.refresh_presence())
@@ -2233,6 +2235,9 @@ func greeting_for(npc_id: String) -> String:
 	var npc: CharacterData = npcs.get(npc_id)
 	if npc == null:
 		return ""
+	var news := FolkNews.take(player, data, npc_id)  # FOLK-046
+	if news != "":
+		return news
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region, rng, Almanac.salt_of(player)).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")
@@ -2591,6 +2596,10 @@ func call_on(npc_id: String) -> void:
 
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
 func _greet_renowned(npc_id: String) -> void:
+	var news := FolkNews.take(player, data, npc_id)  # FOLK-046: a friend's reaction replaces the greeting, once
+	if news != "":
+		EventBus.post("%s: %s" % [String(npcs[npc_id].name), news], "people")
+		return
 	if player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id):
 		return
 	var key := "greeted_" + npc_id

@@ -486,6 +486,7 @@ func _validate() -> void:
 		_validate_welcome(def)
 	load_errors.append_array(Deeds.validate(self))
 	_validate_world()
+	_validate_folk_news()
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
@@ -856,6 +857,18 @@ func _validate_world() -> void:
 				for l in dl:
 					if not l is String or String(l) == "" or String(l).length() > 140:
 						load_errors.append("NPC '%s' drop_by_lines entries must be strings of 1-140 chars" % npc["id"])
+		if npc.has("news_lines"):  # FOLK-046
+			var nl: Variant = npc["news_lines"]
+			if not nl is Dictionary:
+				load_errors.append("NPC '%s' news_lines must be an object" % npc["id"])
+			else:
+				for k in nl:
+					if not ["sect_join", "promotion"].has(String(k)) or not nl[k] is Array or (nl[k] as Array).is_empty() or (nl[k] as Array).size() > 3:
+						load_errors.append("NPC '%s' news_lines.%s needs 1-3 strings under sect_join/promotion" % [npc["id"], k])
+					else:
+						for l in nl[k]:
+							if not l is String or String(l) == "" or String(l).length() > 160:
+								load_errors.append("NPC '%s' news_lines entries must be strings of 1-160 chars" % npc["id"])
 		if npc.has("tend_lines"):
 			var tl: Variant = npc["tend_lines"]
 			if not (tl is Array) or (tl as Array).is_empty() or (tl as Array).size() > 3:
@@ -1309,6 +1322,23 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 
 
 ## SECT-032: a sect's optional `welcome` {line, items}: non-empty line <= 160 chars, 1-2 known items of 1-5 each, worth <= 60 stones.
+func _validate_folk_news() -> void:  # FOLK-046
+	var cfg: Dictionary = family.get("folk_news", {})
+	if cfg.is_empty():
+		return
+	var mf: int = int(cfg.get("min_favor", -1))
+	if mf < -100 or mf > 100:
+		load_errors.append("family.folk_news.min_favor must be -100..100")
+	for kind in ["sect_join", "promotion"]:
+		var pool: Variant = cfg.get("lines", {}).get(kind, [])
+		if not pool is Array or (pool as Array).is_empty():
+			load_errors.append("family.folk_news.lines.%s needs at least one line" % kind)
+			continue
+		for l in pool:
+			if not l is String or String(l) == "" or String(l).length() > 160:
+				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
+
+
 func _validate_welcome(def: SectDef) -> void:
 	if def.welcome.is_empty():
 		return
