@@ -7684,10 +7684,12 @@ func test_headman_work_hint_follows_available_chores() -> void:
 ## GUIDE-267: a chore's short fight line says whom to ask; fight_target points at the giver.
 func test_short_fight_keeps_the_chore_giver() -> void:
 	var d := data()
-	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Qiu) · 100%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Steward Qiu) · 100%")
 	var long_line := Guidance.short_fight_line("Easy fight: Chore for Reed Hall Overseer: Boardwalk Leech Swarm (100 in 100)", d)
 	assert_true(long_line.contains("Overseer") and long_line.length() <= Guidance.SHORT_ASK_CHARS, long_line)
 	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Porters' Foreman: A Very Long Beast Name Indeed Here (100 in 100)", d), "Easy fight: A Very Long Beast Name Indeed Here · 100%")
+	# SECT-034: the title shrinks one word at a time; "(ask Qiu)" only when "Steward Qiu" does not fit
+	assert_true(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Boardwalk Leech Swarm (100 in 100)", d).contains("(ask Qiu)"))
 	# the region goes before the giver
 	assert_eq(Guidance.short_fight_line("Easy fight: Wild Boar in Withered Bone Marsh (9 days, 99 in 100)", d), "Easy fight: Wild Boar, Bone Marsh · 9d · 99%")
 
@@ -7698,7 +7700,7 @@ func test_short_fight_names_the_board_hall_and_site() -> void:
 	assert_true(Guidance.short_fight_line("Easy fight: Bounty: Drunk Bully Disciple in Qingshi Village (Bounty Board) (99 in 100)", d).contains("(Bounty Board)"))
 	assert_true(Guidance.short_fight_line("Easy fight: Sect mission: Cull Wolves (mission board, Azure Cloud Hall) (95 in 100)", d).contains("(mission board"))
 	assert_true(Guidance.short_fight_line("Easy fight: Explore here: Wild Boar (explore Old Cave) (99 in 100)", d).contains("(explore Old Cave)"))
-	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Qiu) · 100%")
+	assert_eq(Guidance.short_fight_line("Easy fight: Chore for Hall Steward Qiu: Stair Crag Goat (100 in 100)", d), "Easy fight: Stair Crag Goat (ask Steward Qiu) · 100%")
 
 
 func test_place_clause_names_board_hall_and_site() -> void:

@@ -949,9 +949,9 @@ static func _short_fight(line: String, data: GameData) -> String:
 	var asks: Array[String] = []
 	if giver != "":
 		asks.append(" (ask %s)" % giver)
-		var last := giver.get_slice(" ", giver.get_slice_count(" ") - 1)
-		if last != giver:
-			asks.append(" (ask %s)" % last)
+		var words := giver.split(" ")
+		for i in range(1, words.size()):  # SECT-034: drop leading words one at a time, keeping the title longest
+			asks.append(" (ask %s)" % " ".join(words.slice(i)))
 	if place_clause != "":
 		asks.append(" (%s)" % place_clause)
 		var lead := place_clause.get_slice(" · ", 0)
@@ -1111,6 +1111,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var sworn := sworn_tend_hint(c, data, region_id, people, favor, flags, today)  # FOLK-044
 		if sworn != "":
 			out.append(sworn)
+	# SECT-034: the report line leads the sect's next steps.
+	var report := report_hint(c, data, region_id)
+	if report != "":
+		out.append(report)
 	if Sects.duty_days_left(c) <= Sects.DUTY_REMINDER_DAYS:
 		var duty := duty_hint(c, data, flags, region_id, today)
 		if duty != "":
@@ -1132,9 +1136,6 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			due_urgent = Commissions.days_left(due_order["order"], today) <= DUE_URGENT_DAYS
 	if due_urgent:
 		out.append(due)
-	var report := report_hint(c, data, region_id)
-	if report != "":
-		out.append(report)
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
@@ -1777,8 +1778,11 @@ static func hall_services(c: CharacterData, data: GameData, _region_id: String, 
 		out.append("Mission board: %d open now" % ready)
 	var lecture := Sects.lecture_def(c, data)
 	if not lecture.is_empty():
-		var when := "today" if Sects.check_lecture(c, data, total_days) == "" else "next month"
-		out.append("Lecture: %s, %s" % [String(lecture.get("name", "the elder's lecture")), when])
+		var lname := String(lecture.get("name", "the elder's lecture"))
+		if Sects.check_lecture(c, data, total_days) == "":
+			out.append("Lecture: %s: open this month (%dd left)" % [lname, Sects.days_left_in_month(total_days)])
+		else:
+			out.append("Lecture: %s, next month" % lname)
 	var cheapest := {}
 	for entry in Sects.shop_items(c, data):
 		if cheapest.is_empty() or int(entry["contribution"]) < int(cheapest["contribution"]):
@@ -6466,7 +6470,7 @@ static func local_first_teacher(c: CharacterData, data: GameData, region_id: Str
 	return ""
 
 
-## GUIDE-286: true when `node_id` is reachable: a choice elsewhere links to it with passing `if`, or it is an entry node.
+## GUIDE-286: true when `node_id` is reachable: a choice elsewhere links to it with passing `if`, (an entry node with no incoming link does not count).
 static func _entry_choice_open(nodes: Dictionary, node_id: String, ctx: Dictionary) -> bool:
 	for other_id: String in nodes:
 		if other_id == node_id:

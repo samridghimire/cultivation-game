@@ -87,3 +87,21 @@ func test_validate_rejects_bad_item() -> void:
 	def.welcome = {"line": "Hi", "items": {"no_such_item": 1}}
 	d._validate_welcome(def)
 	assert_eq(d.load_errors.size(), 1)
+
+
+## SECT-034: the hall's lecture row says it is open all month; the report line leads the sect's lines.
+func test_lecture_row_and_report_first() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.realm_index = 1
+	gs.join_sect("azure_cloud_sect")
+	var d := gs.data as GameData
+	var rows := Guidance.hall_services(c, d, "qingshi_village", 3, {})
+	var found := false
+	for r in rows:
+		if String(r).begins_with("Lecture:"):
+			found = true
+			assert_true(String(r).contains("open this month (27d left)"), r)
+	assert_true(found)
+	var hints := Guidance.hints(c, d, 1.0, 10, {}, {}, "qingshi_village", 3)
+	assert_true(hints.size() > 0 and String(hints[0]).begins_with("Report at the"), str(hints))

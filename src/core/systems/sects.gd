@@ -306,11 +306,16 @@ static func promotion_summary(c: CharacterData, data: GameData) -> Dictionary:
 	var rank := int(c.sect["rank"])
 	out["rank_name"] = sect.rank_name(rank)
 	var perks := PackedStringArray()
-	for entry: Dictionary in sect.shop:
-		if int(entry.get("min_rank", 0)) == rank and rank > 0:
-			perks.append("can buy %s" % String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
+	if rank > 0:  # SECT-034: the rank's stipend, duty and treasury unlocks
+		var rows := ladder(c, data)
+		if rank < rows.size():
+			perks = rows[rank]["perks"]
 	out["perks_new"] = perks
-	out["next_needs"] = ", ".join(rank_needs(c, data))
+	var needs := Array(rank_needs(c, data))
+	if needs_trial(c, data):
+		var foe := trial_enemy(c, data)
+		needs.append("win a trial against %s" % String(data.enemies.get(foe, {}).get("name", foe)))
+	out["next_needs"] = ", ".join(PackedStringArray(needs))
 	return out
 
 
@@ -364,7 +369,7 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	var lecture_text := ""
 	if not lecture.is_empty():
 		var name := String(lecture.get("name", "the lecture"))
-		lecture_text = "%s attended" % name if check_lecture(c, data, total_days) != "" else "%s today" % name
+		lecture_text = "%s attended" % name if check_lecture(c, data, total_days) != "" else "%s: open this month (%dd left)" % [name, days_left_in_month(total_days)]
 	var ids := available_missions(c, data, flags)
 	var ready := 0
 	for id in ids:
@@ -398,6 +403,11 @@ static func duty_progress(c: CharacterData) -> int:
 ## Days left in the current sect month (months close on `age_days`).
 static func duty_days_left(c: CharacterData) -> int:
 	return Calendar.DAYS_PER_MONTH - c.age_days % Calendar.DAYS_PER_MONTH
+
+
+## SECT-034: days from `total_days` to the end of its month (1 on the last day).
+static func days_left_in_month(total_days: int) -> int:
+	return Calendar.DAYS_PER_MONTH - total_days % Calendar.DAYS_PER_MONTH
 
 
 ## Days left at which the duty reminder appears.
