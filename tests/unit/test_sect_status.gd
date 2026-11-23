@@ -24,7 +24,7 @@ func test_fresh_disciple_ladder() -> void:
 	assert_false(rows[1]["reached"])
 	assert_true(rows[1]["needs"].size() >= 2)
 	assert_true(" ".join(rows[1]["needs"]).contains("trial vs"))
-	assert_true(" ".join(rows[1]["needs"]).contains("500 contribution"))
+	assert_true(" ".join(rows[1]["needs"]).contains("%d contribution" % int(d.sects["azure_cloud_sect"].ranks[1]["contribution"])))
 
 
 func test_month_status_fresh_and_duty() -> void:

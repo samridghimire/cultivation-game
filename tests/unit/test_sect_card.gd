@@ -218,19 +218,6 @@ func test_modes_have_vignettes() -> void:
 	card.free()
 
 
-## GFX-250: the vignette is 2x (480x128), carries the sect id for its props, and draws without error for every sect and mode.
-func test_vignette_sect_props() -> void:
-	assert_eq(Vector2(SectCard.SectVignette.W, SectCard.SectVignette.H), Vector2(480, 128))
-	var card := SectCard.new()
-	(Engine.get_main_loop() as SceneTree).root.add_child(card)
-	for sid in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
-		card.open({"name": "S", "rank_name": "Outer", "duty": "d", "perks": PackedStringArray(), "first_step": "go"}, Color.SKY_BLUE, sid)
-		assert_eq(card.vignette.sect_id, sid)
-		card.vignette.queue_redraw()
-		await (Engine.get_main_loop() as SceneTree).process_frame
-	card.free()
-
-
 ## GFX-248: the lecture hall is drawn at 2x (480x144), centred, with a scene node.
 func test_lecture_scene_is_large() -> void:
 	var card := SectCard.new()

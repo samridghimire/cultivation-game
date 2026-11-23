@@ -69,7 +69,7 @@ static func perk_line(perk: String) -> String:
 
 
 ## `welcome` comes from Guidance.sect_welcome; `color` is the sect's robe colour (white-ish when none).
-func open(welcome: Dictionary, color: Color = UIStyle.ACCENT, sect_id: String = "") -> void:
+func open(welcome: Dictionary, color: Color = UIStyle.ACCENT) -> void:
 	_title.text = String(welcome.get("name", ""))
 	_title.add_theme_color_override("font_color", color)
 	_banner.color = color
@@ -79,7 +79,7 @@ func open(welcome: Dictionary, color: Color = UIStyle.ACCENT, sect_id: String = 
 		_rows.remove_child(c)
 		c.free()
 	vignette = null
-	_add_vignette("join", color, sect_id)
+	_add_vignette("join", color)
 	var lines := PackedStringArray()
 	if String(welcome.get("home_region_name", "")) != "":
 		lines.append(home_line(welcome))
@@ -98,7 +98,7 @@ func open(welcome: Dictionary, color: Color = UIStyle.ACCENT, sect_id: String = 
 
 
 ## WU-603: promotion mode. `summary` is Sects.promotion_summary; `sect_name` leads the card; `has_next` is false at the top rank.
-func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, color: Color = UIStyle.ACCENT, sect_id: String = "") -> void:
+func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, color: Color = UIStyle.ACCENT) -> void:
 	_title.text = sect_name
 	_title.add_theme_color_override("font_color", color)
 	_banner.color = color
@@ -108,7 +108,7 @@ func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, colo
 		_rows.remove_child(c)
 		c.free()
 	vignette = null
-	_add_vignette("promote", color, sect_id)
+	_add_vignette("promote", color)
 	var perks: PackedStringArray = summary.get("perks_new", PackedStringArray())
 	var lines := PackedStringArray()
 	if perks.is_empty():
@@ -131,7 +131,7 @@ func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, colo
 
 
 ## WU-604: welcome mode after reporting at the hall. `items` is [[item_id, "2 x Qi Gathering Pill"], ...]; `services` from Guidance.hall_services.
-func open_report(sect_name: String, rank_name: String, line: String, items: Array, services: PackedStringArray, data: GameData, color: Color = UIStyle.ACCENT, sect_id: String = "") -> void:
+func open_report(sect_name: String, rank_name: String, line: String, items: Array, services: PackedStringArray, data: GameData, color: Color = UIStyle.ACCENT) -> void:
 	_title.text = sect_name
 	_title.add_theme_color_override("font_color", color)
 	_banner.color = color
@@ -141,7 +141,7 @@ func open_report(sect_name: String, rank_name: String, line: String, items: Arra
 		_rows.remove_child(c)
 		c.free()
 	vignette = null
-	_add_vignette("report", color, sect_id)
+	_add_vignette("report", color)
 	if line != "":
 		_add_row("\"%s\"" % line)
 	if not items.is_empty():
@@ -205,11 +205,8 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 
 
 ## GFX-246: a small drawn header picture for the join / report / promotion modes ("join", "report", "promote").
-func _add_vignette(mode: String, color: Color, sect_id: String = "") -> SectVignette:
+func _add_vignette(mode: String, color: Color) -> SectVignette:
 	var v := SectVignette.new()
-	v.sect_id = sect_id
-	if GameState.player != null and GameState.data != null:
-		v.player_look = PlayerLook.of(GameState.player, GameState.data)
 	v.mode = mode
 	v.color = color
 	v.custom_minimum_size = Vector2(SectVignette.W, SectVignette.H)
@@ -310,97 +307,44 @@ class LectureScene extends Control:
 		_sit(player_look if player_look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}, W / 2.0, 140, 2.0)  # the player
 
 
-## GFX-250: 480x128 header pictures at 2x, code-drawn in the sect colour with PixelFigure people and one set of props
-## per sect (`sect_id`). join: the player before the hall gate; report: the player bowing to a steward at the hall door;
-## promote: the player under a raised banner, a disciple either side with a rank sash.
+## GFX-246: 240x64 header pictures, code-drawn in the sect colour. join: the player before a hall gate;
+## report: the player bowing before a steward at a desk; promote: the player under a raised banner, a disciple either side.
 class SectVignette extends Control:
-	const W := 480
-	const H := 128
-	const GROUND := 96
+	const W := 240
+	const H := 64
 	var mode := "join"
 	var color := Color.WHITE
-	var sect_id := ""
-	var player_look: Dictionary = {}
 
-	## A whole PixelFigure standing with its feet at `base`, `s` times its 16x20 art size. `dir` is "down"/"left"/"right".
-	static func draw_figure(ci: CanvasItem, look: Dictionary, cx: float, base: float, s: float, dir: String = "down", bow: bool = false) -> void:
-		var tex := PixelFigure.frame(look, dir, 0)
-		var w := 16.0 * s
-		var h := 20.0 * s
-		ci.draw_rect(Rect2(cx - w * 0.4, base - s, w * 0.8, s * 1.5), Color(0, 0, 0, 0.3))  # shadow
-		if bow:
-			ci.draw_set_transform(Vector2(cx, base), 0.35, Vector2.ONE)
-			ci.draw_texture_rect(tex, Rect2(-w / 2, -h, w, h), false)
-			ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		else:
-			ci.draw_texture_rect(tex, Rect2(cx - w / 2, base - h, w, h), false)
-
-	func _player() -> Dictionary:
-		return player_look if player_look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}
-
-	func _disciple(extra: Dictionary = {}) -> Dictionary:
-		var d := {"robe": color.darkened(0.2), "sash": color.lightened(0.3)}
-		d.merge(extra, true)
-		return d
-
-	func _props() -> void:
-		var wood := Color(0.45, 0.32, 0.2)
-		match sect_id:
-			"blood_lotus_sect":
-				draw_rect(Rect2(20, GROUND - 2, 120, 12), Color(0.35, 0.05, 0.07))  # blood pit rim and pool
-				draw_rect(Rect2(20, GROUND - 2, 120, 3), Color(0.25, 0.2, 0.2))
-				draw_rect(Rect2(28, GROUND + 3, 104, 5), Color(0.6, 0.08, 0.1))
-				for x in [58, 80, 102]:  # a lotus on the pit
-					draw_rect(Rect2(x - 6, GROUND - 8, 12, 6), color.lightened(0.2))
-					draw_rect(Rect2(x - 3, GROUND - 13, 6, 6), color.lightened(0.5))
-			"myriad_treasure_pavilion":
-				draw_rect(Rect2(14, 34, 96, 62), Color(0.35, 0.3, 0.22))  # vault door
-				draw_rect(Rect2(20, 40, 84, 56), Color(0.22, 0.2, 0.17))
-				draw_rect(Rect2(60, 40, 4, 56), Color(0.5, 0.4, 0.2))
-				draw_rect(Rect2(48, 64, 8, 8), Color(0.8, 0.65, 0.25))  # lock plates
-				draw_rect(Rect2(68, 64, 8, 8), Color(0.8, 0.65, 0.25))
-				draw_rect(Rect2(116, 76, 44, 20), wood)  # counter with an abacus
-				draw_rect(Rect2(120, 68, 36, 10), wood.darkened(0.2))
-				for i in 4:
-					draw_rect(Rect2(124 + i * 8, 70, 4, 6), Color(0.9, 0.8, 0.4))
-			_:
-				draw_rect(Rect2(16, GROUND - 4, 120, 10), Color(0.5, 0.5, 0.52))  # stone sparring ring
-				draw_rect(Rect2(24, GROUND - 2, 104, 6), Color(0.4, 0.4, 0.42))
-				draw_rect(Rect2(150, 54, 40, 6), wood)  # sword rack
-				draw_rect(Rect2(152, 54, 4, 42), wood.darkened(0.2))
-				draw_rect(Rect2(184, 54, 4, 42), wood.darkened(0.2))
-				for x in [160, 168, 176]:
-					draw_rect(Rect2(x, 32, 3, 28), Color(0.78, 0.82, 0.88))
-					draw_rect(Rect2(x - 1, 58, 5, 3), color)
+	func _person(x: float, y: float, robe: Color, bow: bool = false) -> void:
+		var s := 2.0
+		var hy := y - 14 + (4 if bow else 0)
+		draw_rect(Rect2(x - 3 * s, y - 8, 6 * s, 8 * s * 0.5 + 8), robe)  # robe
+		draw_rect(Rect2(x - 2 * s + (3 if bow else 0), hy, 4 * s, 3 * s), Color(0.9, 0.75, 0.6))  # head
+		draw_rect(Rect2(x - 2 * s + (3 if bow else 0), hy, 4 * s, s), Color(0.12, 0.1, 0.1))  # hair
 
 	func _draw() -> void:
 		draw_rect(Rect2(0, 0, W, H), Color(0.14, 0.15, 0.2))  # dusk sky
-		draw_rect(Rect2(0, GROUND, W, H - GROUND), Color(0.3, 0.24, 0.17))  # ground
-		draw_rect(Rect2(0, GROUND, W, 3), color.darkened(0.3))
-		_props()
-		var wood := Color(0.45, 0.32, 0.2)
+		draw_rect(Rect2(0, 48, W, H - 48), Color(0.3, 0.24, 0.17))  # ground
+		var player := Color(0.8, 0.8, 0.75)
 		match mode:
 			"join":
-				draw_rect(Rect2(300, 24, 14, 74), wood)  # gate posts
-				draw_rect(Rect2(392, 24, 14, 74), wood)
-				draw_rect(Rect2(288, 14, 130, 10), color)  # gate roof
-				draw_rect(Rect2(314, 36, 78, 60), color.darkened(0.55))  # doorway
-				draw_figure(self, _player(), 230, 118, 4.0, "right")
+				draw_rect(Rect2(150, 12, 8, 40), Color(0.45, 0.32, 0.2))  # gate posts
+				draw_rect(Rect2(196, 12, 8, 40), Color(0.45, 0.32, 0.2))
+				draw_rect(Rect2(144, 8, 66, 6), color)  # gate roof
+				draw_rect(Rect2(158, 18, 38, 34), color.darkened(0.55))  # doorway
+				_person(80, 52, player)
 			"report":
-				draw_rect(Rect2(296, 70, 100, 8), wood)  # desk in the doorway
-				draw_rect(Rect2(302, 78, 6, 20), wood.darkened(0.2))
-				draw_rect(Rect2(384, 78, 6, 20), wood.darkened(0.2))
-				draw_rect(Rect2(330, 64, 22, 6), Color(0.85, 0.8, 0.65))  # ledger
-				draw_figure(self, _disciple({"sash": Color(0.9, 0.75, 0.3)}), 342, 100, 3.0, "left")  # steward at the door
-				draw_figure(self, _player(), 230, 118, 4.0, "right", true)
+				draw_rect(Rect2(130, 34, 70, 6), Color(0.45, 0.32, 0.2))  # desk
+				draw_rect(Rect2(136, 40, 4, 12), Color(0.35, 0.25, 0.16))
+				draw_rect(Rect2(190, 40, 4, 12), Color(0.35, 0.25, 0.16))
+				draw_rect(Rect2(150, 31, 14, 3), Color(0.85, 0.8, 0.65))  # ledger
+				_person(165, 34, color.darkened(0.2))  # steward behind the desk
+				_person(90, 52, player, true)  # bowing
 			_:
-				draw_rect(Rect2(W / 2.0 - 2, 6, 5, 92), wood)  # raised banner
-				draw_rect(Rect2(W / 2.0 + 3, 10, 52, 44), color)
-				draw_rect(Rect2(W / 2.0 + 3, 50, 52, 8), color.darkened(0.25))
-				draw_rect(Rect2(W / 2.0 + 18, 22, 20, 18), color.lightened(0.5))
-				var sash := Color(0.9, 0.75, 0.3)
-				draw_figure(self, _disciple({"robe": color.darkened(0.3)}), W / 2.0 - 100, 118, 3.5, "right")
-				draw_figure(self, _disciple({"robe": color.darkened(0.3)}), W / 2.0 + 100, 118, 3.5, "left")
-				var look := _player().duplicate()
-				look["sash"] = sash  # the new rank's sash
-				draw_figure(self, look, W / 2.0 - 40, 120, 4.0)
+				draw_rect(Rect2(W / 2.0 - 1, 4, 3, 44), Color(0.45, 0.32, 0.2))  # raised banner
+				draw_rect(Rect2(W / 2.0 + 2, 6, 26, 22), color)
+				draw_rect(Rect2(W / 2.0 + 2, 26, 26, 4), color.darkened(0.25))
+				draw_rect(Rect2(W / 2.0 + 9, 12, 10, 9), color.lightened(0.5))
+				_person(W / 2.0, 52, player)
+				_person(W / 2.0 - 44, 52, color.darkened(0.3))
+				_person(W / 2.0 + 44, 52, color.darkened(0.3))

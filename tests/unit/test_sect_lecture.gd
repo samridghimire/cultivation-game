@@ -132,3 +132,38 @@ func test_every_sect_lecture_has_enough_lines() -> void:
 		c.realm_index = 1
 		Sects.join(c, data(), sect.id)
 		assert_true(String(Sects.attend_lecture(c, data(), seeded_rng(), 5)["line"]) != "", sect.id)
+
+
+## SECT-039: in the hall's region an open lecture leads the hints, ahead of the mission board and meditation lines.
+func test_open_lecture_leads_hints_in_hall_region() -> void:
+	var c := _disciple()
+	var hall := Sects.home_region(data(), String(c.sect["id"]))
+	var hint := "Your sect's elder lectures this month; attend at the sect hall."
+	var here := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, hall, 5))
+	assert_true(here.has(hint))
+	var elsewhere := ""
+	for rid: String in data().regions:
+		if rid != hall:
+			elsewhere = rid
+			break
+	var away := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, elsewhere, 5))
+	assert_true(away.has(hint), "still listed away from the hall, but not first")
+	assert_true(away.find(hint) >= here.find(hint))
+	var board_idx := -1
+	for i in here.size():
+		if String(here[i]).contains("mission"):
+			board_idx = i
+			break
+	if board_idx >= 0:
+		assert_true(here.find(hint) < board_idx)
+	assert_eq(here.count(hint), 1, "listed once")
+
+
+## SECT-039: each start-region sect's rank-1 trial foe is a sparring foe tuned at or below full power.
+func test_rank_one_trial_foes_are_tuned_sparring() -> void:
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
+		var def: SectDef = data().sects[sect_id]
+		var foe: Dictionary = data().enemies[String(def.ranks[1]["trial"])]
+		assert_false(bool(foe.get("lethal", true)), sect_id)
+		assert_true(float(foe.get("power_mult", 1.0)) <= 1.0, sect_id)
+		assert_true(int(def.ranks[1]["contribution"]) >= 250, sect_id)

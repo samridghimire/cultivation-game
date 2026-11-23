@@ -1139,6 +1139,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if Children.is_pregnant(c):
 		var days := int(c.pregnancy.get("days_left", 0))
 		out.append("A child is due in %s." % Calendar.format_duration(days))
+	# SECT-039: an open lecture leads for a member standing in the hall's region (it costs 2 days and pays 6 days of qi).
+	var lecture_here := _lecture_hint(c, data, today) if today >= 0 and not c.is_rogue() and region_id == Sects.home_region(data, String(c.sect["id"])) else ""
+	if lecture_here != "":
+		out.append(lecture_here)
 	var thin := thin_defence_hint(c, data, region_id, flags)
 	var method_offer := sect_method_hint(c, data)
 	# GUIDE-196: a claimable method that nearly doubles qi leads the thin-defence line.
@@ -1223,7 +1227,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			out.append(missions)
 	if today >= 0:
 		var lecture := _lecture_hint(c, data, today)
-		if lecture != "":
+		if lecture != "" and lecture_here == "":
 			out.append(lecture)
 		var delivery := Commissions.delivery_hint(c, data, today)
 		if delivery != "":

@@ -93,7 +93,7 @@ func test_missions_earn_reputation_with_own_sect() -> void:
 	c.add_item("spirit_herb", 5)
 	var result := Sects.complete_mission(c, data(), "gather_spirit_herbs", {})
 	assert_true(result["ok"])
-	assert_eq(Reputation.value(c, data(), "azure_cloud_sect"), Reputation.mission_gain(data(), 40))
+	assert_eq(Reputation.value(c, data(), "azure_cloud_sect"), Reputation.mission_gain(data(), int(data().sect_missions["gather_spirit_herbs"]["contribution"])))
 	assert_gt(Reputation.value(c, data(), "azure_cloud_sect"), 0)
 
 

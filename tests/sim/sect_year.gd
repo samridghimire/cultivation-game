@@ -83,7 +83,7 @@ func _run() -> void:
 			var short: int = int(e.get("skipped", 0))
 			first_promo.append(promo_day)
 			short_months.append(short)
-			var rep_day: int = int(rec["reported"]) - maxi(joined, 0) if int(rec["reported"]) >= 0 else -1
+			var rep_day: int = maxi(0, int(rec["reported"]) - maxi(joined, 0)) if int(rec["reported"]) >= 0 else -1  # SECT-039: a start-day join reports before the first month-loop day
 			print("  %-4d %8s %9d %9d %12d %9d %9d %11s %9d %7s" % [s, str(rep_day) if rep_day >= 0 else "never", int(e.get("lectures", 0)), int(e.get("missions", 0)), contribution, r120, r365, "%d/%d" % [met, short], int(rec["stipend"]), str(joined) + ("*" if unreported else "")])
 			gs.end_session()
 		var late := 0

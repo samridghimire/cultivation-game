@@ -4105,7 +4105,7 @@ func test_deliver_mission_held_some() -> void:
 	var c := _deliver_only(d)
 	c.add_item("spirit_herb", 1)
 	var text := Guidance._mission_hint(c, d, {}, "qingshi_village")
-	assert_true(text.contains("Relieve a Fevered Village (90 contribution) needs 2 "), text)
+	assert_true(text.contains("Relieve a Fevered Village (%d contribution) needs 2 " % int(d.sect_missions["relieve_fevered_village"]["contribution"])), text)
 	assert_true(text.contains("you have 1 of 5."), text)
 
 
@@ -4160,7 +4160,7 @@ func test_deliver_pick_prefers_gatherable_here() -> void:
 		if id != "relieve_fevered_village" and id != "herb_hall_tithe":
 			c.mission_cooldowns[id] = c.age_days + 30
 	var text := Guidance._mission_hint(c, d, {}, "qingshi_village")
-	assert_true(text.contains("Tithe to the Herb Hall (35 contribution) needs 3 Spirit Herbs: you have 0 of 3."), text)
+	assert_true(text.contains("Tithe to the Herb Hall (%d contribution) needs 3 Spirit Herbs: you have 0 of 3." % int(d.sect_missions["herb_hall_tithe"]["contribution"])), text)
 	assert_true(text.contains("Spirit Herbs grow at Village Herb Slope here."), text)
 	assert_false(text.contains("Relieve a Fevered Village"), text)
 
