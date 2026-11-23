@@ -19,6 +19,7 @@ const BLOCK_CAP := 5  ## WU-517: rows per Today block
 const PAGES: Array[String] = ["today", "sect", "journal"]  # WU-605: "sect" only shows for members
 var _page := "today"
 var _today: VBoxContainer
+const TREASURY_SHOWN := 8  ## WU-613: rows shown before "+N more", so This month fits the first screen
 var _sect: VBoxContainer  ## WU-605: the Sect page
 var _almanac := PackedStringArray()  ## WU-513: the almanac lines shown under the Today date
 var _tabs: HBoxContainer
@@ -105,6 +106,9 @@ func set_page(page: String) -> void:
 			continue
 		(tab as Button).modulate = Color.WHITE if tab.name == "Tab_" + page else DIM
 	_scroll.scroll_vertical = 0
+	# WU-613: a tab that holds the focus ring follows the page (open() then set_page("sect") used to leave it on Today).
+	if is_inside_tree() and get_viewport().gui_get_focus_owner() in _tabs.get_children():
+		(_tabs.get_node("Tab_" + page) as Button).grab_focus()
 
 
 func _process(delta: float) -> void:
@@ -124,12 +128,16 @@ func open() -> void:
 	_build_sect()
 	set_page("today")
 	visible = true
-	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
+	focus_page()
 
 
 ## WU-608: focus the first control of the current page (the tab button).
 func focus_page() -> void:
-	(_tabs.get_node("Tab_" + _page) as Button).grab_focus.call_deferred()
+	_focus_current_tab.call_deferred()
+
+
+func _focus_current_tab() -> void:  ## resolves the page when it runs, so open() then set_page("sect") lands on the Sect tab
+	(_tabs.get_node("Tab_" + _page) as Button).grab_focus()
 
 
 ## WU-605: the Sect page: banner header, this month, the rank ladder. Members only; the tab hides for rogues.
@@ -177,20 +185,22 @@ func _build_sect() -> void:
 	mbox.add_theme_constant_override("separation", 6)
 	month.add_child(mbox)
 	mbox.add_child(UIStyle.label("This month", 18, UIStyle.ACCENT))
+	var names := Sects.ready_mission_names(p, GameState.data, GameState.world_flags)
 	for line in month_lines(status):
 		mbox.add_child(UIStyle.label(line, 15))
-	var names := Sects.ready_mission_names(p, GameState.data, GameState.world_flags)
-	if not names.is_empty():
-		mbox.add_child(UIStyle.label("    Ready: %s" % ", ".join(names), 14, DIM))
-	var rows := Sects.treasury_rows(p, GameState.data)
+		if line.begins_with("Missions:") and not names.is_empty():  # WU-613: the names sit right under the count
+			mbox.add_child(UIStyle.label("    Ready: %s" % ", ".join(names), 14, DIM))
+	var rows := treasury_order(Sects.treasury_rows(p, GameState.data))
 	if not rows.is_empty():
+		mbox.add_child(UIStyle.label("Treasury", 15, UIStyle.ACCENT))
 		var trow := HFlowContainer.new()
 		trow.name = "SectTreasury"
 		trow.custom_minimum_size = Vector2(700, 0)
-		trow.add_child(UIStyle.label("Treasury: ", 15))
-		for i in rows.size():
-			var afford := bool(rows[i]["affordable"])
-			trow.add_child(UIStyle.label(String(rows[i]["text"]) + ("," if i < rows.size() - 1 else ""), 15, Color.WHITE if afford else DIM))
+		trow.add_theme_constant_override("h_separation", 20)
+		for i in mini(rows.size(), TREASURY_SHOWN):
+			trow.add_child(UIStyle.label(String(rows[i]["text"]), 14, Color.WHITE if bool(rows[i]["affordable"]) else DIM))
+		if rows.size() > TREASURY_SHOWN:
+			trow.add_child(UIStyle.label("+%d more at the hall" % (rows.size() - TREASURY_SHOWN), 14, DIM))
 		mbox.add_child(trow)
 	var duty := int(status["duty"])
 	if duty > 0:
@@ -265,9 +275,18 @@ static func month_lines(status: Dictionary) -> PackedStringArray:
 		out.append("Lecture: %s" % String(status["lecture"]))
 	if int(status.get("missions_total", 0)) > 0:
 		out.append("Missions: %d of %d ready" % [int(status["missions_ready"]), int(status["missions_total"])])
-	var claim: PackedStringArray = status.get("claimable", PackedStringArray())
-	if not claim.is_empty():
-		out.append("Treasury, within reach: %s" % ", ".join(claim))
+	return out
+
+
+## WU-613: treasury rows with the affordable ones first (stable order inside each group). Pure.
+static func treasury_order(rows: Array[Dictionary]) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for r in rows:
+		if bool(r["affordable"]):
+			out.append(r)
+	for r in rows:
+		if not bool(r["affordable"]):
+			out.append(r)
 	return out
 
 

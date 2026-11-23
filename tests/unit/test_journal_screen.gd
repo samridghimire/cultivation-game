@@ -128,3 +128,32 @@ func test_sect_page_progress() -> void:
 	assert_true(journal._sect.find_child("RankBar", true, false) != null)
 	assert_true(journal._sect.find_child("SectTreasury", true, false) != null)
 	hud.queue_free()
+
+
+## WU-613: the tab focus follows the page, the treasury is one block (affordable first) and no "within reach" duplicate.
+func test_sect_page_tidy() -> void:
+	var root: Node = Engine.get_main_loop().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.join_sect("azure_cloud_sect")
+	var journal := JournalScreen.new()
+	root.add_child(journal)
+	journal.open()
+	await root.get_tree().process_frame
+	journal.set_page("sect")
+	await root.get_tree().process_frame
+	assert_true(root.get_viewport().gui_get_focus_owner() == journal._tabs.get_node("Tab_sect"), "focus follows to the Sect tab")
+	journal.set_page("journal")
+	assert_true(root.get_viewport().gui_get_focus_owner() == journal._tabs.get_node("Tab_journal"), "and to every other tab")
+	var rows: Array[Dictionary] = [{"text": "a (9)", "affordable": false}, {"text": "b (1)", "affordable": true}, {"text": "c (2)", "affordable": true}]
+	var ordered := JournalScreen.treasury_order(rows)
+	assert_eq(String(ordered[0]["text"]), "b (1)")
+	assert_eq(String(ordered[2]["text"]), "a (9)")
+	var lines := JournalScreen.month_lines(Sects.month_status(gs.player, gs.data, GameClock.total_days, gs.world_flags))
+	for l in lines:
+		assert_false(l.begins_with("Treasury"), "the treasury lives in one block")
+	assert_eq(journal._sect.find_children("SectTreasury", "", true, false).size(), 1 if not Sects.treasury_rows(gs.player, gs.data).is_empty() else 0)
+	journal.free()
