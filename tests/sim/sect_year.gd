@@ -5,6 +5,8 @@ extends SceneTree
 ## monthly duty was met or short, and the stipend stones paid. A summary line per sect flags a first promotion later than
 ## day 120 or more than 3 duty-short months. Measures only; it changes no data.
 ## Days are counted from the day the character joined (a mortal cannot join before the first breakthrough, so "day 0" is that day); "reported" is days after joining.
+## SIM-029: also prints, per seed, the day (after joining, checked at each month end) each SECT-035 goal row (report, lecture, mission, rank 1)
+## was first seen done, or "never" with the hints player's top hint line at the end of the run.
 ## Usage: tools/godot.sh --headless --path . -s res://tests/sim/sect_year.gd -- [seeds] [days] [--sects=a,b,c]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
@@ -57,9 +59,16 @@ func _run() -> void:
 			bus.sect_reported.connect(on_report)
 			bus.sect_promoted.connect(on_promo)
 			bus.message_posted.connect(on_msg)
+			var rows: Dictionary = {}  # SIM-029: goal row index -> absolute day first seen done
 			var day0: int = 0  # a new session restarts the clock at day 0
 			var hook := func(_month: int) -> void:
-				pass
+				var pc: CharacterData = gs.player
+				if pc == null or pc.is_rogue():
+					return
+				var gl: Array[Dictionary] = Guidance.sect_goals(pc, gs.data, gs.world_flags, clock.total_days)
+				for i in gl.size():
+					if bool(gl[i]["done"]) and not rows.has(i):
+						rows[i] = clock.total_days
 			var out: Dictionary = FirstHour.play(gs, clock, s, months, false, hook)
 			var joined: int = int(out["sect_day"]) - day0 if int(out["sect_day"]) >= 0 else -1
 			var unreported: bool = gs.player != null and Sects.needs_report(gs.player)
@@ -85,6 +94,16 @@ func _run() -> void:
 			short_months.append(short)
 			var rep_day: int = maxi(0, int(rec["reported"]) - maxi(joined, 0)) if int(rec["reported"]) >= 0 else -1  # SECT-039: a start-day join reports before the first month-loop day
 			print("  %-4d %8s %9d %9d %12d %9d %9d %11s %9d %7s" % [s, str(rep_day) if rep_day >= 0 else "never", int(e.get("lectures", 0)), int(e.get("missions", 0)), contribution, r120, r365, "%d/%d" % [met, short], int(rec["stipend"]), str(joined) + ("*" if unreported else "")])
+			var top_hint := ""
+			if gs.player != null and not gs.player.is_rogue():
+				var hs: PackedStringArray = Guidance.hints(gs.player, gs.data, gs.hint_density(), 1, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)
+				top_hint = hs[0] if hs.size() > 0 else ""
+			var parts: Array[String] = []
+			var labels: Array[String] = ["report", "lecture", "mission", "rank 1"]
+			var glist: Array[Dictionary] = Guidance.sect_goals(gs.player, gs.data, gs.world_flags, clock.total_days) if gs.player != null else []
+			for i in glist.size():
+				parts.append("%s %s" % [labels[i] if i < labels.size() else str(i), str(int(rows[i]) - maxi(joined, 0)) if rows.has(i) else "never"])
+			print("       goal rows (day after joining, month-end check): %s%s" % [", ".join(parts), ("  | top hint: " + top_hint) if top_hint != "" else ""])
 			gs.end_session()
 		var late := 0
 		var many_short := 0

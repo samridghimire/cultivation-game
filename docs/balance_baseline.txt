@@ -1740,30 +1740,39 @@ Sect year: azure_cloud_sect (home azure_peak), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 301: trial odds 0 in 100
   1           0         3         4          375         0         1        12/0         6      35
+       goal rows (day after joining, month-end check): report 23, lecture 202, mission 168, rank 1 294  | top hint: Your sect duty is 0 / 30 contribution with 3 days left this month. Hall Steward Qiu has chores (6 contribution a day).
   [SECT-036] day 244: trial odds 80 in 100
   2           0         2         6          515         0         1        10/3         6      18
+       goal rows (day after joining, month-end check): report 28, lecture 293, mission 201, rank 1 233  | top hint: Treat your injuries: claim a Meridian Mending Pill from your sect treasury (100 contribution, you have 470). Qi Deviation (heals in 5 months and 23 days) slows your cultivation to x0.5. Left alone they cost about 2 months and 27 days of cultivation and weaken you in fights.
   [SECT-036] day 251: trial odds 73 in 100
   3           0         2         5          410         0         1        11/1        12      35
+       goal rows (day after joining, month-end check): report 23, lecture 202, mission 170, rank 1 230  | top hint: Your sect's elder lectures this month; attend at the sect hall.
   first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [309, 245, 252]
 
 Sect year: blood_lotus_sect (home withered_bone_marsh), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 233: trial odds 60 in 100
   1           0         3        10          625         0         1        13/0        15      16
+       goal rows (day after joining, month-end check): report 0, lecture 252, mission 196, rank 1 252  | top hint: Unseal Appraising Eye in the artifact (O)
   [SECT-036] day 233: trial odds 69 in 100
   2           0         3        11          695         0         1        13/0        10      16
+       goal rows (day after joining, month-end check): report 0, lecture 252, mission 196, rank 1 280  | top hint: Your sect's elder lectures this month; attend at the sect hall.
   [SECT-036] day 233: trial odds 58 in 100
   3           0         3        10          650         0         1        13/0        15      16
+       goal rows (day after joining, month-end check): report 0, lecture 252, mission 196, rank 1 252  | top hint: Your sect's elder lectures this month; attend at the sect hall.
   first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [262, 283, 262]
 
 Sect year: myriad_treasure_pavilion (home fallen_star_market), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 255: trial odds 72 in 100
   1           0         3         4          350         0         1         9/2         8      60
+       goal rows (day after joining, month-end check): report 28, lecture 237, mission 147, rank 1 209  | top hint: Your sect duty is 0 / 30 contribution with 4 days left this month. Drive Off the Den Wolves (70 contribution, 4 days) covers it.
   [SECT-036] day 261: trial odds 98 in 100
   2           0         2         4          350         0         1        10/3         8      17
+       goal rows (day after joining, month-end check): report 28, lecture 265, mission 203, rank 1 265  | top hint: Your sect duty is 0 / 30 contribution with 5 days left this month. Drive Off the Den Wolves (70 contribution, 4 days) covers it.
   [SECT-036] day 347: trial odds 100 in 100
   3           0         2         4          400         0         1        13/0         8      17
+       goal rows (day after joining, month-end check): report 28, lecture 288, mission 203, rank 1 345  | top hint: Your sect duty is 0 / 30 contribution with 2 days left this month. Missing it skips this month's stipend (8 spirit stones).
   first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [256, 262, 348]
 
 
