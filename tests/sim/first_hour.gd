@@ -137,6 +137,10 @@ static var spend_contribution := false
 static var qi_pill_cap := -1
 static var contribution_log := {"pill_days": [], "pill": 0, "body": 0, "qi_items": 0, "qi_cost": 0, "qi_used": 0, "qi": 0}
 const TRIAL_MIN_ODDS := 0.7
+## SIM-030: the hints player takes the sect trial at these odds, and trains while they are lower.
+const HINTS_TRIAL_ODDS := 0.6
+## SIM-030: print every trial attempt the hints player makes (day, odds, won).
+static var trial_log := false
 ## SIM-010: the "hints" player. Once a week (4 a month) it acts on the first Next-steps line it can act on (goal line, then the
 ## hints) through the same GameState calls the curious policy uses, else meditates the week. It replaces the month's 30-day
 ## meditation and the end-of-month explore. hints_log: {"acted": {action: count}, "idle_weeks": n, "weeks": n,
@@ -850,10 +854,10 @@ static func _walk_to(gs: Node, c: CharacterData, target: String) -> void:
 ## QA-136: when the hint says "The trial for <rank> is open" and its odds are >= TRIAL_MIN_ODDS, walk to a sect hall
 ## (the current region's, else the first region with one), attempt the trial through GameState and walk home.
 ## done["trials_won"] / done["trials_lost"] count the outcomes.
-static func _attempt_open_trial(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary) -> void:
+static func _attempt_open_trial(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, min_odds: float = TRIAL_MIN_ODDS) -> void:
 	if not attempt_trials or not c.alive or c.is_rogue() or not c.injuries.is_empty():
 		return
-	if Guidance.trial_odds(c, gs.data) < TRIAL_MIN_ODDS:
+	if Guidance.trial_odds(c, gs.data) < min_odds:
 		return
 	var home: String = gs.current_region
 	var hall_region := ""
@@ -2151,11 +2155,24 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			if not done.has("trial_odds_shown"):
 				done["trial_odds_shown"] = true
 				print("  [SECT-036] day %d: trial odds %d in 100" % [day, roundi(odds * 100.0)])
-			if odds >= 0.5:
-				_attempt_open_trial(gs, c, done, kinds)
+			if odds >= HINTS_TRIAL_ODDS:
+				var trials_before := int(done.get("trials_won", 0))
+				_attempt_open_trial(gs, c, done, kinds, 0.0)
 				if kinds.has("trial"):
 					acted = "trial"
 					acted_line = "Sect rank trial"
+					if trial_log:
+						print("  [SIM-030] day %d: trial attempt at %d in 100 -> %s" % [day, roundi(odds * 100.0), "won" if int(done.get("trials_won", 0)) > trials_before else "lost"])
+			elif c.alive and c.injuries.is_empty() and Sects.trial_advice(c, gs.data).begins_with("Close"):
+				# SIM-030: a person with the trial card open trains until the odds are fair: the best combat style, else meditation.
+				var style := Techniques.practice_target(c, gs.data)
+				if style != "":
+					gs.practice_technique(style, 7)
+				else:
+					gs.cultivate(7, density)
+				acted = "train"
+				acted_line = "Train for the sect trial"
+				done["trial_train_weeks"] = int(done.get("trial_train_weeks", 0)) + 1
 		var steps: Array[String] = []
 		if acted == "":
 			steps = _next_steps(gs, c, day)

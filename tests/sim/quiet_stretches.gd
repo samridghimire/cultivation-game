@@ -37,6 +37,7 @@ func _run() -> void:
 	_breakdown = args.has("--breakdown")
 	FirstHour.record_weeks = args.has("--weeks")  # GUIDE-280: print the hint lines and action of each week of the longest stretch
 	FirstHour.sect_report = true
+	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
 	for policy in ["default", "curious", "hints"]:
 		if hints_only and policy != "hints":
 			continue

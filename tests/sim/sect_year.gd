@@ -31,6 +31,7 @@ func _run() -> void:
 	var bus: Node = root.get_node("EventBus")
 	FirstHour.hints_policy = true
 	FirstHour.sect_report = true
+	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
 	var months := int(ceil(days / 30.0))
 	for sect_id in sects:
 		var def: SectDef = gs.data.sects.get(sect_id)
