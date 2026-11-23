@@ -112,6 +112,7 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_subtitle.text = "Trial for %s" % sect.rank_name(next)
 	arena.color = color
 	arena.sect_id = String(c.sect["id"])
+	arena.result = false
 	arena.player_look = PlayerLook.of(c, data)
 	arena.queue_redraw()
 	_foe.text = foe_line(data, enemy)
@@ -152,8 +153,9 @@ func open_lost(sect_name: String, info: Dictionary, color: Color = UIStyle.ACCEN
 	_title.add_theme_color_override("font_color", color)
 	_banner.color = color
 	_banner.queue_redraw()
-	_subtitle.text = "Trial for %s: not yet" % String(info.get("rank", "the next rank"))
+	_subtitle.text = lost_subtitle(info)
 	arena.color = color
+	arena.result = true
 	arena.queue_redraw()
 	var lines := lost_lines(info)
 	_foe.text = lines[0]
@@ -166,6 +168,11 @@ func open_lost(sect_name: String, info: Dictionary, color: Color = UIStyle.ACCEN
 	_wait_button.text = "Back"
 	visible = true
 	_wait_button.grab_focus.call_deferred()
+
+
+## The result-mode subtitle: names the rank the trial was for (the next rank, not the current one). Pure.
+static func lost_subtitle(info: Dictionary) -> String:
+	return "Trial for %s: lost" % String(info.get("rank", "the next rank"))
 
 
 ## [examiner line, what you lacked, injury line, odds now]; "" entries are empty. Pure.
@@ -215,6 +222,9 @@ func _unhandled_input(event: InputEvent) -> void:
 ## GFX-250: the arena at 2x (480x128), the SectVignette set (ground, ring/pit/vault props per sect) with the player on
 ## the left and the examiner (sect colour, white hair, wooden sword) on the right, facing each other.
 class TrialArena extends SectCard.SectVignette:
+	## WU-616: result mode after a lost trial: the player kneels back a step, the examiner's sword points down.
+	var result := false
+
 	func _draw() -> void:
 		draw_rect(Rect2(0, 0, W, H), Color(0.14, 0.15, 0.2))  # dusk sky
 		draw_rect(Rect2(0, GROUND, W, H - GROUND), Color(0.3, 0.24, 0.17))  # packed earth
@@ -223,7 +233,14 @@ class TrialArena extends SectCard.SectVignette:
 		for x in [210, W - 214]:  # rope posts
 			draw_rect(Rect2(x, 52, 6, 46), Color(0.45, 0.32, 0.2))
 		draw_line(Vector2(213, 62), Vector2(W - 211, 62), color.darkened(0.2), 3.0)
-		draw_figure(self, _player(), 250, 118, 4.0, "right")
+		if result:
+			draw_figure(self, _player(), 226, 122, 4.0, "right")
+			draw_rect(Rect2(262, 118, 22, 4), Color(0.75, 0.6, 0.4))  # your sword on the ground
+		else:
+			draw_figure(self, _player(), 250, 118, 4.0, "right")
 		var examiner := _disciple({"robe": color, "sash": Color(0.9, 0.75, 0.3), "accessories": PackedStringArray(["white_hair"])})
 		draw_figure(self, examiner, 370, 118, 4.0, "left")
-		draw_rect(Rect2(332, 78, 22, 4), Color(0.75, 0.6, 0.4))  # wooden sword
+		if result:
+			draw_rect(Rect2(336, 84, 4, 22), Color(0.75, 0.6, 0.4))  # sword lowered, point down
+		else:
+			draw_rect(Rect2(332, 78, 22, 4), Color(0.75, 0.6, 0.4))  # wooden sword

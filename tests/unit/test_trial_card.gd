@@ -195,6 +195,28 @@ func test_lost_trial_opens_result_card_with_back_focus() -> void:
 	_teardown(gs, hud)
 
 
+## WU-616: the lost card names the next rank, not the current one, and the arena switches to result mode.
+func test_lost_card_names_next_rank_and_arena_result() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: TrialCard = hud.get("_trial_card")
+	var sect: SectDef = gs.data.sects["azure_cloud_sect"]
+	var info := {"examiner": "Elder Wen", "rank": sect.rank_name(1), "chance": 0.4}
+	assert_eq(TrialCard.lost_subtitle(info), "Trial for %s: lost" % sect.rank_name(1))
+	EventBus.promotion_trial_lost.emit("azure_cloud_sect", info)
+	await _frames()
+	var t := card.all_text()
+	assert_true(t.contains("Trial for %s: lost" % sect.rank_name(1)), t)
+	assert_false(t.contains("not yet"), t)
+	assert_true(card.arena.result)
+	card.wait_button().pressed.emit()
+	assert_true(card.open(gs.player, gs.data))
+	assert_false(card.arena.result)
+	_teardown(gs, hud)
+
+
 ## WU-615: a sect-join news line reaches Xiao Ling's talk (window) and is gone afterwards, however the talk is opened.
 func test_news_reaches_xiao_ling_talk() -> void:
 	var out: Array = []
