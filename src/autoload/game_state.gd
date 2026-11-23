@@ -3618,6 +3618,43 @@ func attempt_promotion_trial() -> void:
 			"chance": Combat.win_chance(player, data, enemy)})
 
 
+## SECT-038: enter the yearly outer-sect contest: never-lethal bouts against the listed foes in order until a loss;
+## each round won pays its prize. Once per year.
+func enter_sect_contest() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var reason := Sects.check_contest(player, data, GameClock.total_days)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	Sects.enter_contest(player, GameClock.total_days)
+	var sect: SectDef = data.sects[player.sect["id"]]
+	EventBus.post("You enter the %s's outer-sect contest." % sect.name)
+	var won := 0
+	var index := 0
+	while true:
+		var round_def := Sects.contest_round(player, data, index)
+		if round_def.is_empty():
+			break
+		var foe := Sects.trial_opponent(data, String(round_def["foe"]))
+		if not fight_enemy(foe):
+			break
+		won += 1
+		var prize: Dictionary = round_def["prize"]
+		Sects.pay_contest_prize(player, data, prize)
+		EventBus.post("Round %d won against %s. (+%d contribution, +%d spirit stones)" % [index + 1, foe.get("name", "your foe"), int(prize.get("contribution", 0)), int(prize.get("spirit_stones", 0))], "progress")
+		index += 1
+	if won == 0:
+		EventBus.post("You fall in the first round of the contest. Next year, perhaps.", "warning")
+	elif Sects.contest_round(player, data, index).is_empty():
+		EventBus.post("You win every round of the contest!", "progress")
+	else:
+		EventBus.post("You are beaten after %d round%s. The contest is over for this year." % [won, "" if won == 1 else "s"], "warning")
+	EventBus.player_changed.emit()
+
+
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
 ## Spending contribution never lowers your rank. Takes no time.
 func buy_with_contribution(item_id: String) -> void:

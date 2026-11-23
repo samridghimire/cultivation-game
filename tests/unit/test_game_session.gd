@@ -4863,3 +4863,23 @@ func test_sect_home_arrival_line_fires_once() -> void:  # WU-607
 	var homes := seen.filter(func(t: String) -> bool: return t.contains("home of the Azure Cloud Sect"))
 	assert_eq(homes.size(), 1, "once per sect")
 	assert_true(gs.world_flags.get("sect_home_seen_azure_cloud_sect", false))
+
+
+## SECT-038: the contest refuses outside its month and, once entered, only once a year.
+func test_enter_sect_contest_once_a_year() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	c.alignment = 0
+	gs.join_sect("blood_lotus_sect")
+	c.sect["reported"] = true
+	gs.enter_sect_contest()  # day 0 is month 1, the contest is in month 6
+	assert_false(c.sect.has("contest_year"), "wrong month: nothing entered")
+	clock.total_days = (int(gs.data.sects["blood_lotus_sect"].contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	gs.enter_sect_contest()
+	assert_eq(int(c.sect["contest_year"]), Calendar.year_of(clock.total_days))
+	assert_false(Sects.contest_open(c, gs.data, clock.total_days))
+	var stones := c.item_count("spirit_stone")
+	gs.enter_sect_contest()  # already entered
+	assert_eq(c.item_count("spirit_stone"), stones)
+	gs.end_session()

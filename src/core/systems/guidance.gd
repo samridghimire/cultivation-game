@@ -1229,6 +1229,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var lecture := _lecture_hint(c, data, today)
 		if lecture != "" and lecture_here == "":
 			out.append(lecture)
+		var contest_hint := _contest_hint(c, data, today)
+		if contest_hint != "":
+			out.append(contest_hint)
 		var delivery := Commissions.delivery_hint(c, data, today)
 		if delivery != "":
 			out.append(delivery)
@@ -7163,6 +7166,13 @@ static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> Strin
 	if Sects.check_lecture(c, data, today) != "":
 		return ""
 	return "Your sect's elder lectures this month; attend at the sect hall."
+
+
+## SECT-038: "The <sect> contest is open this month" while a member can enter it.
+static func _contest_hint(c: CharacterData, data: GameData, today: int) -> String:
+	if not Sects.contest_open(c, data, today):
+		return ""
+	return "The %s contest is open this month; enter at the sect hall." % (data.sects[c.sect["id"]] as SectDef).name
 
 
 const SEASONAL_JOURNAL_MAX := 2

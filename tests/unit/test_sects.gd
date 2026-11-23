@@ -346,3 +346,54 @@ func test_trial_advice_branches() -> void:
 		ranks[1].erase("trial")
 	else:
 		ranks[1]["trial"] = had_trial
+
+
+# --- SECT-038: the outer-sect contest -----------------------------------------
+
+func _contest_day(sect_id: String = "azure_cloud_sect") -> int:
+	return (int(data().sects[sect_id].contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+
+
+func _contest_member() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	Sects.join(c, data(), "azure_cloud_sect")
+	return c
+
+
+func test_contest_open_only_in_its_month_once_a_year() -> void:
+	var c := _contest_member()
+	c.sect["reported"] = true
+	var day := _contest_day()
+	assert_true(Sects.contest_open(c, data(), day))
+	assert_false(Sects.contest_open(c, data(), day + Calendar.DAYS_PER_MONTH), "next month")
+	Sects.enter_contest(c, day)
+	assert_false(Sects.contest_open(c, data(), day + 3), "entered this year")
+	assert_true(Sects.contest_open(c, data(), day + Calendar.DAYS_PER_YEAR), "next year")
+
+
+func test_contest_refuses_rogue_rank_two_and_unreported() -> void:
+	var rogue := new_character()
+	assert_false(Sects.contest_open(rogue, data(), _contest_day()))
+	var c := _contest_member()
+	c.sect["reported"] = false
+	assert_false(Sects.contest_open(c, data(), _contest_day()))
+	c.sect["reported"] = true
+	c.sect["rank"] = 2
+	assert_false(Sects.contest_open(c, data(), _contest_day()))
+
+
+func test_contest_rounds_in_order_and_validated() -> void:
+	var c := _contest_member()
+	var def: Dictionary = data().sects["azure_cloud_sect"].contest
+	assert_eq(Sects.contest_round(c, data(), 0)["foe"], def["foes"][0])
+	assert_true(Sects.contest_round(c, data(), int(def["rounds"])).is_empty())
+	assert_eq(Sects.validate_contests(data()).size(), 0)
+
+
+func test_contest_prize_pays_stones_and_contribution() -> void:
+	var c := _contest_member()
+	var stones_before := c.item_count("spirit_stone")
+	Sects.pay_contest_prize(c, data(), {"contribution": 12, "spirit_stones": 7})
+	assert_eq(c.item_count("spirit_stone"), stones_before + 7)
+	assert_eq(int(c.sect["contribution"]), 12)

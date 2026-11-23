@@ -753,6 +753,89 @@ static func lecture_line(lecture: Dictionary, month_index: int) -> String:
 	return line.left(1).to_upper() + line.substr(1)
 
 
+# --- The outer-sect contest (SECT-038) ----------------------------------------
+
+## The contest definition of `c`'s sect ({} for rogues and sects without one).
+static func contest_def(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue() or not data.sects.has(c.sect["id"]):
+		return {}
+	return (data.sects[c.sect["id"]] as SectDef).contest
+
+
+## Why `c` cannot enter the contest on `total_days`, or "" when they can.
+static func check_contest(c: CharacterData, data: GameData, total_days: int) -> String:
+	if c.is_rogue():
+		return "Only sect disciples may enter the contest."
+	var contest := contest_def(c, data)
+	if contest.is_empty():
+		return "Your sect holds no contest."
+	if needs_report(c):
+		return "Report to the hall first."
+	if int(c.sect.get("rank", 0)) > 1:
+		return "The outer-sect contest is for disciples of the first two ranks."
+	if Calendar.month_of(total_days) != int(contest.get("month", 0)):
+		return "The contest is held in month %d of the year." % int(contest.get("month", 1))
+	if int(c.sect.get("contest_year", -1)) == Calendar.year_of(total_days):
+		return "You have already entered this year's contest."
+	return ""
+
+
+## True while `check_contest` allows entry.
+static func contest_open(c: CharacterData, data: GameData, total_days: int) -> bool:
+	return check_contest(c, data, total_days) == ""
+
+
+## Round `index` (0-based) of `c`'s contest: {foe (enemy id), prize {contribution, spirit_stones}}; {} past the last round.
+static func contest_round(c: CharacterData, data: GameData, index: int) -> Dictionary:
+	var contest := contest_def(c, data)
+	var foes: Array = contest.get("foes", [])
+	if index < 0 or index >= foes.size():
+		return {}
+	var prizes: Array = contest.get("prizes", [])
+	return {"foe": String(foes[index]), "prize": prizes[index] if index < prizes.size() else {}}
+
+
+## Marks this year's contest as entered.
+static func enter_contest(c: CharacterData, total_days: int) -> void:
+	c.sect["contest_year"] = Calendar.year_of(total_days)
+
+
+## Pays one round's prize (contribution may promote). Returns the prize dictionary.
+static func pay_contest_prize(c: CharacterData, data: GameData, prize: Dictionary) -> void:
+	var stones := int(prize.get("spirit_stones", 0))
+	if stones > 0:
+		c.add_item("spirit_stone", stones)
+	var contribution := int(prize.get("contribution", 0))
+	if contribution > 0:
+		add_contribution(c, data, contribution)
+
+
+## Load errors for the sects.json `contest` blocks.
+static func validate_contests(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for sect: SectDef in data.sects.values():
+		if sect.contest.is_empty():
+			continue
+		var label := "Sect '%s' contest" % sect.id
+		var month := int(sect.contest.get("month", 0))
+		if month < 1 or month > Calendar.MONTHS_PER_YEAR:
+			errors.append("%s needs month 1..12" % label)
+		var rounds := int(sect.contest.get("rounds", 0))
+		if rounds < 2 or rounds > 3:
+			errors.append("%s needs rounds 2..3" % label)
+		var foes: Array = sect.contest.get("foes", [])
+		var prizes: Array = sect.contest.get("prizes", [])
+		if foes.size() != rounds or prizes.size() != rounds:
+			errors.append("%s needs %d foes and %d prizes" % [label, rounds, rounds])
+		for foe: Variant in foes:
+			if not data.enemies.has(String(foe)):
+				errors.append("%s lists unknown foe '%s'" % [label, foe])
+		for prize: Variant in prizes:
+			if not (prize is Dictionary) or int((prize as Dictionary).get("contribution", 0)) < 0 or int((prize as Dictionary).get("spirit_stones", 0)) < 0:
+				errors.append("%s prizes need contribution and spirit_stones >= 0" % label)
+	return errors
+
+
 ## Load errors for the sects.json `lecture` blocks.
 static func validate_lectures(data: GameData) -> PackedStringArray:
 	var errors := PackedStringArray()
