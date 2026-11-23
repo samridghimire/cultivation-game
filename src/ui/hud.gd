@@ -200,6 +200,8 @@ var _season_flush_queued := false
 var _time_skip: TimeSkipOverlay
 var _gift_left: GiftLeftCard  # WU-600
 var _sworn_oath: SwornOath  ## GFX-235
+var _trial_return := ""  ## WU-612: "board" or "hall" while the trial card was opened from there
+var _trial_stepped := false
 var _pending_moments: Array[Dictionary] = []  ## WU-601: friendship moments waiting for a free screen (FIFO)
 var _pending_year: Array = []  # [year, lines, start_year] waiting for a free screen (WU-031)
 var _pending_kickoff: Array = []  # [season, year, lines] (SEASON-013)
@@ -336,7 +338,7 @@ func _ready() -> void:
 	_sect_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_sect_card))
 	_trial_card = TrialCard.new()  # WU-609
-	_trial_card.closed.connect(_update_modal)
+	_trial_card.closed.connect(_on_trial_card_closed)
 	_trial_card.confirmed.connect(_on_trial_confirmed)
 	add_child(UIStyle.centered(_trial_card))
 	EventBus.promotion_trial_offered.connect(_on_promotion_trial_offered)
@@ -1967,6 +1969,8 @@ func _drain_moments() -> void:
 			_play_sect_promoted(String(m["sect_id"]), m.get("summary", {}), bool(m.get("has_next", false)))
 		"sect_lecture":
 			_play_sect_lecture(String(m["sect_id"]), m.get("result", {}))
+		"trial_return":
+			_return_from_trial(String(m.get("to", "")))
 	if not _pending_moments.is_empty():
 		_drain_moments.call_deferred()
 
@@ -2218,15 +2222,44 @@ func _play_sect_report(sect_id: String, line: String, items: Dictionary) -> void
 func _on_promotion_trial_offered(sect_id: String) -> void:
 	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
 		return
+	_trial_return = ""
+	if _mission_board_n != null and _mission_board_n.visible:
+		_trial_return = "board"
+	elif _choice_menu.visible and is_instance_valid(_last_source):
+		_trial_return = "hall"
 	_choice_menu.close()
 	_close_screens()
+	_trial_stepped = false
 	_trial_card.open(GameState.player, GameState.data, _sect_color(sect_id))
 	_update_modal()
 
 
 func _on_trial_confirmed() -> void:
+	_trial_stepped = true
 	_update_modal()
 	GameState.attempt_promotion_trial()
+	if _trial_return != "":  # WU-612: after the fight and the promotion moment, back to where it was offered
+		_pending_moments.append({"kind": "trial_return", "to": _trial_return})
+		_trial_return = ""
+		_update_modal()
+
+
+## WU-612: "Not yet" / B return to the board or hall; "Step into the arena" is handled in _on_trial_confirmed.
+func _on_trial_card_closed() -> void:
+	if not _trial_stepped:
+		_return_from_trial(_trial_return)
+		_trial_return = ""
+	_trial_stepped = false
+	_update_modal()
+
+
+func _return_from_trial(to: String) -> void:
+	if GameState.player == null or GameState.player.is_rogue():
+		return
+	if to == "board":
+		_mission_board.open("rank")
+	elif to == "hall" and is_instance_valid(_last_source):
+		_choice_menu.open_for(_last_source)
 
 
 ## WU-603: the promotion card reuses the sect card.

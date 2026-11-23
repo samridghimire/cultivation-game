@@ -81,6 +81,8 @@ var last_explore_deep_path := false
 var _bounty_fight := false
 ## A lethal foe sensed while exploring, awaiting face_threat() (transient, not saved).
 var pending_threat := ""
+## WU-612: the news line a villager opens their dialogue with; the dialogue window reads it once (not saved).
+var pending_greeting := ""
 ## Set when the Creation Artifact just respawned the player (ART-005) until
 ## they pick where to awaken: {cause, anchor_id, lives_left, qi_lost}. Not saved.
 var pending_respawn: Dictionary = {}
@@ -160,6 +162,7 @@ func start_session(character: CharacterData) -> void:
 	last_explore_look = ""
 	pending_cast = {}
 	pending_threat = ""
+	pending_greeting = ""
 	pending_respawn = {}
 	load_recap = []
 	arrival_banner_pending = true
@@ -1934,7 +1937,8 @@ func start_dialogue(npc_id: String) -> void:
 	dialogue_node = node
 	if not world_flags.has(Guidance.MET_FLAG + npc_id):
 		world_flags[Guidance.MET_FLAG + npc_id] = GameClock.total_days  # GUIDE-270
-	_greet_renowned(npc_id)
+	pending_greeting = ""
+	_greet_renowned(npc_id, true)
 	_friend_scene(npc_id)
 	_named_remembers(npc_id)
 	_note_teacher_seen(npc_id)
@@ -2600,10 +2604,12 @@ func call_on(npc_id: String) -> void:
 
 
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
-func _greet_renowned(npc_id: String) -> void:
+func _greet_renowned(npc_id: String, opens_dialogue: bool = false) -> void:
 	var news := FolkNews.take(player, data, npc_id)  # FOLK-046: a friend's reaction replaces the greeting, once
 	if news != "":
 		EventBus.post("%s: %s" % [String(npcs[npc_id].name), news], "people")
+		if opens_dialogue:
+			pending_greeting = news  # WU-612: the dialogue's opening line
 		return
 	if player.parents.has(npc_id) or player.children.has(npc_id) or player.spouses.has(npc_id):
 		return
