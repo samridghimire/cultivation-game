@@ -148,3 +148,15 @@ func test_propose_queues_wedding_news() -> void:
 		assert_eq(String(c.folk_news.get("elder_mo", "")), "wedding")
 	else:
 		assert_false(c.folk_news.has("elder_mo"), "no marriage, no news")
+
+
+## RV-FOLK047: marrying a named villager queues the news for the others, not for the new spouse.
+func test_wedding_news_skips_the_spouse() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["elder_mo"] = 60
+	gs.npc_favor["xiao_ling"] = 60
+	c.spouses.append("xiao_ling")
+	FolkNews.queue(c, gs.data, gs.npc_favor, "wedding")
+	assert_eq(String(c.folk_news.get("elder_mo", "")), "wedding")
+	assert_false(c.folk_news.has("xiao_ling"), "the spouse is not told of their own wedding")

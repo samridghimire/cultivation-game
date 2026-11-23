@@ -20,6 +20,8 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 			continue
 		if int(favor.get(id, int(def.get("favor", 0)))) < min_favor:
 			continue
+		if kind == "wedding" and player.spouses.has(id):
+			continue  # RV-FOLK047: the new spouse does not congratulate you on marrying them
 		player.folk_news[id] = kind
 		n += 1
 	return n

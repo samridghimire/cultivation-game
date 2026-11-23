@@ -109,6 +109,9 @@ func open() -> void:
 	if not _source_has_portrait:
 		_apply_portrait(SpeakerPortrait.texture_for(String(view["speaker"])))
 	_text.text = view["text"]
+	if GameState.pending_greeting != "":  # WU-612: news opens the talk, read once
+		_text.text = "%s\n\n%s" % [GameState.pending_greeting, view["text"]]
+		GameState.pending_greeting = ""
 	for child in _choices.get_children():
 		_choices.remove_child(child)
 		child.queue_free()

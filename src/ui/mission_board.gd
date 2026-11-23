@@ -120,10 +120,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
-func open() -> void:
+func open(tab: String = "missions") -> void:
 	_selected = ""
 	_offer_item = ""
-	_tab = "missions"
+	_tab = tab
 	var pill := breakthrough_pill_id(GameState.player, GameState.data)
 	if pill != "":  # WU-328: the claim goal leads here, so open on the treasury with the pill selected
 		_tab = "shop"

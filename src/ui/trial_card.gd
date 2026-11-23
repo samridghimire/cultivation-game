@@ -111,6 +111,8 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_banner.queue_redraw()
 	_subtitle.text = "Trial for %s" % sect.rank_name(next)
 	arena.color = color
+	arena.sect_id = String(c.sect["id"])
+	arena.player_look = PlayerLook.of(c, data)
 	arena.queue_redraw()
 	_foe.text = foe_line(data, enemy)
 	_odds.text = odds_line(chance)
@@ -174,31 +176,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
-## The arena, drawn in code: the player on the left, the examiner on the right (sect robe), facing each other.
-class TrialArena extends Control:
-	const W := 240
-	const H := 80
-	var color := Color.WHITE
-
-	func _person(x: float, y: float, robe: Color, face_right: bool) -> void:
-		var s := 3.0
-		var dir := 1.0 if face_right else -1.0
-		draw_rect(Rect2(x - 3 * s, y - 9 * s, 6 * s, 9 * s), robe)  # robe
-		draw_rect(Rect2(x - 2 * s, y - 13 * s, 4 * s, 4 * s), Color(0.9, 0.75, 0.6))  # head
-		draw_rect(Rect2(x - 2 * s, y - 13 * s, 4 * s, s), Color(0.12, 0.1, 0.1))  # hair
-		draw_rect(Rect2(x + dir * 3 * s - (s if dir < 0 else 0.0), y - 7 * s, s, s), robe.darkened(0.3))  # sleeve
-		draw_rect(Rect2(x + dir * 4 * s - (3 * s if dir < 0 else 0.0), y - 8 * s, 3 * s, s), Color(0.75, 0.6, 0.4))  # wooden blade
-
+## GFX-250: the arena at 2x (480x128), the SectVignette set (ground, ring/pit/vault props per sect) with the player on
+## the left and the examiner (sect colour, white hair, wooden sword) on the right, facing each other.
+class TrialArena extends SectCard.SectVignette:
 	func _draw() -> void:
 		draw_rect(Rect2(0, 0, W, H), Color(0.14, 0.15, 0.2))  # dusk sky
-		draw_rect(Rect2(0, 60, W, H - 60), Color(0.3, 0.24, 0.17))  # packed earth
-		draw_rect(Rect2(0, 60, W, 3), color)  # sect colour floor stripe
-		for x in [10, W - 14]:  # rope posts
-			draw_rect(Rect2(x, 36, 4, 28), Color(0.45, 0.32, 0.2))
-		draw_line(Vector2(12, 42), Vector2(W - 12, 42), color.darkened(0.2), 2.0)
-		draw_ellipse_ring(Vector2(W / 2.0, 70), 70.0)
-		_person(70, 72, Color(0.8, 0.8, 0.75), true)
-		_person(W - 70, 72, color.darkened(0.3), false)
-
-	func draw_ellipse_ring(center: Vector2, rx: float) -> void:
-		draw_line(Vector2(center.x - rx, center.y), Vector2(center.x + rx, center.y), Color(0.45, 0.36, 0.25), 1.0)
+		draw_rect(Rect2(0, GROUND, W, H - GROUND), Color(0.3, 0.24, 0.17))  # packed earth
+		draw_rect(Rect2(0, GROUND, W, 3), color)  # sect colour floor stripe
+		_props()
+		for x in [210, W - 214]:  # rope posts
+			draw_rect(Rect2(x, 52, 6, 46), Color(0.45, 0.32, 0.2))
+		draw_line(Vector2(213, 62), Vector2(W - 211, 62), color.darkened(0.2), 3.0)
+		draw_figure(self, _player(), 250, 118, 4.0, "right")
+		var examiner := _disciple({"robe": color, "sash": Color(0.9, 0.75, 0.3), "accessories": PackedStringArray(["white_hair"])})
+		draw_figure(self, examiner, 370, 118, 4.0, "left")
+		draw_rect(Rect2(332, 78, 22, 4), Color(0.75, 0.6, 0.4))  # wooden sword

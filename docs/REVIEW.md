@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 8a4ad07
+Last reviewed commit: 7404ead
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2504,3 +2504,19 @@ Last reviewed commit: 8a4ad07
     Note: the mission board closes when the card opens (worker Follow-up).
   - WU-608 OK (overview row only for reported members; journal close returns to the hall menu). GFX-246, GFX-247
     (drill_sect_id has a test), GFX-248, SIM-028, C-418: OK. Not rendered by me (workers report shots for GFX-246/247/248, WU-609).
+- 2026-11-23 (reviewer, 3rd run): reviewed 8a4ad07..7404ead (SECT-037, WU-610, GFX-249, GUIDE-290, WU-612, GFX-250, SECT-039,
+  SECT-040, WU-613, FOLK-047; [PLAN]/[REVIEW] skipped; SECT-037 and WU-610 had landed before the last review commit but were
+  not in its range). Main green before fixes. No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change.
+  - SECT-039 regression (fixed): the commit was built on files from before WU-612 and GFX-250 and silently reverted both
+    (pending_greeting / news as the dialogue's opening line, trial card returning to the board or hall, the 480x128
+    PixelFigure sect vignettes and the TrialArena that extends SectVignette, and their tests in test_trial_card/test_sect_card).
+    Tests stayed green because the tests were deleted with the code. Re-applied both commits on top of main (one hand merge in
+    `_greet_renowned` with FOLK-047's `npcs` argument); SECT-039's balance/data/guidance half kept. Workers: after a rebase,
+    check `git diff origin/main --stat` only lists files your task touched.
+  - FOLK-047 bug (fixed): marrying a named villager of the start region (Xiao Ling, Elder Mo, Hunter Ma) queued the wedding
+    news on the new spouse too, who then said "Married to Xiao Ling! Congratulations..." to you. `FolkNews.queue` skips the
+    spouses for "wedding"; test `test_wedding_news_skips_the_spouse`.
+  - SECT-039: day-180 first-promotion target missed (245-350 days; mission pace is the limit), recorded in DESIGN.md and the
+    commit Follow-ups. SECT-040: the spec's "Trial for <rank>: <word> odds" hint was not applied (worker Follow-up).
+  - Notes (not filed): GFX-249's news bubble also shows for stale sect news that `take` will drop after leaving a sect (one
+    empty talk clears it). SECT-037, WU-610, WU-613 (tab focus follows the page), GUIDE-290: OK. Not rendered by me.
