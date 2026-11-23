@@ -29,6 +29,8 @@ signal shop_requested(merchant_name: String, max_price: int, stock_tags: Array, 
 ## The player opened their sect's mission board (sect hall); show the MissionBoard.
 signal mission_board_requested
 ## The sect hall wants the read-only sect balance-of-power window (WU-002).
+## WU-608: the hall menu's "Sect overview" row; `source` is the hall, so B in the journal returns to its menu.
+signal sect_overview_requested(source: Node)
 signal sect_balance_requested
 ## Show gossip lines in a read-only window (WU-111).
 signal gossip_requested(lines: PackedStringArray)

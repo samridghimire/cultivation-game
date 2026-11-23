@@ -389,6 +389,7 @@ func _ready() -> void:
 	EventBus.season_board_requested.connect(_on_season_board_requested)
 	EventBus.auction_requested.connect(_on_auction_requested)
 	EventBus.sect_balance_requested.connect(_on_sect_balance_requested)
+	EventBus.sect_overview_requested.connect(_on_sect_overview_requested)
 	EventBus.gossip_requested.connect(_on_gossip_requested)
 	EventBus.family_requested.connect(_on_family_requested)
 	EventBus.child_training_requested.connect(_on_child_training_requested)
@@ -543,6 +544,27 @@ func _on_season_board_requested() -> void:
 func _on_mission_board_requested() -> void:
 	_mission_board.open()
 	_update_modal()
+
+
+## WU-608: the hall's overview opens the journal's Sect page; closing it returns to the hall menu.
+var _overview_from: Node
+
+func _on_sect_overview_requested(source: Node) -> void:
+	_overview_from = source
+	var journal: Control = _screen("toggle_journal")
+	if not journal.closed.is_connected(_on_overview_closed):
+		journal.closed.connect(_on_overview_closed, CONNECT_DEFERRED)
+	journal.open()
+	journal.set_page("sect")
+	journal.focus_page()
+	_update_modal()
+
+
+func _on_overview_closed() -> void:
+	var src := _overview_from
+	_overview_from = null
+	if is_instance_valid(src) and not _any_screen_open():
+		_choice_menu.open_for(src)
 
 
 func _on_sect_balance_requested() -> void:

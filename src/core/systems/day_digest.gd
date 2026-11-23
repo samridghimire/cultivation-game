@@ -5,13 +5,15 @@ extends RefCounted
 const MIN_DAYS := 5
 const MAX_LINES := 5
 ## Kinds in priority order; the first whose keyword occurs in the text (or whose category matches) wins.
-const KINDS: Array[String] = ["realm", "crop", "visit", "quarrel", "event", "weather", "tomorrow"]
+const KINDS: Array[String] = ["sect", "realm", "crop", "visit", "quarrel", "event", "weather", "tomorrow"]
 
 
 static func kind_of(text: String, category: String) -> String:
 	var t := text.to_lower()
 	if text.begins_with("Tomorrow:"):
 		return "tomorrow"
+	if text.begins_with("Your sect pays your monthly stipend") or text.begins_with("You fell short of your sect duty"):
+		return "sect"  # WU-608
 	if t.contains("breakthrough") or t.contains("reach the") or t.contains("stage") or t.contains("realm"):
 		return "realm"
 	if t.contains("ready to harvest") or t.contains("ripen"):

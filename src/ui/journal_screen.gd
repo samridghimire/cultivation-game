@@ -127,6 +127,11 @@ func open() -> void:
 	(_tabs.get_node("Tab_today") as Button).grab_focus.call_deferred()
 
 
+## WU-608: focus the first control of the current page (the tab button).
+func focus_page() -> void:
+	(_tabs.get_node("Tab_" + _page) as Button).grab_focus.call_deferred()
+
+
 ## WU-605: the Sect page: banner header, this month, the rank ladder. Members only; the tab hides for rogues.
 func _build_sect() -> void:
 	for c in _sect.get_children():

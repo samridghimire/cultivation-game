@@ -29,6 +29,9 @@ func get_options() -> Array[Dictionary]:
 	elif not player.is_rogue():
 		if Sects.needs_report(player):
 			options.append({"label": "Report as a new disciple", "action": GameState.report_to_sect})
+		else:
+			options.append({"label": overview_label(player, GameState.data, GameClock.total_days, GameState.world_flags),
+				"action": func() -> void: EventBus.sect_overview_requested.emit(self)})
 		var ids := Sects.available_missions(player, GameState.data, GameState.world_flags)
 		var ready := ids.filter(func(id: String) -> bool: return Sects.check_mission(player, GameState.data, id, GameState.world_flags) == "").size()
 		options.append({"label": "Mission board (%d of %d available)" % [ready, ids.size()], "action": EventBus.mission_board_requested.emit})
@@ -49,6 +52,16 @@ func get_options() -> Array[Dictionary]:
 	options.append_array(shop_options())
 	options.append_array(preload("res://src/world/interactables/explore_site.gd").event_options())
 	return options
+
+
+## WU-608: "Sect overview: <rank>, duty n/m, <balance> contribution" for a reported member; "" otherwise.
+static func overview_label(player: CharacterData, data: GameData, total_days: int, flags: Dictionary) -> String:
+	var status := Sects.month_status(player, data, total_days, flags)
+	if status.is_empty() or Sects.needs_report(player):
+		return ""
+	var def: SectDef = data.sects[player.sect["id"]]
+	var duty := "no duty" if int(status["duty"]) <= 0 else "duty %d/%d" % [int(status["progress"]), int(status["duty"])]
+	return "Sect overview: %s, %s, %d contribution" % [def.rank_name(int(player.sect["rank"])), duty, int(status["balance"])]
 
 
 func _ask(what: String) -> void:

@@ -8,7 +8,7 @@ const HOLD_SECONDS := 6.0
 const FADE_SECONDS := 0.5
 const MAX_LINES := 5
 const KIND_COLORS := {
-	"realm": Color(0.95, 0.8, 0.35), "crop": Color(0.55, 0.85, 0.4), "visit": Color(0.9, 0.6, 0.75),
+	"sect": Color(0.55, 0.8, 0.9), "realm": Color(0.95, 0.8, 0.35), "crop": Color(0.55, 0.85, 0.4), "visit": Color(0.9, 0.6, 0.75),
 	"quarrel": Color(0.9, 0.45, 0.4), "event": Color(0.6, 0.75, 0.95), "weather": Color(0.6, 0.7, 0.8),
 	"": Color(0.75, 0.75, 0.75),
 }
@@ -55,6 +55,17 @@ static func shown_lines(digest: Dictionary) -> PackedStringArray:
 	return out
 
 
+## WU-608: the month-end sect posts as one short row ("Duty met: stipend paid (..)" / "Duty short by N: stipend withheld").
+static func sect_row(line: String) -> String:
+	if line.begins_with("Your sect pays your monthly stipend: "):
+		return "Duty met: stipend paid (%s)" % line.trim_prefix("Your sect pays your monthly stipend: ").trim_suffix(".")
+	if line.begins_with("You fell short of your sect duty ("):
+		var nums := line.get_slice(")", 0).get_slice("(", 1).get_slice(" ", 0).split("/")
+		if nums.size() == 2:
+			return "Duty short by %d: stipend withheld" % maxi(int(nums[1]) - int(nums[0]), 0)
+	return line
+
+
 func show_digest(digest: Dictionary) -> void:
 	if not should_show(digest):
 		return
@@ -67,7 +78,7 @@ func show_digest(digest: Dictionary) -> void:
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var dot := UIStyle.label("•", 14, KIND_COLORS.get(DayDigest.kind_of(line, "info"), KIND_COLORS[""]))
 		row.add_child(dot)
-		var l := UIStyle.label(line, 14)
+		var l := UIStyle.label(sect_row(line), 14)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size.x = 340
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
