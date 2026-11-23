@@ -181,6 +181,8 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 	vignette = null
 	var scene := LectureScene.new()
 	scene.color = color
+	if GameState.player != null and GameState.data != null:
+		scene.player_look = PlayerLook.of(GameState.player, GameState.data)
 	scene.custom_minimum_size = Vector2(LectureScene.W, LectureScene.H)
 	scene.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	scene.clip_contents = true
@@ -268,35 +270,41 @@ class SectBanner extends Control:
 		ci.draw_rect(Rect2(3 * s, 3 * s, 3 * s, 3 * s), col.lightened(0.5))
 
 
-## WU-606: the lecture hall, drawn in code: the elder on a dais, seated disciples in two rows, scrolls either side.
+## WU-606 / GFX-248: the lecture hall at 2x: the elder seated on the dais (3x), four disciples in two rows and the
+## player in the front row (PixelFigure sprites, upper body only), mats under them, scroll hangings either side.
 class LectureScene extends Control:
-	const W := 240
-	const H := 72
+	const W := 480
+	const H := 144
 	var color := Color.WHITE
+	var player_look: Dictionary = {}
 
-	func _seated(x: float, y: float, robe: Color, s: float) -> void:
-		draw_rect(Rect2(x - 3 * s, y, 6 * s, 3 * s), robe)  # body
-		draw_rect(Rect2(x - 2 * s, y - 3 * s, 4 * s, 3 * s), Color(0.9, 0.75, 0.6))  # head
-		draw_rect(Rect2(x - 2 * s, y - 3 * s, 4 * s, s), Color(0.12, 0.1, 0.1))  # hair
-		draw_rect(Rect2(x - 4 * s, y + 3 * s, 8 * s, s), robe.darkened(0.3))  # crossed legs
+	func _sit(look: Dictionary, cx: float, base: float, s: float) -> void:
+		var tex := PixelFigure.frame(look, "down", 0)
+		var w := 16.0 * s
+		var h := 15.0 * s  # cropped above the knees: they sit on a mat
+		draw_rect(Rect2(cx - w * 0.7, base - 3 * s, w * 1.4, 4 * s), Color(0.55, 0.2, 0.18))  # mat
+		draw_rect(Rect2(cx - w * 0.7, base - 3 * s, w * 1.4, s), Color(0.7, 0.35, 0.25))
+		draw_texture_rect_region(tex, Rect2(cx - w / 2, base - h, w, h), Rect2(0, 0, 16, 15))
 
 	func _draw() -> void:
 		draw_rect(Rect2(0, 0, W, H), Color(0.16, 0.13, 0.12))  # hall wall
-		draw_rect(Rect2(0, 44, W, H - 44), Color(0.3, 0.22, 0.15))  # floor boards
-		for x in range(0, W, 24):
-			draw_rect(Rect2(x, 44, 1, H - 44), Color(0.22, 0.16, 0.11))
-		for x in [14, W - 26]:  # hanging scrolls
-			draw_rect(Rect2(x, 6, 12, 26), Color(0.85, 0.8, 0.65))
-			draw_rect(Rect2(x, 4, 12, 2), Color(0.45, 0.32, 0.2))
-			draw_rect(Rect2(x + 5, 10, 2, 16), Color(0.2, 0.15, 0.1))
-		draw_rect(Rect2(W / 2.0 - 30, 36, 60, 10), Color(0.4, 0.28, 0.18))  # dais
-		draw_rect(Rect2(W / 2.0 - 30, 36, 60, 2), Color(0.55, 0.4, 0.25))
-		_seated(W / 2.0, 30, color.darkened(0.35), 2.0)
-		for row in 2:
-			for i in 3:
-				var side := -1.0 if i == 0 else (1.0 if i == 2 else 0.0)
-				var x := W / 2.0 + (i - 1) * 56.0 + (row * 14.0 if row == 1 else 0.0) * side
-				_seated(x, 51 + row * 11, color, 1.0)
+		draw_rect(Rect2(0, 92, W, H - 92), Color(0.3, 0.22, 0.15))  # floor boards
+		for x in range(0, W, 48):
+			draw_rect(Rect2(x, 92, 2, H - 92), Color(0.22, 0.16, 0.11))
+		for x in [24, W - 60]:  # hanging scrolls
+			draw_rect(Rect2(x, 12, 36, 60), Color(0.85, 0.8, 0.65))
+			draw_rect(Rect2(x - 2, 8, 40, 5), Color(0.45, 0.32, 0.2))
+			draw_rect(Rect2(x + 15, 22, 5, 38), Color(0.2, 0.15, 0.1))
+			draw_rect(Rect2(x + 8, 28, 19, 4), color)
+		draw_rect(Rect2(W / 2.0 - 80, 80, 160, 18), Color(0.4, 0.28, 0.18))  # dais
+		draw_rect(Rect2(W / 2.0 - 80, 80, 160, 4), Color(0.55, 0.4, 0.25))
+		_sit({"robe": color.darkened(0.35), "sash": color.lightened(0.3), "hair": Color(0.85, 0.85, 0.85)}, W / 2.0, 90, 3.0)
+		var robe := {"robe": color, "sash": color.darkened(0.3)}
+		for x in [W / 2.0 - 150, W / 2.0 - 70, W / 2.0 + 70, W / 2.0 + 150]:  # back row
+			_sit(robe, x, 118, 1.7)
+		for x in [W / 2.0 - 110, W / 2.0 + 110]:  # front row
+			_sit(robe, x, 140, 2.0)
+		_sit(player_look if player_look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}, W / 2.0, 140, 2.0)  # the player
 
 
 ## GFX-246: 240x64 header pictures, code-drawn in the sect colour. join: the player before a hall gate;

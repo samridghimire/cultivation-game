@@ -216,3 +216,17 @@ func test_modes_have_vignettes() -> void:
 	card.open_lecture("Azure", "lecture", "line", 5, "", Color.SKY_BLUE)
 	assert_true(card.vignette == null)
 	card.free()
+
+
+## GFX-248: the lecture hall is drawn at 2x (480x144), centred, with a scene node.
+func test_lecture_scene_is_large() -> void:
+	var card := SectCard.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(card)
+	card.open_lecture("Azure", "lecture", "line", 5, "", Color.SKY_BLUE)
+	var found := false
+	for c in card._rows.get_children():
+		if c is SectCard.LectureScene:
+			found = true
+			assert_true(c.custom_minimum_size.x >= 480 and c.custom_minimum_size.y >= 140)
+	assert_true(found)
+	card.free()
