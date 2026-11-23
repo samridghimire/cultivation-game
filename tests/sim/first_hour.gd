@@ -2383,7 +2383,7 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		gs.buy_item(manual)
 		gs.use_item(manual)
 		return "manual" if not c.techniques.is_empty() else ""
-	if line.begins_with("Goal: Learn your first technique: ") and line.contains("earn "):
+	if line.begins_with("Goal: Learn your first technique: ") and line.contains(", earn "):
 		# GUIDE-275: too poor for the manual: sell what a stall pays for, else take the nearest fair fight for the stones.
 		_sell_loot_here(gs, c, gs.current_region)
 		if c.item_count("spirit_stone") > stones_before:
@@ -2833,7 +2833,7 @@ static func _talk_to_elder_mo(gs: Node, prefer: String = "", npc_id: String = "e
 		for choice: Dictionary in view.get("choices", []):
 			if not choice.get("disabled", false) and String(choice.get("label", "")).begins_with("I am new"):
 				pick = int(choice["index"])
-			if prefer != "" and not choice.get("disabled", false) and (String(choice.get("label", "")).contains(prefer) or (npc_id != "elder_mo" and String(choice.get("label", "")).contains("(Learn "))):
+			if prefer != "" and not choice.get("disabled", false) and (String(choice.get("label", "")).to_lower().contains(prefer) or (npc_id != "elder_mo" and String(choice.get("label", "")).contains("(Learn "))):
 				pick = int(choice["index"])
 				break
 		if pick < 0:

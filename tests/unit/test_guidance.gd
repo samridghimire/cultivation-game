@@ -7877,6 +7877,21 @@ func test_first_technique_goal_names_the_ridge_manual() -> void:
 	assert_eq(Guidance.hud_goal_text(c, d, flags, d.start_region, 10), "Learn your first technique", "the start region keeps the plain goal")
 
 
+## GUIDE-291: the marsh goal says "ask Old Monster Gui (free)" only while one talk teaches it (no favor gate), and the sim's
+## "Learn ..." line is not mistaken for an "earn N more" line.
+func test_first_technique_goal_in_the_marsh_names_gui_only_when_open() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.techniques = {}
+	var d := data()
+	var flags := {Guidance.ELDER_MO_FLAG: true}
+	assert_eq(Guidance.local_first_teacher(c, d, "withered_bone_marsh", flags), "Old Monster Gui")
+	var line := Guidance.hud_goal_text(c, d, flags, "withered_bone_marsh", 10)
+	assert_eq(line, "Learn your first technique: ask Old Monster Gui (free)")
+	c.techniques = {"basic_breathing": 1}
+	assert_eq(Guidance.local_first_teacher(c, d, "withered_bone_marsh", flags), "", "known: no teacher line")
+
+
 ## GUIDE-275: injured with no healer to name, the line says how long rest takes.
 func test_treat_injuries_line_names_the_rest_days() -> void:
 	var c := _fresh()
