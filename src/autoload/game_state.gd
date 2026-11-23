@@ -3634,6 +3634,20 @@ func attempt_promotion_trial() -> void:
 			"chance": Combat.win_chance(player, data, enemy)})
 
 
+## WU-611: the hall entry for the contest: asks the HUD for the contest card (it calls enter_sect_contest on
+## "Enter the contest"). Posts the reason instead when it cannot be entered.
+func offer_sect_contest() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var reason := Sects.check_contest(player, data, GameClock.total_days)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	EventBus.sect_contest_offered.emit(String(player.sect["id"]))
+
+
 ## SECT-038: enter the yearly outer-sect contest: never-lethal bouts against the listed foes in order until a loss;
 ## each round won pays its prize. Once per year.
 func enter_sect_contest() -> void:
@@ -3656,10 +3670,17 @@ func enter_sect_contest() -> void:
 			break
 		var foe := Sects.trial_opponent(data, String(round_def["foe"]))
 		if not fight_enemy(foe):
+			EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": false,
+				"foe": String(foe.get("name", "your foe")), "prize": {}, "next_foe": ""})
 			break
 		won += 1
 		var prize: Dictionary = round_def["prize"]
 		var promoted := Sects.pay_contest_prize(player, data, prize)
+		var next_def := Sects.contest_round(player, data, index + 1)
+		var next_foe := Sects.trial_opponent(data, String(next_def["foe"])) if not next_def.is_empty() else {}
+		EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": true,
+			"foe": String(foe.get("name", "your foe")), "prize": prize, "next_foe": String(next_foe.get("name", "")),
+			"next_chance": Combat.win_chance(player, data, next_foe) if not next_foe.is_empty() else 0.0})
 		EventBus.post("Round %d won against %s. (+%d contribution, +%d spirit stones)" % [index + 1, foe.get("name", "your foe"), int(prize.get("contribution", 0)), int(prize.get("spirit_stones", 0))], "progress")
 		if promoted:
 			_post_promotion()  # RV-SECT038: a prize that crosses a rank threshold is announced like a mission's

@@ -40,7 +40,7 @@ func get_options() -> Array[Dictionary]:
 			options.append(lecture)
 		if not Sects.contest_def(player, GameState.data).is_empty():
 			var contest_reason := Sects.check_contest(player, GameState.data, GameClock.total_days)
-			options.append({"label": "Enter the outer-sect contest", "action": GameState.enter_sect_contest, "disabled": contest_reason != "", "reason": contest_reason, "keep_open": true})
+			options.append({"label": "Enter the outer-sect contest", "action": GameState.offer_sect_contest, "disabled": contest_reason != "", "reason": contest_reason})
 		var trial := trial_option()
 		if not trial.is_empty():
 			options.append(trial)

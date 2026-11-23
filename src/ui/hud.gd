@@ -217,6 +217,8 @@ var _friend_card: FriendSceneCard  # WU-467
 var _season_card: SeasonCard  # WU-495
 var _sect_card: SectCard  # WU-602
 var _trial_card: TrialCard  # WU-609
+var _sect_contest_card: SectContestCard  # WU-611
+var _contest_return := false
 var _pending_friend_scenes: Array = []
 var _season_board: SeasonBoard  # WU-466
 ## [frame, text] of recent feature notices, so a realm card can list the ones its breakthrough caused.
@@ -341,8 +343,14 @@ func _ready() -> void:
 	_trial_card.closed.connect(_on_trial_card_closed)
 	_trial_card.confirmed.connect(_on_trial_confirmed)
 	add_child(UIStyle.centered(_trial_card))
+	_sect_contest_card = SectContestCard.new()  # WU-611
+	_sect_contest_card.closed.connect(_on_sect_contest_card_closed)
+	_sect_contest_card.confirmed.connect(_on_sect_contest_confirmed)
+	add_child(UIStyle.centered(_sect_contest_card))
 	EventBus.promotion_trial_offered.connect(_on_promotion_trial_offered)
 	EventBus.promotion_trial_lost.connect(_on_promotion_trial_lost)
+	EventBus.sect_contest_offered.connect(_on_sect_contest_offered)
+	EventBus.sect_contest_bout.connect(_on_sect_contest_bout)
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
 	EventBus.sect_lecture_attended.connect(_on_sect_lecture_attended)  # WU-606
@@ -455,7 +463,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1603,7 +1611,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1979,6 +1987,10 @@ func _drain_moments() -> void:
 			_update_modal()
 		"trial_return":
 			_return_from_trial(String(m.get("to", "")))
+		"contest_bout":
+			var cs := String(m["sect_id"])
+			_sect_contest_card.open_result(GameState.data.sects[cs].name, m.get("info", {}), _sect_color(cs))
+			_update_modal()
 	if not _pending_moments.is_empty():
 		_drain_moments.call_deferred()
 
@@ -2250,6 +2262,41 @@ func _on_promotion_trial_lost(sect_id: String, info: Dictionary) -> void:
 	_update_modal()
 
 
+## WU-611: the hall asked for the contest card; stage it over a cleared screen.
+func _on_sect_contest_offered(sect_id: String) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	_contest_return = _choice_menu.visible and is_instance_valid(_last_source)
+	_choice_menu.close()
+	_close_screens()
+	_sect_contest_card.open(GameState.player, GameState.data, GameClock.total_days, _sect_color(sect_id))
+	_update_modal()
+
+
+## WU-611: each bout is told on the card, through the moments queue.
+func _on_sect_contest_bout(sect_id: String, info: Dictionary) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	_pending_moments.append({"kind": "contest_bout", "sect_id": sect_id, "info": info})
+	_update_modal()
+
+
+func _on_sect_contest_confirmed() -> void:
+	GameState.enter_sect_contest()
+	if _contest_return:  # back to the hall menu after the last result
+		_pending_moments.append({"kind": "trial_return", "to": "hall"})
+		_contest_return = false
+	_update_modal()
+
+
+func _on_sect_contest_card_closed() -> void:
+	if _pending_moments.is_empty() and _contest_return:
+		_return_from_trial("hall")
+		_contest_return = false
+	_update_modal()
+	_drain_moments.call_deferred()
+
+
 func _on_trial_confirmed() -> void:
 	_trial_stepped = true
 	_update_modal()
@@ -2337,7 +2384,7 @@ func _season_card_blocked() -> bool:
 		_dialogue.closed.connect(_flush_year_review, CONNECT_ONE_SHOT)
 	if is_instance_valid(RoadCard.current) and not RoadCard.current.finished.is_connected(_flush_year_review):
 		RoadCard.current.finished.connect(_flush_year_review, CONNECT_ONE_SHOT)
-	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _encounter.visible or _combat_report.visible \
+	return _dialogue.visible or is_instance_valid(RoadCard.current) or _friend_card.visible or _contest_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _encounter.visible or _combat_report.visible \
 			or _realm_card.visible or _tribulation.visible or _any_screen_open()
 
 
@@ -2727,7 +2774,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
 
 
 func _update_modal() -> void:

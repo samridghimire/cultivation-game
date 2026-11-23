@@ -218,5 +218,11 @@ signal promotion_trial_offered(sect_id: String)
 signal promotion_trial_lost(sect_id: String, info: Dictionary)
 ## WU-617: a technique rose to `level` through practice; `before`/`after` are Techniques.describe_bonuses_at texts.
 signal technique_leveled(tech_id: String, level: int, before: String, after: String)
+## WU-611: the hall asks the HUD to stage the outer-sect contest card.
+@warning_ignore("unused_signal")
+signal sect_contest_offered(sect_id: String)
+## WU-611: one contest bout finished; `info` has round, rounds, won, foe, prize, next_foe, next_chance.
+@warning_ignore("unused_signal")
+signal sect_contest_bout(sect_id: String, info: Dictionary)
 ## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
 signal sect_lecture_attended(sect_id: String, result: Dictionary)

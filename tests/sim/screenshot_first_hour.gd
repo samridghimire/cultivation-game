@@ -11,6 +11,7 @@ extends SceneTree
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
+## WU-611: `-- --sect-contest=<sect_id>` renders sect_contest.png and sect_contest_result.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card). With `--lose` it also renders sect_trial_lost.png (WU-614).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
@@ -493,6 +494,29 @@ func _start() -> void:
 						"rank": (gs.data.sects[tid] as SectDef).rank_name(Sects.next_rank(c, gs.data)),
 						"advice": Sects.trial_advice(c, gs.data), "injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.35})
 					hud.call("_drain_moments"), "close": tcard.close})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-611: the outer-sect contest card (entry, then the first bout's result)
+		if a.begins_with("--sect-contest="):
+			var cid := a.substr(15)
+			var ccard: Control = hud.get("_sect_contest_card")
+			shots.append({"name": "sect_contest", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(cid)
+				c.sect["reported"] = true
+				(hud.get("_pending_moments") as Array).clear()
+				(hud.get("_sect_card") as Control).close()
+				Engine.get_main_loop().root.get_node("GameClock").total_days = (int((gs.data.sects[cid] as SectDef).contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+				gs.current_region = Sects.home_region(gs.data, cid)
+				gs.offer_sect_contest(), "close": ccard.close})
+			shots.append({"name": "sect_contest_result", "open": func() -> void:
+				ccard.close()
+				var bus: Node = Engine.get_main_loop().root.get_node("EventBus")
+				var nxt := Sects.trial_opponent(gs.data, String(Sects.contest_round(c, gs.data, 1)["foe"]))
+				bus.sect_contest_bout.emit(cid, {"round": 1, "rounds": 3, "won": true, "foe": "Drunk Bully Disciple",
+					"prize": Sects.contest_round(c, gs.data, 0)["prize"], "next_foe": String(nxt.get("name", "")), "next_chance": Combat.win_chance(c, gs.data, nxt)})
+				hud.call("_drain_moments"), "close": ccard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
 		if a.begins_with("--sect-report="):
