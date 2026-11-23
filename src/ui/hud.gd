@@ -2192,7 +2192,7 @@ func _sect_color(sect_id: String) -> Color:
 func _play_sect_join(sect_id: String) -> void:
 	if GameState.player.is_rogue():
 		return
-	_sect_card.open(Guidance.sect_welcome(GameState.player, GameState.data, sect_id, GameState.current_region), _sect_color(sect_id))
+	_sect_card.open(Guidance.sect_welcome(GameState.player, GameState.data, sect_id, GameState.current_region), _sect_color(sect_id), sect_id)
 	_update_modal()
 
 
@@ -2214,7 +2214,7 @@ func _play_sect_report(sect_id: String, line: String, items: Dictionary) -> void
 		rows.append([item_id, "%d x %s" % [int(items[item_id]), nm]])
 	var def: SectDef = GameState.data.sects[sect_id]
 	_sect_card.open_report(def.name, def.rank_name(int(p.sect["rank"])), line, rows,
-		Guidance.hall_services(p, GameState.data, GameState.current_region, GameClock.total_days, GameState.world_flags), GameState.data, _sect_color(sect_id))
+		Guidance.hall_services(p, GameState.data, GameState.current_region, GameClock.total_days, GameState.world_flags), GameState.data, _sect_color(sect_id), sect_id)
 	_update_modal()
 
 
@@ -2278,7 +2278,7 @@ func _play_sect_promoted(sect_id: String, summary: Dictionary, has_next: bool) -
 	if GameState.player.is_rogue():
 		return
 	var def: SectDef = GameState.data.sects[sect_id]
-	_sect_card.open_promotion(def.name, summary, has_next, _sect_color(sect_id))
+	_sect_card.open_promotion(def.name, summary, has_next, _sect_color(sect_id), sect_id)
 	_update_modal()
 
 
