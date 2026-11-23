@@ -73,6 +73,7 @@ func test_news_bubble_follows_pending_news() -> void:
 	_root().add_child(n)
 	await (Engine.get_main_loop() as SceneTree).process_frame
 	assert_true(not n.news_waiting(), "no news at first")
+	GameState.player.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
 	GameState.player.folk_news[id] = "sect_join"
 	assert_true(FolkNews.has_pending(GameState.player, id))
 	EventBus.player_changed.emit()

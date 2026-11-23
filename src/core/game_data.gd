@@ -864,8 +864,8 @@ func _validate_world() -> void:
 				load_errors.append("NPC '%s' news_lines must be an object" % npc["id"])
 			else:
 				for k in nl:
-					if not ["sect_join", "promotion", "breakthrough", "wedding"].has(String(k)) or not nl[k] is Array or (nl[k] as Array).is_empty() or (nl[k] as Array).size() > 3:
-						load_errors.append("NPC '%s' news_lines.%s needs 1-3 strings under sect_join/promotion/breakthrough/wedding" % [npc["id"], k])
+					if not ["sect_join", "promotion", "breakthrough", "wedding", "sect_join_demonic", "promotion_demonic"].has(String(k)) or not nl[k] is Array or (nl[k] as Array).is_empty() or (nl[k] as Array).size() > 3:
+						load_errors.append("NPC '%s' news_lines.%s needs 1-3 strings under sect_join/promotion/breakthrough/wedding/sect_join_demonic/promotion_demonic" % [npc["id"], k])
 					else:
 						for l in nl[k]:
 							if not l is String or String(l) == "" or String(l).length() > 160:
@@ -1336,6 +1336,14 @@ func _validate_folk_news() -> void:
 			load_errors.append("family.folk_news.lines.%s needs at least one line" % kind)
 			continue
 		for l in pool:
+			if not l is String or String(l) == "" or String(l).length() > 160:
+				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
+	for kind in ["sect_join_demonic", "promotion_demonic"]:  # FOLK-048: optional wary lines for a demonic sect
+		var dpool: Variant = cfg.get("lines", {}).get(kind, [])
+		if not dpool is Array:
+			load_errors.append("family.folk_news.lines.%s must be an array" % kind)
+			continue
+		for l in dpool:
 			if not l is String or String(l) == "" or String(l).length() > 160:
 				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
 

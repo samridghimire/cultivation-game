@@ -160,3 +160,51 @@ func test_wedding_news_skips_the_spouse() -> void:
 	FolkNews.queue(c, gs.data, gs.npc_favor, "wedding")
 	assert_eq(String(c.folk_news.get("elder_mo", "")), "wedding")
 	assert_false(c.folk_news.has("xiao_ling"), "the spouse is not told of their own wedding")
+
+
+func test_demonic_sect_uses_demonic_keys() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.sect = {"id": "blood_lotus_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
+	c.folk_news["xiao_ling"] = "sect_join"
+	var own := FolkNews.take(c, gs.data, "xiao_ling")
+	assert_true(own.contains("bad people"), "own demonic line: " + own)
+	c.folk_news["elder_mo"] = "sect_join"  # own plain line beats the shared demonic one
+	var mo := FolkNews.take(c, gs.data, "elder_mo")
+	assert_true(mo.contains("Walls and rules") or mo.contains("Sixty years"), "own plain line: " + mo)
+	var saved_own: Variant = gs.data.npcs["elder_mo"]["news_lines"]
+	gs.data.npcs["elder_mo"]["news_lines"] = {}
+	c.folk_news["elder_mo"] = "sect_join"
+	var shared := FolkNews.take(c, gs.data, "elder_mo")
+	gs.data.npcs["elder_mo"]["news_lines"] = saved_own
+	assert_true(shared.contains("sits easy") or shared.contains("Some doors"), "shared demonic line: " + shared)
+	assert_true(shared != "" and not shared.contains("{"), shared)
+	c.folk_news["elder_mo"] = "promotion"
+	assert_true(gs.data.family["folk_news"]["lines"]["promotion_demonic"].size() > 0)
+	assert_true(FolkNews.take(c, gs.data, "elder_mo") != "")
+
+
+func test_demonic_falls_back_to_plain_and_righteous_unchanged() -> void:
+	var c := _start()
+	var gs := _gs()
+	var saved: Variant = gs.data.family["folk_news"]["lines"].get("sect_join_demonic")
+	gs.data.family["folk_news"]["lines"].erase("sect_join_demonic")
+	c.sect = {"id": "blood_lotus_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
+	c.folk_news["elder_mo"] = "sect_join"
+	var plain := FolkNews.take(c, gs.data, "elder_mo")
+	assert_true(plain.contains("Walls and rules") or plain.contains("Sixty years"), "falls back to Mo's plain line: " + plain)
+	gs.data.family["folk_news"]["lines"]["sect_join_demonic"] = saved
+	c.sect["id"] = "azure_cloud_sect"
+	c.folk_news["xiao_ling"] = "sect_join"
+	assert_false(FolkNews.take(c, gs.data, "xiao_ling").contains("bad people"))
+
+
+func test_has_pending_drops_after_leaving_sect() -> void:
+	var c := _start()
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
+	c.folk_news["elder_mo"] = "sect_join"
+	assert_true(FolkNews.has_pending(c, "elder_mo"))
+	c.sect = {}
+	assert_false(FolkNews.has_pending(c, "elder_mo"))
+	c.folk_news["elder_mo"] = "wedding"
+	assert_true(FolkNews.has_pending(c, "elder_mo"), "non-sect news stays for rogues")

@@ -30,7 +30,11 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 
 ## GFX-249: true while `npc_id` holds a pending news reaction (the world shows a bubble over them).
 static func has_pending(player: CharacterData, npc_id: String) -> bool:
-	return player != null and npc_id != "" and player.folk_news.has(npc_id)
+	if player == null or npc_id == "" or not player.folk_news.has(npc_id):
+		return false
+	if SECT_KINDS.has(String(player.folk_news[npc_id])):
+		return not player.is_rogue()  # FOLK-048: `take` drops sect news once you left; no bubble for it either
+	return true
 
 
 ## The reaction line for `npc_id` ("" when none pending); clears it. Tokens {player} {sect} {rank} {realm} {spouse}. Only sect kinds need a sect.
@@ -44,9 +48,19 @@ static func take(player: CharacterData, data: GameData, npc_id: String, people: 
 		return ""  # RV-FOLK046: news of a sect the player has since left is stale; drop it
 	var def: Dictionary = data.npcs.get(npc_id, {})
 	var own: Dictionary = def.get("news_lines", {})
-	var pool: Array = own.get(kind, [])
+	var shared: Dictionary = data.family.get("folk_news", {}).get("lines", {})
+	var demonic := false
+	if in_sect and SECT_KINDS.has(kind):  # FOLK-048: friends who disapprove of a demonic sect
+		demonic = (data.sects[String(player.sect["id"])] as SectDef).alignment_tag == "demonic"
+	var pool: Array = []
+	if demonic:
+		pool = own.get(kind + "_demonic", [])
 	if pool.is_empty():
-		pool = data.family.get("folk_news", {}).get("lines", {}).get(kind, [])
+		pool = own.get(kind, [])
+	if pool.is_empty() and demonic:
+		pool = shared.get(kind + "_demonic", [])
+	if pool.is_empty():
+		pool = shared.get(kind, [])
 	if pool.is_empty():
 		return ""
 	var line := String(pool[absi(("%s|%s|%d" % [npc_id, kind, player.age_days]).hash()) % pool.size()])
