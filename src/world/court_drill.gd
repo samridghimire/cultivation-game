@@ -9,6 +9,7 @@ const ROW_LAG := 0.15
 const EDGE := 28.0  ## clear of the court edge
 const DOOR_CLEAR := 48.0  ## the free column down to the hall door
 const MIN_GAP := 22.0
+const BLOCKER_CLEAR := 24.0  ## from a person's stand or a place's anchor
 const SLOT := 30.0
 const FORMS: Array[String] = ["sword", "fist", "ledger"]
 
@@ -24,16 +25,35 @@ static func drill_today(weather: String, festival_here: bool) -> bool:
 	return not festival_here and weather != "rain" and weather != "storm"
 
 
-## Figure feet positions: two rows in the court's south part (below `top_y` when given), none in the door column,
+## Figure feet positions: rows in the court's south part (below the hall's end + 36), none in the door column,
 ## none within MIN_GAP of another, none within `blockers` (map px circles of 24 px). Deterministic.
-static func positions(court: Rect2, count: int, door_x: float, top_y: float = -1.0, blockers: Array[Vector2] = []) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	var top := top_y if top_y >= 0.0 else court.position.y + court.size.y * 0.55
+## GFX-243: where the south band holds fewer than two rows, half the figures stand in columns flanking the hall.
+static func positions(court: Rect2, count: int, hall: Rect2, blockers: Array[Vector2] = []) -> Array[Vector2]:
+	var door_x := hall.get_center().x
+	var top := hall.end.y + 36.0
 	var bottom := court.end.y - EDGE
 	var rows: Array[float] = []
 	if bottom - top >= MIN_GAP + 8.0:
 		rows.append(bottom - MIN_GAP - 14.0)
 	rows.append(bottom)
+	var flank_count := 0 if rows.size() >= 2 else count / 2
+	var out := _south(court, count - flank_count, door_x, rows, blockers)
+	if out.size() < count:
+		var want := count - out.size()
+		var west := true
+		var cols := _flank_slots(court, hall, blockers, out)
+		while want > 0 and (not cols[0].is_empty() or not cols[1].is_empty()):
+			var side: Array = cols[0] if west else cols[1]
+			if side.is_empty():
+				side = cols[1] if west else cols[0]
+			out.append(side.pop_front())
+			west = not west
+			want -= 1
+	return out
+
+
+static func _south(court: Rect2, count: int, door_x: float, rows: Array[float], blockers: Array[Vector2]) -> Array[Vector2]:
+	var out: Array[Vector2] = []
 	var slots: Array[float] = []
 	var x := court.position.x + EDGE
 	while x <= court.end.x - EDGE:
@@ -48,17 +68,41 @@ static func positions(court: Rect2, count: int, door_x: float, top_y: float = -1
 			var p := Vector2(sx + (SLOT / 2.0 if r == 1 else 0.0), y)
 			if absf(p.x - door_x) < DOOR_CLEAR / 2.0 or p.x > court.end.x - EDGE:
 				continue
-			var blocked := false
-			for b in blockers:
-				if b.distance_to(p) < 24.0:
-					blocked = true
-			if not blocked:
-				free.append(p.x)
+			if not _clear_of(p, blockers):
+				continue
+			free.append(p.x)
 		var take := mini(want, free.size())
 		for i in take:
 			var idx := int(round(float(i) * float(free.size() - 1) / float(maxi(take - 1, 1)))) if take > 1 else free.size() / 2
 			out.append(Vector2(free[idx], y))
 	return out
+
+
+static func _clear_of(p: Vector2, blockers: Array[Vector2]) -> bool:
+	for b in blockers:
+		if b.distance_to(p) < BLOCKER_CLEAR:
+			return false
+	return true
+
+
+## [west column slots, east column slots] beside the hall, top to bottom, clear of blockers and of `taken`.
+static func _flank_slots(court: Rect2, hall: Rect2, blockers: Array[Vector2], taken: Array[Vector2]) -> Array:
+	var cols: Array = [[], []]
+	var xs: Array[float] = [hall.position.x - SLOT, hall.end.x + SLOT]
+	for c in 2:
+		var x := clampf(xs[c], court.position.x + EDGE, court.end.x - EDGE)
+		var y := hall.position.y + 16.0
+		while y <= court.end.y - EDGE:
+			var p := Vector2(x, y)
+			var ok := _clear_of(p, blockers)
+			for t in taken:
+				ok = ok and t.distance_to(p) >= MIN_GAP
+			if ok:
+				cols[c].append(p)
+				taken = taken.duplicate()
+				taken.append(p)
+			y += MIN_GAP + 8.0
+	return cols
 
 
 ## Rebuilds for one sect hall. `court` and `door_x` come from SectCourt; `hall` is the hall's rect.
@@ -69,7 +113,7 @@ func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2
 	_scale = float(Sprites.scale())
 	_form = String(sect_def.court_drill.get("form", "sword"))
 	var robe := Color(sect_def.robe_color) if sect_def.robe_color != "" else PixelFigure.DEFAULT_ROBE
-	var spots := positions(court, int(sect_def.court_drill.get("count", 0)), hall.get_center().x, hall.end.y + 36.0, blockers)
+	var spots := positions(court, int(sect_def.court_drill.get("count", 0)), hall, blockers)
 	var row_y := -1.0
 	var row := 0
 	for p in spots:

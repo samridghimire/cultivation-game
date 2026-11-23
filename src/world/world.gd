@@ -342,6 +342,9 @@ func _refresh_court_drill() -> void:
 		var blockers: Array[Vector2] = []
 		for spot: Array in _region.get("npc_spots", []):  # people's stands stay uncovered
 			blockers.append(Vector2(float(spot[0]), float(spot[1])))
+		for other: Dictionary in _region.get("places", []):  # GFX-243: nor a neighbour's door or label anchor
+			if other != place:
+				blockers.append(_vec(other["pos"]))
 		_court_drill.setup(def, SectCourt.court_rect(place, _region), hall, blockers, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
 		return
 
