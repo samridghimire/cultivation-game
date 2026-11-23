@@ -152,3 +152,50 @@ func test_report_card_and_queue_behind_menu() -> void:
 	gs.end_session()
 	root.remove_child(hud)
 	hud.free()
+
+
+func test_open_lecture_text() -> void:
+	var card := SectCard.new()
+	card.open_lecture("Azure Cloud Sect", "the dawn lecture", "Elder Feng speaks of wind.", 12, "", Color.CYAN)
+	var t := card.all_text()
+	assert_true(t.contains("The dawn lecture"))
+	assert_true(t.contains("Elder Feng speaks of wind."))
+	assert_true(t.contains("+12 qi"))
+	assert_false(t.contains("Insight glimpsed"))
+	var scene: Control = null
+	for n in card._rows.get_children():
+		if n is SectCard.LectureScene:
+			scene = n
+	assert_true(scene != null and scene.custom_minimum_size.x > 0 and scene.custom_minimum_size.y > 0, "vignette has a size")
+	card.open_lecture("Azure Cloud Sect", "x", "Line.", 0, "Wind Glimpse", Color.CYAN)
+	t = card.all_text()
+	assert_true(t.contains("bottleneck"))
+	assert_true(t.contains("Insight glimpsed: Wind Glimpse"))
+	card.free()
+
+
+func test_lecture_moment_waits_for_open_menu() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.pending_event = ""
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await _frames()
+	var card: SectCard = hud.get("_sect_card")
+	var menu: Control = hud.get("_choice_menu")
+	gs.player.sect = {"id": "azure_cloud_sect", "rank": 1, "contribution": 0}
+	menu.visible = true
+	EventBus.sect_lecture_attended.emit("azure_cloud_sect", {"name": "the lecture", "line": "", "qi": 5, "insight_name": ""})
+	await _frames()
+	assert_false(card.visible, "waits while a menu is open")
+	menu.visible = false
+	hud.call("_update_modal")
+	await _frames()
+	assert_true(card.visible)
+	assert_true(card.all_text().contains("You attend the lecture."))
+	assert_true(card.button().has_focus())
+	card.close()
+	gs.end_session()
+	root.remove_child(hud)
+	hud.free()

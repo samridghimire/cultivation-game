@@ -209,3 +209,5 @@ signal sect_joined(sect_id: String)
 signal sect_reported(sect_id: String, items: Dictionary)
 @warning_ignore("unused_signal")
 signal sect_promoted(sect_id: String, rank: int)
+## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
+signal sect_lecture_attended(sect_id: String, result: Dictionary)

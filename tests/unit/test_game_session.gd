@@ -156,6 +156,13 @@ func test_join_and_leave_sect() -> void:
 	gs.end_session()
 
 
+var _lecture_events: Array = []
+
+
+func _collect_lecture(_sect_id: String, result: Dictionary) -> void:
+	_lecture_events.append(result)
+
+
 func test_attend_lecture_once_a_month() -> void:
 	var c := _start()
 	var gs := _game_state()
@@ -165,11 +172,17 @@ func test_attend_lecture_once_a_month() -> void:
 	assert_eq(clock.total_days, 0)
 	gs.join_sect("blood_lotus_sect")
 	var qi_before := c.qi
+	_lecture_events.clear()
+	EventBus.sect_lecture_attended.connect(_collect_lecture)
 	gs.attend_lecture()
+	assert_eq(_lecture_events.size(), 1)
+	assert_true(_lecture_events[0].has("qi") and _lecture_events[0].has("insight_name"))
 	assert_gt(c.qi, qi_before)
 	assert_eq(clock.total_days, 2)
 	var qi_after := c.qi
 	gs.attend_lecture()  # same month: refused
+	EventBus.sect_lecture_attended.disconnect(_collect_lecture)
+	assert_eq(_lecture_events.size(), 1, "a refused lecture emits nothing")
 	assert_eq(c.qi, qi_after)
 	assert_eq(clock.total_days, 2)
 	gs.end_session()

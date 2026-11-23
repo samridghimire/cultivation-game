@@ -336,6 +336,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_sect_card))
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
+	EventBus.sect_lecture_attended.connect(_on_sect_lecture_attended)  # WU-606
 	EventBus.sect_reported.connect(_on_sect_reported)  # WU-604
 	_friend_card.closed.connect(_flush_year_review)
 	_contest_card.closed.connect(_flush_year_review)
@@ -1934,6 +1935,8 @@ func _drain_moments() -> void:
 			_play_sect_report(String(m["sect_id"]), String(m.get("line", "")), m.get("items", {}))
 		"sect_promoted":
 			_play_sect_promoted(String(m["sect_id"]), m.get("summary", {}), bool(m.get("has_next", false)))
+		"sect_lecture":
+			_play_sect_lecture(String(m["sect_id"]), m.get("result", {}))
 	if not _pending_moments.is_empty():
 		_drain_moments.call_deferred()
 
@@ -2198,6 +2201,26 @@ func _play_sect_promoted(sect_id: String, summary: Dictionary, has_next: bool) -
 		return
 	var def: SectDef = GameState.data.sects[sect_id]
 	_sect_card.open_promotion(def.name, summary, has_next, _sect_color(sect_id))
+	_update_modal()
+
+
+## WU-606: the monthly lecture plays as a card through the moments queue.
+func _on_sect_lecture_attended(sect_id: String, result: Dictionary) -> void:
+	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
+		return
+	_pending_moments.append({"kind": "sect_lecture", "sect_id": sect_id, "result": result})
+	_update_modal()
+
+
+func _play_sect_lecture(sect_id: String, result: Dictionary) -> void:
+	if GameState.player.is_rogue() or not GameState.data.sects.has(sect_id):
+		return
+	var def: SectDef = GameState.data.sects[sect_id]
+	var name := String(result.get("name", "the lecture"))
+	var line := String(result.get("line", ""))
+	if line == "":
+		line = "You attend %s." % name
+	_sect_card.open_lecture(def.name, name, line, int(result.get("qi", 0)), String(result.get("insight_name", "")), _sect_color(sect_id))
 	_update_modal()
 
 

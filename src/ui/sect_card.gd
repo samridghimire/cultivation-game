@@ -161,6 +161,39 @@ func open_report(sect_name: String, rank_name: String, line: String, items: Arra
 	_button.grab_focus.call_deferred()
 
 
+## WU-606: lecture mode: a drawn hall vignette, the elder's line, the qi gained and any insight.
+func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int, insight_name: String, color: Color = UIStyle.ACCENT) -> void:
+	_title.text = sect_name
+	_title.add_theme_color_override("font_color", color)
+	_banner.color = color
+	_banner.queue_redraw()
+	_subtitle.text = lecture_name.substr(0, 1).to_upper() + lecture_name.substr(1)
+	for c in _rows.get_children():
+		_rows.remove_child(c)
+		c.free()
+	var scene := LectureScene.new()
+	scene.color = color
+	scene.custom_minimum_size = Vector2(LectureScene.W, LectureScene.H)
+	scene.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	scene.clip_contents = true
+	_rows.add_child(scene)
+	_add_row(line)
+	if qi > 0:
+		_add_row("+%d qi" % qi)
+	else:
+		_add_row("Your qi is at a bottleneck: the words settle in your mind")
+	if insight_name != "":
+		var l := UIStyle.label("Insight glimpsed: %s" % insight_name, 17, UIStyle.ACCENT)
+		_rows.add_child(l)
+	var dim := UIStyle.label("Next lecture: next month", 15)
+	dim.modulate = Color(1, 1, 1, 0.6)
+	_rows.add_child(dim)
+	_step.text = ""
+	_step.visible = false
+	visible = true
+	_button.grab_focus.call_deferred()
+
+
 func _add_row(text: String) -> void:
 	var l := UIStyle.label(text, 16)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -210,3 +243,34 @@ class SectBanner extends Control:
 		draw_rect(Rect2(s, 8 * s, 7 * s, s), color.darkened(0.25))  # swallow-tail
 		draw_rect(Rect2(4 * s, 8 * s, s, s), Color(0, 0, 0, 0))
 		draw_rect(Rect2(3 * s, 3 * s, 3 * s, 3 * s), color.lightened(0.5))
+
+
+## WU-606: the lecture hall, drawn in code: the elder on a dais, seated disciples in two rows, scrolls either side.
+class LectureScene extends Control:
+	const W := 240
+	const H := 72
+	var color := Color.WHITE
+
+	func _seated(x: float, y: float, robe: Color, s: float) -> void:
+		draw_rect(Rect2(x - 3 * s, y, 6 * s, 3 * s), robe)  # body
+		draw_rect(Rect2(x - 2 * s, y - 3 * s, 4 * s, 3 * s), Color(0.9, 0.75, 0.6))  # head
+		draw_rect(Rect2(x - 2 * s, y - 3 * s, 4 * s, s), Color(0.12, 0.1, 0.1))  # hair
+		draw_rect(Rect2(x - 4 * s, y + 3 * s, 8 * s, s), robe.darkened(0.3))  # crossed legs
+
+	func _draw() -> void:
+		draw_rect(Rect2(0, 0, W, H), Color(0.16, 0.13, 0.12))  # hall wall
+		draw_rect(Rect2(0, 44, W, H - 44), Color(0.3, 0.22, 0.15))  # floor boards
+		for x in range(0, W, 24):
+			draw_rect(Rect2(x, 44, 1, H - 44), Color(0.22, 0.16, 0.11))
+		for x in [14, W - 26]:  # hanging scrolls
+			draw_rect(Rect2(x, 6, 12, 26), Color(0.85, 0.8, 0.65))
+			draw_rect(Rect2(x, 4, 12, 2), Color(0.45, 0.32, 0.2))
+			draw_rect(Rect2(x + 5, 10, 2, 16), Color(0.2, 0.15, 0.1))
+		draw_rect(Rect2(W / 2.0 - 30, 36, 60, 10), Color(0.4, 0.28, 0.18))  # dais
+		draw_rect(Rect2(W / 2.0 - 30, 36, 60, 2), Color(0.55, 0.4, 0.25))
+		_seated(W / 2.0, 30, color.darkened(0.35), 2.0)
+		for row in 2:
+			for i in 3:
+				var side := -1.0 if i == 0 else (1.0 if i == 2 else 0.0)
+				var x := W / 2.0 + (i - 1) * 56.0 + (row * 14.0 if row == 1 else 0.0) * side
+				_seated(x, 51 + row * 11, color, 1.0)

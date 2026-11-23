@@ -3592,10 +3592,15 @@ func attend_lecture() -> void:
 		EventBus.post("%s Your qi is at a bottleneck; the words settle in your mind instead." % scene, "progress")
 	else:
 		EventBus.post("%s (+%d qi)" % [scene, int(result["qi"])], "progress")
+	var insight_name := ""
 	if result["insight_id"] != "":
 		var insight: Dictionary = Dao.def_of(data, result["insight_id"])
+		insight_name = String(insight.get("name", "Dao"))
 		EventBus.post("A line of the lecture clicks: you glimpse the %s." % insight.get("name", "Dao"), "progress")
 	_pass_time(int(result["days"]), "Attending a lecture")
+	var lecture_result: Dictionary = result.duplicate()
+	lecture_result["insight_name"] = insight_name
+	EventBus.sect_lecture_attended.emit(String(player.sect.get("id", "")), lecture_result)
 	EventBus.player_changed.emit()
 
 

@@ -10,6 +10,7 @@ extends SceneTree
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
+## WU-606: `-- --sect-lecture=<sect_id> [--insight]` renders sect_lecture.png (the monthly lecture card; --insight forces a Dao glimpse).
 ## WU-602: `-- --sect-join=<sect_id>` renders sect_join.png (the joining card, e.g. azure_cloud_sect).
 ## WU-495: append `-- --season-end` for the season card (season_card.png).
 ## WU-494: append `-- --jetty=N` (0..3) for the Village Pond Jetty build stage (like --well=N).
@@ -413,6 +414,29 @@ func _start() -> void:
 				c.alignment = 0
 				c.realm_index = maxi(c.realm_index, 1)
 				gs.join_sect(jid), "close": jcard.close})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-606: join, attend the lecture
+		if a.begins_with("--sect-lecture="):
+			var lid := a.substr(15)
+			var lcard: Control = hud.get("_sect_card")
+			shots.append({"name": "sect_lecture", "open": func() -> void:
+				hud.get("_banner").visible = false
+				c.alignment = 0
+				c.realm_index = maxi(c.realm_index, 1)
+				gs.join_sect(lid)
+				(hud.get("_pending_moments") as Array).clear()
+				lcard.close()
+				var ts: Control = hud.get("_time_skip")
+				if OS.get_cmdline_user_args().has("--insight"):
+					var res := {"name": "the lecture", "line": String(Sects.lecture_def(c, gs.data).get("name", "")), "qi": 12, "insight_name": "Glimpse of the Dao"}
+					var ldef := Sects.lecture_def(c, gs.data)
+					res["line"] = Sects.lecture_line(ldef, 3)
+					res["name"] = String(ldef.get("name", "the lecture"))
+					Engine.get_main_loop().root.get_node("EventBus").sect_lecture_attended.emit(lid, res)
+				else:
+					gs.attend_lecture()
+				ts.visible = false
+				hud.call("_update_modal"), "close": lcard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
 		if a.begins_with("--sect-report="):
