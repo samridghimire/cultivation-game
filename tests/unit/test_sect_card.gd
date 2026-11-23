@@ -199,3 +199,20 @@ func test_lecture_moment_waits_for_open_menu() -> void:
 	gs.end_session()
 	root.remove_child(hud)
 	hud.free()
+
+
+## GFX-246: each of the join, report and promotion modes carries a header vignette; lecture mode keeps its own scene.
+func test_modes_have_vignettes() -> void:
+	var gd: GameData = (Engine.get_main_loop() as SceneTree).root.get_node("GameState").data
+	var card := SectCard.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(card)
+	card.open({"name": "Azure", "rank_name": "Outer", "duty": "d", "perks": PackedStringArray(), "first_step": "go"}, Color.SKY_BLUE)
+	assert_true(card.vignette != null and card.vignette.mode == "join" and card.vignette.custom_minimum_size.x > 0 and card.vignette.custom_minimum_size.y > 0)
+	card.open_report("Azure", "Outer", "Welcome", [], PackedStringArray(), gd, Color.SKY_BLUE)
+	assert_eq(card.vignette.mode, "report")
+	assert_eq(card.vignette.custom_minimum_size, Vector2(SectCard.SectVignette.W, SectCard.SectVignette.H))
+	card.open_promotion("Azure", {"rank_name": "Inner"}, true, Color.SKY_BLUE)
+	assert_eq(card.vignette.mode, "promote")
+	card.open_lecture("Azure", "lecture", "line", 5, "", Color.SKY_BLUE)
+	assert_true(card.vignette == null)
+	card.free()

@@ -15,6 +15,7 @@ var _subtitle: Label
 var _rows: VBoxContainer
 var _step: Label
 var _button: Button
+var vignette: SectVignette  ## GFX-246: the header picture of the current mode (null in lecture mode)
 
 
 func _init() -> void:
@@ -77,6 +78,8 @@ func open(welcome: Dictionary, color: Color = UIStyle.ACCENT) -> void:
 	for c in _rows.get_children():
 		_rows.remove_child(c)
 		c.free()
+	vignette = null
+	_add_vignette("join", color)
 	var lines := PackedStringArray()
 	if String(welcome.get("home_region_name", "")) != "":
 		lines.append(home_line(welcome))
@@ -104,6 +107,8 @@ func open_promotion(sect_name: String, summary: Dictionary, has_next: bool, colo
 	for c in _rows.get_children():
 		_rows.remove_child(c)
 		c.free()
+	vignette = null
+	_add_vignette("promote", color)
 	var perks: PackedStringArray = summary.get("perks_new", PackedStringArray())
 	var lines := PackedStringArray()
 	if perks.is_empty():
@@ -135,6 +140,8 @@ func open_report(sect_name: String, rank_name: String, line: String, items: Arra
 	for c in _rows.get_children():
 		_rows.remove_child(c)
 		c.free()
+	vignette = null
+	_add_vignette("report", color)
 	if line != "":
 		_add_row("\"%s\"" % line)
 	if not items.is_empty():
@@ -171,6 +178,7 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 	for c in _rows.get_children():
 		_rows.remove_child(c)
 		c.free()
+	vignette = null
 	var scene := LectureScene.new()
 	scene.color = color
 	scene.custom_minimum_size = Vector2(LectureScene.W, LectureScene.H)
@@ -192,6 +200,19 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 	_step.visible = false
 	visible = true
 	_button.grab_focus.call_deferred()
+
+
+## GFX-246: a small drawn header picture for the join / report / promotion modes ("join", "report", "promote").
+func _add_vignette(mode: String, color: Color) -> SectVignette:
+	var v := SectVignette.new()
+	v.mode = mode
+	v.color = color
+	v.custom_minimum_size = Vector2(SectVignette.W, SectVignette.H)
+	v.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.clip_contents = true
+	_rows.add_child(v)
+	vignette = v
+	return v
 
 
 func _add_row(text: String) -> void:
@@ -276,3 +297,46 @@ class LectureScene extends Control:
 				var side := -1.0 if i == 0 else (1.0 if i == 2 else 0.0)
 				var x := W / 2.0 + (i - 1) * 56.0 + (row * 14.0 if row == 1 else 0.0) * side
 				_seated(x, 51 + row * 11, color, 1.0)
+
+
+## GFX-246: 240x64 header pictures, code-drawn in the sect colour. join: the player before a hall gate;
+## report: the player bowing before a steward at a desk; promote: the player under a raised banner, a disciple either side.
+class SectVignette extends Control:
+	const W := 240
+	const H := 64
+	var mode := "join"
+	var color := Color.WHITE
+
+	func _person(x: float, y: float, robe: Color, bow: bool = false) -> void:
+		var s := 2.0
+		var hy := y - 14 + (4 if bow else 0)
+		draw_rect(Rect2(x - 3 * s, y - 8, 6 * s, 8 * s * 0.5 + 8), robe)  # robe
+		draw_rect(Rect2(x - 2 * s + (3 if bow else 0), hy, 4 * s, 3 * s), Color(0.9, 0.75, 0.6))  # head
+		draw_rect(Rect2(x - 2 * s + (3 if bow else 0), hy, 4 * s, s), Color(0.12, 0.1, 0.1))  # hair
+
+	func _draw() -> void:
+		draw_rect(Rect2(0, 0, W, H), Color(0.14, 0.15, 0.2))  # dusk sky
+		draw_rect(Rect2(0, 48, W, H - 48), Color(0.3, 0.24, 0.17))  # ground
+		var player := Color(0.8, 0.8, 0.75)
+		match mode:
+			"join":
+				draw_rect(Rect2(150, 12, 8, 40), Color(0.45, 0.32, 0.2))  # gate posts
+				draw_rect(Rect2(196, 12, 8, 40), Color(0.45, 0.32, 0.2))
+				draw_rect(Rect2(144, 8, 66, 6), color)  # gate roof
+				draw_rect(Rect2(158, 18, 38, 34), color.darkened(0.55))  # doorway
+				_person(80, 52, player)
+			"report":
+				draw_rect(Rect2(130, 34, 70, 6), Color(0.45, 0.32, 0.2))  # desk
+				draw_rect(Rect2(136, 40, 4, 12), Color(0.35, 0.25, 0.16))
+				draw_rect(Rect2(190, 40, 4, 12), Color(0.35, 0.25, 0.16))
+				draw_rect(Rect2(150, 31, 14, 3), Color(0.85, 0.8, 0.65))  # ledger
+				_person(165, 34, color.darkened(0.2))  # steward behind the desk
+				_person(90, 52, player, true)  # bowing
+			_:
+				draw_rect(Rect2(W / 2.0 - 1, 4, 3, 44), Color(0.45, 0.32, 0.2))  # raised banner
+				draw_rect(Rect2(W / 2.0 + 2, 6, 26, 22), color)
+				draw_rect(Rect2(W / 2.0 + 2, 26, 26, 4), color.darkened(0.25))
+				draw_rect(Rect2(W / 2.0 + 9, 12, 10, 9), color.lightened(0.5))
+				_person(W / 2.0, 52, player)
+				_person(W / 2.0 - 44, 52, color.darkened(0.3))
+				_person(W / 2.0 + 44, 52, color.darkened(0.3))
