@@ -426,6 +426,42 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 		"lecture": lecture_text, "missions_ready": ready, "missions_total": ids.size(), "balance": balance, "claimable": claimable}
 
 
+## WU-610: progress toward the next rank's contribution: {have, need, next_name, trial_foe}. {} for rogues and at the
+## top rank. `have` is lifetime contribution (what promotion checks), `need` the next rank's requirement.
+static func rank_progress(c: CharacterData, data: GameData) -> Dictionary:
+	var rank := next_rank(c, data)
+	if rank < 0:
+		return {}
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var def: Dictionary = sect.ranks[rank]
+	var foe := trial_enemy(c, data)
+	return {"have": int(c.sect.get("contribution", 0)), "need": int(def.get("contribution", 0)), "next_name": sect.rank_name(rank),
+		"trial_foe": String(data.enemies.get(foe, {}).get("name", foe)) if foe != "" else ""}
+
+
+## WU-610: the treasury as rows {name, cost, affordable, text}; `text` reads "Qi Gathering Pill (20)". `affordable`
+## is false when the balance or the rank falls short. Data order. [] for rogues.
+static func treasury_rows(c: CharacterData, data: GameData) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for entry: Dictionary in shop_items(c, data):
+		var id := String(entry["item_id"])
+		var name := String(data.items.get(id, {}).get("name", id))
+		out.append({"name": name, "cost": int(entry["contribution"]), "affordable": check_purchase(c, data, id) == "",
+			"text": "%s (%d)" % [name, int(entry["contribution"])]})
+	return out
+
+
+## WU-610: names of the first `limit` missions `c` could take right now, board order.
+static func ready_mission_names(c: CharacterData, data: GameData, flags: Dictionary = {}, limit: int = 2) -> PackedStringArray:
+	var out := PackedStringArray()
+	for id in available_missions(c, data, flags):
+		if out.size() >= limit:
+			break
+		if check_mission(c, data, id, flags) == "":
+			out.append(String((data.sect_missions[id] as Dictionary).get("name", id)))
+	return out
+
+
 ## Contribution `c` owes each month at their rank (0 = none).
 static func monthly_duty(c: CharacterData, data: GameData) -> int:
 	if c.is_rogue():

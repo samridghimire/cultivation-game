@@ -95,3 +95,36 @@ func test_sect_tab_for_members_only() -> void:
 			break
 	journal.close()
 	hud.queue_free()
+
+
+## WU-610: rank progress, treasury costs and ready missions on the Sect page (pure helpers + page).
+func test_sect_page_progress() -> void:
+	var root: Node = Engine.get_main_loop().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.join_sect("azure_cloud_sect")
+	var prog := Sects.rank_progress(gs.player, gs.data)
+	assert_false(prog.is_empty())
+	assert_true(JournalScreen.rank_progress_text(prog).contains(" / "))
+	var rows := Sects.treasury_rows(gs.player, gs.data)
+	assert_false(rows.is_empty())
+	assert_true(String(rows[0]["text"]).ends_with(")"))
+	gs.player.sect["contribution"] = 100000
+	var shop := Sects.shop_items(gs.player, gs.data)
+	var after := Sects.treasury_rows(gs.player, gs.data)
+	for i in after.size():
+		var open := int(shop[i].get("min_rank", 0)) <= int(gs.player.sect["rank"])
+		assert_eq(bool(after[i]["affordable"]), open, "rich: affordable exactly when the rank allows")
+	assert_true(Sects.ready_mission_names(gs.player, gs.data, {}, 2).size() <= 2)
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await root.get_tree().process_frame
+	var journal: JournalScreen = hud.get("_screens").get("toggle_journal")
+	journal.open()
+	journal.set_page("sect")
+	assert_true(journal._sect.find_child("RankBar", true, false) != null)
+	assert_true(journal._sect.find_child("SectTreasury", true, false) != null)
+	hud.queue_free()

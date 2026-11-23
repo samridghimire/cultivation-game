@@ -158,6 +158,18 @@ func _build_sect() -> void:
 	hrow.add_child(htext)
 	htext.add_child(UIStyle.label(def.name, 22, color))
 	htext.add_child(UIStyle.label("%s · %d contribution to spend" % [def.rank_name(int(p.sect["rank"])), int(status["balance"])], 16))
+	var prog := Sects.rank_progress(p, GameState.data)
+	if not prog.is_empty():
+		var pbar := UIStyle.bar(Vector2(300, 14), color)
+		pbar.name = "RankBar"
+		pbar.max_value = maxi(1, int(prog["need"]))
+		pbar.value = mini(int(prog["have"]), int(pbar.max_value))
+		pbar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		htext.add_child(pbar)
+		var ptxt := "%s: %s" % [String(prog["next_name"]), rank_progress_text(prog)]
+		htext.add_child(UIStyle.label(ptxt, 14, DIM))
+		if String(prog["trial_foe"]) != "":
+			htext.add_child(UIStyle.label("Trial: %s" % String(prog["trial_foe"]), 14, DIM))
 	_sect.add_child(head)
 	var month := UIStyle.panel()
 	month.name = "SectMonth"
@@ -167,6 +179,19 @@ func _build_sect() -> void:
 	mbox.add_child(UIStyle.label("This month", 18, UIStyle.ACCENT))
 	for line in month_lines(status):
 		mbox.add_child(UIStyle.label(line, 15))
+	var names := Sects.ready_mission_names(p, GameState.data, GameState.world_flags)
+	if not names.is_empty():
+		mbox.add_child(UIStyle.label("    Ready: %s" % ", ".join(names), 14, DIM))
+	var rows := Sects.treasury_rows(p, GameState.data)
+	if not rows.is_empty():
+		var trow := HFlowContainer.new()
+		trow.name = "SectTreasury"
+		trow.custom_minimum_size = Vector2(700, 0)
+		trow.add_child(UIStyle.label("Treasury: ", 15))
+		for i in rows.size():
+			var afford := bool(rows[i]["affordable"])
+			trow.add_child(UIStyle.label(String(rows[i]["text"]) + ("," if i < rows.size() - 1 else ""), 15, Color.WHITE if afford else DIM))
+		mbox.add_child(trow)
 	var duty := int(status["duty"])
 	if duty > 0:
 		var bar := ProgressBar.new()
@@ -213,6 +238,11 @@ func _build_sect() -> void:
 				pl.custom_minimum_size = Vector2(700, 0)
 				lbox.add_child(pl)
 	_sect.add_child(lad)
+
+
+## WU-610: "212 / 500 contribution" for a Sects.rank_progress. Pure.
+static func rank_progress_text(prog: Dictionary) -> String:
+	return "%d / %d contribution" % [int(prog["have"]), int(prog["need"])]
 
 
 ## WU-605: the This month text lines for a Sects.month_status. Pure.
