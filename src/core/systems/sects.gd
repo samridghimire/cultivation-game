@@ -312,8 +312,10 @@ static func check_promotion(c: CharacterData, data: GameData) -> String:
 
 ## The trial opponent for `enemy_id`: a sparring match that never kills, takes
 ## no spirit stones and grants no loot (a defeat can still injure).
-static func trial_opponent(data: GameData, enemy_id: String) -> Dictionary:
+static func trial_opponent(data: GameData, enemy_id: String, power_mult: float = 1.0) -> Dictionary:
 	var enemy: Dictionary = (data.enemies[enemy_id] as Dictionary).duplicate(true)
+	if power_mult != 1.0:  # SECT-043: a contest round's own scaling, on top of the foe's power_mult
+		enemy["power_mult"] = float(enemy.get("power_mult", 1.0)) * power_mult
 	enemy["lethal"] = false
 	enemy["spar"] = true
 	enemy["rewards"] = {}
@@ -775,7 +777,8 @@ static func check_contest(c: CharacterData, data: GameData, total_days: int) -> 
 		return "The outer-sect contest is for disciples of the first two ranks."
 	if Calendar.month_of(total_days) != int(contest.get("month", 0)):
 		return "The contest is held in month %d of the year." % int(contest.get("month", 1))
-	if int(c.sect.get("contest_year", -1)) == Calendar.year_of(total_days):
+	var year := Calendar.year_of(total_days)
+	if int(c.sect.get("contest_year", -1)) == year or c.last_contest_year == year:
 		return "You have already entered this year's contest."
 	return ""
 
@@ -792,12 +795,15 @@ static func contest_round(c: CharacterData, data: GameData, index: int) -> Dicti
 	if index < 0 or index >= foes.size():
 		return {}
 	var prizes: Array = contest.get("prizes", [])
-	return {"foe": String(foes[index]), "prize": prizes[index] if index < prizes.size() else {}}
+	var mults: Array = contest.get("power_mults", [])
+	return {"foe": String(foes[index]), "prize": prizes[index] if index < prizes.size() else {},
+		"power_mult": float(mults[index]) if index < mults.size() else 1.0}
 
 
 ## Marks this year's contest as entered.
 static func enter_contest(c: CharacterData, total_days: int) -> void:
 	c.sect["contest_year"] = Calendar.year_of(total_days)
+	c.last_contest_year = Calendar.year_of(total_days)  # SECT-043: survives leaving and rejoining
 
 
 ## Pays one round's prize. Returns true when its contribution promoted `c` (the caller announces it).
@@ -828,6 +834,13 @@ static func validate_contests(data: GameData) -> PackedStringArray:
 		var prizes: Array = sect.contest.get("prizes", [])
 		if foes.size() != rounds or prizes.size() != rounds:
 			errors.append("%s needs %d foes and %d prizes" % [label, rounds, rounds])
+		var mults: Variant = sect.contest.get("power_mults", [])
+		if not (mults is Array) or ((mults as Array).size() != foes.size() and not (mults as Array).is_empty()):
+			errors.append("%s power_mults must list one value per foe" % label)
+		else:
+			for m: Variant in mults:
+				if not (m is float or m is int) or float(m) < 0.4 or float(m) > 2.0:
+					errors.append("%s power_mults values must be numbers in [0.4, 2.0]" % label)
 		for foe: Variant in foes:
 			if not data.enemies.has(String(foe)):
 				errors.append("%s lists unknown foe '%s'" % [label, foe])

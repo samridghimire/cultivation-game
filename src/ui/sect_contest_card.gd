@@ -81,7 +81,7 @@ static func ladder_lines(c: CharacterData, data: GameData, next_index: int = 0) 
 		var round_def := Sects.contest_round(c, data, i)
 		if round_def.is_empty():
 			break
-		var foe := Sects.trial_opponent(data, String(round_def["foe"]))
+		var foe := Sects.trial_opponent(data, String(round_def["foe"]), float(round_def["power_mult"]))
 		var mark := "won" if i < next_index else ("next" if i == next_index else "")
 		out.append("Round %d: %s (%s)%s" % [i + 1, String(foe.get("name", "a rival")), prize_text(round_def["prize"]), " - " + mark if mark != "" else ""])
 		i += 1
@@ -97,7 +97,7 @@ func open(c: CharacterData, data: GameData, today: int, color: Color = UIStyle.A
 	_subtitle.text = "%s outer-sect contest" % sect.name
 	_ladder.text = "\n".join(ladder_lines(c, data))
 	var first := Sects.contest_round(c, data, 0)
-	var foe := Sects.trial_opponent(data, String(first["foe"]))
+	var foe := Sects.trial_opponent(data, String(first["foe"]), float(first["power_mult"]))
 	var chance := Combat.win_chance(c, data, foe)  # once, on open
 	_odds.text = "First bout vs %s. %s" % [String(foe.get("name", "a rival")), TrialCard.odds_line(chance)]
 	_odds.add_theme_color_override("font_color", TrialCard.odds_color(chance))

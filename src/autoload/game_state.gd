@@ -3670,7 +3670,7 @@ func enter_sect_contest() -> void:
 		var round_def := Sects.contest_round(player, data, index)
 		if round_def.is_empty():
 			break
-		var foe := Sects.trial_opponent(data, String(round_def["foe"]))
+		var foe := Sects.trial_opponent(data, String(round_def["foe"]), float(round_def["power_mult"]))
 		if not fight_enemy(foe):
 			EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": false,
 				"foe": String(foe.get("name", "your foe")), "prize": {}, "next_foe": ""})
@@ -3679,7 +3679,7 @@ func enter_sect_contest() -> void:
 		var prize: Dictionary = round_def["prize"]
 		var promoted := Sects.pay_contest_prize(player, data, prize)
 		var next_def := Sects.contest_round(player, data, index + 1)
-		var next_foe := Sects.trial_opponent(data, String(next_def["foe"])) if not next_def.is_empty() else {}
+		var next_foe := Sects.trial_opponent(data, String(next_def["foe"]), float(next_def["power_mult"])) if not next_def.is_empty() else {}
 		EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": true,
 			"foe": String(foe.get("name", "your foe")), "prize": prize, "next_foe": String(next_foe.get("name", "")),
 			"next_chance": Combat.win_chance(player, data, next_foe) if not next_foe.is_empty() else 0.0})

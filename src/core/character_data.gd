@@ -61,6 +61,8 @@ var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
 ## Empty = rogue cultivator. Otherwise {"id": String, "rank": int, "contribution": int, "spent": int (optional)}.
 ## contribution is lifetime earned (drives rank); spent is what went to the sect shop (Sects.contribution_balance).
 var sect: Dictionary = {}
+## SECT-043: the year of the last outer-sect contest entered (-1 = never); kept when the sect is left.
+var last_contest_year: int = -1
 var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
 var equipment: Dictionary = {}
@@ -287,6 +289,7 @@ func to_dict() -> Dictionary:
 		"alignment": alignment,
 		"professions": professions.duplicate(true),
 		"sect": sect.duplicate(),
+		"last_contest_year": last_contest_year,
 		"inventory": inventory.duplicate(),
 		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
@@ -429,6 +432,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	for prof_id in profs:
 		c.professions[prof_id] = {"rank": int(profs[prof_id].get("rank", 0)), "xp": float(profs[prof_id].get("xp", 0))}
 	var s: Dictionary = d.get("sect", {})
+	c.last_contest_year = int(d.get("last_contest_year", int(s.get("contest_year", -1))))
 	if not s.is_empty():
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):

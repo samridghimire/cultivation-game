@@ -391,6 +391,53 @@ func test_contest_rounds_in_order_and_validated() -> void:
 	assert_eq(Sects.validate_contests(data()).size(), 0)
 
 
+func test_contest_power_mults_default_and_validation() -> void:
+	var c := _contest_member()
+	var d := data()
+	var def: Dictionary = d.sects["azure_cloud_sect"].contest
+	var saved: Variant = def.get("power_mults")
+	def.erase("power_mults")
+	assert_eq(Sects.contest_round(c, d, 0)["power_mult"], 1.0)
+	def["power_mults"] = [0.8, 1.2, 1.5]
+	assert_eq(Sects.contest_round(c, d, 1)["power_mult"], 1.2)
+	assert_eq(Sects.validate_contests(d).size(), 0)
+	def["power_mults"] = [1.0, 1.0]
+	assert_true(Sects.validate_contests(d).size() > 0, "wrong length")
+	def["power_mults"] = [1.0, 2.5, 1.0]
+	assert_true(Sects.validate_contests(d).size() > 0, "out of range")
+	def["power_mults"] = [1.0, 0.1, 1.0]
+	assert_true(Sects.validate_contests(d).size() > 0, "too low")
+	if saved == null:
+		def.erase("power_mults")
+	else:
+		def["power_mults"] = saved
+	var foe := Sects.trial_opponent(d, "village_boxer", 1.5)
+	assert_eq(float(foe["power_mult"]), float(d.enemies["village_boxer"].get("power_mult", 1.0)) * 1.5)
+
+
+func test_contest_entry_survives_leaving_and_rejoining() -> void:
+	var c := _contest_member()
+	c.sect["reported"] = true
+	var day := _contest_day()
+	Sects.enter_contest(c, day)
+	Sects.leave(c)
+	Sects.join(c, data(), "azure_cloud_sect")
+	c.sect["reported"] = true
+	assert_false(Sects.contest_open(c, data(), day + 2), "same year, new membership")
+	assert_true(Sects.contest_open(c, data(), day + Calendar.DAYS_PER_YEAR), "next year")
+
+
+func test_last_contest_year_round_trips_and_defaults() -> void:
+	var c := new_character()
+	c.last_contest_year = 3
+	assert_eq(CharacterData.from_dict(c.to_dict()).last_contest_year, 3)
+	var d := c.to_dict()
+	d.erase("last_contest_year")
+	assert_eq(CharacterData.from_dict(d).last_contest_year, -1)
+	d["sect"] = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0, "contest_year": 5}
+	assert_eq(CharacterData.from_dict(d).last_contest_year, 5, "an old save falls back to the sect's year")
+
+
 func test_contest_prize_pays_stones_and_contribution() -> void:
 	var c := _contest_member()
 	var stones_before := c.item_count("spirit_stone")

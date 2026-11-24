@@ -513,7 +513,7 @@ func _start() -> void:
 			shots.append({"name": "sect_contest_result", "open": func() -> void:
 				ccard.close()
 				var bus: Node = Engine.get_main_loop().root.get_node("EventBus")
-				var nxt := Sects.trial_opponent(gs.data, String(Sects.contest_round(c, gs.data, 1)["foe"]))
+				var nxt := Sects.trial_opponent(gs.data, String(Sects.contest_round(c, gs.data, 1)["foe"]), float(Sects.contest_round(c, gs.data, 1)["power_mult"]))
 				bus.sect_contest_bout.emit(cid, {"round": 1, "rounds": 3, "won": true, "foe": "Drunk Bully Disciple",
 					"prize": Sects.contest_round(c, gs.data, 0)["prize"], "next_foe": String(nxt.get("name", "")), "next_chance": Combat.win_chance(c, gs.data, nxt)})
 				hud.call("_drain_moments"), "close": ccard.close})

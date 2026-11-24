@@ -7,7 +7,7 @@ extends SceneTree
 ## Days are counted from the day the character joined (a mortal cannot join before the first breakthrough, so "day 0" is that day); "reported" is days after joining.
 ## SIM-029: also prints, per seed, the day (after joining, checked at each month end) each SECT-035 goal row (report, lecture, mission, rank 1)
 ## was first seen done, or "never" with the hints player's top hint line at the end of the run.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/sect_year.gd -- [seeds] [days] [--sects=a,b,c]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/sect_year.gd -- [seeds] [days] [--sects=a,b,c] [--contest-odds]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const DEFAULT_SECTS: Array[String] = ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]
@@ -32,6 +32,7 @@ func _run() -> void:
 	FirstHour.hints_policy = true
 	FirstHour.sect_report = true
 	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
+	var contest_odds := args.has("--contest-odds")  # SECT-043: print the contest foes' odds in the first contest month
 	var months := int(ceil(days / 30.0))
 	for sect_id in sects:
 		var def: SectDef = gs.data.sects.get(sect_id)
@@ -62,10 +63,14 @@ func _run() -> void:
 			bus.message_posted.connect(on_msg)
 			var rows: Dictionary = {}  # SIM-029: goal row index -> absolute day first seen done
 			var day0: int = 0  # a new session restarts the clock at day 0
+			var odds_done: Array = [false]
 			var hook := func(_month: int) -> void:
 				var pc: CharacterData = gs.player
 				if pc == null or pc.is_rogue():
 					return
+				if contest_odds and not odds_done[0] and Calendar.month_of(clock.total_days) == int(Sects.contest_def(pc, gs.data).get("month", 0)):
+					odds_done[0] = true  # SECT-043: the first contest month of the run
+					print(_contest_line(gs, sect_id, s, clock.total_days))
 				var gl: Array[Dictionary] = Guidance.sect_goals(pc, gs.data, gs.world_flags, clock.total_days)
 				for i in gl.size():
 					if gl[i].has("key"):  # SECT-042: rank-1 rows are keyed by name
@@ -122,3 +127,20 @@ func _run() -> void:
 		print("  first promotion after day 120 (or never): %d/%d seeds; duty short > 3 months: %d/%d seeds; first promotion days: %s" % [late, seeds, many_short, seeds, str(first_promo)])
 		print("")
 	quit(0)
+
+
+## SECT-043: one line of win chances (in 100) for each round of the player's sect contest, or why they cannot enter.
+func _contest_line(gs: Node, sect_id: String, seed_n: int, day: int) -> String:
+	var c: CharacterData = gs.player
+	var head := "contest %s seed %d day %d rank %d realm %s" % [sect_id, seed_n, day, int(c.sect.get("rank", 0)), gs.data.realms[c.realm_index].name]
+	var reason := Sects.check_contest(c, gs.data, day)
+	var parts: PackedStringArray = []
+	var i := 0
+	while true:
+		var r := Sects.contest_round(c, gs.data, i)
+		if r.is_empty():
+			break
+		var foe := Sects.trial_opponent(gs.data, String(r["foe"]), float(r["power_mult"]))
+		parts.append("r%d %s %d" % [i + 1, r["foe"], roundi(Combat.win_chance(c, gs.data, foe) * 100.0)])
+		i += 1
+	return "%s: %s%s" % [head, ", ".join(parts), "" if reason == "" else " (cannot enter: %s)" % reason]
