@@ -36,3 +36,31 @@ func test_layout_falls_back_into_court_on_a_short_map() -> void:
 	var hall := Rect2(360, 210, 180, 50)
 	var lay := ContestStage.layout(court, hall, 8, [], Vector2(1000, 420))
 	assert_true(court.encloses(lay["platform"]), "platform inside court")
+
+
+func test_shallow_court_never_puts_stage_south_of_it() -> void:
+	var court := Rect2(300, 200, 300, 70)  # shallow: no room under the hall
+	var hall := Rect2(360, 210, 180, 50)
+	var map := Vector2(1000, 800)
+	var label := Rect2(250, 185, 90, 24)
+	var lay := ContestStage.layout(court, hall, 8, [], map, [label])
+	var platform: Rect2 = lay["platform"]
+	assert_true(platform.end.y <= court.end.y + 0.1 or platform.position.y < court.end.y, "not south of the court")
+	assert_false(platform.intersects(hall.grow(14.0)), "clear of the hall")
+	assert_false(platform.intersects(label), "clear of the label")
+	for s: Vector2 in lay["spots"]:
+		assert_false(hall.grow(10.0).has_point(s), "disciples off the hall wall")
+
+
+func test_month_change_toggles_stage() -> void:
+	var data := GameData.load_from_dir()
+	var stage := ContestStage.new()
+	var court := Rect2(300, 200, 300, 200)
+	var hall := Rect2(360, 210, 180, 50)
+	var def: SectDef = data.sects["azure_cloud_sect"]
+	var none: Array[Vector2] = []
+	stage.setup(def, court, hall, none, Vector2(1000, 800), 1 * Calendar.DAYS_PER_MONTH, false, false)
+	assert_false(stage.visible)
+	stage.setup(def, court, hall, none, Vector2(1000, 800), 2 * Calendar.DAYS_PER_MONTH, false, false)
+	assert_true(stage.visible)
+	stage.free()

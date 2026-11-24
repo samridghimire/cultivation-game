@@ -31,17 +31,9 @@ static func shown(contest: Dictionary, total_days: int) -> bool:
 ## The platform rect and the standing spots for `count` disciples. The platform sits in the court's south part on the
 ## side of the door column with more room (the column from the hall door stays free); spots ring it, inside the court,
 ## clear of `blockers` and of each other. Returns {platform: Rect2, spots: Array[Vector2]}. Deterministic.
-static func layout(court: Rect2, hall: Rect2, count: int, blockers: Array[Vector2] = [], map_size: Vector2 = Vector2(100000, 100000)) -> Dictionary:
-	var door_x := hall.get_center().x
-	var cx := door_x
-	# Just south of the court when the map has room (courts are shallow), else on its far side of the door column.
-	var cy := court.end.y + 16.0 + SIZE.y / 2.0
-	if cy + SIZE.y / 2.0 + RING_GAP + 12.0 > map_size.y:
-		cy = maxf(hall.end.y + 8.0 + SIZE.y / 2.0, court.end.y - 14.0 - SIZE.y / 2.0)
-		var east_room := court.end.x - door_x
-		var west_room := door_x - court.position.x
-		cx = door_x + east_room * 0.55 if east_room >= west_room else door_x - west_room * 0.55
-	var platform := Rect2(Vector2(cx, cy) - SIZE / 2.0, SIZE)
+static func layout(court: Rect2, hall: Rect2, count: int, blockers: Array[Vector2] = [], map_size: Vector2 = Vector2(100000, 100000), avoid: Array[Rect2] = []) -> Dictionary:
+	var platform := _pick_platform(court, hall, map_size, avoid)
+	var beside := not court.encloses(platform)
 	var spots: Array[Vector2] = []
 	var ring := platform.grow(RING_GAP)
 	var cand: Array[Vector2] = []
@@ -61,9 +53,11 @@ static func layout(court: Rect2, hall: Rect2, count: int, blockers: Array[Vector
 			break
 		if not inner.has_point(p) or platform.grow(8.0).has_point(p):
 			continue
-		if p.y < hall.end.y + 10.0 or (court.has_point(p) and p.y < court.end.y - 20.0):
+		if hall.grow(10.0).has_point(p) or (not beside and (p.y < hall.end.y + 10.0 or (court.has_point(p) and p.y < court.end.y - 20.0))):
 			continue  # never over the hall or the court's open middle
 		var ok := true
+		for r in avoid:
+			ok = ok and not r.has_point(p)
 		for b in blockers:
 			ok = ok and b.distance_to(p) >= BLOCKER_CLEAR
 		for s in spots:
@@ -73,8 +67,37 @@ static func layout(court: Rect2, hall: Rect2, count: int, blockers: Array[Vector
 	return {"platform": platform, "spots": spots}
 
 
+## GFX-255: the platform inside the court when it fits (the door column stays free), else on the open ground beside the
+## hall (the side nearer the map's middle, which faces the road), clear of `avoid` (labels, neighbours); never south of the court.
+static func _pick_platform(court: Rect2, hall: Rect2, map_size: Vector2, avoid: Array[Rect2]) -> Rect2:
+	var door_x := hall.get_center().x
+	var bounds := Rect2(Vector2.ZERO, map_size).grow(-10.0)
+	var east_room := court.end.x - door_x
+	var west_room := door_x - court.position.x
+	var cy := court.end.y - 14.0 - SIZE.y / 2.0
+	var in_court: Array[Rect2] = []
+	for k in [0.55, 0.4]:
+		var cx: float = door_x + east_room * k if east_room >= west_room else door_x - west_room * k
+		in_court.append(Rect2(Vector2(cx, cy) - SIZE / 2.0, SIZE))
+	var side: Array[Rect2] = []
+	var east_first := hall.get_center().x < map_size.x / 2.0
+	for east in [east_first, not east_first]:
+		var sx := hall.end.x + 24.0 + SIZE.x / 2.0 if east else hall.position.x - 24.0 - SIZE.x / 2.0
+		side.append(Rect2(Vector2(sx, hall.get_center().y) - SIZE / 2.0, SIZE))
+	var fallback := Rect2()
+	for r in in_court + side:
+		var in_c := court.encloses(r)
+		var fits := (r.position.y >= hall.end.y + 8.0) if in_c else (bounds.encloses(r) and not r.grow(14.0).intersects(hall))
+		var clear := fits
+		for a in avoid:
+			clear = clear and not a.intersects(r.grow(10.0))
+		if clear:
+			return r
+	return fallback if fallback != Rect2() else in_court[0]
+
+
 ## Rebuilds for one sect hall; hides itself outside the contest month.
-func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, total_days: int, wooden: bool, moving: bool) -> void:
+func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, total_days: int, wooden: bool, moving: bool, avoid: Array[Rect2] = []) -> void:
 	_figures.clear()
 	_fig_looks.clear()
 	_spar_looks.clear()
@@ -88,7 +111,7 @@ func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2
 		queue_redraw()
 		return
 	_robe = Color(sect_def.robe_color) if sect_def.robe_color != "" else PixelFigure.DEFAULT_ROBE
-	var lay := layout(court, hall, MAX_FIGURES, blockers, map_size)
+	var lay := layout(court, hall, MAX_FIGURES, blockers, map_size, avoid)
 	_platform = lay["platform"]
 	for p: Vector2 in lay["spots"]:
 		_figures.append(p)

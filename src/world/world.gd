@@ -69,6 +69,7 @@ var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
 var _court_drill: CourtDrill  # GFX-241
 var _contest_stage: ContestStage  # GFX-253
+var _stage_month := -1  # GFX-255
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
 var _rain_eaves: RainEaves  ## GFX-190
@@ -226,6 +227,11 @@ func _end_day_cycle() -> void:
 
 
 func _on_days_advanced(_days: int) -> void:
+	var month := Calendar.month_of(GameClock.total_days)
+	if _stage_month != month:  # GFX-255: the contest stage and court drill follow the month while you stand here
+		_stage_month = month
+		_refresh_court_drill()
+		_refresh_contest_stage()
 	queue_redraw()  # WU-494: the jetty project may have moved on
 	_build_roamers()
 	_build_forage()
@@ -296,6 +302,7 @@ func _refresh_ambient() -> void:
 	_refresh_market_life()
 	_refresh_court_drill()
 	_refresh_contest_stage()
+	_stage_month = Calendar.month_of(GameClock.total_days)
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -386,8 +393,16 @@ func _refresh_contest_stage() -> void:
 	for other: Dictionary in _region.get("places", []):
 		if other != place:
 			blockers.append(_vec(other["pos"]))
+	var avoid: Array[Rect2] = [Rect2(hall.position - Vector2(0, 24), Vector2(hall.size.x, 24))]  # the hall's own label strip
+	for other: Dictionary in _region.get("places", []):  # GFX-255: neighbours and their labels stay clear
+		if other != place:
+			var op := _vec(other["pos"])
+			var osz := _vec(other.get("size", [64, 64]))
+			avoid.append(Rect2(op - osz / 2.0 - Vector2(0, 24), osz + Vector2(0, 24)))
+	for b in blockers:
+		avoid.append(Rect2(b - Vector2(60, 28), Vector2(120, 40)))  # label plates of people and posts
 	_contest_stage.setup(def, SectCourt.court_rect(place, _region), hall, blockers, map_size, GameClock.total_days,
-		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
+		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), avoid)
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.
