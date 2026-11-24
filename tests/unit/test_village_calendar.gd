@@ -487,3 +487,66 @@ func test_wake_day_request_eve() -> void:
 	assert_eq(int(w.get("day", -1)), 7)
 	c.letter_requests[0]["until"] = 1
 	assert_true(VillageCalendar.wake_day(data(), {}, {}, [], "qingshi_village", 0, 9, c, {}).is_empty(), "eve is today: nothing to wake for")
+
+
+## WU-619: the sect's year on the calendar.
+func _member() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	assert_true(Sects.join(c, data(), "azure_cloud_sect")["ok"])
+	c.sect["reported"] = true
+	return c
+
+
+func _sect_kinds(es: Array) -> Array:
+	return es.filter(func(e: Dictionary) -> bool: return ["lecture", "duty", "sect_contest"].has(e["kind"]))
+
+
+func test_sect_dates_rogue_has_none() -> void:
+	var es := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 90, new_character(), {})
+	assert_eq(_sect_kinds(es).size(), 0)
+
+
+func test_sect_dates_member() -> void:
+	var c := _member()
+	var es := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 90, c, {})
+	var lec := _kinds(es, "lecture")
+	assert_eq(lec.size(), 3)
+	assert_eq(int(lec[0]["day"]), 0)
+	assert_true(String(lec[0]["text"]).begins_with("Lecture: "))
+	if Sects.monthly_duty(c, data()) > 0:
+		var duty := _kinds(es, "duty")
+		assert_eq(int(duty[0]["day"]), Calendar.DAYS_PER_MONTH - 1)
+		assert_true(String(duty[0]["text"]).contains("/"))
+	var contest := _kinds(es, "sect_contest")
+	assert_eq(contest.size(), 1)
+	assert_eq(int(contest[0]["day"]), 2 * Calendar.DAYS_PER_MONTH)
+
+
+func test_sect_lecture_attended_moves_to_next_month() -> void:
+	var c := _member()
+	Sects.attend_lecture(c, data(), seeded_rng(1), 0)
+	var es := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", 0, 60, c, {})
+	var lec := _kinds(es, "lecture")
+	assert_eq(lec.size(), 1)
+	assert_eq(int(lec[0]["day"]), Calendar.DAYS_PER_MONTH)
+
+
+func test_sect_contest_gone_after_entry_and_today_inside_month() -> void:
+	var c := _member()
+	var inside := 2 * Calendar.DAYS_PER_MONTH + 10
+	var es := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", inside, 10, c, {})
+	assert_eq(int(_kinds(es, "sect_contest")[0]["day"]), inside)
+	Sects.enter_contest(c, inside)
+	es = VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", inside, 10, c, {})
+	assert_eq(_kinds(es, "sect_contest").size(), 0)
+
+
+func test_sect_contest_reminder_only_on_opening_day() -> void:
+	var c := _member()
+	var open := 2 * Calendar.DAYS_PER_MONTH
+	var r := VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", open - 1, c)
+	assert_true(r.size() > 0 and String(r[0]).contains("outer-sect contest"), str(r))
+	r = VillageCalendar.reminders(data(), {}, {}, [], "qingshi_village", open + 4, c)
+	for line in r:
+		assert_false(String(line).contains("outer-sect contest"))

@@ -6,7 +6,7 @@ extends RefCounted
 const MAX_REMINDERS := 3
 ## SKIP-001: dated kinds that cut a long meditation short (not markets, forage, seasons, almanac or festival months).
 const WAKE_KINDS := ["festival_day", "festival_active", "hunt", "great_beast", "field", "rent", "request", "secret_realm", "event", "birthday"]
-const KIND_ORDER := ["market", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season", "almanac"]
+const KIND_ORDER := ["market", "lecture", "sect_contest", "duty", "hunt", "festival_active", "festival_day", "festival_month", "birthday", "field", "rent", "request", "secret_realm", "event", "forage", "season", "almanac"]
 
 
 ## CAL-009: "Your birthday" plus the birthdays of a living spouse and children in [start, start + span), region "" (anywhere).
@@ -138,6 +138,8 @@ static func upcoming(data: GameData, npcs: Dictionary, favor: Dictionary, active
 		_great_beasts(out, data, c, start, end)
 		_forage_seasons(out, data, c, start, end)
 		_own_dates(out, data, npcs, active_events, c, start, end)
+		if not c.is_rogue():
+			_sect_dates(out, data, c, start, start, end)
 	out.sort_custom(_before)
 	return out
 
@@ -201,6 +203,34 @@ static func _great_beasts(out: Array[Dictionary], data: GameData, c: CharacterDa
 			out.append({"day": day, "kind": "great_beast", "region": rid, "enemy": enemy,
 				"text": "The %s walks %s" % [beast, Exploration.region_name(data, rid)]})
 			day = Wildlife.next_great_day(data, rid, day + 1, c.realm_index, c)
+
+
+## WU-619: a sect member's lecture, monthly duty and contest month inside [start, end). `total_today` is the real today
+## (the current month's duty progress is only known for it).
+static func _sect_dates(out: Array[Dictionary], data: GameData, c: CharacterData, total_today: int, start: int, end: int) -> void:
+	var sect_id := String(c.sect.get("id", ""))
+	var region := Sects.home_region(data, sect_id)
+	var lecture := Sects.lecture_def(c, data)
+	var contest := Sects.contest_def(c, data)
+	var duty := Sects.monthly_duty(c, data)
+	var m0 := month_start(start)
+	while m0 < end:
+		var current := m0 == month_start(total_today)
+		var m_end := m0 + Calendar.DAYS_PER_MONTH - 1
+		if not lecture.is_empty() and m_end >= start:
+			var day := maxi(m0, start)
+			if Sects.check_lecture(c, data, day) == "":
+				out.append({"day": day, "kind": "lecture", "region": region, "text": "Lecture: %s" % String(lecture.get("name", "the lecture"))})
+		if duty > 0 and m_end >= start and m_end < end:
+			var text := "Sect duty due"
+			if current:
+				text = "Sect duty due (%d/%d contribution)" % [Sects.duty_progress(c), duty]
+			out.append({"day": m_end, "kind": "duty", "region": region, "text": text})
+		if not contest.is_empty() and Calendar.month_of(m0) == int(contest.get("month", 0)) and m_end >= start:
+			var day2 := maxi(m0, start)
+			if Sects.check_contest(c, data, day2) == "":
+				out.append({"day": day2, "kind": "sect_contest", "region": region, "hall": Sects.hall_name(data, region, c), "text": "Outer-sect contest (all month, at the hall)"})
+		m0 += Calendar.DAYS_PER_MONTH
 
 
 ## CAL-002: the player's own dated things inside [start, end).
@@ -462,6 +492,15 @@ static func reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e
 			if who == "A neighbour":
 				who = "a neighbour"
 			return "Tomorrow: %s's request is due (%s)." % [who, String(e.get("what", ""))]
+		"sect_contest":
+			if Calendar.day_of(int(e["day"])) != 1:
+				return ""
+			var hall := String(e.get("hall", ""))
+			return "Tomorrow: the outer-sect contest opens at the %s." % (hall if hall != "" else "sect hall")
+		"lecture":
+			return ""
+		"duty":
+			return ""
 		"festival_month":
 			return ""
 		"season":
