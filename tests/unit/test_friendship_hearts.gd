@@ -286,3 +286,23 @@ func test_heart_pop_curve_and_tea_gap() -> void:
 	node.free()
 	var w := 16.0 * float(Sprites.scale())
 	assert_true(TimeSkipOverlay.tea_gap() - w >= w, "a sprite width of table and air between the seated pair")
+
+
+## C-411: Azure Peak and the ridge villagers each have friend scenes at favor 40 and 60, and at most 3 cheap gifts.
+func test_friend_scenes_part_two_cover_eight_villagers() -> void:
+	var d := data()
+	var ids := ["swordsman_yun", "hermit_gu", "disciple_bai", "patriarch_lin", "alchemist_ye", "lord_xuan", "saint_lan", "sage_wen"]
+	var gifts := 0
+	for npc_id: String in ids:
+		for favor: int in [40, 60]:
+			var found := 0
+			for scene: Dictionary in d.scenes:
+				if String(scene.get("npc", "")) == npc_id and int(scene.get("min_favor", 0)) == favor:
+					found += 1
+					assert_true(String(scene["text"]).contains("{name}"), "%s %d text has {name}" % [npc_id, favor])
+					if scene.has("gift"):
+						gifts += 1
+						assert_true(int(d.items[String(scene["gift"])].price) <= 15, "gift cheap")
+						assert_true(npc_id != "disciple_bai", "Bai's sect forbids gifts")
+			assert_eq(found, 1, "%s has one scene at favor %d" % [npc_id, favor])
+	assert_true(gifts <= 3, "at most 3 gifts, got %d" % gifts)
