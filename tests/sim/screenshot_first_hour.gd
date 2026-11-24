@@ -183,6 +183,9 @@ func _start() -> void:
 				c.alignment = 0
 				c.realm_index = maxi(c.realm_index, 1)
 				gs.join_sect(mid)
+				for a2 in OS.get_cmdline_user_args():  # GFX-252: --sect-rank=N sets the rank directly
+					if a2.begins_with("--sect-rank="):
+						c.sect["rank"] = int(a2.substr(12))
 				gs.current_region = Sects.home_region(gs.data, mid)
 				region_list = [gs.current_region]
 				member_shot = mid

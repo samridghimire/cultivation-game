@@ -291,6 +291,9 @@ func _draw_sprite(o: Vector2, sash: Color) -> bool:
 	# Centred on the feet (the placeholder robe hem sits at y=12); the sash line keeps sect and alignment readable.
 	draw_texture_rect(tex, Rect2(o + Vector2(-size.x / 2.0, 12.0 - size.y), size), false)
 	draw_line(o + Vector2(-size.x * 0.3, 12.0 - size.y * 0.35), o + Vector2(size.x * 0.3, 12.0 - size.y * 0.35), sash, 2.0)
+	var trim: Color = _look.get("trim", Color(0, 0, 0, 0))  # GFX-252: rank trim at the hem
+	if trim.a > 0.0:
+		draw_line(o + Vector2(-size.x * 0.35, 11.0), o + Vector2(size.x * 0.35, 11.0), trim, 1.0)
 	return true
 
 

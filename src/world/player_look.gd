@@ -16,6 +16,8 @@ const SASH_COLORS := {
 const AURA_LOW := Color("9fe3ff")
 const AURA_HIGH := Color("ffd76a")
 const MAX_AURA_RINGS := 4
+## GFX-252: collar and hem trim by sect rank (index = rank - 1, the last entry for higher ranks): silver, gold, jade.
+const RANK_TRIM: Array[Color] = [Color("c8d0d8"), Color("e8c76a"), Color("6fd3a8")]
 const SKIN := Color("e8c9a0")
 const HAIR := Color("2a2018")
 
@@ -27,11 +29,17 @@ static func of(c: CharacterData, data: GameData) -> Dictionary:
 		var sect: SectDef = data.sects.get(String(c.sect.get("id", "")))
 		if sect != null and sect.robe_color != "":
 			robe = Color(sect.robe_color)
+	var trim := Color(0, 0, 0, 0)
+	if not c.is_rogue():
+		var rank := int(c.sect.get("rank", 0))
+		if rank >= 1:
+			trim = RANK_TRIM[mini(rank, RANK_TRIM.size()) - 1]
 	var tier_id := String(Alignment.tier(c.alignment, data).get("id", "neutral"))
 	var rings := mini(c.realm_index, MAX_AURA_RINGS)
 	var t := 0.0 if rings <= 1 else float(rings - 1) / float(MAX_AURA_RINGS - 1)
 	return {
 		"robe": robe,
+		"trim": trim,
 		"sash": SASH_COLORS.get(tier_id, SASH_COLORS["neutral"]),
 		"skin": SKIN,
 		"hair": HAIR,

@@ -230,17 +230,28 @@ static func frame(look: Dictionary, dir: String, index: int) -> ImageTexture:
 	var acc: PackedStringArray = look.get("accessories", PackedStringArray())
 	if acc.has("white_hair"):
 		hair = WHITE_HAIR
+	var trim: Color = look.get("trim", Color(0, 0, 0, 0))  # GFX-252: rank trim on the collar and hem
 	var i := posmod(index, 3)
-	var key := "%s|%s|%s|%s|%s|%s|%s|%d|%s" % [robe.to_html(), sash.to_html(), skin.to_html(), hair.to_html(), style, child, dir, i, ",".join(acc)]
+	var key := "%s|%s|%s|%s|%s|%s|%s|%d|%s|%s" % [robe.to_html(), sash.to_html(), skin.to_html(), hair.to_html(), style, child, dir, i, ",".join(acc), trim.to_html() if trim.a > 0.0 else ""]
 	if not _cache.has(key):
 		var colors := {"o": OUTLINE, "s": skin, "h": hair, "r": robe, "R": robe.darkened(0.25), "b": sash, "e": OUTLINE, "f": SHOES,
-			"S": STRAW, "U": FUR, "K": SCARF, "A": APRON, "C": CANE}
+			"S": STRAW, "U": FUR, "K": SCARF, "A": APRON, "C": CANE, "t": trim}
 		var tpl := rows("right" if dir == "left" else dir, i, style, false)
+		if trim.a > 0.0:
+			tpl = _apply_trim(tpl)
 		tpl = overlay(tpl, acc, dir == "left" or dir == "right")
 		if child:
 			tpl = _shorten(tpl)
 		_cache[key] = _build(tpl, colors, dir == "left")
 	return _cache[key]
+
+
+## GFX-252: the shoulder (collar) row and the hem row take the trim colour ("t").
+static func _apply_trim(tpl: PackedStringArray) -> PackedStringArray:
+	var out := tpl.duplicate()
+	out[9] = out[9].replace("r", "t")
+	out[17] = out[17].replace("R", "t")
+	return out
 
 
 ## GFX-101: a one-colour copy of `tex`'s opaque pixels, drawn offset in 4 directions under the sprite as a light outline.
