@@ -5052,7 +5052,7 @@ static func goal_target(c: CharacterData, data: GameData, flags: Dictionary, npc
 			if bool(rows[i]["done"]):
 				continue
 			var text := String(rows[i]["text"])
-			if (text.begins_with("Report") or text.begins_with("Finish")) and home != "" and region_id == home:
+			if (text.begins_with("Report") or text.begins_with("Finish") or text.begins_with("Claim")) and home != "" and region_id == home:
 				var hall := Sects.hall_name(data, home, c)
 				return {"place": hall} if hall != "" else {}
 			return {}
@@ -5339,6 +5339,8 @@ static func sect_goals(c: CharacterData, data: GameData, _flags: Dictionary, _to
 	if c.is_rogue() or not data.sects.has(c.sect["id"]):
 		return out
 	var sect: SectDef = data.sects[c.sect["id"]]
+	if int(c.sect["rank"]) >= 1:
+		return _rank_goals(c, data, sect)
 	var home := String(sect.home_region)
 	var hall := Sects.hall_name(data, home, c) if home != "" else ""
 	var where := "the sect hall"
@@ -5362,12 +5364,43 @@ static func sect_goals(c: CharacterData, data: GameData, _flags: Dictionary, _to
 	return out
 
 
+## SECT-042: the goals after the first rank, read from sects.json: the rank's treasury item, a mission of the
+## rank's tier, the realm and the contribution the next rank asks. Rows the sect's data does not have are skipped.
+static func _rank_goals(c: CharacterData, data: GameData, sect: SectDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var rank := int(c.sect["rank"])
+	var cheapest: Dictionary = {}
+	for entry: Dictionary in sect.shop:
+		if int(entry.get("min_rank", 0)) == rank and (cheapest.is_empty() or int(entry["contribution"]) < int(cheapest["contribution"])):
+			cheapest = entry
+	if not cheapest.is_empty():
+		var item_name := String(data.items.get(String(cheapest["item_id"]), {}).get("name", cheapest["item_id"]))
+		out.append({"key": "perk", "text": "Claim %s from the treasury (%d contribution)" % [item_name, int(cheapest["contribution"])], "done": LifeStats.get_stat(c, "perk_buys") >= 1})
+	var tier_mission := false
+	for mission: Dictionary in data.sect_missions.values():
+		if int(mission.get("min_rank", 0)) == rank and Sects.mission_offered(c, data, mission, {}) and data.realm_index_of(String(mission.get("min_realm", "mortal"))) <= c.realm_index:
+			tier_mission = true
+			break
+	if tier_mission:
+		out.append({"key": "rank_mission", "text": "Finish a mission for a %s" % sect.rank_name(rank), "done": LifeStats.get_stat(c, "rank_missions_done") >= 1})
+	if rank + 1 < sect.ranks.size():
+		var def: Dictionary = sect.ranks[rank + 1]
+		var min_realm := data.realm_index_of(String(def.get("min_realm", "mortal")))
+		if String(def.get("trial", "")) != "" and min_realm > 0:
+			var label: String = data.realms[min_realm].stage_label(int(def.get("min_stage", 0))) if int(def.get("min_stage", 0)) > 0 else data.realms[min_realm].name
+			out.append({"key": "realm", "text": "Reach %s for the %s trial" % [label, sect.rank_name(rank + 1)], "done": c.realm_index > min_realm or (c.realm_index == min_realm and c.stage >= int(def.get("min_stage", 0)))})
+		var need := int(def.get("contribution", 0))
+		if need > 0:
+			out.append({"key": "contribution", "text": "Earn %d contribution for %s" % [need, sect.rank_name(rank + 1)], "done": int(c.sect.get("contribution", 0)) >= need})
+	return out
+
+
 ## SECT-035: a sect member before Foundation with a sect goal still open.
 static func sect_goals_active(c: CharacterData, data: GameData, flags: Dictionary) -> bool:
 	if c.is_rogue() or c.realm_index > 1:
 		return false
 	for goal in sect_goals(c, data, flags):
-		if not goal["done"]:
+		if not goal["done"] and String(goal.get("key", "")) != "realm":  # SECT-042: the realm row never holds the ladder open
 			return true
 	return false
 

@@ -3585,6 +3585,8 @@ func take_mission(mission_id: String) -> void:
 		EventBus.player_changed.emit()
 		return
 	LifeStats.add(player, "missions_done")
+	if int(mission.get("min_rank", 0)) >= 1:
+		LifeStats.add(player, "rank_missions_done")  # SECT-042
 	var notes: PackedStringArray = result["notes"]
 	notes.insert(0, "+%d contribution" % result["contribution"])
 	EventBus.post("Mission complete: %s. (%s)" % [mission["name"], ", ".join(notes)], "progress")
@@ -3700,10 +3702,13 @@ func buy_with_contribution(item_id: String) -> void:
 	EventBus.topic = "sect"
 	if not _can_act():
 		return
+	var entry := Sects.shop_entry(player, data, item_id)
 	var result := Sects.buy_with_contribution(player, data, item_id)
 	if not result["ok"]:
 		EventBus.post(result["reason"], "warning")
 	else:
+		if int(entry.get("min_rank", 0)) >= 1:
+			LifeStats.add(player, "perk_buys")  # SECT-042: a rank-gated treasury item
 		EventBus.post("The sect treasury grants you %s for %d contribution. (%d contribution left)" % [data.items[item_id].get("name", item_id), result["cost"], Sects.contribution_balance(player)], "progress")
 	EventBus.player_changed.emit()
 

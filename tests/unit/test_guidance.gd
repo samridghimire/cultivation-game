@@ -8026,3 +8026,6 @@ func _finish_sect_goals(c: CharacterData) -> void:
 	c.sect["rank"] = maxi(1, int(c.sect.get("rank", 0)))
 	LifeStats.add(c, "lectures_attended")
 	LifeStats.add(c, "missions_done")
+	LifeStats.add(c, "perk_buys")
+	LifeStats.add(c, "rank_missions_done")
+	c.sect["contribution"] = 100000

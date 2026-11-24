@@ -33,10 +33,14 @@ func test_all_done_is_inactive() -> void:
 	c.sect["reported"] = true
 	LifeStats.add(c, "lectures_attended")
 	LifeStats.add(c, "missions_done")
-	c.sect["rank"] = 1
-	assert_false(Guidance.sect_goals_active(c, d, {}))
 	for row in Guidance.sect_goals(c, d, {}):
-		assert_true(row["done"])
+		assert_true(row["done"] or String(row["text"]).begins_with("Rise"))
+	c.sect["contribution"] = 300
+	c.sect["rank"] = 1
+	# SECT-042: rank 1 has its own rows, still open
+	assert_true(Guidance.sect_goals_active(c, d, {}))
+	for row in Guidance.sect_goals(c, d, {}):
+		assert_false(row["done"] and String(row.get("key", "")) in ["perk", "rank_mission", "realm"])
 
 
 func test_rogue_and_foundation() -> void:
@@ -103,13 +107,14 @@ func test_hud_announces_across_the_sect_ladder() -> void:
 	c.sect["reported"] = true
 	LifeStats.add(c, "lectures_attended")
 	LifeStats.add(c, "missions_done")
+	LifeStats.add(c, "perk_buys")
+	LifeStats.add(c, "rank_missions_done")
+	c.sect["contribution"] = 100000
 	hud.call("_sync_goals_done")
 	c.sect["rank"] = 1  # the last sect goal: the HUD leaves the sect ladder
 	hud.call("_announce_goals_done")
 	assert_eq(hud.get("_goals_ladder"), "first")
-	texts = _banner_texts(banner)
-	assert_true(texts.contains("Rise to"), "last sect goal announced: " + texts)
-	assert_true(texts.contains("sect goals are done"), texts)
+	# SECT-042: the rank-0 rows are replaced by the rank-1 rows, so no "Rise to" banner; the promotion has its own
 	hud.free()
 	gs.end_session()
 
@@ -119,3 +124,56 @@ func _banner_texts(banner: Banner) -> String:
 	for q: Array in banner.get("_queue"):
 		out += " | " + String(q[1])
 	return out
+
+
+func _rank_one() -> Array:
+	var p := _azure()
+	var c: CharacterData = p[0]
+	c.sect["reported"] = true
+	c.sect["rank"] = 1
+	c.sect["contribution"] = 300
+	return p
+
+
+## SECT-042: rank-1 rows read their numbers from sects.json.
+func test_rank_one_rows() -> void:
+	var p := _rank_one()
+	var c: CharacterData = p[0]
+	var d: GameData = p[1]
+	var rows := Guidance.sect_goals(c, d, {})
+	var keys: Array = []
+	for r in rows:
+		keys.append(String(r["key"]))
+	assert_eq(keys, ["perk", "rank_mission", "realm", "contribution"])
+	assert_true(String(rows[0]["text"]).begins_with("Claim "))
+	assert_true(String(rows[2]["text"]).contains("Foundation Establishment"))
+	assert_true(String(rows[3]["text"]).contains("3000"))
+	for r in rows:
+		assert_false(r["done"])
+
+
+func test_rank_one_rows_complete() -> void:
+	var p := _rank_one()
+	var c: CharacterData = p[0]
+	var d: GameData = p[1]
+	LifeStats.add(c, "perk_buys")
+	LifeStats.add(c, "rank_missions_done")
+	c.sect["contribution"] = 3000
+	c.realm_index = 2
+	for r in Guidance.sect_goals(c, d, {}):
+		assert_true(r["done"], String(r["text"]))
+	assert_false(Guidance.sect_goals_active(c, d, {}))
+
+
+func test_rank_one_skips_rows_the_sect_lacks() -> void:
+	var p := _rank_one()
+	var c: CharacterData = p[0]
+	var d: GameData = p[1]
+	var sect: SectDef = d.sects["azure_cloud_sect"]
+	var saved := sect.ranks.duplicate(true)
+	sect.ranks.resize(2)  # no rank 2: no realm or contribution row
+	var keys: Array = []
+	for r in Guidance.sect_goals(c, d, {}):
+		keys.append(String(r["key"]))
+	assert_eq(keys, ["perk", "rank_mission"])
+	sect.ranks = saved

@@ -68,7 +68,10 @@ func _run() -> void:
 					return
 				var gl: Array[Dictionary] = Guidance.sect_goals(pc, gs.data, gs.world_flags, clock.total_days)
 				for i in gl.size():
-					if bool(gl[i]["done"]) and not rows.has(i):
+					if gl[i].has("key"):  # SECT-042: rank-1 rows are keyed by name
+						if bool(gl[i]["done"]) and not rows.has(gl[i]["key"]):
+							rows[gl[i]["key"]] = clock.total_days
+					elif bool(gl[i]["done"]) and not rows.has(i):
 						rows[i] = clock.total_days
 			var out: Dictionary = FirstHour.play(gs, clock, s, months, false, hook)
 			var joined: int = int(out["sect_day"]) - day0 if int(out["sect_day"]) >= 0 else -1
@@ -103,6 +106,9 @@ func _run() -> void:
 			var labels: Array[String] = ["report", "lecture", "mission", "rank 1"]
 			var glist: Array[Dictionary] = Guidance.sect_goals(gs.player, gs.data, gs.world_flags, clock.total_days) if gs.player != null else []
 			for i in glist.size():
+				if glist[i].has("key"):
+					parts.append("%s %s" % [glist[i]["key"], str(int(rows[glist[i]["key"]]) - maxi(joined, 0)) if rows.has(glist[i]["key"]) else "never"])
+					continue
 				parts.append("%s %s" % [labels[i] if i < labels.size() else str(i), str(int(rows[i]) - maxi(joined, 0)) if rows.has(i) else "never"])
 			print("       goal rows (day after joining, month-end check): %s%s" % [", ".join(parts), ("  | top hint: " + top_hint) if top_hint != "" else ""])
 			gs.end_session()
