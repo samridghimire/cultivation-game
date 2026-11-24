@@ -142,3 +142,37 @@ func test_rival_in_the_final_round() -> void:
 	assert_true(SectContestCard.result_text({"round": 3, "won": false, "foe": rival.name, "rival": true}).contains("Your rival " + rival.name))
 	card.close()
 	_teardown(gs, hud)
+
+
+func test_arena_mode_follows_the_bout_result() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: SectContestCard = hud.get("_sect_contest_card")
+	assert_true(card.open(gs.player, gs.data, gs.get_node("/root/GameClock").total_days))
+	assert_eq(card.arena().mode, "ready")
+	card.open_result("Azure", {"round": 1, "rounds": 3, "won": true, "foe": "Boxer", "prize": {}, "next_foe": "X"})
+	assert_eq(card.arena().mode, "won")
+	card.open_result("Azure", {"round": 2, "rounds": 3, "won": false, "foe": "Boxer"})
+	assert_eq(card.arena().mode, "lost")
+	assert_true(card.arena().foe_look.is_empty(), "a plain foe uses the default look")
+	_teardown(gs, hud)
+
+
+func test_rival_round_names_and_looks_like_the_rival() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: SectContestCard = hud.get("_sect_contest_card")
+	var rival := CharacterFactory.create("Han", gs.data, seeded_rng(9), "male")
+	rival.id = "test_rival"
+	gs.npcs["test_rival"] = rival
+	card.open_result("Azure", {"round": 3, "rounds": 3, "won": true, "foe": "Han", "rival": true, "foe_person": "test_rival", "prize": {}, "next_foe": ""})
+	assert_false(card.arena().foe_look.is_empty(), "the foe wears the rival's look")
+	assert_eq(card.arena().rival_name, "Han")
+	assert_true(card.all_text().to_lower().contains("your rival han"), card.all_text())
+	card.open_result("Azure", {"round": 3, "rounds": 3, "won": false, "foe": "Han", "rival": true, "foe_person": "test_rival"})
+	assert_true(card.all_text().contains("beats you"), card.all_text())
+	_teardown(gs, hud)
