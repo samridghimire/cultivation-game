@@ -10,6 +10,7 @@ extends SceneTree
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
+## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
 ## WU-611: `-- --sect-contest=<sect_id>` renders sect_contest.png and sect_contest_result.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card). With `--lose` it also renders sect_trial_lost.png (WU-614).
@@ -189,6 +190,9 @@ func _start() -> void:
 				gs.current_region = Sects.home_region(gs.data, mid)
 				region_list = [gs.current_region]
 				member_shot = mid
+	if OS.get_cmdline_user_args().has("--contest-month") and member_shot != "":  # GFX-253
+		var cm := int(gs.data.sects[member_shot].contest.get("month", 1))
+		root.get_node("GameClock").total_days = (cm - 1) * Calendar.DAYS_PER_MONTH
 	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
 		_drop_start_line()

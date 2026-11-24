@@ -68,6 +68,7 @@ var _mist_bands: MistBands  # GFX-091: drifting mist over misty regions
 var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
 var _court_drill: CourtDrill  # GFX-241
+var _contest_stage: ContestStage  # GFX-253
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
 var _rain_eaves: RainEaves  ## GFX-190
@@ -294,6 +295,7 @@ func _refresh_ambient() -> void:
 	_refresh_cloud_wisps()
 	_refresh_market_life()
 	_refresh_court_drill()
+	_refresh_contest_stage()
 	if _ambient != null:
 		_ambient.queue_free()
 		_ambient = null
@@ -327,6 +329,9 @@ func _refresh_court_drill() -> void:
 	_court_drill.visible = false
 	_court_drill.set_process(false)
 	var rid := String(_region.get("id", GameState.current_region))
+	var contest_hall := _contest_hall(rid)
+	if not contest_hall.is_empty() and ContestStage.shown(GameState.data.sects[contest_hall["sect"]].contest, GameClock.total_days):
+		return  # GFX-253: the stage takes the court this month
 	var festival := false
 	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, rid):
 		festival = festival or WorldEvents.is_festival(GameState.data, String(instance["id"]))
@@ -348,6 +353,41 @@ func _refresh_court_drill() -> void:
 				blockers.append(_vec(other["pos"]))
 		_court_drill.setup(def, SectCourt.court_rect(place, _region), hall, blockers, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
 		return
+
+
+## GFX-253: {sect, place} of the sect hall in this region that drills/holds a contest, or {}.
+func _contest_hall(rid: String) -> Dictionary:
+	for place: Dictionary in _region.get("places", []):
+		var sid := SectCourt.drill_sect_id(place, rid, GameState.data.sects)
+		var def: SectDef = GameState.data.sects.get(sid)
+		if def != null and def.home_region == rid and not def.contest.is_empty():
+			return {"sect": sid, "place": place}
+	return {}
+
+
+## GFX-253: the contest platform on the hall court in the sect's contest month.
+func _refresh_contest_stage() -> void:
+	if _contest_stage == null:
+		_contest_stage = ContestStage.new()
+		_contest_stage.name = "ContestStage"
+		add_child(_contest_stage)
+		move_child(_contest_stage, 0)
+	_contest_stage.visible = false
+	_contest_stage.set_process(false)
+	var found := _contest_hall(String(_region.get("id", GameState.current_region)))
+	if found.is_empty():
+		return
+	var def: SectDef = GameState.data.sects[found["sect"]]
+	var place: Dictionary = found["place"]
+	var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
+	var blockers: Array[Vector2] = []
+	for spot: Array in _region.get("npc_spots", []):
+		blockers.append(Vector2(float(spot[0]), float(spot[1])))
+	for other: Dictionary in _region.get("places", []):
+		if other != place:
+			blockers.append(_vec(other["pos"]))
+	_contest_stage.setup(def, SectCourt.court_rect(place, _region), hall, blockers, map_size, GameClock.total_days,
+		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.
