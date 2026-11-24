@@ -150,6 +150,35 @@ static func attitude_change_line(name: String, before: String, after: String) ->
 	return "%s cools toward you and is your proud rival again." % name
 
 
+## SECT-044: true when `rival` fills the contest's last round: alive, in `c`'s sect, at most one major realm apart.
+static func contest_rival(c: CharacterData, rival: CharacterData, _data: GameData) -> bool:
+	if rival == null or not rival.alive or c.is_rogue() or rival.is_rogue():
+		return false
+	return String(rival.sect.get("id", "")) == String(c.sect.get("id", "")) and absi(rival.realm_index - c.realm_index) <= 1
+
+
+## SECT-044: karma.json rival.join_sect_chance (0-1, default 0.5).
+static func join_sect_chance(data: GameData) -> float:
+	return float(rules(data).get("join_sect_chance", 0.5))
+
+
+## SECT-044: a living, sect-less rival follows the player into `sect_id` with join_sect_chance. True when they joined.
+static func follow_into_sect(rival: CharacterData, sect_id: String, data: GameData, rng: RandomNumberGenerator) -> bool:
+	if rival == null or not rival.alive or not rival.is_rogue():
+		return false
+	if rng.randf() >= join_sect_chance(data):
+		return false
+	rival.sect = {"id": sect_id, "rank": 0, "contribution": 0}
+	return true
+
+
+## SECT-044: the rival's remark after the contest bout.
+static func contest_line(rival: CharacterData, you_won: bool) -> String:
+	if you_won:
+		return "%s yields the ring with a stiff bow. \"The sect will remember this bout.\"" % rival.name
+	return "%s takes the last round and the crowd's roar. \"Perhaps next year.\"" % rival.name
+
+
 ## RIVAL-011: one line of news for a rival who has died, else "". The player's
 ## own kill ("slain by ...") already posts its line, so it gives "".
 static func death_news(_c: CharacterData, rival: CharacterData) -> String:
@@ -304,6 +333,8 @@ static func validate(data: GameData) -> PackedStringArray:
 	for key: String in ["first_meeting_day", "first_meeting_window"]:
 		if r.has(key) and (not (r[key] is int or r[key] is float) or int(r[key]) < 0):
 			errors.append("karma.json rival %s must be a whole number >= 0" % key)
+	if r.has("join_sect_chance") and (not (r["join_sect_chance"] is int or r["join_sect_chance"] is float) or float(r["join_sect_chance"]) < 0.0 or float(r["join_sect_chance"]) > 1.0):
+		errors.append("karma.json rival join_sect_chance must be in 0-1")
 	if r.has("friendly_favor") and (not (r["friendly_favor"] is int or r["friendly_favor"] is float) or int(r["friendly_favor"]) < 1 or int(r["friendly_favor"]) > 100):
 		errors.append("karma.json rival friendly_favor must be a whole number 1-100")
 	if r.has("encounter_cooldown_days") and (not (r["encounter_cooldown_days"] is int or r["encounter_cooldown_days"] is float) or int(r["encounter_cooldown_days"]) < 0):

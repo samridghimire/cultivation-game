@@ -654,6 +654,7 @@ func join_sect(sect_id: String) -> void:
 	var result := Sects.join(player, data, sect_id)
 	if result["ok"]:
 		EventBus.post("You are accepted into the %s." % data.sects[sect_id].name, "progress")
+		Rivals.follow_into_sect(Rivals.rival_of(player, npcs), sect_id, data, rng)  # SECT-044
 		_sync_announced_rank()
 		# SECT-037: a sect's home region is known once you belong, and standing in it says so now.
 		var home := Sects.home_region(data, sect_id)
@@ -3670,22 +3671,26 @@ func enter_sect_contest() -> void:
 		var round_def := Sects.contest_round(player, data, index)
 		if round_def.is_empty():
 			break
-		var foe := Sects.trial_opponent(data, String(round_def["foe"]), float(round_def["power_mult"]))
+		var foe := _contest_foe(index, round_def)
 		if not fight_enemy(foe):
 			EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": false,
 				"foe": String(foe.get("name", "your foe")), "prize": {}, "next_foe": ""})
+			if foe.has("person"):
+				_note_contest_rival(false)
 			break
 		won += 1
 		var prize: Dictionary = round_def["prize"]
 		var promoted := Sects.pay_contest_prize(player, data, prize)
 		var next_def := Sects.contest_round(player, data, index + 1)
-		var next_foe := Sects.trial_opponent(data, String(next_def["foe"]), float(next_def["power_mult"])) if not next_def.is_empty() else {}
+		var next_foe := _contest_foe(index + 1, next_def) if not next_def.is_empty() else {}
 		EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": true,
 			"foe": String(foe.get("name", "your foe")), "prize": prize, "next_foe": String(next_foe.get("name", "")),
 			"next_chance": Combat.win_chance(player, data, next_foe) if not next_foe.is_empty() else 0.0})
 		EventBus.post("Round %d won against %s. (+%d contribution, +%d spirit stones)" % [index + 1, foe.get("name", "your foe"), int(prize.get("contribution", 0)), int(prize.get("spirit_stones", 0))], "progress")
 		if promoted:
 			_post_promotion()  # RV-SECT038: a prize that crosses a rank threshold is announced like a mission's
+		if foe.has("person"):
+			_note_contest_rival(true)
 		index += 1
 	if won > 0 and Sects.contest_round(player, data, index).is_empty():
 		FolkNews.queue(player, data, npc_favor, "contest")  # FOLK-049: friends cheer a champion
@@ -3696,6 +3701,30 @@ func enter_sect_contest() -> void:
 	else:
 		EventBus.post("You are beaten after %d round%s. The contest is over for this year." % [won, "" if won == 1 else "s"], "warning")
 	EventBus.player_changed.emit()
+
+
+## SECT-044: the foe of contest round `index`: your rival in the last round when they share your sect
+## (Rivals.contest_rival), else the listed foe.
+func _contest_foe(index: int, round_def: Dictionary) -> Dictionary:
+	var rounds := int(Sects.contest_def(player, data).get("rounds", 0))
+	var rival := Rivals.rival_of(player, npcs)
+	if index == rounds - 1 and Rivals.contest_rival(player, rival, data):
+		var foe := Karma.npc_enemy(rival, data, player)
+		foe["spar"] = true
+		return foe
+	return Sects.trial_opponent(data, String(round_def["foe"]), float(round_def["power_mult"]))
+
+
+## SECT-044: the rival's remark and ledger nudge after the contest bout against them.
+func _note_contest_rival(you_won: bool) -> void:
+	var rival := Rivals.rival_of(player, npcs)
+	if rival == null:
+		return
+	var key := "rival_bouts_won" if you_won else "rival_bouts_lost"
+	LifeStats.add(player, key)
+	world_flags[key] = int(world_flags.get(key, 0)) + 1
+	EventBus.post(Rivals.contest_line(rival, you_won), "dialogue")
+	_rival_consequences({"rival_grudge": 3} if you_won else {"rival_favor": 3})
 
 
 ## Buy an item from your sect's contribution shop (sects.json `shop`).
