@@ -12,7 +12,7 @@ extends SceneTree
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
-## WU-611: `-- --sect-contest=<sect_id>` renders sect_contest.png and sect_contest_result.png.
+## WU-611: `-- --sect-contest=<sect_id>` (add `--contest-rival` for WU-620's rival in the last round) renders sect_contest.png and sect_contest_result.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card). With `--lose` it also renders sect_trial_lost.png (WU-614).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
 ## WU-604: `-- --sect-report=<sect_id>` renders sect_report.png (join, report at the home hall: the welcome card).
@@ -516,6 +516,10 @@ func _start() -> void:
 				(hud.get("_sect_card") as Control).close()
 				Engine.get_main_loop().root.get_node("GameClock").total_days = (int((gs.data.sects[cid] as SectDef).contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
 				gs.current_region = Sects.home_region(gs.data, cid)
+				if "--contest-rival" in OS.get_cmdline_user_args():  # WU-620: your rival fills the last round
+					var rv := Rivals.spawn(c, gs.npcs, gs.data, RandomNumberGenerator.new(), "qingshi_village")
+					rv.realm_index = c.realm_index
+					rv.sect = {"id": cid, "rank": 0, "contribution": 0}
 				gs.offer_sect_contest(), "close": ccard.close})
 			shots.append({"name": "sect_contest_result", "open": func() -> void:
 				ccard.close()

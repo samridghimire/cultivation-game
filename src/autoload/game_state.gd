@@ -3674,7 +3674,7 @@ func enter_sect_contest() -> void:
 		var foe := _contest_foe(index, round_def)
 		if not fight_enemy(foe):
 			EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": false,
-				"foe": String(foe.get("name", "your foe")), "prize": {}, "next_foe": ""})
+				"foe": String(foe.get("name", "your foe")), "prize": {}, "next_foe": "", "rival": foe.has("person")})
 			if foe.has("person"):
 				_note_contest_rival(false)
 			break
@@ -3685,6 +3685,7 @@ func enter_sect_contest() -> void:
 		var next_foe := _contest_foe(index + 1, next_def) if not next_def.is_empty() else {}
 		EventBus.sect_contest_bout.emit(String(player.sect["id"]), {"round": index + 1, "rounds": int(Sects.contest_def(player, data).get("rounds", 0)), "won": true,
 			"foe": String(foe.get("name", "your foe")), "prize": prize, "next_foe": String(next_foe.get("name", "")),
+			"rival": foe.has("person"), "next_rival": next_foe.has("person"),
 			"next_chance": Combat.win_chance(player, data, next_foe) if not next_foe.is_empty() else 0.0})
 		EventBus.post("Round %d won against %s. (+%d contribution, +%d spirit stones)" % [index + 1, foe.get("name", "your foe"), int(prize.get("contribution", 0)), int(prize.get("spirit_stones", 0))], "progress")
 		if promoted:

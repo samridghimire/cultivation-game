@@ -72,9 +72,20 @@ static func prize_text(prize: Dictionary) -> String:
 	return ", ".join(parts) if not parts.is_empty() else "no prize"
 
 
-## One line per round: "Round 1: Village Boxer (Prize: ...)". `marks` is the index of the next bout (earlier rounds are
-## shown as won). Pure.
-static func ladder_lines(c: CharacterData, data: GameData, next_index: int = 0) -> PackedStringArray:
+## WU-620: true when `rival` (may be null) fills round `index` (0-based), the last. Pure.
+static func rival_round(c: CharacterData, data: GameData, rival: CharacterData, index: int) -> bool:
+	var rounds := int(Sects.contest_def(c, data).get("rounds", 0))
+	return index == rounds - 1 and Rivals.contest_rival(c, rival, data)
+
+
+## "Your rival <name> waits in the final round." Pure.
+static func rival_line(name: String) -> String:
+	return "Your rival %s waits in the final round." % name
+
+
+## One line per round: "Round 1: Village Boxer (Prize: ...)". `next_index` is the index of the next bout (earlier rounds are
+## shown as won). `rival` (WU-620) replaces the last round's foe when they fill it. Pure.
+static func ladder_lines(c: CharacterData, data: GameData, next_index: int = 0, rival: CharacterData = null) -> PackedStringArray:
 	var out := PackedStringArray()
 	var i := 0
 	while true:
@@ -83,21 +94,27 @@ static func ladder_lines(c: CharacterData, data: GameData, next_index: int = 0) 
 			break
 		var foe := Sects.trial_opponent(data, String(round_def["foe"]), float(round_def["power_mult"]))
 		var mark := "won" if i < next_index else ("next" if i == next_index else "")
-		out.append("Round %d: %s (%s)%s" % [i + 1, String(foe.get("name", "a rival")), prize_text(round_def["prize"]), " - " + mark if mark != "" else ""])
+		var foe_name := rival.name if rival_round(c, data, rival, i) else String(foe.get("name", "a rival"))
+		out.append("Round %d: %s (%s)%s" % [i + 1, foe_name, prize_text(round_def["prize"]), " - " + mark if mark != "" else ""])
 		i += 1
 	return out
 
 
 ## Entry mode. Returns false (and stays closed) when the contest cannot be entered.
-func open(c: CharacterData, data: GameData, today: int, color: Color = UIStyle.ACCENT) -> bool:
+func open(c: CharacterData, data: GameData, today: int, color: Color = UIStyle.ACCENT, rival: CharacterData = null) -> bool:
 	if Sects.check_contest(c, data, today) != "":
 		return false
 	var sect: SectDef = data.sects[c.sect["id"]]
 	_style(sect.name, color)
 	_subtitle.text = "%s outer-sect contest" % sect.name
-	_ladder.text = "\n".join(ladder_lines(c, data))
+	var lines := ladder_lines(c, data, 0, rival)
+	if rival_round(c, data, rival, int(Sects.contest_def(c, data).get("rounds", 0)) - 1):
+		lines.append(rival_line(rival.name))
+	_ladder.text = "\n".join(lines)
 	var first := Sects.contest_round(c, data, 0)
 	var foe := Sects.trial_opponent(data, String(first["foe"]), float(first["power_mult"]))
+	if rival_round(c, data, rival, 0):  # a one-round contest
+		foe = Karma.npc_enemy(rival, data, c)
 	var chance := Combat.win_chance(c, data, foe)  # once, on open
 	_odds.text = "First bout vs %s. %s" % [String(foe.get("name", "a rival")), TrialCard.odds_line(chance)]
 	_odds.add_theme_color_override("font_color", TrialCard.odds_color(chance))
@@ -121,6 +138,8 @@ func open_result(sect_name: String, info: Dictionary, color: Color = UIStyle.ACC
 	_odds.remove_theme_color_override("font_color")
 	if bool(info.get("won", false)) and String(info.get("next_foe", "")) != "":
 		_odds.text = "Next: %s. %s" % [String(info["next_foe"]), TrialCard.odds_line(float(info.get("next_chance", 0.0)))]
+		if bool(info.get("next_rival", false)):
+			_odds.text = rival_line(String(info["next_foe"])) + "\n" + _odds.text
 	_note.text = ""
 	_enter_button.visible = false
 	_back_button.text = "OK"
@@ -134,6 +153,8 @@ static func result_subtitle(info: Dictionary) -> String:
 
 static func result_text(info: Dictionary) -> String:
 	var foe := String(info.get("foe", "your foe"))
+	if bool(info.get("rival", false)):
+		foe = "Your rival " + foe
 	if not bool(info.get("won", false)):
 		return "%s beats you. You placed in round %d." % [foe, int(info.get("round", 1))]
 	var line := "You defeat %s. Prize: %s." % [foe, prize_text(info.get("prize", {}))]

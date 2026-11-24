@@ -2269,7 +2269,7 @@ func _on_sect_contest_offered(sect_id: String) -> void:
 	_contest_return = _choice_menu.visible and is_instance_valid(_last_source)
 	_choice_menu.close()
 	_close_screens()
-	_sect_contest_card.open(GameState.player, GameState.data, GameClock.total_days, _sect_color(sect_id))
+	_sect_contest_card.open(GameState.player, GameState.data, GameClock.total_days, _sect_color(sect_id), Rivals.rival_of(GameState.player, GameState.npcs))
 	_update_modal()
 
 

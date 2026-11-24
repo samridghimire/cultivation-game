@@ -112,3 +112,33 @@ func test_hall_row_action_is_the_offer() -> void:
 	assert_true(found)
 	hall.free()
 	_teardown(gs, out[0])
+
+
+func test_rival_in_the_final_round() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var rival := Rivals.spawn(gs.player, gs.npcs, gs.data, seeded_rng(6), "qingshi_village")
+	rival.realm_index = gs.player.realm_index
+	rival.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	var card: SectContestCard = hud.get("_sect_contest_card")
+	var days: int = gs.get_node("/root/GameClock").total_days
+	assert_true(card.open(gs.player, gs.data, days, UIStyle.ACCENT, rival))
+	var t := card.all_text()
+	assert_true(t.contains("Your rival %s waits in the final round." % rival.name), t)
+	var lines := SectContestCard.ladder_lines(gs.player, gs.data, 0, rival)
+	assert_true(lines[lines.size() - 1].contains(rival.name), lines[lines.size() - 1])
+	assert_false(lines[0].contains(rival.name))
+	card.close()
+	# No rival in the sect: the generic ladder and no rival line.
+	rival.sect = {}
+	assert_true(card.open(gs.player, gs.data, days, UIStyle.ACCENT, rival))
+	assert_false(card.all_text().contains("waits in the final round"))
+	card.close()
+	# Result card naming the rival as the next foe.
+	card.open_result("Azure", {"round": 2, "rounds": 3, "won": true, "foe": "Boxer", "prize": {}, "next_foe": rival.name, "next_rival": true, "next_chance": 0.5})
+	assert_true(card.all_text().contains("Your rival %s waits in the final round." % rival.name))
+	assert_true(SectContestCard.result_text({"round": 3, "won": false, "foe": rival.name, "rival": true}).contains("Your rival " + rival.name))
+	card.close()
+	_teardown(gs, hud)
