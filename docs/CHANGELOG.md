@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-24 [WU-621] The journal's Sect page tells you when the sect contest is and whether you may enter.
+- 2026-11-24 [SECT-044] Your rival may face you in the final round of the sect contest.
+- 2026-11-24 [SECT-041] Balance tooling: the hints player takes sect missions first; the first promotion is now limited by the rank trial.
+- 2026-11-24 [GFX-253] During the contest month a stage with banners and sparring disciples stands at the sect hall.
+- 2026-11-24 [GFX-252] Your sect rank shows as a silver, gold or jade trim on your robe.
+- 2026-11-24 [SIM-031] Balance tooling: a rogue's first season in Qingshi, measured.
+- 2026-11-24 [FOLK-049] Village friends cheer when you win the sect contest.
+- 2026-11-24 [SECT-043] The sect contest is fairer: later rounds are tuned to real odds, and you cannot enter twice a year by rejoining.
+- 2026-11-24 [WU-619] Sect lectures, duty and the contest month appear on the calendar.
+- 2026-11-24 [SECT-042] After your first promotion the Sect page lists the next rank's goals.
+- 2026-11-24 [WU-611] Entering the sect contest opens a card with the round ladder, prizes and your odds; each bout gets its result card.
+- 2026-11-24 [C-411] Friends on Azure Peak and the ridge share scenes when your friendship grows; a few give small gifts.
 - 2026-11-24 [WU-617] Practising an art shows its level and about how many days to the next; a level-up gets a small card.
 - 2026-11-24 [SIM-030] Balance tooling: the hints player trains for and attempts the sect promotion trial.
 - 2026-11-24 [WU-616] A lost promotion trial names the rank you tried for and shows you kneeling in the arena.

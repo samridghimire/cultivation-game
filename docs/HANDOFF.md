@@ -2,6 +2,15 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-24 12:10
+- 12 landed; the contest and rank-1 ladder are in. Planner shots: sect_contest(+_result) text-only card -> GFX-254 (spec, absorbs
+  WU-620); member_azure_cloud_sect `--contest-month`: stage off screen at the bottom -> GFX-255 (spec); journal_sect ignores
+  `--sect-rank` -> WU-618 notes. Shot runs with `--member`/`--sect-contest` still exit 134 after writing PNGs (QA-240).
+- First promotion is trial-limited now (SECT-041): SECT-046 (docs/specs/SECT-046.md) adds trial lessons, a FOUND-003-style
+  mechanic, small enough not to need the owner; if its balance run still misses 6/9 by day 180, raise it as part of F-005d.
+- SIM-031: a rogue never learns a style or hears a lecture in 180 days -> SIM-033 (find sim vs game cause).
+- Next planner: read SECT-046's before/after promotion days and SIM-033's named causes; file WU-624/GFX-256 follow-ons.
+
 ## Planner 2026-11-23 12:10
 - 11 landed (the sect is now surfaced end to end); PERF-030 dropped. Planner shots: journal_sect OK; sect_lecture works but its
   figures are 1x dots (GFX-248); sect_promote shows "Promoted: Outer Disciple" only because the flag skips the trial (QA-245).
