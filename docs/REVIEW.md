@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: f24a0e6
+Last reviewed commit: 7f11a3b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2534,3 +2534,17 @@ Last reviewed commit: f24a0e6
   - GUIDE-291 and SIM-030 are sim-only fixes (hints player branches); SIM-030 notes training weeks now count as quiet.
   - WU-614/WU-616 OK (the card only opens via the trial card path, so the arena's sect/look are set). QA-246 audit OK.
     C-417/GFX-251 data only. Not rendered by me (workers report shots).
+- 2026-11-24 (reviewer): reviewed f24a0e6..7f11a3b (WU-617, C-411, WU-611, SECT-042, WU-619, SECT-043, FOLK-049, SIM-031,
+  GFX-252, GFX-253, SECT-041; [PLAN]/[REVIEW] skipped). Main green before the fix. No BACKLOG/CHANGELOG edits by workers; no
+  new binary assets; no SAVE_VERSION change (SECT-043's `last_contest_year` defaults to -1, or the old `sect.contest_year`).
+  An empty `claim WU-617` commit (690bc50) landed on main again: rebase with `--no-keep-empty`.
+  - SECT-042 fix: the perk and tier-mission rows read lifetime stats (`perk_buys`, `rank_missions_done`), and `_rank_goals`
+    ran for every rank >= 1, so a rank-2 member's "Claim <rank-2 item>" / "Finish a mission for a <rank 2>" rows showed done
+    from the rank-1 purchase/mission. Those two rows are now rank-1 only (the realm and contribution rows stay for 2+); test
+    `test_rank_two_has_no_lifetime_rows`.
+  - SECT-041 changed only the hints sim (it takes a ready mission before the weekly friend line); no game data or guidance
+    changed, so real players' pace is unchanged. 4 of 9 seeds reach rank 1 by ~day 180 (target 6); Azure/Blood are now
+    trial-limited (worker Follow-up).
+  - SECT-043 matches the spec; odds targets met per the commit tables. WU-611/WU-617 cards go through the moments queue and
+    grab focus. GFX-253's stage only refreshes on region load (a month change while standing in the region keeps the old
+    state until the next load; same as the court drill). WU-619, FOLK-049, GFX-252, SIM-031, C-411: OK. Not rendered by me.

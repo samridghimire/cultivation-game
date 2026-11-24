@@ -5370,15 +5370,17 @@ static func _rank_goals(c: CharacterData, data: GameData, sect: SectDef) -> Arra
 	var out: Array[Dictionary] = []
 	var rank := int(c.sect["rank"])
 	var cheapest: Dictionary = {}
+	# perk_buys / rank_missions_done are lifetime counts, so the perk and tier-mission rows only fit the first rank
+	# after rank 0 (at rank 2+ they would read done from the rank-1 purchase/mission).
 	for entry: Dictionary in sect.shop:
-		if int(entry.get("min_rank", 0)) == rank and (cheapest.is_empty() or int(entry["contribution"]) < int(cheapest["contribution"])):
+		if rank == 1 and int(entry.get("min_rank", 0)) == rank and (cheapest.is_empty() or int(entry["contribution"]) < int(cheapest["contribution"])):
 			cheapest = entry
 	if not cheapest.is_empty():
 		var item_name := String(data.items.get(String(cheapest["item_id"]), {}).get("name", cheapest["item_id"]))
 		out.append({"key": "perk", "text": "Claim %s from the treasury (%d contribution)" % [item_name, int(cheapest["contribution"])], "done": LifeStats.get_stat(c, "perk_buys") >= 1})
 	var tier_mission := false
 	for mission: Dictionary in data.sect_missions.values():
-		if int(mission.get("min_rank", 0)) == rank and Sects.mission_offered(c, data, mission, {}) and data.realm_index_of(String(mission.get("min_realm", "mortal"))) <= c.realm_index:
+		if rank == 1 and int(mission.get("min_rank", 0)) == rank and Sects.mission_offered(c, data, mission, {}) and data.realm_index_of(String(mission.get("min_realm", "mortal"))) <= c.realm_index:
 			tier_mission = true
 			break
 	if tier_mission:

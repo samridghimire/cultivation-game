@@ -177,3 +177,16 @@ func test_rank_one_skips_rows_the_sect_lacks() -> void:
 		keys.append(String(r["key"]))
 	assert_eq(keys, ["perk", "rank_mission"])
 	sect.ranks = saved
+
+
+## RV-SECT042: perk_buys / rank_missions_done are lifetime counts, so a rank-2 member gets no perk or tier-mission
+## row that would read done from the rank-1 purchase.
+func test_rank_two_has_no_lifetime_rows() -> void:
+	var p := _rank_one()
+	var c: CharacterData = p[0]
+	var d: GameData = p[1]
+	c.sect["rank"] = 2
+	LifeStats.add(c, "perk_buys")
+	LifeStats.add(c, "rank_missions_done")
+	for r in Guidance.sect_goals(c, d, {}):
+		assert_false(String(r["key"]) in ["perk", "rank_mission"], String(r["text"]))
