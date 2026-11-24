@@ -554,6 +554,9 @@ func _start() -> void:
 			(hud.get("_pending_moments") as Array).clear()
 			(hud.get("_sect_card") as Control).close()
 			Sects.add_contribution(c, gs.data, 60)
+			for a3 in OS.get_cmdline_user_args():  # WU-618: --sect-rank=N applies on the journal path too
+				if a3.begins_with("--sect-rank="):
+					c.sect["rank"] = int(a3.substr(12))
 			jscreen.open()
 			jscreen.set_page("sect"), "close": jscreen.close})
 		special = true

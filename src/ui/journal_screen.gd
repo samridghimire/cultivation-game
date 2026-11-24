@@ -179,6 +179,20 @@ func _build_sect() -> void:
 		if String(prog["trial_foe"]) != "":
 			htext.add_child(UIStyle.label("Trial: %s" % String(prog["trial_foe"]), 14, DIM))
 	_sect.add_child(head)
+	var goal_rows := sect_goal_rows(p, GameState.data, GameState.world_flags)
+	if not goal_rows.is_empty():  # WU-618: the next rank's goals, done/undone like the first-days rows
+		var gpanel := UIStyle.panel()
+		gpanel.name = "SectGoals"
+		var gbox := VBoxContainer.new()
+		gbox.add_theme_constant_override("separation", 4)
+		gpanel.add_child(gbox)
+		gbox.add_child(UIStyle.label(sect_goals_heading(p, GameState.data), 18, UIStyle.ACCENT))
+		for g: Dictionary in goal_rows:
+			var gl := UIStyle.label("%s %s" % ["[x]" if bool(g["done"]) else "[ ]", String(g["text"])], 15, DIM if bool(g["done"]) else Color.WHITE)
+			gl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			gl.custom_minimum_size = Vector2(700, 0)
+			gbox.add_child(gl)
+		_sect.add_child(gpanel)
 	var month := UIStyle.panel()
 	month.name = "SectMonth"
 	var mbox := VBoxContainer.new()
@@ -248,6 +262,23 @@ func _build_sect() -> void:
 				pl.custom_minimum_size = Vector2(700, 0)
 				lbox.add_child(pl)
 	_sect.add_child(lad)
+
+
+## WU-618: the rank goals (SECT-042) a member past the first rank is working on. [] for rogues and at rank 0
+## (the first-days rows show those on the Today page) and at the top rank with nothing left to do.
+static func sect_goal_rows(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
+	if c.is_rogue() or not data.sects.has(c.sect["id"]) or int(c.sect["rank"]) < 1:
+		return []
+	return Guidance.sect_goals(c, data, flags)
+
+
+## WU-618: "Rise to Inner Disciple" for the heading over sect_goal_rows.
+static func sect_goals_heading(c: CharacterData, data: GameData) -> String:
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var rank := int(c.sect["rank"])
+	if rank + 1 < sect.ranks.size():
+		return "Rise to %s" % sect.rank_name(rank + 1)
+	return "Goals"
 
 
 ## WU-610: "212 / 500 contribution" for a Sects.rank_progress. Pure.

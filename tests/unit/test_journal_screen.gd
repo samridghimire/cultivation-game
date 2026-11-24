@@ -163,3 +163,18 @@ func test_month_lines_show_contest_line() -> void:
 	var lines := JournalScreen.month_lines({"duty": 0, "stipend": {}, "lecture": "", "contest": "Contest: month 3 (in 10 days)"})
 	assert_true("Contest: month 3 (in 10 days)" in lines)
 	assert_false("Contest" in "".join(JournalScreen.month_lines({"duty": 0, "stipend": {}})))
+
+
+## WU-618: the rank goals show on the Sect page for rank 1, not rank 0 or rogues.
+func test_sect_goal_rows_by_rank() -> void:
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("Goals", d, seeded_rng(3))
+	c.realm_index = 1
+	c.alignment = 50
+	assert_true(JournalScreen.sect_goal_rows(c, d, {}).is_empty())
+	Sects.join(c, d, "azure_cloud_sect")
+	assert_true(JournalScreen.sect_goal_rows(c, d, {}).is_empty())
+	c.sect["rank"] = 1
+	var rows := JournalScreen.sect_goal_rows(c, d, {})
+	assert_false(rows.is_empty())
+	assert_eq(JournalScreen.sect_goals_heading(c, d), "Rise to %s" % d.sects["azure_cloud_sect"].rank_name(2))
