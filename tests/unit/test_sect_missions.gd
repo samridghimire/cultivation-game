@@ -354,3 +354,15 @@ func test_mission_offered_matches_available_missions() -> void:
 	var rogue := new_character()
 	for m: Dictionary in data().sect_missions.values():
 		assert_false(Sects.mission_offered(rogue, data(), m, {}), "rogues are offered nothing")
+
+
+func test_new_disciples_have_enough_chores() -> void:
+	# C-423: each first-year sect offers >= 4 rank-0 missions with no item or stage requirement.
+	for sect_id in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
+		var n: int = 0
+		for mid in Sects.available_missions(_disciple(sect_id), data()):
+			var m: Dictionary = data().sect_missions[mid]
+			if int(m.get("min_rank", 0)) == 0 and int(m.get("min_stage", 0)) == 0 \
+					and not m.has("requires") and not m.has("requires_flag"):
+				n += 1
+		assert_true(n >= 4, "%s has %d free rank-0 chores" % [sect_id, n])

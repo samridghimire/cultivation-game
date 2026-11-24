@@ -4083,6 +4083,9 @@ func test_cooling_mission_is_not_too_dangerous() -> void:
 	c.mission_cooldowns["escort_mortal_villagers"] = c.age_days + 12
 	# RV-015: the den wolf hunt is now a fair fight for this player, so keep it cooling too.
 	c.mission_cooldowns["drive_off_den_wolves"] = c.age_days + 30
+	# C-423: the new rank-0 chores are fair fights or fightless too, so keep them cooling.
+	for id in ["chase_off_crag_goat", "sweep_the_cloud_stair"]:
+		c.mission_cooldowns[id] = c.age_days + 30
 	var text := Guidance._mission_hint(c, d, {})
 	var name: String = d.sect_missions["escort_mortal_villagers"].name
 	assert_true(text.contains("%s (%d contribution) is ready again in %s." % [name, int(d.sect_missions["escort_mortal_villagers"]["contribution"]), Calendar.format_duration(12)]), text)

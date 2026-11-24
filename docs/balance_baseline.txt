@@ -1738,42 +1738,42 @@ Time breakdown (SIM-022): hints player, day 0 to Foundation or end of run; days 
 
 Sect year: azure_cloud_sect (home azure_peak), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
-  [SECT-036] day 87: trial odds 3 in 100
-  1           0         2         8          675         0         1        12/0        12      35
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Your sect duty is 0 / 30 contribution with 6 days left this month. Drive Off the Den Wolves (70 contribution, 4 days) covers it.
-  [SECT-036] day 75: trial odds 3 in 100
-  2           0         1         8          675         0         1        12/1        12      18
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm 336, contribution never  | top hint: Today in Azure Peak: Azure Pine Needles by the path.
-  [SECT-036] day 87: trial odds 5 in 100
-  3           0         2         9          745         0         1         9/3        24      35
+  [SECT-036] day 80: trial odds 3 in 100
+  1           0         2         7          485         0         1        11/1        12      35
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Unseal Appraising Eye in the artifact (O)
+  [SECT-036] day 75: trial odds 0 in 100
+  2           0         1         9          670         0         1        12/1        24      18
        goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Your sect's elder lectures this month; attend at the sect hall.
-  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [292, 283, 179]
+  [SECT-036] day 80: trial odds 5 in 100
+  3           0         2         9          620         0         1        12/0        18      35
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Fox Spirit Pills with spare stones: the Wandering Merchant in Qingshi Village (10 days, by way of Misty Forest) sells them for 40 stones, about 16 days of meditation each.
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [256, 230, 249]
 
 Sect year: blood_lotus_sect (home withered_bone_marsh), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
-  [SECT-036] day 74: trial odds 0 in 100
-  1           0         0         5          325         0         1        12/1         5      19
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Headman Zhou has work today: Run errands around the village for Headman Zhou (2d, 9 stones).
-  [SECT-036] day 54: trial odds 1 in 100
-  2           0         3        14          880         0         1        12/1        20      19
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Your sect's elder lectures this month; attend at the sect hall.
-  [SECT-036] day 54: trial odds 0 in 100
-  3           0         3        13          860         0         1        13/0        15      19
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Unseal Appraising Eye in the artifact (O)
-  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [278, 223, 299]
+  [SECT-036] day 43: trial odds 1 in 100
+  1           0         2        10          585         0         1        13/0         0      22
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Star-Dew Qi Pills with spare stones: the Star-Dew Pill Stall in Fallen Star Market (9 days) sells them for 20 stones, about 16 days of meditation each.
+  [SECT-036] day 43: trial odds 0 in 100
+  2           0         2        15          885         0         1        13/0        20      22
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Your sect treasury hands out the Blood Lotus Rebirth Scripture (qi x2.0, yours x1.0) for 600 contribution (you have 885). Claim it at the sect treasury and learn it there.
+  [SECT-036] day 58: trial odds 0 in 100
+  3           0         3        13          755         0         1        13/0         5      22
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Peddler Hei can teach you Drowned Reed Step.
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [349, 226, 313]
 
 Sect year: myriad_treasure_pavilion (home fallen_star_market), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
-  [SECT-036] day 102: trial odds 57 in 100
-  1           0         3         6          485         0         1         5/7        16      45
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Your sect's elder lectures this month; attend at the sect hall.
-  [SECT-036] day 77: trial odds 20 in 100
-  2           0         3         8          660         0         1         8/5        24      20
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Your sect duty is 0 / 30 contribution with 5 days left this month. Drive Off the Den Wolves (70 contribution, 4 days) covers it.
-  [SECT-036] day 101: trial odds 52 in 100
-  3           0         3         6          485         0         1         6/6        24      44
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Your sect's elder lectures this month; attend at the sect hall.
-  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 3/3 seeds; first promotion days: [131, 127, 123]
+  [SECT-036] day 99: trial odds 57 in 100
+  1           0         3        10          750         0         1         7/5        24      45
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 3 days (level 1 now). Each level raises your odds in a fight.
+  [SECT-036] day 81: trial odds 0 in 100
+  2           0         3        10          725         0         1         9/4        32      20
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 15 days (level 1 now). Each level raises your odds in a fight.
+  [SECT-036] day 98: trial odds 52 in 100
+  3           0         3         8          575         0         1        10/2        16      44
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 5 days (level 1 now). Each level raises your odds in a fight.
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 2/3 seeds; first promotion days: [128, 131, 246]
 
 
 ## first Foundation Establishment year (seeds 1-10)
