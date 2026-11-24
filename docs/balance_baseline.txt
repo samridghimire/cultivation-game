@@ -2075,3 +2075,21 @@ first hour in presses (hints player, seeds 1-10, 24 months, start misty_forest)
   first_breakthrough     10/10             19             19             40             49
   sect_joined            10/10             19             19             40             49
 
+## rogue first season (hints player, seeds 1-10, 180 days)
+
+Rogue's first season (hints player, seeds 1-10, 180 days, start qingshi_village)
+  seed  friend  style  fair win    sect which                       report
+  1         39      -        20      47 azure_cloud_sect                57   lect -
+  2         65      -        20      20 azure_cloud_sect                30   lect -
+  3         38      -        20      46 azure_cloud_sect                56   lect -
+  4         65      -        20      20 azure_cloud_sect                30   lect -
+  5         30      -        20      39 azure_cloud_sect                49   lect -
+  6         41      -        20     128 azure_cloud_sect               138   lect -
+  7         58      -        20      20 azure_cloud_sect                30   lect -
+  8         65      -        20      20 azure_cloud_sect                30   lect -
+  9         65      -        20      20 azure_cloud_sect                30   lect -
+  10        72      -        20      20 azure_cloud_sect                30   lect -
+  Medians: first friend 65 (10/10); first style never (0/10); first fair win 20 (10/10); sect joined 20 (10/10); first report 30 (10/10); first lecture never (0/10)
+  Most-shown hints the player could not act on (all seeds):
+       6 x Become friends: give Elder Mo the Qi Gathering Pill they like (favor N
+

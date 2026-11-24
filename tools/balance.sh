@@ -59,6 +59,7 @@ fresh() {
 	run "first hour, curious practiser (seeds 1-10, 12 months)" res://tests/sim/simulate_practise.gd -- 10 12
 	run "first_hour_presses (hints player, seeds 1-10, 12 months)" res://tests/sim/first_hour_presses.gd -- 10 12
 	run "first hour in every start (hints player, seeds 1-10, 24 months)" res://tests/sim/first_hour_presses.gd -- 10 24 --starts=qingshi_village,withered_bone_marsh,myriad_peaks_ridge,azure_peak,fallen_star_market,misty_forest
+	run "rogue first season (hints player, seeds 1-10, 180 days)" res://tests/sim/rogue_season.gd -- 10 180
 }
 CHECK=0
 while [[ $# -gt 0 ]]; do
