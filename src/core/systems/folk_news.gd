@@ -4,7 +4,8 @@ extends RefCounted
 ## named villager of the start region at favor >= folk_news.min_favor; the next greeting uses it. Lines are
 ## picked with a stable hash, never the session rng (RV-FOLK041). FOLK-047 adds "breakthrough" and "wedding".
 
-const SECT_KINDS: Array[String] = ["sect_join", "promotion"]
+## FOLK-049 adds "contest" (a champion of the sect contest; it names the sect, so it is sect news too).
+const SECT_KINDS: Array[String] = ["sect_join", "promotion", "contest"]
 
 
 ## Marks every qualifying villager of the player's start region. `kind` is "sect_join", "promotion", "breakthrough" or "wedding"; a newer kind replaces an unheard older one.

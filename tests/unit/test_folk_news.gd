@@ -208,3 +208,57 @@ func test_has_pending_drops_after_leaving_sect() -> void:
 	assert_false(FolkNews.has_pending(c, "elder_mo"))
 	c.folk_news["elder_mo"] = "wedding"
 	assert_true(FolkNews.has_pending(c, "elder_mo"), "non-sect news stays for rogues")
+
+
+## FOLK-049: a contest champion (every round won) is cheered; a loss queues nothing.
+func _contest_setup(sect_id: String, foes: Array) -> CharacterData:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["elder_mo"] = 60
+	gs.npc_favor["xiao_ling"] = 20
+	c.sect = {"id": sect_id, "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": true}
+	var def: Dictionary = (gs.data.sects[sect_id] as SectDef).contest
+	def["foes"] = foes
+	def["rounds"] = foes.size()
+	def["power_mults"] = [1.0, 1.0]
+	GameClock.total_days = (int(def["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	return c
+
+
+func test_contest_champion_queues_news() -> void:
+	var gs := _gs()
+	var saved: Dictionary = (gs.data.sects["azure_cloud_sect"] as SectDef).contest.duplicate(true)
+	var c := _contest_setup("azure_cloud_sect", ["wild_boar", "wild_boar"])
+	gs.enter_sect_contest()
+	(gs.data.sects["azure_cloud_sect"] as SectDef).contest = saved
+	assert_eq(String(c.folk_news.get("elder_mo", "")), "contest")
+	assert_false(c.folk_news.has("xiao_ling"), "a 20-favor villager never reacts")
+	var line := FolkNews.take(c, gs.data, "elder_mo", gs.npcs)
+	assert_true(line != "" and not line.contains("{"), line)
+	gs.end_session()
+
+
+func test_contest_loss_queues_nothing() -> void:
+	var gs := _gs()
+	var saved: Dictionary = (gs.data.sects["azure_cloud_sect"] as SectDef).contest.duplicate(true)
+	var c := _contest_setup("azure_cloud_sect", ["wild_boar", "wild_boar"])
+	(gs.data.sects["azure_cloud_sect"] as SectDef).contest["power_mults"] = [1.0, 2.0]
+	(gs.data.sects["azure_cloud_sect"] as SectDef).contest["foes"] = ["wild_boar", "sect_senior_tester"]
+	c.realm_index = 0
+	gs.enter_sect_contest()
+	(gs.data.sects["azure_cloud_sect"] as SectDef).contest = saved
+	assert_false(c.folk_news.has("elder_mo"), "round 2 lost: no champion")
+	gs.end_session()
+
+
+func test_contest_news_uses_demonic_lines() -> void:
+	var c := _start()
+	var gs := _gs()
+	c.sect = {"id": "blood_lotus_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": true}
+	var saved: Variant = gs.data.npcs["elder_mo"].get("news_lines")
+	gs.data.npcs["elder_mo"].erase("news_lines")
+	c.folk_news["elder_mo"] = "contest"
+	var line := FolkNews.take(c, gs.data, "elder_mo")
+	if saved != null:
+		gs.data.npcs["elder_mo"]["news_lines"] = saved
+	assert_true(line.contains("wary"), "shared demonic line: " + line)

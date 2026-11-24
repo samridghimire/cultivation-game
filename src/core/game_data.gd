@@ -1322,7 +1322,7 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 	return errors
 
 
-## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion, breakthrough, wedding}}: each pool 1+ strings of 1-160 chars.
+## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion, breakthrough, wedding, contest (FOLK-049)} plus optional *_demonic}: each pool 1+ strings of 1-160 chars.
 func _validate_folk_news() -> void:
 	var cfg: Dictionary = family.get("folk_news", {})
 	if cfg.is_empty():
@@ -1330,7 +1330,7 @@ func _validate_folk_news() -> void:
 	var mf: int = int(cfg.get("min_favor", -1))
 	if mf < -100 or mf > 100:
 		load_errors.append("family.folk_news.min_favor must be -100..100")
-	for kind in ["sect_join", "promotion", "breakthrough", "wedding"]:
+	for kind in ["sect_join", "promotion", "breakthrough", "wedding", "contest"]:
 		var pool: Variant = cfg.get("lines", {}).get(kind, [])
 		if not pool is Array or (pool as Array).is_empty():
 			load_errors.append("family.folk_news.lines.%s needs at least one line" % kind)
@@ -1338,7 +1338,7 @@ func _validate_folk_news() -> void:
 		for l in pool:
 			if not l is String or String(l) == "" or String(l).length() > 160:
 				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
-	for kind in ["sect_join_demonic", "promotion_demonic"]:  # FOLK-048: optional wary lines for a demonic sect
+	for kind in ["sect_join_demonic", "promotion_demonic", "contest_demonic"]:  # FOLK-048: optional wary lines for a demonic sect
 		var dpool: Variant = cfg.get("lines", {}).get(kind, [])
 		if not dpool is Array:
 			load_errors.append("family.folk_news.lines.%s must be an array" % kind)

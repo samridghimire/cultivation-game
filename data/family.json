@@ -82,6 +82,13 @@
         "Word came that you are now {rank} in the {sect}. We are proud of you, {player}.",
         "{rank}, they say! Do not forget the village when you are grand, {player}."
       ],
+      "contest": [
+        "Champion of the {sect} contest! The whole village heard it, {player}.",
+        "They say nobody beat you at the {sect} contest, {player}. We toasted you at the inn."
+      ],
+      "contest_demonic": [
+        "Champion of the {sect}, they say. I am glad you are unharmed, {player}, and wary of the company you keep."
+      ],
       "breakthrough": [
         "They say you reached {realm}, {player}! The whole village is talking about it.",
         "{realm}! Who would have guessed it of you, {player}? We are proud."

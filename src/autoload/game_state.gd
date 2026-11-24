@@ -3687,6 +3687,8 @@ func enter_sect_contest() -> void:
 		if promoted:
 			_post_promotion()  # RV-SECT038: a prize that crosses a rank threshold is announced like a mission's
 		index += 1
+	if won > 0 and Sects.contest_round(player, data, index).is_empty():
+		FolkNews.queue(player, data, npc_favor, "contest")  # FOLK-049: friends cheer a champion
 	if won == 0:
 		EventBus.post("You fall in the first round of the contest. Next year, perhaps.", "warning")
 	elif Sects.contest_round(player, data, index).is_empty():
