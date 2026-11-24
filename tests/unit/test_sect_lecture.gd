@@ -84,11 +84,10 @@ func _lecture_rows(c: CharacterData, today: int) -> Array:
 
 func test_lecture_hint_and_journal_only_when_attendable() -> void:
 	var c := _disciple()
-	var hint := "Your sect's elder lectures this month; attend at the sect hall."
-	assert_true(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)).has(hint))
+	assert_true(_has_lecture_line(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)))
 	assert_eq(_lecture_rows(c, 5).size(), 1)
 	Sects.attend_lecture(c, data(), seeded_rng(), 5)
-	assert_false(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 6)).has(hint))
+	assert_false(_has_lecture_line(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 6)))
 	assert_eq(_lecture_rows(c, 6).size(), 0)
 	assert_eq(_lecture_rows(c, Calendar.DAYS_PER_MONTH + 1).size(), 1, "next month")
 
@@ -96,7 +95,7 @@ func test_lecture_hint_and_journal_only_when_attendable() -> void:
 func test_rogue_gets_no_lecture_hint() -> void:
 	var c := new_character()
 	assert_eq(_lecture_rows(c, 5).size(), 0)
-	assert_false(Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)).has("Your sect's elder lectures this month; attend at the sect hall."))
+	assert_false(_has_lecture_line(Guidance.hints(c, data(), 1.0, 40, {}, {}, c.home_region, 5)))
 
 
 func test_lectures_attended_counts_and_milestone_at_twelve() -> void:
@@ -138,25 +137,28 @@ func test_every_sect_lecture_has_enough_lines() -> void:
 func test_open_lecture_leads_hints_in_hall_region() -> void:
 	var c := _disciple()
 	var hall := Sects.home_region(data(), String(c.sect["id"]))
-	var hint := "Your sect's elder lectures this month; attend at the sect hall."
 	var here := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, hall, 5))
-	assert_true(here.has(hint))
+	assert_true(_has_lecture_line(here))
 	var elsewhere := ""
 	for rid: String in data().regions:
 		if rid != hall:
 			elsewhere = rid
 			break
 	var away := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, elsewhere, 5))
-	assert_true(away.has(hint), "still listed away from the hall, but not first")
-	assert_true(away.find(hint) >= here.find(hint))
+	assert_true(_has_lecture_line(away), "still listed away from the hall, but not first")
+	assert_true(_lecture_index(away) >= _lecture_index(here))
 	var board_idx := -1
 	for i in here.size():
 		if String(here[i]).contains("mission"):
 			board_idx = i
 			break
 	if board_idx >= 0:
-		assert_true(here.find(hint) < board_idx)
-	assert_eq(here.count(hint), 1, "listed once")
+		assert_true(_lecture_index(here) < board_idx)
+	var count := 0
+	for h: String in here:
+		if h.begins_with("Lecture at the "):
+			count += 1
+	assert_eq(count, 1, "listed once")
 
 
 ## SECT-039: each start-region sect's rank-1 trial foe is a sparring foe tuned at or below full power.
@@ -167,3 +169,29 @@ func test_rank_one_trial_foes_are_tuned_sparring() -> void:
 		assert_false(bool(foe.get("lethal", true)), sect_id)
 		assert_true(float(foe.get("power_mult", 1.0)) <= 1.0, sect_id)
 		assert_true(int(def.ranks[1]["contribution"]) >= 250, sect_id)
+
+
+## SIM-033: the lecture line names the hall and the month, for a member anywhere.
+func _has_lecture_line(hints: Array) -> bool:
+	for h: String in hints:
+		if h.begins_with("Lecture at the ") and h.contains(": this month"):
+			return true
+	return false
+
+
+func test_lecture_line_names_the_hall() -> void:
+	var c := _disciple()
+	var hall := Sects.hall_name(data(), Sects.home_region(data(), String(c.sect["id"])), c)
+	var lines := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", 5))
+	var found := ""
+	for h: String in lines:
+		if h.begins_with("Lecture at the "):
+			found = h
+	assert_true(found.begins_with("Lecture at the %s: this month" % hall), found)
+
+
+func _lecture_index(hints: Array) -> int:
+	for i in hints.size():
+		if String(hints[i]).begins_with("Lecture at the "):
+			return i
+	return -1

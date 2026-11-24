@@ -7196,11 +7196,12 @@ static func _ledger_top(ledger: Dictionary, c: CharacterData, people: Dictionary
 	return found.slice(0, KARMA_JOURNAL_MAX)
 
 
-## "Your sect's elder lectures this month": only while the lecture can be attended.
+## SIM-033: "Lecture at the <hall>: this month (N days left)." with the hall named; only while it can be attended.
 static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> String:
 	if Sects.check_lecture(c, data, today) != "":
 		return ""
-	return "Your sect's elder lectures this month; attend at the sect hall."
+	var hall := Sects.hall_name(data, Sects.home_region(data, String(c.sect["id"])), c)
+	return "Lecture at the %s: this month (%d days left)." % [hall if hall != "" else "sect hall", Sects.days_left_in_month(today)]
 
 
 ## SECT-038: "The <sect> contest is open this month" while a member can enter it.

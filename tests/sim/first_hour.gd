@@ -166,6 +166,8 @@ static var trace_friend := false
 ## GUIDE-280: when set, every hints week appends {day, acted, line, top} here (quiet_stretches.gd --weeks prints the longest stretch's weeks).
 static var week_trace: Array = []
 static var record_weeks := false
+## SIM-033: the hints player acts on the lecture / style-teacher line in the same week as a 1-day friend kindness (rogue_season.gd).
+static var weekly_extras := false
 static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
 ## QA-145: once a month, before meditating, move to the faster spot Guidance.far_qi_offer names when it saves >= 30 days
 ## net of the round trip, and stay there (the new region is home from then on).
@@ -373,6 +375,9 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_note_first_win(out, c, clock, fight)
 		if hints_policy:
 			kinds = kinds_pre
+			# SIM-033: the hints player learns a style from a teacher or a manual; note it at the month end the way a lesson is noted.
+			if out["first_style_day"] < 0 and Techniques.knows_kind(c, gs.data, "combat"):
+				out["first_style_day"] = clock.total_days
 		elif not curious:
 			_retry_chores(gs, c)
 			_note_first_win(out, c, clock, fight)
@@ -2291,6 +2296,14 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			(hints_log.get_or_add("acted_lines", {}) as Dictionary)[acted_key] = int((hints_log["acted_lines"] as Dictionary).get(acted_key, 0)) + 1
 			kinds[acted] = true
 			press_log["presses"] = int(press_log["presses"]) + int(PRESS_COST.get(acted, 3)) + (TRAVEL_PRESSES if gs.current_region != region_before else 0)
+			# SIM-033: a 1-day kindness leaves days in the week: a player also attends the lecture or works toward a style lesson.
+			if weekly_extras and c.alive and (acted == "lend" or acted == "tea"):
+				for extra: String in steps:
+					if extra.begins_with("Lecture at ") or extra.contains("can teach you"):
+						var extra_kind := _act_on_hint(gs, c, done, extra, gs.get_node("/root/GameClock").total_days)
+						if extra_kind != "":
+							kinds[extra_kind] = true
+							break
 			# An action that took less than the week leaves the rest of it to meditation.
 			var left: int = 7 - (gs.get_node("/root/GameClock").total_days - day)
 			if left > 0 and c.alive:
@@ -2531,6 +2544,19 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				var favor_before := int(gs.npc_favor.get(id, 0))
 				gs.lend_a_hand(id)
 				return "lend" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
+		return ""
+	if line.begins_with("Become friends: give ") and line.contains(" they like (favor "):
+		# SIM-033: "give <Name> the <Item> they like": the villager is here, the item held; give it.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc == null or not line.begins_with("Become friends: give %s the " % npc.name):
+				continue
+			for item_id: String in c.inventory:
+				if line.contains("the %s they like" % String(gs.data.items[item_id].get("name", item_id))):
+					var favor_before := int(gs.npc_favor.get(id, 0))
+					if String(gs.data.npcs[id].get("region", "")) == gs.current_region:
+						gs.give_gift(id, item_id)
+					return "gift" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
 		return ""
 	if line.begins_with("Grow closer: ") and (line.contains("'s birthday in ") or line.contains("'s birthday is today")):
 		# FOLK-040: buy the liked item when it is on sale here, walk to the villager and give it on the day.
@@ -2797,7 +2823,7 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		_sell_loot_here(gs, c, gs.current_region)
 		return "sell" if c.item_count("spirit_stone") > stones_before else ""
 	# SECT-036: SECT-034 reworded the line ("Lecture: <name>: open this month"); decide by the rule, not the wording.
-	if (line.begins_with("Lecture:") or line.contains("lectures this month")) and not c.is_rogue():
+	if (line.begins_with("Lecture:") or line.begins_with("Lecture at ") or line.contains("lectures this month") or line.begins_with("Goal: Attend ") and line.contains("lecture")) and not c.is_rogue():
 		var hall := Sects.home_region(gs.data, String(c.sect["id"]))
 		if hall != "":
 			_walk_to(gs, c, hall)

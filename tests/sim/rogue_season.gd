@@ -22,6 +22,7 @@ func _run() -> void:
 	var clock: Node = root.get_node("GameClock")
 	var bus: Node = root.get_node("EventBus")
 	FirstHour.hints_policy = true
+	FirstHour.weekly_extras = true  # SIM-033
 	FirstHour.start_region = "qingshi_village"
 	print("Rogue's first season (hints player, seeds 1-%d, %d days, start qingshi_village)" % [seeds, days])
 	print("  %-4s %7s %6s %9s %7s %-26s %7s" % ["seed", "friend", "style", "fair win", "sect", "which", "report"])
