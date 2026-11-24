@@ -4,6 +4,7 @@ extends SceneTree
 ## something grew: realm/stage, technique levels, life stats (not the ones that grow with every
 ## meditation: days_in_seclusion, qi_gathered, stones_earned), distinct item ids held, milestones,
 ## encounter ids met, NPCs with favor > 0, regions visited, goals done on the active goal ladder.
+## SIM-032: a week of training for the sect trial counts as new too (technique practice levels already did, WU-617).
 ## GUIDE-290: a favor tier crossing, a friend scene and a sect lecture also count as "something new" (each opens a card the player sees).
 ## A quiet stretch is the run of days between two new days. Time only passes in jumps (a month of
 ## meditation is one jump), so a jump with no change counts all its days as quiet.
@@ -163,6 +164,7 @@ static func snapshot(gs: Node) -> Dictionary:
 		tiers += Folk.tier_index(gs.data, int(gs.npc_favor[npc_id]))
 	s["favor_tiers"] = tiers
 	s["friend_scenes"] = c.scenes_seen.size()
+	s["trial_training"] = FirstHour.trial_train_total  # SIM-032: a week of trial training is a visible step toward the rank
 	s["lecture_month"] = int(c.sect.get("lecture_month", -1)) + 1
 	var done := 0
 	for g: Dictionary in Guidance.active_goal_ladder(c, gs.data, gs.world_flags):

@@ -149,6 +149,8 @@ const TRIAL_MIN_ODDS := 0.7
 const HINTS_TRIAL_ODDS := 0.6
 ## SIM-030: print every trial attempt the hints player makes (day, odds, won).
 static var trial_log := false
+## SIM-032: weeks the hints player trained for the sect trial (monotonic across runs; quiet_stretches.gd counts a rise as something new).
+static var trial_train_total := 0
 ## SIM-010: the "hints" player. Once a week (4 a month) it acts on the first Next-steps line it can act on (goal line, then the
 ## hints) through the same GameState calls the curious policy uses, else meditates the week. It replaces the month's 30-day
 ## meditation and the end-of-month explore. hints_log: {"acted": {action: count}, "idle_weeks": n, "weeks": n,
@@ -2227,6 +2229,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 				acted = "train"
 				acted_line = "Train for the sect trial"
 				done["trial_train_weeks"] = int(done.get("trial_train_weeks", 0)) + 1
+				trial_train_total += 1
 		var steps: Array[String] = []
 		if acted == "":
 			steps = _next_steps(gs, c, day)
