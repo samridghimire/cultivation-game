@@ -273,6 +273,8 @@ static func month_lines(status: Dictionary) -> PackedStringArray:
 		out.append("Stipend: %s" % ", ".join(parts))
 	if String(status.get("lecture", "")) != "":
 		out.append("Lecture: %s" % String(status["lecture"]))
+	if String(status.get("contest", "")) != "":
+		out.append(String(status["contest"]))
 	if int(status.get("missions_total", 0)) > 0:
 		out.append("Missions: %d of %d ready" % [int(status["missions_ready"]), int(status["missions_total"])])
 	return out

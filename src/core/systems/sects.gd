@@ -449,7 +449,7 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	for entry: Dictionary in options.slice(0, 3):
 		claimable.append(String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
 	return {"duty": monthly_duty(c, data), "progress": duty_progress(c), "days_left": duty_days_left(c), "stipend": stipend(c, data),
-		"lecture": lecture_text, "missions_ready": ready, "missions_total": ids.size(), "balance": balance, "claimable": claimable}
+		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "missions_ready": ready, "missions_total": ids.size(), "balance": balance, "claimable": claimable}
 
 
 ## WU-610: progress toward the next rank's contribution: {have, need, next_name, trial_foe}. {} for rogues and at the
@@ -786,6 +786,31 @@ static func check_contest(c: CharacterData, data: GameData, total_days: int) -> 
 ## True while `check_contest` allows entry.
 static func contest_open(c: CharacterData, data: GameData, total_days: int) -> bool:
 	return check_contest(c, data, total_days) == ""
+
+
+## WU-621: the contest line for the Sect page and hall overview. "" for rogues and sects without a contest.
+## Outside the month "Contest: month M (in N days)"; inside it "Contest: open now at the <hall>" or the
+## `check_contest` reason when entry is barred.
+static func contest_line(c: CharacterData, data: GameData, total_days: int) -> String:
+	var contest := contest_def(c, data)
+	if contest.is_empty():
+		return ""
+	var month := int(contest.get("month", 1))
+	if Calendar.month_of(total_days) != month:
+		var target := total_days - total_days % Calendar.DAYS_PER_YEAR + (month - 1) * Calendar.DAYS_PER_MONTH
+		if target <= total_days:
+			target += Calendar.DAYS_PER_YEAR
+		return "Contest: month %d (in %d days)" % [month, target - total_days]
+	var why := check_contest(c, data, total_days)
+	if why == "":
+		var sect: SectDef = data.sects[c.sect["id"]]
+		var hall := hall_name(data, sect.home_region, c)
+		return "Contest: open now at the %s" % (hall if hall != "" else "sect hall")
+	if why.begins_with("You have already"):
+		return "Contest: already entered this year"
+	if why.contains("first two ranks"):
+		return "Contest: for the first two ranks"
+	return "Contest: %s" % why
 
 
 ## Round `index` (0-based) of `c`'s contest: {foe (enemy id), prize {contribution, spirit_stones}}; {} past the last round.

@@ -458,3 +458,26 @@ func test_contest_prize_reports_a_promotion() -> void:
 	ranks[1]["trial"] = had_trial
 	assert_true(promoted)
 	assert_eq(int(c.sect["rank"]), 1)
+
+
+# --- WU-621: the contest line ---------------------------------------------------
+
+func test_contest_line_before_during_after_entering() -> void:
+	var c := _contest_member()
+	c.sect["reported"] = true
+	var day := _contest_day()
+	assert_eq(Sects.contest_line(c, data(), day - 10), "Contest: month 3 (in 10 days)")
+	assert_true(Sects.contest_line(c, data(), day + 1).begins_with("Contest: open now at the "))
+	Sects.enter_contest(c, day + 1)
+	assert_eq(Sects.contest_line(c, data(), day + 2), "Contest: already entered this year")
+	assert_eq(Sects.contest_line(c, data(), day + 40), "Contest: month 3 (in %d days)" % (day + Calendar.DAYS_PER_YEAR - day - 40))
+	var d := new_character()
+	d.realm_index = 1
+	Sects.join(d, data(), "azure_cloud_sect")
+	d.sect["reported"] = true
+	d.sect["rank"] = 2
+	assert_eq(Sects.contest_line(d, data(), day + 1), "Contest: for the first two ranks")
+
+
+func test_contest_line_absent_for_rogue() -> void:
+	assert_eq(Sects.contest_line(new_character(), data(), 5), "")

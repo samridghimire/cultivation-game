@@ -157,3 +157,9 @@ func test_sect_page_tidy() -> void:
 		assert_false(l.begins_with("Treasury"), "the treasury lives in one block")
 	assert_eq(journal._sect.find_children("SectTreasury", "", true, false).size(), 1 if not Sects.treasury_rows(gs.player, gs.data).is_empty() else 0)
 	journal.free()
+
+
+func test_month_lines_show_contest_line() -> void:
+	var lines := JournalScreen.month_lines({"duty": 0, "stipend": {}, "lecture": "", "contest": "Contest: month 3 (in 10 days)"})
+	assert_true("Contest: month 3 (in 10 days)" in lines)
+	assert_false("Contest" in "".join(JournalScreen.month_lines({"duty": 0, "stipend": {}})))
