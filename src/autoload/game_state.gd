@@ -3338,10 +3338,26 @@ func practice_technique(tech_id: String, days: int) -> void:
 	if result["levels_gained"] > 0:
 		var mastered := " (mastered)" if Techniques.is_mastered(player, data, tech_id) else ""
 		EventBus.post("Your %s reaches level %d%s!" % [def.name, Techniques.level(player, tech_id), mastered], "progress")
+		var new_level := Techniques.level(player, tech_id)
+		EventBus.technique_leveled.emit(tech_id, new_level, Techniques.describe_bonuses_at(player, data, tech_id, old_level), Techniques.describe_bonuses_at(player, data, tech_id, new_level))
+	else:
+		_post_practice_progress(tech_id)  # WU-617
 	var insights := Dao.on_practice(player, data, tech_id, days, rng)
 	for insight_id in insights:
 		EventBus.post("Practicing the %s, you comprehend the %s more deeply (level %d)!" % [def.name, Dao.def_of(data, insight_id)["name"], Dao.level(player, insight_id)], "progress")
 	_pass_time(days, "Practicing the %s" % def.name)
+
+
+## WU-617: the session's progress line; a newer one for the same art replaces the last row instead of stacking.
+func _post_practice_progress(tech_id: String) -> void:
+	var line := Techniques.progress_line(player, data, tech_id)
+	var prefix := "%s: level " % (data.techniques[tech_id] as TechniqueDef).name
+	if line == "":
+		return
+	if not EventBus.history.is_empty() and String(EventBus.history[-1]["text"]).begins_with(prefix):
+		EventBus.replace_last(line, "progress")
+	else:
+		EventBus.post(line, "progress")
 
 
 ## Contemplate a Dao insight you have already glimpsed, in seclusion, for `days`.

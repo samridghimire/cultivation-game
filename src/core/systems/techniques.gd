@@ -91,6 +91,20 @@ static func days_to_next(c: CharacterData, data: GameData, tech_id: String) -> i
 	return ceili(need / rate)
 
 
+## WU-617: "Gold-Piercing Finger: level 3, about 12 days of practice to level 4" ("" when mastered or unknown).
+static func progress_line(c: CharacterData, data: GameData, tech_id: String) -> String:
+	var def: TechniqueDef = data.techniques.get(tech_id)
+	if def == null or not knows(c, tech_id):
+		return ""
+	var lvl := level(c, tech_id)
+	if lvl >= def.max_level:
+		return "%s: level %d (mastered)" % [def.name, lvl]
+	var days := days_to_next(c, data, tech_id)
+	if days <= 0:
+		return "%s: level %d" % [def.name, lvl]
+	return "%s: level %d, about %d %s of practice to level %d" % [def.name, lvl, days, "day" if days == 1 else "days", lvl + 1]
+
+
 ## GUIDE-162: the level a typical player has practised an art to on reaching `realm_index` (1 + 2 per realm, capped
 ## at the art's max level); combat_balance's typical player uses the same curve.
 static func typical_level(data: GameData, realm_index: int, tech_id: String) -> int:
@@ -277,10 +291,14 @@ static func describe_method(c: CharacterData, data: GameData, tech_id: String) -
 ## e.g. "+12% cultivation speed, +6 attack" at the character's current level
 ## (or level 1 if the technique is not known yet).
 static func describe_bonuses(c: CharacterData, data: GameData, tech_id: String) -> String:
+	return describe_bonuses_at(c, data, tech_id, maxi(level(c, tech_id), 1))
+
+
+## WU-617: the same text at an explicit `lvl` (before/after a level-up).
+static func describe_bonuses_at(c: CharacterData, data: GameData, tech_id: String, lvl: int) -> String:
 	var def: TechniqueDef = data.techniques.get(tech_id)
 	if def == null:
 		return ""
-	var lvl := maxi(level(c, tech_id), 1)
 	var factor := element_factor(def, c.spiritual_roots, data) * Dao.technique_multiplier(c.dao, data, def)
 	var parts: PackedStringArray = []
 	for key in TechniqueDef.BONUS_KEYS:

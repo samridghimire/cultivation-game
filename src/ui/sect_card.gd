@@ -204,6 +204,30 @@ func open_lecture(sect_name: String, lecture_name: String, line: String, qi: int
 	_button.grab_focus.call_deferred()
 
 
+## WU-617: a technique level-up moment: name, "Level N", the bonus change and one focused OK.
+func open_technique(tech_name: String, level: int, before: String, after: String, mastered: bool = false) -> void:
+	_title.text = tech_name
+	_title.add_theme_color_override("font_color", UIStyle.ACCENT)
+	_banner.color = UIStyle.ACCENT
+	_banner.queue_redraw()
+	_subtitle.text = "Level %d%s" % [level, " (mastered)" if mastered else ""]
+	for c in _rows.get_children():
+		_rows.remove_child(c)
+		c.free()
+	vignette = null
+	if after != "":
+		_add_row("Now: %s" % after)
+		if before != "" and before != after:
+			var dim := UIStyle.label("Was: %s" % before, 15)
+			dim.modulate = Color(1, 1, 1, 0.6)
+			_rows.add_child(dim)
+	_step.text = ""
+	_step.visible = false
+	_button.text = "OK"
+	visible = true
+	_button.grab_focus.call_deferred()
+
+
 ## GFX-246: a small drawn header picture for the join / report / promotion modes ("join", "report", "promote").
 func _add_vignette(mode: String, color: Color, sect_id: String = "") -> SectVignette:
 	var v := SectVignette.new()
@@ -231,6 +255,7 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	_button.text = "Continue"  # WU-617: the technique mode says OK
 	closed.emit()
 
 

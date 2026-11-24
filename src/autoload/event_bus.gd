@@ -216,5 +216,7 @@ signal sect_promoted(sect_id: String, rank: int)
 signal promotion_trial_offered(sect_id: String)
 ## WU-614: a promotion trial was lost; `info` has examiner, advice, injuries (PackedStringArray) and chance (float).
 signal promotion_trial_lost(sect_id: String, info: Dictionary)
+## WU-617: a technique rose to `level` through practice; `before`/`after` are Techniques.describe_bonuses_at texts.
+signal technique_leveled(tech_id: String, level: int, before: String, after: String)
 ## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
 signal sect_lecture_attended(sect_id: String, result: Dictionary)

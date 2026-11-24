@@ -346,6 +346,7 @@ func _ready() -> void:
 	EventBus.sect_joined.connect(_on_sect_joined)
 	EventBus.sect_promoted.connect(_on_sect_promoted)  # WU-603
 	EventBus.sect_lecture_attended.connect(_on_sect_lecture_attended)  # WU-606
+	EventBus.technique_leveled.connect(_on_technique_leveled)  # WU-617
 	EventBus.sect_reported.connect(_on_sect_reported)  # WU-604
 	_friend_card.closed.connect(_flush_year_review)
 	_contest_card.closed.connect(_flush_year_review)
@@ -1968,6 +1969,8 @@ func _drain_moments() -> void:
 			_play_sect_report(String(m["sect_id"]), String(m.get("line", "")), m.get("items", {}))
 		"sect_promoted":
 			_play_sect_promoted(String(m["sect_id"]), m.get("summary", {}), bool(m.get("has_next", false)))
+		"technique_level":
+			_play_technique_level(m)
 		"sect_lecture":
 			_play_sect_lecture(String(m["sect_id"]), m.get("result", {}))
 		"trial_lost":
@@ -2292,6 +2295,20 @@ func _play_sect_promoted(sect_id: String, summary: Dictionary, has_next: bool) -
 		return
 	var def: SectDef = GameState.data.sects[sect_id]
 	_sect_card.open_promotion(def.name, summary, has_next, _sect_color(sect_id), sect_id)
+	_update_modal()
+
+
+## WU-617: a technique level-up plays as a small card through the moments queue.
+func _on_technique_leveled(tech_id: String, level: int, before: String, after: String) -> void:
+	_pending_moments.append({"kind": "technique_level", "tech_id": tech_id, "level": level, "before": before, "after": after})
+	_update_modal()
+
+
+func _play_technique_level(m: Dictionary) -> void:
+	var def: TechniqueDef = GameState.data.techniques.get(String(m["tech_id"]))
+	if def == null:
+		return
+	_sect_card.open_technique(def.name, int(m["level"]), String(m["before"]), String(m["after"]), int(m["level"]) >= def.max_level)
 	_update_modal()
 
 
