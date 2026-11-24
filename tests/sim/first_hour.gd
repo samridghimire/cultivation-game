@@ -79,6 +79,14 @@ static var chat_teacher := false
 ## (only when the fight is rated 40%+, SEASON-024), enter the festival contest, sell a wanted good held), then walks home.
 ## simulate_curious_years.gd's --season-tasks turns it on (part of the memo key). season_task_log counts what was done.
 static var season_tasks := false
+## SECT-041: when on, each sim month records, per rank-0 mission the member's sect lists, why it was not taken that month
+## (cooldown, loss_cooldown, items, realm, away, flag, odds, other) or that it was taken. Read by sect_year.gd --mission-report.
+static var mission_report_on := false
+static var mission_report: Dictionary = {}  # mission id -> {reason -> weeks}
+static var mission_other_acts: Dictionary = {}  # acted kind (and its top line) -> weeks a ready mission was passed over for it
+static var _mission_ready_week := false
+static var contribution_met_day := -1  # first weekly step at which the next rank's contribution was held (rank 0)
+
 ## QA-174: at sect rank 1 take one mission a month, only while standing in a region with a sect hall (MISSION-001)
 ## and only when its foe is rated Even or better. simulate_curious_years.gd's --mission-monthly; part of the memo key.
 static var mission_monthly := false
@@ -699,6 +707,8 @@ static func _curious_month(gs: Node, c: CharacterData, done: Dictionary, today: 
 	for f: Dictionary in fair:
 		var k := String(f.get("kind", ""))
 		done["fair_log"]["by_kind"][k] = int(done["fair_log"]["by_kind"].get(k, 0)) + 1
+	if mission_report_on and not c.is_rogue() and c.alive and int(c.sect.get("rank", 0)) == 0:
+		_note_missions(gs, c)
 	if not c.is_rogue() and c.alive and mission_monthly and int(c.sect.get("rank", 0)) <= 1:
 		_take_monthly_mission(gs, c, done, kinds, fair, today)
 	elif not c.is_rogue() and c.alive:
@@ -2057,6 +2067,45 @@ static func _take_monthly_mission(gs: Node, c: CharacterData, done: Dictionary, 
 	_take_one_mission(gs, c, done, kinds, fair, best, today)
 
 
+static func _bump_mission(mission_id: String, reason: String) -> void:
+	var row: Dictionary = mission_report.get(mission_id, {})
+	row[reason] = int(row.get(reason, 0)) + 1
+	mission_report[mission_id] = row
+
+
+## SECT-041: why each rank-0 mission the sect lists cannot (or was not) taken this month; "ready" months not taken become
+## "other" in sect_year.gd (ready minus taken). The policy takes missions where it stands, so "away" counts only the board rule.
+static func _note_missions(gs: Node, c: CharacterData) -> void:
+	var next := Sects.next_rank(c, gs.data)
+	if next >= 0 and contribution_met_day < 0 and Sects.contribution_balance(c) >= int((gs.data.sects[c.sect["id"]] as SectDef).ranks[next].get("contribution", 0)):
+		contribution_met_day = gs.get_node("/root/GameClock").total_days
+	if contribution_met_day >= 0:
+		return  # only the weeks while the next rank's contribution is still to earn are a mission-pace question
+	for id: String in gs.data.sect_missions:
+		var m: Dictionary = gs.data.sect_missions[id]
+		if int(m.get("min_rank", 0)) != 0:
+			continue
+		var sects: Array = m.get("sects", [])
+		if not sects.is_empty() and not sects.has(c.sect["id"]):
+			continue
+		var reason := "ready"
+		if not Sects.mission_offered(c, gs.data, m, gs.world_flags):
+			reason = "flag"
+		elif Sects.mission_rank_realm_reason(c, gs.data, m) != "":
+			reason = "realm"
+		elif Sects.mission_cooldown_left(c, id) > 0:
+			reason = "loss_cooldown" if c.mission_losses.has(id) else "cooldown"
+		elif Sects.check_mission(c, gs.data, id, gs.world_flags) != "":
+			reason = "items"
+		elif Sects.board_reason(c, gs.data, gs.current_region) != "":
+			reason = "away"
+		elif _mission_odds(gs, c, id) < min_mission_odds:
+			reason = "odds"
+		_bump_mission(id, reason)
+		if reason == "ready":
+			_mission_ready_week = true
+
+
 ## Takes one mission and logs its outcome. Missions need no travel (Sects.check_mission has no place rule).
 static func _take_one_mission(gs: Node, c: CharacterData, done: Dictionary, kinds: Dictionary, fair: Array[Dictionary], mission_id: String, today: int) -> void:
 	var lost_before := LifeStats.get_stat(c, "fights_lost")
@@ -2070,6 +2119,8 @@ static func _take_one_mission(gs: Node, c: CharacterData, done: Dictionary, kind
 	fight_origin = "mission"
 	gs.take_mission(mission_id)
 	fight_origin = "other"
+	if mission_report_on and contribution_met_day < 0:
+		_bump_mission(mission_id, "taken")
 	if listed_chance >= 0.0:
 		done["fair_log"]["taken"].append({"kind": "mission", "chance": listed_chance, "won": LifeStats.get_stat(c, "fights_won") > won_before})
 	kinds["mission"] = true
@@ -2148,6 +2199,9 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		var acted_line := ""
 		var skipped: Array[String] = []
 		var tries: Dictionary = done.get_or_add("hint_tries", {})
+		if mission_report_on and c.alive and not c.is_rogue() and int(c.sect.get("rank", 0)) == 0:
+			_mission_ready_week = false
+			_note_missions(gs, c)  # SECT-041: one reading per weekly step of the hints player
 		# SECT-036: a member whose contribution is met takes the rank trial when it rates at least 50 in 100, else keeps training.
 		if hints_policy and sect_report and c.alive and not c.is_rogue() and Sects.needs_trial(c, gs.data) and Sects.check_promotion(c, gs.data) == "":
 			var foe := Sects.trial_opponent(gs.data, Sects.trial_enemy(c, gs.data))
@@ -2238,6 +2292,10 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var left: int = 7 - (gs.get_node("/root/GameClock").total_days - day)
 			if left > 0 and c.alive:
 				gs.cultivate(left, density)
+		if mission_report_on and _mission_ready_week and acted != "mission":
+			var k := "%s | %s" % [acted if acted != "" else "(idle)", RegEx.create_from_string("\\d+").sub(acted_line, "N", true).substr(0, 60)]
+			mission_other_acts[k] = int(mission_other_acts.get(k, 0)) + 1
+		_mission_ready_week = false
 		note_milestones(gs, c)
 	return kinds
 
@@ -2275,6 +2333,22 @@ static func with_easy_fight_prefix(text: String) -> String:
 	return "Easy fight: " + text.trim_prefix("Easy fight: ")
 
 
+## SECT-041: the mission line a rank-0 member chasing the next rank's contribution acts on first ("" when none applies).
+static func _promotion_mission_line(gs: Node, c: CharacterData) -> String:
+	if not hints_policy or not sect_report or c.is_rogue() or int(c.sect.get("rank", 0)) != 0:
+		return ""
+	var rank := Sects.next_rank(c, gs.data)
+	if rank < 0:
+		return ""
+	var need := int((gs.data.sects[c.sect["id"]] as SectDef).ranks[rank].get("contribution", 0))
+	if Sects.contribution_balance(c) >= need:
+		return ""
+	var best := Guidance.best_mission(c, gs.data, gs.world_flags)
+	if best == "" or Sects.check_mission(c, gs.data, best, gs.world_flags, gs.current_region) != "":
+		return ""
+	return "Sect mission ready: %s (%d contribution to the next rank)" % [gs.data.sect_missions[best].get("name", best), need - Sects.contribution_balance(c)]
+
+
 ## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
@@ -2289,6 +2363,11 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 		var closer := Guidance.grow_closer_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)
 		if closer.begins_with("Grow closer: share tea at "):
 			lines.append(closer)
+	# SECT-041: a rank-0 member still earning the next rank's contribution does a ready mission before the weekly kindness (an
+	# action takes the sim's whole week step; a player does both): the line is the hint's own wording, so Guidance still names it.
+	var sect_mission := _promotion_mission_line(gs, c)
+	if sect_mission != "":
+		lines.insert(0, sect_mission)
 	# FOLK-042: a friend's birthday is once a year and the line shows 14 days ahead: the player keeps the day, so it goes first
 	# (the HUD's 5-line cap and the fight lines above it hid it from the sim in every seed).
 	var birthday := Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)

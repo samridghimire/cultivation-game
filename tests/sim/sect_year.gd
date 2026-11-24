@@ -33,6 +33,7 @@ func _run() -> void:
 	FirstHour.sect_report = true
 	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
 	var contest_odds := args.has("--contest-odds")  # SECT-043: print the contest foes' odds in the first contest month
+	FirstHour.mission_report_on = args.has("--mission-report")  # SECT-041: why rank-0 missions were not taken, per sect
 	var months := int(ceil(days / 30.0))
 	for sect_id in sects:
 		var def: SectDef = gs.data.sects.get(sect_id)
@@ -43,6 +44,8 @@ func _run() -> void:
 		FirstHour.join_sect_id = sect_id
 		print("Sect year: %s (home %s), hints player, %d days" % [sect_id, def.home_region, days])
 		print("  %-4s %8s %9s %9s %12s %9s %9s %11s %9s %7s" % ["seed", "reported", "lectures", "missions", "contribution", "rank@120", "rank@365", "duty met/short", "stipend", "joined"])
+		FirstHour.mission_report.clear()
+		FirstHour.mission_other_acts.clear()
 		var first_promo: Array = []
 		var short_months: Array = []
 		for s in range(1, seeds + 1):
@@ -78,6 +81,7 @@ func _run() -> void:
 							rows[gl[i]["key"]] = clock.total_days
 					elif bool(gl[i]["done"]) and not rows.has(i):
 						rows[i] = clock.total_days
+			FirstHour.contribution_met_day = -1
 			var out: Dictionary = FirstHour.play(gs, clock, s, months, false, hook)
 			var joined: int = int(out["sect_day"]) - day0 if int(out["sect_day"]) >= 0 else -1
 			var unreported: bool = gs.player != null and Sects.needs_report(gs.player)
@@ -100,6 +104,8 @@ func _run() -> void:
 			var met: int = int(e.get("months", 0)) - int(e.get("skipped", 0))
 			var short: int = int(e.get("skipped", 0))
 			first_promo.append(promo_day)
+			if FirstHour.mission_report_on:
+				print("       rank-1 contribution first held on day %s (promotion day %d)" % [str(FirstHour.contribution_met_day - day0 - maxi(joined, 0)) if FirstHour.contribution_met_day >= 0 else "never", promo_day])
 			short_months.append(short)
 			var rep_day: int = maxi(0, int(rec["reported"]) - maxi(joined, 0)) if int(rec["reported"]) >= 0 else -1  # SECT-039: a start-day join reports before the first month-loop day
 			print("  %-4d %8s %9d %9d %12d %9d %9d %11s %9d %7s" % [s, str(rep_day) if rep_day >= 0 else "never", int(e.get("lectures", 0)), int(e.get("missions", 0)), contribution, r120, r365, "%d/%d" % [met, short], int(rec["stipend"]), str(joined) + ("*" if unreported else "")])
@@ -125,6 +131,8 @@ func _run() -> void:
 			if int(short_months[i]) > 3:
 				many_short += 1
 		print("  first promotion after day 120 (or never): %d/%d seeds; duty short > 3 months: %d/%d seeds; first promotion days: %s" % [late, seeds, many_short, seeds, str(first_promo)])
+		if FirstHour.mission_report_on:
+			_print_mission_report(sect_id, seeds)
 		print("")
 	quit(0)
 
@@ -144,3 +152,20 @@ func _contest_line(gs: Node, sect_id: String, seed_n: int, day: int) -> String:
 		parts.append("r%d %s %d" % [i + 1, r["foe"], roundi(Combat.win_chance(c, gs.data, foe) * 100.0)])
 		i += 1
 	return "%s: %s%s" % [head, ", ".join(parts), "" if reason == "" else " (cannot enter: %s)" % reason]
+
+
+## SECT-041: one table per sect: for each rank-0 mission, weeks (all seeds) taken and not taken by reason.
+## "other" = weeks the mission was ready (and rated fair enough) but the policy still did not take it.
+func _print_mission_report(sect_id: String, seeds: int) -> void:
+	print("  Rank-0 mission weeks, %s, %d seeds (a week = one hints-player step):" % [sect_id, seeds])
+	print("    %-28s %6s %8s %9s %7s %7s %6s %5s %5s %6s" % ["mission", "taken", "cooldown", "loss_cool", "items", "realm", "away", "flag", "odds", "other"])
+	for id: String in FirstHour.mission_report:
+		var r: Dictionary = FirstHour.mission_report[id]
+		var taken := int(r.get("taken", 0))
+		var other := maxi(0, int(r.get("ready", 0)) - taken)
+		print("    %-28s %6d %8d %9d %7d %7d %6d %5d %5d %6d" % [id, taken, int(r.get("cooldown", 0)), int(r.get("loss_cooldown", 0)), int(r.get("items", 0)), int(r.get("realm", 0)), int(r.get("away", 0)), int(r.get("flag", 0)), int(r.get("odds", 0)), other])
+	var acts: Array = FirstHour.mission_other_acts.keys()
+	acts.sort_custom(func(a: String, b: String) -> bool: return int(FirstHour.mission_other_acts[a]) > int(FirstHour.mission_other_acts[b]))
+	print("    weeks a ready mission was passed over, by what the player did instead:")
+	for k: String in acts.slice(0, 8):
+		print("      %4d  %s" % [int(FirstHour.mission_other_acts[k]), k])
