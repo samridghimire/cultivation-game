@@ -2,6 +2,15 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-24 [WU-617] Practising an art shows its level and about how many days to the next; a level-up gets a small card.
+- 2026-11-24 [SIM-030] Balance tooling: the hints player trains for and attempts the sect promotion trial.
+- 2026-11-24 [WU-616] A lost promotion trial names the rank you tried for and shows you kneeling in the arena.
+- 2026-11-24 [GFX-251] The Misty Forest charcoal stall now stands on the road's verge, its name clear.
+- 2026-11-24 [QA-246] Audit: nothing else was lost when an earlier sect change was built on stale files.
+- 2026-11-23 [GUIDE-291] Balance tooling: the hints player follows the free first-technique hint.
+- 2026-11-23 [FOLK-048] Village friends disapprove when you join a demonic sect.
+- 2026-11-23 [WU-615] Friends' news now really reaches you: they open their talk with it.
+- 2026-11-23 [SECT-038] Sects hold a yearly outer-sect contest: win bouts in a row for contribution and spirit stones.
 - 2026-11-23 [WU-614] A lost promotion trial gets its own card: what you lacked, your injury and your odds now.
 - 2026-11-23 [C-417] Misty Forest gets a Charcoal Burner's Stall that sells the Iron Fist manual and food.
 - 2026-11-23 [SIM-029] Balance tooling: the day each sect goal is first reached, per seed and sect.
