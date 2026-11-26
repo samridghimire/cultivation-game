@@ -2514,6 +2514,11 @@ func _on_breakthrough(success: bool, realm_name: String) -> void:
 	GameState.last_surpassed_rival = ""
 	if success:
 		_show_realm_card.call_deferred(realm_name, details, surpassed)
+	elif details != "" and GameState.player != null and GameState.data != null:
+		# GFX-260: a failed gate opens a card (stage, qi lost, injury, lessons) through the realm-card path.
+		_pending_realm_card = [realm_name, "", details, [], "", true]
+		if not _tribulation.visible:
+			_open_pending_realm_card()
 	else:
 		_banner.announce("Breakthrough Failed", "Your qi scatters before the gate of %s." % realm_name, UIStyle.CATEGORY_COLORS["danger"])
 
@@ -2544,7 +2549,11 @@ func _open_pending_realm_card() -> void:
 	_pending_realm_card = []
 	_choice_menu.close()
 	_close_screens()
-	_realm_card.open(card[0], card[1], card[2], card[3], card[4])
+	var look := PlayerLook.of(GameState.player, GameState.data)
+	if card.size() > 5:
+		_realm_card.open_failed(card[0], RealmCard.failed_lines(card[2]), look, GameState.player.realm_index + 1)
+	else:
+		_realm_card.open(card[0], card[1], card[2], card[3], card[4], look, GameState.player.realm_index)
 	_update_modal()
 
 

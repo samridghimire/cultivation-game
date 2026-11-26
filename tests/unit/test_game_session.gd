@@ -2130,6 +2130,25 @@ func test_failed_breakthrough_posts_no_growth_lines() -> void:
 	gs.end_session()
 
 
+func test_failed_breakthrough_details_carry_qi_and_lesson() -> void:  # GFX-260
+	var c := _start()
+	var gs := _game_state()
+	c.realm_index = 1
+	c.stage = gs.data.realms[1].stage_count() - 1
+	Cultivation.add_qi(c, gs.data, 1e12)
+	c.breakthrough_bonus = -5.0
+	var details: Array[String] = []
+	var on_details := func(t: String) -> void: details.append(t)
+	EventBus.breakthrough_details.connect(on_details)
+	gs.attempt_breakthrough()
+	EventBus.breakthrough_details.disconnect(on_details)
+	assert_eq(details.size(), 1)
+	var lines := RealmCard.failed_lines(details[0])
+	assert_true(lines[0].begins_with("Qi lost:"), "first line is the qi lost")
+	assert_true(lines.size() <= RealmCard.MAX_EXTRA_LINES)
+	gs.end_session()
+
+
 func _break_through_once(gs: Node, c: CharacterData) -> void:
 	var realm := c.realm_index
 	for i in 30:

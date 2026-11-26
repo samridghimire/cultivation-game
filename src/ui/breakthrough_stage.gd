@@ -24,6 +24,8 @@ var _mote_color := Color(0.95, 0.85, 0.5)
 var _t := -1.0  ## attempt progress in seconds; < 0 when idle
 var _success := true
 var _frozen := false  ## debug_set_phase holds the picture still for screenshots
+var _pose := ""  ## GFX-260: "risen" (standing in a light column) or "scattered" (head bowed, motes drifting off); "" is the window's stage
+var _caption := ""
 var _result := 0  ## 0 none, 1 success, -1 failure: how the player is drawn after the beat
 
 
@@ -36,11 +38,20 @@ func setup(look: Dictionary, target_realm: int, vision: bool, mote_color: Color 
 	_look = look
 	_target_realm = target_realm
 	_vision = vision
+	_pose = ""
 	_ghost_alpha = 0.45 if vision else 0.0
 	_mote_color = mote_color
 	_frozen = false
 	_t = -1.0
 	_result = 0
+	queue_redraw()
+
+
+## GFX-260: a still pose for the realm card ("risen", `caption` is the new realm's name) or the failed-gate card ("scattered").
+func set_pose(look: Dictionary, target_realm: int, pose: String, caption: String = "", mote_color: Color = Color(0.95, 0.85, 0.5)) -> void:
+	setup(look, target_realm, false, mote_color)
+	_pose = pose
+	_caption = caption
 	queue_redraw()
 
 
@@ -119,6 +130,9 @@ func _draw() -> void:
 		var ridge := PackedVector2Array([Vector2(0, 96), Vector2(60, 70), Vector2(120, 88), Vector2(200, 56), Vector2(280, 84), Vector2(360, 62), Vector2(430, 82), Vector2(W, 66), Vector2(W, 96)])
 		draw_colored_polygon(ridge, Color(0.1, 0.11, 0.2))
 	draw_rect(Rect2(0, 96, W, H - 96), Color(0.09, 0.09, 0.14))
+	if _pose != "":
+		_draw_pose()
+		return
 	var pull := 0.0
 	var burst := 0.0
 	if _t >= 0.0:
@@ -150,3 +164,32 @@ func _draw() -> void:
 		var k := clampf((_t - ATTEMPT_TIME * GATHER_END) / (ATTEMPT_TIME * (1.0 - GATHER_END)), 0.0, 1.0)
 		var flash := Color(1.0, 0.95, 0.7, 0.9 * (1.0 - k)) if _success else Color(0.8, 0.1, 0.1, 0.5 * (1.0 - k))
 		draw_rect(Rect2(0, 0, W, H), flash)
+
+
+## GFX-260: the two still poses. Risen: a soft light column, the player standing, motes settled in a ring at the feet,
+## the realm's name above. Scattered: the player seated and dimmed with head bowed, motes drifting away.
+func _draw_pose() -> void:
+	var s := 3.0
+	var look := _look if _look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}
+	if _pose == "risen":
+		for k in 5:  # the column, widest and faintest outermost
+			var half := 46.0 - 8.0 * k
+			draw_rect(Rect2(SEAT_X - half, 0, half * 2.0, BASE), Color(1.0, 0.95, 0.7, 0.07 + 0.04 * k))
+		var tex := PixelFigure.frame(look, "down", 0)
+		draw_texture_rect(tex, Rect2(SEAT_X - 24, BASE - 20 * s, 16 * s, 20 * s), false, Color(1.15, 1.12, 1.0))
+		for i in MOTES:  # settled ring at the feet
+			var a := float(i) * TAU / float(MOTES)
+			draw_rect(Rect2(SEAT_X + cos(a) * 46.0 - 2.0, BASE - 2.0 + sin(a) * 7.0, 4, 4), Color(_mote_color, 0.9))
+		if _caption != "":
+			var font := ThemeDB.fallback_font
+			var size := font.get_string_size(_caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 18)
+			draw_string(font, Vector2((W - size.x) * 0.5, 24.0), _caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1.0, 0.95, 0.75))
+	else:
+		for i in MOTES:  # drifting away, thin and fading
+			var p := mote_pos(i, 1.5 + float(i) * 0.3, 0.0, 0.8)
+			draw_rect(Rect2(p.x, p.y, 4, 4), Color(_mote_color, 0.35))
+		var tex2 := PixelFigure.frame(look, "down", 0)
+		draw_rect(Rect2(SEAT_X - 34, BASE - 6, 68, 10), Color(0.4, 0.17, 0.16))
+		draw_texture_rect_region(tex2, Rect2(SEAT_X - 24, BASE - 15 * s + 3.0, 16 * s, 15 * s), Rect2(0, 0, 16, 15), Color(0.55, 0.5, 0.55))
+		draw_rect(Rect2(SEAT_X - 28, BASE - 9, 56, 6), Color(0, 0, 0, 0.3))
+		draw_rect(Rect2(0, 0, W, H), Color(0.0, 0.0, 0.05, 0.25))

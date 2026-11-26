@@ -445,6 +445,7 @@ func attempt_breakthrough() -> void:
 	var old_realm_index := player.realm_index
 	var lifespan_before := Cultivation.lifespan_years(player, data)
 	var qi_rate_before := Cultivation.qi_per_day(player, data)
+	var qi_before := player.qi
 	var result := Cultivation.attempt_breakthrough(player, data, rng)
 	_report_tribulation(result)
 	if result["died"]:
@@ -483,6 +484,13 @@ func attempt_breakthrough() -> void:
 		var lesson := _failure_lesson_line()
 		if lesson != "":
 			EventBus.post(lesson, "info")
+		# GFX-260: the failed-gate card's lines (qi lost, injury, lessons).
+		var card_lines: Array[String] = ["Qi lost: %d of %d." % [roundi(qi_before - player.qi), roundi(qi_before)]]
+		if result["injury"] != "":
+			card_lines.append("Injury: %s." % Injuries.injury_name(data, result["injury"]))
+		if lesson != "":
+			card_lines.append(lesson)
+		EventBus.breakthrough_details.emit("\n".join(card_lines))
 		var tip := Guidance.pill_source_hint(player, data)
 		EventBus.post(tip if tip != "" else "Fortune, Dao insights and pills raise your odds.", "info")
 	EventBus.breakthrough_attempted.emit(result["success"], result["realm_name"])

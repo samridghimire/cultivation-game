@@ -45,3 +45,17 @@ func test_card_waits_for_the_tribulation_screen() -> void:
 	assert_true(card.visible, "without a tribulation the card shows at once")
 	hud.free()
 	gs.end_session()
+
+
+func test_failed_lines_drop_empty_ones() -> void:  # GFX-260
+	assert_eq(RealmCard.failed_lines("Qi lost: 5 of 10.\n\nInjury: Bruise.\n"), ["Qi lost: 5 of 10.", "Injury: Bruise."] as Array[String])
+
+
+func test_failed_card_opens_with_scattered_stage() -> void:  # GFX-260
+	var card := RealmCard.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(card)
+	card.open_failed("Foundation Establishment", ["Qi lost: 5 of 10."], {}, 2)
+	assert_true(card.visible)
+	assert_eq(card.get("_title").text, "Breakthrough Failed")
+	assert_true(card.get("_stage").visible)
+	card.queue_free()

@@ -514,6 +514,14 @@ func _start_breakthrough_shots(gs: Node) -> void:
 			win.open()
 			var st: BreakthroughStage = win.get("_stage")
 			st.debug_set_phase(1.0 if ok else 1.1, ok), "close": win.close})
+	# GFX-260: the realm card with the risen stage, and the failed-gate card.
+	var card: Control = hud.get("_realm_card")
+	shots.append({"name": "realm_card_staged", "open": func() -> void:
+		hide_banner.call()
+		card.call("open", "Foundation Establishment", gs.data.realms[2].description, "Lifespan +50 years", ["Alchemy is open to you."], "", PlayerLook.of(c, gs.data), 1), "close": card.close})
+	shots.append({"name": "breakthrough_failed", "open": func() -> void:
+		hide_banner.call()
+		card.call("open_failed", "Foundation Establishment", ["Qi lost: 400 of 1000.", "Injury: Qi Deviation.", "The lessons stay with you: +5 percent on your next attempt."], PlayerLook.of(c, gs.data), 2), "close": card.close})
 	# WU-400: the heart vision above the Attempt button.
 	shots.append({"name": "breakthrough_vision", "open": func() -> void:
 		c.add_item("spirit_stone", 0)

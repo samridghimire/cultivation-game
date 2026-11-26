@@ -11,6 +11,7 @@ const MAX_EXTRA_LINES := 3
 const AUTO_CLOSE_SECONDS := 8.0
 const WRAP_WIDTH := 640
 
+var _stage: BreakthroughStage  ## GFX-260: the risen / scattered header
 var _title: Label
 var _desc: Label
 var _extra: VBoxContainer
@@ -27,6 +28,10 @@ func _init() -> void:
 	box.add_theme_constant_override("separation", 10)
 	box.custom_minimum_size = Vector2(WRAP_WIDTH, 0)
 	add_child(box)
+	_stage = BreakthroughStage.new()
+	_stage.visible = false
+	_stage.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(_stage)
 	_title = UIStyle.label("", 32, UIStyle.ACCENT)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_title)
@@ -59,7 +64,12 @@ static func card_lines(_realm_desc: String, details: String, notices: Array, sur
 	return lines
 
 
-func open(realm_name: String, realm_desc: String, details: String, notices: Array, surpassed: String = "") -> void:
+## The staged header is shown when `look` (a PlayerLook dictionary) is given.
+func open(realm_name: String, realm_desc: String, details: String, notices: Array, surpassed: String = "", look: Dictionary = {}, realm_index: int = 1) -> void:
+	_stage.visible = not look.is_empty()
+	if _stage.visible:
+		_stage.set_pose(look, realm_index, "risen", realm_name)
+	_title.add_theme_color_override("font_color", UIStyle.ACCENT)
 	_title.text = realm_name
 	_desc.text = realm_desc
 	_desc.visible = realm_desc != ""
@@ -73,6 +83,23 @@ func open(realm_name: String, realm_desc: String, details: String, notices: Arra
 	visible = true
 	_timer.start(AUTO_CLOSE_SECONDS)
 	_button.grab_focus.call_deferred()
+
+
+## GFX-260: a failed gate. `lines` are the qi lost, any injury and the lessons bonus (shown whole, danger-coloured title).
+func open_failed(realm_name: String, lines: Array, look: Dictionary, realm_index: int) -> void:
+	open("Breakthrough Failed", "Your qi scatters before the gate of %s." % realm_name, "", lines, "", {}, realm_index)
+	_stage.visible = true
+	_stage.set_pose(look, realm_index, "scattered")
+	_title.add_theme_color_override("font_color", UIStyle.CATEGORY_COLORS["danger"])
+
+
+## The lines of a failed card from GameState's details text ("\n"-separated); empty ones dropped.
+static func failed_lines(details: String) -> Array[String]:
+	var lines: Array[String] = []
+	for l in details.split("\n"):
+		if l.strip_edges() != "":
+			lines.append(l.strip_edges())
+	return lines
 
 
 func close() -> void:
