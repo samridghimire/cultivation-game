@@ -217,6 +217,7 @@ var _respawn: RespawnScreen
 var _realm_card: RealmCard
 var _contest_card: ContestCard  # WU-454
 var _friend_card: FriendSceneCard  # WU-467
+var _friend_med_card: FriendMeditationCard  # WU-635
 var _season_card: SeasonCard  # WU-495
 var _sect_card: SectCard  # WU-602
 var _trial_card: TrialCard  # WU-609
@@ -335,6 +336,10 @@ func _ready() -> void:
 	_friend_card.closed.connect(_update_modal)
 	_friend_card.closed.connect(_flush_friend_scenes)
 	add_child(UIStyle.centered(_friend_card))
+	_friend_med_card = FriendMeditationCard.new()
+	_friend_med_card.done.connect(_update_modal)
+	add_child(UIStyle.centered(_friend_med_card))
+	EventBus.friend_meditation_requested.connect(_on_friend_meditation_requested)
 	_season_card = SeasonCard.new()
 	_season_card.closed.connect(_update_modal)
 	_season_card.closed.connect(_flush_year_review)
@@ -467,7 +472,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -2573,6 +2578,14 @@ func _on_contest_finished(result: Dictionary) -> void:
 		RoadCard.current.finished.connect(func(): _show_contest_card(result), CONNECT_ONE_SHOT)
 	else:
 		_show_contest_card.call_deferred(result)
+
+
+## WU-635: the seated-together card, then the meditation itself.
+func _on_friend_meditation_requested(npc_id: String, npc_name: String, density: float) -> void:
+	_choice_menu.close()
+	_friend_med_card.open(npc_id, npc_name)
+	_friend_med_card.done.connect(GameState.meditate_with_friend.bind(npc_id, density), CONNECT_ONE_SHOT)
+	_update_modal()
 
 
 ## WU-467: the friend scene card; waits for the conversation (and a road card) that triggered it to finish.

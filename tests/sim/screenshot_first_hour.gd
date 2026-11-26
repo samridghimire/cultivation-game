@@ -10,6 +10,7 @@ extends SceneTree
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
+## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## WU-633: `--journal-sect --sect-rank=2 --contest-records` shows both contest records.
@@ -494,6 +495,14 @@ func _start() -> void:
 				hud.get("_banner").visible = false
 				gs.current_region = String(gs.data.npcs[rid].get("region", "qingshi_village"))
 				Engine.get_main_loop().root.get_node("EventBus").friend_rose.emit(rid, "qi_start", "Qi Refining"), "close": func() -> void: pass})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-635: sit together card
+		if a.begins_with("--friend-meditation="):
+			var mid := a.substr(20)
+			shots.append({"name": "friend_meditation", "open": func() -> void:
+				hud.get("_banner").visible = false
+				(hud.get("_friend_med_card") as Control).call("open", mid, String(gs.data.npcs[mid].get("name", mid)))
+				hud.call("_update_modal"), "close": func() -> void: (hud.get("_friend_med_card") as Control).visible = false})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-629: a friend's own pending news, then the congratulate card
 		if a.begins_with("--own-news="):

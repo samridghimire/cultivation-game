@@ -138,5 +138,5 @@ func _friend_meditation_options() -> Array[Dictionary]:
 		var npc: CharacterData = GameState.npcs[id]
 		options.append({"label": "Meditate with %s (%d days)" % [npc.name, int(rules.get("days", 7))],
 			"description": "+%d%% qi, favor +%d. Once every %d days." % [roundi((float(rules.get("qi_mult", 1.1)) - 1.0) * 100.0), int(rules.get("favor", 2)), int(rules.get("cooldown_days", 14))],
-			"action": GameState.meditate_with_friend.bind(id, qi_density), "keep_open": true})
+			"action": GameState.request_friend_meditation.bind(id, qi_density), "keep_open": true})
 	return options

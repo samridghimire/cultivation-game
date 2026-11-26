@@ -103,3 +103,45 @@ func test_no_free_favor_at_a_bottleneck() -> void:
 	assert_false(gs.world_flags.has("friend_med_xiao_ling"), "no cooldown")
 	assert_eq(clock.total_days, day)
 	gs.end_session()
+
+
+## WU-635: the staged card comes before the time skip; closing it runs the meditation.
+func test_staged_card_then_meditation() -> void:
+	var gs := _start()
+	var clock := _root().get_node("GameClock")
+	_friend(gs, "xiao_ling", 1, 50)
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: FriendMeditationCard = hud.get("_friend_med_card")
+	var day: int = clock.total_days
+	gs.request_friend_meditation("xiao_ling", 1.0)
+	assert_true(card.visible, "card shown first")
+	assert_eq(clock.total_days, day, "no time passes yet")
+	assert_eq(card.line_text(), "You and Xiao Ling sit together in quiet cultivation.")
+	card.close()
+	assert_false(card.visible)
+	assert_gt(clock.total_days, day, "the meditation ran on close")
+	assert_eq(gs.npc_favor["xiao_ling"], 52)
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()
+
+
+func test_request_without_hud_meditates_at_once() -> void:
+	var gs := _start()
+	var clock := _root().get_node("GameClock")
+	_friend(gs, "xiao_ling", 1, 50)
+	var day: int = clock.total_days
+	gs.request_friend_meditation("xiao_ling", 1.0)
+	assert_gt(clock.total_days, day)
+	gs.end_session()
+
+
+func test_motes_still_when_reduced() -> void:
+	assert_false(FriendMeditationCard.motes_move(true))
+	assert_true(FriendMeditationCard.motes_move(false))
+	for i in FriendMeditationCard.MOTES:
+		var p := FriendMeditationCard.mote_pos(i, 3.0)
+		assert_true(p.x >= FriendMeditationCard.SEAT_L and p.x <= FriendMeditationCard.SEAT_R)

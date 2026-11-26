@@ -2918,6 +2918,16 @@ func make_amends(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## WU-635: the entry point of the "Meditate with" menu row: a staged card first when the HUD is listening.
+func request_friend_meditation(npc_id: String, location_density: float = 1.0) -> void:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not _can_act() or EventBus.friend_meditation_requested.get_connections().is_empty() \
+			or Folk.meditation_block(player, data, npc, int(npc_favor.get(npc_id, 0)), world_flags, current_region, GameClock.total_days) != "":
+		meditate_with_friend(npc_id, location_density)
+		return
+	EventBus.friend_meditation_requested.emit(npc_id, npc.name, location_density)
+
+
 ## FOLK-052: sit beside a friend at a meditation spot (family.json friend_meditation; see Folk.meditation_block).
 func meditate_with_friend(npc_id: String, location_density: float = 1.0) -> void:
 	EventBus.topic = "family"
