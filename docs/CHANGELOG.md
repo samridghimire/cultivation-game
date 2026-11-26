@@ -2,6 +2,14 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-25 [WU-622] The Sect page shows when this month's duty is met and why each locked mission is not ready yet.
+- 2026-11-25 [WU-618] The Sect page lists what your next rank asks of you, ticked off as you go.
+- 2026-11-25 [GFX-255] The contest stage stands where you can see it, beside the hall and clear of labels.
+- 2026-11-25 [SIM-033] Rogue hints name the hall that holds this month's lecture; balance tooling for the rogue's first season fixed.
+- 2026-11-25 [C-423] New disciples get more chores they can take on day one: two per sect.
+- 2026-11-25 [GFX-254] The contest card shows the bout itself: a platform, sect banners, the crowd, you and your opponent.
+- 2026-11-25 [WU-620] The contest card names your rival when they wait in the final round.
+- 2026-11-25 [SIM-032] Balance tooling: weeks spent training for a trial no longer count as quiet.
 - 2026-11-24 [WU-621] The journal's Sect page tells you when the sect contest is and whether you may enter.
 - 2026-11-24 [SECT-044] Your rival may face you in the final round of the sect contest.
 - 2026-11-24 [SECT-041] Balance tooling: the hints player takes sect missions first; the first promotion is now limited by the rank trial.
