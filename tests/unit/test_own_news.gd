@@ -155,3 +155,37 @@ func test_liked_gift_with_news_stays_under_the_cap() -> void:  # FOLK-051
 	assert_true(int(gs.npc_favor["xiao_ling"]) <= cap, "favor %d within cap %d" % [int(gs.npc_favor["xiao_ling"]), cap])
 	assert_false(c.friend_news.has("xiao_ling"), "news still cleared")
 	gs.end_session()
+
+
+## C-425: a bad congrats_reply is rejected; the thanks uses the NPC's own line.
+func test_congrats_reply_validation() -> void:
+	var d := data()
+	var old: Variant = d.npcs["elder_mo"]["congrats_reply"]
+	d.npcs["elder_mo"]["congrats_reply"] = ["x".repeat(121)]
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	assert_true(text.contains("'elder_mo' congrats_reply entries"), text)
+	d.npcs["elder_mo"]["congrats_reply"] = ["a", "b", "c"]
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("'elder_mo' congrats_reply needs 1-2"))
+	d.npcs["elder_mo"]["congrats_reply"] = old
+
+
+func test_congratulate_uses_npc_voice() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["xiao_ling"] = 50
+	FolkNews.queue_own(c, gs.data, gs.npc_favor, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	var got: Array = []
+	var cb := func(_id: String, _n: String, text: String) -> void: got.append(text)
+	EventBus.friend_congratulated.connect(cb)
+	gs.congratulate("xiao_ling")
+	EventBus.friend_congratulated.disconnect(cb)
+	assert_eq(got.size(), 1)
+	var ok := false
+	for l: String in gs.data.npcs["xiao_ling"]["congrats_reply"]:
+		if got[0] == "\"%s\"" % l.replace("{player}", c.name):
+			ok = true
+	assert_true(ok, str(got))

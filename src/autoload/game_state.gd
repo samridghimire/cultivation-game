@@ -2632,8 +2632,17 @@ func congratulate(npc_id: String) -> void:
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
 	EventBus.post("You congratulate %s. %s beams. (%s)" % [npcs[npc_id].name, npcs[npc_id].name, _favor_text(npc_id)], "progress")
 	EventBus.npc_reaction.emit(npc_id, "happy")
-	EventBus.friend_congratulated.emit(npc_id, String(npcs[npc_id].name), "\"Thank you, %s. Your good word means a great deal to me.\"" % player.name)
+	EventBus.friend_congratulated.emit(npc_id, String(npcs[npc_id].name), _congrats_reply(npc_id))
 	EventBus.player_changed.emit()
+
+
+## C-425: the friend's own thanks (stable pick by npc and day, no rng), else the generic sentence.
+func _congrats_reply(npc_id: String) -> String:
+	var pool: Array = data.npcs.get(npc_id, {}).get("congrats_reply", [])
+	if pool.is_empty():
+		return "\"Thank you, %s. Your good word means a great deal to me.\"" % player.name
+	var line := String(pool[absi(("%s|congrats|%d" % [npc_id, GameClock.total_days]).hash()) % pool.size()])
+	return "\"%s\"" % line.replace("{player}", player.name)
 
 
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
