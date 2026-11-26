@@ -170,6 +170,7 @@ func start_session(character: CharacterData) -> void:
 	dialogue_event = ""
 	pending_event = String(data.artifact.get("intro_event", ""))
 	Npcs.ensure_all(npcs, data, rng)
+	FolkNews.remember_realms(player, data, npcs)  # FOLK-053
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	npc_clans = {}
 	NpcClans.ensure(npc_clans, npcs, data, rng)
@@ -5172,6 +5173,7 @@ func load_save_dict(d: Dictionary) -> void:
 	last_arrival_first_visit = false
 	npcs = Npcs.from_dict(d.get("npcs", {}))
 	Npcs.ensure_all(npcs, data, rng)
+	FolkNews.remember_realms(player, data, npcs)  # FOLK-053: old saves start from the current realms
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
 	npc_favor = {}
 	for npc_id in d.get("npc_favor", {}):
@@ -5685,6 +5687,7 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		if event.has("kind") and ["qi_start", "breakthrough"].has(String(event["kind"])) and FolkNews.queue_own(player, data, npc_favor, npcs.get(String(event["npc_id"])), String(event["kind"]), String(event.get("realm", "")), GameClock.total_days):
 			var friend_name := String(npcs[String(event["npc_id"])].name)  # FOLK-050
+			player.friend_news_realm[String(event["npc_id"])] = npcs[String(event["npc_id"])].realm_index  # FOLK-053
 			EventBus.friend_rose.emit(String(event["npc_id"]), String(event["kind"]), String(event.get("realm", "")))  # GFX-262
 			EventBus.post(("%s has begun Qi Refining." if event["kind"] == "qi_start" else "%s has broken through.") % friend_name + " Visit to congratulate %s." % friend_name, "info")
 			continue
@@ -5692,6 +5695,12 @@ func _on_days_advanced(days: int) -> void:
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
+	for rose_id in FolkNews.catch_up(player, data, npc_favor, npcs, GameClock.total_days):  # FOLK-053
+		var rose: CharacterData = npcs[rose_id]
+		var rose_kind := String(player.friend_news[rose_id].get("kind", "breakthrough"))
+		var rose_realm := String(player.friend_news[rose_id].get("realm", ""))
+		EventBus.friend_rose.emit(rose_id, rose_kind, rose_realm)
+		EventBus.post(("%s has begun Qi Refining." if rose_kind == "qi_start" else "%s has broken through.") % rose.name + " Visit to congratulate %s." % rose.name, "info")
 	FolkNews.prune_own(player, data, GameClock.total_days)
 	Guidance.note_trial_prep(player, data, GameClock.total_days, world_flags)  # SECT-053
 	_rival_news()

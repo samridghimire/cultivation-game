@@ -93,6 +93,36 @@ static func queue_own(player: CharacterData, data: GameData, favor: Dictionary, 
 	return true
 
 
+## FOLK-053: remember each living named NPC's realm the first time (absent ids only), so starting realms never announce.
+static func remember_realms(player: CharacterData, data: GameData, npcs: Dictionary) -> void:
+	if player == null:
+		return
+	for id: String in data.npcs:
+		var npc: CharacterData = npcs.get(id)
+		if npc != null and npc.alive and not player.friend_news_realm.has(id):
+			player.friend_news_realm[id] = npc.realm_index
+
+
+## FOLK-053: queues the news of friends who rose while favor was below min_favor. Returns the npc ids queued.
+static func catch_up(player: CharacterData, data: GameData, favor: Dictionary, npcs: Dictionary, day: int) -> Array[String]:
+	var queued: Array[String] = []
+	if player == null:
+		return queued
+	for id: String in player.friend_news_realm.keys():
+		var npc: CharacterData = npcs.get(id)
+		if npc == null or not npc.alive or not Npcs.cultivates(npc, data):
+			continue
+		var known: int = int(player.friend_news_realm[id])
+		if npc.realm_index <= known:
+			continue
+		var kind := "qi_start" if known == 0 and npc.realm_index == 1 else "breakthrough"
+		var realm_name := String(data.realms[npc.realm_index].name) if npc.realm_index < data.realms.size() else ""
+		if queue_own(player, data, favor, npc, kind, realm_name, day):
+			player.friend_news_realm[id] = npc.realm_index
+			queued.append(id)
+	return queued
+
+
 ## Pure: their own entry is older than own_days (no erasing).
 static func _expired(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
 	var own_days: int = int(data.family.get("folk_news", {}).get("own_days", 30))
@@ -165,7 +195,7 @@ static func journal_rows(player: CharacterData, data: GameData, npcs: Dictionary
 		var name: String = npc.name if npc != null else String(data.npcs.get(id, {}).get("name", id))
 		var what := "began Qi Refining" if String(entry.get("kind", "")) == "qi_start" else "broke through to %s" % String(entry.get("realm", "a new realm"))
 		var left := maxi(1, own_days - (day - int(entry.get("day", 0))))
-		rows.append({"npc_id": id, "name": name, "region": String(data.npcs.get(id, {}).get("region", "")), "days_left": left,
+		rows.append({"npc_id": id, "name": name, "region": Npcs.region_of(npc, data) if npc != null else String(data.npcs.get(id, {}).get("region", "")), "days_left": left,
 			"text": "%s %s: congratulate them (%d days left)" % [name, what, left]})
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["days_left"]) < int(b["days_left"]) or (int(a["days_left"]) == int(b["days_left"]) and String(a["npc_id"]) < String(b["npc_id"])))

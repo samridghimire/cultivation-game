@@ -217,3 +217,66 @@ func test_journal_includes_row_after_queued_news() -> void:
 		if String(e.get("text", "")).contains("Xiao Ling began Qi Refining: congratulate them"):
 			found = true
 	assert_true(found, "journal row present")
+
+
+func test_catch_up_queues_missed_qi_start() -> void:  # FOLK-053
+	var c := _start()
+	var gs := _gs()
+	var xl: CharacterData = gs.npcs["xiao_ling"]
+	c.friend_news_realm["xiao_ling"] = 0
+	xl.realm_index = 1
+	assert_eq(FolkNews.catch_up(c, gs.data, {"xiao_ling": 30}, gs.npcs, 50).size(), 0, "favor 30 queues nothing")
+	assert_eq(int(c.friend_news_realm["xiao_ling"]), 0, "memory unchanged")
+	var got := FolkNews.catch_up(c, gs.data, {"xiao_ling": 40}, gs.npcs, 50)
+	assert_eq(got, ["xiao_ling"] as Array[String])
+	assert_eq(String(c.friend_news["xiao_ling"]["kind"]), "qi_start")
+	assert_eq(int(c.friend_news_realm["xiao_ling"]), 1)
+	assert_eq(FolkNews.catch_up(c, gs.data, {"xiao_ling": 40}, gs.npcs, 50).size(), 0, "not twice")
+
+
+func test_seed_does_not_announce_starting_realms() -> void:  # FOLK-053
+	var c := _start()
+	var gs := _gs()
+	c.friend_news_realm.clear()
+	FolkNews.remember_realms(c, gs.data, gs.npcs)
+	assert_eq(FolkNews.catch_up(c, gs.data, {"elder_mo": 60, "xiao_ling": 60}, gs.npcs, 5).size(), 0)
+
+
+func test_old_save_without_memory_loads_quietly() -> void:  # FOLK-053
+	var c := _start()
+	var gs := _gs()
+	var d := c.to_dict()
+	d.erase("friend_news_realm")
+	var c2 := CharacterData.from_dict(d)
+	assert_true(c2.friend_news_realm.is_empty())
+	gs.npcs["xiao_ling"].realm_index = 1
+	FolkNews.remember_realms(c2, gs.data, gs.npcs)
+	assert_eq(FolkNews.catch_up(c2, gs.data, {"xiao_ling": 90}, gs.npcs, 5).size(), 0)
+	var c3 := CharacterData.from_dict(c2.to_dict())
+	assert_eq(int(c3.friend_news_realm.get("xiao_ling", -1)), 1, "round trip")
+
+
+func test_daily_handler_catches_up_once() -> void:  # FOLK-053
+	var c := _start()
+	var gs := _gs()
+	c.friend_news_realm["xiao_ling"] = 0
+	gs.npcs["xiao_ling"].realm_index = 1
+	gs.npc_favor["xiao_ling"] = 45
+	gs._pass_time(1)
+	assert_true(c.friend_news.has("xiao_ling"), "news reached the player")
+	assert_eq(int(c.friend_news_realm["xiao_ling"]), 1)
+
+
+func test_journal_row_names_current_region() -> void:  # FOLK-053
+	var c := _start()
+	var gs := _gs()
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", 10)
+	var xl: CharacterData = gs.npcs["xiao_ling"]
+	var other := ""
+	for r: String in gs.data.regions:
+		if r != Npcs.region_of(xl, gs.data):
+			other = r
+			break
+	xl.home_region = other
+	var rows := FolkNews.journal_rows(c, gs.data, gs.npcs, 12)
+	assert_eq(String(rows[0]["region"]), Npcs.region_of(xl, gs.data))

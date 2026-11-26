@@ -185,6 +185,8 @@ var folk_tier_seen: Dictionary = {}
 var folk_news: Dictionary = {}
 ## FOLK-050: friends' own news, npc_id -> {kind, realm, day, told}. See FolkNews.queue_own.
 var friend_news: Dictionary = {}
+## FOLK-053: npc_id -> realm_index last known to the player (see FolkNews.catch_up).
+var friend_news_realm: Dictionary = {}
 var lessons_taught: Dictionary = {}  # FOLK-020: "<npc_id>:<index>" -> day
 ## Friend scenes already shown (FOLK-013) and the day the last one played.
 var scenes_seen: Array[String] = []
@@ -372,6 +374,7 @@ func to_dict() -> Dictionary:
 		"folk_tier_seen": folk_tier_seen.duplicate(),
 		"folk_news": folk_news.duplicate(),
 		"friend_news": friend_news.duplicate(true),
+		"friend_news_realm": friend_news_realm.duplicate(),
 		"lessons_taught": lessons_taught.duplicate(),
 		"scenes_seen": scenes_seen.duplicate(),
 		"scene_day": scene_day,
@@ -583,6 +586,7 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		for id: String in fn:
 			var e: Dictionary = fn[id]
 			c.friend_news[id] = {"kind": String(e.get("kind", "")), "realm": String(e.get("realm", "")), "day": int(e.get("day", 0)), "told": bool(e.get("told", false))}
+	c.friend_news_realm = _int_values(d.get("friend_news_realm", {}))
 	c.lessons_taught = _int_values(d.get("lessons_taught", {}))
 	for sid in d.get("scenes_seen", []):
 		c.scenes_seen.append(String(sid))
