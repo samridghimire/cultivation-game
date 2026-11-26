@@ -493,13 +493,17 @@ func _start() -> void:
 				(hud.get("_sect_card") as Control).close()
 				gs.current_region = Sects.home_region(gs.data, tid)
 				Sects.add_contribution(c, gs.data, int((gs.data.sects[tid] as SectDef).ranks[1].get("contribution", 0)))
+				for ua in OS.get_cmdline_user_args():  # WU-624: `--trial-losses=N` shows the lessons of N lost tries
+					if ua.begins_with("--trial-losses="):
+						c.sect["trial_losses"] = int(ua.substr(15))
 				gs.offer_promotion_trial(), "close": tcard.close})
 			if OS.get_cmdline_user_args().has("--lose"):  # WU-614: the lost-trial result card
 				shots.append({"name": "sect_trial_lost", "open": func() -> void:
 					tcard.close()
 					Engine.get_main_loop().root.get_node("EventBus").promotion_trial_lost.emit(tid, {"examiner": String(Sects.trial_foe(c, gs.data).get("name", "The examiner")),
 						"rank": (gs.data.sects[tid] as SectDef).rank_name(Sects.next_rank(c, gs.data)),
-						"advice": Sects.trial_advice(c, gs.data), "injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.35})
+						"advice": Sects.trial_advice(c, gs.data), "injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.35,
+						"lesson": Sects.trial_lesson(c, gs.data), "learned": true})
 					hud.call("_drain_moments"), "close": tcard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-611: the outer-sect contest card (entry, then the first bout's result)

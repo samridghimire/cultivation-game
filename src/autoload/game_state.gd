@@ -3640,7 +3640,7 @@ func attempt_promotion_trial() -> void:
 		EventBus.promotion_trial_lost.emit(String(player.sect["id"]), {
 			"examiner": String(enemy.get("name", "The examiner")), "rank": rank_name,
 			"advice": Sects.trial_advice(player, data), "injuries": Injuries.describe(player, data),
-			"chance": Combat.win_chance(player, data, Sects.trial_foe(player, data)), "lesson": lesson})
+			"chance": Combat.win_chance(player, data, Sects.trial_foe(player, data)), "lesson": lesson, "learned": lesson > lesson_before})
 
 
 ## WU-611: the hall entry for the contest: asks the HUD for the contest card (it calls enter_sect_contest on

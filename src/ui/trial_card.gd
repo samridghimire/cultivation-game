@@ -118,6 +118,9 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_foe.text = foe_line(data, enemy)
 	_odds.text = odds_line(chance)
 	_odds.add_theme_color_override("font_color", odds_color(chance))
+	var lessons := lessons_line(c, data)  # WU-624
+	if lessons != "":
+		_odds.text += "\n" + lessons
 	if chance < 0.5:  # SECT-040: the biggest gap, under the odds
 		var advice := Sects.trial_advice(c, data)
 		if advice != "":
@@ -163,11 +166,33 @@ func open_lost(sect_name: String, info: Dictionary, color: Color = UIStyle.ACCEN
 	_odds.remove_theme_color_override("font_color")
 	_safe.text = lines[2]
 	_perks.text = lines[3]
+	var learned := lost_lesson_line(info)  # WU-624
+	if learned != "":
+		_perks.text = (_perks.text + "\n" + learned).strip_edges()
 	_perks.visible = _perks.text != ""
 	_step_button.visible = false
 	_wait_button.text = "Back"
 	visible = true
 	_wait_button.grab_focus.call_deferred()
+
+
+## WU-624: "Lessons from 2 tries: examiner -12%" under the odds; "" when nothing was learned yet. Pure.
+static func lessons_line(c: CharacterData, data: GameData) -> String:
+	var lesson := Sects.trial_lesson(c, data)
+	if lesson <= 0.0:
+		return ""
+	var tries := int(c.sect.get("trial_losses", 0))
+	return "Lessons from %d %s: examiner -%d%%" % [tries, "try" if tries == 1 else "tries", roundi(lesson * 100.0)]
+
+
+## WU-624: what the lost trial taught, from the info dict's `lesson` (total) and `learned` (grew this time). "" when 0.
+static func lost_lesson_line(info: Dictionary) -> String:
+	var lesson := float(info.get("lesson", 0.0))
+	if lesson <= 0.0:
+		return ""
+	if bool(info.get("learned", false)):
+		return "You learned the examiner's forms: next time they fight %d%% weaker." % roundi(lesson * 100.0)
+	return "You know the examiner's forms as well as you can (they fight %d%% weaker)." % roundi(lesson * 100.0)
 
 
 ## The result-mode subtitle: names the rank the trial was for (the next rank, not the current one). Pure.

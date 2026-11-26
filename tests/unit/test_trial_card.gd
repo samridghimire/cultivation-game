@@ -169,6 +169,22 @@ func test_lost_lines_pure() -> void:
 	assert_eq(unhurt[2], "You come away unhurt.")
 
 
+## WU-624: the lesson lines show only once something was learned.
+func test_lesson_lines_only_when_learned() -> void:
+	assert_eq(TrialCard.lost_lesson_line({"lesson": 0.0}), "")
+	assert_eq(TrialCard.lost_lesson_line({}), "")
+	assert_true(TrialCard.lost_lesson_line({"lesson": 0.06, "learned": true}).contains("6% weaker"))
+	assert_true(TrialCard.lost_lesson_line({"lesson": 0.18, "learned": false}).contains("as well as you can"))
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	assert_eq(TrialCard.lessons_line(gs.player, gs.data), "")
+	gs.player.sect["trial_losses"] = 2
+	var line := TrialCard.lessons_line(gs.player, gs.data)
+	assert_true(line.begins_with("Lessons from 2 tries: examiner -"), line)
+	_teardown(gs, hud)
+
+
 func test_lost_trial_opens_result_card_with_back_focus() -> void:
 	var out: Array = []
 	var gs := _setup(out)
