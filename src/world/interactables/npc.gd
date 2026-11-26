@@ -255,6 +255,13 @@ func is_seated() -> bool:
 func _ready() -> void:
 	add_to_group("npc")
 	super._ready()
+	if npc_id != "" and GameState.data != null and GameState.data.npcs.has(npc_id):  # GFX-264
+		var aura := FriendAura.new()
+		aura.npc_id = npc_id
+		aura.name = "FriendAura"
+		aura.show_behind_parent = true
+		aura.position = Vector2(size.x / 2.0, size.y - 2.0)
+		add_child(aura)
 	home = position
 	_walk_to = home
 	_visiting = GameState.player != null and npc_id != "" and GameState.visitor_today() == npc_id

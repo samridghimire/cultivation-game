@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## GFX-264: `-- --friend-realm=<npc_id>:<realm_index>` shows the friend's aura: friend_realm_<n>.png.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
@@ -487,6 +488,18 @@ func _start() -> void:
 			shots.append({"name": "news_talk", "open": func() -> void:
 				(hud.get("_friend_card") as Control).close()
 				gs.start_dialogue(nid), "close": func() -> void: pass})
+			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-264: --friend-realm=<npc_id>:<realm_index>
+		if a.begins_with("--friend-realm="):
+			var parts := a.substr(15).split(":")
+			var fid := String(parts[0])
+			var fr := int(parts[1]) if parts.size() > 1 else 0
+			shots.append({"name": "friend_realm_%d" % fr, "open": func() -> void:
+				hud.get("_banner").visible = false
+				gs.current_region = String(gs.data.npcs[fid].get("region", "qingshi_village"))
+				for n in Engine.get_main_loop().get_nodes_in_group("npc"):
+					if n.get("npc_id") == fid and n.has_node("FriendAura"):
+						n.get_node("FriendAura").override_realm = fr, "close": func() -> void: pass})
 			special = true
 	for a in OS.get_cmdline_user_args():  # GFX-262: a friend rises in sight
 		if a.begins_with("--friend-rose="):
