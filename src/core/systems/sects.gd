@@ -492,7 +492,7 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	for entry: Dictionary in options.slice(0, 3):
 		claimable.append(String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
 	return {"duty": monthly_duty(c, data), "progress": duty_progress(c), "days_left": duty_days_left(c), "stipend": stipend(c, data),
-		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "contest_record": contest_record_line(c, data), "missions_ready": ready, "missions_total": ids.size(), "blockers": blockers, "balance": balance, "claimable": claimable}
+		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "contest_record": contest_record_line(c, data), "contest_outer_record": outer_record_line(c, data), "missions_ready": ready, "missions_total": ids.size(), "blockers": blockers, "balance": balance, "claimable": claimable}
 
 
 ## WU-622: why the listed missions are not ready, bucketed by their first blocker: {"rank": n, "realm": n, "items": n,
@@ -979,6 +979,7 @@ static func record_contest(c: CharacterData, data: GameData, rounds_won: int, ro
 	var full := rounds > 0 and rounds_won >= rounds
 	if full:
 		LifeStats.add(c, "contest_wins")
+		rec["wins"] = int(rec.get("wins", 0)) + 1
 		rec["last_year"] = Calendar.year_of(total_days)
 		rec["sect"] = String(c.sect.get("id", ""))
 	c.contest_record[kind] = rec
@@ -1007,6 +1008,22 @@ static func contest_record_line(c: CharacterData, data: GameData) -> String:
 	if rounds > 0:
 		line += " of %d" % rounds
 	var wins := int(rec["wins"])
+	return line + ", champion %d time%s" % [wins, "" if wins == 1 else "s"] if wins > 0 else line
+
+
+## WU-633: for a player in the inner contest's ranks with an outer record: "Outer contest: best round N, champion X times".
+## Per-kind wins are counted from WU-633 on; an older record falls back to the overall total when no inner record exists.
+static func outer_record_line(c: CharacterData, data: GameData) -> String:
+	if not is_inner_contest(c, data):
+		return ""
+	var rec: Dictionary = c.contest_record.get("outer", {})
+	var best := int(rec.get("best_round", 0))
+	if best <= 0:
+		return ""
+	var wins := int(rec.get("wins", 0))
+	if wins == 0 and (c.contest_record.get("inner", {}) as Dictionary).is_empty():
+		wins = LifeStats.get_stat(c, "contest_wins")
+	var line := "Outer contest: best round %d" % best
 	return line + ", champion %d time%s" % [wins, "" if wins == 1 else "s"] if wins > 0 else line
 
 

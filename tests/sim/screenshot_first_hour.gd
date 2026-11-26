@@ -12,6 +12,7 @@ extends SceneTree
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
+## WU-633: `--journal-sect --sect-rank=2 --contest-records` shows both contest records.
 ## GFX-261: `--inner-contest-month` does the same for the inner contest's month.
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
@@ -605,6 +606,8 @@ func _start() -> void:
 			for a3 in OS.get_cmdline_user_args():  # WU-618: --sect-rank=N applies on the journal path too
 				if a3.begins_with("--sect-rank="):
 					c.sect["rank"] = int(a3.substr(12))
+			if OS.get_cmdline_user_args().has("--contest-records"):  # WU-633: an outer and an inner record
+				c.contest_record = {"outer": {"best_round": 2, "wins": 1}, "inner": {"best_round": 1}}
 			jscreen.open()
 			jscreen.set_page("sect"), "close": jscreen.close})
 		special = true
