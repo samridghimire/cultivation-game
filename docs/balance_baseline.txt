@@ -1766,32 +1766,32 @@ Quiet stretches, hints policy, 10 seeds, 365 days
   [SECT-036] day 97: trial odds 5 in 100
   seed  3:  49 new days, longest stretch  34 days
   [SECT-036] day 78: trial odds 0 in 100
-  seed  4:  51 new days, longest stretch  27 days
+  seed  4:  49 new days, longest stretch  27 days
   [SECT-036] day 90: trial odds 0 in 100
   seed  5:  58 new days, longest stretch  28 days
   [SECT-036] day 183: trial odds 2 in 100
   seed  6:  46 new days, longest stretch  42 days
   [SECT-036] day 71: trial odds 2 in 100
-  seed  7:  60 new days, longest stretch  38 days
+  seed  7:  57 new days, longest stretch  38 days
   [SECT-036] day 71: trial odds 2 in 100
   seed  8:  51 new days, longest stretch  38 days
   [SECT-036] day 71: trial odds 0 in 100
   seed  9:  49 new days, longest stretch  34 days
   [SECT-036] day 103: trial odds 3 in 100
   seed 10:  39 new days, longest stretch  55 days
-SIM-015 sect: 381 sect months over 10 seeds, 50 stipends skipped for missed duty (duty met 331 months); realms at end: ["1.5", "2.0", "1.6", "1.5", "2.0", "1.1", "1.7", "1.8", "1.5", "1.8"]
+SIM-015 sect: 381 sect months over 10 seeds, 51 stipends skipped for missed duty (duty met 330 months); realms at end: ["1.5", "2.0", "1.6", "1.5", "2.0", "1.1", "1.7", "1.8", "1.5", "1.8"]
 Stretch (days between new things): median 5, max 55; median of per-seed medians 5, of per-seed maxes 38
-New days per month (median over seeds): 10 5 4 2 2 2 1 2 5 4 7 6 1
+New days per month (median over seeds): 10 5 4 2 2 2 1 2 5 4 7 6 0
   longest 1: seed 10, days 237-292 (55 days), months 8-10, actions: meditate,explore,tea,trial
   longest 2: seed 1, days 217-269 (52 days), months 8-9, actions: meditate,explore,tea
   longest 3: seed 2, days 191-233 (42 days), months 7-8, actions: meditate,explore,tea
 
-Hints player: 520 weeks, 0 meditated with nothing to act on (0 of them preparing for a beast); acted: { "lend": 152, "sect_report": 10, "mission": 70, "tea": 135, "talk": 10, "teacher": 10, "trial": 14, "explore": 18, "fight": 60, "heal": 3, "unseal": 12, "lecture": 11, "buy_qi": 2, "treasury": 3, "study": 2, "forage": 1, "fish": 1, "cook": 1, "train": 5 }
-  unactionable x84: Goal: Learn a fighting style
-  unactionable x18: Easy fight: Hall Steward Qiu: Drive the crag goats off the cloud-stair
-  unactionable x9: Easy fight: Sect mission: Chase Off the Crag Goat (mission board, Azur
-  unactionable x8: Bai Qingwu can teach you Rippling Moon Sword Art.
+Hints player: 520 weeks, 0 meditated with nothing to act on (0 of them preparing for a beast); acted: { "lend": 152, "sect_report": 10, "mission": 67, "tea": 135, "talk": 10, "teacher": 10, "trial": 13, "explore": 18, "fight": 62, "heal": 4, "unseal": 12, "lecture": 11, "friend_meditate": 5, "buy_qi": 2, "forage": 1, "fish": 1, "cook": 1, "train": 5, "treasury": 1 }
+  unactionable x85: Goal: Learn a fighting style
+  unactionable x16: Easy fight: Hall Steward Qiu: Drive the crag goats off the cloud-stair
+  unactionable x10: Easy fight: Sect mission: Chase Off the Crag Goat (mission board, Azur
   unactionable x8: Goal: Reach the Nrd Layer of Qi Refining
+  unactionable x4: Easy fight: Fair fight: Sect mission: Cull the Mist Wolves (mission bo
   acted x123: Grow closer: share tea at Yun Feng's (favor N/N).
   acted x45: Become friends: lend Yun Feng a hand (splitting firewood, N day, favor
   acted x45: Make a friend: lend Yun Feng a hand (splitting firewood, N day, favor 
@@ -1803,42 +1803,42 @@ Hints player: 520 weeks, 0 meditated with nothing to act on (0 of them preparing
 
 Quiet stretches, hints policy, 4 seeds, 1095 days
   [SECT-036] day 98: trial odds 3 in 100
-  seed  1: 176 new days, longest stretch  52 days
+  seed  1: 153 new days, longest stretch  52 days
   seed  1 realm.stage at day: { 365: "1.5", 730: "1.8" }
   [SECT-036] day 72: trial odds 0 in 100
-  seed  2: 144 new days, longest stretch  42 days
+  seed  2: 139 new days, longest stretch  42 days
   seed  2 realm.stage at day: { 365: "2.0", 730: "2.3" }
   [SECT-036] day 97: trial odds 5 in 100
-  seed  3: 144 new days, longest stretch  34 days
+  seed  3: 160 new days, longest stretch  35 days
   seed  3 realm.stage at day: { 365: "1.6", 730: "1.8" }
   [SECT-036] day 78: trial odds 0 in 100
-  seed  4: 163 new days, longest stretch  33 days
-  seed  4 realm.stage at day: { 365: "1.5", 730: "1.7" }
-SIM-015 sect: 146 sect months over 4 seeds, 11 stipends skipped for missed duty (duty met 135 months); realms at end: ["2.1", "2.3", "2.2", "1.8"]
+  seed  4: 165 new days, longest stretch  33 days
+  seed  4 realm.stage at day: { 365: "1.5", 730: "1.8" }
+SIM-015 sect: 146 sect months over 4 seeds, 17 stipends skipped for missed duty (duty met 129 months); realms at end: ["2.2", "2.3", "2.2", "2.1"]
 Stretch (days between new things): median 6, max 52; median of per-seed medians 6, of per-seed maxes 42
-New days per month (median over seeds): 10 5 8 2 2 2 2 2 5 4 8 6 2 6 6 7 5 8 6 7 6 6 5 6 5 5 5 5 5 2 4 5 4 5 3 2 0
+New days per month (median over seeds): 10 5 8 2 2 2 2 2 5 4 8 6 3 6 4 5 4 7 7 7 4 6 6 7 7 6 5 4 3 4 5 3 3 2 2 2 0
   longest 1: seed 1, days 217-269 (52 days), months 8-9, actions: meditate,explore,tea
   longest 2: seed 2, days 191-233 (42 days), months 7-8, actions: meditate,explore,tea
   longest 3: seed 1, days 168-204 (36 days), months 6-7, actions: meditate,explore,lend,tea
 
-Hints player: 592 weeks, 40 meditated with nothing to act on (0 of them preparing for a beast); acted: { "lend": 64, "sect_report": 4, "mission": 144, "tea": 56, "talk": 4, "teacher": 5, "trial": 7, "explore": 8, "fight": 77, "heal": 8, "unseal": 13, "lecture": 90, "treasury": 3, "study": 3, "buy_qi": 17, "spar": 3, "travel": 3, "armor": 3, "meditate": 33, "birthday_gift": 1, "forage": 2, "sell": 1, "breakthrough": 3 }
-  unactionable x242: Goal: Learn a fighting style
-  unactionable x237: Easy fight: Hall Steward Qiu: Drive the crag goats off the cloud-stair
-  unactionable x111: Goal: Win a fight against a Foundation foe
-  unactionable x98: Your sect treasury hands out the Azure Cloud Heart Sutra (qi xN.N, you
-  unactionable x94: Bai Qingwu can teach you Rippling Moon Sword Art.
-  acted x90: Lecture at the Azure Cloud Hall: this month (N days left).
+Hints player: 592 weeks, 34 meditated with nothing to act on (0 of them preparing for a beast); acted: { "lend": 64, "sect_report": 4, "mission": 128, "tea": 56, "talk": 4, "teacher": 4, "trial": 6, "explore": 8, "fight": 79, "heal": 11, "unseal": 14, "lecture": 91, "friend_meditate": 12, "treasury": 3, "study": 3, "armor": 4, "forage": 4, "spar": 4, "meditate": 42, "birthday_gift": 1, "congratulate": 2, "travel": 1, "sell": 1, "breakthrough": 4, "buy_qi": 8 }
+  unactionable x253: Easy fight: Hall Steward Qiu: Drive the crag goats off the cloud-stair
+  unactionable x223: Goal: Learn a fighting style
+  unactionable x154: Meditate beside Yun Feng at Cloud-Sea Cliff (Nx qi): +N% qi for N days
+  unactionable x118: Goal: Win a fight against a Foundation foe
+  unactionable x70: Bai Qingwu can teach you Rippling Moon Sword Art.
+  acted x91: Lecture at the Azure Cloud Hall: this month (N days left).
   acted x56: Grow closer: share tea at Yun Feng's (favor N/N).
-  acted x35: Your sect duty is N / N contribution with N days left this month. Swee
-  acted x31: The best pays N contribution: Drive Off the Fog-Antler Stag (N days), 
-  acted x21: Gather N more qi to reach the next stage: about N months and N days at
+  acted x37: Your sect duty is N / N contribution with N days left this month. Swee
+  acted x29: Gather N more qi to reach the next stage: about N months and N days at
+  acted x22: The best pays N contribution: Drive Off the Fog-Antler Stag (N days), 
 
 Time breakdown (SIM-022): hints player, day 0 to Foundation or end of run; days / qi gained per activity
-  seed  1: cultivate 467/17311, travel 32/0, fights 59/2579, chores/work 235/1180, lend/social 55/2407, crafting 0/0, injured/resting 15/0, practise 0/0, breakthrough 28/0, events/waiting 30/150 | days at QR peak 30
+  seed  1: cultivate 454/16807, travel 20/0, fights 51/2640, chores/work 219/920, lend/social 55/2626, crafting 0/0, injured/resting 9/0, practise 0/0, breakthrough 28/0, events/waiting 17/45 | days at QR peak 12
   seed  2: cultivate 207/15237, travel 10/0, fights 12/335, chores/work 63/120, lend/social 17/300, crafting 0/0, injured/resting 0/0, practise 0/0, breakthrough 14/0, events/waiting 31/35 | days at QR peak 4
-  seed  3: cultivate 401/17154, travel 20/0, fights 41/2064, chores/work 202/920, lend/social 47/2253, crafting 0/0, injured/resting 0/0, practise 0/0, breakthrough 21/0, events/waiting 23/165 | days at QR peak 23
-  seed  4: cultivate 605/20545, travel 20/0, fights 59/1400, chores/work 269/720, lend/social 65/2773, crafting 0/0, injured/resting 9/0, practise 0/0, breakthrough 28/0, events/waiting 20/70 | days at QR peak 19
-  medians (days/qi): cultivate 467/17311, travel 20/0, fights 59/2064, chores/work 235/920, lend/social 55/2407, crafting 0/0, injured/resting 9/0, practise 0/0, breakthrough 28/0, events/waiting 30/150; days at QR peak 23
+  seed  3: cultivate 418/17673, travel 20/0, fights 46/2420, chores/work 179/1020, lend/social 49/2346, crafting 0/0, injured/resting 9/0, practise 0/0, breakthrough 35/0, events/waiting 37/1295 | days at QR peak 8
+  seed  4: cultivate 502/17608, travel 20/0, fights 55/1240, chores/work 228/840, lend/social 53/2488, crafting 3/0, injured/resting 6/0, practise 0/0, breakthrough 14/0, events/waiting 38/70 | days at QR peak 5
+  medians (days/qi): cultivate 454/17608, travel 20/0, fights 51/2420, chores/work 219/920, lend/social 53/2488, crafting 0/0, injured/resting 9/0, practise 0/0, breakthrough 28/0, events/waiting 37/70; days at QR peak 8
 
 
 ## sect year (hints player, seeds 1-3, 365 days)
@@ -1847,10 +1847,10 @@ Sect year: azure_cloud_sect (home azure_peak), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 80: trial odds 3 in 100
   1           0         2         8          590         0         1        11/1        12      35
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Qi Gathering Pills with spare stones: the Wandering Merchant in Qingshi Village (10 days, by way of Misty Forest) sells them for 15 stones, about 6 days of meditation each.
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Meditate beside Yun Feng at Cloud-Sea Cliff (5x qi): +10% qi for 7 days
   [SECT-036] day 75: trial odds 0 in 100
   2           0         1        10          625         0         1        13/0        30      18
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Lecture at the Azure Cloud Hall: this month (26 days left).
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Treat your injuries: the Cliffside Hermit Physician treats it for 246 stones (you have 95). Damaged Meridians (heals in 11 months and 28 days) slows your cultivation to x0.25. Left alone they cost about 8 months and 29 days of cultivation and weaken you in fights.
   [SECT-036] day 80: trial odds 5 in 100
   3           0         2         9          620         0         1        12/0        18      35
        goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Star-Dew Qi Pills with spare stones: the Star-Dew Pill Stall in Fallen Star Market (12 days) sells them for 20 stones, about 9 days of meditation each.
@@ -1860,26 +1860,26 @@ Sect year: blood_lotus_sect (home withered_bone_marsh), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 43: trial odds 1 in 100
   1           0         2        10          585         0         1        13/0         0      22
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Star-Dew Qi Pills with spare stones: the Star-Dew Pill Stall in Fallen Star Market (9 days) sells them for 20 stones, about 16 days of meditation each.
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Meditate beside Peddler Hei at Yin Gathering Altar (2.9x qi): +10% qi for 7 days
   [SECT-036] day 43: trial odds 0 in 100
-  2           0         2        15          885         0         1        13/0        20      22
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Your sect treasury hands out the Blood Lotus Rebirth Scripture (qi x2.0, yours x1.0) for 600 contribution (you have 885). Claim it at the sect treasury and learn it there.
+  2           0         2        12          700         0         1        13/0        20      22
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Buy Star-Dew Qi Pills with spare stones: the Star-Dew Pill Stall in Fallen Star Market (9 days) sells them for 20 stones, about 8 days of meditation each.
   [SECT-036] day 58: trial odds 0 in 100
-  3           0         3        13          755         0         1        13/0         5      22
-       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Peddler Hei can teach you Drowned Reed Step.
-  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [349, 226, 313]
+  3           0         3        11          615         0         1        13/0         5      22
+       goal rows (day after joining, month-end check): perk never, rank_mission never, realm never, contribution never  | top hint: Unseal Appraising Eye in the artifact (O)
+  first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [350, 226, 313]
 
 Sect year: myriad_treasure_pavilion (home fallen_star_market), hints player, 365 days
   seed reported  lectures  missions contribution  rank@120  rank@365 duty met/short   stipend  joined
   [SECT-036] day 99: trial odds 57 in 100
   1           0         3        13          840         0         1        11/1        56      45
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 17 days (level 1 now). Each level raises your odds in a fight.
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 2 months and 9 days (level 1 now). Each level raises your odds in a fight.
   [SECT-036] day 81: trial odds 0 in 100
   2           0         2        13          815         0         1        12/1        56      20
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 29 days (level 1 now). Each level raises your odds in a fight.
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 2 months and 13 days (level 1 now). Each level raises your odds in a fight.
   [SECT-036] day 98: trial odds 52 in 100
   3           0         3        10          635         0         1        12/0        32      44
-       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Practise Gold-Piercing Finger on the Techniques screen: level 2 in about 1 month and 19 days (level 1 now). Each level raises your odds in a fight.
+       goal rows (day after joining, month-end check): perk never, realm never, contribution never  | top hint: Meditate beside Hua Qingyi at Rented Cultivation Room: +10% qi for 7 days
   first promotion after day 120 (or never): 3/3 seeds; duty short > 3 months: 0/3 seeds; first promotion days: [128, 131, 246]
 
 
@@ -2034,7 +2034,7 @@ first hour in presses (hints player, seeds 1-10, 12 months)
   first_friend           10/10             33             45             64             90
   friend_tier2           10/10             48             60             98            125
   close_friend           10/10             66             87            140            189
-  sworn_friend            0/10          never              -          never              -
+  sworn_friend            3/10            144            147            327            330
   first_lesson           10/10             66             87            140            189
   first_friend_scene     10/10             48             60             98            125
   first_technique        10/10             90            120            196            266
@@ -2060,7 +2060,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start qingshi_villag
   first_friend           10/10             33             45             64             90
   friend_tier2           10/10             48             60             98            125
   close_friend           10/10             66             87            140            189
-  sworn_friend            4/10            182            184            397            431
+  sworn_friend           10/10            152            198            349            450
   first_lesson           10/10             66             87            140            189
   first_friend_scene     10/10             48             60             98            125
   first_technique        10/10             90            120            196            266
@@ -2083,7 +2083,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start withered_bone_
   first_friend           10/10             32             35             67             74
   friend_tier2           10/10             47             60            102            128
   close_friend           10/10             65             86            144            193
-  sworn_friend            4/10            169            174            397            397
+  sworn_friend           10/10            142            185            330            421
   first_lesson           10/10             65             86            144            193
   first_friend_scene     10/10             47             60            102            128
   first_technique        10/10              9              9             12             12
@@ -2106,10 +2106,10 @@ first hour in presses (hints player, seeds 1-10, 24 months, start myriad_peaks_r
   first_friend           10/10             30             30             46             60
   friend_tier2           10/10             42             51             81            109
   close_friend           10/10             60             78            130            178
-  sworn_friend            8/10            153            246            486            543
+  sworn_friend           10/10             99            246            229            543
   first_lesson           10/10             60             78            130            178
   first_friend_scene     10/10             42             51             81            109
-  first_technique         1/10            258            258            688            688
+  first_technique         1/10            243            243            535            535
   first_breakthrough     10/10             15             27             25             46
   sect_joined            10/10             15             27             25             46
 seed 1 first_win day 8
@@ -2129,7 +2129,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start azure_peak)
   first_friend           10/10             27             33             51             67
   friend_tier2           10/10             42             51             88            109
   close_friend           10/10             60             81            130            179
-  sworn_friend            2/10            182            182            397            397
+  sworn_friend           10/10            137            225            320            524
   first_lesson           10/10             60             81            130            179
   first_friend_scene     10/10             42             51             88            109
   first_technique        10/10             84            114            186            256
@@ -2152,7 +2152,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start fallen_star_ma
   first_friend           10/10             33             36             67             74
   friend_tier2           10/10             51             72            102            151
   close_friend           10/10             66             93            144            200
-  sworn_friend            1/10            167            167            397            397
+  sworn_friend           10/10            153            188            350            436
   first_lesson           10/10             66             93            144            200
   first_friend_scene     10/10             51             72            102            151
   first_technique        10/10             12             12             13             13
@@ -2175,7 +2175,7 @@ first hour in presses (hints player, seeds 1-10, 24 months, start misty_forest)
   first_friend           10/10             32             35             61             68
   friend_tier2            9/10             47             56             96            117
   close_friend            9/10             65             86            138            187
-  sworn_friend            4/10            170            173            397            397
+  sworn_friend            9/10            149            196            346            452
   first_lesson            9/10             65             86            138            187
   first_friend_scene      9/10             47             56             96            117
   first_technique        10/10              9              9             12             12
