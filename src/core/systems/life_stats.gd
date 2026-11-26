@@ -5,7 +5,7 @@ extends RefCounted
 ## the end-of-life summary.
 
 const KEYS: Array[String] = ["fights_won", "fights_lost", "threats_fled", "breakthroughs", "breakthroughs_failed",
-	"tribulations_survived", "respawns", "items_crafted", "missions_done", "rank_missions_done", "perk_buys", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "commissions_lapsed", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost", "profession_ranks", "profession_stones", "harvests", "beasts_hunted", "foraged", "great_beasts"]
+	"tribulations_survived", "respawns", "items_crafted", "missions_done", "rank_missions_done", "perk_buys", "deeds_done", "encounters", "days_in_seclusion", "commissions_done", "commissions_lapsed", "tournaments_won", "incursions_repelled", "festival_activities", "realm_floors_cleared", "inheritances_claimed", "stones_earned", "qi_gathered", "regions_visited", "lectures_attended", "seasons_gathered", "happenings_seen", "discoveries", "bounties_done", "best_renown", "regions_mastered", "rival_bouts_won", "rival_bouts_lost", "renown_titles", "inheritances_lost", "profession_ranks", "profession_stones", "harvests", "beasts_hunted", "foraged", "great_beasts", "contest_rounds_won", "contest_wins"]
 
 const LABELS := {
 	"fights_won": "Fights won",
@@ -20,6 +20,8 @@ const LABELS := {
 	"beasts_hunted": "Beasts hunted in the wild",
 	"foraged": "Things picked up on the way",
 	"great_beasts": "Great beasts felled",
+	"contest_rounds_won": "Contest rounds won",
+	"contest_wins": "Sect contests won outright",
 	"profession_ranks": "Profession ranks gained",
 	"profession_stones": "Spirit stones from your craft",
 	"commissions_done": "Commissions filled",
@@ -105,6 +107,9 @@ static func epilogue(c: CharacterData, data: GameData, clan: ClanData = null, ma
 		out.append("Clan: %s, %d members" % [clan.name, clan.members.size()])
 	if not c.children.is_empty():
 		out.append("Children: %d" % c.children.size())
+	var champ := Sects.contest_win_line(c, data)
+	if champ != "":
+		out.append(champ)
 	var stats := lines(c)
 	for i in mini(stats.size(), max_stats):
 		out.append(stats[i])

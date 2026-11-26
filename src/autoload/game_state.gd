@@ -3699,11 +3699,12 @@ func enter_sect_contest() -> void:
 		if foe.has("person"):
 			_note_contest_rival(true)
 		index += 1
-	if won > 0 and Sects.contest_round(player, data, index).is_empty():
+	var champion := Sects.record_contest(player, won, int(Sects.contest_def(player, data).get("rounds", 0)), GameClock.total_days)
+	if champion:
 		FolkNews.queue(player, data, npc_favor, "contest")  # FOLK-049: friends cheer a champion
 	if won == 0:
 		EventBus.post("You fall in the first round of the contest. Next year, perhaps.", "warning")
-	elif Sects.contest_round(player, data, index).is_empty():
+	elif champion:
 		EventBus.post("You win every round of the contest!", "progress")
 	else:
 		EventBus.post("You are beaten after %d round%s. The contest is over for this year." % [won, "" if won == 1 else "s"], "warning")

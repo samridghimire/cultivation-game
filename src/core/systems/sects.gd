@@ -885,6 +885,39 @@ static func enter_contest(c: CharacterData, total_days: int) -> void:
 	c.last_contest_year = Calendar.year_of(total_days)  # SECT-043: survives leaving and rejoining
 
 
+## SECT-048: records a finished contest: `rounds_won` bouts won of `rounds` in `total_days`' year.
+## Counts rounds, and a full win (all rounds won) once. Returns true on a full win.
+static func record_contest(c: CharacterData, rounds_won: int, rounds: int, total_days: int) -> bool:
+	if rounds_won <= 0:
+		return false
+	LifeStats.add(c, "contest_rounds_won", rounds_won)
+	var rec := c.contest_record
+	rec["best_round"] = maxi(int(rec.get("best_round", 0)), rounds_won)
+	var full := rounds > 0 and rounds_won >= rounds
+	if full:
+		LifeStats.add(c, "contest_wins")
+		rec["last_year"] = Calendar.year_of(total_days)
+		rec["sect"] = String(c.sect.get("id", ""))
+	c.contest_record = rec
+	return full
+
+
+## SECT-048: {best_round, wins, last_year} (last_year -1 and zeros when never entered/won).
+static func contest_record(c: CharacterData) -> Dictionary:
+	return {"best_round": int(c.contest_record.get("best_round", 0)), "wins": LifeStats.get_stat(c, "contest_wins"),
+		"last_year": int(c.contest_record.get("last_year", -1))}
+
+
+## SECT-048: "Won the <sect> contest in year N" for the latest full win; "" when none.
+static func contest_win_line(c: CharacterData, data: GameData) -> String:
+	var year := int(c.contest_record.get("last_year", -1))
+	if year < 0:
+		return ""
+	var id := String(c.contest_record.get("sect", ""))
+	var name := String((data.sects[id] as SectDef).name) if data.sects.has(id) else "sect"
+	return "Won the %s contest in year %d" % [name, year]
+
+
 ## Pays one round's prize. Returns true when its contribution promoted `c` (the caller announces it).
 static func pay_contest_prize(c: CharacterData, data: GameData, prize: Dictionary) -> bool:
 	var stones := int(prize.get("spirit_stones", 0))

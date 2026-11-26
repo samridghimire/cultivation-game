@@ -63,6 +63,8 @@ var professions: Dictionary = {}  # profession id -> {"rank": int, "xp": float}
 var sect: Dictionary = {}
 ## SECT-043: the year of the last outer-sect contest entered (-1 = never); kept when the sect is left.
 var last_contest_year: int = -1
+## SECT-048: the contest record that outlives the sect: {best_round, last_year, sect (id of the last full win)}; {} = none.
+var contest_record: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
 var equipment: Dictionary = {}
@@ -290,6 +292,7 @@ func to_dict() -> Dictionary:
 		"professions": professions.duplicate(true),
 		"sect": sect.duplicate(),
 		"last_contest_year": last_contest_year,
+		"contest_record": contest_record.duplicate(),
 		"inventory": inventory.duplicate(),
 		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
@@ -433,6 +436,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		c.professions[prof_id] = {"rank": int(profs[prof_id].get("rank", 0)), "xp": float(profs[prof_id].get("xp", 0))}
 	var s: Dictionary = d.get("sect", {})
 	c.last_contest_year = int(d.get("last_contest_year", int(s.get("contest_year", -1))))
+	var cr: Dictionary = d.get("contest_record", {})
+	if not cr.is_empty():
+		c.contest_record = {"best_round": int(cr.get("best_round", 0)), "last_year": int(cr.get("last_year", -1)), "sect": String(cr.get("sect", ""))}
 	if not s.is_empty():
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):
