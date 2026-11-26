@@ -148,3 +148,25 @@ static func congratulate(player: CharacterData, data: GameData, npc_id: String, 
 static func prune_own(player: CharacterData, data: GameData, day: int) -> void:
 	for id: String in player.friend_news.keys():
 		_fresh(player, data, id, day)
+
+
+## GUIDE-293: journal rows for every fresh own-news entry (told or not; pure, nothing erased), fewest days left first.
+## Each row: {npc_id, name, text, region (id), days_left}.
+static func journal_rows(player: CharacterData, data: GameData, npcs: Dictionary, day: int) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	if player == null:
+		return rows
+	var own_days: int = int(data.family.get("folk_news", {}).get("own_days", 30))
+	for id: String in player.friend_news:
+		if _expired(player, data, id, day):
+			continue
+		var entry: Dictionary = player.friend_news[id]
+		var npc: CharacterData = npcs.get(id)
+		var name: String = npc.name if npc != null else String(data.npcs.get(id, {}).get("name", id))
+		var what := "began Qi Refining" if String(entry.get("kind", "")) == "qi_start" else "broke through to %s" % String(entry.get("realm", "a new realm"))
+		var left := maxi(1, own_days - (day - int(entry.get("day", 0))))
+		rows.append({"npc_id": id, "name": name, "region": String(data.npcs.get(id, {}).get("region", "")), "days_left": left,
+			"text": "%s %s: congratulate them (%d days left)" % [name, what, left]})
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["days_left"]) < int(b["days_left"]) or (int(a["days_left"]) == int(b["days_left"]) and String(a["npc_id"]) < String(b["npc_id"])))
+	return rows

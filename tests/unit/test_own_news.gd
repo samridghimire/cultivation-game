@@ -189,3 +189,31 @@ func test_congratulate_uses_npc_voice() -> void:
 		if got[0] == "\"%s\"" % l.replace("{player}", c.name):
 			ok = true
 	assert_true(ok, str(got))
+
+
+func test_journal_rows_fresh_told_expired_sorted() -> void:
+	var c := _start()
+	var gs := _gs()
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50, "elder_mo": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", 10)
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50, "elder_mo": 50}, gs.npcs["elder_mo"], "breakthrough", "Core Formation", 20)
+	var rows := FolkNews.journal_rows(c, gs.data, gs.npcs, 25)
+	assert_eq(rows.size(), 2)
+	assert_eq(String(rows[0]["npc_id"]), "xiao_ling", "fewest days left first")
+	assert_true(String(rows[0]["text"]).contains("began Qi Refining: congratulate them (15 days left)"), String(rows[0]["text"]))
+	assert_true(String(rows[1]["text"]).contains("broke through to Core Formation"))
+	FolkNews.take_own(c, gs.data, "xiao_ling", 25)
+	assert_eq(FolkNews.journal_rows(c, gs.data, gs.npcs, 25).size(), 2, "told but not congratulated is still listed")
+	assert_eq(FolkNews.journal_rows(c, gs.data, gs.npcs, 45).size(), 1, "expired gone")
+	assert_eq(c.friend_news.size(), 2, "pure: nothing erased")
+
+
+func test_journal_includes_row_after_queued_news() -> void:
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["xiao_ling"] = 50
+	FolkNews.queue_own(c, gs.data, gs.npc_favor, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	var found := false
+	for e: Dictionary in gs.journal_entries():
+		if String(e.get("text", "")).contains("Xiao Ling began Qi Refining: congratulate them"):
+			found = true
+	assert_true(found, "journal row present")
