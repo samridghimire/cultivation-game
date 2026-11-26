@@ -241,3 +241,34 @@ func test_contest_record_line() -> void:
 	Sects.record_contest(c, 3, 3, 100)
 	assert_true(Sects.contest_record_line(c, d).ends_with("champion 1 time"))
 	assert_true("Contest record: x" in JournalScreen.month_lines({"duty": 0, "stipend": {}, "contest_record": "Contest record: x"}))
+
+
+## SECT-051: the Sect page shows the trial preview row under the goals only while the odds are poor.
+func test_sect_page_trial_preview_row() -> void:
+	var root: Node = Engine.get_main_loop().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.join_sect("azure_cloud_sect")
+	gs.player.sect["rank"] = 1
+	for k: String in gs.player.attributes:
+		gs.player.attributes[k] = 1
+	gs.player.techniques = {}
+	var sect: SectDef = gs.data.sects["azure_cloud_sect"]
+	var need := int(sect.ranks[2].get("contribution", 0))
+	gs.player.sect["contribution"] = need / 2
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	await root.get_tree().process_frame
+	var journal: JournalScreen = hud.get("_screens").get("toggle_journal")
+	journal.open()
+	journal.set_page("sect")
+	var expect := not Guidance.trial_preview(gs.player, gs.data).is_empty()
+	assert_eq(journal._sect.find_child("TrialPreview", true, false) != null, expect)
+	gs.player.sect["contribution"] = 0
+	journal.set_page("sect")
+	journal.open()
+	assert_true(journal._sect.find_child("TrialPreview", true, false) == null)
+	hud.queue_free()

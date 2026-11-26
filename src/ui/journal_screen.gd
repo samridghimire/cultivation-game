@@ -190,6 +190,11 @@ func _build_sect() -> void:
 		gbox.add_child(UIStyle.label(sect_goals_heading(p, GameState.data), 18, UIStyle.ACCENT))
 		for g: Dictionary in goal_rows:
 			gbox.add_child(goal_box_row(bool(g["done"]), String(g["text"]), DIM if bool(g["done"]) else Color.WHITE, 680))
+		var preview := Guidance.trial_preview(p, GameState.data)  # SECT-051
+		if not preview.is_empty():
+			var prow := UIStyle.label("%s trial, now %s (%d in 100): %s" % [preview["rank_name"], preview["word"], roundi(float(preview["odds"]) * 100.0), preview["advice"]], 14, DIM)
+			prow.name = "TrialPreview"
+			gbox.add_child(prow)
 		_sect.add_child(gpanel)
 	var month := UIStyle.panel()
 	month.name = "SectMonth"

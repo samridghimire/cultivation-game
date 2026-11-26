@@ -1237,6 +1237,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		else:
 			out.append(missions)
 	if today >= 0:
+		var preview := trial_preview_hint(c, data, today)  # SECT-051
+		if preview != "":
+			out.append(preview)
 		var lecture := _lecture_hint(c, data, today)
 		if lecture != "" and lecture_here == "":
 			# GUIDE-292: an open lecture within the days left leads the friend / lend lines (the rarer chance); out of reach it trails.
@@ -7232,6 +7235,39 @@ static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> Strin
 
 
 ## SECT-038: "The <sect> contest is open this month" while a member can enter it.
+## SECT-051: the next rank's trial before it opens. {} unless `c` is in a sect whose next rank asks a trial, has at least
+## TRIAL_PREVIEW_SHARE of that rank's contribution, the odds against the examiner are below even and the examiner's advice
+## is not empty (an open trial is covered by the trial lines). Else {rank_name, odds, word, advice}.
+const TRIAL_PREVIEW_SHARE := 0.5
+const TRIAL_PREVIEW_DAYS := 7
+
+
+static func trial_preview(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue() or not Sects.needs_trial(c, data) or trial_odds(c, data) >= 0.0:
+		return {}
+	var rank := Sects.next_rank(c, data)
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var need := int(sect.ranks[rank].get("contribution", 0))
+	if need <= 0 or float(int(c.sect.get("contribution", 0))) < float(need) * TRIAL_PREVIEW_SHARE:
+		return {}
+	var odds := Combat.win_chance(c, data, Sects.trial_foe(c, data))
+	var advice := Sects.trial_advice(c, data)
+	if odds >= 0.5 or advice == "":
+		return {}
+	return {"rank_name": sect.rank_name(rank), "odds": odds, "word": Combat.label_for_chance(odds), "advice": advice}
+
+
+## SECT-051: "Prepare for the Inner Disciple trial (now Hard, 12 in 100): Learn an attack technique; ...", shown on one
+## day in TRIAL_PREVIEW_DAYS (the day number's weekly slot, so the line is stateless). "" when `trial_preview` is empty.
+static func trial_preview_hint(c: CharacterData, data: GameData, today: int) -> String:
+	if today < 0 or today % TRIAL_PREVIEW_DAYS != 0:
+		return ""
+	var p := trial_preview(c, data)
+	if p.is_empty():
+		return ""
+	return "Prepare for the %s trial (now %s, %d in 100): %s" % [p["rank_name"], String(p["word"]), roundi(float(p["odds"]) * 100.0), p["advice"]]
+
+
 static func _contest_hint(c: CharacterData, data: GameData, today: int) -> String:
 	if not Sects.contest_open(c, data, today):
 		return ""

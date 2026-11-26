@@ -8032,3 +8032,57 @@ func _finish_sect_goals(c: CharacterData) -> void:
 	LifeStats.add(c, "perk_buys")
 	LifeStats.add(c, "rank_missions_done")
 	c.sect["contribution"] = 100000
+
+
+## SECT-051: the next trial is previewed from half the rank's contribution while the odds are poor.
+func _preview_member() -> CharacterData:
+	var c := new_character()
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	for k: String in c.attributes:
+		c.attributes[k] = 1
+	c.techniques = {}
+	c.stage = 0
+	return c
+
+
+func test_trial_preview_hint_at_half_contribution() -> void:
+	var d := data()
+	var c := _preview_member()
+	var need := int(d.sects["azure_cloud_sect"].ranks[1]["contribution"])
+	c.sect["contribution"] = need / 2
+	assert_eq(Guidance.trial_odds(c, d), -1.0)
+	var hint := Guidance.trial_preview_hint(c, d, 14)
+	assert_true(hint.begins_with("Prepare for the %s trial (now " % d.sects["azure_cloud_sect"].rank_name(1)), hint)
+	assert_true(hint.ends_with(Sects.trial_advice(c, d)), hint)
+	c.sect["contribution"] = need / 2 - 1
+	assert_eq(Guidance.trial_preview_hint(c, d, 14), "")
+
+
+func test_trial_preview_once_a_week_and_not_when_easy() -> void:
+	var d := data()
+	var c := _preview_member()
+	c.sect["contribution"] = int(d.sects["azure_cloud_sect"].ranks[1]["contribution"]) - 1
+	var shown := 0
+	for day in range(14, 21):
+		if Guidance.trial_preview_hint(c, d, day) != "":
+			shown += 1
+	assert_eq(shown, 1)
+	assert_eq(Guidance.trial_preview_hint(c, d, -1), "")
+	# strong: odds >= 50 in 100, no preview
+	c.realm_index = 3
+	c.stage = 5
+	for k: String in c.attributes:
+		c.attributes[k] = 60
+	if Combat.win_chance(c, d, Sects.trial_foe(c, d)) >= 0.5:
+		assert_true(Guidance.trial_preview(c, d).is_empty())
+
+
+func test_trial_preview_empty_for_rogues_and_open_trial() -> void:
+	var d := data()
+	var c := _preview_member()
+	c.sect = {}
+	assert_true(Guidance.trial_preview(c, d).is_empty())
+	c = _preview_member()
+	c.sect["contribution"] = 99999
+	assert_true(Guidance.trial_preview(c, d).is_empty())
