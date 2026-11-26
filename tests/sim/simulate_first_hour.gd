@@ -1,6 +1,6 @@
 extends SceneTree
 ## First-hour sim (QA-016): scripted newcomers in Qingshi Village (tests/sim/first_hour.gd).
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N] [--deaths] [--recharge] [--hint-missions] [--rating-check]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/simulate_first_hour.gd -- [seeds] [months]  [--curious] [--trace] [--zero] [--forced] [--injury-origins] [--odds-bands] [--qi-pill-cap=N] [--deaths] [--recharge] [--hint-missions] [--rating-check] [--firsts]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const FORCED_ODDS := 0.2
@@ -200,6 +200,9 @@ func _print_injury_origins(rows: Array, slow_days: Array, breaks: Array, seeds: 
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
+	if args.has("--firsts"):
+		_run_firsts(args)
+		return
 	var curious := args.has("--curious")
 	FirstHour.hints_policy = args.has("--hints")  # SIM-010: the player who reads the Next-steps lines (not --curious)
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
@@ -596,3 +599,170 @@ func _run() -> void:
 	print("Bounties (QA-146), offered by region (ids once per seed): %s; taken (times): %s" % [str(FirstHour.bounty_log["offered"]), str(FirstHour.bounty_log["taken"])])
 	print("Lines by category: %s" % str(by_cat))
 	quit()
+
+
+const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first season task done"]
+const DEAD_DAYS := 14
+
+
+## SIM-037: which of the FIRSTS hold now (name -> true).
+func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary) -> Dictionary:
+	var best_tier := -1
+	for id: String in gs.npc_favor:
+		best_tier = maxi(best_tier, Folk.tier_index(gs.data, int(gs.npc_favor[id])))
+	var shared := false
+	for k: String in gs.world_flags:
+		if k.begins_with("friend_med_"):
+			shared = true
+	return {
+		FIRSTS[0]: gs.npc_favor.get("elder_mo", 0) > 0 or bool(gs.world_flags.get(Guidance.ELDER_MO_FLAG, false)),
+		FIRSTS[1]: LifeStats.get_stat(c, "deeds_done") >= 1,
+		FIRSTS[2]: LifeStats.get_stat(c, "fights_won") >= 1,
+		FIRSTS[3]: not c.techniques.is_empty(),
+		FIRSTS[4]: best_tier >= 0,
+		FIRSTS[5]: best_tier >= 1,
+		FIRSTS[6]: c.realm_index * 100 + c.stage > start_stage,
+		FIRSTS[7]: not c.is_rogue(),
+		FIRSTS[8]: LifeStats.get_stat(c, "lectures_attended") >= 1,
+		FIRSTS[9]: bool(flags.get("congrat", false)),
+		FIRSTS[10]: shared,
+		FIRSTS[11]: bool(flags.get("season", false)),
+	}
+
+
+## SIM-037: --firsts [seeds] [months]: the day of each first per seed (hints policy, Qingshi start), then dead stretches.
+func _run_firsts(args: Array) -> void:
+	var nums: Array[int] = []
+	for a in args:
+		if not a.begins_with("--"):
+			nums.append(int(a))
+	var seeds := nums[0] if nums.size() > 0 else 6
+	var months := nums[1] if nums.size() > 1 else 6
+	FirstHour.hints_policy = true
+	FirstHour.start_region = ""
+	FirstHour.sect_report = true
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	var bus: Node = root.get_node("EventBus")
+	var table: Dictionary = {}  # first -> [day per seed or -1]
+	for f in FIRSTS:
+		table[f] = []
+	var stretch_rows: Array = []  # {seed, start, end, kinds}
+	var sorted_all: Array = []
+	for s in range(1, seeds + 1):
+		var st := {"day0": -1, "start_stage": -1, "found": {}, "events": [0], "last": {}, "acts": []}
+		var flags := {}
+		var on_congrat := func(_id: String, _n: String, _t: String) -> void: flags["congrat"] = true
+		var on_season := func(_s: String, _r: String) -> void: flags["season"] = true
+		bus.friend_congratulated.connect(on_congrat)
+		bus.season_tasks_done.connect(on_season)
+		var on_days := func(n: int) -> void:
+			var c: CharacterData = gs.player
+			if c == null:
+				return
+			if int(st["day0"]) < 0:
+				st["day0"] = clock.total_days - n
+				st["start_stage"] = c.realm_index * 100 + c.stage
+			var rel: int = clock.total_days - int(st["day0"])
+			st["acts"].append([rel - n, rel, FirstHour._activity_of(get_stack())])
+			var now := _firsts_now(gs, c, int(st["start_stage"]), flags)
+			var new_event := false
+			for f: String in now:
+				if now[f] and not st["found"].has(f):
+					st["found"][f] = rel
+					new_event = true
+			var stage_now: int = c.realm_index * 100 + c.stage
+			if stage_now > int(st["last"].get("stage", st["start_stage"])):
+				new_event = true
+			st["last"]["stage"] = stage_now
+			if new_event:
+				st["events"].append(rel)
+		gs.get_node("/root/GameClock").days_advanced.connect(on_days)
+		var out: Dictionary = FirstHour.play(gs, clock, s, months, false)
+		gs.get_node("/root/GameClock").days_advanced.disconnect(on_days)
+		bus.friend_congratulated.disconnect(on_congrat)
+		bus.season_tasks_done.disconnect(on_season)
+		var end_day: int = clock.total_days - int(st["day0"])
+		var events: Array = st["events"]
+		events.append(end_day)
+		for i in range(1, events.size()):
+			var a: int = events[i - 1]
+			var b: int = events[i]
+			if b - a >= DEAD_DAYS:
+				var kinds := {}
+				for act: Array in st["acts"]:
+					if int(act[1]) > a and int(act[0]) < b:
+						kinds[act[2]] = int(kinds.get(act[2], 0)) + int(mini(int(act[1]), b) - maxi(int(act[0]), a))
+				var ranked: Array = kinds.keys()
+				ranked.sort_custom(func(x: String, y: String) -> bool: return kinds[x] > kinds[y])
+				var top: Array = []
+				for k in ranked.slice(0, 3):
+					top.append("%s %dd" % [k, kinds[k]])
+				stretch_rows.append({"seed": s, "start": a, "end": b, "len": b - a, "top": ", ".join(top)})
+		for f in FIRSTS:
+			table[f].append(int(st["found"].get(f, -1)))
+		gs.end_session()
+	var lines: Array[String] = []
+	lines.append("# SIM-037: the first season as a list of firsts")
+	lines.append("")
+	lines.append("Hints policy, Qingshi start, %d seeds, %d months. Days are counted from day 0; `never` means the sim did not reach it." % [seeds, months])
+	lines.append("")
+	var head := "| first |"
+	var rule := "|---|"
+	for s in range(1, seeds + 1):
+		head += " seed %d |" % s
+		rule += "---|"
+	lines.append(head + " median |")
+	lines.append(rule + "---|")
+	for f in FIRSTS:
+		var row := "| %s |" % f
+		var reached: Array = []
+		for d: int in table[f]:
+			row += " %s |" % (str(d) if d >= 0 else "never")
+			if d >= 0:
+				reached.append(d)
+		var med := "never" if reached.size() * 2 < seeds else "%.0f" % _median(reached.duplicate())
+		lines.append(row + " %s |" % med)
+	lines.append("")
+	lines.append("## Dead stretches (%d+ days with no first and no stage change)" % DEAD_DAYS)
+	lines.append("")
+	stretch_rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["len"] > b["len"])
+	lines.append("| seed | days | length | top action kinds |")
+	lines.append("|---|---|---|---|")
+	for r: Dictionary in stretch_rows:
+		lines.append("| %d | %d-%d | %d | %s |" % [r["seed"], r["start"], r["end"], r["len"], r["top"]])
+	if stretch_rows.is_empty():
+		lines.append("| - | - | - | none |")
+	lines.append("")
+	lines.append("%s" % "\n".join(_firsts_summary(stretch_rows, seeds)))
+	var text := "\n".join(lines) + "\n"
+	print(text)
+	var f := FileAccess.open("res://docs/specs/SIM-037-result.md", FileAccess.WRITE)
+	if f != null:
+		f.store_string(text)
+	quit()
+
+
+## Names the two longest median dead stretches: stretches are grouped by (rounded start day / 30) bucket across seeds.
+func _firsts_summary(rows: Array, seeds: int) -> Array[String]:
+	var buckets := {}
+	for r: Dictionary in rows:
+		var key: int = int(r["start"]) / 30
+		if not buckets.has(key):
+			buckets[key] = []
+		buckets[key].append(r)
+	var ranked: Array = buckets.keys()
+	ranked.sort_custom(func(a: int, b: int) -> bool:
+		var la: Array = buckets[a].map(func(r: Dictionary) -> int: return r["len"])
+		var lb: Array = buckets[b].map(func(r: Dictionary) -> int: return r["len"])
+		return _median(la.duplicate()) * la.size() > _median(lb.duplicate()) * lb.size())
+	var out: Array[String] = []
+	out.append("Summary: the two stretches that recur most across %d seeds (by median length, seeds hit):" % seeds)
+	for k in ranked.slice(0, 2):
+		var group: Array = buckets[k]
+		var lens: Array = group.map(func(r: Dictionary) -> int: return r["len"])
+		var acts := {}
+		for r: Dictionary in group:
+			acts[r["top"]] = true
+		out.append("- starting around day %d-%d: median %.0f days in %d seeds; the sim was doing: %s." % [k * 30, k * 30 + 29, _median(lens.duplicate()), group.size(), " / ".join(acts.keys().slice(0, 2))])
+	return out
