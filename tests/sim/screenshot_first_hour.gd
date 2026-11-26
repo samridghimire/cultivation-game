@@ -515,6 +515,16 @@ func _start() -> void:
 				(hud.get("_pending_friend_scenes") as Array).clear()
 				(hud.get("_friend_card") as Control).close()
 				gs.congratulate(oid), "close": func() -> void: (hud.get("_friend_card") as Control).call("close")})
+			shots.append({"name": "own_news_people", "open": func() -> void:  # WU-634: the People page with the star and realm line
+				hud.get("_banner").visible = false
+				(hud.get("_friend_card") as Control).close()
+				gs.npc_favor[oid] = 60
+				gs.npcs[oid].realm_index = 1
+				gs.current_region = String(gs.data.npcs[oid].get("region", "qingshi_village"))
+				c.friend_news[oid] = {"kind": "qi_start", "realm": "Qi Refining", "day": int(Engine.get_main_loop().root.get_node("GameClock").total_days), "told": false}
+				var pbook: Control = hud.get("_village_book")
+				pbook.open()
+				pbook.call("set_page", "people"), "close": func() -> void: (hud.get("_village_book") as Control).call("close")})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-609: the staged promotion trial card
 		if a.begins_with("--sect-trial="):

@@ -334,3 +334,40 @@ func test_people_card_labels_fit() -> void:
 	book.queue_free()
 	await _frames()
 	gs.end_session()
+
+
+## WU-634: friends who cultivate show their realm under the name (mortals nothing); fresh own news adds the star.
+func test_people_card_realm_line_and_news_star() -> void:
+	var root := _tree().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	var people := Npcs.in_region(gs.npcs, gs.data, gs.current_region)
+	var a: CharacterData = people[0]
+	var b: CharacterData = people[1]
+	a.realm_index = 1
+	a.stage = 1
+	b.realm_index = 0
+	assert_eq(Folk.people_realm_line(b, gs.data), "", "mortals hidden")
+	assert_eq(Folk.people_realm_line(a, gs.data), Cultivation.realm_label(a, gs.data))
+	gs.npc_favor[a.id] = 40
+	gs.npc_favor[b.id] = 30
+	gs.player.friend_news[a.id] = {"kind": "qi_start", "realm": "Qi Refining", "day": GameClock.total_days, "told": false}
+	var rows: Array = gs.people_entries()
+	var ea: Dictionary = rows.filter(func(r: Dictionary) -> bool: return r["id"] == a.id)[0]
+	var eb: Dictionary = rows.filter(func(r: Dictionary) -> bool: return r["id"] == b.id)[0]
+	assert_true(bool(ea["has_news"]) and not bool(eb["has_news"]))
+	assert_eq(String(eb["realm_line"]), "")
+	assert_true(VillageBook.people_detail(ea, gs.data).contains("Has news: congratulate them"))
+	var book := VillageBook.new()
+	root.add_child(book)
+	book.open()
+	book.set_page("people")
+	await _frames()
+	var card := (book.get("_grid") as GridContainer).get_node(String(a.id))
+	assert_true(card.find_child("NewsStar", true, false) != null, "star on the news card")
+	assert_true(card.find_child("RealmLine", true, false) != null, "realm line on the cultivating friend")
+	var card_b := (book.get("_grid") as GridContainer).get_node(String(b.id))
+	assert_true(card_b.find_child("RealmLine", true, false) == null and card_b.find_child("NewsStar", true, false) == null)
+	book.queue_free()
+	await _frames()

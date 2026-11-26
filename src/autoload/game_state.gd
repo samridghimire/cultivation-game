@@ -3929,6 +3929,9 @@ func unmark_day(day: int) -> void:
 func people_entries() -> Array[Dictionary]:
 	var rows := Folk.people_entries(npcs, data, current_region, npc_favor, world_flags, GameClock.total_days)
 	for e in rows:  # WU-588: the next thing that grows each friendship (read-only)
+		var friend: CharacterData = npcs.get(String(e["id"]))
+		e["realm_line"] = Folk.people_realm_line(friend, data)  # WU-634
+		e["has_news"] = FolkNews.has_own(player, data, String(e["id"]), GameClock.total_days)
 		e["next_step"] = Folk.next_step(player, npcs.get(String(e["id"])), data, world_flags, GameClock.total_days, int(e["favor"]), current_region)
 	return rows
 

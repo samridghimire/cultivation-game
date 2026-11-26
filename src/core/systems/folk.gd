@@ -635,6 +635,13 @@ static func people_entries(npcs: Dictionary, data: GameData, region_id: String, 
 	return out
 
 
+## WU-634: the People card's realm line for a friend: "Qi Refining 2" style label, "" for mortals (hidden). Pure.
+static func people_realm_line(npc: CharacterData, data: GameData) -> String:
+	if npc == null or npc.realm_index <= 0:
+		return ""
+	return Cultivation.realm_label(npc, data)
+
+
 ## WU-588: one short line on the next thing that grows the friendship with `npc` today, from state the game already has:
 ## tea or a hand lent when ready, else whichever returns soonest, else a liked item, else the next tier. "" when nothing is left.
 static func next_step(c: CharacterData, npc: CharacterData, data: GameData, flags: Dictionary, today: int, favor: int, region_id: String = "") -> String:

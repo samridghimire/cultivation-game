@@ -7,6 +7,19 @@ extends PanelContainer
 signal closed
 
 const COLUMNS := 6
+## WU-634: the WU-629 rising star (same pixels as EmoteBubble's own_news) as a 16x16 control beside a friend's name.
+class NewsStar extends Control:
+	func _init() -> void:
+		custom_minimum_size = Vector2(16, 16)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var star := Color("e9b824")
+		draw_rect(Rect2(Vector2(7, 2), Vector2(2, 9)), star)
+		draw_rect(Rect2(Vector2(4, 5), Vector2(8, 2)), star)
+		draw_rect(Rect2(Vector2(5, 3), Vector2(1, 1)), star)
+		draw_rect(Rect2(Vector2(10, 3), Vector2(1, 1)), star)
+
 const PAGES: Array[String] = ["fish", "hunts", "herbs", "people", "festivals"]
 const PEOPLE_COLUMNS := 3
 const CARD_SIZE := Vector2(320, 120)
@@ -401,7 +414,23 @@ func _card(e: Dictionary) -> Button:
 	row.add_child(col)
 	var name_label := UIStyle.label(String(e["name"]), 16, UIStyle.ACCENT)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(name_label)
+	if bool(e.get("has_news", false)):  # WU-634: the rising star beside the name
+		var name_row := HBoxContainer.new()
+		name_row.add_theme_constant_override("separation", 4)
+		name_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_row.name = "NameRow"
+		name_row.add_child(name_label)
+		var star := NewsStar.new()
+		star.name = "NewsStar"
+		name_row.add_child(star)
+		col.add_child(name_row)
+	else:
+		col.add_child(name_label)
+	if String(e.get("realm_line", "")) != "":  # WU-634: friends who cultivate; mortals show nothing
+		var realm := UIStyle.label(String(e["realm_line"]), 13, DIM)
+		realm.name = "RealmLine"
+		realm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(realm)
 	var hearts := maxi((data.family.get("folk_tiers", []) as Array).size(), 1)
 	var h := TextureRect.new()
 	h.texture = HudIcons.hearts(hearts, int(e["tier_index"]) + 1, 2)
@@ -472,6 +501,8 @@ static func people_detail(e: Dictionary, data: GameData) -> String:
 		parts.append("Dislikes: %s." % names.call(dislikes))
 	if String(e.get("last_gift", "")) != "":
 		parts.append(String(e["last_gift"]) + ".")
+	if bool(e.get("has_news", false)):  # WU-634
+		parts.append("Has news: congratulate them.")
 	return " ".join(parts)
 
 
