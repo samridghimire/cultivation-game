@@ -366,3 +366,28 @@ func test_new_disciples_have_enough_chores() -> void:
 					and not m.has("requires") and not m.has("requires_flag"):
 				n += 1
 		assert_true(n >= 4, "%s has %d free rank-0 chores" % [sect_id, n])
+
+
+## SECT-047: a rank-1 member can always meet the monthly duty from the cheapest mission that needs no items or flag, done as
+## often as its days and cooldown allow in one 30-day month.
+func test_rank_one_duty_is_within_one_months_cheapest_missions() -> void:
+	var d := GameData.new()
+	for sect_id: String in d.sects:
+		var duty := int((d.sects[sect_id] as SectDef).ranks[1].get("monthly_duty", 0))
+		var cheapest := {}
+		for id: String in d.sect_missions:
+			var m: Dictionary = d.sect_missions[id]
+			var sects: Array = m.get("sects", [])
+			if int(m.get("min_rank", 0)) > 1 or (not sects.is_empty() and not sects.has(sect_id)):
+				continue
+			if m.has("requires") or m.has("requires_flag") or int(m.get("contribution", 0)) <= 0:
+				continue
+			if cheapest.is_empty() or int(m["contribution"]) < int(cheapest["contribution"]):
+				cheapest = m
+		assert_false(cheapest.is_empty(), "%s has no plain rank-1 mission" % sect_id)
+		if cheapest.is_empty():
+			continue
+		var spacing := maxi(int(cheapest.get("days", 1)), int(cheapest.get("cooldown_days", 0)))
+		var runs := (Calendar.DAYS_PER_MONTH - int(cheapest.get("days", 1))) / spacing + 1
+		var month := runs * int(cheapest["contribution"])
+		assert_true(duty <= month, "%s rank-1 duty %d exceeds a month of %s (%d)" % [sect_id, duty, cheapest["id"], month])

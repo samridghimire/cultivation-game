@@ -34,6 +34,7 @@ func _run() -> void:
 	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
 	var contest_odds := args.has("--contest-odds")  # SECT-043: print the contest foes' odds in the first contest month
 	FirstHour.mission_report_on = args.has("--mission-report")  # SECT-041: why rank-0 missions were not taken, per sect
+	var duty_report := args.has("--duty-report")  # SECT-047: months held, met and short per rank
 	var months := int(ceil(days / 30.0))
 	for sect_id in sects:
 		var def: SectDef = gs.data.sects.get(sect_id)
@@ -107,6 +108,8 @@ func _run() -> void:
 			if FirstHour.mission_report_on:
 				print("       rank-1 contribution first held on day %s (promotion day %d)" % [str(FirstHour.contribution_met_day - day0 - maxi(joined, 0)) if FirstHour.contribution_met_day >= 0 else "never", promo_day])
 			short_months.append(short)
+			if duty_report:
+				_print_duty_report(gs, sect_id, s, e)
 			var rep_day: int = maxi(0, int(rec["reported"]) - maxi(joined, 0)) if int(rec["reported"]) >= 0 else -1  # SECT-039: a start-day join reports before the first month-loop day
 			print("  %-4d %8s %9d %9d %12d %9d %9d %11s %9d %7s" % [s, str(rep_day) if rep_day >= 0 else "never", int(e.get("lectures", 0)), int(e.get("missions", 0)), contribution, r120, r365, "%d/%d" % [met, short], int(rec["stipend"]), str(joined) + ("*" if unreported else "")])
 			var top_hint := ""
@@ -169,3 +172,15 @@ func _print_mission_report(sect_id: String, seeds: int) -> void:
 	print("    weeks a ready mission was passed over, by what the player did instead:")
 	for k: String in acts.slice(0, 8):
 		print("      %4d  %s" % [int(FirstHour.mission_other_acts[k]), k])
+
+
+## SECT-047: per rank 1+, months held, duty met/short and mean contribution earned a month, against the rank's monthly_duty.
+func _print_duty_report(gs: Node, sect_id: String, seed_n: int, e: Dictionary) -> void:
+	var def: SectDef = gs.data.sects[sect_id]
+	var ranks: Array = (e.get("rank_held", {}) as Dictionary).keys()
+	ranks.sort()
+	for rk: int in ranks:
+		if rk < 1:
+			continue
+		var held := int(e["rank_held"][rk])
+		print("       duty %s seed %d rank %d: held %d months, met %d, short %d, mean earned %.0f/month, duty %d" % [sect_id, seed_n, rk, held, int(e["rank_met"].get(rk, 0)), int(e["rank_short"].get(rk, 0)), float(e["rank_earned"].get(rk, 0)) / maxf(1.0, held), int(def.ranks[rk].get("monthly_duty", 0))])

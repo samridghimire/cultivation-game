@@ -109,6 +109,11 @@ static var season_seed := 0
 const SEASON_STALL_WAIT_DAYS := 16
 static var season_task_log := {"trips": 0, "catch_days": 0, "gather_days": 0, "hunts": 0, "contests": 0, "sold": 0, "bought": 0, "stall_waits": 0}
 static var _teach_rec := {}
+## SECT-047: dict[key] += n (default 1).
+static func _bump(d: Dictionary, key: int, n: int = 1) -> void:
+	d[key] = int(d.get(key, 0)) + n
+
+
 ## QA-141: missions rated below this are skipped, as a player reading the board's odds (WU-286) would;
 ## simulate_first_hour.gd's --blind-missions sets it to 0 (the old policy).
 static var min_mission_odds := 0.4
@@ -265,10 +270,11 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 		_injury_sync(gs, c, clock.total_days, open_injuries, seed_value, text if category == "danger" else "")
 	if injury_report:
 		bus.message_posted.connect(on_msg)
-	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "chores": 0, "chore_days": 0, "chore_walk_days": 0, "chore_trips": 0, "foundation_day": -1, "rank1_day": -1, "short": [], "earned": []}
+	var sect_entry := {"seed": seed_value, "joined": -1, "away": 0, "months": 0, "skipped": 0, "paid": 0, "missions": 0, "lectures": 0, "chores": 0, "chore_days": 0, "chore_walk_days": 0, "chore_trips": 0, "foundation_day": -1, "rank1_day": -1, "short": [], "earned": [], "rank_held": {}, "rank_met": {}, "rank_short": {}, "rank_earned": {}, "last_contribution": 0}
 	var on_sect_msg := func(text: String, _category: String) -> void:
 		if text.contains("this month's stipend is withheld"):
 			sect_entry["skipped"] += 1
+			_bump(sect_entry["rank_short"], int(c.sect.get("rank", 0)) if not c.is_rogue() else -1)  # SECT-047
 			var short := RegEx.create_from_string("\\((\\d+)/(\\d+) contribution\\)").search(text)  # QA-170: earned/duty
 			var rank_now := int(c.sect.get("rank", 0)) if not c.is_rogue() else -1
 			sect_entry["short"].append([rank_now, int(short.get_string(1)), int(short.get_string(2))] if short != null else [rank_now, -1, -1])
@@ -277,6 +283,7 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			sect_entry[key] = int(sect_entry.get(key, 0)) + 1
 		elif text.begins_with("Your sect pays your monthly stipend"):
 			sect_entry["paid"] += 1
+			_bump(sect_entry["rank_met"], int(c.sect.get("rank", 0)) if not c.is_rogue() else -1)  # SECT-047
 	if sect_report:
 		bus.message_posted.connect(on_sect_msg)
 	var act := {"seed": seed_value, "days": {}, "foundation_days": {}, "med_qi": 0.0, "med_days": 0, "found": false}
@@ -413,6 +420,11 @@ static func play(gs: Node, clock: Node, seed_value: int, months: int, curious: b
 			if sect_entry["joined"] < 0:
 				sect_entry["joined"] = clock.total_days
 			sect_entry["months"] += 1
+			var rk := int(c.sect.get("rank", 0))  # SECT-047: months held and contribution earned per rank
+			_bump(sect_entry["rank_held"], rk)
+			var contrib_now := int(c.sect.get("contribution", 0))
+			_bump(sect_entry["rank_earned"], rk, maxi(0, contrib_now - int(sect_entry["last_contribution"])))
+			sect_entry["last_contribution"] = contrib_now
 			if c.realm_index >= 2 and int(sect_entry["foundation_day"]) < 0:
 				sect_entry["foundation_day"] = clock.total_days  # QA-227
 			if gs.current_region != (gs.data.sects[c.sect["id"]] as SectDef).home_region:
@@ -2365,6 +2377,16 @@ static func _promotion_mission_line(gs: Node, c: CharacterData) -> String:
 	return "Sect mission ready: %s (%d contribution to the next rank)" % [gs.data.sect_missions[best].get("name", best), need - Sects.contribution_balance(c)]
 
 
+## SECT-047: the duty hint's own line when it names a covering mission ("... <mission> (N contribution, D) covers it."), else "".
+static func _duty_mission_line(gs: Node, c: CharacterData, day: int) -> String:
+	if not hints_policy or not sect_report or c.is_rogue() or int(c.sect.get("rank", 0)) < 1:
+		return ""
+	if Sects.duty_days_left(c) > Sects.DUTY_REMINDER_DAYS:
+		return ""
+	var line := Guidance.duty_hint(c, gs.data, gs.world_flags, gs.current_region, day)
+	return line if line.ends_with("covers it.") else ""
+
+
 ## SIM-010: what the HUD's Next steps card lists, top first: the goal line, the easy-fight line, then the hints.
 static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var lines: Array[String] = []
@@ -2384,6 +2406,11 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var sect_mission := _promotion_mission_line(gs, c)
 	if sect_mission != "":
 		lines.insert(0, sect_mission)
+	# SECT-047: a rank 1+ member with the month's duty unmet and the reminder showing does the mission the duty line names
+	# before the weekly kindness: a player reads that line and a missed duty costs the stipend.
+	var duty_line := _duty_mission_line(gs, c, day)
+	if duty_line != "":
+		lines.insert(0, duty_line)
 	# FOLK-042: a friend's birthday is once a year and the line shows 14 days ahead: the player keeps the day, so it goes first
 	# (the HUD's 5-line cap and the fight lines above it hid it from the sim in every seed).
 	var birthday := Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)
@@ -2634,6 +2661,13 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				gs.perform_deed(chore)
 				got = true
 		return "chore" if got else ""
+	if line.begins_with("Your sect duty") and line.ends_with("covers it.") and not c.is_rogue():
+		# SECT-047: take the covering mission the duty line names.
+		for id: String in Sects.available_missions(c, gs.data, gs.world_flags):
+			if line.contains("%s (" % String(gs.data.sect_missions[id]["name"])) and Sects.check_mission(c, gs.data, id, gs.world_flags) == "":
+				_take_one_mission(gs, c, done, kinds, [] as Array[Dictionary], id, day)
+				return "mission"
+		return ""
 	if line.begins_with("Easy fight") or line.contains("Fights you can win"):
 		var fair := Guidance.fair_fights(c, gs.data, gs.world_flags, day, gs.current_region, gs.npcs, gs.npc_favor)
 		_take_listed_deed(gs, c, done, fair, kinds, day)
