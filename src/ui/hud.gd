@@ -2504,6 +2504,10 @@ func _show_arrival(region_id: String) -> void:
 
 
 func _on_breakthrough(success: bool, realm_name: String) -> void:
+	if _breakthrough.is_attempting() and _breakthrough.visible:
+		# GFX-258: the stage plays its beat first; the card or banner follows when the window closes.
+		_breakthrough.closed.connect(_on_breakthrough.bind(success, realm_name), CONNECT_ONE_SHOT)
+		return
 	var details := _breakthrough_details
 	_breakthrough_details = ""
 	var surpassed := GameState.last_surpassed_rival

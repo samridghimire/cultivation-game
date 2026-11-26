@@ -506,6 +506,14 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		c.breakthrough_failures = 3
 		hide_banner.call()
 		win.open(), "close": win.close})
+	# GFX-258: the stage mid-attempt, success flash and failure burst.
+	for outcome in [true, false]:
+		var ok: bool = outcome
+		shots.append({"name": "bs_stage_success" if ok else "bs_stage_fail", "open": func() -> void:
+			hide_banner.call()
+			win.open()
+			var st: BreakthroughStage = win.get("_stage")
+			st.debug_set_phase(1.0 if ok else 1.1, ok), "close": win.close})
 	# WU-400: the heart vision above the Attempt button.
 	shots.append({"name": "breakthrough_vision", "open": func() -> void:
 		c.add_item("spirit_stone", 0)

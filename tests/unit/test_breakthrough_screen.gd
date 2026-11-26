@@ -78,6 +78,9 @@ func test_focus_never_starts_on_attempt_and_closed_fires() -> void:
 	screen._attempt_button.pressed.emit()  # WU-400: the open heart vision asks "Push on?" first
 	assert_eq(fired[0], 1)
 	screen._attempt_button.pressed.emit()
+	if screen._stage.is_playing():  # GFX-258: the beat plays first; a skip ends it
+		assert_eq(fired[0], 1)
+		screen._stage.skip()
 	assert_eq(fired[0], 2)
 	host.queue_free()
 

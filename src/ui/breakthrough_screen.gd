@@ -21,6 +21,10 @@ var _vision_outcome: Label
 var _push_on_asked: bool = false
 var _attempt_button: Button
 var _later_button: Button
+var _stage: BreakthroughStage
+var _attempting := false  ## from Attempt until the window closes
+var _outcome := 0  ## 1 success, -1 failure once breakthrough_attempted fired
+var _tracking := false
 
 
 func _init() -> void:
@@ -32,6 +36,9 @@ func _init() -> void:
 	add_child(box)
 	_title = UIStyle.label("", 26, UIStyle.ACCENT)
 	box.add_child(_title)
+	_stage = BreakthroughStage.new()
+	_stage.attempt_finished.connect(close)
+	box.add_child(_stage)
 	_blurb = UIStyle.label("", 15, UIStyle.HINT)
 	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_blurb.custom_minimum_size = Vector2(520, 0)
@@ -76,9 +83,24 @@ func _init() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("ui_cancel"):
+	if not visible:
+		return
+	if _stage.is_playing() and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept")):
+		get_viewport().set_input_as_handled()
+		_stage.skip()
+	elif event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
+
+
+## True from the moment Attempt is confirmed until the window closes (the HUD waits to show its card).
+func is_attempting() -> bool:
+	return _attempting
+
+
+func _on_attempted(success: bool, _realm_name: String) -> void:
+	if _attempting:
+		_outcome = 1 if success else -1
 
 
 ## "Base (Foundation Establishment)  +35%" per term; negatives read "-N%".
@@ -127,6 +149,9 @@ func open() -> void:
 	_push_on_asked = false
 	_vision_outcome.visible = false
 	_attempt_button.text = "Attempt"
+	_attempting = false
+	_attempt_button.disabled = false
+	_later_button.disabled = false
 	_refresh()
 	visible = true
 	_focus_first.call_deferred()
@@ -137,6 +162,11 @@ func _refresh() -> void:
 	var data := GameState.data
 	var next: RealmDef = data.realms[mini(p.realm_index + 1, data.realms.size() - 1)]
 	_title.text = "Breakthrough: %s" % next.name
+	var mote := Color(0.95, 0.85, 0.5)
+	var dom: Array[Color] = load("res://src/ui/character_creation.gd").dominant_colors(p.spiritual_roots, data)
+	if not dom.is_empty():
+		mote = dom[0]
+	_stage.setup(PlayerLook.of(p, data), mini(p.realm_index + 1, data.realms.size() - 1), not GameState.heart_vision().is_empty(), mote)
 	_blurb.text = realm_blurb(data, p.realm_index)
 	_blurb.visible = _blurb.text != ""
 	_refresh_vision(p, data)
@@ -181,6 +211,7 @@ func _refresh_vision(p: CharacterData, data: GameData) -> void:
 func _face(index: int) -> void:
 	var before := GameState.player.heart_bonus
 	GameState.face_heart_vision(index)
+	_stage.fade_vision()
 	var bonus := GameState.player.heart_bonus
 	_vision_outcome.text = "Your heart is steadied." if bonus > before else ("Your heart is shaken." if bonus < before else "Your heart is unmoved.")
 	_vision_outcome.visible = true
@@ -213,12 +244,25 @@ func _attempt() -> void:
 		_push_on_asked = true
 		_attempt_button.text = "Push on without facing it?"
 		return
-	close()
+	_attempting = true
+	_outcome = 0
+	if not EventBus.breakthrough_attempted.is_connected(_on_attempted):
+		EventBus.breakthrough_attempted.connect(_on_attempted)
+	_attempt_button.disabled = true
+	_later_button.disabled = true
 	GameState.attempt_breakthrough()
+	if _outcome == 0 or not visible or GameState.player == null:
+		close()  # refused, or a tribulation took over: close at once as before
+		return
+	_stage.play_attempt(_outcome > 0)
 
 
 func close() -> void:
 	if not visible:
 		return
+	if _stage.is_playing():
+		_stage.skip()
+		return  # the stage's finish closes the window again
 	visible = false
+	_attempting = false
 	closed.emit()
