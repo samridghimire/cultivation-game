@@ -279,3 +279,57 @@ func test_stick_released_only_for_right_y_in_dead_zone() -> void:
 	e.axis_value = 0.1
 	assert_true(cc.stick_released(e))
 
+
+
+## WU-626: the goal row keeps the whole goal when its two rows hold it: no "…" unless the full text needs a 3rd row.
+func _goal_row_for(gs: Node, c: CharacterData) -> Array:
+	var clock: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameClock")
+	var font := ThemeDB.fallback_font
+	var goal: String = HudScript.goal_text(c, gs.data, gs.world_flags, gs.clan, gs.hint_density(), gs.current_region, clock.total_days)
+	var row: String = HudScript.goal_row(goal, gs.data, font)
+	var compact := Guidance.compact_goal(goal, gs.data)
+	return [row, HudScript.wrapped_lines(compact, font, 14, HudScript.GOAL_W).size() > 2, goal]
+
+
+func test_goal_row_reads_whole_for_sect_members_and_rogues() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var cut: Array[String] = []
+	var checked := 0
+	for region in ["qingshi_village", "withered_bone_marsh", "myriad_peaks_ridge", "azure_peak", "fallen_star_market", "misty_forest"]:
+		var c := CharacterFactory.create("Newcomer", gs.data, seeded_rng(7))
+		gs.start_session(c)
+		gs.current_region = region
+		var res := _goal_row_for(gs, c)
+		checked += 1
+		if String(res[0]).ends_with("…") and not bool(res[1]):
+			cut.append("rogue %s: %s" % [region, res[2]])
+		gs.end_session()
+	for sect_id: String in ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]:
+		if not gs.data.sects.has(sect_id):
+			continue
+		for stage in ["unreported", "reported", "trial_ready"]:
+			var c := CharacterFactory.create("Newcomer", gs.data, seeded_rng(7))
+			gs.start_session(c)
+			c.alignment = 0
+			c.realm_index = maxi(c.realm_index, 1)
+			Sects.join(c, gs.data, sect_id)  # not gs.join_sect: no join card queued for a HUD
+			gs.current_region = Sects.home_region(gs.data, sect_id)
+			if stage != "unreported":
+				c.sect["reported"] = true
+			if stage == "trial_ready":
+				Sects.add_contribution(c, gs.data, int((gs.data.sects[sect_id] as SectDef).ranks[1].get("contribution", 0)))
+			var res := _goal_row_for(gs, c)
+			checked += 1
+			if String(res[0]).ends_with("…") and not bool(res[1]):
+				cut.append("%s %s: %s" % [sect_id, stage, res[2]])
+			gs.end_session()
+	assert_true(checked >= 9, "walked the goals")
+	assert_eq(cut.size(), 0, "cut although two rows hold it: " + " | ".join(cut))
+
+
+func test_goal_row_keeps_a_goal_two_rows_hold() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var font := ThemeDB.fallback_font
+	var line := "Goal: Report at the Azure Cloud Hall: new disciples register"
+	var row: String = HudScript.goal_row(line, gs.data, font)
+	assert_eq(row, line)

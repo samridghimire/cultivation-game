@@ -924,7 +924,7 @@ func _refresh() -> void:
 	_injuries.text = "Injured: " + ", ".join(Injuries.describe(p, data))
 	var hint_count := int(Settings.get_value("hud_hints"))
 	var goal := goal_text(p, data, GameState.world_flags, GameState.clan, density, GameState.current_region, GameClock.total_days) if hint_count > 0 else ""
-	_goal.text = fit_goal(Guidance.short_goal(goal, data), _goal.get_theme_font("font"))
+	_goal.text = goal_row(goal, data, _goal.get_theme_font("font"))
 	_goal.tooltip_text = goal
 	_goal.visible = goal != ""
 	var hints: PackedStringArray = []
@@ -2910,6 +2910,14 @@ static func cut_entries(entries: PackedStringArray, font: Font, font_size: int, 
 	elif out.is_empty():
 		out.append(trim_entry(entries[0], font, font_size, width, 1))
 	return out
+
+
+## WU-626: the whole (compacted) goal when it fits the row's two lines; else the word-cut short form.
+static func goal_row(goal: String, data: GameData, font: Font) -> String:
+	var compact := Guidance.compact_goal(goal, data)
+	if wrapped_lines(compact, font, 14, GOAL_W).size() <= 2:
+		return compact
+	return fit_goal(Guidance.short_goal(goal, data), font)
 
 
 ## WU-580: the goal row at the card's width, at most 2 lines, trimmed at a word with an ellipsis (tooltip keeps the full text).

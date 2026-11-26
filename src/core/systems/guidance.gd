@@ -1043,6 +1043,23 @@ static func fight_target(c: CharacterData, data: GameData, flags: Dictionary, re
 ## "Talk to X in R" -> "See X in R", then the word-boundary cut of short_hint.
 const SHORT_GOAL_CHARS := 46
 static func short_goal(goal_line: String, data: GameData) -> String:
+	var line := compact_goal(goal_line, data)
+	if line.length() <= SHORT_GOAL_CHARS or _goal_keeps_whole(line):
+		return line
+	var cut := line.substr(0, SHORT_GOAL_CHARS)  # one char short of the limit's end: the ellipsis takes the last
+	var space := cut.rfind(" ")
+	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS - 1)
+	return drop_trailing_stop_words(cut.rstrip(" .:;,-(")) + "\u2026"
+
+
+## WU-626: a closed road's "(opens at ...)" line up to 14 chars over the limit is kept whole (GUIDE-284).
+static func _goal_keeps_whole(line: String) -> bool:
+	return line.length() <= SHORT_GOAL_CHARS + 14 and line.ends_with(")") and line.contains(" (opens at ")
+
+
+## WU-626: the goal line with every shortening except the word cut: "(N days)" -> "· Nd", short region names,
+## "Talk to" -> "See", the manual step dropped. The HUD shows this whole when it fits its two rows.
+static func compact_goal(goal_line: String, data: GameData) -> String:
 	var line := goal_line
 	if line.length() <= SHORT_GOAL_CHARS:
 		return line
@@ -1061,13 +1078,7 @@ static func short_goal(goal_line: String, data: GameData) -> String:
 	# GUIDE-285: the manual step ("...: buy Cloud-Parting Palm at the Pedlar, 40 stones") lives in the hints; the row keeps the goal whole.
 	if line.contains("Learn your first technique: "):
 		return line.get_slice("Learn your first technique", 0) + "Learn your first technique"
-	# GUIDE-284: a closed road's "(opens at Core Formation)" is the point of the line: keep it whole (the goal row wraps to two rows).
-	if line.length() <= SHORT_GOAL_CHARS + 14 and line.ends_with(")") and line.contains(" (opens at "):
-		return line
-	var cut := line.substr(0, SHORT_GOAL_CHARS)  # one char short of the limit's end: the ellipsis takes the last
-	var space := cut.rfind(" ")
-	cut = cut.substr(0, space) if space > 0 else cut.substr(0, SHORT_GOAL_CHARS - 1)
-	return drop_trailing_stop_words(cut.rstrip(" .:;,-(")) + "\u2026"
+	return line
 
 
 ## Up to `limit` hints for `c`. `density` is the qi density where the player
