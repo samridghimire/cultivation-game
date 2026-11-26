@@ -7,7 +7,7 @@ extends SceneTree
 ## Days are counted from the day the character joined (a mortal cannot join before the first breakthrough, so "day 0" is that day); "reported" is days after joining.
 ## SIM-029: also prints, per seed, the day (after joining, checked at each month end) each SECT-035 goal row (report, lecture, mission, rank 1)
 ## was first seen done, or "never" with the hints player's top hint line at the end of the run.
-## Usage: tools/godot.sh --headless --path . -s res://tests/sim/sect_year.gd -- [seeds] [days] [--sects=a,b,c] [--contest-odds]
+## Usage: tools/godot.sh --headless --path . -s res://tests/sim/sect_year.gd -- [seeds] [days] [--sects=a,b,c] [--contest-odds] [--ladder-report]
 
 const FirstHour := preload("res://tests/sim/first_hour.gd")
 const DEFAULT_SECTS: Array[String] = ["azure_cloud_sect", "blood_lotus_sect", "myriad_treasure_pavilion"]
@@ -35,6 +35,8 @@ func _run() -> void:
 	var contest_odds := args.has("--contest-odds")  # SECT-043: print the contest foes' odds in the first contest month
 	FirstHour.mission_report_on = args.has("--mission-report")  # SECT-041: why rank-0 missions were not taken, per sect
 	var duty_report := args.has("--duty-report")  # SECT-047: months held, met and short per rank
+	var ladder := args.has("--ladder-report")  # SIM-035: promotions, trial odds when contribution was ready, rank-2 months/duty, inner contests
+	FirstHour.enter_contests = ladder
 	var months := int(ceil(days / 30.0))
 	for sect_id in sects:
 		var def: SectDef = gs.data.sects.get(sect_id)
@@ -65,6 +67,13 @@ func _run() -> void:
 			bus.sect_reported.connect(on_report)
 			bus.sect_promoted.connect(on_promo)
 			bus.message_posted.connect(on_msg)
+			var ladder_rec := {"ready": {}, "entries": [], "won": 0}  # SIM-035
+			var on_bout := func(_sid: String, info: Dictionary) -> void:
+				if int(info.get("round", 0)) == 1:
+					ladder_rec["entries"].append([clock.total_days, Sects.is_inner_contest(gs.player, gs.data)])
+				if bool(info.get("won", false)):
+					ladder_rec["won"] += 1
+			bus.sect_contest_bout.connect(on_bout)
 			var rows: Dictionary = {}  # SIM-029: goal row index -> absolute day first seen done
 			var day0: int = 0  # a new session restarts the clock at day 0
 			var odds_done: Array = [false]
@@ -72,6 +81,13 @@ func _run() -> void:
 				var pc: CharacterData = gs.player
 				if pc == null or pc.is_rogue():
 					return
+				if ladder:
+					var nxt := Sects.next_rank(pc, gs.data)
+					if nxt >= 0 and not ladder_rec["ready"].has(nxt) and Sects.contribution_balance(pc) >= int((gs.data.sects[pc.sect["id"]] as SectDef).ranks[nxt].get("contribution", 0)):
+						var odds := -1
+						if Sects.needs_trial(pc, gs.data):
+							odds = roundi(Combat.win_chance(pc, gs.data, Sects.trial_foe(pc, gs.data)) * 100.0)
+						ladder_rec["ready"][nxt] = [clock.total_days, odds]
 				if contest_odds and not odds_done[0] and Calendar.month_of(clock.total_days) == int(Sects.contest_def(pc, gs.data).get("month", 0)):
 					odds_done[0] = true  # SECT-043: the first contest month of the run
 					print(_contest_line(gs, sect_id, s, clock.total_days))
@@ -89,6 +105,7 @@ func _run() -> void:
 			bus.sect_reported.disconnect(on_report)
 			bus.sect_promoted.disconnect(on_promo)
 			bus.message_posted.disconnect(on_msg)
+			bus.sect_contest_bout.disconnect(on_bout)
 			var e: Dictionary = FirstHour.sect_log[-1] if not FirstHour.sect_log.is_empty() else {}
 			var contribution := int(gs.player.sect.get("contribution", 0)) if gs.player != null and not gs.player.is_rogue() else -1
 			var r120 := 0
@@ -110,6 +127,8 @@ func _run() -> void:
 			short_months.append(short)
 			if duty_report:
 				_print_duty_report(gs, sect_id, s, e)
+			if ladder:
+				_print_ladder(sect_id, s, rec, ladder_rec, e, maxi(joined, 0))
 			var rep_day: int = maxi(0, int(rec["reported"]) - maxi(joined, 0)) if int(rec["reported"]) >= 0 else -1  # SECT-039: a start-day join reports before the first month-loop day
 			print("  %-4d %8s %9d %9d %12d %9d %9d %11s %9d %7s" % [s, str(rep_day) if rep_day >= 0 else "never", int(e.get("lectures", 0)), int(e.get("missions", 0)), contribution, r120, r365, "%d/%d" % [met, short], int(rec["stipend"]), str(joined) + ("*" if unreported else "")])
 			var top_hint := ""
@@ -184,3 +203,23 @@ func _print_duty_report(gs: Node, sect_id: String, seed_n: int, e: Dictionary) -
 			continue
 		var held := int(e["rank_held"][rk])
 		print("       duty %s seed %d rank %d: held %d months, met %d, short %d, mean earned %.0f/month, duty %d" % [sect_id, seed_n, rk, held, int(e["rank_met"].get(rk, 0)), int(e["rank_short"].get(rk, 0)), float(e["rank_earned"].get(rk, 0)) / maxf(1.0, held), int(def.ranks[rk].get("monthly_duty", 0))])
+
+
+## SIM-035: one line per run: day of each promotion (after joining), when each rank's contribution was ready (month-end check) with the
+## trial odds that day (-1 = no trial), months held and duty met/short at rank 2, and the inner-sect contests entered with rounds won.
+func _print_ladder(sect_id: String, seed_n: int, rec: Dictionary, lr: Dictionary, e: Dictionary, joined: int) -> void:
+	var promos: PackedStringArray = []
+	for p: Array in rec["promos"]:
+		promos.append("r%d d%d" % [int(p[1]), int(p[0]) - 0 - joined])
+	var ready: PackedStringArray = []
+	for k: int in lr["ready"]:
+		var rd: Array = lr["ready"][k]
+		ready.append("r%d d%d odds %s" % [k, int(rd[0]) - joined, str(rd[1]) if int(rd[1]) >= 0 else "-"])
+	var inner := 0
+	var outer := 0
+	for en: Array in lr["entries"]:
+		if bool(en[1]):
+			inner += 1
+		else:
+			outer += 1
+	print("       ladder %s seed %d: promos [%s]; ready [%s]; rank 2 held %d months, duty met %d short %d; contests entered outer %d inner %d, rounds won %d" % [sect_id, seed_n, ", ".join(promos), ", ".join(ready), int(e.get("rank_held", {}).get(2, 0)), int(e.get("rank_met", {}).get(2, 0)), int(e.get("rank_short", {}).get(2, 0)), outer, inner, int(lr["won"])])

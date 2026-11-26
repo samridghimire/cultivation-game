@@ -154,6 +154,8 @@ const TRIAL_MIN_ODDS := 0.7
 const HINTS_TRIAL_ODDS := 0.6
 ## SIM-030: print every trial attempt the hints player makes (day, odds, won).
 static var trial_log := false
+## SIM-035: when true the hints player acts on the "contest is open this month" line (walks to the hall and enters). Off by default so other sims keep their numbers.
+static var enter_contests := false
 ## SIM-032: weeks the hints player trained for the sect trial (monotonic across runs; quiet_stretches.gd counts a rise as something new).
 static var trial_train_total := 0
 ## SIM-010: the "hints" player. Once a week (4 a month) it acts on the first Next-steps line it can act on (goal line, then the
@@ -2411,6 +2413,9 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	var duty_line := _duty_mission_line(gs, c, day)
 	if duty_line != "":
 		lines.insert(0, duty_line)
+	# SIM-035: a member whose sect contest is open this month (and who is not away from the hall too long) goes and enters it.
+	if enter_contests and not c.is_rogue() and Sects.contest_open(c, gs.data, day):
+		lines.insert(0, Guidance._contest_hint(c, gs.data, day))
 	# FOLK-042: a friend's birthday is once a year and the line shows 14 days ahead: the player keeps the day, so it goes first
 	# (the HUD's 5-line cap and the fight lines above it hid it from the sim in every seed).
 	var birthday := Guidance.birthday_gift_hint(c, gs.data, gs.npcs, gs.current_region, gs.npc_favor, gs.world_flags, day)
@@ -2864,6 +2869,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		if Sects.check_lecture(c, gs.data, day) == "":
 			gs.attend_lecture()
 			return "lecture"
+		return ""
+	if enter_contests and line.contains("is open this month; enter at the sect hall") and not c.is_rogue():
+		var hall2 := Sects.home_region(gs.data, String(c.sect["id"]))
+		if hall2 != "":
+			_walk_to(gs, c, hall2)
+		if Sects.check_contest(c, gs.data, gs.get_node("/root/GameClock").total_days) == "":
+			gs.enter_sect_contest()
+			return "contest"
 		return ""
 	if line.begins_with("Gather ") and line.contains(" more qi to reach the next stage") and c.alive:
 		gs.cultivate(7, gs.hint_density())

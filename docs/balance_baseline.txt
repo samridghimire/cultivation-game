@@ -34,39 +34,39 @@ Lines by category: { "warning": 50, "progress": 224, "artifact": 81, "almanac": 
 
 First-hour sim (curious player): 10 seeds, 12 months
   seed  QR1  QR3  QR9  sect  injuries  won  lost  fled  lines/month
-     1   14  189    -    14         0   36     3     0  60.9
-        first win day 14 (wild_boar), style bought day 44
-     2   14  247    -    14         0   31     8     0  61.2
-        first win day 14 (wild_boar), style bought day 39
-     3   14  189    -    14         0   35     3     0  63.6
-        first win day 14 (wild_boar), style bought day 47
-     4   14  236    -    14         0   38     1     0  70.0
-        first win day 14 (wild_boar), style bought day 47
-     5   37   99    -    37         0   40     1     0  69.6
+     1   14  232    -    14         0   36     1     0  55.2
+        first win day 14 (wild_boar), style bought day 48
+     2   14  189    -    14         0   37     1     0  59.7
+        first win day 14 (wild_boar), style bought day 43
+     3   14  259    -    14         0   32     2     0  63.2
+        first win day 14 (wild_boar), style bought day 48
+     4   14  263    -    14         0   39     0     0  63.7
+        first win day 14 (wild_boar), style bought day 51
+     5   37  171  700    37         0   36     2     0  67.1
         first win day 14 (wild_boar), style bought day 27
-     6   14  256    -    14         0   37     5     0  71.2
-        first win day 14 (wild_boar), style bought day 46
-     7   14  189    -    14         0   38     1     0  69.2
-        first win day 14 (wild_boar), style bought day 55
-     8   14  170    -    14         0   36     2     0  72.5
-        first win day 14 (wild_boar), style bought day 45
-     9   14  279    -    14         0   32     3     0  58.9
+     6   14  254    -    14         0   41     2     0  60.2
+        first win day 14 (wild_boar), style bought day 50
+     7   14  266    -    14         0   38     0     0  64.2
+        first win day 14 (wild_boar), style bought day 59
+     8   14  151  727    14         0   41     0     0  62.0
         first win day 14 (wild_boar), style bought day 49
-    10   14  142    -    14         0   38     1     0  72.8
-        first win day 14 (wild_boar), style bought day 49
-Medians (day): QR1 14, QR3 189, QR9 -1 (0/10 seeds reached it), sect 14; injuries 0; fights won 37, lost 3, fled 0; 69.6 log lines/month
-First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day 47 (10 seeds)
-Sect trials: Inner Disciple median day 414 (10/10 seeds); trials won 10, lost 1; stones at the last month: median 270
-Distinct action kinds per month: 6.7; months after the first with no log lines: 0
-Injury treatments (QA-128): 13, clinic stones 242
-Iron Fist level median (QA-138): m03 2, m06 3, m12 5; first Mist Wolf win: median day 607 (10/10 seeds)
+     9   14  229    -    14         0   42     1     0  64.5
+        first win day 14 (wild_boar), style bought day 50
+    10   14  177    -    14         0   41     0     0  67.1
+        first win day 14 (wild_boar), style bought day 53
+Medians (day): QR1 14, QR3 232, QR9 727 (2/10 seeds reached it), sect 14; injuries 0; fights won 39, lost 1, fled 0; 63.7 log lines/month
+First win: median day 14, seeds with no win in 12 months: 0; first-win foes: { "wild_boar": 10 }; median style day 50 (10 seeds)
+Sect trials: Inner Disciple median day 445 (10/10 seeds); trials won 10, lost 3; stones at the last month: median 170
+Distinct action kinds per month: 6.3; months after the first with no log lines: 0
+Injury treatments (QA-128): 7, clinic stones 66
+Iron Fist level median (QA-138): m03 2, m06 3, m12 5; first Mist Wolf win: median day 540 (10/10 seeds)
 Spar-hint bouts (QA-138): 0, refusals: []
-Armor shopping (QA-140): armor worn by day 340 median (10/10 seeds); 0 loot sales for 0 stones, 10 trips to a smithy
-Road encounters (QA-118): 8/10 seeds met one; { "road_caravan_fire": 1, "road_highwayman": 2, "road_lost_child": 2, "road_milestone_carver": 1, "road_caravan_guard": 1, "road_talisman_peddler": 1, "road_overturned_cart": 1, "road_star_market_lantern_line": 1, "road_woodcutter_warning": 1, "road_mushroom_basket": 1 }
-Sect contribution (QA-146): m06 median 849, m12 median 2230; stage at m12: { "QR5": 3, "QR6": 4, "QR9": 1, "QR8": 1, "QR7": 1 }
+Armor shopping (QA-140): armor worn by day 381 median (10/10 seeds); 2 loot sales for 119 stones, 10 trips to a smithy
+Road encounters (QA-118): 7/10 seeds met one; { "road_star_market_cracked_slate": 2, "road_rain_shelter": 1, "road_woodcutter_warning": 2, "road_fallen_rogue": 2, "road_talisman_peddler": 2, "road_lost_child": 1, "road_wandering_boxer": 1, "road_mushroom_basket": 1, "road_winter_frozen_traveller": 1 }
+Sect contribution (QA-146): m06 median 1030, m12 median 2808; stage at m12: { "QR6": 2, "QR8": 1, "QR7": 3, "QR9": 2, "QR5": 2 }
 Stones at the QR9 bottleneck (QA-146): median -1 (0/10 seeds reached it)
-Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 22, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "azure_peak": 5, "misty_forest": 20 }; taken (times): { "qingshi_village": 54 }
-Lines by category: { "warning": 237, "progress": 2122, "artifact": 134, "almanac": 1602, "info": 1851, "world": 1018, "karma": 279, "danger": 743, "travel": 45, "social": 7, "normal": 1 }
+Bounties (QA-146), offered by region (ids once per seed): { "qingshi_village": 23, "fallen_star_market": 10, "myriad_peaks_ridge": 10, "misty_forest": 12, "azure_peak": 2 }; taken (times): { "qingshi_village": 11 }
+Lines by category: { "warning": 242, "progress": 2172, "artifact": 127, "almanac": 1477, "info": 1636, "world": 966, "karma": 251, "danger": 611, "travel": 36, "normal": 1, "social": 3 }
 
 ## log noise (seeds 1-5, 12 months)
 
