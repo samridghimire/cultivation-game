@@ -181,6 +181,8 @@ var folk_gift_day: Dictionary = {}
 var folk_tier_seen: Dictionary = {}
 ## FOLK-046: villagers with a pending reaction to your sect news: npc id -> "sect_join" | "promotion".
 var folk_news: Dictionary = {}
+## FOLK-050: friends' own news, npc_id -> {kind, realm, day, told}. See FolkNews.queue_own.
+var friend_news: Dictionary = {}
 var lessons_taught: Dictionary = {}  # FOLK-020: "<npc_id>:<index>" -> day
 ## Friend scenes already shown (FOLK-013) and the day the last one played.
 var scenes_seen: Array[String] = []
@@ -366,6 +368,7 @@ func to_dict() -> Dictionary:
 		"folk_visit_day": folk_visit_day.duplicate(),
 		"folk_tier_seen": folk_tier_seen.duplicate(),
 		"folk_news": folk_news.duplicate(),
+		"friend_news": friend_news.duplicate(true),
 		"lessons_taught": lessons_taught.duplicate(),
 		"scenes_seen": scenes_seen.duplicate(),
 		"scene_day": scene_day,
@@ -563,6 +566,11 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	c.folk_visit_day = _int_values(d.get("folk_visit_day", {}))
 	c.folk_tier_seen = _int_values(d.get("folk_tier_seen", {}))
 	c.folk_news = _str_values(d.get("folk_news", {}))
+	var fn: Variant = d.get("friend_news", {})
+	if fn is Dictionary:  # FOLK-050: JSON turns the day into a float
+		for id: String in fn:
+			var e: Dictionary = fn[id]
+			c.friend_news[id] = {"kind": String(e.get("kind", "")), "realm": String(e.get("realm", "")), "day": int(e.get("day", 0)), "told": bool(e.get("told", false))}
 	c.lessons_taught = _int_values(d.get("lessons_taught", {}))
 	for sid in d.get("scenes_seen", []):
 		c.scenes_seen.append(String(sid))

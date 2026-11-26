@@ -331,9 +331,9 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			return
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:
-			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info"})
+			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info", "kind": "breakthrough", "realm": result["realm_name"]})
 		elif result["success"] and c.realm_index == 1:
-			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info"})
+			events.append({"npc_id": c.id, "text": "%s has begun Qi Refining." % c.name, "category": "info", "kind": "qi_start", "realm": result["realm_name"]})
 		if result["success"] and Bloodlines.update(c, data):
 			events.append({"npc_id": c.id, "text": "Heaven and earth tremble: the %s of %s has awakened!" % [Bloodlines.bloodline_name(data, c.bloodline), c.name], "category": "progress"})
 		if result["success"] and Sects.npc_promote(c, data):

@@ -31,6 +31,8 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 
 ## GFX-249: true while `npc_id` holds a pending news reaction (the world shows a bubble over them).
 static func has_pending(player: CharacterData, npc_id: String) -> bool:
+	if player != null and npc_id != "" and player.friend_news.has(npc_id) and not bool(player.friend_news[npc_id].get("told", false)):
+		return true  # FOLK-050: their own news waits to be heard
 	if player == null or npc_id == "" or not player.folk_news.has(npc_id):
 		return false
 	if SECT_KINDS.has(String(player.folk_news[npc_id])):
@@ -76,3 +78,66 @@ static func take(player: CharacterData, data: GameData, npc_id: String, people: 
 	if not player.spouses.is_empty() and people.has(player.spouses.back()):
 		spouse_name = String((people[player.spouses.back()] as CharacterData).name)
 	return line.replace("{realm}", realm_name).replace("{spouse}", spouse_name)
+
+
+## FOLK-050: a named, living friend (favor >= min_favor, any region) has news of their own. Newer replaces older.
+static func queue_own(player: CharacterData, data: GameData, favor: Dictionary, npc: CharacterData, kind: String, realm: String, day: int) -> bool:
+	var cfg: Dictionary = data.family.get("folk_news", {})
+	if cfg.is_empty() or player == null or npc == null or not npc.alive or not data.npcs.has(npc.id):
+		return false
+	if int(favor.get(npc.id, int(data.npcs[npc.id].get("favor", 0)))) < int(cfg.get("min_favor", 40)):
+		return false
+	player.friend_news[npc.id] = {"kind": kind, "realm": realm, "day": day, "told": false}
+	return true
+
+
+## True while their own news is fresh (not older than own_days); expired entries are dropped.
+static func _fresh(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
+	if player == null or not player.friend_news.has(npc_id):
+		return false
+	var own_days: int = int(data.family.get("folk_news", {}).get("own_days", 30))
+	if day - int(player.friend_news[npc_id].get("day", 0)) > own_days:
+		player.friend_news.erase(npc_id)
+		return false
+	return true
+
+
+## Their news is pending and not yet heard.
+static func has_own(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
+	return _fresh(player, data, npc_id, day) and not bool(player.friend_news[npc_id].get("told", false))
+
+
+## They can still be congratulated (heard or not, until it goes stale or you do).
+static func can_congratulate(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
+	return _fresh(player, data, npc_id, day)
+
+
+## Their own line, once ("" when none). The entry stays (marked told) so the talk can offer to congratulate.
+static func take_own(player: CharacterData, data: GameData, npc_id: String, day: int) -> String:
+	if not has_own(player, data, npc_id, day):
+		return ""
+	var entry: Dictionary = player.friend_news[npc_id]
+	entry["told"] = true
+	var kind := String(entry["kind"])
+	var cfg: Dictionary = data.family.get("folk_news", {})
+	var pool: Array = data.npcs.get(npc_id, {}).get("own_news_lines", {}).get(kind, [])
+	if pool.is_empty():
+		pool = cfg.get("own_fallback", {}).get(kind, [])
+	if pool.is_empty():
+		return ""
+	var line := String(pool[absi(("%s|own|%d" % [npc_id, day]).hash()) % pool.size()])
+	return line.replace("{player}", player.name).replace("{realm}", String(entry.get("realm", "")))
+
+
+## Congratulate: clears the entry and returns the favor to add (0 when there is nothing to congratulate).
+static func congratulate(player: CharacterData, data: GameData, npc_id: String, day: int) -> int:
+	if not can_congratulate(player, data, npc_id, day):
+		return 0
+	player.friend_news.erase(npc_id)
+	return int(data.family.get("folk_news", {}).get("congratulate_favor", 3))
+
+
+## Drops every expired entry (call on month change).
+static func prune_own(player: CharacterData, data: GameData, day: int) -> void:
+	for id: String in player.friend_news.keys():
+		_fresh(player, data, id, day)

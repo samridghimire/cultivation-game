@@ -327,7 +327,7 @@ func lesson_waiting() -> bool:
 
 ## GFX-249: this villager holds a pending FOLK-046 news reaction (cleared by the talk that plays it).
 func news_waiting() -> bool:
-	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id)
+	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id)  # FOLK-050 also covers their own news
 
 
 ## WU-486: keep the persistent "!" bubble in step with lesson_waiting() (hidden while a modal is open).
@@ -813,6 +813,8 @@ func get_options() -> Array[Dictionary]:
 			if needed_flag != "" and not GameState.world_flags.get(needed_flag, false):
 				continue  # C-370: a teacher's last errand stays hidden until its flag is set
 			options.append({"label": deed["name"], "action": GameState.perform_deed.bind(deed["id"])})
+	if GameState.can_congratulate(npc_id):  # FOLK-050
+		options.append({"label": "Congratulate %s" % String(GameState.npcs[npc_id].name), "action": GameState.congratulate.bind(npc_id)})
 	options.append_array(_child_options())
 	options.append_array(_letter_options())
 	options.append_array(_acquaintance_options())

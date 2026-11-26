@@ -1346,6 +1346,12 @@ func _validate_folk_news() -> void:
 		for l in pool:
 			if not l is String or String(l) == "" or String(l).length() > 160:
 				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
+	for key in ["own_days", "congratulate_favor"]:  # FOLK-050
+		if cfg.has(key) and (not (cfg[key] is int or cfg[key] is float) or int(cfg[key]) <= 0):
+			load_errors.append("family.folk_news.%s must be an int > 0" % key)
+	_validate_own_lines(cfg.get("own_fallback", {}), "family.folk_news.own_fallback", true)
+	for id: String in npcs:
+		_validate_own_lines(npcs[id].get("own_news_lines", {}), "npcs.%s.own_news_lines" % id, false)
 	for kind in ["sect_join_demonic", "promotion_demonic", "contest_demonic"]:  # FOLK-048: optional wary lines for a demonic sect
 		var dpool: Variant = cfg.get("lines", {}).get(kind, [])
 		if not dpool is Array:
@@ -1354,6 +1360,28 @@ func _validate_folk_news() -> void:
 		for l in dpool:
 			if not l is String or String(l) == "" or String(l).length() > 160:
 				load_errors.append("family.folk_news.lines.%s entries must be strings of 1-160 chars" % kind)
+
+
+## FOLK-050: own-news lines: keys qi_start / breakthrough, 1-3 strings of 1-140 chars (`required` = both keys present).
+func _validate_own_lines(lines: Variant, label: String, required: bool) -> void:
+	if not lines is Dictionary:
+		load_errors.append("%s must be an object" % label)
+		return
+	if required:
+		for k in ["qi_start", "breakthrough"]:
+			if not (lines as Dictionary).has(k):
+				load_errors.append("%s needs %s" % [label, k])
+	for k: String in lines:
+		if k != "qi_start" and k != "breakthrough":
+			load_errors.append("%s: unknown key %s" % [label, k])
+			continue
+		var pool: Variant = lines[k]
+		if not pool is Array or (pool as Array).is_empty() or (pool as Array).size() > 3:
+			load_errors.append("%s.%s needs 1-3 lines" % [label, k])
+			continue
+		for l in pool:
+			if not l is String or String(l) == "" or String(l).length() > 140:
+				load_errors.append("%s.%s entries must be strings of 1-140 chars" % [label, k])
 
 
 ## SECT-032: a sect's optional `welcome` {line, items}: non-empty line <= 160 chars, 1-2 known items of 1-5 each, worth <= 60 stones.

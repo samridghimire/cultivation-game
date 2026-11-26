@@ -2248,6 +2248,8 @@ func greeting_for(npc_id: String) -> String:
 	if npc == null:
 		return ""
 	var news := FolkNews.take(player, data, npc_id, npcs)  # FOLK-046
+	if news == "":
+		news = FolkNews.take_own(player, data, npc_id, GameClock.total_days)  # FOLK-050
 	if news != "":
 		return news
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region, rng, Almanac.salt_of(player)).replace("{player}", player.name)
@@ -2606,9 +2608,30 @@ func call_on(npc_id: String) -> void:
 	_pass_time(int(rules.get("days", 1)), "Tea")
 
 
+## FOLK-050: true while `npc_id`'s own news can still be congratulated.
+func can_congratulate(npc_id: String) -> bool:
+	return player != null and FolkNews.can_congratulate(player, data, npc_id, GameClock.total_days)
+
+
+## FOLK-050: congratulate a friend on their own news: no time passes, favor once.
+func congratulate(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act() or not npcs.has(npc_id):
+		return
+	var gain := FolkNews.congratulate(player, data, npc_id, GameClock.total_days)
+	if gain <= 0:
+		return
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
+	EventBus.post("You congratulate %s. %s beams. (%s)" % [npcs[npc_id].name, npcs[npc_id].name, _favor_text(npc_id)], "progress")
+	EventBus.npc_reaction.emit(npc_id, "happy")
+	EventBus.player_changed.emit()
+
+
 ## NEWS-002: a renowned player is greeted by name, at most once per NPC per 30 days. Family never.
 func _greet_renowned(npc_id: String, opens_dialogue: bool = false) -> void:
 	var news := FolkNews.take(player, data, npc_id, npcs)  # FOLK-046: a friend's reaction replaces the greeting, once
+	if news == "":
+		news = FolkNews.take_own(player, data, npc_id, GameClock.total_days)  # FOLK-050
 	if news != "":
 		EventBus.post("%s: %s" % [String(npcs[npc_id].name), news], "people")
 		if opens_dialogue:
@@ -2748,6 +2771,8 @@ func give_gift(npc_id: String, item_id: String) -> void:
 		gain = mini(gain + Almanac.gift_favor(today_omen()), maxi(0, cap - favor))  # CAL-010
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
+	if taste > 0:  # FOLK-050: a liked gift while their news is pending also congratulates
+		npc_favor[npc_id] = clampi(int(npc_favor[npc_id]) + FolkNews.congratulate(player, data, npc_id, GameClock.total_days), 0, 100)
 	if taste >= 0:
 		Karma.on_kindness(player, data, npc_id, "gift")
 	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018
@@ -5614,10 +5639,15 @@ func _on_days_advanced(days: int) -> void:
 			var news := Folk.celebration_news(data, party["kind"], GameClock.total_days)
 			EventBus.post(news.replace("{region}", data.regions.get(current_region, {}).get("name", current_region)).replace("{text}", event["text"]), "info")
 			continue
+		if event.has("kind") and ["qi_start", "breakthrough"].has(String(event["kind"])) and FolkNews.queue_own(player, data, npc_favor, npcs.get(String(event["npc_id"])), String(event["kind"]), String(event.get("realm", "")), GameClock.total_days):
+			var friend_name := String(npcs[String(event["npc_id"])].name)  # FOLK-050
+			EventBus.post(("%s has begun Qi Refining." if event["kind"] == "qi_start" else "%s has broken through.") % friend_name + " Visit to congratulate %s." % friend_name, "info")
+			continue
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
 			continue
 		EventBus.post(event["text"], event["category"])
+	FolkNews.prune_own(player, data, GameClock.total_days)
 	_rival_news()
 	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))
