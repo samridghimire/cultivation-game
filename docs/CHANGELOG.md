@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-26 [C-412] Four more friends teach you a home dish (Marsh Catfish Pot, Pine-Smoked Cloud Trout, Merchant's Fried Moon Cake, Highland Thyme Tisane).
+- 2026-11-26 [SECT-049] Contest messages are chosen by reason codes, so rewording one no longer changes the Sect page line.
+- 2026-11-26 [WU-630] The sect trial card lists what to prepare (the main gap, armor, a meal) with the same Prepare tag as the Sect page.
+- 2026-11-26 [SIM-035] The second sect rank, measured over two years: nobody reaches it, so no inner contest yet (a pacing question for the owner).
+- 2026-11-26 [WU-629] A friend's own news shows its own star bubble, and congratulating them opens a face-to-face card.
+- 2026-11-26 [GFX-260] The new-realm card shows you risen in a column of light; a failed breakthrough gets its own card.
+- 2026-11-26 [SECT-051] Long before a sect trial opens, a hint and the Sect page tell you how to prepare for it.
+- 2026-11-26 [FOLK-050] Friends cultivate on their own: when one begins Qi Refining or breaks through, you hear about it and can congratulate them.
+- 2026-11-26 [C-421] Village friends react in their own words to joining a demonic sect, promotions there and contest wins.
+- 2026-11-26 [GFX-258] The breakthrough window is staged: you meditate under a night sky, and the attempt ends in a flash of success or a burst of failure.
+- 2026-11-26 [WU-627] The Sect page shows your contest record: best round and how many times you were champion.
 - 2026-11-26 [SECT-045] Inner and core disciples get their own yearly contest with stronger foes and bigger prizes.
 - 2026-11-26 [GFX-256] Winning the whole sect contest ends on a champion's card: you alone on the platform, the crowd cheering.
 - 2026-11-26 [GUIDE-292] A rogue hears about an open lecture early enough to reach it (first lecture by about day 103, not 174).

@@ -2,6 +2,16 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-26 12:10
+- 11 landed; reviewed through 3f32add (no new fix tasks). Planner shots: realm_card_staged, breakthrough_failed and own_news_card
+  read well; bs_stage_success has the stage left of centre and a ~705 px tall window -> WU-632 (spec). Congratulate reply is one
+  fixed sentence for everyone -> C-425 (spec). The --breakthrough-shots run printed "Aborted" after its PNGs (QA-240 family).
+- SIM-035: rank 2 never reached in two years -> SECT-050 blocked; the "(SECT-046) First promotion timing" question now covers rank 2.
+- Systems turns to friends who cultivate: FOLK-051 (loose ends + 730-day measure), FOLK-052 (meditate beside a friend,
+  docs/specs/FOLK-052.md), SIM-036 depends on FOLK-051's numbers; SECT-052 (docs/specs/SECT-052.md) splits the contest records.
+- Next planner: read FOLK-051's per-seed friend realms; if SIM-036 needs a per-NPC drive field that is a small default, not an
+  owner call. Open WU-632's 720p shots.
+
 ## Planner 2026-11-26 06:10
 - 10 landed (sect ladder complete through the inner contest); SIM-034 closed with no change. Planner shots: hud_arrival,
   inventory, journal, character sheet, champion card and trial cards fine; the breakthrough window is text only -> GFX-258
