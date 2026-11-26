@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 35449b9
+Last reviewed commit: 3f32add
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2561,3 +2561,15 @@ Last reviewed commit: 35449b9
     `fallback`. The contest tests mutate the shared Azure Cloud contest def (one restores it). SECT-046/WU-624 lesson
     lines, WU-622 blockers, WU-626 goal row, SECT-048 record and GFX-254/WU-620 staging match their specs; cards focus via
     the existing moments path. Not rendered by me.
+- 2026-11-26 (reviewer): reviewed 35449b9..3f32add (GUIDE-292, GFX-256, SECT-045, WU-627, GFX-258, C-421, FOLK-050,
+  SECT-051, GFX-260, WU-629, SIM-035; [PLAN]/[REVIEW] skipped). Main green (4791 tests). No BACKLOG/CHANGELOG edits by
+  workers; no new binary assets; no SAVE_VERSION change (FOLK-050's `friend_news` defaults to {}).
+  - GFX-258 fix: the HUD now waits for the staged breakthrough window to close before the realm card, but
+    `_show_realm_card` only collects "New" notices from the current frame, so after the ~1.4 s stage every realm card lost
+    its notices (new techniques, unlocked features). The HUD keeps the breakthrough's frame while it waits; test
+    `test_staged_card_keeps_the_notices_of_its_frame`.
+  - SECT-045 fix: the calendar entry used `"inner-sect contest".capitalize()` ("Inner-sect Contest"); now spelled out.
+  - Notes (not filed): the contest record (WU-627) and `last_contest_year` are shared by the outer and inner contests, so
+    "best round N of M" counts M from the current rank's contest; the world's contest stage (GFX-253) only stages the
+    outer month. FOLK-050: a liked gift's congratulate favor can go past the gift cap; `has_pending` shows the bubble for
+    an expired entry until the next day-advance prune. SECT-049 (contest reason codes) is still needed. Not rendered by me.

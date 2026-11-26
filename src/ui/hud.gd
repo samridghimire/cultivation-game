@@ -25,6 +25,9 @@ signal hints_changed
 
 var _age: Label
 var _breakthrough_details: String = ""
+## The frame the breakthrough resolved on while the staged window held the card back (-1 = none), so the
+## realm card still lists the "New" notices of that frame (GFX-258 review fix).
+var _breakthrough_frame: int = -1
 var _status: Label
 var _region_name: Label
 var _region_chip: Label
@@ -2507,6 +2510,8 @@ func _show_arrival(region_id: String) -> void:
 func _on_breakthrough(success: bool, realm_name: String) -> void:
 	if _breakthrough.is_attempting() and _breakthrough.visible:
 		# GFX-258: the stage plays its beat first; the card or banner follows when the window closes.
+		if _breakthrough_frame < 0:
+			_breakthrough_frame = Engine.get_process_frames()
 		_breakthrough.closed.connect(_on_breakthrough.bind(success, realm_name), CONNECT_ONE_SHOT)
 		return
 	var details := _breakthrough_details
@@ -2515,7 +2520,9 @@ func _on_breakthrough(success: bool, realm_name: String) -> void:
 	GameState.last_surpassed_rival = ""
 	if success:
 		_show_realm_card.call_deferred(realm_name, details, surpassed)
-	elif details != "" and GameState.player != null and GameState.data != null:
+		return
+	_breakthrough_frame = -1
+	if details != "" and GameState.player != null and GameState.data != null:
 		# GFX-260: a failed gate opens a card (stage, qi lost, injury, lessons) through the realm-card path.
 		_pending_realm_card = [realm_name, "", details, [], "", true]
 		if not _tribulation.visible:
@@ -2533,9 +2540,11 @@ func _show_realm_card(realm_name: String, details: String, surpassed: String = "
 		_banner.announce("Breakthrough!", "You have entered the %s realm." % realm_name, UIStyle.ACCENT)
 		return
 	var notices: Array = []
+	var since := _breakthrough_frame if _breakthrough_frame >= 0 else Engine.get_process_frames()
+	_breakthrough_frame = -1
 	if int(Settings.get_value("hud_hints")) > 0:
 		for entry in _recent_notices:
-			if int(entry[0]) >= Engine.get_process_frames() - 1:
+			if int(entry[0]) >= since - 1:
 				notices.append(String(entry[1]))
 	_pending_realm_card = [realm_name, data.realms[p.realm_index].description, details, notices, surpassed]
 	# After a tribulation, the card waits until its waves have been watched and closed.

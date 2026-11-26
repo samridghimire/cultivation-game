@@ -47,6 +47,29 @@ func test_card_waits_for_the_tribulation_screen() -> void:
 	gs.end_session()
 
 
+func test_staged_card_keeps_the_notices_of_its_frame() -> void:  # GFX-258 review fix
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Wanderer", gs.data, seeded_rng(3)))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	root.add_child(hud)
+	var trib: TribulationScreen = hud.get("_tribulation")
+	trib.visible = true  # hold the card pending so its lines can be read
+	var frame := Engine.get_process_frames()
+	hud.set("_recent_notices", [[frame, "New: a technique"]])
+	hud.set("_breakthrough_frame", frame)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	hud.call("_show_realm_card", "Foundation Establishment", "")
+	var pending: Array = hud.get("_pending_realm_card")
+	if int(Settings.get_value("hud_hints")) > 0:
+		assert_true((pending[3] as Array).has("New: a technique"), "the stage's wait does not drop the breakthrough's notices")
+	assert_eq(int(hud.get("_breakthrough_frame")), -1, "the held frame is used once")
+	trib.visible = false
+	hud.free()
+	gs.end_session()
+
+
 func test_failed_lines_drop_empty_ones() -> void:  # GFX-260
 	assert_eq(RealmCard.failed_lines("Qi lost: 5 of 10.\n\nInjury: Bruise.\n"), ["Qi lost: 5 of 10.", "Injury: Bruise."] as Array[String])
 
