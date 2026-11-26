@@ -71,7 +71,7 @@ func test_contest_bout_with_rival_posts_line_and_tallies() -> void:
 func test_rival_follows_player_into_sect() -> void:
 	var gs := _gs()
 	var rival := CharacterData.new()
-	assert_false(Rivals.follow_into_sect(rival, "azure_cloud_sect", gs.data, seeded_rng(1)) and false)
+	rival.realm_index = 1  # the Azure Cloud takes Qi Refining and above
 	var joined := 0
 	for i in 40:
 		rival.sect = {}
@@ -82,3 +82,15 @@ func test_rival_follows_player_into_sect() -> void:
 	rival.sect = {"id": "blood_lotus_sect"}
 	assert_false(Rivals.follow_into_sect(rival, "azure_cloud_sect", gs.data, seeded_rng(1)), "already in a sect")
 	assert_false(Rivals.follow_into_sect(null, "azure_cloud_sect", gs.data, seeded_rng(1)))
+
+
+func test_rival_follows_only_into_a_sect_that_accepts_them() -> void:
+	var gs := _gs()
+	var rival := CharacterData.new()
+	rival.realm_index = 1
+	rival.alignment = 60  # too soft-hearted for the Blood Lotus (max_alignment 0)
+	for i in 20:
+		assert_false(Rivals.follow_into_sect(rival, "blood_lotus_sect", gs.data, seeded_rng(i)), "a righteous rival never joins the Blood Lotus")
+	rival.realm_index = 0  # a mortal is below the Azure Cloud's min_realm
+	for i in 20:
+		assert_false(Rivals.follow_into_sect(rival, "azure_cloud_sect", gs.data, seeded_rng(i)), "a mortal rival is turned away")

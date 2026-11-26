@@ -162,9 +162,13 @@ static func join_sect_chance(data: GameData) -> float:
 	return float(rules(data).get("join_sect_chance", 0.5))
 
 
-## SECT-044: a living, sect-less rival follows the player into `sect_id` with join_sect_chance. True when they joined.
+## SECT-044: a living, sect-less rival the sect would accept (realm, alignment) follows the player into `sect_id`
+## with join_sect_chance. True when they joined.
 static func follow_into_sect(rival: CharacterData, sect_id: String, data: GameData, rng: RandomNumberGenerator) -> bool:
-	if rival == null or not rival.alive or not rival.is_rogue():
+	if rival == null or not rival.alive or not rival.is_rogue() or not data.sects.has(sect_id):
+		return false
+	var sect: SectDef = data.sects[sect_id]  # RV-SECT044: the sect must accept the rival too (realm, alignment)
+	if rival.realm_index < data.realm_index_of(sect.min_realm) or rival.alignment < sect.min_alignment or rival.alignment > sect.max_alignment:
 		return false
 	if rng.randf() >= join_sect_chance(data):
 		return false

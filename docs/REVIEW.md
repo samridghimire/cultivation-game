@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 7f11a3b
+Last reviewed commit: 35449b9
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2548,3 +2548,16 @@ Last reviewed commit: 7f11a3b
   - SECT-043 matches the spec; odds targets met per the commit tables. WU-611/WU-617 cards go through the moments queue and
     grab focus. GFX-253's stage only refreshes on region load (a month change while standing in the region keeps the old
     state until the next load; same as the court drill). WU-619, FOLK-049, GFX-252, SIM-031, C-411: OK. Not rendered by me.
+- 2026-11-26 (reviewer): reviewed 7f11a3b..35449b9 (SECT-044, WU-621, SIM-032, WU-620, GFX-254, C-423, SIM-033, GFX-255,
+  WU-618, WU-622, SECT-046, WU-625, WU-626, SECT-047, SECT-048, WU-624, GFX-257; [PLAN]/[REVIEW] skipped). Main green.
+  No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change (SECT-046's `sect.trial_losses` and
+  SECT-048's `contest_record` default to 0 / {}).
+  - SECT-044 fix: `Rivals.follow_into_sect` put the sect-less rival into the player's sect without asking whether the sect
+    would take them, so a righteous rival could join the Blood Lotus (max_alignment 0) or a mortal rival the Azure Cloud. It
+    now checks the sect's min_realm and alignment bounds; test `test_rival_follows_only_into_a_sect_that_accepts_them`.
+  - WU-625 fix: Fisher Pei's dragon-boat line called the player "Lad"; the player may be any gender. Line reworded.
+  - Notes (not filed): `Sects.contest_line` maps `check_contest` reasons by string prefix ("You have already", "first two
+    ranks"), so rewording those messages silently changes the Sect page line. GFX-255's `_pick_platform` has a never-set
+    `fallback`. The contest tests mutate the shared Azure Cloud contest def (one restores it). SECT-046/WU-624 lesson
+    lines, WU-622 blockers, WU-626 goal row, SECT-048 record and GFX-254/WU-620 staging match their specs; cards focus via
+    the existing moments path. Not rendered by me.
