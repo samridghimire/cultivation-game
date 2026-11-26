@@ -366,6 +366,17 @@ func test_trial_advice_branches() -> void:
 	assert_true(line.begins_with("Learn an attack technique; the examiner uses "), line)
 	c.techniques = {"metal_edge_sword": {"level": 1, "xp": 0.0}}
 	assert_eq(Sects.trial_advice(c, d), "Close: train a few more days and try again.")
+	# WU-630: items, capped, priority order, armor and meal only after the main gap is closed
+	c.equipment["armor"] = ""
+	c.buffs.clear()
+	var items := Sects.trial_advice_items(c, d)
+	assert_eq(items.size(), 2)
+	assert_eq(items[0], Sects.trial_advice(c, d))
+	assert_true(items[1].begins_with("Wear armor"), items[1])
+	assert_eq(Sects.trial_advice_items(c, d, 3).size(), 3)
+	c.injuries = {"broken_ribs": 5}
+	assert_eq(Sects.trial_advice_items(c, d).size(), 1, "heal first stands alone")
+	c.injuries.clear()
 	if had_trial == null:
 		ranks[1].erase("trial")
 	else:

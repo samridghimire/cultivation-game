@@ -53,6 +53,26 @@ func test_card_shows_examiner_rank_and_odds() -> void:
 	_teardown(gs, hud)
 
 
+func test_prepare_rows_match_advice_items() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: TrialCard = hud.get("_trial_card")
+	gs.player.techniques.clear()
+	gs.player.realm_index = 1
+	gs.player.stage = 0
+	card.open(gs.player, gs.data)
+	var prep: Node = card.find_child("TrialPrep", true, false)
+	var items := Sects.trial_advice_items(gs.player, gs.data)
+	assert_eq(prep.get_child_count(), items.size())
+	for i in items.size():
+		var row: Node = prep.get_child(i)
+		assert_eq((row.get_child(0) as Label).text, "Prepare")
+		assert_eq((row.get_child(1) as Label).text, items[i])
+	_teardown(gs, hud)
+
+
 func test_not_yet_fights_nothing() -> void:
 	var out: Array = []
 	var gs := _setup(out)

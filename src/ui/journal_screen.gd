@@ -192,8 +192,14 @@ func _build_sect() -> void:
 			gbox.add_child(goal_box_row(bool(g["done"]), String(g["text"]), DIM if bool(g["done"]) else Color.WHITE, 680))
 		var preview := Guidance.trial_preview(p, GameState.data)  # SECT-051
 		if not preview.is_empty():
-			var prow := UIStyle.label("%s trial, now %s (%d in 100): %s" % [preview["rank_name"], preview["word"], roundi(float(preview["odds"]) * 100.0), preview["advice"]], 14, DIM)
+			var prow := HBoxContainer.new()  # WU-630: same "Prepare" look as the trial card
 			prow.name = "TrialPreview"
+			prow.add_theme_constant_override("separation", 8)
+			prow.add_child(UIStyle.label("Prepare", 14, UIStyle.ACCENT))
+			var ptext := UIStyle.label("%s trial, now %s (%d in 100): %s" % [preview["rank_name"], preview["word"], roundi(float(preview["odds"]) * 100.0), preview["advice"]], 14, DIM)
+			ptext.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ptext.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			prow.add_child(ptext)
 			gbox.add_child(prow)
 		_sect.add_child(gpanel)
 	var month := UIStyle.panel()

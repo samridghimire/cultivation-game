@@ -368,6 +368,25 @@ static func trial_advice(c: CharacterData, data: GameData) -> String:
 	return "Close: train a few more days and try again."
 
 
+## WU-630: up to `max_items` short preparation items for the open trial, in priority order: the one-line
+## `trial_advice` gap first, then (only once that is "Close") no armor worn, then no meal buff active. [] when no trial is open. Pure.
+static func trial_advice_items(c: CharacterData, data: GameData, max_items: int = 2) -> PackedStringArray:
+	var out := PackedStringArray()
+	var first := trial_advice(c, data)
+	if first == "":
+		return out
+	out.append(first)
+	if first.begins_with("Heal first") or first.begins_with("The examiner is at"):
+		return out  # fix that first; more items would be noise
+	if String(c.equipment.get("armor", "")) == "":
+		out.append("Wear armor: it blunts the examiner's blows.")
+	if c.buffs.is_empty():
+		out.append("Eat a meal first: a hot dish gives a short edge.")
+	while out.size() > max_items:
+		out.remove_at(out.size() - 1)
+	return out
+
+
 ## Promotes `c` one rank after a won trial (then through any trial-free ranks
 ## that follow). Returns false if `c` could not attempt the trial.
 static func pass_trial(c: CharacterData, data: GameData) -> bool:

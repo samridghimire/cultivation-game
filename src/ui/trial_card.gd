@@ -17,6 +17,7 @@ var _title: Label
 var _subtitle: Label
 var _foe: Label
 var _odds: Label
+var _prep: VBoxContainer  # WU-630
 var _safe: Label
 var _perks: Label
 var _step_button: Button
@@ -52,6 +53,9 @@ func _init() -> void:
 	box.add_child(arena)
 	_foe = _wrapped(box, 18)
 	_odds = _wrapped(box, 18)
+	_prep = VBoxContainer.new()
+	_prep.name = "TrialPrep"
+	box.add_child(_prep)
 	_safe = _wrapped(box, 16, Color(0.75, 0.85, 0.7))
 	_perks = _wrapped(box, 16)
 	var row := HBoxContainer.new()
@@ -118,13 +122,12 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	_foe.text = foe_line(data, enemy)
 	_odds.text = odds_line(chance)
 	_odds.add_theme_color_override("font_color", odds_color(chance))
+	_fill_prep(PackedStringArray())
 	var lessons := lessons_line(c, data)  # WU-624
 	if lessons != "":
 		_odds.text += "\n" + lessons
 	if chance < 0.5:  # SECT-040: the biggest gap, under the odds
-		var advice := Sects.trial_advice(c, data)
-		if advice != "":
-			_odds.text += "\n" + advice
+		_fill_prep(Sects.trial_advice_items(c, data))
 	_safe.text = SAFE_LINE
 	_perks.text = _perk_text(c, data, sect, next)
 	_perks.visible = _perks.text != ""
@@ -136,6 +139,21 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	else:
 		_step_button.grab_focus.call_deferred()
 	return true
+
+
+## WU-630: one "Prepare" row per advice item (a small accent tag, then the text).
+func _fill_prep(items: PackedStringArray) -> void:
+	for ch in _prep.get_children():
+		_prep.remove_child(ch)
+		ch.free()
+	for item in items:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		row.add_child(UIStyle.label("Prepare", 15, UIStyle.ACCENT))
+		var t := _wrapped(row, 16)
+		t.custom_minimum_size = Vector2(WRAP_WIDTH - 80, 0)
+		t.text = item
+		_prep.add_child(row)
 
 
 ## What the next rank brings: its ladder perks (SECT-033). "" when none are listed.
