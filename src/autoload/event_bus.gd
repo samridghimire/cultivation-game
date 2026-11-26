@@ -228,3 +228,8 @@ signal sect_contest_offered(sect_id: String)
 signal sect_contest_bout(sect_id: String, info: Dictionary)
 ## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
 signal sect_lecture_attended(sect_id: String, result: Dictionary)
+
+
+## GFX-262: a friend's own news (FolkNews.queue_own) was queued; `kind` is "qi_start" or "breakthrough". The region plays a light column if they stand in it.
+@warning_ignore("unused_signal")
+signal friend_rose(npc_id: String, kind: String, realm: String)

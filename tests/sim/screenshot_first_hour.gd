@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
@@ -481,6 +482,14 @@ func _start() -> void:
 			shots.append({"name": "news_talk", "open": func() -> void:
 				(hud.get("_friend_card") as Control).close()
 				gs.start_dialogue(nid), "close": func() -> void: pass})
+			special = true
+	for a in OS.get_cmdline_user_args():  # GFX-262: a friend rises in sight
+		if a.begins_with("--friend-rose="):
+			var rid := a.substr(14)
+			shots.append({"name": "friend_rose", "open": func() -> void:
+				hud.get("_banner").visible = false
+				gs.current_region = String(gs.data.npcs[rid].get("region", "qingshi_village"))
+				Engine.get_main_loop().root.get_node("EventBus").friend_rose.emit(rid, "qi_start", "Qi Refining"), "close": func() -> void: pass})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-629: a friend's own pending news, then the congratulate card
 		if a.begins_with("--own-news="):

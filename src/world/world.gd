@@ -179,6 +179,7 @@ func _ready() -> void:
 	EventBus.player_changed.connect(_on_player_changed_tags)  # WU-526: devour, pills, respawn
 	EventBus.forage_changed.connect(_build_forage)
 	EventBus.pickup_noted.connect(_on_pickup_noted)
+	EventBus.friend_rose.connect(_on_friend_rose)
 	EventBus.forage_changed.connect(_build_eggs)
 	get_tree().auto_accept_quit = false
 
@@ -646,6 +647,15 @@ func _on_modal_changed(is_open: bool) -> void:
 func _on_pickup_noted(item_id: String, amount: int) -> void:
 	if player != null:
 		PickupFloat.spawn(self, GameState.data, item_id, amount, player.position)
+
+
+## GFX-262: a friend's breakthrough plays over their figure when they stand in this region.
+func _on_friend_rose(npc_id: String, _kind: String, realm: String) -> void:
+	for node in get_children():
+		if node is Interactable and node.get("npc_id") == npc_id:
+			var who: CharacterData = GameState.npcs.get(npc_id)
+			RiseColumn.spawn(self, node.position, who.name if who != null else npc_id, realm)
+			return
 
 
 func _on_region_changed(region_id: String) -> void:

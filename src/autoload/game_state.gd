@@ -5673,6 +5673,7 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		if event.has("kind") and ["qi_start", "breakthrough"].has(String(event["kind"])) and FolkNews.queue_own(player, data, npc_favor, npcs.get(String(event["npc_id"])), String(event["kind"]), String(event.get("realm", "")), GameClock.total_days):
 			var friend_name := String(npcs[String(event["npc_id"])].name)  # FOLK-050
+			EventBus.friend_rose.emit(String(event["npc_id"]), String(event["kind"]), String(event.get("realm", "")))  # GFX-262
 			EventBus.post(("%s has begun Qi Refining." if event["kind"] == "qi_start" else "%s has broken through.") % friend_name + " Visit to congratulate %s." % friend_name, "info")
 			continue
 		# News about generated strangers is noise; only report people the player knows.
