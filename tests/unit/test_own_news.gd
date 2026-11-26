@@ -191,6 +191,17 @@ func test_congratulate_uses_npc_voice() -> void:
 	assert_true(ok, str(got))
 
 
+## C-426: friends beyond the village have their own congrats, breakthrough and wedding lines.
+func test_far_friends_have_own_voices() -> void:
+	var data: GameData = _gs().data
+	for id: String in ["herbalist_lan", "peddler_hei", "swordsman_yun", "disciple_bai", "broker_qian", "alchemist_hua", "hermit_gu"]:
+		var def: Dictionary = data.npcs[id]
+		assert_true(def.has("congrats_reply"), id + " congrats_reply")
+		var nl: Dictionary = def.get("news_lines", {})
+		assert_true((nl.get("breakthrough", []) as Array).size() >= 1 and String(nl["breakthrough"][0]).contains("{realm}"), id + " breakthrough")
+		assert_true((nl.get("wedding", []) as Array).size() >= 1 and String(nl["wedding"][0]).contains("{spouse}"), id + " wedding")
+
+
 func test_journal_rows_fresh_told_expired_sorted() -> void:
 	var c := _start()
 	var gs := _gs()
