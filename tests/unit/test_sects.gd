@@ -426,11 +426,17 @@ func test_contest_rounds_in_order_and_validated() -> void:
 	assert_eq(Sects.validate_contests(data()).size(), 0)
 
 
+var _contest_snapshot: Dictionary = {}
+
+
 func test_contest_power_mults_default_and_validation() -> void:
+	_contest_snapshot = (data().sects["azure_cloud_sect"] as SectDef).contest.duplicate(true)
 	var c := _contest_member()
 	var d := data()
-	var def: Dictionary = d.sects["azure_cloud_sect"].contest
-	var saved: Variant = def.get("power_mults")
+	var sect: SectDef = d.sects["azure_cloud_sect"]
+	var original := sect.contest
+	var def := original.duplicate(true)  # SECT-049: edit a copy, never the shared def
+	sect.contest = def
 	def.erase("power_mults")
 	assert_eq(Sects.contest_round(c, d, 0)["power_mult"], 1.0)
 	def["power_mults"] = [0.8, 1.2, 1.5]
@@ -442,10 +448,8 @@ func test_contest_power_mults_default_and_validation() -> void:
 	assert_true(Sects.validate_contests(d).size() > 0, "out of range")
 	def["power_mults"] = [1.0, 0.1, 1.0]
 	assert_true(Sects.validate_contests(d).size() > 0, "too low")
-	if saved == null:
-		def.erase("power_mults")
-	else:
-		def["power_mults"] = saved
+	sect.contest = original
+	assert_eq(original, _contest_snapshot, "the shared def is unchanged")
 	var foe := Sects.trial_opponent(d, "village_boxer", 1.5)
 	assert_eq(float(foe["power_mult"]), float(d.enemies["village_boxer"].get("power_mult", 1.0)) * 1.5)
 
@@ -574,4 +578,34 @@ func test_sect_without_inner_contest_refuses_rank_two() -> void:
 	sect.inner_contest = {}
 	var day := (int(sect.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
 	assert_eq(Sects.check_contest(c, data(), day), "The outer-sect contest is for disciples of the first two ranks.")
+	sect.inner_contest = saved
+
+
+# --- SECT-049: contest reason codes ---------------------------------------------
+
+func test_contest_check_reason_codes_and_line() -> void:
+	var day := _contest_day()
+	var rogue := new_character()
+	assert_eq(Sects.contest_check(rogue, data(), day)["reason"], "not_member")
+	var c := _contest_member()
+	c.sect["reported"] = true
+	assert_eq(Sects.contest_check(c, data(), day)["reason"], "ok")
+	assert_eq(Sects.contest_check(c, data(), day)["message"], "")
+	assert_eq(Sects.contest_check(c, data(), day - Calendar.DAYS_PER_MONTH)["reason"], "wrong_month")
+	assert_true(Sects.contest_line(c, data(), day - Calendar.DAYS_PER_MONTH).begins_with("Contest: month"))
+	c.sect["reported"] = false
+	assert_eq(Sects.contest_check(c, data(), day)["reason"], "need_report")
+	assert_eq(Sects.contest_line(c, data(), day), "Contest: Report to the hall first.")
+	c.sect["reported"] = true
+	Sects.enter_contest(c, day)
+	assert_eq(Sects.contest_check(c, data(), day + 1)["reason"], "already_entered")
+	assert_eq(Sects.contest_line(c, data(), day + 1), "Contest: already entered this year")
+	var d := _contest_member()
+	d.sect["reported"] = true
+	d.sect["rank"] = 2
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	var saved := sect.inner_contest
+	sect.inner_contest = {}
+	assert_eq(Sects.contest_check(d, data(), day)["reason"], "rank_too_high")
+	assert_eq(Sects.contest_line(d, data(), day), "Contest: for the first two ranks")
 	sect.inner_contest = saved

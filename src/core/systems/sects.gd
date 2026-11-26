@@ -853,23 +853,29 @@ static func contest_name(c: CharacterData, data: GameData) -> String:
 	return "inner-sect contest" if is_inner_contest(c, data) else "outer-sect contest"
 
 
-## Why `c` cannot enter the contest on `total_days`, or "" when they can.
-static func check_contest(c: CharacterData, data: GameData, total_days: int) -> String:
+## SECT-049: the contest check as {reason (a code), message}. Codes: "ok", "not_member", "no_contest",
+## "need_report", "rank_too_high", "wrong_month", "already_entered". Callers switch on `reason`, never on the message.
+static func contest_check(c: CharacterData, data: GameData, total_days: int) -> Dictionary:
 	if c.is_rogue():
-		return "Only sect disciples may enter the contest."
+		return {"reason": "not_member", "message": "Only sect disciples may enter the contest."}
 	var contest := contest_def(c, data)
 	if contest.is_empty():
-		return "Your sect holds no contest."
+		return {"reason": "no_contest", "message": "Your sect holds no contest."}
 	if needs_report(c):
-		return "Report to the hall first."
+		return {"reason": "need_report", "message": "Report to the hall first."}
 	if int(c.sect.get("rank", 0)) > 1 and not is_inner_contest(c, data):
-		return "The outer-sect contest is for disciples of the first two ranks."
+		return {"reason": "rank_too_high", "message": "The outer-sect contest is for disciples of the first two ranks."}
 	if Calendar.month_of(total_days) != int(contest.get("month", 0)):
-		return "The contest is held in month %d of the year." % int(contest.get("month", 1))
+		return {"reason": "wrong_month", "message": "The contest is held in month %d of the year." % int(contest.get("month", 1))}
 	var year := Calendar.year_of(total_days)
 	if int(c.sect.get("contest_year", -1)) == year or c.last_contest_year == year:
-		return "You have already entered this year's contest."
-	return ""
+		return {"reason": "already_entered", "message": "You have already entered this year's contest."}
+	return {"reason": "ok", "message": ""}
+
+
+## Why `c` cannot enter the contest on `total_days`, or "" when they can.
+static func check_contest(c: CharacterData, data: GameData, total_days: int) -> String:
+	return String(contest_check(c, data, total_days)["message"])
 
 
 ## True while `check_contest` allows entry.
@@ -890,14 +896,15 @@ static func contest_line(c: CharacterData, data: GameData, total_days: int) -> S
 		if target <= total_days:
 			target += Calendar.DAYS_PER_YEAR
 		return "%s: month %d (in %d days)" % [contest_label(c, data), month, target - total_days]
-	var why := check_contest(c, data, total_days)
-	if why == "":
+	var check := contest_check(c, data, total_days)
+	var why := String(check["message"])
+	if check["reason"] == "ok":
 		var sect: SectDef = data.sects[c.sect["id"]]
 		var hall := hall_name(data, sect.home_region, c)
 		return "%s: open now at the %s" % [contest_label(c, data), (hall if hall != "" else "sect hall")]
-	if why.begins_with("You have already"):
+	if check["reason"] == "already_entered":
 		return "%s: already entered this year" % contest_label(c, data)
-	if why.contains("first two ranks"):
+	if check["reason"] == "rank_too_high":
 		return "Contest: for the first two ranks"
 	return "%s: %s" % [contest_label(c, data), why]
 

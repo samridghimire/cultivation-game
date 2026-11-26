@@ -84,7 +84,6 @@ static func _pick_platform(court: Rect2, hall: Rect2, map_size: Vector2, avoid: 
 	for east in [east_first, not east_first]:
 		var sx := hall.end.x + 24.0 + SIZE.x / 2.0 if east else hall.position.x - 24.0 - SIZE.x / 2.0
 		side.append(Rect2(Vector2(sx, hall.get_center().y) - SIZE / 2.0, SIZE))
-	var fallback := Rect2()
 	for r in in_court + side:
 		var in_c := court.encloses(r)
 		var fits := (r.position.y >= hall.end.y + 8.0) if in_c else (bounds.encloses(r) and not r.grow(14.0).intersects(hall))
@@ -93,7 +92,7 @@ static func _pick_platform(court: Rect2, hall: Rect2, map_size: Vector2, avoid: 
 			clear = clear and not a.intersects(r.grow(10.0))
 		if clear:
 			return r
-	return fallback if fallback != Rect2() else in_court[0]
+	return in_court[0]
 
 
 ## Rebuilds for one sect hall; hides itself outside the contest month.
