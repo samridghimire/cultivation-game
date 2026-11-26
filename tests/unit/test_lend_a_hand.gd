@@ -420,3 +420,20 @@ func test_pond_fisher_and_firewood() -> void:
 	assert_true((fisher["spots"]["work"] as Array).size() == 2)
 	var w := Vector2(float(fisher["spots"]["work"][0]), float(fisher["spots"]["work"][1]))
 	assert_true(w.distance_to(jetty) < 80.0, "work spot is on the jetty")
+
+
+## GUIDE-292: the gift line never offers the only pill held; with two it does.
+func test_make_friend_gift_skips_a_single_pill() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var flags := {}
+	for id: String in d.npcs:
+		flags["lend_" + id] = 0
+	var favor := {"elder_mo": 25}
+	var c := new_character()
+	c.inventory = {"qi_gathering_pill": 1}
+	assert_true(Family.gift_taste(d, "elder_mo", "qi_gathering_pill") == 1, "Mo likes the pill")
+	assert_eq(Guidance.make_friend_hint(c, d, npcs, flags, "qingshi_village", 0, favor), "")
+	c.add_item("qi_gathering_pill", 1)
+	var gift := Guidance.make_friend_hint(c, d, npcs, flags, "qingshi_village", 0, favor)
+	assert_true(gift.begins_with("Become friends: give "), gift)

@@ -195,3 +195,22 @@ func _lecture_index(hints: Array) -> int:
 		if String(hints[i]).begins_with("Lecture at the "):
 			return i
 	return -1
+
+
+## GUIDE-292: an open lecture within the days left outranks the make-a-friend line away from the hall.
+func test_lecture_outranks_friend_line_when_reachable() -> void:
+	var c := _disciple()
+	var lines := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", 1))
+	var friend := -1
+	for i in lines.size():
+		if String(lines[i]).begins_with("Make a friend") or String(lines[i]).begins_with("Become friends"):
+			friend = i
+			break
+	var lecture := _lecture_index(lines)
+	assert_true(lecture >= 0, "lecture listed")
+	if friend >= 0:
+		assert_true(lecture < friend, "lecture %d before friend %d: %s" % [lecture, friend, lines])
+	# Too few days left in the month to walk there and attend: it trails.
+	var late := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", Calendar.DAYS_PER_MONTH - 1))
+	var late_lecture := _lecture_index(late)
+	assert_true(late_lecture < 0 or late_lecture >= lecture)

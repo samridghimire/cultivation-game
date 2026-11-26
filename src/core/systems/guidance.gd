@@ -1239,7 +1239,13 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if today >= 0:
 		var lecture := _lecture_hint(c, data, today)
 		if lecture != "" and lecture_here == "":
-			out.append(lecture)
+			# GUIDE-292: an open lecture within the days left leads the friend / lend lines (the rarer chance); out of reach it trails.
+			var hall_days := route_days(c, data, region_id, Sects.home_region(data, String(c.sect["id"]))) if region_id != "" else 0
+			var lecture_days := int(Sects.lecture_def(c, data).get("days", 2))
+			if hall_days >= 0 and hall_days + lecture_days <= Sects.days_left_in_month(today):
+				out.insert(mini(1, out.size()), lecture)
+			else:
+				out.append(lecture)
 		var contest_hint := _contest_hint(c, data, today)
 		if contest_hint != "":
 			out.append(contest_hint)
@@ -1353,6 +1359,13 @@ static func _omen_sell_line(c: CharacterData, data: GameData, flags: Dictionary,
 		return ""
 	var where := "here" if int(found["days"]) == 0 else "%d %s" % [int(found["days"]), "road" if int(found["days"]) == 1 else "roads"]
 	return "Good for trade: sell to the %s, %s." % [found["result"], where]
+
+
+## GUIDE-292: a usable item that adds qi or breakthrough odds (the items file has no `pill` tag).
+static func _is_cultivation_pill(data: GameData, item_id: String) -> bool:
+	var item: Dictionary = data.items.get(item_id, {})
+	var effects: Dictionary = item.get("effects", {})
+	return bool(item.get("usable", false)) and (effects.has("qi") or effects.has("breakthrough_bonus"))
 
 
 ## The name of the friend here with the highest favor who would take a gift from your pack, else "".
@@ -2495,6 +2508,9 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 				best_favor = f
 		elif any_acq and f > gift_best_favor:
 			for item_id: String in c.inventory:
+				# GUIDE-292: never suggest giving away the only pill held (it may be the next breakthrough's).
+				if _is_cultivation_pill(data, item_id) and c.item_count(item_id) <= 1:
+					continue
 				if Family.gift_taste(data, id, item_id) == 1 and Family.check_gift(c, npc, f, item_id, data) == "":
 					gift_best = id
 					gift_best_favor = f
