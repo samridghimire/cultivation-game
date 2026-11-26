@@ -169,9 +169,9 @@ func test_demonic_sect_uses_demonic_keys() -> void:
 	c.folk_news["xiao_ling"] = "sect_join"
 	var own := FolkNews.take(c, gs.data, "xiao_ling")
 	assert_true(own.contains("bad people"), "own demonic line: " + own)
-	c.folk_news["elder_mo"] = "sect_join"  # own plain line beats the shared demonic one
+	c.folk_news["elder_mo"] = "sect_join"  # C-421: Mo's own demonic line beats the shared one
 	var mo := FolkNews.take(c, gs.data, "elder_mo")
-	assert_true(mo.contains("Walls and rules") or mo.contains("Sixty years"), "own plain line: " + mo)
+	assert_true(mo.contains("blood and bargains"), "own demonic line: " + mo)
 	var saved_own: Variant = gs.data.npcs["elder_mo"]["news_lines"]
 	gs.data.npcs["elder_mo"]["news_lines"] = {}
 	c.folk_news["elder_mo"] = "sect_join"
@@ -190,8 +190,11 @@ func test_demonic_falls_back_to_plain_and_righteous_unchanged() -> void:
 	var saved: Variant = gs.data.family["folk_news"]["lines"].get("sect_join_demonic")
 	gs.data.family["folk_news"]["lines"].erase("sect_join_demonic")
 	c.sect = {"id": "blood_lotus_sect", "rank": 0, "contribution": 0, "spent": 0, "month_earned": 0, "reported": false}
+	var saved_mo: Variant = gs.data.npcs["elder_mo"]["news_lines"].get("sect_join_demonic")
+	gs.data.npcs["elder_mo"]["news_lines"].erase("sect_join_demonic")
 	c.folk_news["elder_mo"] = "sect_join"
 	var plain := FolkNews.take(c, gs.data, "elder_mo")
+	gs.data.npcs["elder_mo"]["news_lines"]["sect_join_demonic"] = saved_mo
 	assert_true(plain.contains("Walls and rules") or plain.contains("Sixty years"), "falls back to Mo's plain line: " + plain)
 	gs.data.family["folk_news"]["lines"]["sect_join_demonic"] = saved
 	c.sect["id"] = "azure_cloud_sect"
@@ -262,3 +265,24 @@ func test_contest_news_uses_demonic_lines() -> void:
 	if saved != null:
 		gs.data.npcs["elder_mo"]["news_lines"] = saved
 	assert_true(line.contains("wary"), "shared demonic line: " + line)
+
+
+## C-421: Elder Mo, Xiao Ling, Hunter Ma and Fisher Pei each have demonic join/rank lines and contest lines.
+func test_c421_sect_life_lines_resolve() -> void:
+	var gs := _gs()
+	for npc_id: String in ["elder_mo", "xiao_ling", "hunter_ma", "fisher_pei"]:
+		for kind: String in ["sect_join", "promotion", "contest"]:
+			for sect_id: String in ["blood_lotus_sect", "azure_cloud_sect"]:
+				var c := _start()
+				c.sect = {"id": sect_id, "rank": 1, "contribution": 0, "spent": 0, "month_earned": 0, "reported": true}
+				c.folk_news[npc_id] = kind
+				var line := FolkNews.take(c, gs.data, npc_id)
+				assert_true(line != "" and not line.contains("{"), "%s %s %s: %s" % [npc_id, kind, sect_id, line])
+				if sect_id == "blood_lotus_sect":
+					var own: Dictionary = gs.data.npcs[npc_id].get("news_lines", {})
+					var pool: Array = own.get(kind + "_demonic", [])
+					var filled: Array = []
+					for t: String in pool:
+						filled.append(t.replace("{player}", c.name).replace("{sect}", "Blood Lotus Sect").replace("{rank}", (gs.data.sects[sect_id] as SectDef).rank_name(1)))
+					assert_true(filled.has(line), "%s %s uses its own demonic line: %s" % [npc_id, kind, line])
+	gs.end_session()
