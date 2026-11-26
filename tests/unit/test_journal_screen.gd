@@ -178,3 +178,32 @@ func test_sect_goal_rows_by_rank() -> void:
 	var rows := JournalScreen.sect_goal_rows(c, d, {})
 	assert_false(rows.is_empty())
 	assert_eq(JournalScreen.sect_goals_heading(c, d), "Rise to %s" % d.sects["azure_cloud_sect"].rank_name(2))
+
+
+## WU-622: the blocker line formats buckets in a fixed order and hides when empty.
+func test_blockers_text() -> void:
+	assert_eq(JournalScreen.blockers_text({}), "")
+	assert_eq(JournalScreen.blockers_text({"blockers": {"items": 5, "rank": 9}}), "9 need a higher rank, 5 need items")
+
+
+## WU-622: mission_blockers buckets every not-ready mission once; ready + blocked = total.
+func test_mission_blockers_buckets() -> void:
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("Blocked", d, seeded_rng(5))
+	assert_true(Sects.mission_blockers(c, d, {}).is_empty(), "rogues have none")
+	c.realm_index = 1
+	c.alignment = 50
+	Sects.join(c, d, "azure_cloud_sect")
+	var st := Sects.month_status(c, d, 0, {})
+	var blocked := 0
+	for k: String in st["blockers"]:
+		blocked += int(st["blockers"][k])
+	assert_eq(int(st["missions_ready"]) + blocked, int(st["missions_total"]))
+	c.sect["rank"] = 0
+	assert_true(int(Sects.mission_blockers(c, d, {}).get("rank", 0)) > 0 or int(st["missions_total"]) == int(st["missions_ready"]), "rank-0 sees rank-gated missions")
+
+
+## WU-622: a met duty line is flagged met by progress >= duty (text unchanged).
+func test_duty_line_text() -> void:
+	var lines := JournalScreen.month_lines({"duty": 30, "progress": 12, "days_left": 9, "stipend": {}})
+	assert_eq(lines[0], "Duty: 12 / 30 contribution, 9 days left")

@@ -11,6 +11,7 @@ signal calendar_requested
 const SCROLL_SPEED := 900.0
 const QUIET_DAY := "A quiet day. Meditate, gather, or walk the roads."
 const DIM := Color(0.6, 0.6, 0.6)
+const MET_GREEN := Color(0.55, 0.9, 0.55)  # WU-622: a met duty
 
 var _scroll: ScrollContainer
 var _cards: VBoxContainer
@@ -201,7 +202,12 @@ func _build_sect() -> void:
 	mbox.add_child(UIStyle.label("This month", 18, UIStyle.ACCENT))
 	var names := Sects.ready_mission_names(p, GameState.data, GameState.world_flags)
 	for line in month_lines(status):
-		mbox.add_child(UIStyle.label(line, 15))
+		var met := line.begins_with("Duty:") and int(status["progress"]) >= int(status["duty"])
+		mbox.add_child(UIStyle.label(line, 15, MET_GREEN if met else Color.WHITE))
+		if line.begins_with("Missions:") and blockers_text(status) != "":
+			var bl := UIStyle.label("    " + blockers_text(status), 14, DIM)
+			bl.name = "MissionBlockers"
+			mbox.add_child(bl)
 		if line.begins_with("Missions:") and not names.is_empty():  # WU-613: the names sit right under the count
 			mbox.add_child(UIStyle.label("    Ready: %s" % ", ".join(names), 14, DIM))
 	var rows := treasury_order(Sects.treasury_rows(p, GameState.data))
@@ -309,6 +315,17 @@ static func month_lines(status: Dictionary) -> PackedStringArray:
 	if int(status.get("missions_total", 0)) > 0:
 		out.append("Missions: %d of %d ready" % [int(status["missions_ready"]), int(status["missions_total"])])
 	return out
+
+
+## WU-622: "9 need a higher rank, 5 need items" for a month_status' `blockers`. "" with none. Pure.
+static func blockers_text(status: Dictionary) -> String:
+	var b: Dictionary = status.get("blockers", {})
+	var parts := PackedStringArray()
+	var labels := {"rank": "need a higher rank", "realm": "need a higher realm", "items": "need items", "wait": "are resting", "other": "are not open to you"}
+	for k: String in ["rank", "realm", "items", "wait", "other"]:
+		if int(b.get(k, 0)) > 0:
+			parts.append("%d %s" % [int(b[k]), labels[k]])
+	return ", ".join(parts)
 
 
 ## WU-613: treasury rows with the affordable ones first (stable order inside each group). Pure.

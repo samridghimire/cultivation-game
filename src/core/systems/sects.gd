@@ -439,6 +439,7 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	for id in ids:
 		if check_mission(c, data, id, flags) == "":
 			ready += 1
+	var blockers := mission_blockers(c, data, flags)
 	var balance := contribution_balance(c)
 	var options: Array[Dictionary] = []
 	for entry: Dictionary in shop_items(c, data):
@@ -449,7 +450,37 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	for entry: Dictionary in options.slice(0, 3):
 		claimable.append(String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
 	return {"duty": monthly_duty(c, data), "progress": duty_progress(c), "days_left": duty_days_left(c), "stipend": stipend(c, data),
-		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "missions_ready": ready, "missions_total": ids.size(), "balance": balance, "claimable": claimable}
+		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "missions_ready": ready, "missions_total": ids.size(), "blockers": blockers, "balance": balance, "claimable": claimable}
+
+
+## WU-622: why the listed missions are not ready, bucketed by their first blocker: {"rank": n, "realm": n, "items": n,
+## "wait": n, "other": n}; only non-zero buckets appear. Ready missions are not counted. {} for rogues.
+static func mission_blockers(c: CharacterData, data: GameData, flags: Dictionary = {}) -> Dictionary:
+	var out := {}
+	if c.is_rogue():
+		return out
+	for id in available_missions(c, data, flags):
+		if check_mission(c, data, id, flags) == "":
+			continue
+		var m: Dictionary = data.sect_missions[id]
+		var key := "other"
+		var min_realm := data.realm_index_of(String(m.get("min_realm", "mortal")))
+		var min_stage := int(m.get("min_stage", 0))
+		if mission_beneath(c, data, m):
+			key = "other"
+		elif int(c.sect["rank"]) < int(m.get("min_rank", 0)):
+			key = "rank"
+		elif c.realm_index < min_realm or (c.realm_index == min_realm and c.stage < min_stage):
+			key = "realm"
+		elif mission_cooldown_left(c, id) > 0:
+			key = "wait"
+		else:
+			for item_id: String in m.get("requires", {}).get("items", {}):
+				if c.item_count(item_id) < int(m["requires"]["items"][item_id]):
+					key = "items"
+					break
+		out[key] = int(out.get(key, 0)) + 1
+	return out
 
 
 ## WU-610: progress toward the next rank's contribution: {have, need, next_name, trial_foe}. {} for rogues and at the
