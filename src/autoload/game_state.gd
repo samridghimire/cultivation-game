@@ -3623,18 +3623,24 @@ func attempt_promotion_trial() -> void:
 		return
 	var sect: SectDef = data.sects[player.sect["id"]]
 	var rank_name := sect.rank_name(Sects.next_rank(player, data))
-	var enemy := Sects.trial_opponent(data, Sects.trial_enemy(player, data))
+	var enemy := Sects.trial_foe(player, data)
 	EventBus.post("You step into the trial arena to earn the rank of %s." % rank_name)
 	if fight_enemy(enemy):
 		Sects.pass_trial(player, data)
 		_post_promotion("You pass the trial. ")
 		EventBus.player_changed.emit()
 	elif _can_act():
-		EventBus.post("You fail the trial for %s. %s You may try again." % [rank_name, Sects.trial_advice(player, data)], "warning")
+		var lesson_before := Sects.trial_lesson(player, data)
+		Sects.note_trial_loss(player)  # SECT-046
+		var lesson := Sects.trial_lesson(player, data)
+		var lesson_line := "You know the examiner's forms as well as you can."
+		if lesson > lesson_before:
+			lesson_line = "You learned the examiner's forms: next time they fight %d%% weaker." % roundi(lesson * 100.0)
+		EventBus.post("You fail the trial for %s. %s %s You may try again." % [rank_name, Sects.trial_advice(player, data), lesson_line], "warning")
 		EventBus.promotion_trial_lost.emit(String(player.sect["id"]), {
 			"examiner": String(enemy.get("name", "The examiner")), "rank": rank_name,
 			"advice": Sects.trial_advice(player, data), "injuries": Injuries.describe(player, data),
-			"chance": Combat.win_chance(player, data, enemy)})
+			"chance": Combat.win_chance(player, data, Sects.trial_foe(player, data)), "lesson": lesson})
 
 
 ## WU-611: the hall entry for the contest: asks the HUD for the contest card (it calls enter_sect_contest on

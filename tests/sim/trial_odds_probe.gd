@@ -18,7 +18,7 @@ func _run() -> void:
 		if p.sect.is_empty() or Sects.check_promotion(p, gs.data) != "":
 			return
 		var eid := Sects.trial_enemy(p, gs.data)
-		var opp := Sects.trial_opponent(gs.data, eid)
+		var opp := Sects.trial_foe(p, gs.data)
 		print("m%02d %s stage %d injuries %s trial_odds %.2f unhurt %.2f clause: %s" % [month + 1, Cultivation.realm_label(p, gs.data), p.stage, str(p.injuries.keys()), Guidance.trial_odds(p, gs.data), Guidance.odds_unhurt(p, gs.data, opp), Guidance._trial_face(p, gs.data) + Guidance._trial_advice(p, gs.data)])
 		print("   techs ", str(p.techniques), " enemy ", str(opp))
 		var copy := CharacterData.from_dict(p.to_dict())

@@ -497,7 +497,7 @@ func _start() -> void:
 			if OS.get_cmdline_user_args().has("--lose"):  # WU-614: the lost-trial result card
 				shots.append({"name": "sect_trial_lost", "open": func() -> void:
 					tcard.close()
-					Engine.get_main_loop().root.get_node("EventBus").promotion_trial_lost.emit(tid, {"examiner": String(Sects.trial_opponent(gs.data, Sects.trial_enemy(c, gs.data)).get("name", "The examiner")),
+					Engine.get_main_loop().root.get_node("EventBus").promotion_trial_lost.emit(tid, {"examiner": String(Sects.trial_foe(c, gs.data).get("name", "The examiner")),
 						"rank": (gs.data.sects[tid] as SectDef).rank_name(Sects.next_rank(c, gs.data)),
 						"advice": Sects.trial_advice(c, gs.data), "injuries": PackedStringArray(["Bruised ribs"]), "chance": 0.35})
 					hud.call("_drain_moments"), "close": tcard.close})

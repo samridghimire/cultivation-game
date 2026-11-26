@@ -103,7 +103,7 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 		return false
 	var sect: SectDef = data.sects[c.sect["id"]]
 	var next := Sects.next_rank(c, data)
-	var enemy := Sects.trial_opponent(data, Sects.trial_enemy(c, data))
+	var enemy := Sects.trial_foe(c, data)
 	var chance := Combat.win_chance(c, data, enemy)  # once, on open: never on the frame loop
 	_title.text = sect.name
 	_title.add_theme_color_override("font_color", color)

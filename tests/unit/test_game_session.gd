@@ -753,6 +753,29 @@ func test_lost_trial_log_names_the_advice() -> void:
 	gs.end_session()
 
 
+func test_lost_trial_teaches_the_examiner_forms() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var ranks := (gs.data.sects["blood_lotus_sect"] as SectDef).ranks
+	ranks[1]["trial"] = "azure_sword_examiner"
+	c.alignment = -300
+	gs.join_sect("blood_lotus_sect")
+	c.sect["contribution"] = 400
+	c.realm_index = 0
+	var before := Combat.win_chance(c, gs.data, Sects.trial_foe(c, gs.data))
+	var log: Array = []
+	EventBus.message_posted.connect(func(text: String, _cat: String) -> void: log.append(text))
+	gs.attempt_promotion_trial()
+	var joined := "\n".join(log)
+	var losses := int(c.sect.get("trial_losses", 0))
+	var after := Combat.win_chance(c, gs.data, Sects.trial_foe(c, gs.data))
+	ranks[1].erase("trial")
+	assert_eq(losses, 1, joined)
+	assert_true(joined.contains("fight 6% weaker"), joined)
+	assert_true(after >= before, "the lesson never lowers the odds")
+	gs.end_session()
+
+
 func test_promotion_trial_and_stipend() -> void:
 	var c := _start()
 	var gs := _game_state()

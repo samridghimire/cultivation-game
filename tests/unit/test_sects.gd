@@ -58,6 +58,30 @@ func test_contribution_stops_at_a_trial_rank() -> void:
 	assert_eq(Sects.check_promotion(c, data()), "", "the trial is open")
 
 
+func test_trial_lessons_grow_cap_and_reset() -> void:
+	var c := new_character()
+	assert_eq(Sects.trial_lesson(c, data()), 0.0, "a rogue learns nothing")
+	c.alignment = -300
+	Sects.join(c, data(), "blood_lotus_sect")
+	c.realm_index = data().realm_index_of("core_formation")
+	Sects.add_contribution(c, data(), 100000)
+	assert_eq(Sects.trial_lesson(c, data()), 0.0)
+	var base: float = float(Sects.trial_opponent(data(), Sects.trial_enemy(c, data())).get("power_mult", 1.0))
+	Sects.note_trial_loss(c)
+	assert_almost_eq(Sects.trial_lesson(c, data()), 0.06, 0.0001)
+	assert_almost_eq(float(Sects.trial_foe(c, data()).get("power_mult", 1.0)), base * 0.94, 0.0001)
+	for i in 5:
+		Sects.note_trial_loss(c)
+	assert_almost_eq(Sects.trial_lesson(c, data()), 0.18, 0.0001, "capped")
+	assert_true(Sects.pass_trial(c, data()))
+	assert_eq(int(c.sect["trial_losses"]), 0, "promotion resets the lessons")
+	assert_eq(Sects.trial_lesson(c, data()), 0.0)
+
+
+func test_trial_foe_empty_without_trial() -> void:
+	assert_true(Sects.trial_foe(new_character(), data()).is_empty())
+
+
 func test_leave_returns_to_rogue() -> void:
 	var c := new_character()
 	c.alignment = -300

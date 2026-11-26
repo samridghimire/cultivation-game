@@ -322,6 +322,28 @@ static func trial_opponent(data: GameData, enemy_id: String, power_mult: float =
 	return enemy
 
 
+## SECT-046: how much weaker the next examiner fights after `c`'s lost trials (0.0 for rogues).
+static func trial_lesson(c: CharacterData, data: GameData) -> float:
+	if c.is_rogue():
+		return 0.0
+	return minf(data.trial_lesson_per_loss * float(int(c.sect.get("trial_losses", 0))), data.trial_lesson_max)
+
+
+## SECT-046: records one lost promotion trial.
+static func note_trial_loss(c: CharacterData) -> void:
+	if not c.is_rogue():
+		c.sect["trial_losses"] = int(c.sect.get("trial_losses", 0)) + 1
+
+
+## SECT-046: the examiner of the open trial with the lessons of past losses applied ({} when no trial).
+## Every fight and every odds display of the promotion trial uses this.
+static func trial_foe(c: CharacterData, data: GameData) -> Dictionary:
+	var enemy_id := trial_enemy(c, data)
+	if enemy_id == "":
+		return {}
+	return trial_opponent(data, enemy_id, 1.0 - trial_lesson(c, data))
+
+
 ## SECT-040: ONE line naming the biggest gap between `c` and the examiner of the open trial. Order: injured, realm or
 ## stage below the foe, no combat technique known, otherwise "Close". "" when no trial is open. Pure.
 static func trial_advice(c: CharacterData, data: GameData) -> String:
@@ -358,6 +380,7 @@ static func pass_trial(c: CharacterData, data: GameData) -> bool:
 
 static func _set_rank(c: CharacterData, rank: int) -> void:
 	c.sect["rank"] = rank
+	c.sect["trial_losses"] = 0  # SECT-046: the lessons were for the old rank's examiner
 	c.sect["duty_grace"] = true  # no duty is owed for the month you were promoted
 
 

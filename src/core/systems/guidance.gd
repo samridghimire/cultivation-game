@@ -3572,7 +3572,7 @@ static func trial_odds(c: CharacterData, data: GameData) -> float:
 	var enemy_id := Sects.trial_enemy(c, data)
 	if enemy_id == "":
 		return -1.0
-	return Combat.win_chance(c, data, Sects.trial_opponent(data, enemy_id))
+	return Combat.win_chance(c, data, Sects.trial_foe(c, data))
 
 
 ## GUIDE-092: the chance of winning `enemy` with `c`'s injuries healed, or -1.0 when `c` has none.
@@ -3604,7 +3604,7 @@ static func _trial_lever(c: CharacterData, data: GameData, region_id: String = "
 	var chance := trial_odds(c, data)
 	if chance < 0.0 or chance >= 0.5:
 		return ""
-	if odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data))) >= 0.5:
+	if odds_unhurt(c, data, Sects.trial_foe(c, data)) >= 0.5:
 		return ""
 	if not trial_practice_payoff(c, data).is_empty():
 		return ""
@@ -3656,7 +3656,7 @@ static func _trial_advice(c: CharacterData, data: GameData, region_id: String = 
 	if chance < 0.0:
 		return line
 	if chance < 0.5:
-		var unhurt := odds_unhurt(c, data, Sects.trial_opponent(data, Sects.trial_enemy(c, data)))
+		var unhurt := odds_unhurt(c, data, Sects.trial_foe(c, data))
 		if unhurt >= 0.5:
 			line += " Your injuries hold you back: healed, you would win about %d in 100." % roundi(unhurt * 100.0)
 		else:
@@ -3686,7 +3686,7 @@ static func trial_practice_payoff(c: CharacterData, data: GameData) -> Dictionar
 	var style := _best_unmastered_combat(c, data)
 	if style == "":
 		return {}
-	var opponent := Sects.trial_opponent(data, Sects.trial_enemy(c, data))
+	var opponent := Sects.trial_foe(c, data)
 	var level_now := Techniques.level(c, style)
 	var saved_injuries: Dictionary = c.injuries
 	var had_entry := c.techniques.has(style)
@@ -6368,7 +6368,7 @@ static func _fair_fights_uncached(c: CharacterData, data: GameData, flags: Dicti
 	if trial_id != "" and Sects.check_promotion(c, data) == "":
 		rated += 1
 		var sect: SectDef = data.sects[c.sect["id"]]
-		_rate_fight(found, c, data, Sects.trial_opponent(data, trial_id), "trial", "Sect trial: %s" % sect.rank_name(Sects.next_rank(c, data)), 0, "%s, sect trial" % String(data.enemies.get(trial_id, {}).get("name", trial_id)))
+		_rate_fight(found, c, data, Sects.trial_foe(c, data), "trial", "Sect trial: %s" % sect.rank_name(Sects.next_rank(c, data)), 0, "%s, sect trial" % String(data.enemies.get(trial_id, {}).get("name", trial_id)))
 	for id in Sects.available_missions(c, data, flags):
 		if rated >= FAIR_FIGHT_MAX_RATED:
 			break

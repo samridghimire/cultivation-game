@@ -2211,7 +2211,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			_note_missions(gs, c)  # SECT-041: one reading per weekly step of the hints player
 		# SECT-036: a member whose contribution is met takes the rank trial when it rates at least 50 in 100, else keeps training.
 		if hints_policy and sect_report and c.alive and not c.is_rogue() and Sects.needs_trial(c, gs.data) and Sects.check_promotion(c, gs.data) == "":
-			var foe := Sects.trial_opponent(gs.data, Sects.trial_enemy(c, gs.data))
+			var foe := Sects.trial_foe(c, gs.data)
 			var odds := Combat.win_chance(c, gs.data, foe)
 			if not done.has("trial_odds_shown"):
 				done["trial_odds_shown"] = true

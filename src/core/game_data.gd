@@ -29,6 +29,9 @@ var professions: Dictionary = {}  # id -> ProfessionDef
 var sects: Dictionary = {}  # id -> SectDef
 ## sects.json top-level "factions" rules (SectFactions, LW-002).
 var sect_factions: Dictionary = {}
+## SECT-046: examiner power lowered per lost promotion trial, and its cap.
+var trial_lesson_per_loss := 0.06
+var trial_lesson_max := 0.18
 ## sects.json top-level "reputation" rules (Reputation system).
 var sect_reputation: Dictionary = {}
 var items: Dictionary = {}  # id -> Dictionary
@@ -224,6 +227,9 @@ func _load(dir: String) -> void:
 	var sect_file := _read(dir, "sects.json")
 	sect_reputation = sect_file.get("reputation", {})
 	sect_factions = sect_file.get("factions", {})
+	var lessons: Dictionary = sect_file.get("trial_lessons", {})
+	trial_lesson_per_loss = float(lessons.get("per_loss", 0.06))
+	trial_lesson_max = float(lessons.get("max", 0.18))
 	for s in sect_file.get("sects", []):
 		var def := SectDef.from_dict(s)
 		sects[def.id] = def
@@ -437,6 +443,8 @@ func _check_unique_ids(rows: Array, file: String) -> void:
 
 ## Cross-reference checks so broken content fails loudly in tests.
 func _validate() -> void:
+	if trial_lesson_per_loss < 0.0 or trial_lesson_per_loss > trial_lesson_max or trial_lesson_max > 0.5:
+		load_errors.append("sects.json trial_lessons needs 0 <= per_loss <= max <= 0.5")
 	if realms.is_empty():
 		load_errors.append("No realms defined")
 	if failure_bonus < 0.0 or failure_bonus > failure_bonus_max or failure_bonus_max > 0.5:
