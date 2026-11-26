@@ -655,6 +655,15 @@ static func _short_hint_base(line: String, data: GameData = null) -> String:
 	if fight != "":
 		return fight
 	var re := RegEx.new()
+	# GUIDE-294: friend lines keep the whole name.
+	re.compile("^Congratulate (.+?) on .+ \\(\\d+ days? left\\)$")
+	var congrats := re.search(line)
+	if congrats != null:
+		return "Congratulate %s" % congrats.get_string(1)
+	re.compile("^Meditate beside (.+?) at ")
+	var sit := re.search(line)
+	if sit != null:
+		return "Sit with %s" % sit.get_string(1)
 	# GUIDE-284: "Ask Elder Mo in Qingshi Village where to begin; he also teaches ..." -> "Ask Elder Mo in Qingshi where to begin"
 	re.compile("^Ask (.+?) in (.+?) where to begin[.;]")
 	var begin := re.search(line)
@@ -1164,6 +1173,14 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(thin)
 	if method_offer != "" and not method_leads:
 		out.append(method_offer)
+	if today >= 0:
+		# GUIDE-294: friends in the Next steps, below the sect/breakthrough lines and above the gathering/work lines.
+		var congrats := congratulate_hint(c, data, people, region_id, today)
+		if congrats != "":
+			out.append(congrats)
+		var sit := friend_meditation_hint(c, data, people, favor, flags, region_id, today)
+		if sit != "":
+			out.append(sit)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
 		out.append(mortal_nudge)
@@ -2409,6 +2426,35 @@ static func _meditation_spot(c: CharacterData, data: GameData, region_id: String
 	out["needed"] = maxf(Cultivation.qi_required(c, data) - c.qi, 0.0)
 	out["rate"] = Cultivation.qi_per_day(c, data, float(best["density"]))
 	return out
+
+
+## GUIDE-294: "Congratulate <name> on <realm> (<N> days left)" for the friend in `region_id` with the fewest days left.
+static func congratulate_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, today: int) -> String:
+	if region_id == "" or today < 0:
+		return ""
+	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):  # sorted, fewest days left first
+		if String(row["region"]) != region_id or not FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
+			continue
+		var entry: Dictionary = c.friend_news[String(row["npc_id"])]
+		var realm := String(entry.get("realm", ""))
+		if realm == "":
+			realm = "Qi Refining"
+		return "Congratulate %s on %s (%d days left)" % [row["name"], realm, int(row["days_left"])]
+	return ""
+
+
+## GUIDE-294: "Meditate beside <name> at <spot>: +N% qi for D days" when a friend here can sit with you.
+static func friend_meditation_hint(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, flags: Dictionary, region_id: String, today: int) -> String:
+	if region_id == "" or today < 0:
+		return ""
+	var spot := _meditation_spot(c, data, region_id, flags)
+	if best_qi_in_region(c, data, region_id, flags)["name"] == "":
+		return ""
+	var ids := Folk.meditation_friends(c, data, people, favor, flags, region_id, today)
+	if ids.is_empty():
+		return ""
+	var rules := Folk.meditation_rules(data)
+	return "Meditate beside %s at %s: +%d%% qi for %d days" % [people[ids[0]].name, spot["spot"], roundi((float(rules.get("qi_mult", 1.1)) - 1.0) * 100.0), int(rules.get("days", 7))]
 
 
 ## GUIDE-229: true when an earlier hint already sends the player to earn stones.

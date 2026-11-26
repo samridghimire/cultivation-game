@@ -203,6 +203,9 @@ func _run() -> void:
 	if args.has("--firsts"):
 		_run_firsts(args)
 		return
+	if args.has("--friends"):
+		_run_friends(args)
+		return
 	var curious := args.has("--curious")
 	FirstHour.hints_policy = args.has("--hints")  # SIM-010: the player who reads the Next-steps lines (not --curious)
 	var zero := args.has("--zero")  # QA-126: count fights rated 0%, by what started them
@@ -631,6 +634,29 @@ func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary
 
 
 ## SIM-037: --firsts [seeds] [months]: the day of each first per seed (hints policy, Qingshi start), then dead stretches.
+## GUIDE-294: --friends [seeds] [months]: per seed the day of the first congratulation and the number of shared meditations (hints policy).
+func _run_friends(args: Array) -> void:
+	var nums: Array[int] = []
+	for a in args:
+		if not a.begins_with("--"):
+			nums.append(int(a))
+	var seeds := nums[0] if nums.size() > 0 else 6
+	var months := nums[1] if nums.size() > 1 else 12
+	FirstHour.hints_policy = true
+	var gs: Node = root.get_node("GameState")
+	var clock: Node = root.get_node("GameClock")
+	var meditating := 0
+	for s in range(1, seeds + 1):
+		FirstHour.friend_tally = {"first_congrat": -1, "meds": 0}
+		FirstHour.play(gs, clock, s, months, false)
+		var t: Dictionary = FirstHour.friend_tally
+		print("seed %d: first congratulation day %s, shared meditations %d" % [s, str(t["first_congrat"]) if int(t["first_congrat"]) >= 0 else "never", int(t["meds"])])
+		if int(t["meds"]) > 0:
+			meditating += 1
+	print("seeds that meditated beside a friend: %d/%d" % [meditating, seeds])
+	quit()
+
+
 func _run_firsts(args: Array) -> void:
 	var nums: Array[int] = []
 	for a in args:

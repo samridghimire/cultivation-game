@@ -166,6 +166,8 @@ const HINT_MAX_TRIES := 3
 ## PERF-027: microseconds spent per Next-steps source (see _next_steps), printed by quiet_stretches.gd --profile.
 static var step_usec: Dictionary = {}
 static var hints_policy := false
+## GUIDE-294: --friends tally, reset per seed by simulate_first_hour.gd: day of the first congratulation (-1 never) and shared meditations.
+static var friend_tally := {"first_congrat": -1, "meds": 0}
 ## SECT-053: the hints player acts on the "Prepare for the <rank> trial" line (wear armor, eat a meal).
 static var prepare_policy := true
 ## GUIDE-279: print each week's top 4 hint lines and the action taken, until the first win (first_hour_presses.gd --trace=<seed>).
@@ -2657,6 +2659,26 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				var favor_before := int(gs.npc_favor.get(id, 0))
 				gs.call_on(id)
 				return "tea" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
+		return ""
+	if line.begins_with("Congratulate "):
+		# GUIDE-294: the line names the friend in this region; congratulate them.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc != null and line.begins_with("Congratulate %s on " % npc.name) and gs.can_congratulate(id):
+				gs.congratulate(id)
+				if friend_tally["first_congrat"] < 0:
+					friend_tally["first_congrat"] = day
+				return "congratulate"
+		return ""
+	if line.begins_with("Meditate beside "):
+		# GUIDE-294: take the "Meditate with <friend>" option the line names.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc != null and line.begins_with("Meditate beside %s at " % npc.name) \
+					and Folk.meditation_block(c, gs.data, npc, int(gs.npc_favor.get(id, 0)), gs.world_flags, gs.current_region, day) == "":
+				gs.meditate_with_friend(id, gs.hint_density())
+				friend_tally["meds"] = int(friend_tally["meds"]) + 1
+				return "friend_meditate"
 		return ""
 	if line.begins_with("Use your"):
 		_use_qi_items(gs, c)
