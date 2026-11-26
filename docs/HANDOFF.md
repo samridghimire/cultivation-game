@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-26 06:10
+- 10 landed (sect ladder complete through the inner contest); SIM-034 closed with no change. Planner shots: hud_arrival,
+  inventory, journal, character sheet, champion card and trial cards fine; the breakthrough window is text only -> GFX-258
+  (docs/specs/GFX-258.md), GFX-260 after it. The default shot run's combat_report.png shows the join card on top (shot bug, QA-240);
+  the lost-trial shot hard-codes 35 in 100 (QA-245).
+- Systems pivots from the sect to friends who cultivate (FOLK-050, docs/specs/FOLK-050.md; C-424 and WU-629 follow).
+  SECT-046's missed promotion target is now the owner's question "(SECT-046) First promotion timing"; nothing blocked on it.
+- Systems still runs thin on decision-free work: F-005d, C-009 and END-001 have been open since 2026-10-07.
+- Next planner: read FOLK-050's measured milestones (if Xiao Ling never reaches Qi Refining in 2 years, decide whether her
+  diligence is a small default or an owner call); open GFX-258's bs_stage_*.png.
+
 ## Planner 2026-11-24 12:10
 - 12 landed; the contest and rank-1 ladder are in. Planner shots: sect_contest(+_result) text-only card -> GFX-254 (spec, absorbs
   WU-620); member_azure_cloud_sect `--contest-month`: stage off screen at the bottom -> GFX-255 (spec); journal_sect ignores

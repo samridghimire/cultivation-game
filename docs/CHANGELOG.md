@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-26 [SECT-045] Inner and core disciples get their own yearly contest with stronger foes and bigger prizes.
+- 2026-11-26 [GFX-256] Winning the whole sect contest ends on a champion's card: you alone on the platform, the crowd cheering.
+- 2026-11-26 [GUIDE-292] A rogue hears about an open lecture early enough to reach it (first lecture by about day 103, not 174).
+- 2026-11-26 [GFX-257] The Sect page's goals use real tick boxes.
+- 2026-11-26 [WU-624] Trial cards show what you learned from each lost try and how much weaker the examiner fights.
+- 2026-11-26 [SECT-048] Your contest wins are recorded: a Sect Champion milestone and a line in your life's epilogue.
+- 2026-11-26 [SECT-047] Balance tooling: the rank-1 monthly duty is measured; the hints player now meets it.
+- 2026-11-26 [WU-626] The HUD goal row shows the whole goal instead of cutting it off.
+- 2026-11-26 [WU-625] Fisher Pei now fishes at the Village Pond Jetty, and villagers' name labels no longer cover other people.
+- 2026-11-26 [SECT-046] Losing a promotion trial teaches you the examiner's forms: they fight weaker at your next try.
 - 2026-11-25 [WU-622] The Sect page shows when this month's duty is met and why each locked mission is not ready yet.
 - 2026-11-25 [WU-618] The Sect page lists what your next rank asks of you, ticked off as you go.
 - 2026-11-25 [GFX-255] The contest stage stands where you can see it, beside the hall and clear of labels.
