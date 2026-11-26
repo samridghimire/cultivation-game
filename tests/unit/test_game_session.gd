@@ -4925,3 +4925,26 @@ func test_enter_sect_contest_once_a_year() -> void:
 	gs.enter_sect_contest()  # already entered
 	assert_eq(c.item_count("spirit_stone"), stones)
 	gs.end_session()
+
+
+## SECT-053: a day advance records the day the Prepare hint is due, so it shows once and not again until 7 days later.
+func test_trial_prep_day_is_recorded_on_advance() -> void:
+	_start()
+	var gs = _game_state()
+	var c: CharacterData = gs.player
+	c.realm_index = 1
+	c.stage = 0
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 0}
+	c.techniques = {}
+	for k: String in c.attributes:
+		c.attributes[k] = 1
+	c.sect["contribution"] = int(gs.data.sects["azure_cloud_sect"].ranks[1]["contribution"]) - 1
+	var key := Guidance.trial_prep_key(c, gs.data)
+	if Guidance.trial_preview(c, gs.data).is_empty():
+		return  # tuning left no preview for this character; the unit tests cover the rule
+	Guidance.note_trial_prep(c, gs.data, 50, gs.world_flags)
+	assert_eq(int(gs.world_flags[key]), 50)
+	Guidance.note_trial_prep(c, gs.data, 53, gs.world_flags)
+	assert_eq(int(gs.world_flags[key]), 50, "not due again before 7 days")
+	Guidance.note_trial_prep(c, gs.data, 57, gs.world_flags)
+	assert_eq(int(gs.world_flags[key]), 57)

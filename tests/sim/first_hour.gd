@@ -166,6 +166,8 @@ const HINT_MAX_TRIES := 3
 ## PERF-027: microseconds spent per Next-steps source (see _next_steps), printed by quiet_stretches.gd --profile.
 static var step_usec: Dictionary = {}
 static var hints_policy := false
+## SECT-053: the hints player acts on the "Prepare for the <rank> trial" line (wear armor, eat a meal).
+static var prepare_policy := true
 ## GUIDE-279: print each week's top 4 hint lines and the action taken, until the first win (first_hour_presses.gd --trace=<seed>).
 static var trace_first_win := false
 ## FOLK-042: --trace-friend=<seed>: one line per week from Close friend until Sworn friend (see _trace_friend_week).
@@ -223,7 +225,7 @@ static var _memo := {}
 
 
 static func play_cached(gs: Node, clock: Node, seed_value: int, months: int, curious: bool = false, no_help: bool = false, wait_for_pill: int = 0) -> Dictionary:
-	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, hints_policy, start_region, join_sect_id, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
+	var key := [seed_value, months, curious, no_help, wait_for_pill, tend, follow_defence, practise_hint, attempt_trials, heal_injuries, heal_far, village, spar_hint, chat_teacher, season_tasks, mission_monthly, steward_chores, steward_max_days, min_mission_odds, chase_best_mission, buy_qi, buy_qi_travel, hints_policy, prepare_policy, start_region, join_sect_id, shop_armor, spend_contribution, qi_pill_cap, far_qi, recharge_first, hint_missions, sect_method, stay_rogue, body_art, trial_report, sect_report, core_report, activity_report, qi_probe]
 	if not _memo.has(key):
 		_memo[key] = play(gs, clock, seed_value, months, curious, Callable(), no_help, wait_for_pill)
 		gs.end_session()
@@ -2545,6 +2547,31 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 			if c.item_count("spirit_stone") > stones_before:
 				return "sell"
 			return _act_on_hint(gs, c, done, "Easy fight: earn the stones", day)
+	if line.begins_with("Prepare for the ") and prepare_policy:
+		# SECT-053: act on the Prepare line where the player stands: wear armor (buying the best affordable one sold here), eat a buff food.
+		var did := ""
+		if line.contains("Wear armor") and String(c.equipment.get("armor", "")) == "":
+			var armor_id := Guidance.affordable_armor(c, gs.data, gs.current_region)
+			if armor_id != "" and c.item_count(armor_id) == 0:
+				gs.buy_item(armor_id)
+			if armor_id != "" and c.item_count(armor_id) > 0:
+				gs.equip_item(armor_id)
+				did = "armor"
+		if (line.contains("Eat a meal") or line.contains("Buy a ")) and c.buffs.is_empty():
+			var food := ""
+			for item_id: Variant in c.inventory:
+				if int(c.inventory[item_id]) > 0 and Sects._item_has_buff(gs.data, String(item_id)):
+					food = String(item_id)
+			if food == "":
+				var offer := Sects.buff_food_offer(c, gs.data, gs.current_region)
+				for item_id: String in gs.data.items:
+					if offer.begins_with("Buy a %s at" % String(gs.data.items[item_id]["name"])) and Sects._item_has_buff(gs.data, item_id):
+						gs.buy_item(item_id)
+						food = item_id if c.item_count(item_id) > 0 else ""
+			if food != "":
+				gs.use_item(food)
+				did = "meal"
+		return did
 	if line.begins_with("You are ready to break through") and Cultivation.can_attempt_breakthrough(c, gs.data):
 		# GUIDE-275: the line says to attempt it; a player does (pills first, as the breakthrough window's Take button does).
 		for pill_id in Guidance.breakthrough_item_ids(c, gs.data):

@@ -8063,11 +8063,14 @@ func test_trial_preview_once_a_week_and_not_when_easy() -> void:
 	var d := data()
 	var c := _preview_member()
 	c.sect["contribution"] = int(d.sects["azure_cloud_sect"].ranks[1]["contribution"]) - 1
-	var shown := 0
-	for day in range(14, 21):
-		if Guidance.trial_preview_hint(c, d, day) != "":
-			shown += 1
-	assert_eq(shown, 1)
+	# SECT-053: shown on the first day it applies, then every 7 days, whatever the weekday
+	var flags := {}
+	var shown: Array[int] = []
+	for day in range(15, 45):
+		Guidance.note_trial_prep(c, d, day, flags)
+		if Guidance.trial_preview_hint(c, d, day, flags) != "":
+			shown.append(day)
+	assert_eq(shown, [15, 22, 29, 36, 43] as Array[int])
 	assert_eq(Guidance.trial_preview_hint(c, d, -1), "")
 	# strong: odds >= 50 in 100, no preview
 	c.realm_index = 3

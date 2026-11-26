@@ -127,7 +127,7 @@ func open(c: CharacterData, data: GameData, color: Color = UIStyle.ACCENT) -> bo
 	if lessons != "":
 		_odds.text += "\n" + lessons
 	if chance < 0.5:  # SECT-040: the biggest gap, under the odds
-		_fill_prep(Sects.trial_advice_items(c, data))
+		_fill_prep(Sects.trial_advice_items(c, data, 2, GameState.current_region))
 	_safe.text = SAFE_LINE
 	_perks.text = _perk_text(c, data, sect, next)
 	_perks.visible = _perks.text != ""

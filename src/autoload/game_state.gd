@@ -5690,6 +5690,7 @@ func _on_days_advanced(days: int) -> void:
 			continue
 		EventBus.post(event["text"], event["category"])
 	FolkNews.prune_own(player, data, GameClock.total_days)
+	Guidance.note_trial_prep(player, data, GameClock.total_days, world_flags)  # SECT-053
 	_rival_news()
 	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).
 	Npcs.ensure_eligible(npcs, data, rng, Children.descendants(player, npcs))

@@ -1237,7 +1237,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		else:
 			out.append(missions)
 	if today >= 0:
-		var preview := trial_preview_hint(c, data, today)  # SECT-051
+		var preview := trial_preview_hint(c, data, today, flags)  # SECT-051
 		if preview != "":
 			out.append(preview)
 		var lecture := _lecture_hint(c, data, today)
@@ -7259,15 +7259,38 @@ static func trial_preview(c: CharacterData, data: GameData) -> Dictionary:
 	return {"rank_name": sect.rank_name(rank), "odds": odds, "word": Combat.label_for_chance(odds), "advice": advice}
 
 
-## SECT-051: "Prepare for the Inner Disciple trial (now Hard, 12 in 100): Learn an attack technique; ...", shown on one
-## day in TRIAL_PREVIEW_DAYS (the day number's weekly slot, so the line is stateless). "" when `trial_preview` is empty.
-static func trial_preview_hint(c: CharacterData, data: GameData, today: int) -> String:
-	if today < 0 or today % TRIAL_PREVIEW_DAYS != 0:
+## SECT-053: the world flag holding the day the Prepare hint was last due for the next rank.
+static func trial_prep_key(c: CharacterData, data: GameData) -> String:
+	return "trial_prep_seen_%d" % Sects.next_rank(c, data)
+
+
+## SECT-053: true when the Prepare hint for the next rank has not been shown, or last showed TRIAL_PREVIEW_DAYS ago or more.
+static func trial_prep_due(c: CharacterData, data: GameData, today: int, flags: Dictionary) -> bool:
+	var seen := int(flags.get(trial_prep_key(c, data), -1))
+	return seen < 0 or today < seen or today - seen >= TRIAL_PREVIEW_DAYS
+
+
+## SECT-053: "Prepare for the Inner Disciple trial (now Hard, 12 in 100): Learn an attack technique; ...", shown on the first
+## day it applies (`trial_prep_due`) and on that day only, then again every TRIAL_PREVIEW_DAYS days. `flags` are the world flags;
+## `note_trial_prep` writes the day. "" when `trial_preview` is empty.
+static func trial_preview_hint(c: CharacterData, data: GameData, today: int, flags: Dictionary = {}) -> String:
+	if today < 0:
 		return ""
 	var p := trial_preview(c, data)
 	if p.is_empty():
 		return ""
+	if int(flags.get(trial_prep_key(c, data), -1)) != today and not trial_prep_due(c, data, today, flags):
+		return ""
 	return "Prepare for the %s trial (now %s, %d in 100): %s" % [p["rank_name"], String(p["word"]), roundi(float(p["odds"]) * 100.0), p["advice"]]
+
+
+## SECT-053: records `today` as the day the Prepare hint shows, when it is due and there is a preview. GameState calls it once
+## per day advance.
+static func note_trial_prep(c: CharacterData, data: GameData, today: int, flags: Dictionary) -> void:
+	if c.is_rogue() or not Sects.needs_trial(c, data) or trial_preview(c, data).is_empty():
+		return
+	if trial_prep_due(c, data, today, flags):
+		flags[trial_prep_key(c, data)] = today
 
 
 static func _contest_hint(c: CharacterData, data: GameData, today: int) -> String:

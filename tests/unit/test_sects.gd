@@ -373,7 +373,23 @@ func test_trial_advice_branches() -> void:
 	assert_eq(items.size(), 2)
 	assert_eq(items[0], Sects.trial_advice(c, d))
 	assert_true(items[1].begins_with("Wear armor"), items[1])
+	# SECT-053: the meal line only when it can be acted on (a held buff food, or a known home meal that carries one)
+	c.inventory.clear()
+	var cooks := false
+	for m: Dictionary in Cooking.known_meals(c, d):
+		if d.items.get(String(m["output"]["item"]), {}).get("effects", {}).has("buff"):
+			cooks = true
+	assert_eq(Sects.has_buff_food(c, d), cooks)
+	c.known_dishes.clear()
+	c.cooked_meals.clear()
+	c.inventory["reed_sachet"] = 1
+	assert_true(Sects.has_buff_food(c, d))
 	assert_eq(Sects.trial_advice_items(c, d, 3).size(), 3)
+	c.inventory.clear()
+	var offer := Sects.buff_food_offer(c, d, "qingshi_village")
+	if offer != "":
+		assert_true(offer.begins_with("Buy a "), offer)
+	assert_eq(Sects.buff_food_offer(c, d, ""), "")
 	c.injuries = {"broken_ribs": 5}
 	assert_eq(Sects.trial_advice_items(c, d).size(), 1, "heal first stands alone")
 	c.injuries.clear()

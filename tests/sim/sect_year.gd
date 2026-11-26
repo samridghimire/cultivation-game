@@ -30,6 +30,7 @@ func _run() -> void:
 	var clock: Node = root.get_node("GameClock")
 	var bus: Node = root.get_node("EventBus")
 	FirstHour.hints_policy = true
+	FirstHour.prepare_policy = not args.has("--no-prepare")  # SECT-053: --no-prepare = the old hints player
 	FirstHour.sect_report = true
 	FirstHour.trial_log = args.has("--trial-log")  # SIM-030: print each sect trial attempt
 	var contest_odds := args.has("--contest-odds")  # SECT-043: print the contest foes' odds in the first contest month

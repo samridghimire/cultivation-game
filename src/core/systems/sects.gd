@@ -370,7 +370,8 @@ static func trial_advice(c: CharacterData, data: GameData) -> String:
 
 ## WU-630: up to `max_items` short preparation items for the open trial, in priority order: the one-line
 ## `trial_advice` gap first, then (only once that is "Close") no armor worn, then no meal buff active. [] when no trial is open. Pure.
-static func trial_advice_items(c: CharacterData, data: GameData, max_items: int = 2) -> PackedStringArray:
+## SECT-053: the meal item is shown only when the player can act on it (a buff food held, a home meal known) or a stall in `region_id` sells one.
+static func trial_advice_items(c: CharacterData, data: GameData, max_items: int = 2, region_id: String = "") -> PackedStringArray:
 	var out := PackedStringArray()
 	var first := trial_advice(c, data)
 	if first == "":
@@ -381,10 +382,48 @@ static func trial_advice_items(c: CharacterData, data: GameData, max_items: int 
 	if String(c.equipment.get("armor", "")) == "":
 		out.append("Wear armor: it blunts the examiner's blows.")
 	if c.buffs.is_empty():
-		out.append("Eat a meal first: a hot dish gives a short edge.")
+		if has_buff_food(c, data):
+			out.append("Eat a meal first: a hot dish gives a short edge.")
+		else:
+			var buy := buff_food_offer(c, data, region_id)
+			if buy != "":
+				out.append(buy)
 	while out.size() > max_items:
 		out.remove_at(out.size() - 1)
 	return out
+
+
+## SECT-053: true when `c` holds a usable food with a buff effect, or knows a home meal whose dish carries one.
+static func has_buff_food(c: CharacterData, data: GameData) -> bool:
+	for item_id: Variant in c.inventory:
+		if int(c.inventory[item_id]) > 0 and _item_has_buff(data, String(item_id)):
+			return true
+	for m: Dictionary in Cooking.known_meals(c, data):
+		if _item_has_buff(data, String(m.get("output", {}).get("item", ""))):
+			return true
+	return false
+
+
+static func _item_has_buff(data: GameData, item_id: String) -> bool:
+	return data.items.get(item_id, {}).get("effects", {}).has("buff") and bool(data.items[item_id].get("usable", false))
+
+
+## SECT-053: "Buy a <meal> at the <stall>" for the cheapest buff food an always-open merchant in `region_id` sells; "" when none.
+static func buff_food_offer(c: CharacterData, data: GameData, region_id: String) -> String:
+	if region_id == "" or not data.regions.has(region_id):
+		return ""
+	var best := ""
+	var best_price := 0
+	for item_id: String in data.items:
+		if not _item_has_buff(data, item_id) or Guidance.merchant_selling(data, region_id, item_id) == "":
+			continue
+		var price := Guidance.merchant_price(c, data, region_id, item_id)
+		if best == "" or price < best_price:
+			best = item_id
+			best_price = price
+	if best == "":
+		return ""
+	return "Buy a %s at the %s (%d stones): a hot dish gives a short edge." % [String(data.items[best]["name"]), Guidance.merchant_selling(data, region_id, best), best_price]
 
 
 ## Promotes `c` one rank after a won trial (then through any trial-free ranks
