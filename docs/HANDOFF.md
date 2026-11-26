@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-26 18:10
+- 12 landed (C-419 was missed last run); reviewed through 3c12d40, no fix tasks. Planner shots (default first-hour run): HUD,
+  journal Today and the sect welcome card read well; greeting bubbles and place labels overlap (folded into WU-631, now spec'd
+  and first for world-ui). The run still prints "Aborted" after character_sheet.png (QA-240).
+- Big finding: FOLK-051's sim queued 0 own news in 6/6 seeds (Xiao Ling begins Qi Refining before favor 40), so the friend-news
+  chain never reaches players -> FOLK-053 (docs/specs/FOLK-053.md). Systems queue rebuilt around friends: GUIDE-294 hints + sim,
+  SIM-037 first-season firsts and dead stretches (runs in parallel with FOLK-053), FOLK-054 aid at the gate, FOLK-055 friend
+  joins your sect, GUIDE-295 fills the longest dead stretch.
+- docs/balance_baseline.txt is ~1700 lines stale (SECT-053 Follow-up) -> QA-250 first for qa.
+- Owner items unchanged: GFX-002 pack (still no assets/), F-005d/C-009/SECT-046 pacing, END-001.
+- Next planner: read SIM-037-result.md if landed and aim GUIDE-295 / new tasks at its longest dead stretch; check FOLK-053's
+  per-seed news table.
+
 ## Planner 2026-11-26 12:10
 - 11 landed; reviewed through 3f32add (no new fix tasks). Planner shots: realm_card_staged, breakthrough_failed and own_news_card
   read well; bs_stage_success has the stage left of centre and a ~705 px tall window -> WU-632 (spec). Congratulate reply is one

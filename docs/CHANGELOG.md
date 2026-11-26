@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-26 [SECT-053] Trial preparation suggests a meal only when you have or can buy one, and reminds you weekly instead of every day.
+- 2026-11-26 [WU-633] The Sect page shows your outer contest record next to the inner one.
+- 2026-11-26 [GUIDE-293] Friends' news shows in the journal with how many days are left to congratulate them.
+- 2026-11-26 [GFX-261] The inner-sect contest gets its own gold-trimmed stage at the hall, watched by elders.
+- 2026-11-26 [SIM-036] Balance tooling: Xiao Ling begins Qi Refining within the first year in every measured run; no change.
+- 2026-11-26 [C-425] Village friends thank you for your congratulations in their own words.
+- 2026-11-26 [GFX-262] When a friend breaks through nearby, a column of light rises over them.
+- 2026-11-26 [FOLK-052] Meditate beside a cultivating friend: a week of shared cultivation for a little more qi and their favor.
+- 2026-11-26 [SECT-052] Outer and inner sect contests keep separate records.
+- 2026-11-26 [FOLK-051] Friends' news expires cleanly and a liked gift no longer pushes favor past its cap.
+- 2026-11-26 [WU-632] The breakthrough window fits the screen at 1280x720 with its stage centred.
+- 2026-11-26 [C-419] Village friends say their own line when you break through or marry.
 - 2026-11-26 [C-412] Four more friends teach you a home dish (Marsh Catfish Pot, Pine-Smoked Cloud Trout, Merchant's Fried Moon Cake, Highland Thyme Tisane).
 - 2026-11-26 [SECT-049] Contest messages are chosen by reason codes, so rewording one no longer changes the Sect page line.
 - 2026-11-26 [WU-630] The sect trial card lists what to prepare (the main gap, armor, a meal) with the same Prepare tag as the Sect page.
