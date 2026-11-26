@@ -68,7 +68,7 @@ static func card_lines(_realm_desc: String, details: String, notices: Array, sur
 func open(realm_name: String, realm_desc: String, details: String, notices: Array, surpassed: String = "", look: Dictionary = {}, realm_index: int = 1) -> void:
 	_stage.visible = not look.is_empty()
 	if _stage.visible:
-		_stage.set_pose(look, realm_index, "risen", realm_name)
+		_stage.set_pose(look, realm_index, "risen")  # WU-632: the title already names the realm
 	_title.add_theme_color_override("font_color", UIStyle.ACCENT)
 	_title.text = realm_name
 	_desc.text = realm_desc

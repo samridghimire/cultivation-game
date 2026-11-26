@@ -215,3 +215,10 @@ func test_no_vision_hides_the_box() -> void:
 	screen.open()
 	assert_false(screen._vision_box.visible)
 	screen.free()
+
+
+## WU-632: the scroll area takes the content's height when it fits, else what the viewport leaves.
+func test_fit_height() -> void:
+	assert_eq(BreakthroughScreen.fit_height(300.0, 720.0, 120.0), 300.0)
+	assert_eq(BreakthroughScreen.fit_height(700.0, 720.0, 120.0), 552.0)
+	assert_eq(BreakthroughScreen.fit_height(700.0, 200.0, 120.0), 120.0)

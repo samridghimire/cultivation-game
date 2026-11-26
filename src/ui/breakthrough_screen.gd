@@ -25,6 +25,12 @@ var _stage: BreakthroughStage
 var _attempting := false  ## from Attempt until the window closes
 var _outcome := 0  ## 1 success, -1 failure once breakthrough_attempted fired
 var _tracking := false
+var _scroll: ScrollContainer  ## WU-632: everything between the title and the buttons; shrinks to fit short viewports
+var _content: VBoxContainer
+var _button_row: HBoxContainer
+var _box: VBoxContainer
+
+const VIEWPORT_MARGIN := 48.0
 
 
 func _init() -> void:
@@ -34,10 +40,22 @@ func _init() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	add_child(box)
+	_box = box
 	_title = UIStyle.label("", 26, UIStyle.ACCENT)
 	box.add_child(_title)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	box.add_child(_scroll)
+	_content = VBoxContainer.new()
+	_content.add_theme_constant_override("separation", 10)
+	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(_content)
+	var inner := box
+	box = _content
 	_stage = BreakthroughStage.new()
 	_stage.attempt_finished.connect(close)
+	_stage.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(_stage)
 	_blurb = UIStyle.label("", 15, UIStyle.HINT)
 	_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -73,7 +91,8 @@ func _init() -> void:
 	box.add_child(_pills)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	box.add_child(row)
+	inner.add_child(row)
+	_button_row = row
 	_attempt_button = UIStyle.button("Attempt", _attempt)
 	_attempt_button.name = "Attempt"
 	row.add_child(_attempt_button)
@@ -91,6 +110,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
+
+
+## WU-632: the scroll area's height: the content's own height, or what is left of the viewport (minus a margin
+## and the title/button chrome) when the content is taller; never below 120.
+static func fit_height(content_h: float, viewport_h: float, chrome_h: float) -> float:
+	return maxf(120.0, minf(content_h, viewport_h - VIEWPORT_MARGIN - chrome_h))
+
+
+func _fit() -> void:
+	if not visible or not is_inside_tree():
+		return
+	var chrome := _title.get_combined_minimum_size().y + _button_row.get_combined_minimum_size().y + 20.0 + 24.0
+	_scroll.custom_minimum_size.y = fit_height(_content.get_combined_minimum_size().y, get_viewport_rect().size.y, chrome)
 
 
 ## True from the moment Attempt is confirmed until the window closes (the HUD waits to show its card).
@@ -154,6 +186,7 @@ func open() -> void:
 	_later_button.disabled = false
 	_refresh()
 	visible = true
+	_fit.call_deferred()
 	_focus_first.call_deferred()
 
 
@@ -218,6 +251,7 @@ func _face(index: int) -> void:
 	_push_on_asked = false
 	_attempt_button.text = "Attempt"
 	_refresh()
+	_fit.call_deferred()
 	_focus_first.call_deferred()
 
 
@@ -236,6 +270,7 @@ func _focus_first() -> void:
 func _take(item_id: String) -> void:
 	GameState.use_item(item_id)
 	_refresh()
+	_fit.call_deferred()
 	_focus_first.call_deferred()
 
 
