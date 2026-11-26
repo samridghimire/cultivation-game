@@ -2340,6 +2340,8 @@ static func meditation_block(player: CharacterData, data: GameData, npc: Charact
 		return "%s is not here." % npc.name
 	if npc.realm_index < 1:
 		return "%s does not cultivate yet." % npc.name
+	if SpiritualRoots.cultivation_multiplier(player.spiritual_roots, data) <= 0.0 or Cultivation.is_at_bottleneck(player, data):
+		return "Meditation will not help you now."  # [REVIEW] else favor and the cooldown were spent while cultivate() refused
 	var need := int(rules.get("min_favor", 40))
 	if favor < need:
 		return "%s needs to know you better (favor %d/%d)." % [npc.name, favor, need]

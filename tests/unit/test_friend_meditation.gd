@@ -86,3 +86,20 @@ func test_missing_friend_meditation_block_fails_validation() -> void:
 	d.family["friend_meditation"] = {"min_favor": 40, "days": 0, "qi_mult": 1.1, "favor": 2, "cooldown_days": 14}
 	d._validate()
 	assert_true("\n".join(d.load_errors).contains("friend_meditation.days"))
+
+
+## [REVIEW]: at a bottleneck cultivate() refuses, so no favor or cooldown may be spent either.
+func test_no_free_favor_at_a_bottleneck() -> void:
+	var gs := _start()
+	var clock := _root().get_node("GameClock")
+	_friend(gs, "xiao_ling", 1, 50)
+	gs.player.stage = (gs.data.realms[gs.player.realm_index] as RealmDef).stage_count() - 1
+	gs.player.qi = 1.0e12
+	assert_true(Cultivation.is_at_bottleneck(gs.player, gs.data))
+	assert_true(Folk.meditation_block(gs.player, gs.data, gs.npcs["xiao_ling"], 50, {}, "qingshi_village", clock.total_days) != "")
+	var day: int = clock.total_days
+	gs.meditate_with_friend("xiao_ling")
+	assert_eq(int(gs.npc_favor["xiao_ling"]), 50, "no favor")
+	assert_false(gs.world_flags.has("friend_med_xiao_ling"), "no cooldown")
+	assert_eq(clock.total_days, day)
+	gs.end_session()

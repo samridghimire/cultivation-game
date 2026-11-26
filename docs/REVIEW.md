@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3f32add
+Last reviewed commit: 3c12d40
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2573,3 +2573,13 @@ Last reviewed commit: 3f32add
     "best round N of M" counts M from the current rank's contest; the world's contest stage (GFX-253) only stages the
     outer month. FOLK-050: a liked gift's congratulate favor can go past the gift cap; `has_pending` shows the bubble for
     an expired entry until the next day-advance prune. SECT-049 (contest reason codes) is still needed. Not rendered by me.
+- 2026-11-26 (reviewer): reviewed 3f32add..3c12d40 (WU-630, SECT-049, C-412, C-419, WU-632, FOLK-051, SECT-052, FOLK-052,
+  GFX-262, C-425, SIM-036, GFX-261, GUIDE-293; [PLAN]/[REVIEW] skipped). Main green (4817 -> 4818 tests). No BACKLOG/CHANGELOG
+  edits by workers; no new binary assets. SECT-052 bumped SAVE_VERSION to 2 with a v2 fixture (v1 fixtures kept); the flat
+  `contest_record` migrates to `{"outer": ...}` and `last_contest_year` seeds `contest_years.outer`, both checked.
+  - FOLK-052 fix: `meditate_with_friend` set the cooldown and added favor before calling `cultivate()`, which refuses at a
+    bottleneck (or without a spiritual root) without passing time, so a player stuck at a bottleneck got +2 favor every 14
+    days for free. `Folk.meditation_block` now refuses then (the option hides); test `test_no_free_favor_at_a_bottleneck`.
+  - Notes (not filed): GUIDE-293's journal row names the friend's home region (data.npcs), not where they are now.
+    WU-630's meal advice doesn't check the player owns a meal (worker Follow-up). SECT-049, GFX-261, GFX-262, C-412, C-419,
+    C-425, FOLK-051, WU-632 match their specs. Not rendered by me.
