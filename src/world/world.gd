@@ -338,7 +338,7 @@ func _refresh_court_drill() -> void:
 	_court_drill.set_process(false)
 	var rid := String(_region.get("id", GameState.current_region))
 	var contest_hall := _contest_hall(rid)
-	if not contest_hall.is_empty() and ContestStage.shown(GameState.data.sects[contest_hall["sect"]].contest, GameClock.total_days):
+	if not contest_hall.is_empty() and Sects.staged_contest(GameState.data, String(contest_hall["sect"]), GameClock.total_days) != "":
 		return  # GFX-253: the stage takes the court this month
 	var festival := false
 	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, rid):
@@ -403,7 +403,8 @@ func _refresh_contest_stage() -> void:
 	for b in blockers:
 		avoid.append(Rect2(b - Vector2(60, 28), Vector2(120, 40)))  # label plates of people and posts
 	_contest_stage.setup(def, SectCourt.court_rect(place, _region), hall, blockers, map_size, GameClock.total_days,
-		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), avoid)
+		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), avoid,
+		Sects.staged_contest(GameState.data, String(found["sect"]), GameClock.total_days))
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.

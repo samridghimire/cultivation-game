@@ -841,6 +841,20 @@ static func contest_def(c: CharacterData, data: GameData) -> Dictionary:
 	return sect.contest
 
 
+## GFX-261: which contest the sect hall stages on `total_days`: "inner" in the sect's inner_contest month (it wins when both
+## months coincide), "outer" in its contest month, else "". Rank-independent: the stage is scenery for everyone.
+static func staged_contest(data: GameData, sect_id: String, total_days: int) -> String:
+	if not data.sects.has(sect_id):
+		return ""
+	var sect := data.sects[sect_id] as SectDef
+	var month := Calendar.month_of(total_days)
+	if not sect.inner_contest.is_empty() and int(sect.inner_contest.get("month", 0)) == month:
+		return "inner"
+	if not sect.contest.is_empty() and int(sect.contest.get("month", 0)) == month:
+		return "outer"
+	return ""
+
+
 ## SECT-045: true when `c` is in the ranks the inner-sect contest serves (rank 2+ of a sect that holds one).
 static func is_inner_contest(c: CharacterData, data: GameData) -> bool:
 	if c.is_rogue() or not data.sects.has(c.sect["id"]):

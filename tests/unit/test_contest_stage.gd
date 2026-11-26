@@ -64,3 +64,35 @@ func test_month_change_toggles_stage() -> void:
 	stage.setup(def, court, hall, none, Vector2(1000, 800), 2 * Calendar.DAYS_PER_MONTH, false, false)
 	assert_true(stage.visible)
 	stage.free()
+
+
+func test_staged_contest_picks_outer_inner_or_none() -> void:  # GFX-261
+	var data := GameData.load_from_dir()
+	var azure: SectDef = data.sects["azure_cloud_sect"]
+	var om := int(azure.contest["month"])
+	var im := int(azure.inner_contest["month"])
+	assert_true(om != im)
+	assert_eq(Sects.staged_contest(data, "azure_cloud_sect", (om - 1) * Calendar.DAYS_PER_MONTH), "outer")
+	assert_eq(Sects.staged_contest(data, "azure_cloud_sect", (im - 1) * Calendar.DAYS_PER_MONTH), "inner")
+	assert_eq(Sects.staged_contest(data, "azure_cloud_sect", 0 if om != 1 and im != 1 else 5 * Calendar.DAYS_PER_MONTH), "")
+	assert_eq(Sects.staged_contest(data, "no_such_sect", 0), "")
+	azure.inner_contest = azure.inner_contest.duplicate()
+	azure.inner_contest["month"] = om  # coinciding months: inner wins
+	assert_eq(Sects.staged_contest(data, "azure_cloud_sect", (om - 1) * Calendar.DAYS_PER_MONTH), "inner")
+
+
+func test_inner_stage_has_fewer_figures() -> void:  # GFX-261
+	var data := GameData.load_from_dir()
+	var def: SectDef = data.sects["azure_cloud_sect"]
+	var court := Rect2(300, 200, 300, 200)
+	var hall := Rect2(360, 210, 180, 50)
+	var outer := ContestStage.new()
+	outer.setup(def, court, hall, [], Vector2(1000, 800), (int(def.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH, false, false, [], "outer")
+	var inner := ContestStage.new()
+	inner.setup(def, court, hall, [], Vector2(1000, 800), 0, false, false, [], "inner")
+	assert_true(inner.is_inner(), "inner flag")
+	assert_true(inner.visible, "inner visible")
+	assert_true(inner.figure_count() <= ContestStage.INNER_FIGURES, "inner cap %d" % inner.figure_count())
+	assert_true(inner.figure_count() < outer.figure_count(), "inner %d vs outer %d" % [inner.figure_count(), outer.figure_count()])
+	outer.free()
+	inner.free()

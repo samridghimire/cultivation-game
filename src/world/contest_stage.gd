@@ -11,6 +11,8 @@ const MIN_FIGURES := 6
 const MAX_FIGURES := 8
 const BLOCKER_CLEAR := 24.0
 const SPAR_SECS := 0.9
+const INNER_FIGURES := 4  # GFX-261: fewer, older spectators at the inner contest
+const GOLD := Color("d8b04a")
 
 var _platform := Rect2()
 var _figures: Array[Vector2] = []
@@ -21,6 +23,7 @@ var _wood := false
 var _moving := false
 var _clock := 0.0
 var _scale := 3.0
+var _inner := false  # GFX-261
 
 
 ## True while `total_days` falls in the sect's contest month (sects.json `contest.month`); {} contest never shows.
@@ -95,8 +98,9 @@ static func _pick_platform(court: Rect2, hall: Rect2, map_size: Vector2, avoid: 
 	return in_court[0]
 
 
-## Rebuilds for one sect hall; hides itself outside the contest month.
-func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, total_days: int, wooden: bool, moving: bool, avoid: Array[Rect2] = []) -> void:
+## Rebuilds for one sect hall; hides itself outside the contest months. GFX-261: `kind` is "outer" or "inner"
+## (Sects.staged_contest); "" falls back to the outer month check.
+func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, total_days: int, wooden: bool, moving: bool, avoid: Array[Rect2] = [], kind: String = "outer") -> void:
 	_figures.clear()
 	_fig_looks.clear()
 	_spar_looks.clear()
@@ -104,15 +108,18 @@ func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2
 	_moving = moving
 	_wood = wooden
 	_scale = float(Sprites.scale())
-	visible = shown(sect_def.contest, total_days)
+	_inner = kind == "inner"
+	visible = _inner or (kind == "outer" and shown(sect_def.contest, total_days))
 	set_process(false)
 	if not visible:
 		queue_redraw()
 		return
 	_robe = Color(sect_def.robe_color) if sect_def.robe_color != "" else PixelFigure.DEFAULT_ROBE
-	var lay := layout(court, hall, MAX_FIGURES, blockers, map_size, avoid)
+	var lay := layout(court, hall, INNER_FIGURES if _inner else MAX_FIGURES, blockers, map_size, avoid)
 	_platform = lay["platform"]
 	for p: Vector2 in lay["spots"]:
+		if _inner and _figures.size() >= INNER_FIGURES:
+			break
 		_figures.append(p)
 		_fig_looks.append(_look(_figures.size()))
 	for i in 2:
@@ -122,7 +129,14 @@ func setup(sect_def: SectDef, court: Rect2, hall: Rect2, blockers: Array[Vector2
 
 
 func _look(i: int) -> Variant:
-	return PlaceLooks.figure_look({"robe": _robe.to_html(false), "style": "bun" if i % 2 == 0 else "hood"}, Color.GRAY)
+	var look := PlaceLooks.figure_look({"robe": _robe.to_html(false), "style": "bun" if i % 2 == 0 else "hood", "hair": "grey" if _inner else "dark"}, Color.GRAY)
+	if _inner:
+		look["accessories"] = PackedStringArray(["white_hair"])
+	return look
+
+
+func is_inner() -> bool:
+	return _inner
 
 
 func figure_count() -> int:
@@ -149,6 +163,12 @@ func _draw() -> void:
 	draw_rect(Rect2(_platform.position + Vector2(0, lift), _platform.size), line, false, 1.0)
 	draw_rect(_platform, top)
 	draw_rect(_platform, line, false, 1.0)
+	if _inner:  # GFX-261: a second, raised tier with a gold edge
+		var tier := Rect2(_platform.position + Vector2(_platform.size.x * 0.2, -9.0), Vector2(_platform.size.x * 0.6, 9.0))
+		draw_rect(tier, side)
+		draw_rect(tier, line, false, 1.0)
+		draw_rect(Rect2(tier.position, Vector2(tier.size.x, 2.0)), GOLD)
+		draw_rect(Rect2(_platform.position, Vector2(_platform.size.x, 2.0)), GOLD)
 	for k in range(1, 4):  # planks / flagstone seams
 		var sx := _platform.position.x + _platform.size.x * float(k) / 4.0
 		draw_line(Vector2(sx, _platform.position.y), Vector2(sx, _platform.end.y), side, 1.0)
@@ -176,4 +196,4 @@ func _draw_pole(base: Vector2) -> void:
 	var sway := sin(_clock * 2.0 + base.x * 0.1) * 1.5 if _moving else 0.0
 	var flag := PackedVector2Array([tip, tip + Vector2(13.0 + sway, 3.0), tip + Vector2(13.0 + sway, 12.0), tip + Vector2(0, 14.0)])
 	draw_colored_polygon(flag, _robe)
-	draw_polyline(PackedVector2Array([flag[0], flag[1], flag[2], flag[3], flag[0]]), Color("2b2118"), 1.0)
+	draw_polyline(PackedVector2Array([flag[0], flag[1], flag[2], flag[3], flag[0]]), GOLD if _inner else Color("2b2118"), 1.5 if _inner else 1.0)

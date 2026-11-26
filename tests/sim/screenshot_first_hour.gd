@@ -12,6 +12,7 @@ extends SceneTree
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
+## GFX-261: `--inner-contest-month` does the same for the inner contest's month.
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
 ## GFX-256: add `--contest-champion` with --sect-contest for sect_contest_champion.png.
@@ -193,8 +194,10 @@ func _start() -> void:
 				gs.current_region = Sects.home_region(gs.data, mid)
 				region_list = [gs.current_region]
 				member_shot = mid
-	if OS.get_cmdline_user_args().has("--contest-month") and member_shot != "":  # GFX-253
+	if (OS.get_cmdline_user_args().has("--contest-month") or OS.get_cmdline_user_args().has("--inner-contest-month")) and member_shot != "":  # GFX-253
 		var cm := int(gs.data.sects[member_shot].contest.get("month", 1))
+		if OS.get_cmdline_user_args().has("--inner-contest-month"):  # GFX-261
+			cm = int(gs.data.sects[member_shot].inner_contest.get("month", cm))
 		root.get_node("GameClock").total_days = (cm - 1) * Calendar.DAYS_PER_MONTH
 	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
