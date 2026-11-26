@@ -118,7 +118,7 @@ func open(c: CharacterData, data: GameData, today: int, color: Color = UIStyle.A
 		return false
 	var sect: SectDef = data.sects[c.sect["id"]]
 	_style(sect.name, color)
-	_subtitle.text = "%s outer-sect contest" % sect.name
+	_subtitle.text = "%s %s" % [sect.name, Sects.contest_name(c, data)]
 	var lines := ladder_lines(c, data, 0, rival)
 	if rival_round(c, data, rival, int(Sects.contest_def(c, data).get("rounds", 0)) - 1):
 		lines.append(rival_line(rival.name))

@@ -3670,7 +3670,7 @@ func enter_sect_contest() -> void:
 		return
 	Sects.enter_contest(player, GameClock.total_days)
 	var sect: SectDef = data.sects[player.sect["id"]]
-	EventBus.post("You enter the %s's outer-sect contest." % sect.name)
+	EventBus.post("You enter the %s's %s." % [sect.name, Sects.contest_name(player, data)])
 	var won := 0
 	var index := 0
 	while true:

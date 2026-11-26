@@ -229,7 +229,7 @@ static func _sect_dates(out: Array[Dictionary], data: GameData, c: CharacterData
 		if not contest.is_empty() and Calendar.month_of(m0) == int(contest.get("month", 0)) and m_end >= start:
 			var day2 := maxi(m0, start)
 			if Sects.check_contest(c, data, day2) == "":
-				out.append({"day": day2, "kind": "sect_contest", "region": region, "hall": Sects.hall_name(data, region, c), "text": "Outer-sect contest (all month, at the hall)"})
+				out.append({"day": day2, "kind": "sect_contest", "region": region, "hall": Sects.hall_name(data, region, c), "text": "%s (all month, at the hall)" % Sects.contest_name(c, data).capitalize()})
 		m0 += Calendar.DAYS_PER_MONTH
 
 
@@ -496,7 +496,8 @@ static func reminder_line(data: GameData, npcs: Dictionary, flags: Dictionary, e
 			if Calendar.day_of(int(e["day"])) != 1:
 				return ""
 			var hall := String(e.get("hall", ""))
-			return "Tomorrow: the outer-sect contest opens at the %s." % (hall if hall != "" else "sect hall")
+			var kind := "inner-sect contest" if String(e.get("text", "")).begins_with("Inner") else "outer-sect contest"
+			return "Tomorrow: the %s opens at the %s." % [kind, (hall if hall != "" else "sect hall")]
 		"lecture":
 			return ""
 		"duty":

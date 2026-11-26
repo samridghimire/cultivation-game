@@ -500,8 +500,67 @@ func test_contest_line_before_during_after_entering() -> void:
 	Sects.join(d, data(), "azure_cloud_sect")
 	d.sect["reported"] = true
 	d.sect["rank"] = 2
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	var saved := sect.inner_contest
+	sect.inner_contest = {}  # SECT-045: without an inner block rank 2 is still barred
 	assert_eq(Sects.contest_line(d, data(), day + 1), "Contest: for the first two ranks")
+	sect.inner_contest = saved
 
 
 func test_contest_line_absent_for_rogue() -> void:
 	assert_eq(Sects.contest_line(new_character(), data(), 5), "")
+
+
+# --- SECT-045: the inner-sect contest ------------------------------------------
+
+func _inner_member(sect_id: String = "azure_cloud_sect") -> CharacterData:
+	var c := new_character()
+	c.realm_index = 2
+	Sects.join(c, data(), sect_id)
+	c.sect["reported"] = true
+	return c
+
+
+func test_rank_picks_outer_or_inner_block() -> void:
+	var c := _inner_member()
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	assert_true(sect.inner_contest.size() > 0)
+	c.sect["rank"] = 1
+	assert_eq(Sects.contest_def(c, data()), sect.contest, "rank 1 sees the outer block")
+	assert_eq(Sects.contest_round(c, data(), 0)["foe"], sect.contest["foes"][0])
+	c.sect["rank"] = 2
+	assert_eq(Sects.contest_def(c, data()), sect.inner_contest, "rank 2 sees the inner block")
+	assert_eq(Sects.contest_round(c, data(), 0)["foe"], sect.inner_contest["foes"][0])
+	assert_eq(Sects.contest_name(c, data()), "inner-sect contest")
+
+
+func test_inner_contest_open_in_its_own_month_once_a_year() -> void:
+	var c := _inner_member()
+	c.sect["rank"] = 2
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	var day := (int(sect.inner_contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	assert_true(Sects.contest_open(c, data(), day))
+	assert_false(Sects.contest_open(c, data(), (int(sect.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH), "not the outer month")
+	assert_true(Sects.contest_line(c, data(), day).begins_with("Inner-sect contest: open now"))
+	Sects.enter_contest(c, day)
+	assert_false(Sects.contest_open(c, data(), day + 3))
+
+
+func test_inner_prizes_beat_outer_and_validate() -> void:
+	for sect: SectDef in data().sects.values():
+		if sect.contest.is_empty():
+			continue
+		assert_false(sect.inner_contest.is_empty(), "%s holds an inner contest" % sect.id)
+		assert_true(int(sect.inner_contest["prizes"][-1]["contribution"]) >= 2 * int(sect.contest["prizes"][-1]["contribution"]), sect.id)
+	assert_eq(Sects.validate_contests(data()).size(), 0)
+
+
+func test_sect_without_inner_contest_refuses_rank_two() -> void:
+	var c := _inner_member()
+	c.sect["rank"] = 2
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	var saved := sect.inner_contest
+	sect.inner_contest = {}
+	var day := (int(sect.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	assert_eq(Sects.check_contest(c, data(), day), "The outer-sect contest is for disciples of the first two ranks.")
+	sect.inner_contest = saved

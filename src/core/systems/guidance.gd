@@ -7235,7 +7235,7 @@ static func _lecture_hint(c: CharacterData, data: GameData, today: int) -> Strin
 static func _contest_hint(c: CharacterData, data: GameData, today: int) -> String:
 	if not Sects.contest_open(c, data, today):
 		return ""
-	return "The %s contest is open this month; enter at the sect hall." % (data.sects[c.sect["id"]] as SectDef).name
+	return "The %s %s is open this month; enter at the sect hall." % [(data.sects[c.sect["id"]] as SectDef).name, "inner-sect contest" if Sects.is_inner_contest(c, data) else "contest"]
 
 
 const SEASONAL_JOURNAL_MAX := 2
