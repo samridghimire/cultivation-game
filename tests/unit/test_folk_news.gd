@@ -286,3 +286,21 @@ func test_c421_sect_life_lines_resolve() -> void:
 						filled.append(t.replace("{player}", c.name).replace("{sect}", "Blood Lotus Sect").replace("{rank}", (gs.data.sects[sect_id] as SectDef).rank_name(1)))
 					assert_true(filled.has(line), "%s %s uses its own demonic line: %s" % [npc_id, kind, line])
 	gs.end_session()
+
+
+## C-419: the four Qingshi friends have their own breakthrough and wedding lines.
+func test_c419_breakthrough_and_wedding_lines_are_their_own() -> void:
+	var gs := _gs()
+	for npc_id: String in ["elder_mo", "xiao_ling", "hunter_ma", "fisher_pei"]:
+		var own: Dictionary = gs.data.npcs[npc_id].get("news_lines", {})
+		for kind: String in ["breakthrough", "wedding"]:
+			var pool: Array = own.get(kind, [])
+			assert_eq(pool.size(), 1, "%s has a %s line" % [npc_id, kind])
+			assert_true(String(pool[0]).length() <= 140, "%s %s <= 140 chars" % [npc_id, kind])
+			var c := _start()
+			c.folk_news[npc_id] = kind
+			var line := FolkNews.take(c, gs.data, npc_id)
+			assert_true(line != "" and not line.contains("{"), "%s %s: %s" % [npc_id, kind, line])
+			var shared: Array = gs.data.family.get("folk_news", {}).get("lines", {}).get(kind, [])
+			assert_false(shared.has(line), "%s %s is not the shared line" % [npc_id, kind])
+	gs.end_session()
