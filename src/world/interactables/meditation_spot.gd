@@ -25,6 +25,7 @@ func get_options() -> Array[Dictionary]:
 		var meditate: Dictionary = options[options.size() - 2]
 		meditate["description"] = String(meditate.get("description", "")) + "\n" + qi_note
 	options.append_array(_dual_cultivation_options())
+	options.append_array(_friend_meditation_options())
 	if Cultivation.can_attempt_breakthrough(GameState.player, GameState.data):
 		var chance := Cultivation.breakthrough_chance(GameState.player, GameState.data)
 		var odds := Guidance.chance_text(GameState.player, GameState.data)
@@ -124,4 +125,18 @@ func _dual_cultivation_options() -> Array[Dictionary]:
 		label = "Try for a child with %s (%s)" % [spouse.name, Calendar.format_duration(child_days)]
 		reason = Children.check_conception(p, spouse, data)
 		options.append({"label": label, "action": GameState.try_for_child.bind(spouse.id), "disabled": reason != "", "reason": reason, "keep_open": true})
+	return options
+
+
+## FOLK-052: "Meditate with <friend> (7 days)" for up to two friends who can sit with you here.
+func _friend_meditation_options() -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	var data := GameState.data
+	var rules := Folk.meditation_rules(data)
+	var ids := Folk.meditation_friends(GameState.player, data, GameState.npcs, GameState.npc_favor, GameState.world_flags, GameState.current_region, GameClock.total_days)
+	for id in ids.slice(0, 2):
+		var npc: CharacterData = GameState.npcs[id]
+		options.append({"label": "Meditate with %s (%d days)" % [npc.name, int(rules.get("days", 7))],
+			"description": "+%d%% qi, favor +%d. Once every %d days." % [roundi((float(rules.get("qi_mult", 1.1)) - 1.0) * 100.0), int(rules.get("favor", 2)), int(rules.get("cooldown_days", 14))],
+			"action": GameState.meditate_with_friend.bind(id, qi_density), "keep_open": true})
 	return options

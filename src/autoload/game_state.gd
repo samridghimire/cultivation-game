@@ -2908,6 +2908,27 @@ func make_amends(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## FOLK-052: sit beside a friend at a meditation spot (family.json friend_meditation; see Folk.meditation_block).
+func meditate_with_friend(npc_id: String, location_density: float = 1.0) -> void:
+	EventBus.topic = "family"
+	if not _can_act():
+		return
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null:
+		return
+	var reason := Folk.meditation_block(player, data, npc, int(npc_favor.get(npc_id, 0)), world_flags, current_region, GameClock.total_days)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		EventBus.player_changed.emit()
+		return
+	var rules := Folk.meditation_rules(data)
+	world_flags["friend_med_" + npc_id] = GameClock.total_days
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + int(rules.get("favor", 2)), 0, 100)
+	EventBus.post("You and %s sit together in quiet cultivation. (%s)" % [npc.name, _favor_text(npc_id)])
+	EventBus.npc_reaction.emit(npc_id, "happy")
+	cultivate(int(rules.get("days", 7)), location_density * float(rules.get("qi_mult", 1.1)), "Meditating with %s" % npc.name)
+
+
 ## Cultivate together with a spouse who is in the current region: both gain
 ## qi with the dual cultivation bonus (data/family.json) and favor rises.
 func dual_cultivate(spouse_id: String, days: int, location_density: float = 1.0) -> void:

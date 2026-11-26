@@ -2310,3 +2310,41 @@ static func validate_tend(data: GameData) -> PackedStringArray:
 			if not l is String or String(l) == "" or String(l).length() > 140:
 				errors.append("family.json folk_visits.tend: lines must be strings of 1-140 chars")
 	return errors
+
+
+## FOLK-052: the data block family.json `friend_meditation`.
+static func meditation_rules(data: GameData) -> Dictionary:
+	return data.family.get("friend_meditation", {})
+
+
+## FOLK-052: named friends who can sit with `player` at a meditation spot in `region`, by favor (high first), then id.
+static func meditation_friends(player: CharacterData, data: GameData, npcs: Dictionary, favor: Dictionary, flags: Dictionary, region: String, today: int) -> Array[String]:
+	var ids: Array[String] = []
+	for id: String in data.npcs:
+		var npc: CharacterData = npcs.get(id)
+		if npc != null and meditation_block(player, data, npc, int(favor.get(id, 0)), flags, region, today) == "":
+			ids.append(id)
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var fa := int(favor.get(a, 0))
+		var fb := int(favor.get(b, 0))
+		return fa > fb if fa != fb else a < b)
+	return ids
+
+
+## FOLK-052: "" when `npc` can meditate beside `player` today, else the reason.
+static func meditation_block(player: CharacterData, data: GameData, npc: CharacterData, favor: int, flags: Dictionary, region: String, today: int) -> String:
+	var rules := meditation_rules(data)
+	if not data.npcs.has(npc.id) or not npc.alive or player.spouses.has(npc.id):
+		return "%s cannot sit with you." % npc.name
+	if Npcs.region_of(npc, data) != region:
+		return "%s is not here." % npc.name
+	if npc.realm_index < 1:
+		return "%s does not cultivate yet." % npc.name
+	var need := int(rules.get("min_favor", 40))
+	if favor < need:
+		return "%s needs to know you better (favor %d/%d)." % [npc.name, favor, need]
+	var last := int(flags.get("friend_med_" + npc.id, -100000))
+	var wait := last + int(rules.get("cooldown_days", 14)) - today
+	if wait > 0:
+		return "You sat together %d days ago; again in %d days." % [today - last, wait]
+	return ""

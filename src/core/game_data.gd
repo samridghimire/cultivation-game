@@ -902,6 +902,19 @@ func _validate_world() -> void:
 		for key in ["asked_flag", "done_flag", "text"]:
 			if String(errand.get(key, "")) == "":
 				load_errors.append("Errand of '%s' has no %s" % [errand.get("npc", ""), key])
+	var med: Dictionary = family.get("friend_meditation", {})  # FOLK-052
+	if med.is_empty():
+		load_errors.append("family.friend_meditation is required")
+	else:
+		if int(med.get("min_favor", -1)) < 0 or int(med.get("min_favor", -1)) > 100:
+			load_errors.append("friend_meditation.min_favor must be 0..100")
+		for key in ["days", "cooldown_days"]:
+			if int(med.get(key, 0)) < 1:
+				load_errors.append("friend_meditation.%s must be >= 1" % key)
+		if float(med.get("qi_mult", 0.0)) < 1.0:
+			load_errors.append("friend_meditation.qi_mult must be >= 1")
+		if int(med.get("favor", -1)) < 0:
+			load_errors.append("friend_meditation.favor must be >= 0")
 	var lend: Dictionary = family.get("lend_a_hand", {})  # FOLK-035
 	if not lend.is_empty():
 		for key in ["days", "cooldown_days"]:
