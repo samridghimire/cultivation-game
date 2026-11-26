@@ -868,7 +868,7 @@ static func contest_check(c: CharacterData, data: GameData, total_days: int) -> 
 	if Calendar.month_of(total_days) != int(contest.get("month", 0)):
 		return {"reason": "wrong_month", "message": "The contest is held in month %d of the year." % int(contest.get("month", 1))}
 	var year := Calendar.year_of(total_days)
-	if int(c.sect.get("contest_year", -1)) == year or c.last_contest_year == year:
+	if entered_year(c, data) == year:
 		return {"reason": "already_entered", "message": "You have already entered this year's contest."}
 	return {"reason": "ok", "message": ""}
 
@@ -926,44 +926,70 @@ static func contest_round(c: CharacterData, data: GameData, index: int) -> Dicti
 		"power_mult": float(mults[index]) if index < mults.size() else 1.0}
 
 
-## Marks this year's contest as entered.
-static func enter_contest(c: CharacterData, total_days: int) -> void:
-	c.sect["contest_year"] = Calendar.year_of(total_days)
-	c.last_contest_year = Calendar.year_of(total_days)  # SECT-043: survives leaving and rejoining
+## SECT-052: "inner" when `c` is in the ranks the inner-sect contest serves, else "outer".
+static func contest_kind(c: CharacterData, data: GameData) -> String:
+	return "inner" if is_inner_contest(c, data) else "outer"
+
+
+## SECT-052: the year `c` last entered the contest of their current kind; -1 when never. The outer kind also honours
+## the older per-sect and per-character years.
+static func entered_year(c: CharacterData, data: GameData) -> int:
+	var kind := contest_kind(c, data)
+	var year := int(c.contest_years.get(kind, -1))
+	if kind == "outer":
+		year = maxi(year, maxi(int(c.sect.get("contest_year", -1)), c.last_contest_year))
+	return year
+
+
+## Marks this year's contest as entered (for the current kind; the outer kind also keeps the older year fields).
+static func enter_contest(c: CharacterData, data: GameData, total_days: int) -> void:
+	var year := Calendar.year_of(total_days)
+	var kind := contest_kind(c, data)
+	c.contest_years[kind] = year
+	if kind == "outer":
+		c.sect["contest_year"] = year
+		c.last_contest_year = year  # SECT-043: survives leaving and rejoining
 
 
 ## SECT-048: records a finished contest: `rounds_won` bouts won of `rounds` in `total_days`' year.
 ## Counts rounds, and a full win (all rounds won) once. Returns true on a full win.
-static func record_contest(c: CharacterData, rounds_won: int, rounds: int, total_days: int) -> bool:
+## SECT-052: kept per kind; pass `kind` when a prize may have changed the rank since entry.
+static func record_contest(c: CharacterData, data: GameData, rounds_won: int, rounds: int, total_days: int, kind: String = "") -> bool:
 	if rounds_won <= 0:
 		return false
+	if kind == "":
+		kind = contest_kind(c, data)
 	LifeStats.add(c, "contest_rounds_won", rounds_won)
-	var rec := c.contest_record
+	var rec: Dictionary = c.contest_record.get(kind, {})
 	rec["best_round"] = maxi(int(rec.get("best_round", 0)), rounds_won)
 	var full := rounds > 0 and rounds_won >= rounds
 	if full:
 		LifeStats.add(c, "contest_wins")
 		rec["last_year"] = Calendar.year_of(total_days)
 		rec["sect"] = String(c.sect.get("id", ""))
-	c.contest_record = rec
+	c.contest_record[kind] = rec
 	return full
 
 
-## SECT-048: {best_round, wins, last_year} (last_year -1 and zeros when never entered/won).
-static func contest_record(c: CharacterData) -> Dictionary:
-	return {"best_round": int(c.contest_record.get("best_round", 0)), "wins": LifeStats.get_stat(c, "contest_wins"),
-		"last_year": int(c.contest_record.get("last_year", -1))}
+## SECT-048: {best_round, wins, last_year} (last_year -1 and zeros when never entered/won). `wins` is the total of both kinds.
+## SECT-052: the record of `kind` ("" = the current kind).
+static func contest_record(c: CharacterData, data: GameData, kind: String = "") -> Dictionary:
+	if kind == "":
+		kind = contest_kind(c, data)
+	var rec: Dictionary = c.contest_record.get(kind, {})
+	return {"best_round": int(rec.get("best_round", 0)), "wins": LifeStats.get_stat(c, "contest_wins"),
+		"last_year": int(rec.get("last_year", -1))}
 
 
-## WU-627: "Record: best round N of M, champion X times" once the player has entered a contest; "" before.
+## WU-627: "Record: best round N of M, champion X times" once the player has entered a contest of the current kind; "" before.
 static func contest_record_line(c: CharacterData, data: GameData) -> String:
-	var rec := contest_record(c)
+	var rec := contest_record(c, data)
 	if int(rec["best_round"]) <= 0:
 		return ""
 	var rounds := 0
 	while not contest_round(c, data, rounds).is_empty():
 		rounds += 1
-	var line := "Contest record: best round %d" % int(rec["best_round"])
+	var line := "%s record: best round %d" % ["Inner-sect contest" if is_inner_contest(c, data) else "Contest", int(rec["best_round"])]
 	if rounds > 0:
 		line += " of %d" % rounds
 	var wins := int(rec["wins"])
@@ -971,13 +997,20 @@ static func contest_record_line(c: CharacterData, data: GameData) -> String:
 
 
 ## SECT-048: "Won the <sect> contest in year N" for the latest full win; "" when none.
+## SECT-052: across both kinds; an inner win reads "Won the <sect> inner-sect contest in year N".
 static func contest_win_line(c: CharacterData, data: GameData) -> String:
-	var year := int(c.contest_record.get("last_year", -1))
+	var year := -1
+	var kind := "outer"
+	for k: String in ["outer", "inner"]:
+		var y := int((c.contest_record.get(k, {}) as Dictionary).get("last_year", -1))
+		if y >= year and y >= 0:
+			year = y
+			kind = k
 	if year < 0:
 		return ""
-	var id := String(c.contest_record.get("sect", ""))
+	var id := String((c.contest_record[kind] as Dictionary).get("sect", ""))
 	var name := String((data.sects[id] as SectDef).name) if data.sects.has(id) else "sect"
-	return "Won the %s contest in year %d" % [name, year]
+	return "Won the %s %scontest in year %d" % [name, "inner-sect " if kind == "inner" else "", year]
 
 
 ## Pays one round's prize. Returns true when its contribution promoted `c` (the caller announces it).

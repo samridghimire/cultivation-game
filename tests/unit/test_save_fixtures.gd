@@ -6,7 +6,8 @@ extends TestCase
 
 const FIXTURE_DIR := "res://tests/fixtures/saves"
 const OLDEST := "v1_oldest"
-const CURRENT := "v1_current"
+const CURRENT := "v2_current"
+const V1_CURRENT := "v1_current"
 const SLOT_PREFIX := "_fixture_"
 
 
@@ -50,7 +51,7 @@ func test_fixtures_cover_supported_versions() -> void:
 ## Every CharacterData field missing from an old save loads as its default.
 func test_missing_character_fields_get_defaults() -> void:
 	var defaults := CharacterData.new().to_dict()
-	for fixture_name in [OLDEST, CURRENT]:
+	for fixture_name in [OLDEST, V1_CURRENT, CURRENT]:
 		var saved: Dictionary = _fixture(fixture_name)["game"]["player"]
 		var restored := CharacterData.from_dict(saved).to_dict()
 		assert_eq(restored.keys().size(), defaults.keys().size(), "%s: same fields as a new character" % fixture_name)
@@ -62,7 +63,7 @@ func test_missing_character_fields_get_defaults() -> void:
 ## No field stored in a fixture is silently dropped when loading (renamed or
 ## removed fields need a migration in SaveManager._migrate).
 func test_saved_character_fields_are_kept() -> void:
-	for fixture_name in [OLDEST, CURRENT]:
+	for fixture_name in [OLDEST, V1_CURRENT, CURRENT]:
 		var saved: Dictionary = _fixture(fixture_name)["game"]["player"]
 		var restored := CharacterData.from_dict(saved).to_dict()
 		for key in saved:
@@ -108,3 +109,7 @@ func test_current_save_loads_and_round_trips() -> void:
 	gs.load_save_dict(JSON.parse_string(JSON.stringify(first)))
 	assert_eq(gs.player.to_dict(), first["player"], "save -> load -> save is stable")
 	assert_eq(gs.npcs.size(), (first["npcs"] as Dictionary).size())
+
+
+func test_v1_current_save_still_loads() -> void:
+	assert_true(_load(V1_CURRENT))

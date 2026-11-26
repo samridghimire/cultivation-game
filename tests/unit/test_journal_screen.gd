@@ -234,11 +234,11 @@ func test_contest_record_line() -> void:
 	c.realm_index = 1
 	Sects.join(c, d, "azure_cloud_sect")
 	assert_eq(Sects.contest_record_line(c, d), "")
-	Sects.record_contest(c, 2, 3, 100)
+	Sects.record_contest(c, d, 2, 3, 100)
 	var line := Sects.contest_record_line(c, d)
 	assert_true(line.begins_with("Contest record: best round 2"), line)
 	assert_false(line.contains("champion"))
-	Sects.record_contest(c, 3, 3, 100)
+	Sects.record_contest(c, d, 3, 3, 100)
 	assert_true(Sects.contest_record_line(c, d).ends_with("champion 1 time"))
 	assert_true("Contest record: x" in JournalScreen.month_lines({"duty": 0, "stipend": {}, "contest_record": "Contest record: x"}))
 

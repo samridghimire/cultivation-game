@@ -537,7 +537,7 @@ func test_sect_contest_gone_after_entry_and_today_inside_month() -> void:
 	var inside := 2 * Calendar.DAYS_PER_MONTH + 10
 	var es := VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", inside, 10, c, {})
 	assert_eq(int(_kinds(es, "sect_contest")[0]["day"]), inside)
-	Sects.enter_contest(c, inside)
+	Sects.enter_contest(c, data(), inside)
 	es = VillageCalendar.upcoming(data(), {}, {}, [], "qingshi_village", inside, 10, c, {})
 	assert_eq(_kinds(es, "sect_contest").size(), 0)
 

@@ -3703,7 +3703,8 @@ func enter_sect_contest() -> void:
 		EventBus.post(reason, "warning")
 		EventBus.player_changed.emit()
 		return
-	Sects.enter_contest(player, GameClock.total_days)
+	var contest_kind := Sects.contest_kind(player, data)
+	Sects.enter_contest(player, data, GameClock.total_days)
 	var sect: SectDef = data.sects[player.sect["id"]]
 	EventBus.post("You enter the %s's %s." % [sect.name, Sects.contest_name(player, data)])
 	var won := 0
@@ -3734,7 +3735,7 @@ func enter_sect_contest() -> void:
 		if foe.has("person"):
 			_note_contest_rival(true)
 		index += 1
-	var champion := Sects.record_contest(player, won, int(Sects.contest_def(player, data).get("rounds", 0)), GameClock.total_days)
+	var champion := Sects.record_contest(player, data, won, int(Sects.contest_def(player, data).get("rounds", 0)), GameClock.total_days, contest_kind)
 	if champion:
 		FolkNews.queue(player, data, npc_favor, "contest")  # FOLK-049: friends cheer a champion
 	if won == 0:

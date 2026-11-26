@@ -9,7 +9,7 @@ extends Node
 signal saved(slot: String, is_auto: bool)
 
 const SAVE_DIR := "user://saves"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2  # 2: SECT-052 per-kind contest_record/contest_years (migrated in CharacterData.from_dict)
 const DEFAULT_SLOT := "slot1"
 const AUTOSAVE_SLOT := "autosave"
 

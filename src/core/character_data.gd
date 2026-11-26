@@ -65,6 +65,8 @@ var sect: Dictionary = {}
 var last_contest_year: int = -1
 ## SECT-048: the contest record that outlives the sect: {best_round, last_year, sect (id of the last full win)}; {} = none.
 var contest_record: Dictionary = {}
+## SECT-052: {"outer": year, "inner": year} of the last contest entered per kind.
+var contest_years: Dictionary = {}
 var inventory: Dictionary = {}  # item id -> count
 ## Equipped artifacts: slot (Equipment.SLOTS) -> item id. Equipped items are not in inventory.
 var equipment: Dictionary = {}
@@ -294,7 +296,8 @@ func to_dict() -> Dictionary:
 		"professions": professions.duplicate(true),
 		"sect": sect.duplicate(),
 		"last_contest_year": last_contest_year,
-		"contest_record": contest_record.duplicate(),
+		"contest_record": contest_record.duplicate(true),
+		"contest_years": contest_years.duplicate(),
 		"inventory": inventory.duplicate(),
 		"equipment": equipment.duplicate(),
 		"techniques": techniques.duplicate(true),
@@ -440,8 +443,17 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	var s: Dictionary = d.get("sect", {})
 	c.last_contest_year = int(d.get("last_contest_year", int(s.get("contest_year", -1))))
 	var cr: Dictionary = d.get("contest_record", {})
-	if not cr.is_empty():
-		c.contest_record = {"best_round": int(cr.get("best_round", 0)), "last_year": int(cr.get("last_year", -1)), "sect": String(cr.get("sect", ""))}
+	if cr.has("best_round"):
+		cr = {"outer": cr}  # SECT-052: an old flat record was the outer contest's
+	for kind: String in ["outer", "inner"]:
+		if cr.get(kind) is Dictionary:
+			var r: Dictionary = cr[kind]
+			c.contest_record[kind] = {"best_round": int(r.get("best_round", 0)), "last_year": int(r.get("last_year", -1)), "sect": String(r.get("sect", ""))}
+	var cy: Dictionary = d.get("contest_years", {})
+	for kind: String in cy:
+		c.contest_years[kind] = int(cy[kind])
+	if not d.has("contest_years") and c.last_contest_year >= 0:
+		c.contest_years["outer"] = c.last_contest_year
 	if not s.is_empty():
 		c.sect = {"id": String(s.get("id", "")), "rank": int(s.get("rank", 0)), "contribution": int(s.get("contribution", 0))}
 		if s.has("spent"):

@@ -402,7 +402,7 @@ func test_contest_open_only_in_its_month_once_a_year() -> void:
 	var day := _contest_day()
 	assert_true(Sects.contest_open(c, data(), day))
 	assert_false(Sects.contest_open(c, data(), day + Calendar.DAYS_PER_MONTH), "next month")
-	Sects.enter_contest(c, day)
+	Sects.enter_contest(c, data(), day)
 	assert_false(Sects.contest_open(c, data(), day + 3), "entered this year")
 	assert_true(Sects.contest_open(c, data(), day + Calendar.DAYS_PER_YEAR), "next year")
 
@@ -458,7 +458,7 @@ func test_contest_entry_survives_leaving_and_rejoining() -> void:
 	var c := _contest_member()
 	c.sect["reported"] = true
 	var day := _contest_day()
-	Sects.enter_contest(c, day)
+	Sects.enter_contest(c, data(), day)
 	Sects.leave(c)
 	Sects.join(c, data(), "azure_cloud_sect")
 	c.sect["reported"] = true
@@ -507,7 +507,7 @@ func test_contest_line_before_during_after_entering() -> void:
 	var day := _contest_day()
 	assert_eq(Sects.contest_line(c, data(), day - 10), "Contest: month 3 (in 10 days)")
 	assert_true(Sects.contest_line(c, data(), day + 1).begins_with("Contest: open now at the "))
-	Sects.enter_contest(c, day + 1)
+	Sects.enter_contest(c, data(), day + 1)
 	assert_eq(Sects.contest_line(c, data(), day + 2), "Contest: already entered this year")
 	assert_eq(Sects.contest_line(c, data(), day + 40), "Contest: month 3 (in %d days)" % (day + Calendar.DAYS_PER_YEAR - day - 40))
 	var d := new_character()
@@ -557,7 +557,7 @@ func test_inner_contest_open_in_its_own_month_once_a_year() -> void:
 	assert_true(Sects.contest_open(c, data(), day))
 	assert_false(Sects.contest_open(c, data(), (int(sect.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH), "not the outer month")
 	assert_true(Sects.contest_line(c, data(), day).begins_with("Inner-sect contest: open now"))
-	Sects.enter_contest(c, day)
+	Sects.enter_contest(c, data(), day)
 	assert_false(Sects.contest_open(c, data(), day + 3))
 
 
@@ -597,7 +597,7 @@ func test_contest_check_reason_codes_and_line() -> void:
 	assert_eq(Sects.contest_check(c, data(), day)["reason"], "need_report")
 	assert_eq(Sects.contest_line(c, data(), day), "Contest: Report to the hall first.")
 	c.sect["reported"] = true
-	Sects.enter_contest(c, day)
+	Sects.enter_contest(c, data(), day)
 	assert_eq(Sects.contest_check(c, data(), day + 1)["reason"], "already_entered")
 	assert_eq(Sects.contest_line(c, data(), day + 1), "Contest: already entered this year")
 	var d := _contest_member()
@@ -609,3 +609,46 @@ func test_contest_check_reason_codes_and_line() -> void:
 	assert_eq(Sects.contest_check(d, data(), day)["reason"], "rank_too_high")
 	assert_eq(Sects.contest_line(d, data(), day), "Contest: for the first two ranks")
 	sect.inner_contest = saved
+
+
+# --- SECT-052: outer and inner contest records kept apart -----------------------
+
+func test_outer_entry_does_not_bar_inner_same_year() -> void:
+	var c := _inner_member()
+	var sect: SectDef = data().sects["azure_cloud_sect"]
+	c.sect["rank"] = 1
+	var outer_day := (int(sect.contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	Sects.enter_contest(c, data(), outer_day)
+	c.sect["rank"] = 2
+	var inner_day := (int(sect.inner_contest["month"]) - 1) * Calendar.DAYS_PER_MONTH
+	assert_eq(Calendar.year_of(outer_day), Calendar.year_of(inner_day))
+	assert_true(Sects.contest_open(c, data(), inner_day), "the inner contest is open after an outer entry")
+	Sects.enter_contest(c, data(), inner_day)
+	assert_false(Sects.contest_open(c, data(), inner_day + 3), "inner twice in a year is refused")
+	assert_eq(int(c.contest_years["outer"]), Calendar.year_of(outer_day))
+
+
+func test_inner_record_apart_from_outer() -> void:
+	var c := _inner_member()
+	c.sect["rank"] = 1
+	Sects.record_contest(c, data(), 2, 3, 100)
+	c.sect["rank"] = 2
+	assert_eq(Sects.contest_record_line(c, data()), "", "nothing entered at this tier")
+	assert_eq(Sects.contest_record(c, data(), "outer")["best_round"], 2)
+	assert_eq(Sects.contest_win_line(c, data()), "")
+	var rounds := int(Sects.contest_def(c, data()).get("rounds", 3))
+	assert_true(Sects.record_contest(c, data(), rounds, rounds, 500))
+	assert_eq(Sects.contest_record(c, data(), "outer")["best_round"], 2, "outer record untouched")
+	assert_true(Sects.contest_record_line(c, data()).begins_with("Inner-sect contest record: best round %d" % rounds))
+	assert_true(Sects.contest_win_line(c, data()).contains("inner-sect contest in year %d" % Calendar.year_of(500)))
+
+
+func test_old_flat_contest_record_migrates_to_outer() -> void:
+	var d := new_character().to_dict()
+	d["contest_record"] = {"best_round": 2, "last_year": 3, "sect": "azure_cloud_sect"}
+	d["last_contest_year"] = 3
+	d.erase("contest_years")
+	var back := CharacterData.from_dict(d)
+	assert_eq(back.contest_record["outer"]["best_round"], 2)
+	assert_eq(back.contest_record["outer"]["last_year"], 3)
+	assert_eq(back.contest_years, {"outer": 3})
