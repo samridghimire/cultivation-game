@@ -139,8 +139,8 @@ func test_taught_meal_hidden_until_learned() -> void:
 	var c := new_character()
 	assert_false(Cooking.is_known(c, data(), "honey_egg_cake"))
 	assert_true(Cooking.is_known(c, data(), "fish_stew"))
-	assert_eq(Cooking.known_meals(c, data()).size(), data().home_meals.size() - 4)
-	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 3, "known dishes plus the ??? hint")
+	assert_eq(Cooking.known_meals(c, data()).size(), data().home_meals.size() - 8)
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 7, "known dishes plus the ??? hint")
 	for item_id: Variant in Cooking.meal(data(), "honey_egg_cake")["ingredients"]:
 		c.add_item(String(item_id), 9)
 	assert_eq(Cooking.check(c, data(), "honey_egg_cake"), "You have not learned to cook that.")
@@ -148,7 +148,7 @@ func test_taught_meal_hidden_until_learned() -> void:
 	assert_false(Cooking.learn(c, data(), "honey_egg_cake"), "twice")
 	assert_false(Cooking.learn(c, data(), "fish_stew"), "not taught")
 	assert_false(Cooking.learn(c, data(), "nonsense"))
-	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 2)
+	assert_eq(Workshop.cook_options(c, data()).size(), data().home_meals.size() - 6)
 	assert_true(Cooking.cook(c, data(), "honey_egg_cake")["ok"])
 
 
@@ -191,3 +191,34 @@ func test_cooked_dish_from_old_save_stays_known() -> void:
 	assert_false(Cooking.is_known(old, data(), "egg_custard"))
 	assert_false(Cooking.learn(old, data(), "boar_roast"), "already known")
 	assert_true(Effects.check(old, data(), {"learn_dish": "boar_roast"}) != "")
+
+
+## C-412: four more dishes friends teach, each by exactly one lesson, cookable afterwards.
+func test_new_friend_dishes_each_taught_by_one_lesson() -> void:
+	for dish_id in ["marsh_catfish_pot", "smoked_cloud_trout", "merchant_moon_cake", "thyme_tisane"]:
+		var teachers := 0
+		var teacher_id := ""
+		var index := -1
+		for npc_id: String in data().npcs:
+			var lessons: Array = data().npcs[npc_id].get("lessons", [])
+			for i in lessons.size():
+				if String(lessons[i].get("effects", {}).get("learn_dish", "")) == dish_id:
+					teachers += 1
+					teacher_id = npc_id
+					index = i
+		assert_eq(teachers, 1, "%s has exactly one lesson" % dish_id)
+		assert_true(String(data().npcs[teacher_id].get("taught_dish_line", "")).contains("{dish}"), "%s has a dish line" % teacher_id)
+		var liked := false
+		for npc_id: String in data().npcs:
+			if npc_id != teacher_id and (data().npcs[npc_id].get("likes", []) as Array).has(dish_id):
+				liked = true
+		assert_true(liked, "%s is liked by another villager" % dish_id)
+		var c := new_character()
+		assert_false(Cooking.is_known(c, data(), dish_id))
+		var effects: Dictionary = data().npcs[teacher_id]["lessons"][index]["effects"]
+		Effects.apply(c, data(), effects, {})
+		assert_true(Cooking.is_known(c, data(), dish_id))
+		for item_id: Variant in Cooking.meal(data(), dish_id)["ingredients"]:
+			c.add_item(String(item_id), 3)
+		assert_true(Cooking.cook(c, data(), dish_id)["ok"])
+		assert_eq(c.item_count(dish_id), 1)
