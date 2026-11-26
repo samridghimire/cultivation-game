@@ -473,7 +473,7 @@ static func month_status(c: CharacterData, data: GameData, total_days: int, flag
 	for entry: Dictionary in options.slice(0, 3):
 		claimable.append(String(data.items.get(String(entry["item_id"]), {}).get("name", entry["item_id"])))
 	return {"duty": monthly_duty(c, data), "progress": duty_progress(c), "days_left": duty_days_left(c), "stipend": stipend(c, data),
-		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "missions_ready": ready, "missions_total": ids.size(), "blockers": blockers, "balance": balance, "claimable": claimable}
+		"lecture": lecture_text, "contest": contest_line(c, data, total_days), "contest_record": contest_record_line(c, data), "missions_ready": ready, "missions_total": ids.size(), "blockers": blockers, "balance": balance, "claimable": claimable}
 
 
 ## WU-622: why the listed missions are not ready, bucketed by their first blocker: {"rank": n, "realm": n, "items": n,
@@ -927,6 +927,21 @@ static func record_contest(c: CharacterData, rounds_won: int, rounds: int, total
 static func contest_record(c: CharacterData) -> Dictionary:
 	return {"best_round": int(c.contest_record.get("best_round", 0)), "wins": LifeStats.get_stat(c, "contest_wins"),
 		"last_year": int(c.contest_record.get("last_year", -1))}
+
+
+## WU-627: "Record: best round N of M, champion X times" once the player has entered a contest; "" before.
+static func contest_record_line(c: CharacterData, data: GameData) -> String:
+	var rec := contest_record(c)
+	if int(rec["best_round"]) <= 0:
+		return ""
+	var rounds := 0
+	while not contest_round(c, data, rounds).is_empty():
+		rounds += 1
+	var line := "Contest record: best round %d" % int(rec["best_round"])
+	if rounds > 0:
+		line += " of %d" % rounds
+	var wins := int(rec["wins"])
+	return line + ", champion %d time%s" % [wins, "" if wins == 1 else "s"] if wins > 0 else line
 
 
 ## SECT-048: "Won the <sect> contest in year N" for the latest full win; "" when none.

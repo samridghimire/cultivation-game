@@ -200,7 +200,7 @@ func _build_sect() -> void:
 	var names := Sects.ready_mission_names(p, GameState.data, GameState.world_flags)
 	for line in month_lines(status):
 		var met := line.begins_with("Duty:") and int(status["progress"]) >= int(status["duty"])
-		mbox.add_child(UIStyle.label(line, 15, MET_GREEN if met else Color.WHITE))
+		mbox.add_child(UIStyle.label(line, 15, MET_GREEN if met else (DIM if line.begins_with("Contest record:") else Color.WHITE)))
 		if line.begins_with("Missions:") and blockers_text(status) != "":
 			var bl := UIStyle.label("    " + blockers_text(status), 14, DIM)
 			bl.name = "MissionBlockers"
@@ -335,6 +335,8 @@ static func month_lines(status: Dictionary) -> PackedStringArray:
 		out.append("Lecture: %s" % String(status["lecture"]))
 	if String(status.get("contest", "")) != "":
 		out.append(String(status["contest"]))
+	if String(status.get("contest_record", "")) != "":
+		out.append(String(status["contest_record"]))
 	if int(status.get("missions_total", 0)) > 0:
 		out.append("Missions: %d of %d ready" % [int(status["missions_ready"]), int(status["missions_total"])])
 	return out

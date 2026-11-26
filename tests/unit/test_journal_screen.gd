@@ -225,3 +225,19 @@ func test_goal_box_row_and_no_duplicate_contribution() -> void:
 	c.sect["rank"] = 1
 	for g: Dictionary in JournalScreen.sect_goal_rows(c, d, {}):
 		assert_true(String(g.get("key", "")) != "contribution")
+
+
+## WU-627: the contest record line is absent before the first contest and present after.
+func test_contest_record_line() -> void:
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("Rec", d, seeded_rng(5))
+	c.realm_index = 1
+	Sects.join(c, d, "azure_cloud_sect")
+	assert_eq(Sects.contest_record_line(c, d), "")
+	Sects.record_contest(c, 2, 3, 100)
+	var line := Sects.contest_record_line(c, d)
+	assert_true(line.begins_with("Contest record: best round 2"), line)
+	assert_false(line.contains("champion"))
+	Sects.record_contest(c, 3, 3, 100)
+	assert_true(Sects.contest_record_line(c, d).ends_with("champion 1 time"))
+	assert_true("Contest record: x" in JournalScreen.month_lines({"duty": 0, "stipend": {}, "contest_record": "Contest record: x"}))
