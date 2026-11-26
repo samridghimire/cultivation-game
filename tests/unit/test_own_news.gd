@@ -92,3 +92,42 @@ func test_simulate_events_carry_kind() -> void:
 		if seen:
 			break
 	assert_true(seen, "Xiao Ling's qi_start event carries kind and realm")
+
+
+func test_congratulate_menu_first_while_pending_then_gone() -> void:  # WU-629
+	var c := _start()
+	var gs := _gs()
+	gs.npc_favor["xiao_ling"] = 50
+	FolkNews.queue_own(c, gs.data, gs.npc_favor, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	var menu: Node = load("res://src/world/interactables/npc.gd").new()
+	menu.npc_id = "xiao_ling"
+	assert_true(menu.own_news_waiting())
+	var options: Array[Dictionary] = menu.get_options()
+	assert_eq(String(options[0]["label"]), "Congratulate %s" % gs.npcs["xiao_ling"].name, "first while pending")
+	(options[0]["action"] as Callable).call()
+	assert_false(menu.own_news_waiting())
+	for o in menu.get_options():
+		assert_false(String(o["label"]).begins_with("Congratulate"), "gone after congratulating")
+	menu.free()
+	gs.end_session()
+
+
+func test_congratulate_first_keeps_order_when_not_pending() -> void:  # WU-629
+	var npc_script: GDScript = load("res://src/world/interactables/npc.gd")
+	var opts: Array[Dictionary] = [{"label": "Look"}, {"label": "Talk"}, {"label": "Congratulate X"}]
+	assert_eq(String(npc_script.congratulate_first(opts, "Congratulate X", false)[0]["label"]), "Look")
+	assert_eq(String(npc_script.congratulate_first(opts, "Congratulate X", true)[0]["label"]), "Congratulate X")
+
+
+func test_congratulate_opens_a_face_to_face_card() -> void:  # WU-629
+	var card := FriendSceneCard.new()
+	(Engine.get_main_loop() as SceneTree).root.add_child(card)
+	var c := _start()
+	card.open("xiao_ling", "Xiao Ling", "Thank you.", "", "", "", true)
+	assert_true(card.shows_player())
+	card.open("xiao_ling", "Xiao Ling", "Hello.")
+	assert_false(card.shows_player())
+	card.queue_free()
+	_gs().end_session()
+	assert_true(EmoteBubble.KINDS.has("own_news"))
+	assert_true(c != null)

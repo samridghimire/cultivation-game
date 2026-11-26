@@ -117,6 +117,8 @@ signal season_tasks_done(season: String, reward: String)
 signal season_board_requested
 ## FOLK-013: a friend scene played (for a card).
 signal friend_scene(npc_id: String, npc_name: String, text: String, gift_name: String, gift_id: String)
+## WU-629: the player congratulated a friend on their own news (a face-to-face card).
+signal friend_congratulated(npc_id: String, npc_name: String, text: String)
 ## GFX-092: an item was picked up or drawn by hand (egg, well water): the world floats "+1 <name>" above the player.
 signal pickup_noted(item_id: String, amount: int)
 ## WU-486: a villager reacts with an emote bubble; kind is "love", "happy" or "sweat".

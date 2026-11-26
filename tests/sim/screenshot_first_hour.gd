@@ -9,6 +9,7 @@ extends SceneTree
 ## WU-496: `-- --trophies` hangs three trophies at the Family Home.
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
+## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
@@ -480,6 +481,27 @@ func _start() -> void:
 			shots.append({"name": "news_talk", "open": func() -> void:
 				(hud.get("_friend_card") as Control).close()
 				gs.start_dialogue(nid), "close": func() -> void: pass})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-629: a friend's own pending news, then the congratulate card
+		if a.begins_with("--own-news="):
+			var oid := a.substr(11)
+			shots.append({"name": "own_news_bubble", "open": func() -> void:
+				hud.get("_banner").visible = false
+				gs.npc_favor[oid] = 60
+				(hud.get("_pending_moments") as Array).clear()
+				(hud.get("_pending_friend_scenes") as Array).clear()
+				(hud.get("_friend_card") as Control).close()
+				c.scene_day = int(Engine.get_main_loop().root.get_node("GameClock").total_days)
+				gs.current_region = String(gs.data.npcs[oid].get("region", "qingshi_village"))
+				c.friend_news[oid] = {"kind": "qi_start", "realm": "Qi Refining", "day": int(Engine.get_main_loop().root.get_node("GameClock").total_days), "told": false}
+				Engine.get_main_loop().root.get_node("EventBus").player_changed.emit()
+				(hud.get("_pending_friend_scenes") as Array).clear()
+				(hud.get("_friend_card") as Control).call_deferred("close")
+				hud.call_deferred("_update_modal"), "close": func() -> void: pass})
+			shots.append({"name": "own_news_card", "open": func() -> void:
+				(hud.get("_pending_friend_scenes") as Array).clear()
+				(hud.get("_friend_card") as Control).close()
+				gs.congratulate(oid), "close": func() -> void: (hud.get("_friend_card") as Control).call("close")})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-609: the staged promotion trial card
 		if a.begins_with("--sect-trial="):

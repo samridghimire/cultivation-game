@@ -10,6 +10,7 @@ const WRAP_WIDTH := 400
 const ZOOM := 5
 
 var _portrait: PortraitBox
+var _player_portrait: PortraitBox  ## WU-629: the player, facing the villager, on a congratulate card
 var _name: Label
 var _text: Label
 var _gift: Label
@@ -58,11 +59,17 @@ func _init() -> void:
 	box.add_child(_learned)
 	_button = UIStyle.button("Close", close)
 	box.add_child(_button)
+	_player_portrait = PortraitBox.new(ZOOM)
+	row.add_child(_player_portrait)
 
 
 ## `npc_id` picks the figure's look ("" = a plain villager).
-func open(npc_id: String, npc_name: String, text: String, gift_name: String = "", gift_id: String = "", learned: String = "") -> void:
-	_portrait.set_portrait(PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("9a8f7a")), "down", 0))
+func open(npc_id: String, npc_name: String, text: String, gift_name: String = "", gift_id: String = "", learned: String = "", face_player: bool = false) -> void:
+	_portrait.set_portrait(PixelFigure.frame(NPC_SCRIPT.look_of(npc_id, Color("9a8f7a")), "right" if face_player else "down", 0))
+	if face_player and GameState.player != null and GameState.data != null:
+		_player_portrait.set_portrait(PixelFigure.frame(PlayerLook.of(GameState.player, GameState.data), "left", 0))
+	else:
+		_player_portrait.set_portrait(null)
 	_name.text = npc_name
 	_text.text = text
 	_gift.text = "They give you %s." % gift_name if gift_name != "" else ""
@@ -104,6 +111,11 @@ func has_gift_icon() -> bool:
 ## The gold "You learned: ..." line, or "" when hidden (WU-479 test).
 func learned_text() -> String:
 	return _learned.text if _learned.visible else ""
+
+
+## True when the player's face shows opposite the villager (WU-629 test).
+func shows_player() -> bool:
+	return _player_portrait.visible
 
 
 func scene_text() -> String:

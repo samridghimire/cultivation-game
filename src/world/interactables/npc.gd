@@ -330,13 +330,31 @@ func news_waiting() -> bool:
 	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id)  # FOLK-050 also covers their own news
 
 
+## WU-629: their own good news is pending (a rising star instead of the news banner).
+func own_news_waiting() -> bool:
+	return GameState.player != null and FolkNews.has_own(GameState.player, GameState.data, npc_id, GameClock.total_days)
+
+
+## WU-629: pure: the options list with "Congratulate" moved to the front while their news is pending.
+static func congratulate_first(options: Array[Dictionary], label: String, pending: bool) -> Array[Dictionary]:
+	if not pending:
+		return options
+	var out: Array[Dictionary] = []
+	for o in options:
+		if o.get("label", "") == label:
+			out.push_front(o)
+		else:
+			out.append(o)
+	return out
+
+
 ## WU-486: keep the persistent "!" bubble in step with lesson_waiting() (hidden while a modal is open).
 func refresh_lesson_bubble() -> void:
 	if not is_inside_tree():
 		return
 	var news := news_waiting()
 	var want := not _modal_open and (news or lesson_waiting())
-	var kind := "news" if news else "lesson"
+	var kind := "own_news" if own_news_waiting() else ("news" if news else "lesson")  # WU-629
 	if _lesson_bubble != null and is_instance_valid(_lesson_bubble) and _lesson_bubble.kind != kind:
 		_lesson_bubble.queue_free()
 		_lesson_bubble = null
@@ -799,6 +817,7 @@ func get_options() -> Array[Dictionary]:
 	if _child_mode == "give":
 		return _give_options()
 	var options: Array[Dictionary] = []
+	var own_pending := own_news_waiting()  # WU-629: read before the talk entries (which hear the news) run
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	options.append({"label": "Look", "action": _look, "keep_open": true})
 	if GameState.has_dialogue(npc_id):
@@ -823,6 +842,8 @@ func get_options() -> Array[Dictionary]:
 	options.append_array(_adoption_options())
 	options.append_array(_courtship_options())
 	options.append_array(_karma_options())
+	if own_pending and GameState.npcs.has(npc_id):  # WU-629: congratulate comes first while it is pending
+		return congratulate_first(options, "Congratulate %s" % String(GameState.npcs[npc_id].name), true)
 	return options
 
 

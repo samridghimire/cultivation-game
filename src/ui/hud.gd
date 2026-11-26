@@ -363,6 +363,7 @@ func _ready() -> void:
 	add_child(UIStyle.centered(_season_board))
 	EventBus.contest_finished.connect(_on_contest_finished)
 	EventBus.friend_scene.connect(_on_friend_scene)
+	EventBus.friend_congratulated.connect(_on_friend_congratulated)  # WU-629
 	EventBus.friend_tended.connect(_on_friend_tended)
 	EventBus.friend_gift_left.connect(_on_friend_gift_left)
 	EventBus.lesson_taught.connect(_on_lesson_taught)
@@ -2570,6 +2571,11 @@ func _on_friend_scene(npc_id: String, npc_name: String, text: String, gift_name:
 	_queue_friend_card([npc_id, npc_name, text, gift_name, gift_id, ""])
 
 
+## WU-629: the congratulate reply, face to face.
+func _on_friend_congratulated(npc_id: String, npc_name: String, text: String) -> void:
+	_queue_friend_card([npc_id, npc_name, text, "", "", "", true])
+
+
 ## WU-479: a friend's lesson shows on the same card, queued exactly like a scene.
 func _on_lesson_taught(npc_id: String, npc_name: String, text: String, effect_line: String) -> void:
 	_queue_friend_card([npc_id, npc_name, text, "", "", effect_line])
@@ -2600,7 +2606,7 @@ func _flush_friend_scenes() -> void:
 		_pending_friend_scenes.clear()
 		return
 	var scene: Array = _pending_friend_scenes.pop_front()
-	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "", String(scene[5]) if scene.size() > 5 else "")
+	_friend_card.open(String(scene[0]), String(scene[1]), String(scene[2]), String(scene[3]), String(scene[4]) if scene.size() > 4 else "", String(scene[5]) if scene.size() > 5 else "", scene.size() > 6 and bool(scene[6]))
 	_update_modal()
 
 

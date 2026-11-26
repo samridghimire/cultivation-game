@@ -6,7 +6,7 @@ extends Node2D
 
 const SIZE := 16
 const RISE := 4.0
-const KINDS: PackedStringArray = ["love", "happy", "sweat", "lesson", "news"]
+const KINDS: PackedStringArray = ["love", "happy", "sweat", "lesson", "news", "own_news"]
 
 var kind := "love"
 ## Seconds the bubble shows; 0 or less = persistent (the "!" lesson bubble).
@@ -88,6 +88,13 @@ func _draw() -> void:
 			draw_rect(Rect2(o + Vector2(5, 7), Vector2(3, 1)), red2)
 			draw_rect(Rect2(o + Vector2(9, 7), Vector2(3, 1)), red2)
 			draw_rect(Rect2(o + Vector2(7, 4), Vector2(3, 1)), white)
+		"own_news":  # WU-629: a small rising star, a friend's own good news
+			var star := Color("e9b824")
+			draw_rect(Rect2(o + Vector2(7, 2), Vector2(2, 9)), star)
+			draw_rect(Rect2(o + Vector2(4, 5), Vector2(8, 2)), star)
+			draw_rect(Rect2(o + Vector2(5, 3), Vector2(1, 1)), star)
+			draw_rect(Rect2(o + Vector2(10, 3), Vector2(1, 1)), star)
+			draw_rect(Rect2(o + Vector2(7, 4), Vector2(2, 2)), white)
 		_:  # lesson: "!"
 			var gold2 := Color("c9871a")
 			draw_rect(Rect2(o + Vector2(7, 2), Vector2(2, 5)), gold2)
