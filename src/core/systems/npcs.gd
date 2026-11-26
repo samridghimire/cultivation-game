@@ -727,6 +727,56 @@ static func spread_stands(stands: Array[Vector2], region: Dictionary) -> Array[V
 	return out
 
 
+## WU-625: a stand's name-label rect (adult figure 28 px tall), as Interactable.label_rect lays it out.
+static func stand_label_rect(stand: Vector2, label_size: Vector2) -> Rect2:
+	return Rect2(stand + Vector2(-label_size.x / 2.0, -14.0 - 8.0 - label_size.y * 0.8), label_size)
+
+
+## WU-625: true when a label at `stand` would cover the head of a figure at any of `figures` (other than itself)
+## or the player's body at `player_pos` (Vector2.ZERO = no player).
+static func label_collides(stand: Vector2, label_size: Vector2, figures: Array[Vector2], player_pos: Vector2, blockers: Array[Rect2] = []) -> bool:
+	var rect := stand_label_rect(stand, label_size)
+	for b in blockers:
+		if rect.intersects(b):
+			return true
+	for q in figures:
+		if q != stand and rect.intersects(Rect2(q.x - 8.0, q.y - 14.0, 16.0, 16.0)):
+			return true
+	return player_pos != Vector2.ZERO and rect.intersects(Rect2(player_pos.x - 12.0, player_pos.y - 22.0, 24.0, 34.0))
+
+
+## WU-625: placement rule for generated villagers: a stand whose name label would cover another figure's head
+## (`figures`: named villagers, other stands) or the player's body moves to the nearest free spot (24-96 px away in
+## 8 directions; `ok` rejects a candidate, e.g. off walkable ground). Deterministic, no rng; a clear layout comes
+## out unchanged. `label_sizes` has one size per stand; `blockers` are rects (place labels, props) no label may cover.
+static func clear_label_overlaps(stands: Array[Vector2], figures: Array[Vector2], label_sizes: Array[Vector2], player_pos: Vector2 = Vector2.ZERO, ok: Callable = Callable(), blockers: Array[Rect2] = []) -> Array[Vector2]:
+	var everyone: Array[Vector2] = figures.duplicate()
+	everyone.append_array(stands)
+	var base := figures.size()
+	for i in stands.size():
+		var size := label_sizes[i] if i < label_sizes.size() else Vector2(120, 14)
+		if not label_collides(everyone[base + i], size, everyone, player_pos, blockers):
+			continue
+		var origin := everyone[base + i]
+		var done := false
+		for r in range(1, 5):
+			for k in 8:
+				var cand := origin + Vector2.from_angle(TAU * float(k) / 8.0) * (24.0 * float(r))
+				if ok.is_valid() and not bool(ok.call(cand)):
+					continue
+				everyone[base + i] = cand
+				if not label_collides(cand, size, everyone, player_pos, blockers):
+					done = true
+					break
+			if done:
+				break
+		if not done:
+			everyone[base + i] = origin
+	var out: Array[Vector2] = []
+	out.assign(everyone.slice(base))
+	return out
+
+
 ## True when `pos` is outside every place keepout except `own`'s.
 static func stop_is_clear_except(pos: Vector2, region: Dictionary, own: Dictionary) -> bool:
 	for p: Dictionary in region.get("places", []):

@@ -103,7 +103,7 @@
   "home": {"visit_days": 7, "visit_favor": 4, "max_child_favor": 100, "move_days": 5},
   "sect_entry": {"min_age_years": 12, "days": 2, "clan_youth_chance": 0.5},
   "acquaintance": {"chat_days": 3, "chat_favor": 2, "charisma_step": 4, "chat_max_favor": 30, "gift_days": 0, "gift_price_per_favor": 10, "gift_max_per_item": 10, "gift_max_favor": 50, "birthday_max_favor": 90, "birthday_min_gain": 10, "gift_like_mult": 2.0, "gift_dislike_favor": -3, "taste_hint_favor": 20},
-  "lend_a_hand": {"days": 1, "cooldown_days": 7, "favor": 4, "max_favor": 45, "verbs": {"sweep": "sweeping the yard", "hoe": "turning the soil", "fish": "mending nets and fishing", "read": "sorting scrolls", "hawk": "minding the stall", "chop": "splitting firewood", "sit": "keeping them company", "": "with their chores"}, "yields": {"hoe": {"item": "millet", "count": 1}, "fish": {"item": "silver_carp", "count": 1}}},
+  "lend_a_hand": {"days": 1, "cooldown_days": 7, "favor": 4, "max_favor": 45, "verbs": {"sweep": "sweeping the yard", "hoe": "turning the soil", "fish": "mending nets and fishing", "read": "sorting scrolls", "hawk": "minding the stall", "chop": "splitting firewood", "sit": "keeping them company", "": "with their chores"}, "yields": {"hoe": {"item": "millet", "count": 1}, "fish": {"item": "silver_carp", "count": 1}, "chop": {"item": "firewood", "count": 1}}},
   "courtship": {"min_favor": 20, "favor_gain": 6, "charisma_step": 2, "days": 7},
   "proposal": {"min_favor": 60, "max_realm_gap": 1, "max_alignment_gap": 600, "days": 1},
   "concubine_rank": "concubine",

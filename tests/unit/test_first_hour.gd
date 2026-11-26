@@ -202,7 +202,13 @@ func test_hints_player_acts_on_next_steps() -> void:
 	saves.autosave_enabled = autosave
 	assert_eq(int(FirstHour.hints_log["weeks"]), 8, "four weekly steps a month")
 	var acted: Dictionary = FirstHour.hints_log["acted"]
-	assert_true(acted.has("talk"), "the first Next-steps line sends the newcomer to Elder Mo")
+	# WU-625: with more friends to lend to the first lines are kindnesses ("lend Elder Mo a hand" included), so the newcomer
+	# reaches Elder Mo either by talking to him or by lending him a hand.
+	var mo_lines := 0
+	for line: String in (FirstHour.hints_log.get("acted_lines", {}) as Dictionary).keys():
+		if line.contains("Elder Mo"):
+			mo_lines += 1
+	assert_true(acted.has("talk") or mo_lines > 0, "the Next-steps lines send the newcomer to Elder Mo in the first two months")
 	assert_true(int(out["month_days"][1]) > int(out["month_days"][0]), "time passes every month")
 
 

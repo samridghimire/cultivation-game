@@ -82,3 +82,25 @@ func test_haunt_places_report_the_overflow_place_and_keep_shared() -> void:
 	var shared_place: Dictionary = Npcs.haunt_place(people[0], region, 1, true)
 	var got := Npcs.haunt_places(people, region, 1, 16, "", "", {}, {people[5].id: shared_place})
 	assert_eq(got[people[5].id], shared_place)
+
+
+## WU-625: a stand whose label would cover another figure's head moves clear; a clear layout is unchanged.
+func test_clear_label_overlaps_separates_colliding_labels() -> void:
+	var sz: Array[Vector2] = [Vector2(100, 20), Vector2(100, 20)]
+	# stand 0's label (above it) covers stand 1's head, which is straight above it
+	var stands: Array[Vector2] = [Vector2(500, 500), Vector2(500, 470)]
+	var none: Array[Vector2] = []
+	var out := Npcs.clear_label_overlaps(stands, none, sz)
+	assert_true(not Npcs.label_collides(out[0], sz[0], [out[0], out[1]] as Array[Vector2], Vector2.ZERO))
+	assert_true(not Npcs.label_collides(out[1], sz[1], [out[0], out[1]] as Array[Vector2], Vector2.ZERO))
+	var far: Array[Vector2] = [Vector2(100, 100), Vector2(600, 600)]
+	assert_eq(Npcs.clear_label_overlaps(far, none, sz), far)
+
+
+func test_clear_label_overlaps_keeps_off_the_player() -> void:
+	var sz: Array[Vector2] = [Vector2(100, 20)]
+	var stands: Array[Vector2] = [Vector2(500, 500)]
+	var player := Vector2(500, 470)  # body sits under the label
+	var out := Npcs.clear_label_overlaps(stands, [] as Array[Vector2], sz, player)
+	assert_true(out[0] != stands[0])
+	assert_true(not Npcs.label_collides(out[0], sz[0], out, player))

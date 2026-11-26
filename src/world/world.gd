@@ -1177,6 +1177,7 @@ func _build_generated_npcs() -> void:
 			crowd = Folk.festival_ring(centre as Vector2 - Vector2(0, 20), mini(neighbours.size(), FestivalContest.CROWD_MAX), blockers, [player.position] as Array[Vector2])
 		for k in crowd.size():
 			stands[neighbours[k].id] = crowd[k]
+	_clear_generated_labels(neighbours, stands)  # WU-625
 	for i in people.size():
 		var c := people[i]
 		var node: Interactable = NPC_SCRIPT.new()
@@ -1194,6 +1195,34 @@ func _build_generated_npcs() -> void:
 		add_child(node)
 		move_child(node, player.get_index())
 	_build_celebration_lanterns(people, stands)
+
+
+## WU-625: a neighbour whose name label would cover another figure's head or the player moves to the nearest free,
+## walkable spot (Npcs.clear_label_overlaps). Only the daily-round stands move; ids and saves are untouched.
+func _clear_generated_labels(neighbours: Array[CharacterData], stands: Dictionary) -> void:
+	var ids: Array[String] = []
+	var list: Array[Vector2] = []
+	var sizes: Array[Vector2] = []
+	for c in neighbours:
+		if stands.has(c.id):
+			ids.append(c.id)
+			list.append(stands[c.id])
+			var title := "%s (%s)" % [c.name, Npcs.world_title(c, GameState.player, GameState.data)]
+			sizes.append(Interactable.label_text_size(title))
+	var figures: Array[Vector2] = []
+	var blockers: Array[Rect2] = []
+	for n in get_children():
+		if n is Interactable:
+			if n.is_person():
+				figures.append(n.position)
+			elif n.label_text() != "":
+				blockers.append(n.label_rect(n.label_text()))
+	var region := _region
+	var ok := func(p: Vector2) -> bool:
+		return SectCourt.settle_stand(p, region, false) == p and Npcs.stop_is_clear(p, region) and Rect2(Vector2(16, 16), map_size - Vector2(32, 32)).has_point(p)
+	var moved := Npcs.clear_label_overlaps(list, figures, sizes, player.position, ok, blockers)
+	for i in ids.size():
+		stands[ids[i]] = moved[i]
 
 
 ## GFX-023: strings of lanterns near the haunt of the first villager whose celebration is open here.

@@ -405,3 +405,18 @@ func test_sworn_tend_and_likes_text() -> void:
 	assert_eq(Folk.birthday_card_line(e, false), "Birthday in 290 days")
 	e["birthday_in"] = 10
 	assert_eq(Folk.birthday_card_line(e, false), "Birthday in 10 days: a liked gift counts double")
+
+
+## C-405: the pond fisher works the jetty; splitting wood with Hunter Ma yields firewood.
+func test_pond_fisher_and_firewood() -> void:
+	var d := data()
+	assert_eq(String(Folk.lend_yield(d, "hunter_ma")["item"]), "firewood")
+	assert_eq(int(Folk.lend_yield(d, "hunter_ma")["count"]), 1)
+	var fisher: Dictionary = d.npcs["fisher_pei"]
+	assert_eq(String(fisher["activity"]), "fish")
+	var spot: Dictionary = Folk.spot_for(d, fisher, 3, "clear", [])
+	assert_true(spot["why"] == "work" or spot["why"] == "rest" or spot["why"] == "market")
+	var jetty := Vector2(680, 288)
+	assert_true((fisher["spots"]["work"] as Array).size() == 2)
+	var w := Vector2(float(fisher["spots"]["work"][0]), float(fisher["spots"]["work"][1]))
+	assert_true(w.distance_to(jetty) < 80.0, "work spot is on the jetty")
