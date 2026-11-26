@@ -271,7 +271,7 @@ static func ensure_all(npcs: Dictionary, data: GameData, rng: RandomNumberGenera
 ## Lives `days` for every NPC, then their family life (NpcFamilies: marriages,
 ## children; NPCs in `reserved` never marry off-screen). Returns notable events
 ## as [{npc_id, text, category}] (family events also carry a "kind").
-static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}, flags: Dictionary = {}) -> Array[Dictionary]:
+static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNumberGenerator, reserved: Dictionary = {}, flags: Dictionary = {}, holds: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	# One base draw per call, then a stream per NPC (hash of base + id), so
 	# adding an NPC to the data does not shift anyone else's dice.
@@ -287,7 +287,7 @@ static func simulate(npcs: Dictionary, data: GameData, days: int, rng: RandomNum
 		while remaining > 0 and c.alive:
 			var step := mini(remaining, STEP_DAYS)
 			remaining -= step
-			_live(c, data, step, npc_rng, events, flags)
+			_live(c, data, step, npc_rng, events, flags, holds)
 	events.append_array(NpcFamilies.simulate(npcs, data, days, rng, reserved))
 	return events
 
@@ -304,7 +304,7 @@ static func die(c: CharacterData, cause: String) -> bool:
 	return true
 
 
-static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary], flags: Dictionary = {}) -> void:
+static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumberGenerator, events: Array[Dictionary], flags: Dictionary = {}, holds: Dictionary = {}) -> void:
 	c.age_days += days
 	if c.age_years() >= Cultivation.lifespan_years(c, data):
 		var text := "News arrives: %s has died of old age at %d." % [c.name, c.age_years()]
@@ -322,6 +322,16 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 		return
 	Cultivation.cultivate(c, data, days, Exploration.qi_density(data, region_of(c, data), flags) * diligence_of(c, data) * Sects.cultivation_bonus(c, data))
 	if Cultivation.can_attempt_breakthrough(c, data):
+		# FOLK-054: a friend of the player waits at the gate of a realm that has an aid item, and asks once.
+		var wait_days := int(FriendAid.rules(data).get("expire_days", 60))
+		if c.aid_bonus <= 0.0 and c.aid_wait < wait_days and (c.aid_wait > 0 or (holds.has(c.id) and FriendAid.item_for(data, c) != "")):
+			if c.aid_wait == 0:
+				events.append({"npc_id": c.id, "text": "%s stands at the gate of %s." % [c.name, data.realms[c.realm_index + 1].name], "category": "info", "kind": "aid_ask", "realm": data.realms[c.realm_index + 1].name})
+			c.aid_wait += days
+			return
+		c.aid_wait = 0
+		c.breakthrough_bonus += c.aid_bonus
+		c.aid_bonus = 0.0
 		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
 		if result["died"]:
 			var text := "Heaven's lightning falls: %s perished in the tribulation of %s." % [c.name, result["realm_name"]]

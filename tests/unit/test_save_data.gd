@@ -101,6 +101,9 @@ func test_every_character_field_survives_a_save() -> void:
 	c.folk_news = {"npc_test_friend": "promotion"}
 	c.friend_news = {"npc_test_friend": {"kind": "qi_start", "realm": "Qi Refining", "day": 5, "told": false}}
 	c.friend_news_realm = {"npc_test_friend": 1}
+	c.friend_aid = {"npc_test_friend": {"realm": 2, "item": "foundation_establishment_pill", "day": 7}}
+	c.aid_bonus = 0.15
+	c.aid_wait = 30
 	c.contest_record = {"outer": {"best_round": 2, "last_year": 3, "sect": "azure_cloud_sect"}}
 	c.contest_years = {"outer": 3, "inner": 4}
 	c.lessons_taught = {"hunter_ma:0": 12}

@@ -187,6 +187,11 @@ var folk_news: Dictionary = {}
 var friend_news: Dictionary = {}
 ## FOLK-053: npc_id -> realm_index last known to the player (see FolkNews.catch_up).
 var friend_news_realm: Dictionary = {}
+## FOLK-054: open requests from friends at their gate, npc_id -> {realm, item, day} (FriendAid).
+var friend_aid: Dictionary = {}
+## FOLK-054 (NPCs): one-use breakthrough odds from the player's aid, and days spent waiting at the gate.
+var aid_bonus: float = 0.0
+var aid_wait: int = 0
 var lessons_taught: Dictionary = {}  # FOLK-020: "<npc_id>:<index>" -> day
 ## Friend scenes already shown (FOLK-013) and the day the last one played.
 var scenes_seen: Array[String] = []
@@ -375,6 +380,9 @@ func to_dict() -> Dictionary:
 		"folk_news": folk_news.duplicate(),
 		"friend_news": friend_news.duplicate(true),
 		"friend_news_realm": friend_news_realm.duplicate(),
+		"friend_aid": friend_aid.duplicate(true),
+		"aid_bonus": aid_bonus,
+		"aid_wait": aid_wait,
 		"lessons_taught": lessons_taught.duplicate(),
 		"scenes_seen": scenes_seen.duplicate(),
 		"scene_day": scene_day,
@@ -587,6 +595,13 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			var e: Dictionary = fn[id]
 			c.friend_news[id] = {"kind": String(e.get("kind", "")), "realm": String(e.get("realm", "")), "day": int(e.get("day", 0)), "told": bool(e.get("told", false))}
 	c.friend_news_realm = _int_values(d.get("friend_news_realm", {}))
+	var fa: Variant = d.get("friend_aid", {})
+	if fa is Dictionary:
+		for id: String in fa:
+			var ae: Dictionary = fa[id]
+			c.friend_aid[id] = {"realm": int(ae.get("realm", 0)), "item": String(ae.get("item", "")), "day": int(ae.get("day", 0))}
+	c.aid_bonus = float(d.get("aid_bonus", 0.0))
+	c.aid_wait = int(d.get("aid_wait", 0))
 	c.lessons_taught = _int_values(d.get("lessons_taught", {}))
 	for sid in d.get("scenes_seen", []):
 		c.scenes_seen.append(String(sid))

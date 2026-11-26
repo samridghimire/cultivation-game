@@ -6087,6 +6087,8 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 	_other_region_event_entries(out, c, data, today, region_id, events)
 	_festival_entries(out, data, today, region_id, events, flags)
 	_opportunity_entries(out, c, data, flags, today, region_id)
+	for row in FriendAid.journal_rows(c, data, people, today):  # FOLK-054
+		_add(out, "Opportunities", "%s (%s)" % [row["text"], _region_name(data, String(row["region"]))], "normal")
 	for row in FolkNews.journal_rows(c, data, people, today):  # GUIDE-293
 		_add(out, "Opportunities", "%s (%s)" % [row["text"], _region_name(data, String(row["region"]))], "normal")
 	_fair_fight_entries(out, fights, c, data, region_id, today, flags)

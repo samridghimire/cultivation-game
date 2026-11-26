@@ -2617,6 +2617,29 @@ func call_on(npc_id: String) -> void:
 	_pass_time(int(rules.get("days", 1)), "Tea")
 
 
+## FOLK-054: true while `npc_id` waits at their gate and you hold the item they asked for.
+func can_give_aid(npc_id: String) -> bool:
+	return player != null and npcs.has(npc_id) and FriendAid.give_block(player, data, npcs[npc_id], GameClock.total_days) == ""
+
+
+## FOLK-054: give a friend the item they asked for; no time passes. Favor now, better breakthrough odds later.
+func give_friend_aid(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act() or not npcs.has(npc_id):
+		return
+	var npc: CharacterData = npcs[npc_id]
+	var block := FriendAid.give_block(player, data, npc, GameClock.total_days)
+	if block != "":
+		EventBus.post(block, "warning")
+		return
+	var item_name := String(data.items.get(String(player.friend_aid[npc_id]["item"]), {}).get("name", "the item"))
+	var gain := FriendAid.give(player, data, npc, GameClock.total_days)
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
+	EventBus.post("You give %s the %s. %s bows deeply. (%s)" % [npc.name, item_name, npc.name, _favor_text(npc_id)], "progress")
+	EventBus.npc_reaction.emit(npc_id, "happy")
+	EventBus.player_changed.emit()
+
+
 ## FOLK-050: true while `npc_id`'s own news can still be congratulated.
 func can_congratulate(npc_id: String) -> bool:
 	return player != null and FolkNews.can_congratulate(player, data, npc_id, GameClock.total_days)
@@ -5688,7 +5711,13 @@ func _on_days_advanced(days: int) -> void:
 	var reserved := npc_favor.duplicate()
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
-	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags):
+	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags, FriendAid.hold_ids(npcs, data, npc_favor, world_flags, GameClock.total_days)):
+		if String(event.get("kind", "")) == "aid_ask":  # FOLK-054
+			var asker: CharacterData = npcs[String(event["npc_id"])]
+			var wanted := FriendAid.open_ask(player, data, asker, world_flags, GameClock.total_days)
+			if wanted != "":
+				EventBus.post("%s stands at the gate of %s and needs a %s. Give it to them within %d days." % [asker.name, String(event.get("realm", "a new realm")), String(data.items.get(wanted, {}).get("name", wanted)), int(FriendAid.rules(data).get("expire_days", 60))], "info")
+			continue
 		var party := _celebration_for(event)
 		if party["kind"] != "":
 			Folk.start_celebration(world_flags, party["ids"], GameClock.total_days, data, party["kind"])
@@ -5712,6 +5741,7 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.friend_rose.emit(rose_id, rose_kind, rose_realm)
 		EventBus.post(("%s has begun Qi Refining." if rose_kind == "qi_start" else "%s has broken through.") % rose.name + " Visit to congratulate %s." % rose.name, "info")
 	FolkNews.prune_own(player, data, GameClock.total_days)
+	FriendAid.prune(player, data, npcs, GameClock.total_days)  # FOLK-054
 	Guidance.note_trial_prep(player, data, GameClock.total_days, world_flags)  # SECT-053
 	_rival_news()
 	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).
