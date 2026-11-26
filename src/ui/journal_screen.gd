@@ -189,10 +189,7 @@ func _build_sect() -> void:
 		gpanel.add_child(gbox)
 		gbox.add_child(UIStyle.label(sect_goals_heading(p, GameState.data), 18, UIStyle.ACCENT))
 		for g: Dictionary in goal_rows:
-			var gl := UIStyle.label("%s %s" % ["[x]" if bool(g["done"]) else "[ ]", String(g["text"])], 15, DIM if bool(g["done"]) else Color.WHITE)
-			gl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			gl.custom_minimum_size = Vector2(700, 0)
-			gbox.add_child(gl)
+			gbox.add_child(goal_box_row(bool(g["done"]), String(g["text"]), DIM if bool(g["done"]) else Color.WHITE, 680))
 		_sect.add_child(gpanel)
 	var month := UIStyle.panel()
 	month.name = "SectMonth"
@@ -248,7 +245,6 @@ func _build_sect() -> void:
 			text += "  (you)"
 			col = color
 		elif bool(r["reached"]):
-			text = "[x] " + text
 			col = DIM
 		else:
 			if needs != "":
@@ -256,10 +252,13 @@ func _build_sect() -> void:
 			if not seen_next:
 				seen_next = true
 				text = "Next: " + text
-		var l := UIStyle.label(text, 15, col)
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size = Vector2(700, 0)
-		lbox.add_child(l)
+		if bool(r["reached"]) and not bool(r["current"]):
+			lbox.add_child(goal_box_row(true, String(r["name"]), col, 680))
+		else:
+			var l := UIStyle.label(text, 15, col)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.custom_minimum_size = Vector2(700, 0)
+			lbox.add_child(l)
 		if bool(r["current"]) or seen_next and text.begins_with("Next: "):
 			var perks := ", ".join(r["perks"] as PackedStringArray)
 			if perks != "":
@@ -275,7 +274,31 @@ func _build_sect() -> void:
 static func sect_goal_rows(c: CharacterData, data: GameData, flags: Dictionary) -> Array[Dictionary]:
 	if c.is_rogue() or not data.sects.has(c.sect["id"]) or int(c.sect["rank"]) < 1:
 		return []
-	return Guidance.sect_goals(c, data, flags)
+	var out: Array[Dictionary] = []
+	var has_bar := not Sects.rank_progress(c, data).is_empty()
+	for g: Dictionary in Guidance.sect_goals(c, data, flags):
+		if has_bar and String(g.get("key", "")) == "contribution":  # the header's bar already shows it
+			continue
+		out.append(g)
+	return out
+
+
+## GFX-257: one goal row, a drawn tick box then the wrapped text. The box carries `done` for tests.
+static func goal_box_row(done: bool, text: String, color: Color = Color.WHITE, width: int = 0) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var box := CheckBox_pixel.new(done)
+	box.name = "GoalBox"
+	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(box)
+	var l := UIStyle.label(text, 15, color)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if width > 0:
+		l.custom_minimum_size = Vector2(width, 0)
+	else:
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	return row
 
 
 ## WU-618: "Rise to Inner Disciple" for the heading over sect_goal_rows.

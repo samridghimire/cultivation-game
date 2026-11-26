@@ -207,3 +207,21 @@ func test_mission_blockers_buckets() -> void:
 func test_duty_line_text() -> void:
 	var lines := JournalScreen.month_lines({"duty": 30, "progress": 12, "days_left": 9, "stipend": {}})
 	assert_eq(lines[0], "Duty: 12 / 30 contribution, 9 days left")
+
+
+## GFX-257: goal rows draw a tick box with the done state; the contribution row hides under the rank bar.
+func test_goal_box_row_and_no_duplicate_contribution() -> void:
+	var done_row := JournalScreen.goal_box_row(true, "Done thing")
+	var open_row := JournalScreen.goal_box_row(false, "Open thing")
+	assert_true(done_row.get_node("GoalBox").done)
+	assert_false(open_row.get_node("GoalBox").done)
+	done_row.free()
+	open_row.free()
+	var d := GameData.load_from_dir()
+	var c := CharacterFactory.create("Ticks", d, seeded_rng(3))
+	c.realm_index = 1
+	c.alignment = 50
+	Sects.join(c, d, "azure_cloud_sect")
+	c.sect["rank"] = 1
+	for g: Dictionary in JournalScreen.sect_goal_rows(c, d, {}):
+		assert_true(String(g.get("key", "")) != "contribution")
