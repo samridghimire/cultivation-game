@@ -327,7 +327,7 @@ func lesson_waiting() -> bool:
 
 ## GFX-249: this villager holds a pending FOLK-046 news reaction (cleared by the talk that plays it).
 func news_waiting() -> bool:
-	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id)  # FOLK-050 also covers their own news
+	return GameState.player != null and FolkNews.has_pending(GameState.player, npc_id, GameState.data, GameClock.total_days)  # FOLK-050 also covers their own news
 
 
 ## WU-629: their own good news is pending (a rising star instead of the news banner).

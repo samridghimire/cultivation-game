@@ -30,9 +30,11 @@ static func queue(player: CharacterData, data: GameData, favor: Dictionary, kind
 
 
 ## GFX-249: true while `npc_id` holds a pending news reaction (the world shows a bubble over them).
-static func has_pending(player: CharacterData, npc_id: String) -> bool:
+## FOLK-051: pass `data` and `day` (>= 0) so an expired, not yet pruned own-news entry shows no bubble.
+static func has_pending(player: CharacterData, npc_id: String, data: GameData = null, day: int = -1) -> bool:
 	if player != null and npc_id != "" and player.friend_news.has(npc_id) and not bool(player.friend_news[npc_id].get("told", false)):
-		return true  # FOLK-050: their own news waits to be heard
+		if day < 0 or data == null or not _expired(player, data, npc_id, day):
+			return true  # FOLK-050: their own news waits to be heard
 	if player == null or npc_id == "" or not player.folk_news.has(npc_id):
 		return false
 	if SECT_KINDS.has(String(player.folk_news[npc_id])):
@@ -91,12 +93,17 @@ static func queue_own(player: CharacterData, data: GameData, favor: Dictionary, 
 	return true
 
 
+## Pure: their own entry is older than own_days (no erasing).
+static func _expired(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
+	var own_days: int = int(data.family.get("folk_news", {}).get("own_days", 30))
+	return day - int(player.friend_news[npc_id].get("day", 0)) > own_days
+
+
 ## True while their own news is fresh (not older than own_days); expired entries are dropped.
 static func _fresh(player: CharacterData, data: GameData, npc_id: String, day: int) -> bool:
 	if player == null or not player.friend_news.has(npc_id):
 		return false
-	var own_days: int = int(data.family.get("folk_news", {}).get("own_days", 30))
-	if day - int(player.friend_news[npc_id].get("day", 0)) > own_days:
+	if _expired(player, data, npc_id, day):
 		player.friend_news.erase(npc_id)
 		return false
 	return true

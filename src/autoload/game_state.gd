@@ -2781,7 +2781,8 @@ func give_gift(npc_id: String, item_id: String) -> void:
 	var before := _rival_attitude()
 	npc_favor[npc_id] = clampi(favor + gain, 0, 100)
 	if taste > 0:  # FOLK-050: a liked gift while their news is pending also congratulates
-		npc_favor[npc_id] = clampi(int(npc_favor[npc_id]) + FolkNews.congratulate(player, data, npc_id, GameClock.total_days), 0, 100)
+		var news_gain := FolkNews.congratulate(player, data, npc_id, GameClock.total_days)  # clears the news either way
+		npc_favor[npc_id] = clampi(int(npc_favor[npc_id]) + mini(news_gain, maxi(0, cap - int(npc_favor[npc_id]))), 0, 100)  # FOLK-051: stays under the gift cap
 	if taste >= 0:
 		Karma.on_kindness(player, data, npc_id, "gift")
 	Folk.record_gift(world_flags, npc_id, item_id, GameClock.total_days, taste)  # FOLK-018

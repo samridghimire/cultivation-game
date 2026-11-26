@@ -131,3 +131,27 @@ func test_congratulate_opens_a_face_to_face_card() -> void:  # WU-629
 	_gs().end_session()
 	assert_true(EmoteBubble.KINDS.has("own_news"))
 	assert_true(c != null)
+
+
+func test_expired_own_news_shows_no_bubble_even_before_pruning() -> void:  # FOLK-051
+	var c := _start()
+	var gs := _gs()
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", 10)
+	assert_true(FolkNews.has_pending(c, "xiao_ling", gs.data, 20), "fresh")
+	assert_false(FolkNews.has_pending(c, "xiao_ling", gs.data, 10 + 31), "expired: no bubble")
+	assert_true(c.friend_news.has("xiao_ling"), "pure: not erased")
+	assert_true(FolkNews.has_pending(c, "xiao_ling"), "no day given keeps the old behavior")
+	gs.end_session()
+
+
+func test_liked_gift_with_news_stays_under_the_cap() -> void:  # FOLK-051
+	var c := _start()
+	var gs := _gs()
+	var cap := Family.gift_cap(gs.data, false)
+	gs.npc_favor["xiao_ling"] = cap - 1
+	c.add_item("moon_cake", 1)
+	FolkNews.queue_own(c, gs.data, gs.npc_favor, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	gs.give_gift("xiao_ling", "moon_cake")
+	assert_true(int(gs.npc_favor["xiao_ling"]) <= cap, "favor %d within cap %d" % [int(gs.npc_favor["xiao_ling"]), cap])
+	assert_false(c.friend_news.has("xiao_ling"), "news still cleared")
+	gs.end_session()
