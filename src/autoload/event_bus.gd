@@ -230,8 +230,9 @@ signal sect_contest_bout(sect_id: String, info: Dictionary)
 signal sect_lecture_attended(sect_id: String, result: Dictionary)
 
 
+## WU-635: the HUD stages a short card, then calls GameState.meditate_with_friend (no listener: it runs at once).
+@warning_ignore("unused_signal")
+signal friend_meditation_requested(npc_id: String, npc_name: String, location_density: float)
 ## GFX-262: a friend's own news (FolkNews.queue_own) was queued; `kind` is "qi_start" or "breakthrough". The region plays a light column if they stand in it.
 @warning_ignore("unused_signal")
-## WU-635: the HUD stages a short card, then calls GameState.meditate_with_friend (no listener: it runs at once).
-signal friend_meditation_requested(npc_id: String, npc_name: String, location_density: float)
 signal friend_rose(npc_id: String, kind: String, realm: String)

@@ -1013,25 +1013,42 @@ static func record_contest(c: CharacterData, data: GameData, rounds_won: int, ro
 	if kind == "":
 		kind = contest_kind(c, data)
 	LifeStats.add(c, "contest_rounds_won", rounds_won)
+	for k: String in ["outer", "inner"]:  # REVIEW: records keep their own count; an older save's are seeded first
+		if c.contest_record.has(k) and not (c.contest_record[k] as Dictionary).has("wins"):
+			c.contest_record[k]["wins"] = kind_wins(c, k)
 	var rec: Dictionary = c.contest_record.get(kind, {})
+	rec["wins"] = int(rec.get("wins", 0))
 	rec["best_round"] = maxi(int(rec.get("best_round", 0)), rounds_won)
 	var full := rounds > 0 and rounds_won >= rounds
 	if full:
 		LifeStats.add(c, "contest_wins")
-		rec["wins"] = int(rec.get("wins", 0)) + 1
+		rec["wins"] = int(rec["wins"]) + 1
 		rec["last_year"] = Calendar.year_of(total_days)
 		rec["sect"] = String(c.sect.get("id", ""))
 	c.contest_record[kind] = rec
 	return full
 
 
-## SECT-048: {best_round, wins, last_year} (last_year -1 and zeros when never entered/won). `wins` is the total of both kinds.
-## SECT-052: the record of `kind` ("" = the current kind).
+## Full wins of one contest kind. Records from WU-633 on carry their own `wins`; an older record without it counts the
+## LifeStats total when the other kind has no record (all wins were this kind's), else 0.
+static func kind_wins(c: CharacterData, kind: String) -> int:
+	var rec: Dictionary = c.contest_record.get(kind, {})
+	if rec.has("wins"):
+		return int(rec["wins"])
+	if rec.is_empty():
+		return 0
+	var other := "inner" if kind == "outer" else "outer"
+	return LifeStats.get_stat(c, "contest_wins") if (c.contest_record.get(other, {}) as Dictionary).is_empty() else 0
+
+
+## SECT-048: {best_round, wins, last_year} (last_year -1 and zeros when never entered/won).
+## SECT-052: the record of `kind` ("" = the current kind). REVIEW: `wins` is this kind's (`kind_wins`), so the inner line
+## no longer repeats outer wins; LifeStats `contest_wins` stays the total.
 static func contest_record(c: CharacterData, data: GameData, kind: String = "") -> Dictionary:
 	if kind == "":
 		kind = contest_kind(c, data)
 	var rec: Dictionary = c.contest_record.get(kind, {})
-	return {"best_round": int(rec.get("best_round", 0)), "wins": LifeStats.get_stat(c, "contest_wins"),
+	return {"best_round": int(rec.get("best_round", 0)), "wins": kind_wins(c, kind),
 		"last_year": int(rec.get("last_year", -1))}
 
 
@@ -1051,7 +1068,7 @@ static func contest_record_line(c: CharacterData, data: GameData) -> String:
 
 
 ## WU-633: for a player in the inner contest's ranks with an outer record: "Outer contest: best round N, champion X times".
-## Per-kind wins are counted from WU-633 on; an older record falls back to the overall total when no inner record exists.
+## Wins are the outer kind's (`kind_wins`).
 static func outer_record_line(c: CharacterData, data: GameData) -> String:
 	if not is_inner_contest(c, data):
 		return ""
@@ -1059,9 +1076,7 @@ static func outer_record_line(c: CharacterData, data: GameData) -> String:
 	var best := int(rec.get("best_round", 0))
 	if best <= 0:
 		return ""
-	var wins := int(rec.get("wins", 0))
-	if wins == 0 and (c.contest_record.get("inner", {}) as Dictionary).is_empty():
-		wins = LifeStats.get_stat(c, "contest_wins")
+	var wins := kind_wins(c, "outer")
 	var line := "Outer contest: best round %d" % best
 	return line + ", champion %d time%s" % [wins, "" if wins == 1 else "s"] if wins > 0 else line
 

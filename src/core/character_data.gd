@@ -460,6 +460,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		if cr.get(kind) is Dictionary:
 			var r: Dictionary = cr[kind]
 			c.contest_record[kind] = {"best_round": int(r.get("best_round", 0)), "last_year": int(r.get("last_year", -1)), "sect": String(r.get("sect", ""))}
+			if r.has("wins"):  # WU-633: per-kind wins (absent in older saves, see Sects.kind_wins)
+				c.contest_record[kind]["wins"] = int(r["wins"])
 	var cy: Dictionary = d.get("contest_years", {})
 	for kind: String in cy:
 		c.contest_years[kind] = int(cy[kind])

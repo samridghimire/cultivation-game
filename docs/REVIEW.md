@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 3c12d40
+Last reviewed commit: 54bdb09
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2583,3 +2583,21 @@ Last reviewed commit: 3c12d40
   - Notes (not filed): GUIDE-293's journal row names the friend's home region (data.npcs), not where they are now.
     WU-630's meal advice doesn't check the player owns a meal (worker Follow-up). SECT-049, GFX-261, GFX-262, C-412, C-419,
     C-425, FOLK-051, WU-632 match their specs. Not rendered by me.
+- 2026-11-26 (reviewer): reviewed 3c12d40..54bdb09 (WU-633, SECT-053, WU-634, WU-631, C-424, FOLK-053, SIM-037, WU-635,
+  GFX-264, QA-250; [PLAN]/[REVIEW] skipped). Main green (4828 -> 4838 tests). No BACKLOG/CHANGELOG edits by workers; no new binary
+  assets; no SAVE_VERSION change (FOLK-053's `friend_news_realm` defaults to {} and is seeded on load; SECT-053's
+  `trial_prep_seen_<rank>` is a world flag).
+  - WU-633 fix: the commit emptied `tests/unit/test_contest_record.gd` (SECT-048's six record tests, 66 lines) and added no
+    test for `outer_record_line`. Restored. Also the inner line used the LifeStats total, so a rank-2 player who won the outer
+    contest once read "Inner-sect contest record: best round 1, champion 1 time" right above "Outer contest: ..., champion
+    1 time". New `Sects.kind_wins`: records carry their own `wins` (an older record without it counts the total when the other
+    kind has none, and is seeded before the next entry), `contest_record.wins` is per kind; tests `test_wins_kept_per_kind`,
+    `test_outer_line_only_in_inner_ranks`, `test_legacy_record_keeps_its_wins`. The restored round-trip test then showed
+    `CharacterData.from_dict` dropped WU-633's per-kind `wins` (the outer line lost its count on every load); now kept,
+    test `test_per_kind_wins_survive_a_save`.
+  - WU-635 fix: the new signal was inserted between `@warning_ignore("unused_signal")` and `friend_rose`, moving the
+    annotation and doc comment off `friend_rose`. Each signal now has its own.
+  - Notes (not filed): SECT-053's Prepare hint shows on two days the first time (unflagged day D, then D+1 when the day
+    advance writes the flag). FOLK-053's catch-up can queue a rise months old the day favor reaches 40 (as specced).
+    WU-635's card always runs the meditation on close (skip = begin), fine. WU-634, WU-631, C-424, GFX-264, SIM-037 and the
+    QA-250 baseline match their specs. Not rendered by me.
