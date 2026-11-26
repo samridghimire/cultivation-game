@@ -12,6 +12,7 @@ extends SceneTree
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
+## GFX-256: add `--contest-champion` with --sect-contest for sect_contest_champion.png.
 ## WU-611: `-- --sect-contest=<sect_id>` (add `--contest-rival` for WU-620's rival in the last round) renders sect_contest.png and sect_contest_result.png.
 ## WU-609: `-- --sect-trial=<sect_id>` renders sect_trial.png (join, report, contribution for rank 1: the trial card). With `--lose` it also renders sect_trial_lost.png (WU-614).
 ## WU-603: `-- --sect-promote` renders sect_promote.png (join azure_cloud_sect, promoted one rank).
@@ -532,6 +533,15 @@ func _start() -> void:
 				bus.sect_contest_bout.emit(cid, {"round": 1, "rounds": 3, "won": true, "foe": "Drunk Bully Disciple",
 					"prize": Sects.contest_round(c, gs.data, 0)["prize"], "next_foe": String(nxt.get("name", "")), "next_chance": Combat.win_chance(c, gs.data, nxt)})
 				hud.call("_drain_moments"), "close": ccard.close})
+			if "--contest-champion" in OS.get_cmdline_user_args():  # GFX-256: the champion moment after a full win
+				shots.append({"name": "sect_contest_champion", "open": func() -> void:
+					ccard.close()
+					var bus2: Node = Engine.get_main_loop().root.get_node("EventBus")
+					gs.player.folk_news["xiao_ling"] = "contest"
+					bus2.sect_contest_bout.emit(cid, {"round": 3, "rounds": 3, "won": true, "foe": "Sect Elder's Disciple", "prize": Sects.contest_round(c, gs.data, 2)["prize"], "next_foe": "", "next_chance": 0.0})
+					hud.call("_drain_moments")
+					ccard.close()
+					hud.call("_drain_moments"), "close": ccard.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-604: join, report at the home hall, capture the welcome card
 		if a.begins_with("--sect-report="):

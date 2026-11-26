@@ -176,3 +176,51 @@ func test_rival_round_names_and_looks_like_the_rival() -> void:
 	card.open_result("Azure", {"round": 3, "rounds": 3, "won": false, "foe": "Han", "rival": true, "foe_person": "test_rival"})
 	assert_true(card.all_text().contains("beats you"), card.all_text())
 	_teardown(gs, hud)
+
+
+func test_champion_pure_text() -> void:
+	var gs := (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	gs.start_session(CharacterFactory.create("Lin", gs.data, seeded_rng(5), "male"))
+	gs.player.alignment = 0
+	gs.player.realm_index = maxi(gs.player.realm_index, 1)
+	gs.join_sect("azure_cloud_sect")
+	var total := SectContestCard.total_prize(gs.player, gs.data)
+	assert_true(int(total["contribution"]) > 0, "rounds' prizes add up")
+	assert_eq(SectContestCard.champion_title("Azure Cloud Sect"), "Champion of the Azure Cloud Sect contest")
+	assert_true(SectContestCard.champion_text(total, true).contains("Word will reach your friends."))
+	assert_false(SectContestCard.champion_text(total, false).contains("Word will reach"))
+	gs.end_session()
+
+
+func _bout(round_n: int, won: bool, next_foe: String) -> Dictionary:
+	return {"round": round_n, "rounds": 3, "won": won, "foe": "Foe", "prize": {"contribution": 5}, "next_foe": next_foe, "next_chance": 0.5}
+
+
+func test_champion_card_only_after_a_full_win() -> void:
+	var out: Array = []
+	var gs := _setup(out)
+	var hud: CanvasLayer = out[0]
+	await _frames()
+	var card: SectContestCard = hud.get("_sect_contest_card")
+	var bus := gs.get_node("/root/EventBus")
+	# A partial run (won round 1, lost round 2) never shows the champion card.
+	bus.sect_contest_bout.emit("azure_cloud_sect", _bout(1, true, "Next"))
+	bus.sect_contest_bout.emit("azure_cloud_sect", _bout(2, false, ""))
+	for i in 6:
+		await _frames(3)
+		if card.visible:
+			assert_false(card.all_text().contains("Champion of"), "no champion card on a partial run")
+			card.back_button().pressed.emit()
+	# A full win: the last bout card, then the champion card, which grabs focus.
+	bus.sect_contest_bout.emit("azure_cloud_sect", _bout(3, true, ""))
+	var saw_champion := false
+	for i in 8:
+		await _frames(3)
+		if card.visible:
+			if card.all_text().contains("Champion of"):
+				saw_champion = true
+				assert_true(card.back_button().has_focus(), "champion card grabs focus")
+				assert_eq(card.arena().mode, "champion")
+			card.back_button().pressed.emit()
+	assert_true(saw_champion, "champion card shown after a full win")
+	_teardown(gs, hud)

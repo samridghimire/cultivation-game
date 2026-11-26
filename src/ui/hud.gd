@@ -1987,6 +1987,11 @@ func _drain_moments() -> void:
 			_update_modal()
 		"trial_return":
 			_return_from_trial(String(m.get("to", "")))
+		"contest_champion":
+			var chs := String(m["sect_id"])
+			var heard := GameState.player.folk_news.values().has("contest")
+			_sect_contest_card.open_champion(GameState.data.sects[chs].name, SectContestCard.total_prize(GameState.player, GameState.data), heard, _sect_color(chs))
+			_update_modal()
 		"contest_bout":
 			var cs := String(m["sect_id"])
 			_sect_contest_card.open_result(GameState.data.sects[cs].name, m.get("info", {}), _sect_color(cs))
@@ -2278,6 +2283,8 @@ func _on_sect_contest_bout(sect_id: String, info: Dictionary) -> void:
 	if not GameState.data.sects.has(sect_id) or GameState.player.is_rogue():
 		return
 	_pending_moments.append({"kind": "contest_bout", "sect_id": sect_id, "info": info})
+	if bool(info.get("won", false)) and String(info.get("next_foe", "")) == "":  # GFX-256: the last round won
+		_pending_moments.append({"kind": "contest_champion", "sect_id": sect_id})
 	_update_modal()
 
 

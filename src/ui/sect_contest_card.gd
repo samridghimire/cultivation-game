@@ -4,6 +4,7 @@ extends PanelContainer
 ## sect banner, "<Sect> outer-sect contest", the round ladder (foe and prize per round) and your odds for the next bout.
 ## "Enter the contest" emits `confirmed` (the HUD then runs GameState.enter_sect_contest); "Not yet" or cancel closes.
 ## Result mode (one per bout, through the moments queue): won -> prize and the next foe; lost -> "You placed in round N".
+## GFX-256: Champion mode (after the last bout card of a full win): the player alone on the platform, sword raised.
 
 signal closed
 signal confirmed
@@ -172,6 +173,54 @@ func open_result(sect_name: String, info: Dictionary, color: Color = UIStyle.ACC
 	_back_button.grab_focus.call_deferred()
 
 
+## GFX-256: the sum of every round's prize. Pure.
+static func total_prize(c: CharacterData, data: GameData) -> Dictionary:
+	var total := {"contribution": 0, "spirit_stones": 0}
+	var i := 0
+	while true:
+		var round_def := Sects.contest_round(c, data, i)
+		if round_def.is_empty():
+			break
+		for k: String in total:
+			total[k] = int(total[k]) + int(round_def["prize"].get(k, 0))
+		i += 1
+	return total
+
+
+## GFX-256: the champion card's title. Pure.
+static func champion_title(sect_name: String) -> String:
+	return "Champion of the %s contest" % sect_name
+
+
+## GFX-256: the champion card's body. `news` is true when friends' news was queued (FOLK-049). Pure.
+static func champion_text(total: Dictionary, news: bool) -> String:
+	var line := "You won every round. Prize in all: %s." % prize_text(total)
+	if news:
+		line += " Word will reach your friends."
+	return line
+
+
+## GFX-256: the champion moment. Opens only after a full win (the HUD queues it from the last bout).
+func open_champion(sect_name: String, total: Dictionary, news: bool, color: Color = UIStyle.ACCENT) -> void:
+	_style(sect_name, color)
+	_subtitle.text = champion_title(sect_name)
+	_set_rows(PackedStringArray())
+	_ladder.text = champion_text(total, news)
+	if GameState.player != null:
+		_arena.setup(String(GameState.player.sect.get("id", "")), color, PlayerLook.of(GameState.player, GameState.data))
+	else:
+		_arena.color = color
+	_arena.set_foe(null)
+	_arena.mode = "champion"
+	_odds.text = ""
+	_odds.remove_theme_color_override("font_color")
+	_note.text = ""
+	_enter_button.visible = false
+	_back_button.text = "OK"
+	visible = true
+	_back_button.grab_focus.call_deferred()
+
+
 static func result_subtitle(info: Dictionary) -> String:
 	return "Round %d of %d: %s" % [int(info.get("round", 1)), int(info.get("rounds", 1)), "won" if bool(info.get("won", false)) else "lost"]
 
@@ -295,6 +344,8 @@ class ContestArena extends SectCard.SectVignette:
 		var foe := foe_look if not foe_look.is_empty() else _disciple({"robe": color.darkened(0.35), "sash": Color(0.9, 0.75, 0.3)})
 		var sword := Color(0.78, 0.82, 0.88)
 		match mode:
+			"champion":
+				_draw_champion(px, wood, sword)
 			"won":
 				draw_figure(self, _player(), px + 100, 84, 4.0, "right")
 				draw_rect(Rect2(px + 126, 36, 4, 22), sword)  # your sword raised
@@ -310,3 +361,14 @@ class ContestArena extends SectCard.SectVignette:
 				draw_figure(self, foe, px + 200, 84, 4.0, "left")
 				draw_rect(Rect2(px + 126, 56, 22, 4), sword)
 				draw_rect(Rect2(px + 152, 56, 22, 4), sword)
+
+
+	## GFX-256: you alone at the platform's centre, sword raised, both banners flying, spectators' arms up, petals falling.
+	func _draw_champion(px: int, wood: Color, sword: Color) -> void:
+		for x in [30, 62, 96, W - 96, W - 62, W - 30]:  # raised arms over the crowd
+			draw_rect(Rect2(x - 12 if x < W / 2 else x + 8, 70, 4, 14), Color(0.85, 0.7, 0.55))
+		draw_figure(self, _player(), W / 2, 84, 4.0, "down")
+		draw_rect(Rect2(W / 2 + 22, 28, 4, 30), sword)  # your sword raised
+		draw_rect(Rect2(W / 2 + 18, 28, 12, 3), wood.lightened(0.3))
+		for i in 14:  # petals in the sect colour, a fixed scatter (no randomness)
+			draw_rect(Rect2((i * 37) % (W - 20) + 8, (i * 23) % 70 + 6, 2, 2), color.lightened(0.25))
