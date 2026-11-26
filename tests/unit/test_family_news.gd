@@ -48,3 +48,17 @@ func test_death_of_generated_child_is_reported() -> void:
 		if line.contains(child.name) and line.contains("died"):
 			reported = true
 	assert_true(reported, "the player hears that their child died")
+
+
+## C-424: every named cultivating NPC has own-news lines of at most 140 chars.
+func test_named_cultivators_have_own_news_lines() -> void:
+	var gd: GameData = data()
+	for id: String in gd.npcs:
+		var def: Dictionary = gd.npcs[id]
+		if not def.get("cultivates", false):
+			continue
+		var lines: Dictionary = def.get("own_news_lines", {})
+		for kind in ["qi_start", "breakthrough"]:
+			assert_true(lines.has(kind), "%s lacks own_news_lines.%s" % [id, kind])
+			for l in lines.get(kind, []):
+				assert_true(String(l).length() <= 140, "%s.%s line too long" % [id, kind])
