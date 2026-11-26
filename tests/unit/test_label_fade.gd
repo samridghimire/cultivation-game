@@ -61,3 +61,13 @@ func test_chip_fades_overlapping_names_only() -> void:
 	assert_eq(LabelFade.chip_alpha(Rect2(120, 90, 80, 16), Rect2()), 1.0)
 	assert_true(LabelFade.hidden_by_chip(Rect2(120, 90, 80, 16), chip))
 	assert_false(LabelFade.hidden_by_chip(Rect2(120, 80, 80, 16), chip))
+
+
+## WU-631: a place label under a greeting bubble dims; clear ones and an empty cover do not.
+func test_covered_alpha() -> void:
+	var covers: Array[Rect2] = [Rect2(0, 0, 100, 30)]
+	assert_eq(LabelFade.covered_alpha(Rect2(50, 20, 60, 16), covers), 0.35)
+	assert_eq(LabelFade.covered_alpha(Rect2(200, 20, 60, 16), covers), 1.0)
+	var none: Array[Rect2] = [Rect2()]
+	assert_eq(LabelFade.covered_alpha(Rect2(0, 0, 60, 16), none), 1.0)
+	assert_eq(LabelFade.bubble_rect(null), Rect2())

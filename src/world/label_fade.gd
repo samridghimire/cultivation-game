@@ -49,3 +49,21 @@ static func npc_alpha(npc_rect: Rect2, place_rects: Array[Rect2]) -> float:
 		if npc_rect.intersects(p):
 			return OVER_PLAYER_ALPHA
 	return 1.0
+
+
+## WU-631: a place label under a greeting bubble (or any cover rect) dims to 35% so the bubble reads cleanly.
+static func covered_alpha(label_rect: Rect2, cover_rects: Array[Rect2]) -> float:
+	for c: Rect2 in cover_rects:
+		if c.size != Vector2.ZERO and label_rect.intersects(c):
+			return OVER_PLAYER_ALPHA
+	return 1.0
+
+
+## WU-631: the world-space rect of a greeting bubble parented to a node (empty when none shows).
+static func bubble_rect(bubble: Control) -> Rect2:
+	if bubble == null or not is_instance_valid(bubble) or not bubble.is_inside_tree():
+		return Rect2()
+	var parent := bubble.get_parent() as Node2D
+	if parent == null:
+		return Rect2()
+	return Rect2(parent.position + bubble.position, bubble.size)

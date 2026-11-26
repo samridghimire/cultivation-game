@@ -1426,6 +1426,10 @@ func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 	for node: Interactable in place_nodes:
 		if float(alphas[node]) > 0.0:
 			places.append(node.drawn_label_rect(view))
+	var covers: Array[Rect2] = [LabelFade.bubble_rect(_greet_bubble)]
+	for node: Interactable in place_nodes:  # WU-631: a greeting bubble dims the place labels under it
+		if float(alphas[node]) > 0.0 and not node.highlighted:
+			alphas[node] = minf(alphas[node], LabelFade.covered_alpha(node.drawn_label_rect(view), covers))
 	for node: Interactable in nodes:
 		var a: float = alphas[node]
 		if a > 0.5 and player != null and node.label_drawn() and (node.get("npc_id") != null or node is Roamer):
