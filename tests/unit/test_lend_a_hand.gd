@@ -437,3 +437,20 @@ func test_make_friend_gift_skips_a_single_pill() -> void:
 	c.add_item("qi_gathering_pill", 1)
 	var gift := Guidance.make_friend_hint(c, d, npcs, flags, "qingshi_village", 0, favor)
 	assert_true(gift.begins_with("Become friends: give "), gift)
+
+
+## FOLK-057: a gift line names someone in this region; far away, the local lend line leads (or nothing when all are resting).
+func test_make_friend_gift_needs_them_here() -> void:
+	var d := data()
+	var npcs := _npcs(d)
+	var flags := {}
+	for id: String in d.npcs:
+		flags["lend_" + id] = 0
+	var favor := {"elder_mo": 25}
+	var c := new_character()
+	c.inventory = {"qi_gathering_pill": 2}
+	assert_true(Guidance.make_friend_hint(c, d, npcs, flags, "qingshi_village", 0, favor).begins_with("Become friends: give "), "gift in Qingshi")
+	assert_eq(Guidance.make_friend_hint(c, d, npcs, flags, "azure_peak", 0, favor), "", "no gift for Mo up at the sect, all resting")
+	var local := Guidance.make_friend_hint(c, d, npcs, {}, "azure_peak", 0, favor)
+	assert_true(local.begins_with("Become friends: lend "), local)
+	assert_false(local.contains("Elder Mo"), local)

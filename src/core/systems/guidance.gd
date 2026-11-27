@@ -2650,7 +2650,7 @@ static func make_friend_hint(c: CharacterData, data: GameData, people: Dictionar
 			if f > best_favor:
 				best = id
 				best_favor = f
-		elif any_acq and f > gift_best_favor:
+		elif any_acq and f > gift_best_favor and Npcs.region_of(npc, data) == region_id:  # FOLK-057: a gift needs them here
 			for item_id: String in c.inventory:
 				# GUIDE-292: never suggest giving away the only pill held (it may be the next breakthrough's).
 				if _is_cultivation_pill(data, item_id) and c.item_count(item_id) <= 1:

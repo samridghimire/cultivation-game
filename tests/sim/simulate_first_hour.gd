@@ -682,6 +682,7 @@ func _run_firsts(args: Array) -> void:
 	var gs: Node = root.get_node("GameState")
 	var clock: Node = root.get_node("GameClock")
 	var bus: Node = root.get_node("EventBus")
+	var trace_favor := args.has("--firsts-trace")
 	var table: Dictionary = {}  # first -> [day per seed or -1]
 	for f in FIRSTS:
 		table[f] = []
@@ -705,6 +706,19 @@ func _run_firsts(args: Array) -> void:
 			st["acts"].append([rel - n, rel, FirstHour._activity_of(get_stack())])
 			var now := _firsts_now(gs, c, int(st["start_stage"]), flags)
 			var new_event := false
+			if trace_favor:
+				# FOLK-057: favor with every named NPC the day the sect is joined and on day 120, plus the make-a-friend line then.
+				for snap: Array in [[FIRSTS[7], "join"], ["", "day120"]]:
+					var key: String = snap[1]
+					var due: bool = (now[FIRSTS[7]] and not st["found"].has(FIRSTS[7])) if key == "join" else (rel >= 120 and not st.has("snap_120"))
+					if due:
+						if key == "day120":
+							st["snap_120"] = true
+						var fav := {}
+						for nid: String in gs.npc_favor:
+							if int(gs.npc_favor[nid]) > 0:
+								fav[nid] = int(gs.npc_favor[nid])
+						print("favor seed %d %s day %d in %s: %s | hint: %s" % [s, key, rel, gs.current_region, str(fav), Guidance.make_friend_hint(c, gs.data, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)])
 			for f: String in now:
 				if now[f] and not st["found"].has(f):
 					st["found"][f] = rel
