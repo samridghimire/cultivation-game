@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-27 [WU-647] A friend in your sect sits in the lecture's front row, named.
+- 2026-11-27 [SECT-054] A friend who joined your sect attends the monthly lecture beside you, and you grow closer.
+- 2026-11-27 [GUIDE-301] Next steps name a qi goal and a better place to meditate when the next layer is a month or more away.
+- 2026-11-27 [WU-645] The world map marks Qingshi while you are away and says what waits there.
+- 2026-11-27 [C-431] The first year's hunt tasks name beasts a first-year cultivator can beat.
+- 2026-11-27 [WU-646] Letters open centred on their paper card; a setting keeps letters quiet.
+- 2026-11-27 [GFX-269] Qingshi Village turns with the seasons: autumn colours and winter snow.
+- 2026-11-27 [FOLK-058] Lending a hand brings a villager closer to friendship sooner.
+- 2026-11-27 [SIM-040] A sect disciple far from Qingshi is now called home for season tasks; balance tooling follows the call.
+- 2026-11-27 [GFX-268] Fallen Star Market's vault seal no longer sits on the Envoy Hall.
+- 2026-11-27 [WU-644] Coming home to Qingshi after a long trip, the arrival says what waits for you.
 - 2026-11-27 [SIM-039] Balance tooling: the first year re-measured after the practice-loop, home-call and friend fixes.
 - 2026-11-27 [GFX-267] The Myriad Treasure Pavilion's envoy hall gets a stone court and a gate like the other sect halls.
 - 2026-11-27 [C-429] Letters from home are written in each villager's own voice.

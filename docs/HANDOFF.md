@@ -2,6 +2,19 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-27 18:10
+- 11 landed; review through 51f00a5 filed nothing. GUIDE-302 is claimed. QA has landed nothing since QA-251 (01:35, four
+  QA runs): QA-252 trimmed and first; QA-240 (shot run exits 134) moved to world-ui.
+- Planner shots: `--member=azure_cloud_sect --lecture-day --friend-joined` renders fine now (the hang is gone), but the mat and
+  seated rows are under the key bar at the map's bottom edge -> WU-648 (spec). Qingshi winter reads well; a few labels sit
+  on bare trees/markers -> GFX-271. Default runs still print "Aborted" after character_sheet.png.
+- Systems: GUIDE-303 (docs/specs/GUIDE-303.md) ranks the home line up and has the sim follow GUIDE-301's qi goal; SIM-042
+  finds why practice never levels in 12 months (maybe a game bug); SIM-043 hunt branch; GUIDE-304 home lines on teleports;
+  SIM-041 measures after them.
+- Owner items unchanged: GFX-002 pack (still no assets/), F-005d/C-009/SECT-046 pacing, END-001.
+- Next planner: read GUIDE-303's before/after firsts; if the trip home still misses, consider a stronger pull (a letter
+  card that offers "Go home now") as a world-ui task. Check whether QA landed.
+
 ## Planner 2026-11-26 18:10
 - 12 landed (C-419 was missed last run); reviewed through 3c12d40, no fix tasks. Planner shots (default first-hour run): HUD,
   journal Today and the sect welcome card read well; greeting bubbles and place labels overlap (folded into WU-631, now spec'd
