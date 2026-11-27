@@ -855,9 +855,7 @@ func travel(region_id: String) -> void:
 	last_travel_from = current_region
 	last_travel_days = int(check["days"])
 	last_travel_snow = snow_days
-	if current_region == SeasonTasks.REGION and region_id != SeasonTasks.REGION:
-		world_flags["home_left_day"] = GameClock.total_days  # WU-644
-	current_region = region_id
+	_set_region(region_id)
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
 	var how := Exploration.travel_how(player, data)
@@ -965,6 +963,13 @@ func _post_arrival_line() -> void:
 		world_flags["season_line_seen"] = seen
 		if not line.contains(season_line):  # WU-464: the arrival line may already say it
 			EventBus.post(season_line, "travel")
+
+
+## GUIDE-304: every real region change goes through here, so leaving Qingshi by any road is noted (WU-644).
+func _set_region(region_id: String) -> void:
+	if current_region == SeasonTasks.REGION and region_id != SeasonTasks.REGION:
+		world_flags["home_left_day"] = GameClock.total_days
+	current_region = region_id
 
 
 ## WU-644: on coming home to Qingshi after a long absence, keep what waits there for today's arrival banner.
@@ -6093,7 +6098,7 @@ func _die_violently(cause: String, fight: Dictionary = {}) -> void:
 	var place := CreationArtifact.anchor_name(data, result["anchor_id"]) if result["anchor_id"] != "" else Exploration.region_name(data, result["region"])
 	EventBus.post("The Creation Artifact pulls your soul back. You awaken at %s, %d qi lost. (%d lives left)" % [place, int(result["qi_lost"]), result["lives_left"]], "warning")
 	var moved: bool = result["region"] != current_region
-	current_region = result["region"]
+	_set_region(result["region"])
 	last_arrival_first_visit = false
 	pending_respawn = {"cause": cause, "anchor_id": result["anchor_id"], "lives_left": result["lives_left"], "qi_lost": result["qi_lost"]}
 	pending_respawn.merge(fight)
@@ -6106,6 +6111,7 @@ func _die_violently(cause: String, fight: Dictionary = {}) -> void:
 	EventBus.player_respawned.emit(result["anchor_id"], result["lives_left"])
 	_pass_time(result["days"])
 	if moved:
+		_note_home_lines()
 		EventBus.region_changed.emit(current_region)
 
 
@@ -6124,9 +6130,10 @@ func choose_respawn_anchor(anchor_id: String) -> void:
 		var place := CreationArtifact.anchor_name(data, anchor_id) if anchor_id != "" else Exploration.region_name(data, data.start_region)
 		EventBus.post("You let the artifact carry your soul to %s instead." % place, "warning")
 	pending_respawn = {}
-	current_region = CreationArtifact.anchor_region(data, anchor_id)
+	_set_region(CreationArtifact.anchor_region(data, anchor_id))
 	last_arrival_first_visit = false
 	spawn_anchor = anchor_id
+	_note_home_lines()
 	EventBus.player_changed.emit()
 	EventBus.region_changed.emit(current_region)
 

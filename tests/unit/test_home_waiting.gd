@@ -59,3 +59,32 @@ func test_note_home_lines_uses_the_left_day_flag() -> void:
 	gs._note_home_lines()
 	assert_true(gs.world_flags.has("home_lines"))
 	assert_false(gs.world_flags.has("home_left_day"), "cleared once home")
+
+
+func test_leaving_home_by_any_road_is_noted() -> void:
+	var gs := _gs()
+	var c := _start()
+	c.field_plots["qingshi_village:Field"] = {"crops": [{"item": "x", "days_left": 0}]}
+	gs.current_region = SeasonTasks.REGION
+	gs.world_flags.erase("home_left_day")
+	gs._set_region("azure_peak")  # an anchor or respawn moves the player without travel()
+	assert_true(gs.world_flags.has("home_left_day"), "left Qingshi")
+	gs.world_flags["home_left_day"] = GameClock.total_days - 30
+	gs._set_region(SeasonTasks.REGION)
+	assert_true(gs.world_flags.has("home_left_day"), "arriving does not clear it by itself")
+	gs._note_home_lines()
+	assert_true(gs.world_flags.has("home_lines"), "30 days away, then home")
+
+
+func test_waiting_season_line_names_days_left() -> void:
+	var gs := _gs()
+	var c := _start()
+	var today := 10
+	var lines := Guidance.home_waiting(c, gs.data, gs.npcs, today)
+	var left := Calendar.days_left_in_season(today)
+	var found := false
+	for l in lines:
+		if String(l).begins_with("Season tasks"):
+			found = true
+			assert_true(String(l).ends_with("(%d %s left)" % [left, "day" if left == 1 else "days"]), l)
+	assert_true(found, str(lines))

@@ -7954,7 +7954,8 @@ static func home_waiting(c: CharacterData, data: GameData, people: Dictionary, t
 		if not bool(t["done"]):
 			open += 1
 	if open > 0:
-		out.append("Season tasks %d/%d done" % [total - open, total])
+		var left := Calendar.days_left_in_season(today)
+		out.append("Season tasks %d/%d done (%d %s left)" % [total - open, total, left, "day" if left == 1 else "days"])
 	var ripe := 0
 	for key: String in c.field_plots:
 		if not key.begins_with(SeasonTasks.REGION + ":"):
