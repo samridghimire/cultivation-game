@@ -2,6 +2,20 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-27 [SIM-038] Balance tooling: the first season re-measured after the hint fixes.
+- 2026-11-27 [GFX-265] Withered Bone Marsh reads better: the workbench and names no longer overlap and the empty ground has a bog pool.
+- 2026-11-27 [FOLK-056] A friend you helped through a breakthrough sends you a thanks gift.
+- 2026-11-27 [GUIDE-297] Next steps keep the monthly sect lecture near the top so you attend your first one soon after joining.
+- 2026-11-27 [C-427] Friends stuck at a breakthrough ask for a wider range of pills, some cheap enough for a newcomer.
+- 2026-11-27 [WU-641] On lecture day your sect's hall shows the elder teaching seated disciples.
+- 2026-11-27 [GUIDE-296] Next steps point to an open season task you can do in the village.
+- 2026-11-27 [WU-640] Reduce motion now stills the breakthrough column and confetti; name labels no longer cover place labels.
+- 2026-11-27 [WU-639] The season's open village tasks get small markers over the places that serve them, and a task count near the village.
+- 2026-11-27 [GUIDE-295] Balance tooling: the first-season sim now follows the fighting-style hint (first technique by day 15).
+- 2026-11-27 [FOLK-055] You can invite a close friend who cultivates into your sect; they move to the sect and stand at its hall.
+- 2026-11-27 [WU-637] A friend's request for help opens a card showing them stuck at their breakthrough and the item they need.
+- 2026-11-27 [QA-251] Tests: the contest tests can no longer leave changed contest data behind.
+- 2026-11-27 [C-426] Friends beyond the village speak about their news and your congratulations in their own voices.
 - 2026-11-27 [GUIDE-294] Next steps suggest congratulating a friend with news and meditating beside a cultivating friend.
 - 2026-11-27 [FOLK-054] A friend stuck at a breakthrough asks you for a pill once; giving it raises their favor and helps their breakthrough.
 - 2026-11-27 [QA-250] Balance tooling: the balance baseline is refreshed on current main.
