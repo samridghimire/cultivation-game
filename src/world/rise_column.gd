@@ -30,6 +30,14 @@ static func mote_pos(i: int, t: float) -> Vector2:
 	return Vector2(sin(float(i) * 2.1 + t * 1.5) * 9.0, -rise)
 
 
+## WU-640: one frame of the effect as {height, alpha, motes}. Under reduce_motion it is a static glow: the column at
+## full height and fixed alpha, no rising motes, identical at every `t` (it still ends at LIFETIME).
+static func frame(t: float, reduce_motion: bool) -> Dictionary:
+	if reduce_motion:
+		return {"height": HEIGHT, "alpha": 0.8, "motes": 0}
+	return {"height": HEIGHT, "alpha": alpha_at(t), "motes": MOTES}
+
+
 ## Plays the effect on `parent` at `feet` (world space). Returns the node.
 static func spawn(parent: Node, feet: Vector2, npc_name: String, realm: String) -> RiseColumn:
 	var col := RiseColumn.new()
@@ -54,15 +62,16 @@ func _process(delta: float) -> void:
 	if _t >= LIFETIME:
 		queue_free()
 		return
-	_label.modulate.a = alpha_at(_t)
+	_label.modulate.a = float(frame(_t, MotionFx.reduced())["alpha"])
 	queue_redraw()
 
 
 func _draw() -> void:
-	var a := alpha_at(_t)
+	var f := frame(_t, MotionFx.reduced())
+	var a: float = f["alpha"]
 	for k in 3:  # three nested bands make the soft edge
 		var w := 14.0 - 4.0 * float(k)
 		draw_rect(Rect2(-w, -HEIGHT, w * 2.0, HEIGHT), Color(_color.r, _color.g, _color.b, 0.10 * a))
-	for i in MOTES:
+	for i in int(f["motes"]):
 		var p := mote_pos(i, _t)
 		draw_rect(Rect2(p.x - 1, p.y - 1, 3, 3), Color(1, 0.97, 0.8, 0.9 * a))

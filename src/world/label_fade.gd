@@ -67,3 +67,11 @@ static func bubble_rect(bubble: Control) -> Rect2:
 	if parent == null:
 		return Rect2()
 	return Rect2(parent.position + bubble.position, bubble.size)
+
+
+## WU-640: a name label yields to a place label only while the player is not close to its owner.
+const NEAR_NPC := 48.0
+
+
+static func near_owner(owner_pos: Vector2, player_pos: Vector2) -> bool:
+	return owner_pos.distance_to(player_pos) <= NEAR_NPC

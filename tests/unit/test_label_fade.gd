@@ -71,3 +71,8 @@ func test_covered_alpha() -> void:
 	var none: Array[Rect2] = [Rect2()]
 	assert_eq(LabelFade.covered_alpha(Rect2(0, 0, 60, 16), none), 1.0)
 	assert_eq(LabelFade.bubble_rect(null), Rect2())
+
+
+func test_name_yields_unless_player_is_near_its_owner() -> void:
+	assert_true(LabelFade.near_owner(Vector2(100, 100), Vector2(130, 120)))
+	assert_false(LabelFade.near_owner(Vector2(100, 100), Vector2(200, 100)))

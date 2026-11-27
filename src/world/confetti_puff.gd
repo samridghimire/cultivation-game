@@ -16,6 +16,10 @@ static func piece_offset(i: int, t: float) -> Vector2:
 	return Vector2(cos(angle) * speed * t, sin(angle) * speed * 0.6 * t - 60.0 * t + 70.0 * t * t)
 
 
+## WU-640: under reduce_motion the pieces rest where the burst peaks (no flight) and only fade.
+const STILL_T := 0.5
+
+
 func _process(delta: float) -> void:
 	_time += delta
 	if _time >= LIFETIME:
@@ -30,4 +34,4 @@ func _draw() -> void:
 	for i in PIECES:
 		var c: Color = COLORS[i % COLORS.size()]
 		c.a = fade
-		draw_rect(Rect2(piece_offset(i, _time), Vector2(s, s * 1.5)), c)
+		draw_rect(Rect2(piece_offset(i, STILL_T if MotionFx.reduced() else _time), Vector2(s, s * 1.5)), c)

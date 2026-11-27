@@ -37,3 +37,12 @@ func test_friend_rose_signal_fires_with_own_news() -> void:
 	var bus := (Engine.get_main_loop() as SceneTree).root.get_node("EventBus")
 	assert_true(bus.has_signal("friend_rose"))
 	assert_true(gs != null)
+
+
+func test_reduce_motion_frame_is_static() -> void:
+	var a := RiseColumn.frame(0.0, true)
+	var b := RiseColumn.frame(2.0, true)
+	assert_eq(a, b, "identical at t=0 and t=2")
+	assert_eq(int(a["motes"]), 0)
+	assert_eq(float(a["height"]), RiseColumn.HEIGHT)
+	assert_eq(int(RiseColumn.frame(1.0, false)["motes"]), RiseColumn.MOTES)

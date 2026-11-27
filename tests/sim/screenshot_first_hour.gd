@@ -11,6 +11,7 @@ extends SceneTree
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-264: `-- --friend-realm=<npc_id>:<realm_index>` shows the friend's aura: friend_realm_<n>.png.
 ## WU-639: `-- --season-tasks` day 3 with one task done: world leaf markers and the HUD's season line: season_tasks.png.
+## WU-640: `-- --reduce-motion` turns the reduce_motion setting on for any shot.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-637: `-- --friend-aid=<npc_id>` opens the friend's request card: friend_aid.png.
 ## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
@@ -98,6 +99,8 @@ func _drop_start_line() -> void:
 
 func _start() -> void:
 	root.get_node("Settings").set("persist", false)  # QA-232: a shot run never touches user://settings.cfg
+	if OS.get_cmdline_user_args().has("--reduce-motion"):  # WU-640
+		root.get_node("Settings").call("set_value", "reduce_motion", true)
 	started = true
 	var gs: Node = root.get_node("GameState")
 	var rng := RandomNumberGenerator.new()

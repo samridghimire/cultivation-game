@@ -1435,7 +1435,7 @@ func _fade_labels(nodes: Array, view: Rect2, chip: Rect2) -> void:
 		var a: float = alphas[node]
 		if a > 0.5 and player != null and node.label_drawn() and (node.get("npc_id") != null or node is Roamer):
 			var r2 := node.drawn_label_rect(view)
-			if not r2.intersects(body):
+			if not r2.intersects(body) and not LabelFade.near_owner(node.position, player.position):
 				a = minf(a, LabelFade.npc_alpha(r2, places))
 		node.set_label_player_alpha(a)
 
