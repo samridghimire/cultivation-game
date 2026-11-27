@@ -1302,6 +1302,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var birthday := birthday_gift_hint(c, data, people, region_id, favor, flags, today)  # FOLK-040
 	if birthday != "":
 		out.insert(mini(2, out.size()), birthday)
+	var season_line := season_task_hint(c, data, region_id, today)  # GUIDE-296: 4th, after the goal, friend and order lines pinned to the first 3
+	if season_line != "":
+		out.insert(mini(3, out.size()), season_line)
 	out = _merge_better_qi(out, c, data, density, region_id, flags)
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
@@ -2440,6 +2443,23 @@ static func congratulate_hint(c: CharacterData, data: GameData, people: Dictiona
 		if realm == "":
 			realm = "Qi Refining"
 		return "Congratulate %s on %s (%d days left)" % [row["name"], realm, int(row["days_left"])]
+	return ""
+
+
+## GUIDE-296: "Season task: <text> at <place> (0/1)" for the first open catch/gather task of the season that a place in
+## Qingshi itself serves in season (nothing to carry, no fight to rate). "" elsewhere or when none is open. Pure.
+static func season_task_hint(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
+	if region_id != SeasonTasks.REGION or today < 0 or c == null:
+		return ""
+	# Read-only (SeasonTasks.list would reset a stale season record on the character).
+	var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today) else {}
+	for t: Dictionary in SeasonTasks.tasks_for(data, today):
+		var n := int(progress.get(String(t["id"]), 0))
+		if n >= int(t["count"]) or not ["catch", "gather"].has(String(t["kind"])):
+			continue
+		var where := SeasonTasks.where(t, c, data, today)
+		if where.begins_with("at ") and not where.contains(" in "):
+			return "Season task: %s %s (%d/%d)" % [t["text"], where, n, int(t["count"])]
 	return ""
 
 

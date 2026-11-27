@@ -2660,6 +2660,14 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				gs.call_on(id)
 				return "tea" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
 		return ""
+	if line.begins_with("Season task: "):
+		# GUIDE-296: the line names an open catch/gather task a Qingshi place serves; work at it for the week.
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
+			if line.begins_with("Season task: %s " % String(t["text"])) and _season_task_left(gs, c, t) > 0:
+				_season_tries = 0
+				_season_gather(gs, c, t)
+				return "season_task"
+		return ""
 	if line.begins_with("Congratulate "):
 		# GUIDE-294: the line names the friend in this region; congratulate them.
 		for id: String in gs.data.npcs:

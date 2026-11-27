@@ -549,7 +549,7 @@ func test_urgent_due_order_leads_the_hints() -> void:
 	c.commissions = [_pill_order(2, 13)]
 	var d := data()
 	var due := Commissions.due_soon_hint(c, d, "qingshi_village", 10)
-	var hints := Guidance.hints(c, d, 1.0, 8, {}, {}, "qingshi_village", 10)
+	var hints := Guidance.hints(c, d, 1.0, 9, {}, {}, "qingshi_village", 10)
 	var herb := Guidance.herb_here_hint(c, d, "qingshi_village", 10)
 	assert_true(hints.has(due), due)
 	var due_i := hints.find(due)
@@ -558,7 +558,7 @@ func test_urgent_due_order_leads_the_hints() -> void:
 	assert_true(due_i < 3, "within the top 3")
 	c.commissions = [_pill_order(2, 20)]
 	due = Commissions.due_soon_hint(c, d, "qingshi_village", 10)
-	hints = Guidance.hints(c, d, 1.0, 8, {}, {}, "qingshi_village", 10)
+	hints = Guidance.hints(c, d, 1.0, 9, {}, {}, "qingshi_village", 10)
 	assert_true(hints.has(due), due)
 	if herb != "":
 		assert_true(hints.find(due) > hints.find(herb), "a later order keeps its old slot")

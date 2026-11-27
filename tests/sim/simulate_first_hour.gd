@@ -604,8 +604,17 @@ func _run() -> void:
 	quit()
 
 
-const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first season task done"]
+const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first season task done", "first season task"]
 const DEAD_DAYS := 14
+
+
+## GUIDE-296: whether any single task of this season's set is complete.
+func _any_season_task_done(gs: Node, c: CharacterData) -> bool:
+	var today: int = gs.get_node("/root/GameClock").total_days
+	for row: Dictionary in SeasonTasks.list(c, gs.data, today):
+		if bool(row["done"]):
+			return true
+	return bool(c.season_tasks.get("done", false)) or not c.seasons_completed.is_empty()
 
 
 ## SIM-037: which of the FIRSTS hold now (name -> true).
@@ -630,6 +639,7 @@ func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary
 		FIRSTS[9]: bool(flags.get("congrat", false)),
 		FIRSTS[10]: shared,
 		FIRSTS[11]: bool(flags.get("season", false)),
+		FIRSTS[12]: _any_season_task_done(gs, c),
 	}
 
 
