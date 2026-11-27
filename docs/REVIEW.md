@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 54bdb09
+Last reviewed commit: 474cee3
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2601,3 +2601,17 @@ Last reviewed commit: 54bdb09
     advance writes the flag). FOLK-053's catch-up can queue a rise months old the day favor reaches 40 (as specced).
     WU-635's card always runs the meditation on close (skip = begin), fine. WU-634, WU-631, C-424, GFX-264, SIM-037 and the
     QA-250 baseline match their specs. Not rendered by me.
+- 2026-11-27 (reviewer): reviewed 54bdb09..474cee3 (FOLK-054, GUIDE-294, C-426, WU-637, FOLK-055, QA-251, GUIDE-295,
+  WU-639, WU-640, GUIDE-296, WU-641, C-427; [PLAN]/[REVIEW] skipped). Main green (4867 tests). No BACKLOG/CHANGELOG edits by
+  workers (FOLK-055 added an Open design question, allowed); no new binary assets; no SAVE_VERSION change (FOLK-054's
+  `friend_aid`, `aid_bonus`, `aid_wait` default on load).
+  - WU-637 / WU-635 fix: neither FriendAidCard nor FriendMeditationCard was in the HUD's `_blocking_except_encounter` or
+    `_on_menu_requested` checks, so while either card was up `ui_modal_changed` said false: the player could walk off and
+    open an NPC menu over the card (and the status/log panels stayed up). Both cards added to both checks; tests assert
+    `_is_blocking` while each card is open and not after it closes.
+  - FOLK-054: validator messages and doc said `friend_aid.items`; the key is `aid_items`. Fixed.
+  - Notes (not filed): C-427 put cheap pills in the aid pools (star_dew_qi_pill, 20 stones), so a friend whose id hashes to
+    it gives +8 favor and +15% odds for 20 stones every 90 days; fine for now, planner may weigh it. WU-637's card is
+    requested from `Npc.get_options()` (a side effect in a getter, guarded by the once-per-ask flag). GUIDE-295's sim change
+    moved first Friend 6/6 -> 2/6 seeds (worker Follow-up; SIM-038). WU-639/WU-640/WU-641 shots were not rendered by their
+    workers or by me.

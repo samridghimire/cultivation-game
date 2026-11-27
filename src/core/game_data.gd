@@ -1366,7 +1366,7 @@ func _validate_friend_invite() -> void:
 		load_errors.append("family.friend_invite needs min_player_rank >= 0 and favor >= 0")
 
 
-## FOLK-054: family.friend_aid {min_favor 0..100, cooldown_days >= 1, expire_days >= 1, favor >= 0, odds_bonus 0..0.5, items {"<realm index>": [item ids]}}.
+## FOLK-054: family.friend_aid {min_favor 0..100, cooldown_days >= 1, expire_days >= 1, favor >= 0, odds_bonus 0..0.5, aid_items {"<realm index>": [item ids]}}.
 func _validate_friend_aid() -> void:
 	var cfg: Dictionary = family.get("friend_aid", {})
 	if cfg.is_empty():
@@ -1381,18 +1381,18 @@ func _validate_friend_aid() -> void:
 		load_errors.append("family.friend_aid.odds_bonus must be 0..0.5")
 	var by_realm: Variant = cfg.get("aid_items", {})
 	if not by_realm is Dictionary or (by_realm as Dictionary).is_empty():
-		load_errors.append("family.friend_aid.items needs at least one realm")
+		load_errors.append("family.friend_aid.aid_items needs at least one realm")
 		return
 	for key: String in by_realm:
 		if not key.is_valid_int() or int(key) < 2 or int(key) >= realms.size():
-			load_errors.append("family.friend_aid.items key '%s' must be a realm index of 2 or more" % key)
+			load_errors.append("family.friend_aid.aid_items key '%s' must be a realm index of 2 or more" % key)
 		var pool: Variant = by_realm[key]
 		if not pool is Array or (pool as Array).is_empty():
-			load_errors.append("family.friend_aid.items.%s needs at least one item" % key)
+			load_errors.append("family.friend_aid.aid_items.%s needs at least one item" % key)
 			continue
 		for item_id: Variant in pool:
 			if not items.has(String(item_id)):
-				load_errors.append("family.friend_aid.items.%s: unknown item '%s'" % [key, item_id])
+				load_errors.append("family.friend_aid.aid_items.%s: unknown item '%s'" % [key, item_id])
 
 
 func _validate_folk_news() -> void:

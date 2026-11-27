@@ -1639,7 +1639,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -2850,7 +2850,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
 
 
 func _update_modal() -> void:

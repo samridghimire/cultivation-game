@@ -152,11 +152,15 @@ func test_card_once_per_ask_and_buttons() -> void:
 	for i in 3:
 		await (Engine.get_main_loop() as SceneTree).process_frame
 	var card: FriendAidCard = hud.get("_friend_aid_card")
+	hud.get("_dialogue").visible = false  # review: the opening dialogue of a new session
+	assert_false(hud.call("_is_blocking"))
 	assert_true(gs.request_friend_aid_card("xiao_ling"))
 	assert_true(card.visible)
+	assert_true(hud.call("_is_blocking"), "review: the card is modal (the player cannot walk or open a menu under it)")
 	assert_true(card.give_button().disabled, "none held")
 	assert_false(gs.request_friend_aid_card("xiao_ling"), "once per ask")
 	card.close()
+	assert_false(hud.call("_is_blocking"))
 	assert_true(gs.player.friend_aid.has("xiao_ling"), "Later keeps the ask")
 	gs.player.add_item(item, 1)
 	gs.world_flags.erase("friend_aid_card_xiao_ling")

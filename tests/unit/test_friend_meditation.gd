@@ -115,13 +115,16 @@ func test_staged_card_then_meditation() -> void:
 	for i in 3:
 		await (Engine.get_main_loop() as SceneTree).process_frame
 	var card: FriendMeditationCard = hud.get("_friend_med_card")
+	hud.get("_dialogue").visible = false  # review: the opening dialogue of a new session
 	var day: int = clock.total_days
 	gs.request_friend_meditation("xiao_ling", 1.0)
 	assert_true(card.visible, "card shown first")
+	assert_true(hud.call("_is_blocking"), "review: the card is modal")
 	assert_eq(clock.total_days, day, "no time passes yet")
 	assert_eq(card.line_text(), "You and Xiao Ling sit together in quiet cultivation.")
 	card.close()
 	assert_false(card.visible)
+	assert_false(hud.call("_is_blocking"))
 	assert_gt(clock.total_days, day, "the meditation ran on close")
 	assert_eq(gs.npc_favor["xiao_ling"], 52)
 	_root().remove_child(hud)
