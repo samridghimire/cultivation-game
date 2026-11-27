@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 94b2b9b
+Last reviewed commit: 51f00a5
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2629,3 +2629,17 @@ Last reviewed commit: 94b2b9b
     (`thanks_due` skips the dead, nothing prunes it; harmless). GUIDE-300's hint calls Combat.win_chance in Guidance.hints.
     GFX-265/GFX-266 raised the scenery caps for the marsh (20) and ridge (15). WU-643's --letter shot was not rendered by
     its worker or by me; GUIDE-299, WU-638, C-428, GUIDE-298, SIM-038 match their specs.
+- 2026-11-27 (reviewer, 3rd run): reviewed 94b2b9b..51f00a5 (FOLK-057, C-429, GFX-267, SIM-039, WU-644, GFX-268, SIM-040,
+  FOLK-058, GFX-269, WU-646, C-431; [PLAN]/[REVIEW] skipped; FOLK-057 landed just before the last review commit). Main green
+  (4896 tests). No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change (WU-644's
+  `home_left_day`/`home_lines` live in world_flags; WU-646's `letters_quiet` setting defaults to false).
+  - C-431 fix: the retargeted autumn year-2 task read "Hunt the Fog-Antler Stag that raids the granaries"; now "tramples the
+    harvest fields" (data only).
+  - SIM-040's Milestones.flag_count guard matters beyond the sim: WU-644 stores an Array (`home_lines`) in world_flags, and
+    `bool(Array)` would have crashed flag_count. Other world_flags scans filter by prefix first; checked, none affected.
+  - Notes (not filed): FOLK-058 (first_bond_favor 7) and SIM-040 (home_call.max_route_days 8 -> 12) change balance numbers
+    without `tools/balance.sh --check`/refresh; C-431 says the baseline already lags (QA-225/QA-244/QA-253 cover the drift).
+    WU-644 only sets `home_left_day` on travel(); leaving Qingshi by a teleport (anchor/creation artifact) gives no home
+    lines on return. Year 2 now has two Fog-Antler Stag hunts (spring and autumn). FOLK-058's test hardcodes max_favor 45.
+    WU-646's slide aims at the parent's live centre each tween step (replaces my previous await-a-frame fix; its test still
+    passes). GFX-267/268/269 renders not re-viewed by me.

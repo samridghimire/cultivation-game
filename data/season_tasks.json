@@ -106,7 +106,7 @@
           {"id": "autumn_moon", "text": "Gather 2 Village Mugwort for the Mid-Autumn cakes.", "kind": "gather", "target": "village_mugwort", "count": 2}
         ],
         [
-          {"id": "autumn_fox_y2", "text": "Hunt the Fog-Antler Stag that raids the granaries.", "kind": "hunt", "target": "fog_antler_stag", "count": 1},
+          {"id": "autumn_fox_y2", "text": "Hunt the Fog-Antler Stag that tramples the harvest fields.", "kind": "hunt", "target": "fog_antler_stag", "count": 1},
           {"id": "autumn_dew_y2", "text": "Gather 2 Dew Grass for the harvest wine.", "kind": "gather", "target": "dew_grass", "count": 2},
           {"id": "autumn_market_y2", "text": "Sell 3 of a stall's wanted goods.", "kind": "sell_wanted", "target": "", "count": 3}
         ]
