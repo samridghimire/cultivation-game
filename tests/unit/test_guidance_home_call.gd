@@ -157,3 +157,14 @@ func test_home_news_uses_npc_lines_else_generic() -> void:
 	var plain := Letters.home_news(c, gs.npcs, gs.data, {}, day, away)
 	gs.data.npcs["xiao_ling"]["home_news_lines"] = saved
 	assert_true(String(plain["text"]).contains("Come by when the sect lets you go"), "generic fallback")
+
+
+## SIM-040: a sect disciple at a hall 10 route days from Qingshi (azure_peak) still gets the line.
+func test_hall_ten_days_away_still_gets_the_line() -> void:
+	var c := _start()
+	var gs := _gs()
+	var cap := int(gs.data.family["home_call"]["max_route_days"])
+	assert_true(cap >= 10, "the cap covers a hall ten days away")
+	var hall := Sects.home_region(gs.data, "azure_cloud_sect")
+	var days := Guidance.route_days(c, gs.data, hall, SeasonTasks.REGION)
+	assert_true(days >= 1 and days <= cap, "the Azure hall is within the cap (%d days)" % days)

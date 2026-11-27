@@ -109,6 +109,14 @@ func test_flag_count_check_counts_matching_set_flags() -> void:
 	assert_true(Milestones.is_met(c, data(), flags, null, check))
 
 
+## SIM-040: a flag holding an array or null must not crash the count (bool() has no constructor for them).
+func test_flag_count_ignores_flags_that_are_not_scalars() -> void:
+	var c := new_character()
+	var check := {"type": "flag_count", "prefix": "errand_", "suffix": "_done", "min": 1}
+	var flags := {"errand_a_done": [1, 2], "errand_b_done": null, "errand_c_done": true}
+	assert_true(Milestones.is_met(c, data(), flags, null, check))
+
+
 func test_ms003_milestones_are_earned_from_their_counters() -> void:
 	var c := new_character()
 	assert_eq(Milestones.newly_reached(c, data(), {}).size(), 0)

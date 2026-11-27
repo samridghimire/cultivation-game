@@ -604,7 +604,7 @@ func _run() -> void:
 	quit()
 
 
-const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first full season set", "first season task"]
+const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first full season set", "first season task", "first trip home", "first practice level"]
 const DEAD_DAYS := 14
 
 
@@ -615,6 +615,15 @@ func _any_season_task_done(gs: Node, c: CharacterData) -> bool:
 		if bool(row["done"]):
 			return true
 	return bool(c.season_tasks.get("done", false)) or not c.seasons_completed.is_empty()
+
+
+## SIM-040: whether any known technique has been practised past its first level.
+func _practice_level_up(c: CharacterData) -> bool:
+	for id: String in c.techniques:
+		var v: Variant = c.techniques[id]
+		if v is Dictionary and int((v as Dictionary).get("level", 1)) > 1:
+			return true
+	return false
 
 
 ## SIM-037: which of the FIRSTS hold now (name -> true).
@@ -640,6 +649,8 @@ func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary
 		FIRSTS[10]: shared,
 		FIRSTS[11]: bool(flags.get("season", false)),
 		FIRSTS[12]: _any_season_task_done(gs, c),
+		FIRSTS[13]: int(FirstHour.home_trips["first"]) >= 0,
+		FIRSTS[14]: _practice_level_up(c),
 	}
 
 
@@ -691,6 +702,7 @@ func _run_firsts(args: Array) -> void:
 	for s in range(1, seeds + 1):
 		var st := {"day0": -1, "start_stage": -1, "found": {}, "events": [0], "last": {}, "acts": []}
 		var flags := {}
+		FirstHour.home_trips = {"first": -1, "count": 0}
 		var on_congrat := func(_id: String, _n: String, _t: String) -> void: flags["congrat"] = true
 		var on_season := func(_s: String, _r: String) -> void: flags["season"] = true
 		bus.friend_congratulated.connect(on_congrat)

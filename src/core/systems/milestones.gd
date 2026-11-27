@@ -107,7 +107,7 @@ static func flag_count(flags: Dictionary, check: Dictionary) -> int:
 	var n := 0
 	for key: String in flags:
 		var value: Variant = flags[key]
-		if not (value is String or value is Dictionary) and bool(value) and key.begins_with(prefix) and key.ends_with(suffix):
+		if (value is bool or value is int or value is float) and bool(value) and key.begins_with(prefix) and key.ends_with(suffix):
 			n += 1
 	return n
 

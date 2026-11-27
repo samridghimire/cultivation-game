@@ -2466,7 +2466,7 @@ static func home_call_hint(c: CharacterData, data: GameData, people: Dictionary,
 		return ""
 	var cfg: Dictionary = data.family.get("home_call", {})
 	var days := route_days(c, data, region_id, SeasonTasks.REGION)
-	if days < 1 or days > int(cfg.get("max_route_days", 8)):
+	if days < 1 or days > int(cfg.get("max_route_days", 12)):
 		return ""
 	var reasons := PackedStringArray()
 	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):

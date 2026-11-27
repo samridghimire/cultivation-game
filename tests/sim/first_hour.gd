@@ -177,6 +177,8 @@ static var trace_friend := false
 ## GUIDE-280: when set, every hints week appends {day, acted, line, top} here (quiet_stretches.gd --weeks prints the longest stretch's weeks).
 static var week_trace: Array = []
 static var record_weeks := false
+## SIM-040: the first day and the number of home_call trips (reset by the --firsts runner).
+static var home_trips := {"first": -1, "count": 0}
 ## SIM-033: the hints player acts on the lecture / style-teacher line in the same week as a 1-day friend kindness (rogue_season.gd).
 static var weekly_extras := false
 static var hints_log := {"acted": {}, "idle_weeks": 0, "weeks": 0, "unmatched": {}}
@@ -216,7 +218,7 @@ const FAR_QI_MIN_SAVED := 30
 ## tests/sim/first_hour_presses.gd. {"presses": n, "first": {milestone: {"day": d, "presses": n}}}, reset by play().
 static var press_log := {"presses": 0, "first": {}}
 ## Menu presses per hinted action: open the menu, choose the entry, confirm. Walking to another region adds TRAVEL_PRESSES.
-const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "sect_report": 3, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "study": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
+const PRESS_COST := {"talk": 3, "use_item": 3, "buy_qi": 3, "heal": 3, "chore": 3, "fight": 3, "great_beast": 6, "spar": 3, "sect_home": 0, "home_call": 0, "sect_report": 3, "mission": 3, "sell": 3, "lend": 3, "teacher": 4, "fish": 3, "armor": 6, "treasury": 3, "study": 3, "unseal": 3, "travel": 0, "practise": 3, "forage": 2, "explore": 2, "bounty": 3, "cook": 3, "trial": 3, "buy": 2, "other": 3}
 const TRAVEL_PRESSES := 3
 const MILESTONES: Array[String] = ["first_stage", "first_win", "first_friend", "friend_tier2", "close_friend", "sworn_friend", "first_lesson", "first_friend_scene", "first_technique", "first_breakthrough", "sect_joined"]
 
@@ -2671,6 +2673,21 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 				gs.call_on(id)
 				return "tea" if int(gs.npc_favor.get(id, 0)) > favor_before else ""
 		return ""
+	if line.begins_with("Home to Qingshi (") and not c.is_rogue():
+		# SIM-040: walk home, do the errands the Qingshi lines name (congratulate, season task), then walk back to the hall.
+		var hall_home := Sects.home_region(gs.data, String(c.sect["id"]))
+		_walk_to(gs, c, SeasonTasks.REGION)
+		if gs.current_region != SeasonTasks.REGION:
+			return ""
+		home_trips["first"] = int(home_trips["first"]) if int(home_trips["first"]) >= 0 else day
+		home_trips["count"] = int(home_trips["count"]) + 1
+		var here_day: int = gs.get_node("/root/GameClock").total_days
+		for errand: String in _next_steps(gs, c, here_day).slice(0, 5):
+			if errand.begins_with("Congratulate ") or errand.begins_with("Season task: "):
+				_act_on_hint(gs, c, done, errand, here_day)
+		if c.alive and hall_home != "" and gs.current_region != hall_home:
+			_walk_to(gs, c, hall_home)
+		return "home_call"
 	if line.begins_with("Season task: "):
 		# GUIDE-296: the line names an open catch/gather task a Qingshi place serves; work at it for the week.
 		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):

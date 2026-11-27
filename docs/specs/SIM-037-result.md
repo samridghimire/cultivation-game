@@ -111,3 +111,17 @@ Before (SIM-038): five stretches of 89-130 days in days 66-199, mostly `practice
 Reading: GUIDE-298 removed the practice loop; the first Friend (FOLK-057) now comes at day 144-158 in five seeds (SIM-038 had it never in 6 months for most), but it is still after day 90 because the Friend only comes at about day 150, once the sim's lend-a-hand and meditation weeks pile up favor. Seed 5 (sect joined day 48) is the only one that makes a Friend by day 45. The longest remaining hole is days ~216-331: the sim meditates 50-64 days with 12-28 days of missions and 7 of fights, and gets no first and no stage change (this report does not say whether a second stage up is possible in that time; not checked). The sim never goes home to Qingshi in that stretch (congratulation 0/6, season set 0/6), so GUIDE-299's home call and GUIDE-300's hunt line are not being acted on by the hints player in the first year.
 
 Follow-ups: propose task SIM-040 (systems): find why `--firsts` never takes the Word-from-home trip or the hunt season task (GUIDE-299 `home_call_hint`, GUIDE-300 hunt line): print the top Next-steps line for the sim's days 120-330 weekly in `--firsts-trace` and check whether the line ever appears (game gap) or the policy ignores it (sim gap); then fix the smaller side. Target: first congratulation and a full season set in >= 3/6 seeds by day 365, and no dead stretch over 90 days.
+
+## After SIM-040
+
+`--firsts 6 12`, hints policy. **Diagnosis (game gap, smaller side fixed):** `home_call_hint` returned "" for every sect disciple: the Azure hall (azure_peak) is 10 route days from Qingshi and `family.json home_call.max_route_days` was 8. Raised to 12; the line now shows 5th-6th in Next steps in the season windows (day 71 "1 spring task left (18 days)", day 159 and 166 "2 summer tasks left"). The sim now has a `"Home to Qingshi ("` branch (walk home, congratulate / season task, walk back to the hall) and two new rows.
+
+| first | before (median) | after (median) |
+|---|---|---|
+| first congratulation | never | never |
+| first full season set | never | never |
+| first trip home | (new) | never (1/6 seeds, day 354) |
+| first practice level | (new) | never |
+| first shared meditation | never (1/6) | never (1/6) |
+
+Dead stretches unchanged (longest 98 days, seed 4, days 216-314). The home line sits below lend/tea/trial lines that the first-actionable-line policy takes every week, so the sim never leaves the hall for it. Target (>= 3/6 seeds congratulating or finishing a set) **missed**.
