@@ -1161,6 +1161,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append("A child is due in %s." % Calendar.format_duration(days))
 	# SECT-039: an open lecture leads for a member standing in the hall's region (it costs 2 days and pays 6 days of qi).
 	var lecture_here := _lecture_hint(c, data, today) if today >= 0 and not c.is_rogue() and region_id == Sects.home_region(data, String(c.sect["id"])) else ""
+	var lecture_lead := lecture_here  # GUIDE-297: the lecture line that must stay in the first 2 (here, or in reach)
 	if lecture_here != "":
 		out.append(lecture_here)
 	var thin := thin_defence_hint(c, data, region_id, flags)
@@ -1264,6 +1265,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 			var lecture_days := int(Sects.lecture_def(c, data).get("days", 2))
 			if hall_days >= 0 and hall_days + lecture_days <= Sects.days_left_in_month(today):
 				out.insert(mini(1, out.size()), lecture)
+				lecture_lead = lecture
 			else:
 				out.append(lecture)
 		var contest_hint := _contest_hint(c, data, today)
@@ -1309,6 +1311,13 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	out = _merge_practise_advice(out)
 	out = _merge_sell_advice(out, sell)
 	out = _fight_before_friend(out, c)
+	# GUIDE-297: the friend, goal and fight lines inserted above pushed the hall's open lecture to 5th (the hints player
+	# never attended one in 6 months); standing in the hall, it leads (second behind a report line).
+	if lecture_lead != "":
+		var lecture_at := out.find(lecture_lead)
+		if lecture_at > 1:
+			out.remove_at(lecture_at)
+			out.insert(mini(1 if report != "" else 0, out.size()), lecture_lead)
 	if home_gated:
 		out.append(home_hint)
 	if out.size() > limit:

@@ -2315,7 +2315,9 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			kinds[acted] = true
 			press_log["presses"] = int(press_log["presses"]) + int(PRESS_COST.get(acted, 3)) + (TRAVEL_PRESSES if gs.current_region != region_before else 0)
 			# SIM-033: a 1-day kindness leaves days in the week: a player also attends the lecture or works toward a style lesson.
-			if weekly_extras and c.alive and (acted == "lend" or acted == "tea"):
+			# GUIDE-297: a member who finished a mission or report at the hall also reads its lecture line (second in the list).
+			var at_hall: bool = not c.is_rogue() and gs.current_region == Sects.home_region(gs.data, String(c.sect["id"]))
+			if weekly_extras and c.alive and (acted == "lend" or acted == "tea" or (at_hall and (acted == "mission" or acted == "sect_report"))):
 				for extra: String in steps:
 					if extra.begins_with("Lecture at ") or extra.contains("can teach you") or extra.begins_with("Season task: "):
 						var extra_kind := _act_on_hint(gs, c, done, extra, gs.get_node("/root/GameClock").total_days)

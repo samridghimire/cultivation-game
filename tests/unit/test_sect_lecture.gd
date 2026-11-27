@@ -214,3 +214,11 @@ func test_lecture_outranks_friend_line_when_reachable() -> void:
 	var late := Array(Guidance.hints(c, data(), 1.0, 40, {}, {}, "qingshi_village", Calendar.DAYS_PER_MONTH - 1))
 	var late_lecture := _lecture_index(late)
 	assert_true(late_lecture < 0 or late_lecture >= lecture)
+
+
+## GUIDE-297: standing in the hall with an open lecture, the line is in the first 2 even with friend and goal lines present.
+func test_open_lecture_in_first_two_in_hall_region() -> void:
+	var c := _disciple()
+	var hall := Sects.home_region(data(), String(c.sect["id"]))
+	var here := Array(Guidance.hints(c, data(), 1.0, 5, {}, {}, hall, 5))
+	assert_true(_lecture_index(here) in [0, 1], str(here))
