@@ -667,6 +667,7 @@ func _run_firsts(args: Array) -> void:
 	FirstHour.hints_policy = true
 	FirstHour.start_region = ""
 	FirstHour.sect_report = true
+	FirstHour.weekly_extras = true  # GUIDE-295: a player who reads the style / lecture line acts on it in a free part of the week
 	var gs: Node = root.get_node("GameState")
 	var clock: Node = root.get_node("GameClock")
 	var bus: Node = root.get_node("EventBus")

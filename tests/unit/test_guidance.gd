@@ -6955,6 +6955,19 @@ func test_style_teacher_in_region_names_favor_and_liked_item() -> void:
 	assert_true(_has(Guidance.hints(c, data(), 1.0, 12, npcs, {}, "qingshi_village", 10, {"hunter_ma": 12}), "can teach you Iron Fist"))
 
 
+func test_style_line_is_in_the_first_three_for_a_newcomer_at_low_favor() -> void:
+	# GUIDE-295: a Qingshi newcomer at favor 5 with Hunter Ma sees the style line among the first 3 Next steps.
+	var c := _fresh()
+	c.techniques = {}
+	var npcs := _style_world()
+	var lines := Guidance.hints(c, data(), 1.0, 3, npcs, {}, "qingshi_village", 10, {"hunter_ma": 5})
+	var found := false
+	for i in mini(3, lines.size()):
+		if lines[i].contains("can teach you Iron Fist"):
+			found = true
+	assert_true(found, "\n".join(lines))
+
+
 func test_style_teacher_names_the_snare_errand() -> void:
 	var c := _fresh()
 	c.techniques = {}
