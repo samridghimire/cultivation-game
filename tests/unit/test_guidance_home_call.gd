@@ -168,3 +168,47 @@ func test_hall_ten_days_away_still_gets_the_line() -> void:
 	var hall := Sects.home_region(gs.data, "azure_cloud_sect")
 	var days := Guidance.route_days(c, gs.data, hall, SeasonTasks.REGION)
 	assert_true(days >= 1 and days <= cap, "the Azure hall is within the cap (%d days)" % days)
+
+
+## GUIDE-302: with catch/gather done, an open hunt task of fair odds calls the player home; a too-strong one does not.
+func test_hunt_only_reason() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(10)
+	var hunt: Dictionary = {}
+	c.season_tasks = {"season_key": SeasonTasks.season_key(day), "progress": {}, "done": false}
+	for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
+		if String(t["kind"]) == "hunt":
+			hunt = t
+		else:
+			c.season_tasks["progress"][String(t["id"])] = int(t["count"])
+	if hunt.is_empty():
+		return
+	var target := String(hunt["target"])
+	var line := Guidance.home_call_hint(c, gs.data, gs.npcs, gs.world_flags, away, day)
+	var rating := Guidance.open_hunt_rating(c, gs.data, day)
+	assert_false(rating.is_empty())
+	if float(rating["chance"]) >= Guidance.HUNT_TASK_MIN_CHANCE:
+		assert_true(line.contains("hunt %d" % int(hunt["count"])) and line.contains(Combat.label_for_chance(float(rating["chance"]))), line)
+	else:
+		assert_eq(line, "", "too strong")
+	# Too strong: swap in the strongest foe.
+	var strongest := ""
+	var best := 0.0
+	var ids: Array = gs.data.enemies.keys()
+	ids.sort()
+	for id: String in ids:
+		var p := float(gs.data.enemies[id].get("power", 0.0))
+		if p >= best:
+			best = p
+			strongest = id
+	hunt["target"] = strongest
+	if Combat.win_chance(c, gs.data, gs.data.enemies[strongest]) < Guidance.HUNT_TASK_MIN_CHANCE:
+		assert_eq(Guidance.home_call_hint(c, gs.data, gs.npcs, gs.world_flags, away, day), "", "hunt too strong")
+	hunt["target"] = target
+	# A catch task still open: the old count reason.
+	for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
+		if String(t["kind"]) != "hunt":
+			c.season_tasks["progress"][String(t["id"])] = 0
+	assert_true(Guidance.home_call_hint(c, gs.data, gs.npcs, gs.world_flags, away, day).contains("task"), "count reason")

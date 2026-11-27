@@ -2512,6 +2512,12 @@ static func home_call_hint(c: CharacterData, data: GameData, people: Dictionary,
 				open += 1
 		if open > 0:
 			reasons.append("%d %s task%s left (%d days)" % [open, SeasonTasks.season_name(today), "" if open == 1 else "s", left])
+		else:
+			# GUIDE-302: only a fair-odds hunt task is left.
+			var rating := open_hunt_rating(c, data, today)
+			if not rating.is_empty() and float(rating["chance"]) >= HUNT_TASK_MIN_CHANCE:
+				var hunt_task: Dictionary = rating["task"]
+				reasons.append("hunt %d %s (%s)" % [int(hunt_task["count"]) - int(rating["done"]), String(rating["enemy"].get("name", "")), Combat.label_for_chance(float(rating["chance"]))])
 	if reasons.size() < 2:
 		var ids: Array = flags.keys()
 		ids.sort()
@@ -2525,6 +2531,23 @@ static func home_call_hint(c: CharacterData, data: GameData, people: Dictionary,
 	if reasons.is_empty():
 		return ""
 	return "Home to Qingshi (%d days): %s" % [days, "; ".join(reasons.slice(0, 2))]
+
+
+const HUNT_TASK_MIN_CHANCE := 0.4
+
+## GUIDE-302: the first open hunt season task with its foe and the player's odds: {task, enemy, chance, done}, or {}
+## when none is open or its foe is unknown. Read-only; shared by season_task_hint and home_call_hint.
+static func open_hunt_rating(c: CharacterData, data: GameData, today: int) -> Dictionary:
+	var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today) else {}
+	for t: Dictionary in SeasonTasks.tasks_for(data, today):
+		var done := int(progress.get(String(t["id"]), 0))
+		if String(t["kind"]) != "hunt" or done >= int(t["count"]):
+			continue
+		var enemy: Dictionary = data.enemies.get(String(t.get("target", "")), {})
+		if enemy.is_empty():
+			return {}
+		return {"task": t, "enemy": enemy, "chance": Combat.win_chance(c, data, enemy), "done": done}
+	return {}
 
 
 ## GUIDE-296: "Season task: <text> at <place> (0/1)" for the first open catch/gather task of the season that a place in
@@ -2553,13 +2576,13 @@ static func season_task_hint(c: CharacterData, data: GameData, region_id: String
 			return "Season task: %s %s (%d/%d)%s" % [t["text"], where, n, int(t["count"]), tail]
 	if hunt.is_empty() or SeasonTasks.has_open(c, data, today, "catch") or SeasonTasks.has_open(c, data, today, "gather"):
 		return ""
-	var enemy: Dictionary = data.enemies.get(String(hunt.get("target", "")), {})
-	if enemy.is_empty():
+	var rating := open_hunt_rating(c, data, today)
+	if rating.is_empty():
 		return ""
-	var chance := Combat.win_chance(c, data, enemy)
+	var chance := float(rating["chance"])
 	var text := String(hunt["text"]).trim_suffix(".")
 	var done := int(progress.get(String(hunt["id"]), 0))
-	if chance < 0.4:
+	if chance < HUNT_TASK_MIN_CHANCE:
 		return "Season task: %s (too strong for now: %s) (%d/%d)%s" % [text, Combat.label_for_chance(chance), done, int(hunt["count"]), tail]
 	var where := SeasonTasks.where(hunt, c, data, today)
 	var place := "" if where == "" else " " + where
