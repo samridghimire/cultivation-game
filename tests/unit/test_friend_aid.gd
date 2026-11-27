@@ -348,3 +348,11 @@ func test_letter_card_slides_to_center() -> void:
 	_root().remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+func test_dead_friend_thanks_pruned_at_month_end() -> void:
+	var gs := _start()
+	gs.player.friend_thanks["xiao_ling"] = {"gift": "spirit_herb", "aid_item": "qi_gathering_pill", "day": GameClock.total_days}
+	gs.npcs["xiao_ling"].alive = false
+	gs._deliver_friend_thanks()
+	assert_true(gs.player.friend_thanks.is_empty(), "dead friend's thanks pruned")

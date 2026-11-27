@@ -941,6 +941,8 @@ func _validate_world() -> void:
 				load_errors.append("lend_a_hand.%s must be >= 1" % key)
 		if int(lend.get("favor", -1)) < 0:
 			load_errors.append("lend_a_hand.favor must be >= 0")
+		if lend.has("first_bond_favor") and (int(lend["first_bond_favor"]) < 1 or int(lend["first_bond_favor"]) > 20):
+			load_errors.append("lend_a_hand.first_bond_favor must be 1..20")
 		if int(lend.get("max_favor", 0)) <= int(family.get("acquaintance", {}).get("chat_max_favor", 0)):
 			load_errors.append("lend_a_hand.max_favor must exceed acquaintance.chat_max_favor")
 		for verb_key: String in lend.get("verbs", {}):

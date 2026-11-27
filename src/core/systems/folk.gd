@@ -2176,7 +2176,18 @@ static func lend_gain(c: CharacterData, data: GameData, favor: int) -> int:
 	var step := maxi(1, int(data.family.get("acquaintance", {}).get("charisma_step", 4)))
 	@warning_ignore("integer_division")
 	var bonus := (c.attribute("charisma") - 10) / step
-	return clampi(maxi(1, int(rules.get("favor", 4)) + bonus), 0, maxi(0, int(rules.get("max_favor", 0)) - favor))
+	var base := int(rules.get("favor", 4))
+	if favor < _friend_min(data):  # FOLK-058: the bond-forming days count for more
+		base = int(rules.get("first_bond_favor", base))
+	return clampi(maxi(1, base + bonus), 0, maxi(0, int(rules.get("max_favor", 0)) - favor))
+
+
+## FOLK-058: favor at which a villager becomes a Friend (folk_tiers entry named "Friend", default 40).
+static func _friend_min(data: GameData) -> int:
+	for t: Dictionary in data.family.get("folk_tiers", []):
+		if String(t.get("name", "")) == "Friend":
+			return int(t.get("min", 40))
+	return 40
 
 
 ## FOLK-035: {item, count} the villager hands over for their trade, or {}.

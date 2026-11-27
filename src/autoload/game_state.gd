@@ -2675,6 +2675,7 @@ func give_friend_aid(npc_id: String) -> void:
 
 ## FOLK-056: delivers thanks gifts that are due (you are in the friend's region, or a week has passed).
 func _deliver_friend_thanks() -> void:
+	FriendAid.prune_thanks(player, npcs)  # FOLK-058
 	for id in FriendAid.thanks_due(player, data, npcs, current_region, GameClock.total_days):
 		var npc: CharacterData = npcs[id]
 		var got := FriendAid.deliver_thanks(player, data, id)

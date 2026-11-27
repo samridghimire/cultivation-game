@@ -43,6 +43,20 @@ func test_gain_and_yield() -> void:
 	d.npcs["elder_mo"]["activity"] = "read"
 
 
+func test_first_bond_favor_below_friend_tier() -> void:
+	var d := data()
+	var c := new_character()
+	var rules: Dictionary = d.family["lend_a_hand"]
+	var old_bond: Variant = rules["first_bond_favor"]
+	var bonus := Folk.lend_gain(c, d, 0) - int(old_bond)
+	assert_eq(Folk.lend_gain(c, d, 30), int(old_bond) + bonus, "bond favor below the Friend tier")
+	assert_eq(Folk.lend_gain(c, d, 39), mini(int(old_bond) + bonus, 45 - 39), "bond favor at 39 (capped)")
+	assert_eq(Folk.lend_gain(c, d, 40), int(rules["favor"]) + bonus if int(rules["favor"]) + bonus <= 5 else 5, "normal favor at 40")
+	rules.erase("first_bond_favor")
+	assert_eq(Folk.lend_gain(c, d, 30), int(rules["favor"]) + bonus, "defaults to favor")
+	rules["first_bond_favor"] = old_bond
+
+
 func test_validation_rejects_bad_block() -> void:
 	var d := data()
 	var old: Dictionary = d.family["lend_a_hand"].duplicate(true)

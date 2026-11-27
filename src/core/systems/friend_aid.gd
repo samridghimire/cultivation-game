@@ -92,6 +92,18 @@ static func queue_thanks(player: CharacterData, data: GameData, npc: CharacterDa
 	return gift
 
 
+## FOLK-058: drops queued thanks whose friend is dead or gone. Returns how many were removed.
+static func prune_thanks(player: CharacterData, npcs: Dictionary) -> int:
+	var gone: Array[String] = []
+	for id: String in player.friend_thanks:
+		var npc: CharacterData = npcs.get(id)
+		if npc == null or not npc.alive:
+			gone.append(id)
+	for id in gone:
+		player.friend_thanks.erase(id)
+	return gone.size()
+
+
 ## FOLK-056: ids of queued thanks ready now: the player is in the friend's region, or thanks_days have passed.
 static func thanks_due(player: CharacterData, data: GameData, npcs: Dictionary, region: String, today: int) -> Array[String]:
 	var out: Array[String] = []
