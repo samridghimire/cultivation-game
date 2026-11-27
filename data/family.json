@@ -110,7 +110,7 @@
   "sect_entry": {"min_age_years": 12, "days": 2, "clan_youth_chance": 0.5},
   "acquaintance": {"chat_days": 3, "chat_favor": 2, "charisma_step": 4, "chat_max_favor": 30, "gift_days": 0, "gift_price_per_favor": 10, "gift_max_per_item": 10, "gift_max_favor": 50, "birthday_max_favor": 90, "birthday_min_gain": 10, "gift_like_mult": 2.0, "gift_dislike_favor": -3, "taste_hint_favor": 20},
   "friend_invite": {"min_favor": 60, "min_player_rank": 1, "favor": 5},
-  "friend_aid": {"min_favor": 40, "cooldown_days": 90, "expire_days": 60, "favor": 8, "odds_bonus": 0.15, "aid_items": {"2": ["foundation_establishment_pill"], "3": ["core_forming_pill"]}},
+  "friend_aid": {"min_favor": 40, "cooldown_days": 90, "expire_days": 60, "favor": 8, "odds_bonus": 0.15, "aid_items": {"2": ["foundation_establishment_pill", "spirit_gathering_pill", "star_dew_qi_pill"], "3": ["core_forming_pill", "soul_nourishing_pill", "cloud_mist_qi_pill"], "4": ["nascent_soul_pill", "soul_nourishing_pill", "bog_lily_qi_pill"]}},
   "friend_meditation": {"min_favor": 40, "days": 7, "qi_mult": 1.1, "favor": 2, "cooldown_days": 14},
     "lend_a_hand": {"days": 1, "cooldown_days": 7, "favor": 4, "max_favor": 45, "verbs": {"sweep": "sweeping the yard", "hoe": "turning the soil", "fish": "mending nets and fishing", "read": "sorting scrolls", "hawk": "minding the stall", "chop": "splitting firewood", "sit": "keeping them company", "": "with their chores"}, "yields": {"hoe": {"item": "millet", "count": 1}, "fish": {"item": "silver_carp", "count": 1}, "chop": {"item": "firewood", "count": 1}}},
   "courtship": {"min_favor": 20, "favor_gain": 6, "charisma_step": 2, "days": 7},

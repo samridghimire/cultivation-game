@@ -57,7 +57,7 @@ func test_give_consumes_boosts_once_and_expires() -> void:
 	var gs := _start()
 	var npc := _gate(gs, "xiao_ling", 50)
 	var item := FriendAid.open_ask(gs.player, gs.data, npc, gs.world_flags, 1000)
-	assert_eq(item, "foundation_establishment_pill")
+	assert_true(["foundation_establishment_pill", "spirit_gathering_pill", "star_dew_qi_pill"].has(item), "ask is one of the realm's aid items")
 	assert_true(FriendAid.give_block(gs.player, gs.data, npc, 1000).begins_with("You have no"))
 	gs.player.add_item(item, 1)
 	assert_eq(FriendAid.give_block(gs.player, gs.data, npc, 1000), "")
