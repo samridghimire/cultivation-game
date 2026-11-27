@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 474cee3
+Last reviewed commit: 94b2b9b
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2615,3 +2615,17 @@ Last reviewed commit: 474cee3
     requested from `Npc.get_options()` (a side effect in a getter, guarded by the once-per-ask flag). GUIDE-295's sim change
     moved first Friend 6/6 -> 2/6 seeds (worker Follow-up; SIM-038). WU-639/WU-640/WU-641 shots were not rendered by their
     workers or by me.
+- 2026-11-27 (reviewer, 2nd run): reviewed 474cee3..94b2b9b (GUIDE-297, FOLK-056, GFX-265, SIM-038, WU-638, WU-642, GUIDE-298,
+  C-428, GUIDE-299, WU-643, GFX-266, GUIDE-300; [PLAN]/[REVIEW] skipped; GUIDE-297 landed just before the last review commit
+  and was not in its range). Main green (4884 -> 4885 tests). No BACKLOG/CHANGELOG edits by workers; no new binary assets; no
+  SAVE_VERSION change (FOLK-056's `friend_thanks` defaults to {} in from_dict).
+  - WU-643 fix: the LetterCard slide captured `position.y` before its CenterContainer had placed it, so on the first letter
+    of a session the tween ended at y=0 and the paper sat at the top edge of the screen (later opens used the previous
+    letter's spot, off by the height difference). The slide now waits a frame (card transparent meanwhile), then tweens
+    up to where the container put it; test `test_letter_card_slides_to_center` (fails on the old code: y=0 vs 525).
+  - FOLK-056 fix: `friend_thanks` was inserted between WU-637's doc comment and `friend_aid_card` (same slip as WU-635's).
+  - WU-642 and WU-643 both added their cards to all three HUD blocking checks (the gap the last review fixed).
+  - Notes (not filed): a queued thanks gift for a friend who dies before delivery stays in `friend_thanks` forever
+    (`thanks_due` skips the dead, nothing prunes it; harmless). GUIDE-300's hint calls Combat.win_chance in Guidance.hints.
+    GFX-265/GFX-266 raised the scenery caps for the marsh (20) and ridge (15). WU-643's --letter shot was not rendered by
+    its worker or by me; GUIDE-299, WU-638, C-428, GUIDE-298, SIM-038 match their specs.

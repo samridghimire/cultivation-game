@@ -233,9 +233,10 @@ signal sect_lecture_attended(sect_id: String, result: Dictionary)
 ## WU-635: the HUD stages a short card, then calls GameState.meditate_with_friend (no listener: it runs at once).
 @warning_ignore("unused_signal")
 signal friend_meditation_requested(npc_id: String, npc_name: String, location_density: float)
-## WU-637: a friend's open request for aid, on a card the first time you greet them.
+## FOLK-056: a friend you aided sent a thank-you gift; the HUD shows it on a card (WU-642).
 @warning_ignore("unused_signal")
-signal friend_thanks(npc_id: String, npc_name: String, item_id: String)  # FOLK-056
+signal friend_thanks(npc_id: String, npc_name: String, item_id: String)
+## WU-637: a friend's open request for aid, on a card the first time you greet them.
 @warning_ignore("unused_signal")
 signal friend_aid_card(npc_id: String, npc_name: String, item_name: String, held: bool)
 ## GFX-262: a friend's own news (FolkNews.queue_own) was queued; `kind` is "qi_start" or "breakthrough". The region plays a light column if they stand in it.

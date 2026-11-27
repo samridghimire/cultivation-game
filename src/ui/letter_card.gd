@@ -85,9 +85,20 @@ func open(npc_id: String, npc_name: String, text: String, request: Dictionary = 
 	visible = true
 	_continue.grab_focus.call_deferred()
 	if slides():
-		var tw := create_tween()
-		position.y += SLIDE_PX
-		tw.tween_property(self, "position:y", position.y - SLIDE_PX, SLIDE_SECONDS)
+		_slide()
+
+
+## The CenterContainer places the card (and its wrapped text settles) only after a frame; tweening from the position
+## before that parked the card at the top of the screen on the first open. So wait a frame, then slide up to where it sits.
+func _slide() -> void:
+	modulate.a = 0.0
+	await get_tree().process_frame
+	modulate.a = 1.0
+	if not visible:
+		return
+	var rest := position.y
+	position.y = rest + SLIDE_PX
+	create_tween().tween_property(self, "position:y", rest, SLIDE_SECONDS)
 
 
 func close() -> void:

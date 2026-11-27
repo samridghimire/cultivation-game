@@ -328,3 +328,23 @@ func test_letter_card() -> void:
 	_root().remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## REVIEW: the slide-in ends where the CenterContainer puts the card (it once parked at y=0 on the first open).
+func test_letter_card_slides_to_center() -> void:
+	var gs := _start()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: LetterCard = hud.get("_letter_card")
+	assert_true(LetterCard.slides(), "default settings slide")
+	card.open("xiao_ling", "Xiao Ling", "Come see me when the sect lets you go; the pond is high and the herbs are in.")
+	await (Engine.get_main_loop() as SceneTree).create_timer(LetterCard.SLIDE_SECONDS + 0.3).timeout
+	var parent := card.get_parent() as Control
+	var want := (parent.size.y - card.size.y) / 2.0
+	assert_true(absf(card.position.y - want) <= 1.0, "card at y=%s, centered is %s" % [card.position.y, want])
+	card.close()
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()
