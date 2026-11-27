@@ -11,6 +11,7 @@ extends SceneTree
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-264: `-- --friend-realm=<npc_id>:<realm_index>` shows the friend's aura: friend_realm_<n>.png.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
+## WU-637: `-- --friend-aid=<npc_id>` opens the friend's request card: friend_aid.png.
 ## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
 ## WU-629: `-- --own-news=<npc_id>` forces that villager's own pending news: own_news_bubble.png, then own_news_card.png (the congratulate card).
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
@@ -516,6 +517,14 @@ func _start() -> void:
 				hud.get("_banner").visible = false
 				(hud.get("_friend_med_card") as Control).call("open", mid, String(gs.data.npcs[mid].get("name", mid)))
 				hud.call("_update_modal"), "close": func() -> void: (hud.get("_friend_med_card") as Control).visible = false})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-637: friend's request card
+		if a.begins_with("--friend-aid="):
+			var aid := a.substr(13)
+			shots.append({"name": "friend_aid", "open": func() -> void:
+				hud.get("_banner").visible = false
+				(hud.get("_friend_aid_card") as Control).call("open", aid, String(gs.data.npcs[aid].get("name", aid)), "Foundation Establishment Pill", true)
+				hud.call("_update_modal"), "close": func() -> void: (hud.get("_friend_aid_card") as Control).visible = false})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-629: a friend's own pending news, then the congratulate card
 		if a.begins_with("--own-news="):

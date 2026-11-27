@@ -136,3 +136,36 @@ func test_data_validation_rejects_bad_block() -> void:
 	gd.family["friend_aid"]["aid_items"]["2"] = ["no_such_item"]
 	gd._validate_friend_aid()
 	assert_false(gd.load_errors.is_empty())
+
+
+## WU-637: the card shows once per ask, focus follows holding the item, "I have it" gives, "Later" keeps the ask.
+func test_card_once_per_ask_and_buttons() -> void:
+	var gs := _start()
+	var npc := _gate(gs, "xiao_ling", 50)
+	var item := FriendAid.open_ask(gs.player, gs.data, npc, gs.world_flags, gs.get_node("/root/GameClock").total_days)
+	assert_true(FriendAid.card_pending(gs.player, gs.data, npc, gs.world_flags, gs.get_node("/root/GameClock").total_days))
+	assert_true(FriendAidCard.focus_give(true))
+	assert_false(FriendAidCard.focus_give(false))
+	assert_true(FriendAid.card_line("Xiao Ling", "Pill", false).ends_with("You have none yet."))
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: FriendAidCard = hud.get("_friend_aid_card")
+	assert_true(gs.request_friend_aid_card("xiao_ling"))
+	assert_true(card.visible)
+	assert_true(card.give_button().disabled, "none held")
+	assert_false(gs.request_friend_aid_card("xiao_ling"), "once per ask")
+	card.close()
+	assert_true(gs.player.friend_aid.has("xiao_ling"), "Later keeps the ask")
+	gs.player.add_item(item, 1)
+	gs.world_flags.erase("friend_aid_card_xiao_ling")
+	assert_true(gs.request_friend_aid_card("xiao_ling"))
+	assert_false(card.give_button().disabled)
+	card.give_button().pressed.emit()
+	assert_false(card.visible)
+	assert_eq(gs.player.item_count(item), 0, "given")
+	assert_false(gs.player.friend_aid.has("xiao_ling"))
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()

@@ -2622,6 +2622,18 @@ func can_give_aid(npc_id: String) -> bool:
 	return player != null and npcs.has(npc_id) and FriendAid.give_block(player, data, npcs[npc_id], GameClock.total_days) == ""
 
 
+## WU-637: the first greeting after a friend asks for aid opens a card (once per ask); false when nothing opened.
+func request_friend_aid_card(npc_id: String) -> bool:
+	var npc: CharacterData = npcs.get(npc_id)
+	if npc == null or not _can_act() or EventBus.friend_aid_card.get_connections().is_empty() \
+			or not FriendAid.card_pending(player, data, npc, world_flags, GameClock.total_days):
+		return false
+	world_flags["friend_aid_card_" + npc_id] = int(player.friend_aid[npc_id].get("day", 0))
+	var item_id := String(player.friend_aid[npc_id].get("item", ""))
+	EventBus.friend_aid_card.emit(npc_id, npc.name, String(data.items.get(item_id, {}).get("name", item_id)), player.item_count(item_id) > 0)
+	return true
+
+
 ## FOLK-054: give a friend the item they asked for; no time passes. Favor now, better breakthrough odds later.
 func give_friend_aid(npc_id: String) -> void:
 	EventBus.topic = "family"

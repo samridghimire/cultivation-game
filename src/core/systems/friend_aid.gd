@@ -101,3 +101,19 @@ static func journal_rows(player: CharacterData, data: GameData, npcs: Dictionary
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["days_left"]) < int(b["days_left"]) or (int(a["days_left"]) == int(b["days_left"]) and String(a["npc_id"]) < String(b["npc_id"])))
 	return rows
+
+
+## WU-637: true when `npc`'s open ask has not yet been put to the player on a card (once per ask, keyed by its day).
+static func card_pending(player: CharacterData, data: GameData, npc: CharacterData, flags: Dictionary, today: int) -> bool:
+	if player == null or not player.friend_aid.has(npc.id):
+		return false
+	var e: Dictionary = player.friend_aid[npc.id]
+	if today - int(e.get("day", 0)) > int(rules(data).get("expire_days", 60)) or not Cultivation.can_attempt_breakthrough(npc, data):
+		return false
+	return int(flags.get("friend_aid_card_" + npc.id, -1)) != int(e.get("day", 0))
+
+
+## WU-637: the line on the card.
+static func card_line(npc_name: String, item_name: String, held: bool) -> String:
+	var line := "%s sits at the gate of a new realm and needs a %s." % [npc_name, item_name]
+	return line + (" You have one." if held else " You have none yet.")

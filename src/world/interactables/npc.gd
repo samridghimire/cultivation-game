@@ -824,6 +824,7 @@ func get_options() -> Array[Dictionary]:
 	if _child_mode == "give":
 		return _give_options()
 	var options: Array[Dictionary] = []
+	GameState.request_friend_aid_card.call_deferred(npc_id)  # WU-637: once per ask
 	var own_pending := own_news_waiting()  # WU-629: read before the talk entries (which hear the news) run
 	var def: Dictionary = GameState.data.npcs.get(npc_id, {})
 	options.append({"label": "Look", "action": _look, "keep_open": true})
