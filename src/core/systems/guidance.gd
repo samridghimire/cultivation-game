@@ -7865,8 +7865,15 @@ const HOME_LINES_MAX := 3
 ## WU-644: up to three short lines of what waits in Qingshi after `away_days` away (friends with news, open
 ## season tasks, ripe field plots). Empty after a short trip or when nothing waits.
 static func home_waiting_lines(c: CharacterData, data: GameData, people: Dictionary, today: int, away_days: int) -> PackedStringArray:
-	var out := PackedStringArray()
 	if c == null or away_days < HOME_AWAY_MIN_DAYS:
+		return PackedStringArray()
+	return home_waiting(c, data, people, today)
+
+
+## WU-645: what waits in Qingshi right now, whatever the absence (shared by the arrival banner and the world map).
+static func home_waiting(c: CharacterData, data: GameData, people: Dictionary, today: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	if c == null:
 		return out
 	var news: Array[Dictionary] = []
 	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):
@@ -7896,3 +7903,24 @@ static func home_waiting_lines(c: CharacterData, data: GameData, people: Diction
 		out.remove_at(out.size() - 1)
 	return out
 
+
+
+## WU-645: short badge text for Qingshi on the world map: "n tasks" for open season tasks, "!" when a friend has
+## news, "" when nothing waits or when the player is already there.
+static func home_badge(c: CharacterData, data: GameData, people: Dictionary, today: int, current_region: String) -> String:
+	if c == null or current_region == SeasonTasks.REGION:
+		return ""
+	var open := 0
+	for t: Dictionary in SeasonTasks.list(c, data, today):
+		if not bool(t["done"]):
+			open += 1
+	var news := false
+	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):
+		if String(row["region"]) == SeasonTasks.REGION and FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
+			news = true
+	var parts := PackedStringArray()
+	if open > 0:
+		parts.append("%d %s" % [open, "task" if open == 1 else "tasks"])
+	if news:
+		parts.append("news")
+	return " · ".join(parts)

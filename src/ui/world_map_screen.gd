@@ -660,6 +660,19 @@ func _rebuild() -> void:
 			b.add_theme_color_override("font_color", SEAL_COLOR)
 			b.add_theme_color_override("font_focus_color", SEAL_COLOR)
 		_style_node(b, unexplored, region_id == GameState.current_region)
+		if region_id == SeasonTasks.REGION:  # WU-645: what waits at home
+			var badge := Guidance.home_badge(GameState.player, data, GameState.npcs, GameClock.total_days, GameState.current_region)
+			if badge != "":
+				b.tooltip_text = "\n".join(Guidance.home_waiting(GameState.player, data, GameState.npcs, GameClock.total_days))
+				var tag := Label.new()
+				tag.name = "HomeBadge"
+				tag.text = "\u2766 " + badge
+				tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				tag.focus_mode = Control.FOCUS_NONE
+				tag.add_theme_font_size_override("font_size", 14)
+				tag.add_theme_color_override("font_color", SEAL_COLOR)
+				tag.position = Vector2(rect.position.x, rect.position.y - 20)
+				_canvas.add_child(tag)
 		b.focus_entered.connect(_select.bind(region_id))
 		b.pressed.connect(_select.bind(region_id))
 		_canvas.add_child(b)
@@ -1017,6 +1030,9 @@ func _show_details() -> void:
 	var marks := region_marks(GameState.player, data, GameState.npcs, GameState.world_events, GameClock.total_days, _selected, GameState.current_region, GameState.world_flags)
 	_marks.visible = not marks.is_empty()
 	_marks.text = "\n".join(marks.map(func(m: Dictionary) -> String: return mark_bbcode(m)))
+	if _selected == SeasonTasks.REGION and Guidance.home_badge(GameState.player, data, GameState.npcs, GameClock.total_days, GameState.current_region) != "":
+		_marks.visible = true  # WU-645: one line each of what waits at home
+		_marks.text += ("\n" if _marks.text != "" else "") + "\n".join(Guidance.home_waiting(GameState.player, data, GameState.npcs, GameClock.total_days))
 	_routes.text = "\n".join(route_lines(GameState.player, data, GameState.current_region, _selected))
 
 

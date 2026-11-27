@@ -21,6 +21,7 @@ extends SceneTree
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## WU-633: `--journal-sect --sect-rank=2 --contest-records` shows both contest records.
 ## GFX-261: `--inner-contest-month` does the same for the inner contest's month.
+## WU-645: add `--map-home` to --map-sect to select Qingshi (its badge and tooltip).
 ## WU-638: `--friend-joined` with --member=<sect_id> brings Xiao Ling into the sect (she stands at its hall).
 ## WU-641: `--lecture-day` with --member=<sect_id> renders the open-lecture scene (member_<sect>.png).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
@@ -716,8 +717,10 @@ func _start() -> void:
 				gs.join_sect(msect)
 				(hud.get("_pending_moments") as Array).clear()
 				(hud.get("_sect_card") as Control).close()
+				if OS.get_cmdline_user_args().has("--map-home"):
+					gs.current_region = "withered_bone_marsh"  # away from home, so Qingshi's badge shows
 				mscreen.open()
-				mscreen._select(Sects.home_region(gs.data, msect)), "close": mscreen.close})
+				mscreen._select(SeasonTasks.REGION if OS.get_cmdline_user_args().has("--map-home") else Sects.home_region(gs.data, msect)), "close": mscreen.close})
 			special = true
 	if OS.get_cmdline_user_args().has("--sect-promote"):  # WU-603: join azure_cloud_sect, then promote one rank
 		var pcard: Control = hud.get("_sect_card")
