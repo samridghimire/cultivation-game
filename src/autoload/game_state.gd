@@ -3947,6 +3947,13 @@ func attend_lecture() -> void:
 		var insight: Dictionary = Dao.def_of(data, result["insight_id"])
 		insight_name = String(insight.get("name", "Dao"))
 		EventBus.post("A line of the lecture clicks: you glimpse the %s." % insight.get("name", "Dao"), "progress")
+	var mate_id := Sects.lecture_mate(player, data, npcs, world_flags)
+	if mate_id != "":  # SECT-054
+		var mate_favor := int(npc_favor.get(mate_id, 0))
+		npc_favor[mate_id] = clampi(mate_favor + int(data.lecture_mate.get("favor", 0)), 0, 100)  # a sect-mate is already past the chat/gift caps
+		var elder := String(Sects.lecture_def(player, data).get("elder", "the elder"))
+		EventBus.post(String(data.lecture_mate.get("line", "")).replace("{name}", npcs[mate_id].name).replace("{elder}", elder), "progress")
+		EventBus.lecture_mate.emit(mate_id)
 	_pass_time(int(result["days"]), "Attending a lecture")
 	var lecture_result: Dictionary = result.duplicate()
 	lecture_result["insight_name"] = insight_name

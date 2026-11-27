@@ -228,6 +228,9 @@ signal sect_contest_offered(sect_id: String)
 signal sect_contest_bout(sect_id: String, info: Dictionary)
 ## WU-606: emitted after a sect lecture's time passes; `result` is Sects.attend_lecture's dict plus `insight_name` ("" when none).
 signal sect_lecture_attended(sect_id: String, result: Dictionary)
+## SECT-054: a sect-mate friend attended the lecture beside the player (favor already applied).
+@warning_ignore("unused_signal")
+signal lecture_mate(npc_id: String)
 
 
 ## WU-635: the HUD stages a short card, then calls GameState.meditate_with_friend (no listener: it runs at once).

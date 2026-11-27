@@ -855,6 +855,16 @@ static func attend_lecture(c: CharacterData, data: GameData, rng: RandomNumberGe
 	return {"ok": true, "reason": "", "line": lecture_line(lecture, _month_index(total_days)), "name": String(lecture.get("name", "the lecture")), "days": int(lecture.get("days", 1)), "qi": qi, "qi_capped": qi_capped, "insight_id": insight_id}
 
 
+## SECT-054: id of the sect-mate friend (FriendInvite.sect_mates, first by id) who attends the lecture beside the
+## player, or "" when there is none.
+static func lecture_mate(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary) -> String:
+	var ids: Array[String] = []
+	for m in FriendInvite.sect_mates(c, people, data, flags):
+		ids.append(String(m["id"]))
+	ids.sort()
+	return "" if ids.is_empty() else ids[0]
+
+
 ## The scene line of `lecture` for `month_index` (C-270): `lines[month % size]` with
 ## {elder} and {topic} filled in, or "" when the lecture has no lines.
 static func lecture_line(lecture: Dictionary, month_index: int) -> String:

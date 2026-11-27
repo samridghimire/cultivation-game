@@ -87,3 +87,41 @@ func test_sect_mates_lists_joined_friend() -> void:
 	assert_true(FriendInvite.sect_mates_line(mates).begins_with("Sect-mates you know: "))
 	assert_true(FriendInvite.sect_mates_line(mates).contains("Xiao Ling"))
 	assert_eq(Npcs.region_of(gs.npcs["xiao_ling"], gs.data), Sects.home_region(gs.data, "myriad_treasure_pavilion"))
+
+
+## SECT-054: the first living sect-mate (by id) attends the lecture.
+func test_lecture_mate_picks_first_living_mate() -> void:
+	var gs := _start()
+	assert_eq(Sects.lecture_mate(gs.player, gs.data, gs.npcs, gs.world_flags), "", "no mate")
+	gs.invite_friend_to_sect("xiao_ling")
+	assert_eq(Sects.lecture_mate(gs.player, gs.data, gs.npcs, gs.world_flags), "xiao_ling")
+	var other := ""
+	for id: String in gs.data.npcs:
+		if id < "xiao_ling":
+			other = id
+			break
+	assert_true(other != "")
+	gs.npcs[other].sect = gs.player.sect.duplicate()
+	gs.world_flags[FriendInvite.flag_key(other)] = true
+	assert_eq(Sects.lecture_mate(gs.player, gs.data, gs.npcs, gs.world_flags), other, "two mates: first by id")
+	gs.npcs[other].alive = false
+	assert_eq(Sects.lecture_mate(gs.player, gs.data, gs.npcs, gs.world_flags), "xiao_ling", "dead mate skipped")
+
+
+func test_attend_lecture_raises_mate_favor_once() -> void:
+	var gs := _start()
+	gs.invite_friend_to_sect("xiao_ling")
+	var before := int(gs.npc_favor["xiao_ling"])
+	gs.attend_lecture()
+	assert_eq(int(gs.npc_favor["xiao_ling"]), before + int(gs.data.lecture_mate["favor"]))
+	gs.attend_lecture()  # same month: refused
+	assert_eq(int(gs.npc_favor["xiao_ling"]), before + int(gs.data.lecture_mate["favor"]))
+	gs.end_session()
+
+
+func test_attend_lecture_without_mate_changes_no_favor() -> void:
+	var gs := _start()
+	var before := int(gs.npc_favor["xiao_ling"])
+	gs.attend_lecture()
+	assert_eq(int(gs.npc_favor["xiao_ling"]), before)
+	gs.end_session()

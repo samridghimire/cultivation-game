@@ -29,6 +29,7 @@ var professions: Dictionary = {}  # id -> ProfessionDef
 var sects: Dictionary = {}  # id -> SectDef
 ## sects.json top-level "factions" rules (SectFactions, LW-002).
 var sect_factions: Dictionary = {}
+var lecture_mate: Dictionary = {}  ## SECT-054: sects.json lecture_mate {favor, line}
 ## SECT-046: examiner power lowered per lost promotion trial, and its cap.
 var trial_lesson_per_loss := 0.06
 var trial_lesson_max := 0.18
@@ -227,6 +228,7 @@ func _load(dir: String) -> void:
 	var sect_file := _read(dir, "sects.json")
 	sect_reputation = sect_file.get("reputation", {})
 	sect_factions = sect_file.get("factions", {})
+	lecture_mate = sect_file.get("lecture_mate", {})
 	var lessons: Dictionary = sect_file.get("trial_lessons", {})
 	trial_lesson_per_loss = float(lessons.get("per_loss", 0.06))
 	trial_lesson_max = float(lessons.get("max", 0.18))
@@ -445,6 +447,9 @@ func _check_unique_ids(rows: Array, file: String) -> void:
 func _validate() -> void:
 	if trial_lesson_per_loss < 0.0 or trial_lesson_per_loss > trial_lesson_max or trial_lesson_max > 0.5:
 		load_errors.append("sects.json trial_lessons needs 0 <= per_loss <= max <= 0.5")
+	var mate_line := String(lecture_mate.get("line", ""))
+	if int(lecture_mate.get("favor", 0)) < 1 or int(lecture_mate.get("favor", 0)) > 10 or mate_line == "" or mate_line.length() > 160 or not mate_line.contains("{name}"):
+		load_errors.append("sects.json lecture_mate needs favor 1..10 and a line (<= 160 chars) with {name}")
 	if realms.is_empty():
 		load_errors.append("No realms defined")
 	if failure_bonus < 0.0 or failure_bonus > failure_bonus_max or failure_bonus_max > 0.5:
