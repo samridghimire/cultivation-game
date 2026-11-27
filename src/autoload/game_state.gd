@@ -5862,6 +5862,8 @@ func _on_days_advanced(days: int) -> void:
 		current_region = before_region
 	for i in months:
 		var letter := Letters.monthly(player, npcs, npc_favor, data, rng, world_flags, GameClock.total_days, current_region)
+		if letter.is_empty():
+			letter = Letters.home_news(player, npcs, data, world_flags, GameClock.total_days, current_region)  # GUIDE-299
 		if not letter.is_empty():
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
 			Letters.remember(player, data, line, GameClock.total_days)

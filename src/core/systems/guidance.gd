@@ -1176,6 +1176,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(method_offer)
 	if today >= 0:
 		# GUIDE-294: friends in the Next steps, below the sect/breakthrough lines and above the gathering/work lines.
+		var home_call := home_call_hint(c, data, people, flags, region_id, today)  # GUIDE-299
+		if home_call != "":
+			out.append(home_call)
 		var congrats := congratulate_hint(c, data, people, region_id, today)
 		if congrats != "":
 			out.append(congrats)
@@ -2453,6 +2456,47 @@ static func congratulate_hint(c: CharacterData, data: GameData, people: Dictiona
 			realm = "Qi Refining"
 		return "Congratulate %s on %s (%d days left)" % [row["name"], realm, int(row["days_left"])]
 	return ""
+
+
+## GUIDE-299: "Home to Qingshi (5 days): congratulate Xiao Ling on Qi Refining; 1 spring task left (14 days)" when the
+## player is away from Qingshi (within family.json home_call.max_route_days) and home has news: a friend's fresh news
+## with time to spare, an open catch/gather season task late in the season, or an open visit invite. "" otherwise. Pure.
+static func home_call_hint(c: CharacterData, data: GameData, people: Dictionary, flags: Dictionary, region_id: String, today: int) -> String:
+	if c == null or region_id == "" or region_id == SeasonTasks.REGION or today < 0:
+		return ""
+	var cfg: Dictionary = data.family.get("home_call", {})
+	var days := route_days(c, data, region_id, SeasonTasks.REGION)
+	if days < 1 or days > int(cfg.get("max_route_days", 8)):
+		return ""
+	var reasons := PackedStringArray()
+	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):
+		if String(row["region"]) != SeasonTasks.REGION or int(row["days_left"]) < days + 2 or not FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
+			continue
+		var realm := String(c.friend_news[String(row["npc_id"])].get("realm", ""))
+		reasons.append("congratulate %s on %s" % [row["name"], realm if realm != "" else "Qi Refining"])
+		break
+	var left := Calendar.days_left_in_season(today)
+	if left <= int(cfg.get("season_days_left", 21)) and left >= days:
+		var open := 0
+		var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today) else {}
+		for t: Dictionary in SeasonTasks.tasks_for(data, today):
+			if ["catch", "gather"].has(String(t["kind"])) and int(progress.get(String(t["id"]), 0)) < int(t["count"]):
+				open += 1
+		if open > 0:
+			reasons.append("%d %s task%s left (%d days)" % [open, SeasonTasks.season_name(today), "" if open == 1 else "s", left])
+	if reasons.size() < 2:
+		var ids: Array = flags.keys()
+		ids.sort()
+		for key: String in ids:
+			if not key.begins_with("letter_visit_") or not bool(flags[key]):
+				continue
+			var npc: CharacterData = people.get(key.substr("letter_visit_".length()))
+			if npc != null and npc.alive and Npcs.region_of(npc, data) == SeasonTasks.REGION:
+				reasons.append("%s invited you to visit" % npc.name)
+				break
+	if reasons.is_empty():
+		return ""
+	return "Home to Qingshi (%d days): %s" % [days, "; ".join(reasons.slice(0, 2))]
 
 
 ## GUIDE-296: "Season task: <text> at <place> (0/1)" for the first open catch/gather task of the season that a place in

@@ -497,6 +497,7 @@ func _validate() -> void:
 	_validate_folk_news()
 	_validate_friend_aid()
 	_validate_friend_invite()
+	_validate_home_call()
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
@@ -1354,6 +1355,15 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 
 
 ## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion, breakthrough, wedding, contest (FOLK-049)} plus optional *_demonic}: each pool 1+ strings of 1-160 chars.
+## GUIDE-299: family.home_call {max_route_days >= 1, season_days_left >= 1} (optional).
+func _validate_home_call() -> void:
+	var cfg: Dictionary = family.get("home_call", {})
+	if cfg.is_empty():
+		return
+	if int(cfg.get("max_route_days", 0)) < 1 or int(cfg.get("season_days_left", 0)) < 1:
+		load_errors.append("family.home_call needs max_route_days >= 1 and season_days_left >= 1")
+
+
 ## FOLK-055: family.friend_invite {min_favor 0..100, min_player_rank >= 0, favor >= 0}.
 func _validate_friend_invite() -> void:
 	var cfg: Dictionary = family.get("friend_invite", {})

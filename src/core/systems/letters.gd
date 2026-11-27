@@ -86,6 +86,27 @@ static func monthly(c: CharacterData, npcs: Dictionary, favor: Dictionary, data:
 	return _write(c, npcs, favor, data, rng, flags, today, id, "friend")
 
 
+## GUIDE-299: a friend living in Qingshi writes once per piece of fresh news while the player is elsewhere. Returns
+## {npc_id, text, notes: [], request: false} or {}. Marks flag `home_news_<npc>_<news day>`.
+static func home_news(c: CharacterData, npcs: Dictionary, data: GameData, flags: Dictionary, today: int, region_id: String) -> Dictionary:
+	if c == null or today < 0 or region_id == "" or region_id == SeasonTasks.REGION:
+		return {}
+	for row: Dictionary in FolkNews.journal_rows(c, data, npcs, today):
+		var id := String(row["npc_id"])
+		if String(row["region"]) != SeasonTasks.REGION or not FolkNews.can_congratulate(c, data, id, today):
+			continue
+		var entry: Dictionary = c.friend_news[id]
+		var flag := "home_news_%s_%d" % [id, int(entry.get("day", 0))]
+		if flags.has(flag):
+			continue
+		flags[flag] = true
+		var news := "I began Qi Refining." if String(entry.get("kind", "")) == "qi_start" else "I broke through to %s." % String(entry.get("realm", "a new realm"))
+		var region := String(data.regions.get(SeasonTasks.REGION, {}).get("name", "home"))
+		var text := String(rules(data).get("home_news_text", "{name} writes from {region}: \"{news} Come by when the sect lets you go.\"")).replace("{name}", String(row["name"])).replace("{region}", region).replace("{news}", news)
+		return {"npc_id": id, "text": text, "notes": [], "request": false}
+	return {}
+
+
 static func _write(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int, id: String, from: String) -> Dictionary:
 	var r := rules(data)
 	var npc_favor := int(favor.get(id, 0))
@@ -280,6 +301,8 @@ static func validate(data: GameData) -> PackedStringArray:
 	var chance := float(r.get("monthly_chance", 0.0))
 	if chance < 0.0 or chance > 1.0:
 		errors.append("family.json letters.monthly_chance must be 0..1")
+	if r.has("home_news_text") and not String(r["home_news_text"]).contains("{name}"):
+		errors.append("family.json letters.home_news_text must contain {name}")
 	if int(r.get("min_favor", 0)) > 100:
 		errors.append("family.json letters.min_favor must be <= 100")
 	var family_chance := float(r.get("family_chance", 0.0))
