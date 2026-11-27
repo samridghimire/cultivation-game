@@ -2274,6 +2274,12 @@ func npc_spot(npc_id: String) -> Dictionary:
 	var def: Dictionary = data.npcs.get(npc_id, {})
 	if def.is_empty():
 		return {"pos": Vector2.ZERO, "why": "home"}
+	var moved: CharacterData = npcs.get(npc_id)
+	if moved != null and moved.home_region != "" and moved.home_region != String(def.get("region", "")):  # FOLK-055: a friend living at their sect
+		var hall := Sects.home_hall(data, String(moved.sect.get("id", "")))
+		var size: Array = data.regions.get(moved.home_region, {}).get("map", {}).get("size", [1600, 1000])
+		var pos: Array = hall.get("pos", [size[0] / 2, size[1] / 2])
+		return {"pos": Vector2(float(pos[0]), float(pos[1]) + 40.0), "why": "home"}
 	return Folk.spot_for(data, def, GameClock.total_days, Weather.of(data, String(def.get("region", "")), GameClock.total_days), world_events)
 
 
@@ -2648,6 +2654,30 @@ func give_friend_aid(npc_id: String) -> void:
 	var gain := FriendAid.give(player, data, npc, GameClock.total_days)
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
 	EventBus.post("You give %s the %s. %s bows deeply. (%s)" % [npc.name, item_name, npc.name, _favor_text(npc_id)], "progress")
+	EventBus.npc_reaction.emit(npc_id, "happy")
+	EventBus.player_changed.emit()
+
+
+## FOLK-055: true when "Invite <name> to the <sect>" should show for `npc_id`.
+func can_invite_friend(npc_id: String) -> bool:
+	return player != null and npcs.has(npc_id) and FriendInvite.offered(player, data, world_flags, npcs[npc_id], int(npc_favor.get(npc_id, 0)))
+
+
+## FOLK-055: invite a friend into your sect; no time passes. They move to the sect's home region, or say why not.
+func invite_friend_to_sect(npc_id: String) -> void:
+	EventBus.topic = "sect"
+	if not _can_act() or not can_invite_friend(npc_id):
+		return
+	var npc: CharacterData = npcs[npc_id]
+	var result := FriendInvite.invite(player, data, world_flags, npc, int(npc_favor.get(npc_id, 0)))
+	if not result["ok"]:
+		EventBus.post(String(result["reason"]), "dialogue")
+		return
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + int(result["favor"]), 0, 100)
+	var sect_name := String(data.sects[String(player.sect["id"])].name)
+	var home := Sects.home_region(data, String(player.sect["id"]))
+	var where := " and sets out for %s" % String(data.regions.get(home, {}).get("name", home)) if home != "" and home != current_region else ""
+	EventBus.post("%s joins the %s as an outer disciple%s. (%s)" % [npc.name, sect_name, where, _favor_text(npc_id)], "progress")
 	EventBus.npc_reaction.emit(npc_id, "happy")
 	EventBus.player_changed.emit()
 

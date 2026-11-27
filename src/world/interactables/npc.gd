@@ -845,6 +845,8 @@ func get_options() -> Array[Dictionary]:
 	if GameState.can_give_aid(npc_id):  # FOLK-054
 		var aid_item := String(GameState.player.friend_aid[npc_id]["item"])
 		options.append({"label": "Give %s to %s" % [String(GameState.data.items.get(aid_item, {}).get("name", aid_item)), String(GameState.npcs[npc_id].name)], "action": GameState.give_friend_aid.bind(npc_id)})
+	if GameState.can_invite_friend(npc_id):  # FOLK-055
+		options.append({"label": "Invite %s to the %s" % [String(GameState.npcs[npc_id].name), String(GameState.data.sects[String(GameState.player.sect["id"])].name)], "action": GameState.invite_friend_to_sect.bind(npc_id)})
 	options.append_array(_child_options())
 	options.append_array(_letter_options())
 	options.append_array(_acquaintance_options())

@@ -496,6 +496,7 @@ func _validate() -> void:
 	_validate_world()
 	_validate_folk_news()
 	_validate_friend_aid()
+	_validate_friend_invite()
 	_validate_combat()
 	_validate_artifact()
 	_validate_recipes()
@@ -1353,6 +1354,18 @@ static func _festival_square_errors(region: Dictionary) -> Array[String]:
 
 
 ## FOLK-046: family.folk_news {min_favor, lines {sect_join, promotion, breakthrough, wedding, contest (FOLK-049)} plus optional *_demonic}: each pool 1+ strings of 1-160 chars.
+## FOLK-055: family.friend_invite {min_favor 0..100, min_player_rank >= 0, favor >= 0}.
+func _validate_friend_invite() -> void:
+	var cfg: Dictionary = family.get("friend_invite", {})
+	if cfg.is_empty():
+		load_errors.append("family.friend_invite is required")
+		return
+	if int(cfg.get("min_favor", -1)) < 0 or int(cfg.get("min_favor", -1)) > 100:
+		load_errors.append("family.friend_invite.min_favor must be 0..100")
+	if int(cfg.get("min_player_rank", -1)) < 0 or int(cfg.get("favor", -1)) < 0:
+		load_errors.append("family.friend_invite needs min_player_rank >= 0 and favor >= 0")
+
+
 ## FOLK-054: family.friend_aid {min_favor 0..100, cooldown_days >= 1, expire_days >= 1, favor >= 0, odds_bonus 0..0.5, items {"<realm index>": [item ids]}}.
 func _validate_friend_aid() -> void:
 	var cfg: Dictionary = family.get("friend_aid", {})
