@@ -57,7 +57,7 @@ func test_give_consumes_boosts_once_and_expires() -> void:
 	var gs := _start()
 	var npc := _gate(gs, "xiao_ling", 50)
 	var item := FriendAid.open_ask(gs.player, gs.data, npc, gs.world_flags, 1000)
-	assert_true(["foundation_establishment_pill", "spirit_gathering_pill", "star_dew_qi_pill"].has(item), "ask is one of the realm's aid items")
+	assert_true(["foundation_establishment_pill", "spirit_gathering_pill", "meridian_mending_pill"].has(item), "ask is one of the realm's aid items")
 	assert_true(FriendAid.give_block(gs.player, gs.data, npc, 1000).begins_with("You have no"))
 	gs.player.add_item(item, 1)
 	assert_eq(FriendAid.give_block(gs.player, gs.data, npc, 1000), "")
@@ -138,6 +138,25 @@ func test_data_validation_rejects_bad_block() -> void:
 	assert_false(gd.load_errors.is_empty())
 
 
+## C-428: aid items cost 60+ stones at Foundation; each thanks item exists and costs 0.3x-0.7x of its realm's median aid item.
+func test_thanks_items_fit_the_aid() -> void:
+	var gd := GameData.load_from_dir()
+	var fa: Dictionary = gd.family["friend_aid"]
+	for realm: String in fa["aid_items"]:
+		var prices: Array[int] = []
+		for id: String in fa["aid_items"][realm]:
+			prices.append(int(gd.items[id].price))
+		prices.sort()
+		var median := float(prices[prices.size() / 2])
+		if realm == "2":
+			assert_true(prices[0] >= 60, "Foundation aid items cost at least 60")
+		assert_eq(fa["thanks_items"][realm].size(), 2, "two thanks items for realm " + realm)
+		for id: String in fa["thanks_items"][realm]:
+			assert_true(gd.items.has(id), id + " exists")
+			var ratio := float(gd.items[id].price) / median
+			assert_true(ratio >= 0.3 and ratio <= 0.7, "%s is %.2fx the median aid item" % [id, ratio])
+
+
 ## WU-637: the card shows once per ask, focus follows holding the item, "I have it" gives, "Later" keeps the ask.
 func test_card_once_per_ask_and_buttons() -> void:
 	var gs := _start()
@@ -180,8 +199,8 @@ func test_thanks_queue_picks_from_new_realm_pool() -> void:
 	var gs := _start()
 	var npc := _gate(gs, "xiao_ling", 50)
 	npc.realm_index = 2
-	var gift := FriendAid.queue_thanks(gs.player, gs.data, npc, "star_dew_qi_pill", seeded_rng(), 1000)
-	assert_true(["spirit_herb", "star_dew_qi_pill"].has(gift))
+	var gift := FriendAid.queue_thanks(gs.player, gs.data, npc, "meridian_mending_pill", seeded_rng(), 1000)
+	assert_true(["superior_qi_gathering_pill", "clear_heart_pill"].has(gift))
 	assert_eq(gs.player.friend_thanks.size(), 1)
 	npc.realm_index = 1
 	assert_eq(FriendAid.queue_thanks(gs.player, gs.data, npc, "x", seeded_rng(), 1000), "", "no pool for that realm")
