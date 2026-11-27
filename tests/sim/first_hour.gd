@@ -2267,7 +2267,20 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		var steps: Array[String] = []
 		if acted == "":
 			steps = _next_steps(gs, c, day)
+		# SIM-042: the practice line sits mid-list behind errands the sim always takes first (case (a): it never practised, so
+		# no style ever levelled). A player who reads it practises that style, at most once per 3 weeks, from day 120 on, after the early
+		# friend and sect errands (practising from day 15 delayed the first Friend by ~55 days).
+		if acted == "" and day >= 120 and day - int(done.get("last_practise_day", -999)) >= 21:
+			for line: String in steps:
+				if line.begins_with("Practise ") and line.contains(" on the Techniques screen"):
+					acted = _act_on_hint(gs, c, done, line, day)
+					if acted != "":
+						acted_line = line
+						done["last_practise_day"] = day
+						break
 		for line: String in steps:
+			if acted != "":
+				break
 			# A line acted on HINT_MAX_TRIES times that is still there is one the policy cannot finish: a player moves on.
 			if int(tries.get(line, 0)) < HINT_MAX_TRIES:
 				acted = _act_on_hint(gs, c, done, line, day)
