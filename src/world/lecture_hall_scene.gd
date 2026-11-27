@@ -6,6 +6,7 @@ extends Node2D
 
 const MAT_SIZE := Vector2(84.0, 26.0)
 const SEATS := 4
+const EDGE_CLEAR := 72.0  # WU-648: seats stay this far above the map's bottom edge
 const BLOCKER_CLEAR := 22.0
 const GOLD := Color("d8b04a")
 
@@ -34,8 +35,19 @@ static func staged(c: CharacterData, data: GameData, region_id: String, total_da
 ## {mat, elder, seats, bell}: the mat centred on the hall door just south of the hall, the elder on it, the seats in a
 ## row south of the mat, all on the map and clear of `blockers`. Deterministic.
 static func layout(hall: Rect2, map_size: Vector2, blockers: Array[Vector2] = []) -> Dictionary:
-	var centre := Vector2(hall.get_center().x, hall.end.y + 16.0 + MAT_SIZE.y / 2.0)
 	var bounds := Rect2(Vector2.ZERO, map_size).grow(-12.0)
+	var centre := Vector2(hall.get_center().x, hall.end.y + 16.0 + MAT_SIZE.y / 2.0)
+	if centre.y + MAT_SIZE.y / 2.0 + 26.0 > map_size.y - EDGE_CLEAR:  # WU-648: too near the bottom edge, sit beside the hall
+		var side_y := minf(centre.y, map_size.y - EDGE_CLEAR - 26.0 - MAT_SIZE.y / 2.0)
+		for sx in [hall.position.x - 16.0 - MAT_SIZE.x / 2.0 - 54.0, hall.end.x + 16.0 + MAT_SIZE.x / 2.0 + 54.0]:
+			var sc := Vector2(sx, side_y)
+			var lay := _build(sc, bounds, blockers)
+			if (lay["seats"] as Array).size() == 4:
+				return lay
+	return _build(centre, bounds, blockers)
+
+
+static func _build(centre: Vector2, bounds: Rect2, blockers: Array[Vector2]) -> Dictionary:
 	var mat := Rect2(centre - MAT_SIZE / 2.0, MAT_SIZE)
 	var seats: Array[Vector2] = []
 	var row_y := mat.end.y + 26.0

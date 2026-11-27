@@ -63,3 +63,14 @@ func test_mate_sits_in_front_row_with_name() -> void:  # WU-647
 	scene.setup(false, null, Rect2(), [], Vector2(1000, 800), false, "xiao_ling", "Xiao Ling")
 	assert_eq(scene.mate_name(), "", "hidden scene keeps no mate")
 	scene.free()
+
+
+func test_layout_near_bottom_edge_sits_beside_hall() -> void:  # WU-648
+	var map := Vector2(1000, 800)
+	var hall := Rect2(400, map.y - 40.0 - 50.0, 180, 50)
+	var lay := LectureHallScene.layout(hall, map, [])
+	assert_true((lay["seats"] as Array).size() >= 3)
+	for s: Vector2 in lay["seats"]:
+		assert_true(s.y <= map.y - 72.0)
+		assert_true(Rect2(Vector2.ZERO, map).has_point(s))
+	assert_false((lay["mat"] as Rect2).intersects(hall))
