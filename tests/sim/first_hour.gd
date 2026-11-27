@@ -2204,6 +2204,15 @@ static func parse_start_arg(arg: String) -> bool:
 	return false
 
 
+## GUIDE-298: true when one of the game's top Next-steps lines asks to prepare or train for the sect trial. The sim used to
+## train every week on its own while the trial advice read "Close", which cost ~70 days of practice with no line asking for it.
+static func _game_asks_trial_prep(gs: Node, c: CharacterData, day: int) -> bool:
+	for line: String in _next_steps(gs, c, day).slice(0, 5):
+		if line.begins_with("Prepare for the") or line.contains("trial") and line.contains("practi"):
+			return true
+	return false
+
+
 ## SIM-010: one sim month of the hints player: four weekly steps (see hints_policy). Returns the kinds of action taken.
 static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: int, density: float) -> Dictionary:
 	var kinds := {}
@@ -2242,7 +2251,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 					acted_line = "Sect rank trial"
 					if trial_log:
 						print("  [SIM-030] day %d: trial attempt at %d in 100 -> %s" % [day, roundi(odds * 100.0), "won" if int(done.get("trials_won", 0)) > trials_before else "lost"])
-			elif c.alive and c.injuries.is_empty() and Sects.trial_advice(c, gs.data).begins_with("Close"):
+			elif c.alive and c.injuries.is_empty() and Sects.trial_advice(c, gs.data).begins_with("Close") and _game_asks_trial_prep(gs, c, day):
 				# SIM-030: a person with the trial card open trains until the odds are fair: the best combat style, else meditation.
 				var style := Techniques.practice_target(c, gs.data)
 				if style != "":
