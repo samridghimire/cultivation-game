@@ -2658,6 +2658,20 @@ func give_friend_aid(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## FOLK-056: delivers thanks gifts that are due (you are in the friend's region, or a week has passed).
+func _deliver_friend_thanks() -> void:
+	for id in FriendAid.thanks_due(player, data, npcs, current_region, GameClock.total_days):
+		var npc: CharacterData = npcs[id]
+		var got := FriendAid.deliver_thanks(player, data, id)
+		if String(got["gift"]) == "":
+			continue
+		npc_favor[id] = clampi(int(npc_favor.get(id, 0)) + int(got["favor"]), 0, 100)
+		var aid_name := String(data.items.get(String(got["aid_item"]), {}).get("name", "help"))
+		var gift_name := String(data.items.get(String(got["gift"]), {}).get("name", got["gift"]))
+		EventBus.post("%s sends thanks for the %s: %s." % [npc.name, aid_name, gift_name], "people")
+		EventBus.friend_thanks.emit(id, npc.name, String(got["gift"]))
+
+
 ## FOLK-055: true when "Invite <name> to the <sect>" should show for `npc_id`.
 func can_invite_friend(npc_id: String) -> bool:
 	return player != null and npcs.has(npc_id) and FriendInvite.offered(player, data, world_flags, npcs[npc_id], int(npc_favor.get(npc_id, 0)))
@@ -5754,6 +5768,9 @@ func _on_days_advanced(days: int) -> void:
 	for spouse_id in player.spouses:
 		reserved[spouse_id] = true
 	for event in Npcs.simulate(npcs, data, days, rng, reserved, world_flags, FriendAid.hold_ids(npcs, data, npc_favor, world_flags, GameClock.total_days)):
+		if String(event.get("kind", "")) == "aid_thanks":  # FOLK-056
+			FriendAid.queue_thanks(player, data, npcs[String(event["npc_id"])], String(event.get("aid_item", "")), rng, GameClock.total_days)
+			continue
 		if String(event.get("kind", "")) == "aid_ask":  # FOLK-054
 			var asker: CharacterData = npcs[String(event["npc_id"])]
 			var wanted := FriendAid.open_ask(player, data, asker, world_flags, GameClock.total_days)
@@ -5784,6 +5801,7 @@ func _on_days_advanced(days: int) -> void:
 		EventBus.post(("%s has begun Qi Refining." if rose_kind == "qi_start" else "%s has broken through.") % rose.name + " Visit to congratulate %s." % rose.name, "info")
 	FolkNews.prune_own(player, data, GameClock.total_days)
 	FriendAid.prune(player, data, npcs, GameClock.total_days)  # FOLK-054
+	_deliver_friend_thanks()  # FOLK-056
 	Guidance.note_trial_prep(player, data, GameClock.total_days, world_flags)  # SECT-053
 	_rival_news()
 	# Marriages, deaths and moves all thin the pool, so top it up every pass (a load tops it up too).

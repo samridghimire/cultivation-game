@@ -189,6 +189,8 @@ var friend_news: Dictionary = {}
 var friend_news_realm: Dictionary = {}
 ## FOLK-054: open requests from friends at their gate, npc_id -> {realm, item, day} (FriendAid).
 var friend_aid: Dictionary = {}
+## FOLK-056: thanks gifts waiting to be delivered, npc_id -> {gift, aid_item, day} (see FriendAid.queue_thanks).
+var friend_thanks: Dictionary = {}
 ## FOLK-054 (NPCs): one-use breakthrough odds from the player's aid, and days spent waiting at the gate.
 var aid_bonus: float = 0.0
 var aid_wait: int = 0
@@ -381,6 +383,7 @@ func to_dict() -> Dictionary:
 		"friend_news": friend_news.duplicate(true),
 		"friend_news_realm": friend_news_realm.duplicate(),
 		"friend_aid": friend_aid.duplicate(true),
+		"friend_thanks": friend_thanks.duplicate(true),
 		"aid_bonus": aid_bonus,
 		"aid_wait": aid_wait,
 		"lessons_taught": lessons_taught.duplicate(),
@@ -602,6 +605,11 @@ static func from_dict(d: Dictionary) -> CharacterData:
 		for id: String in fa:
 			var ae: Dictionary = fa[id]
 			c.friend_aid[id] = {"realm": int(ae.get("realm", 0)), "item": String(ae.get("item", "")), "day": int(ae.get("day", 0))}
+	var ft: Variant = d.get("friend_thanks", {})
+	if ft is Dictionary:
+		for id: String in ft:
+			var te: Dictionary = ft[id]
+			c.friend_thanks[id] = {"gift": String(te.get("gift", "")), "aid_item": String(te.get("aid_item", "")), "day": int(te.get("day", 0))}
 	c.aid_bonus = float(d.get("aid_bonus", 0.0))
 	c.aid_wait = int(d.get("aid_wait", 0))
 	c.lessons_taught = _int_values(d.get("lessons_taught", {}))

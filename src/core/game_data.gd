@@ -1379,6 +1379,20 @@ func _validate_friend_aid() -> void:
 	var odds := float(cfg.get("odds_bonus", -1.0))
 	if odds < 0.0 or odds > 0.5:
 		load_errors.append("family.friend_aid.odds_bonus must be 0..0.5")
+	if int(cfg.get("thanks_days", 0)) < 1 or int(cfg.get("thanks_favor", -1)) < 0:
+		load_errors.append("family.friend_aid needs thanks_days >= 1 and thanks_favor >= 0")
+	var thanks: Variant = cfg.get("thanks_items", {})
+	if not thanks is Dictionary:
+		load_errors.append("family.friend_aid.thanks_items must be a dictionary")
+	else:
+		for key: String in thanks:
+			var tpool: Variant = thanks[key]
+			if not key.is_valid_int() or int(key) < 2 or int(key) >= realms.size() or not tpool is Array or (tpool as Array).is_empty():
+				load_errors.append("family.friend_aid.thanks_items.%s needs a realm index of 2 or more and items" % key)
+				continue
+			for item_id: Variant in tpool:
+				if not items.has(String(item_id)):
+					load_errors.append("family.friend_aid.thanks_items.%s: unknown item '%s'" % [key, item_id])
 	var by_realm: Variant = cfg.get("aid_items", {})
 	if not by_realm is Dictionary or (by_realm as Dictionary).is_empty():
 		load_errors.append("family.friend_aid.aid_items needs at least one realm")

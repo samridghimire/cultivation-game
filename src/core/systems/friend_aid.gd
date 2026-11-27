@@ -81,6 +81,41 @@ static func give(player: CharacterData, data: GameData, npc: CharacterData, toda
 	return int(rules(data).get("favor", 8))
 
 
+## FOLK-056: a friend whose aided breakthrough succeeded sends one gift from friend_aid.thanks_items[new realm index].
+## Returns the gift id queued ("" when none: no pool for that realm). The rng picks the gift.
+static func queue_thanks(player: CharacterData, data: GameData, npc: CharacterData, aid_item: String, rng: RandomNumberGenerator, today: int) -> String:
+	var pool: Variant = rules(data).get("thanks_items", {}).get(str(npc.realm_index), [])
+	if not pool is Array or (pool as Array).is_empty():
+		return ""
+	var gift := String(pool[rng.randi_range(0, (pool as Array).size() - 1)])
+	player.friend_thanks[npc.id] = {"gift": gift, "aid_item": aid_item, "day": today}
+	return gift
+
+
+## FOLK-056: ids of queued thanks ready now: the player is in the friend's region, or thanks_days have passed.
+static func thanks_due(player: CharacterData, data: GameData, npcs: Dictionary, region: String, today: int) -> Array[String]:
+	var out: Array[String] = []
+	var wait := int(rules(data).get("thanks_days", 7))
+	for id: String in player.friend_thanks:
+		var npc: CharacterData = npcs.get(id)
+		if npc == null or not npc.alive:
+			continue
+		if Npcs.region_of(npc, data) == region or today - int(player.friend_thanks[id].get("day", 0)) >= wait:
+			out.append(id)
+	out.sort()
+	return out
+
+
+## FOLK-056: hands over the queued gift; returns {gift, aid_item, favor} (gift "" when nothing was queued).
+static func deliver_thanks(player: CharacterData, data: GameData, npc_id: String) -> Dictionary:
+	if not player.friend_thanks.has(npc_id):
+		return {"gift": "", "aid_item": "", "favor": 0}
+	var e: Dictionary = player.friend_thanks[npc_id]
+	player.friend_thanks.erase(npc_id)
+	player.add_item(String(e["gift"]), 1)
+	return {"gift": String(e["gift"]), "aid_item": String(e.get("aid_item", "")), "favor": int(rules(data).get("thanks_favor", 3))}
+
+
 ## Journal rows for open asks: [{npc_id, name, region, days_left, text}], fewest days left first.
 static func journal_rows(player: CharacterData, data: GameData, npcs: Dictionary, today: int) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []

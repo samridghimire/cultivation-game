@@ -330,6 +330,8 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 			c.aid_wait += days
 			return
 		c.aid_wait = 0
+		var aided := c.aid_bonus > 0.0
+		var aid_item := FriendAid.item_for(data, c) if aided else ""  # FOLK-056
 		c.breakthrough_bonus += c.aid_bonus
 		c.aid_bonus = 0.0
 		var result := Cultivation.attempt_breakthrough(c, data, rng, true)
@@ -339,6 +341,8 @@ static func _live(c: CharacterData, data: GameData, days: int, rng: RandomNumber
 				text += " The unborn child is lost as well."
 			events.append({"npc_id": c.id, "text": text, "category": "warning", "kind": "death"})
 			return
+		if aided and result["success"]:
+			events.append({"npc_id": c.id, "text": "", "category": "info", "kind": "aid_thanks", "aid_item": aid_item})
 		# Mortal to Qi Refining is routine; only report real breakthroughs.
 		if result["success"] and c.realm_index > 1:
 			events.append({"npc_id": c.id, "text": "Rumours spread: %s has broken through to %s!" % [c.name, result["realm_name"]], "category": "info", "kind": "breakthrough", "realm": result["realm_name"]})

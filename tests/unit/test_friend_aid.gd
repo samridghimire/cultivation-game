@@ -173,3 +173,67 @@ func test_card_once_per_ask_and_buttons() -> void:
 	_root().remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## FOLK-056: a friend's thanks gift.
+func test_thanks_queue_picks_from_new_realm_pool() -> void:
+	var gs := _start()
+	var npc := _gate(gs, "xiao_ling", 50)
+	npc.realm_index = 2
+	var gift := FriendAid.queue_thanks(gs.player, gs.data, npc, "star_dew_qi_pill", seeded_rng(), 1000)
+	assert_true(["spirit_herb", "star_dew_qi_pill"].has(gift))
+	assert_eq(gs.player.friend_thanks.size(), 1)
+	npc.realm_index = 1
+	assert_eq(FriendAid.queue_thanks(gs.player, gs.data, npc, "x", seeded_rng(), 1000), "", "no pool for that realm")
+	var p2 := CharacterData.from_dict(gs.player.to_dict())
+	assert_eq(p2.friend_thanks, gs.player.friend_thanks, "save round-trip")
+	assert_eq(CharacterData.from_dict({}).friend_thanks.size(), 0, "old saves default")
+	gs.end_session()
+
+
+func test_thanks_due_by_region_or_week() -> void:
+	var gs := _start()
+	var npc := _gate(gs, "xiao_ling", 50)
+	npc.realm_index = 2
+	FriendAid.queue_thanks(gs.player, gs.data, npc, "x", seeded_rng(), 1000)
+	var home := Npcs.region_of(npc, gs.data)
+	assert_eq(FriendAid.thanks_due(gs.player, gs.data, gs.npcs, "nowhere", 1003).size(), 0)
+	assert_eq(FriendAid.thanks_due(gs.player, gs.data, gs.npcs, home, 1003).size(), 1, "in their region")
+	assert_eq(FriendAid.thanks_due(gs.player, gs.data, gs.npcs, "nowhere", 1007).size(), 1, "a week anywhere")
+	gs.end_session()
+
+
+func test_aided_success_sends_one_gift_failure_none() -> void:
+	var gs := _start()
+	var npc := _gate(gs, "xiao_ling", 50)
+	npc.aid_bonus = 0.15
+	npc.breakthrough_bonus = 10.0
+	var events := Npcs.simulate(gs.npcs, gs.data, 30, seeded_rng(), {}, {}, {})
+	assert_eq(events.filter(func(e: Dictionary) -> bool: return e.get("kind", "") == "aid_thanks").size(), 1)
+	var other := _gate(gs, "elder_mo", 50)
+	other.breakthrough_bonus = 10.0
+	events = Npcs.simulate(gs.npcs, gs.data, 30, seeded_rng(), {}, {}, {})
+	assert_eq(events.filter(func(e: Dictionary) -> bool: return e.get("kind", "") == "aid_thanks").size(), 0, "no aid, no thanks")
+	gs.end_session()
+
+
+func test_thanks_delivery_integration() -> void:
+	var gs := _start()
+	var npc := _gate(gs, "xiao_ling", 50)
+	var item := FriendAid.open_ask(gs.player, gs.data, npc, gs.world_flags, GameClock.total_days)
+	gs.player.add_item(item, 1)
+	gs.give_friend_aid("xiao_ling")
+	npc.breakthrough_bonus = 10.0
+	var favor := int(gs.npc_favor["xiao_ling"])
+	gs.current_region = "somewhere_else"
+	gs._pass_time(30)
+	assert_eq(npc.realm_index, 2, "broke through")
+	assert_eq(gs.player.friend_thanks.size(), 1, "queued")
+	gs._pass_time(8)
+	assert_true(gs.player.friend_thanks.is_empty(), "delivered after a week away")
+	assert_eq(int(gs.npc_favor["xiao_ling"]), favor + 3)
+	var held := 0
+	for gift: String in gs.data.family["friend_aid"]["thanks_items"]["2"]:
+		held += gs.player.item_count(gift)
+	assert_true(held >= 1, "the gift arrived")
+	gs.end_session()
