@@ -218,6 +218,12 @@ func _build_sect() -> void:
 			mbox.add_child(bl)
 		if line.begins_with("Missions:") and not names.is_empty():  # WU-613: the names sit right under the count
 			mbox.add_child(UIStyle.label("    Ready: %s" % ", ".join(names), 14, DIM))
+	var mates_line := FriendInvite.sect_mates_line(FriendInvite.sect_mates(p, GameState.npcs, GameState.data, GameState.world_flags))
+	if mates_line != "":  # WU-638
+		var ml := UIStyle.label(mates_line, 15, Color.WHITE)
+		ml.name = "SectMates"
+		ml.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		mbox.add_child(ml)
 	var rows := treasury_order(Sects.treasury_rows(p, GameState.data))
 	if not rows.is_empty():
 		mbox.add_child(UIStyle.label("Treasury", 15, UIStyle.ACCENT))

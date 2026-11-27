@@ -52,3 +52,28 @@ static func invite(player: CharacterData, data: GameData, flags: Dictionary, npc
 		npc.home_region = home
 	flags[flag_key(npc.id)] = true
 	return {"ok": true, "reason": "", "favor": int(rules(data).get("favor", 5))}
+
+
+## WU-638: named friends who joined the player's sect (FOLK-055 flag set, same sect id, alive), in npcs.json order:
+## [{id, name, realm}]. Empty for rogues.
+static func sect_mates(player: CharacterData, npcs: Dictionary, data: GameData, flags: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if player == null or player.is_rogue():
+		return out
+	var sect_id := String(player.sect.get("id", ""))
+	for id: String in data.npcs:
+		var c: CharacterData = npcs.get(id)
+		if c == null or not c.alive or not flags.get(flag_key(id), false) or String(c.sect.get("id", "")) != sect_id:
+			continue
+		out.append({"id": id, "name": c.name, "realm": String(data.realms[clampi(c.realm_index, 0, data.realms.size() - 1)].name)})
+	return out
+
+
+## WU-638: "Sect-mates you know: Xiao Ling (Qi Refining), ..." or "" with none.
+static func sect_mates_line(mates: Array[Dictionary]) -> String:
+	if mates.is_empty():
+		return ""
+	var parts := PackedStringArray()
+	for m in mates:
+		parts.append("%s (%s)" % [m["name"], m["realm"]])
+	return "Sect-mates you know: " + ", ".join(parts)

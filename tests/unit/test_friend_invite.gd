@@ -74,3 +74,16 @@ func test_save_round_trip_keeps_membership() -> void:
 	assert_eq(back.home_region, Sects.home_region(gs.data, "myriad_treasure_pavilion"))
 	var flags: Dictionary = JSON.parse_string(JSON.stringify(gs.world_flags))
 	assert_true(bool(flags.get("friend_invited_xiao_ling", false)))
+
+
+func test_sect_mates_lists_joined_friend() -> void:
+	var gs := _start()
+	assert_eq(FriendInvite.sect_mates(gs.player, gs.npcs, gs.data, gs.world_flags).size(), 0)
+	assert_eq(FriendInvite.sect_mates_line([]), "")
+	gs.invite_friend_to_sect("xiao_ling")
+	var mates := FriendInvite.sect_mates(gs.player, gs.npcs, gs.data, gs.world_flags)
+	assert_eq(mates.size(), 1)
+	assert_eq(String(mates[0]["id"]), "xiao_ling")
+	assert_true(FriendInvite.sect_mates_line(mates).begins_with("Sect-mates you know: "))
+	assert_true(FriendInvite.sect_mates_line(mates).contains("Xiao Ling"))
+	assert_eq(Npcs.region_of(gs.npcs["xiao_ling"], gs.data), Sects.home_region(gs.data, "myriad_treasure_pavilion"))
