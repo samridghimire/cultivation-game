@@ -2748,7 +2748,8 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 	if line.begins_with("Season task: "):
 		# GUIDE-296: the line names an open catch/gather task a Qingshi place serves; work at it for the week.
 		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
-			if line.begins_with("Season task: %s " % String(t["text"])) and _season_task_left(gs, c, t) > 0:
+			# GUIDE-300's hunt line drops the text's final "." (catch/gather lines keep it): match without it.
+			if line.begins_with("Season task: %s" % String(t["text"]).trim_suffix(".")) and _season_task_left(gs, c, t) > 0:
 				_season_tries = 0
 				if String(t["kind"]) == "hunt":
 					# SIM-043: GUIDE-300's hunt line (shown at >= 40 in 100 or "too strong"): go to the foe's region, fight, walk back to the hall.

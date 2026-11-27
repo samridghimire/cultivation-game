@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 51f00a5
+Last reviewed commit: a63b04f
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2643,3 +2643,18 @@ Last reviewed commit: 51f00a5
     lines on return. Year 2 now has two Fog-Antler Stag hunts (spring and autumn). FOLK-058's test hardcodes max_favor 45.
     WU-646's slide aims at the parent's live centre each tween step (replaces my previous await-a-frame fix; its test still
     passes). GFX-267/268/269 renders not re-viewed by me.
+- 2026-11-27 (reviewer, 4th run): reviewed 51f00a5..a63b04f (WU-645, GUIDE-301, SECT-054, WU-647, GUIDE-302, WU-648, GUIDE-303,
+  C-432, SIM-042, GFX-270, GFX-271, SIM-043; [PLAN]/[REVIEW] skipped; WU-645 landed just before the last review commit).
+  Main green (4910 tests). No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change (SECT-054
+  and C-432 add data only; favor goes into the existing `npc_favor`).
+  - SIM-043 fix: the sim's season-task match was `begins_with("Season task: <text> ")`, but GUIDE-300's hunt line drops the
+    text's final "." (every hunt text ends with one), so the new hunt branch could never fire; that is why SIM-043 measured
+    no change. It now matches the text without its final ".". `--firsts 3 12` after the fix: first full season set still
+    never and first trip home never (catch/gather tasks are not finished, as SIM-043's Follow-up says).
+  - WU-645: doc comment said the badge shows "!" for news; the code shows "news". Doc fixed.
+  - Filed WU-651 (P0): the lecture-mate is drawn twice on lecture day, seated by WU-647 and also as their walking NPC in
+    the same sect region (WU-648's Follow-up saw the overlapping labels).
+  - Notes (not filed): SECT-054/C-432 put the favor bump and line pick in GameState.attend_lecture rather than a Sects
+    helper (small, deterministic hash of id and day). GFX-271's label bands drop some decor in every region, not just
+    Qingshi (worker Follow-up). GUIDE-301's/GUIDE-303's before/after `--firsts` measurements were not run by their workers.
+    GFX-270/GFX-271/WU-648 renders not re-viewed by me.

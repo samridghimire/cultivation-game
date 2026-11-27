@@ -7971,7 +7971,7 @@ static func home_waiting(c: CharacterData, data: GameData, people: Dictionary, t
 
 
 
-## WU-645: short badge text for Qingshi on the world map: "n tasks" for open season tasks, "!" when a friend has
+## WU-645: short badge text for Qingshi on the world map: "n tasks" for open season tasks, "news" when a friend has
 ## news, "" when nothing waits or when the player is already there.
 static func home_badge(c: CharacterData, data: GameData, people: Dictionary, today: int, current_region: String) -> String:
 	if c == null or current_region == SeasonTasks.REGION:
