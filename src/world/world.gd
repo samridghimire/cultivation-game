@@ -69,6 +69,7 @@ var _village_life: VillageLife
 var _market_life: MarketLife  # GFX-119
 var _court_drill: CourtDrill  # GFX-241
 var _contest_stage: ContestStage  # GFX-253
+var _lecture_scene: LectureHallScene  # WU-641
 var _stage_month := -1  # GFX-255
 var _water_life: WaterLife
 var _rain_puddles: RainPuddles  ## GFX-184
@@ -234,6 +235,7 @@ func _on_days_advanced(_days: int) -> void:
 		_stage_month = month
 		_refresh_court_drill()
 		_refresh_contest_stage()
+	_refresh_lecture_scene()  # WU-641: the lecture window opens with the month and closes once attended
 	queue_redraw()  # WU-494: the jetty project may have moved on
 	_build_roamers()
 	_build_forage()
@@ -304,6 +306,7 @@ func _refresh_ambient() -> void:
 	_refresh_market_life()
 	_refresh_court_drill()
 	_refresh_contest_stage()
+	_refresh_lecture_scene()
 	_stage_month = Calendar.month_of(GameClock.total_days)
 	if _ambient != null:
 		_ambient.queue_free()
@@ -344,8 +347,8 @@ func _refresh_court_drill() -> void:
 	var festival := false
 	for instance: Dictionary in WorldEvents.active_in(GameState.world_events, rid):
 		festival = festival or WorldEvents.is_festival(GameState.data, String(instance["id"]))
-	if not CourtDrill.drill_today(_weather_kind, festival):
-		return
+	if not CourtDrill.drill_today(_weather_kind, festival) or LectureHallScene.staged(GameState.player, GameState.data, rid, GameClock.total_days):
+		return  # WU-641: the lecture takes the hall front
 	for place: Dictionary in _region.get("places", []):
 		var drill_id := SectCourt.drill_sect_id(place, rid, GameState.data.sects)  # GFX-247
 		if drill_id == "":
@@ -406,6 +409,34 @@ func _refresh_contest_stage() -> void:
 	_contest_stage.setup(def, SectCourt.court_rect(place, _region), hall, blockers, map_size, GameClock.total_days,
 		SectCourt.court_style(place) == "planks", not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), avoid,
 		Sects.staged_contest(GameState.data, String(found["sect"]), GameClock.total_days))
+
+
+## WU-641: the lecturing elder and seated disciples in front of the member's home hall while the lecture is open.
+func _refresh_lecture_scene() -> void:
+	if _lecture_scene == null:
+		_lecture_scene = LectureHallScene.new()
+		_lecture_scene.name = "LectureHallScene"
+		add_child(_lecture_scene)
+		move_child(_lecture_scene, 0)
+	var rid := String(_region.get("id", GameState.current_region))
+	var on := LectureHallScene.staged(GameState.player, GameState.data, rid, GameClock.total_days)
+	var place := {}
+	if on:
+		for pl: Dictionary in _region.get("places", []):
+			if SectCourt.drill_sect_id(pl, rid, GameState.data.sects) == String(GameState.player.sect["id"]):
+				place = pl
+				break
+	if place.is_empty():
+		_lecture_scene.setup(false, null, Rect2(), [], map_size, false)
+		return
+	var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
+	var blockers: Array[Vector2] = []
+	for spot: Array in _region.get("npc_spots", []):
+		blockers.append(Vector2(float(spot[0]), float(spot[1])))
+	for other: Dictionary in _region.get("places", []):
+		if other != place:
+			blockers.append(_vec(other["pos"]))
+	_lecture_scene.setup(true, GameState.data.sects[String(GameState.player.sect["id"])], hall, blockers, map_size, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.

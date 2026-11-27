@@ -2502,13 +2502,15 @@ func _show_waiting_arrival() -> void:
 
 ## Arrival banner subtitle (WU-192, WU-514): "First visit · Qi x1.5 · Calm · Known here: Respected".
 ## `c` may be null (no title).
-static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool) -> String:
+static func arrival_subtitle(c: CharacterData, data: GameData, region_id: String, qi: float, danger: String, first_visit: bool, total_days: int = -1) -> String:
 	var sub := "Qi x%s · %s" % [Exploration.format_density(qi), danger]
 	if first_visit:
 		sub = "First visit · " + sub
 	var title := Renown.title(c, data, region_id) if c != null else ""
 	if title != "":
 		sub += " · Known here: " + title
+	if total_days >= 0 and c != null and LectureHallScene.staged(c, data, region_id, total_days):  # WU-641
+		sub += " · Lecture today"
 	return sub
 
 
@@ -2518,7 +2520,7 @@ func _show_arrival(region_id: String) -> void:
 		return
 	var qi := Exploration.effective_density(data, region_id, GameState.world_flags, GameClock.total_days, GameState.world_events, GameState.player)
 	var first_visit := GameState.last_arrival_first_visit
-	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit)
+	var sub := arrival_subtitle(GameState.player, data, region_id, qi, WorldMapScreen.danger_name(data, region_id), first_visit, GameClock.total_days)
 	if first_visit:  # WU-544: who teaches here
 		var teach := Npcs.region_teaching_lines(Npcs.region_teachings(GameState.player, data, GameState.npc_favor, region_id))
 		if not teach.is_empty():

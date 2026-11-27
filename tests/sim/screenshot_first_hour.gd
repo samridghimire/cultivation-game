@@ -19,6 +19,7 @@ extends SceneTree
 ## GFX-249: `-- --news=<npc_id>` joins a sect with that villager at favor 60: news_bubble.png (the bubble over them), news_talk.png (their talk).
 ## WU-633: `--journal-sect --sect-rank=2 --contest-records` shows both contest records.
 ## GFX-261: `--inner-contest-month` does the same for the inner contest's month.
+## WU-641: `--lecture-day` with --member=<sect_id> renders the open-lecture scene (member_<sect>.png).
 ## GFX-253: add `--contest-month` to --member=<sect> to start on the first day of that sect's contest month (the contest stage shows).
 ## GFX-247: `-- --member=<sect_id>` joins that sect and renders its home region's arrival as member_<sect_id>.png.
 ## GFX-256: add `--contest-champion` with --sect-contest for sect_contest_champion.png.
@@ -207,6 +208,8 @@ func _start() -> void:
 		if OS.get_cmdline_user_args().has("--inner-contest-month"):  # GFX-261
 			cm = int(gs.data.sects[member_shot].inner_contest.get("month", cm))
 		root.get_node("GameClock").total_days = (cm - 1) * Calendar.DAYS_PER_MONTH
+	if OS.get_cmdline_user_args().has("--lecture-day") and member_shot != "":  # WU-641: the lecture is open (not yet attended this month)
+		c.sect["lecture_month"] = -1
 	_festival_clock(gs)  # QA-198: --festival/--contest/--practice/--regular/--journal pick the day before the world is built
 	if not region_list.is_empty():
 		_drop_start_line()
