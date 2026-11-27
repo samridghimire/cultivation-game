@@ -436,7 +436,9 @@ func _refresh_lecture_scene() -> void:
 	for other: Dictionary in _region.get("places", []):
 		if other != place:
 			blockers.append(_vec(other["pos"]))
-	_lecture_scene.setup(true, GameState.data.sects[String(GameState.player.sect["id"])], hall, blockers, map_size, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")))
+	var mate_id := Sects.lecture_mate(GameState.player, GameState.data, GameState.npcs, GameState.world_flags)
+	var mate_name: String = GameState.npcs[mate_id].name if mate_id != "" else ""
+	_lecture_scene.setup(true, GameState.data.sects[String(GameState.player.sect["id"])], hall, blockers, map_size, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), mate_id, mate_name)
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.

@@ -48,3 +48,18 @@ func test_arrival_subtitle_mentions_lecture_only_when_open() -> void:
 	assert_true(HUD.arrival_subtitle(m[0], m[1], m[2], 1.0, "Calm", false, 40).contains("Lecture today"))
 	assert_false(HUD.arrival_subtitle(m[0], m[1], m[2], 1.0, "Calm", false).contains("Lecture today"))
 	assert_false(HUD.arrival_subtitle(m[0], m[1], "no_such_region", 1.0, "Calm", false, 40).contains("Lecture today"))
+
+
+func test_mate_sits_in_front_row_with_name() -> void:  # WU-647
+	var m := _member()
+	var sect: SectDef = (m[1] as GameData).sects["azure_cloud_sect"]
+	var scene := LectureHallScene.new()
+	var hall := Rect2(360, 210, 180, 50)
+	scene.setup(true, sect, hall, [], Vector2(1000, 800), false)
+	assert_eq(scene.mate_name(), "", "no mate, no label")
+	scene.setup(true, sect, hall, [], Vector2(1000, 800), false, "xiao_ling", "Xiao Ling")
+	assert_eq(scene.mate_name(), "Xiao Ling")
+	assert_true(scene.mate_seat_pos().y > scene.mat_rect().end.y, "south of the mat")
+	scene.setup(false, null, Rect2(), [], Vector2(1000, 800), false, "xiao_ling", "Xiao Ling")
+	assert_eq(scene.mate_name(), "", "hidden scene keeps no mate")
+	scene.free()

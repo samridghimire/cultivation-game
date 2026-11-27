@@ -18,6 +18,8 @@ var _robe := PixelFigure.DEFAULT_ROBE
 var _moving := false
 var _clock := 0.0
 var _scale := 3.0
+var _mate_seat := -1  # WU-647: index in _seats of the sect-mate friend, -1 when none
+var _mate_name := ""
 
 
 ## True when `c` is a member of `sect_id`'s sect, that sect lives in `region_id` and its lecture can be attended on `total_days`.
@@ -49,7 +51,10 @@ static func layout(hall: Rect2, map_size: Vector2, blockers: Array[Vector2] = []
 
 
 ## Rebuilds for one hall; hidden unless `on`.
-func setup(on: bool, sect_def: SectDef, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, moving: bool) -> void:
+## WU-647: `mate_id` (Sects.lecture_mate) sits in the front row beside the elder's mat with their name label.
+func setup(on: bool, sect_def: SectDef, hall: Rect2, blockers: Array[Vector2], map_size: Vector2, moving: bool, mate_id: String = "", mate_name: String = "") -> void:
+	_mate_seat = -1
+	_mate_name = ""
 	_seats.clear()
 	_looks.clear()
 	_clock = 0.0
@@ -67,6 +72,10 @@ func setup(on: bool, sect_def: SectDef, hall: Rect2, blockers: Array[Vector2], m
 	for p: Vector2 in lay["seats"]:
 		_seats.append(p)
 		_looks.append(PlaceLooks.figure_look({"robe": _robe.to_html(false), "style": "bun" if _seats.size() % 2 == 0 else "hood", "hair": "dark"}, Color.GRAY))
+	if mate_id != "" and not _seats.is_empty():
+		_mate_seat = _seats.size() - 1  # the seat nearest the mat's centre
+		_mate_name = mate_name
+		_looks[_mate_seat] = preload("res://src/world/interactables/npc.gd").look_of(mate_id, _robe)
 	var elder_look := PlaceLooks.figure_look({"robe": _robe.to_html(false), "style": "bun", "hair": "grey"}, Color.GRAY)
 	elder_look["accessories"] = PackedStringArray(["white_hair"])
 	_elder_look = elder_look
@@ -76,6 +85,15 @@ func setup(on: bool, sect_def: SectDef, hall: Rect2, blockers: Array[Vector2], m
 
 func seat_count() -> int:
 	return _seats.size()
+
+
+## The seated sect-mate's name, "" when none sits.
+func mate_name() -> String:
+	return _mate_name
+
+
+func mate_seat_pos() -> Vector2:
+	return _seats[_mate_seat] if _mate_seat >= 0 else Vector2(-1, -1)
 
 
 func mat_rect() -> Rect2:
@@ -99,6 +117,11 @@ func _draw() -> void:
 		var p := _seats[i]
 		PlaceArt.ellipse(self, p + Vector2(0, 2), Vector2(13.0, 5.0), Color("6b4e2e"))  # a cushion
 		_draw_person(p, _looks[i], "up", 7.0)
+		if i == _mate_seat:
+			var font := ThemeDB.fallback_font
+			var at := p + Vector2(-60.0, 22.0)
+			draw_string(font, at + Vector2(1, 1), _mate_name, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color(0, 0, 0, 0.8))
+			draw_string(font, at, _mate_name, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color("f2e3b8"))
 	var bob := sin(_clock * 2.4) * 2.0 if _moving else 0.0
 	_draw_bell(_elder + Vector2(20.0, -52.0 + bob))
 
