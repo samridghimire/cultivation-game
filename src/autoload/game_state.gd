@@ -3952,7 +3952,11 @@ func attend_lecture() -> void:
 		var mate_favor := int(npc_favor.get(mate_id, 0))
 		npc_favor[mate_id] = clampi(mate_favor + int(data.lecture_mate.get("favor", 0)), 0, 100)  # a sect-mate is already past the chat/gift caps
 		var elder := String(Sects.lecture_def(player, data).get("elder", "the elder"))
-		EventBus.post(String(data.lecture_mate.get("line", "")).replace("{name}", npcs[mate_id].name).replace("{elder}", elder), "progress")
+		var mate_lines: Array = data.npcs.get(mate_id, {}).get("lecture_mate_lines", [])  # C-432: their own voice, stable pick (never rng)
+		var mate_line := String(data.lecture_mate.get("line", ""))
+		if not mate_lines.is_empty():
+			mate_line = String(mate_lines[hash("%s/%d" % [mate_id, GameClock.total_days]) % mate_lines.size()])
+		EventBus.post(mate_line.replace("{name}", npcs[mate_id].name).replace("{elder}", elder), "progress")
 		EventBus.lecture_mate.emit(mate_id)
 	_pass_time(int(result["days"]), "Attending a lecture")
 	var lecture_result: Dictionary = result.duplicate()

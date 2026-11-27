@@ -125,3 +125,40 @@ func test_attend_lecture_without_mate_changes_no_favor() -> void:
 	gs.attend_lecture()
 	assert_eq(int(gs.npc_favor["xiao_ling"]), before)
 	gs.end_session()
+
+
+## C-432: a friend with lecture_mate_lines speaks in their own voice; one without falls back to the generic line.
+func test_lecture_mate_uses_own_line() -> void:
+	var gs := _start()
+	gs.invite_friend_to_sect("xiao_ling")
+	var seen: Array = []
+	var cb := func(text: String, _cat: String = "") -> void: seen.append(text)
+	EventBus.message_posted.connect(cb)
+	gs.attend_lecture()
+	EventBus.message_posted.disconnect(cb)
+	var elder := String(Sects.lecture_def(gs.player, gs.data).get("elder", "the elder"))
+	var own: Array = []
+	for l in gs.data.npcs["xiao_ling"]["lecture_mate_lines"]:
+		own.append(String(l).replace("{elder}", elder))
+	var hit := false
+	for t in seen:
+		if own.has(t):
+			hit = true
+	assert_true(hit, "one of Xiao Ling's own lines was posted: %s" % str(seen))
+	gs.end_session()
+
+
+func test_lecture_mate_lines_validation() -> void:
+	var d := data()
+	var ling: Array = d.npcs["xiao_ling"]["lecture_mate_lines"]
+	var ma: Array = d.npcs["hunter_ma"]["lecture_mate_lines"]
+	d.npcs["xiao_ling"]["lecture_mate_lines"] = ["a", "b", "c"]
+	d.npcs["hunter_ma"]["lecture_mate_lines"] = ["x".repeat(161)]
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	d.npcs["xiao_ling"]["lecture_mate_lines"] = ling
+	d.npcs["hunter_ma"]["lecture_mate_lines"] = ma
+	d.load_errors.clear()
+	assert_true(text.contains("'xiao_ling' lecture_mate_lines needs 1-2"), text)
+	assert_true(text.contains("'hunter_ma' lecture_mate_lines entries"), text)
