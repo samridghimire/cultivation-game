@@ -677,6 +677,7 @@ func _run_firsts(args: Array) -> void:
 	FirstHour.hints_policy = true
 	FirstHour.start_region = ""
 	FirstHour.sect_report = true
+	FirstHour.record_weeks = args.has("--firsts-trace")  # GUIDE-296: print each week's top lines and action (seed 1 only)
 	FirstHour.weekly_extras = true  # GUIDE-295: a player who reads the style / lecture line acts on it in a free part of the week
 	var gs: Node = root.get_node("GameState")
 	var clock: Node = root.get_node("GameClock")
@@ -717,6 +718,9 @@ func _run_firsts(args: Array) -> void:
 		gs.get_node("/root/GameClock").days_advanced.connect(on_days)
 		var out: Dictionary = FirstHour.play(gs, clock, s, months, false)
 		gs.get_node("/root/GameClock").days_advanced.disconnect(on_days)
+		if FirstHour.record_weeks and s == 1:
+			for w: Dictionary in FirstHour.week_trace.slice(0, 14):
+				print("day %3d | %-10s | %s || %s" % [w["day"], w["acted"], str(w["line"]).substr(0, 40), " | ".join(w["top"]).substr(0, 260)])
 		bus.friend_congratulated.disconnect(on_congrat)
 		bus.season_tasks_done.disconnect(on_season)
 		var end_day: int = clock.total_days - int(st["day0"])

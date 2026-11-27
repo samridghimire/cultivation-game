@@ -2317,7 +2317,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			# SIM-033: a 1-day kindness leaves days in the week: a player also attends the lecture or works toward a style lesson.
 			if weekly_extras and c.alive and (acted == "lend" or acted == "tea"):
 				for extra: String in steps:
-					if extra.begins_with("Lecture at ") or extra.contains("can teach you"):
+					if extra.begins_with("Lecture at ") or extra.contains("can teach you") or extra.begins_with("Season task: "):
 						var extra_kind := _act_on_hint(gs, c, done, extra, gs.get_node("/root/GameClock").total_days)
 						if extra_kind != "":
 							kinds[extra_kind] = true
