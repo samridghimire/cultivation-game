@@ -604,7 +604,7 @@ func _run() -> void:
 	quit()
 
 
-const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first season task done", "first season task"]
+const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first full season set", "first season task"]
 const DEAD_DAYS := 14
 
 

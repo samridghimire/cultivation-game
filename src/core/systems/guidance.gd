@@ -2501,19 +2501,41 @@ static func home_call_hint(c: CharacterData, data: GameData, people: Dictionary,
 
 ## GUIDE-296: "Season task: <text> at <place> (0/1)" for the first open catch/gather task of the season that a place in
 ## Qingshi itself serves in season (nothing to carry, no fight to rate). "" elsewhere or when none is open. Pure.
+## GUIDE-300: once no catch/gather task is open, an open hunt task shows with the fight's odds ("Season task: hunt 2
+## boars in Misty Forest, Even (75 in 100) (0/2)") when they are >= 40 in 100, else "(too strong for now: Deadly)".
+## Within 21 days of the season's end the line adds ", N days left in <season>".
 static func season_task_hint(c: CharacterData, data: GameData, region_id: String, today: int) -> String:
 	if region_id != SeasonTasks.REGION or today < 0 or c == null:
 		return ""
+	var left := Calendar.days_left_in_season(today)
+	var tail := "" if left > 21 else ", %d day%s left in %s" % [left, "" if left == 1 else "s", Calendar.season_of(today).to_lower()]
 	# Read-only (SeasonTasks.list would reset a stale season record on the character).
 	var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == SeasonTasks.season_key(today) else {}
+	var hunt: Dictionary = {}
 	for t: Dictionary in SeasonTasks.tasks_for(data, today):
 		var n := int(progress.get(String(t["id"]), 0))
-		if n >= int(t["count"]) or not ["catch", "gather"].has(String(t["kind"])):
+		if n >= int(t["count"]):
+			continue
+		if String(t["kind"]) == "hunt" and hunt.is_empty():
+			hunt = t
+		if not ["catch", "gather"].has(String(t["kind"])):
 			continue
 		var where := SeasonTasks.where(t, c, data, today)
 		if where.begins_with("at ") and not where.contains(" in "):
-			return "Season task: %s %s (%d/%d)" % [t["text"], where, n, int(t["count"])]
-	return ""
+			return "Season task: %s %s (%d/%d)%s" % [t["text"], where, n, int(t["count"]), tail]
+	if hunt.is_empty() or SeasonTasks.has_open(c, data, today, "catch") or SeasonTasks.has_open(c, data, today, "gather"):
+		return ""
+	var enemy: Dictionary = data.enemies.get(String(hunt.get("target", "")), {})
+	if enemy.is_empty():
+		return ""
+	var chance := Combat.win_chance(c, data, enemy)
+	var text := String(hunt["text"]).trim_suffix(".")
+	var done := int(progress.get(String(hunt["id"]), 0))
+	if chance < 0.4:
+		return "Season task: %s (too strong for now: %s) (%d/%d)%s" % [text, Combat.label_for_chance(chance), done, int(hunt["count"]), tail]
+	var where := SeasonTasks.where(hunt, c, data, today)
+	var place := "" if where == "" else " " + where
+	return "Season task: %s%s, %s (%d in 100) (%d/%d)%s" % [text, place, Combat.odds_word(chance), roundi(chance * 100.0), done, int(hunt["count"]), tail]
 
 
 ## GUIDE-294: "Meditate beside <name> at <spot>: +N% qi for D days" when a friend here can sit with you.
