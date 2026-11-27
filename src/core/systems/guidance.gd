@@ -1191,6 +1191,10 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var idle_nudge := idle_crafter_hint(c, data, region_id, today, flags)
 	if idle_nudge != "":
 		out.append(idle_nudge)
+	elif today >= 0:
+		var stage_goal := stage_goal_hint(c, data, region_id, flags)
+		if stage_goal != "":
+			out.append(stage_goal)
 	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "", today)
 	if buy != "":
 		out.append(buy)
@@ -2016,6 +2020,30 @@ static func idle_crafter_hint(c: CharacterData, data: GameData, region_id: Strin
 		var days := ceili(Cultivation.days_to_next_stage(c, data, float(best["density"])))
 		return "Meditate at %s: about %s to %s (you have not cultivated %s)." % [String(best["spot"]), Calendar.format_duration(days), _next_step_name(c, data), since]
 	return "You have not cultivated %s." % since
+
+
+## GUIDE-301: days of meditation from which a stage is "far" and worth a goal line.
+const STAGE_GOAL_MIN_DAYS := 30
+
+
+## GUIDE-301: "Goal: Qi Refining 5th Layer in about 3 months at Cloud-Sea Cliff (x5.0)" for a cultivator whose next
+## stage is STAGE_GOAL_MIN_DAYS+ days of meditation away, so a long stretch shows progress. When a clearly denser
+## spot is reachable the line names that one. "" for a mortal, at a bottleneck, with a near stage, or no region. Pure.
+static func stage_goal_hint(c: CharacterData, data: GameData, region_id: String, flags: Dictionary = {}) -> String:
+	if c.realm_index < 1 or region_id == "" or Cultivation.is_at_bottleneck(c, data):
+		return ""
+	var here := best_qi_in_region(c, data, region_id, flags)
+	var far := best_qi_reachable(c, data, region_id, flags)
+	var best := far if float(far["density"]) > float(here["density"]) * 1.25 else here
+	var days := Cultivation.days_to_next_stage(c, data, float(best["density"]))
+	if days < STAGE_GOAL_MIN_DAYS:
+		return ""
+	var realm: RealmDef = data.realms[c.realm_index]
+	var target := "%s %s" % [realm.name, realm.stage_names[c.stage + 1]] if c.stage + 1 < realm.stage_count() else _next_step_name(c, data)
+	var place := String(best["name"])
+	if place == "":
+		place = String(data.regions.get(String(best["region"]), {}).get("name", "a meditation spot"))
+	return "Goal: %s in about %s at %s (x%s)" % [target, Calendar.format_duration(days), place, String.num(float(best["density"]), 1)]
 
 
 ## GUIDE-103: what the next qi goal is called: "the next layer" (or `plain`), or at a realm's last

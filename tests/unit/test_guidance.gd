@@ -3130,6 +3130,27 @@ func test_idle_hint_replaces_gather_line() -> void:
 	assert_true(gather, str(fresh))
 
 
+func test_stage_goal_hint() -> void:
+	var c := _fresh()
+	c.realm_index = 1
+	c.stage = 3
+	c.qi = 0.0
+	var line := Guidance.stage_goal_hint(c, data(), "qingshi_village")
+	assert_true(line.begins_with("Goal: Qi Refining 5th Layer in about "), line)
+	assert_true(line.contains(" at ") and line.contains("(x"), line)
+	c.qi = data().realms[1].qi_required(3) - 1.0
+	assert_eq(Guidance.stage_goal_hint(c, data(), "qingshi_village"), "", "a near stage needs no goal line")
+	c.qi = 0.0
+	assert_eq(Guidance.stage_goal_hint(c, data(), ""), "", "no region, no line")
+	c.realm_index = 0
+	assert_eq(Guidance.stage_goal_hint(c, data(), "qingshi_village"), "", "a mortal has the mortal hints")
+	var top := _fresh()
+	top.realm_index = 1
+	top.stage = data().realms[1].stage_count() - 1
+	top.qi = data().realms[1].qi_required(top.stage)
+	assert_eq(Guidance.stage_goal_hint(top, data(), "qingshi_village"), "", "at a bottleneck the breakthrough hint speaks")
+
+
 func test_idle_crafter_hint() -> void:
 	var c := _fresh()
 	c.professions["alchemist"] = {"rank": 0, "xp": 0.0}
