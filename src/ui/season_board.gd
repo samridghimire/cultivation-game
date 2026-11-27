@@ -67,6 +67,51 @@ static func near_village(data: GameData, region_id: String) -> bool:
 	return region_id == SeasonTasks.REGION or Exploration.is_nearby(data, region_id, SeasonTasks.REGION)
 
 
+## WU-639: where each open season task is served in `region_id`: [{task_id, interactable_id}] where interactable_id is the
+## place's display name. `tasks` are the raw defs (SeasonTasks.tasks_for), `progress` {task_id: n}. catch/gather: the first
+## fishing/gather place whose table holds the target in `season`; hunt: the first explore site that can bring the foe up
+## (`day` as for Exploration.sites_with_foe). Done tasks and tasks with no spot here (contests too) are skipped. Pure.
+static func task_spots(data: GameData, region_id: String, tasks: Array, progress: Dictionary, season: String = "", day: int = -1) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var places: Array = data.regions.get(region_id, {}).get("places", [])
+	for t: Dictionary in tasks:
+		var id := String(t.get("id", ""))
+		if int(progress.get(id, 0)) >= int(t.get("count", 1)):
+			continue
+		var target := String(t.get("target", ""))
+		var kind := String(t.get("kind", ""))
+		var spot := ""
+		if kind == "catch" or kind == "gather":
+			var table_key := "catch_table" if kind == "catch" else "gather_table"
+			for pl: Dictionary in places:
+				for e: Dictionary in pl.get(table_key, []):
+					if String(e.get("item", "")) == target and Exploration.in_season(e, season):
+						spot = String(pl["display_name"])
+						break
+				if spot != "":
+					break
+		elif kind == "hunt":
+			var sites := Exploration.sites_with_foe(CharacterData.new(), data, region_id, target, season, day)
+			if not sites.is_empty():
+				spot = String(sites[0].get("display_name", ""))
+		if spot != "":
+			out.append({"task_id": id, "interactable_id": spot})
+	return out
+
+
+## WU-639: "Spring tasks 1/3: <next open task, short>" while any task is open and the HUD shows hints near the village;
+## "" when all are done or there are none. The last open task keeps WU-462's "One more for ..." wording elsewhere.
+static func season_line(tasks: Array, season_name: String) -> String:
+	var left: Array = tasks.filter(func(t: Dictionary) -> bool: return not bool(t["done"]))
+	if tasks.is_empty() or left.size() < 2:
+		return ""
+	var done := tasks.size() - left.size()
+	var text := String(left[0]["text"])
+	if text.length() > 28:
+		text = text.substr(0, 27).strip_edges() + "…"
+	return "%s tasks %d/%d: %s" % [season_name.substr(0, 1).to_upper() + season_name.substr(1), done, tasks.size(), text]
+
+
 func open() -> void:
 	var day := GameClock.total_days
 	build(GameState.season_tasks(), SeasonTasks.season_name(day), GameState.season_reward_line(), shrine_line(GameState.player, GameState.data), SeasonTasks.reward_text(GameState.data, day))

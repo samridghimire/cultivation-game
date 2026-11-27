@@ -52,6 +52,7 @@ var _hint_full := ""  ## GFX-016: the hint text before the line cap.
 var _goal: Label
 var _hunt: Label
 var _fair: Label
+var _season_soft := false  ## WU-639: the shown season line is the soft "tasks n/m" one
 var _season_task: Label  ## WU-462: "One more for spring: ..." when one season task is left.
 var _fair_queued := false
 var _log: RichTextLabel
@@ -950,9 +951,16 @@ func _refresh() -> void:
 	_hunt.text = Guidance.short_fight_line(hunt, data)
 	_hunt.tooltip_text = hunt
 	_hunt.visible = hunt != ""
-	var one_left := season_one_left_line(GameState.season_tasks(), SeasonTasks.season_name(GameClock.total_days)) if hint_count > 0 and SeasonBoard.near_village(data, GameState.current_region) else ""
+	var season_tasks := GameState.season_tasks()
+	var season_name := SeasonTasks.season_name(GameClock.total_days)
+	var one_left := ""
+	if hint_count > 0 and SeasonBoard.near_village(data, GameState.current_region):
+		one_left = season_one_left_line(season_tasks, season_name)
+		if one_left == "":
+			one_left = SeasonBoard.season_line(season_tasks, season_name)  # WU-639
 	_season_task.text = one_left
 	_season_task.visible = one_left != ""
+	_season_soft = one_left != "" and not one_left.begins_with("One more")  # WU-639
 	_hint_lines = hints
 	hints_changed.emit()
 	_set_hint_text(hints)
@@ -1254,12 +1262,18 @@ func _apply_line_cap() -> void:
 	if not _hint.visible:
 		return
 	var font := _hint.get_theme_font("font")
-	var used := 0
-	for label: Label in [_goal, _hunt, _fair, _season_task]:
-		if label.visible:
-			used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label != _hunt else 1
-	var budget := maxi(1, GUIDE_MAX_LINES - used)
-	var cut := cut_entries(_hint_full.split("\n"), font, 14, HINT_W, budget)
+	var cut := PackedStringArray()
+	for pass_i in 2:
+		var used := 0
+		for label: Label in [_goal, _hunt, _fair, _season_task]:
+			if label.visible:
+				used += maxi(1, wrapped_lines(label.text, font, 14, 316.0).size()) if label != _hunt else 1
+		cut = cut_entries(_hint_full.split("\n"), font, 14, HINT_W, maxi(1, GUIDE_MAX_LINES - used))
+		# WU-639: the "Spring tasks 1/3" line is the first to go when it would cost the hints a line
+		if pass_i == 0 and _season_soft and _season_task.visible and "\n".join(cut) != _hint_full:
+			_season_task.visible = false
+		else:
+			break
 	if cut.size() != _hint_full.split("\n").size() or "\n".join(cut) != _hint_full:
 		_hint.text = "\n".join(cut)
 		_hint.tooltip_text = "\n".join(_hint_lines)  # WU-579: a mouse player can still read the trimmed text

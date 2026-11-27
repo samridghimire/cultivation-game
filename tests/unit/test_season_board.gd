@@ -91,3 +91,33 @@ func test_shop_title_is_one_line_with_notes_in_another_label() -> void:
 	assert_true(shop._title_notes != null)
 	assert_false(shop._title_notes.text.begins_with(" "))
 	shop.queue_free()
+
+
+## WU-639: the spring set's world spots in Qingshi.
+func test_task_spots_for_spring_set() -> void:
+	var gs: Node = (Engine.get_main_loop() as SceneTree).root.get_node("GameState")
+	var data: GameData = gs.data
+	var tasks: Array = [
+		{"id": "a", "kind": "catch", "target": "peach_blossom_bream", "count": 1},
+		{"id": "b", "kind": "gather", "target": "spirit_herb", "count": 3},
+		{"id": "c", "kind": "contest", "target": "qingming_festival", "count": 1},
+	]
+	var spots := SeasonBoard.task_spots(data, "qingshi_village", tasks, {}, "spring", 0)
+	var by_task: Dictionary = {}
+	for s: Dictionary in spots:
+		by_task[s["task_id"]] = s["interactable_id"]
+	assert_eq(by_task.get("a"), "Village Pond Jetty")
+	assert_eq(by_task.get("b"), "Village Herb Slope")
+	assert_false(by_task.has("c"), "a contest has no spot and is skipped")
+	# in winter the bream is not in the table; a finished task is skipped
+	assert_eq(SeasonBoard.task_spots(data, "qingshi_village", [tasks[0]], {}, "winter", 0).size(), 0)
+	assert_eq(SeasonBoard.task_spots(data, "qingshi_village", [tasks[1]], {"b": 3}, "spring", 0).size(), 0)
+	assert_eq(SeasonBoard.task_spots(data, "no_such_region", tasks, {}, "spring", 0).size(), 0)
+
+
+func test_season_line_wording() -> void:
+	var t := func(done: bool, text: String) -> Dictionary: return {"text": text, "done": done}
+	assert_eq(SeasonBoard.season_line([t.call(true, "A"), t.call(false, "Land a bream."), t.call(false, "C")], "spring"), "Spring tasks 1/3: Land a bream.")
+	assert_eq(SeasonBoard.season_line([t.call(true, "A"), t.call(true, "B"), t.call(false, "C")], "spring"), "", "one left keeps WU-462's wording")
+	assert_eq(SeasonBoard.season_line([], "spring"), "")
+	assert_true(SeasonBoard.season_line([t.call(false, "x".repeat(80)), t.call(false, "B")], "spring").length() < 50)

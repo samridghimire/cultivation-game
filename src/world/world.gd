@@ -135,6 +135,7 @@ func _ready() -> void:
 	_build_season_tint()
 	_build_beast_arrow()
 	add_child(GoalMarker.new())  # WU-567
+	add_child(SeasonMarkers.new())  # WU-639
 	_lap("setup")
 	_build_decor()
 	_lap("props/decor")

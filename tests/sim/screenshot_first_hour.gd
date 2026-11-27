@@ -10,6 +10,7 @@ extends SceneTree
 ## WU-605: `-- --journal-sect` renders journal_sect.png (the journal's Sect page).
 ## WU-607: `-- --map-sect=<sect_id>` renders map_sect.png (the world map as a member of that sect, report still owed).
 ## GFX-264: `-- --friend-realm=<npc_id>:<realm_index>` shows the friend's aura: friend_realm_<n>.png.
+## WU-639: `-- --season-tasks` day 3 with one task done: world leaf markers and the HUD's season line: season_tasks.png.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
 ## WU-637: `-- --friend-aid=<npc_id>` opens the friend's request card: friend_aid.png.
 ## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
@@ -502,6 +503,15 @@ func _start() -> void:
 					if n.get("npc_id") == fid and n.has_node("FriendAura"):
 						n.get_node("FriendAura").override_realm = fr, "close": func() -> void: pass})
 			special = true
+	if OS.get_cmdline_user_args().has("--season-tasks"):  # WU-639
+		shots.append({"name": "season_tasks", "open": func() -> void:
+			hud.get("_banner").visible = false
+			var gclock: Node = Engine.get_main_loop().root.get_node("GameClock")
+			gclock.total_days = 3
+			var first: Dictionary = SeasonTasks.tasks_for(gs.data, 3)[1]
+			SeasonTasks.note(gs.player, gs.data, String(first["kind"]), String(first["target"]), int(first["count"]), 3)
+			Engine.get_main_loop().root.get_node("EventBus").player_changed.emit(), "close": func() -> void: pass})
+		special = true
 	for a in OS.get_cmdline_user_args():  # GFX-262: a friend rises in sight
 		if a.begins_with("--friend-rose="):
 			var rid := a.substr(14)
