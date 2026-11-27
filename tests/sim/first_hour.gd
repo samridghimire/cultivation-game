@@ -1793,6 +1793,12 @@ static func _season_gather(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	_season_why(gs, t, why)
 
 
+## SIM-043: --firsts-trace line for a hunt the hints player went on.
+static func _trace_hunt(gs: Node, c: CharacterData, t: Dictionary, day: int) -> void:
+	if record_weeks:
+		week_trace.append({"day": day, "acted": "season_hunt", "line": "hunt %s (%d left)" % [String(t["target"]), _season_task_left(gs, c, t)], "top": ""})
+
+
 static func _season_hunt(gs: Node, c: CharacterData, t: Dictionary) -> void:
 	var target := String(t["target"])
 	var enemy: Dictionary = gs.data.enemies.get(target, {})
@@ -2744,6 +2750,20 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
 			if line.begins_with("Season task: %s " % String(t["text"])) and _season_task_left(gs, c, t) > 0:
 				_season_tries = 0
+				if String(t["kind"]) == "hunt":
+					# SIM-043: GUIDE-300's hunt line (shown at >= 40 in 100 or "too strong"): go to the foe's region, fight, walk back to the hall.
+					if line.contains("too strong for now"):
+						return ""
+					var hunt_home: String = gs.current_region
+					var hunts_before := int(season_task_log["hunts"])
+					_season_hunt(gs, c, t)
+					if int(season_task_log["hunts"]) == hunts_before:
+						return ""
+					_trace_hunt(gs, c, t, day)
+					var hunt_back := Sects.home_region(gs.data, String(c.sect["id"])) if not c.is_rogue() else hunt_home
+					if c.alive and hunt_back != "" and gs.current_region != hunt_back:
+						_walk_to(gs, c, hunt_back)
+					return "season_hunt"
 				_season_gather(gs, c, t)
 				return "season_task"
 		return ""
