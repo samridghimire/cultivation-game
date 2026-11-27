@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-27 [SIM-039] Balance tooling: the first year re-measured after the practice-loop, home-call and friend fixes.
+- 2026-11-27 [GFX-267] The Myriad Treasure Pavilion's envoy hall gets a stone court and a gate like the other sect halls.
+- 2026-11-27 [C-429] Letters from home are written in each villager's own voice.
+- 2026-11-27 [FOLK-057] At your sect's home, Next steps suggest lending a hand to someone there instead of a gift to a villager far away.
+- 2026-11-27 [GUIDE-300] Next steps show a season hunt task with the fight's odds and how many days the season has left.
+- 2026-11-27 [GFX-266] Azure Peak's hall steward no longer stands at the map's edge; Myriad Peaks Ridge looks less bare.
+- 2026-11-27 [WU-643] A friend's letter opens on a sheet of paper with their figure, the text and any request.
+- 2026-11-27 [GUIDE-299] Next steps call you home to Qingshi when a friend there has news or a season task is running out; news reaches you by letter.
+- 2026-11-27 [C-428] A friend's request for help and their thanks gift now fit the breakthrough they face.
+- 2026-11-27 [GUIDE-298] Balance tooling: the first-year sim no longer trains for the sect trial every week.
+- 2026-11-27 [WU-642] A friend's thanks gift arrives on a card with the gift and a line from them.
+- 2026-11-27 [WU-638] The Sect page lists the friends who are your sect-mates and their realm.
 - 2026-11-27 [SIM-038] Balance tooling: the first season re-measured after the hint fixes.
 - 2026-11-27 [GFX-265] Withered Bone Marsh reads better: the workbench and names no longer overlap and the empty ground has a bog pool.
 - 2026-11-27 [FOLK-056] A friend you helped through a breakthrough sends you a thanks gift.
