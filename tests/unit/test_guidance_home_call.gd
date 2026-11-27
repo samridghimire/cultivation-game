@@ -134,3 +134,26 @@ func test_validation_reports_bad_home_call() -> void:
 	assert_eq(gs.data.load_errors.size(), before + 1)
 	gs.data.load_errors.resize(before)
 	gs.data.family["home_call"] = saved
+
+
+## C-429: a villager with home_news_lines writes in their own voice; one without falls back to the generic text.
+func test_home_news_uses_npc_lines_else_generic() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(40)
+	_news(c, day)
+	var letter := Letters.home_news(c, gs.npcs, gs.data, {}, day, away)
+	var text := String(letter["text"])
+	var region := String(gs.data.regions[SeasonTasks.REGION]["name"])
+	var ok := false
+	for l: String in gs.data.npcs["xiao_ling"]["home_news_lines"]:
+		if text == l.replace("{region}", region).replace("{news}", "I began Qi Refining."):
+			ok = true
+	assert_true(ok, "Xiao Ling's own line: " + text)
+	assert_false(text.contains("Come by when the sect lets you go"))
+	var saved: Array = gs.data.npcs["xiao_ling"]["home_news_lines"]
+	gs.data.npcs["xiao_ling"].erase("home_news_lines")
+	var plain := Letters.home_news(c, gs.npcs, gs.data, {}, day, away)
+	gs.data.npcs["xiao_ling"]["home_news_lines"] = saved
+	assert_true(String(plain["text"]).contains("Come by when the sect lets you go"), "generic fallback")

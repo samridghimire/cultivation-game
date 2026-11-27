@@ -102,7 +102,10 @@ static func home_news(c: CharacterData, npcs: Dictionary, data: GameData, flags:
 		flags[flag] = true
 		var news := "I began Qi Refining." if String(entry.get("kind", "")) == "qi_start" else "I broke through to %s." % String(entry.get("realm", "a new realm"))
 		var region := String(data.regions.get(SeasonTasks.REGION, {}).get("name", "home"))
+		var own: Array = data.npcs.get(id, {}).get("home_news_lines", [])  # C-429: stable pick, no rng draw
 		var text := String(rules(data).get("home_news_text", "{name} writes from {region}: \"{news} Come by when the sect lets you go.\"")).replace("{name}", String(row["name"])).replace("{region}", region).replace("{news}", news)
+		if not own.is_empty():
+			text = String(own[hash("%s_%d" % [id, int(entry.get("day", 0))]) % own.size()]).replace("{region}", region).replace("{news}", news)
 		return {"npc_id": id, "text": text, "notes": [], "request": false}
 	return {}
 
