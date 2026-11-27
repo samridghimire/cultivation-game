@@ -855,6 +855,8 @@ func travel(region_id: String) -> void:
 	last_travel_from = current_region
 	last_travel_days = int(check["days"])
 	last_travel_snow = snow_days
+	if current_region == SeasonTasks.REGION and region_id != SeasonTasks.REGION:
+		world_flags["home_left_day"] = GameClock.total_days  # WU-644
 	current_region = region_id
 	last_arrival_first_visit = Exploration.visit(player, region_id)
 	world_flags["notice_road_" + region_id] = true  # you are already here (TRAV-001)
@@ -948,6 +950,7 @@ func _post_arrival_line() -> void:
 	world_flags["arrival_day"] = day
 	world_flags["arrival_region"] = current_region
 	world_flags["arrival_line"] = line
+	_note_home_lines()
 	if line != "":
 		EventBus.post(line, "travel")
 	_post_sect_home_arrival()
@@ -962,6 +965,18 @@ func _post_arrival_line() -> void:
 		world_flags["season_line_seen"] = seen
 		if not line.contains(season_line):  # WU-464: the arrival line may already say it
 			EventBus.post(season_line, "travel")
+
+
+## WU-644: on coming home to Qingshi after a long absence, keep what waits there for today's arrival banner.
+func _note_home_lines() -> void:
+	world_flags.erase("home_lines")
+	if current_region != SeasonTasks.REGION or not world_flags.has("home_left_day"):
+		return
+	var away := GameClock.total_days - int(world_flags["home_left_day"])
+	world_flags.erase("home_left_day")
+	var lines := Guidance.home_waiting_lines(player, data, npcs, GameClock.total_days, away)
+	if not lines.is_empty():
+		world_flags["home_lines"] = Array(lines)
 
 
 ## WU-607: once per sect, the first arrival at a member's sect home says where the hall stands.

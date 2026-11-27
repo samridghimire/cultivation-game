@@ -65,6 +65,7 @@ extends SceneTree
 ## QA-187: append `-- --companion` (a Qingshi friend invited along, WU-413): companion.png (the HUD chip) and
 ## field_menu.png (the rented field's menu with the tool icons).
 ## WU-452: `-- --road-card [--road-encounter]` renders road_card.png (and road_encounter.png).
+## WU-644: `--home-after=<days>` (with --arrival-card, in Qingshi) shows the "what waits at home" lines after that many days away.
 ## GFX-065: append `-- --arrival-card` for arrival_card.png, right after a new game starts, the card still up.
 ## GFX-081: `-- --shrine=N` sets the old shrine's stage (0..4).
 ## QA-198: `-- --festival` (festival_qingshi), `--contest` (contest_card), `--practice` (practice_menu), `--regular` (shop_regular), `--journal` (journal_today); one flag per run.
@@ -227,6 +228,12 @@ func _start() -> void:
 		_drop_start_line()
 		gs.call("_post_arrival_line")  # GUIDE-210: the region's own arrival line, once, after the day is final
 	gs.pending_event = ""
+	for arg in OS.get_cmdline_user_args():  # WU-644
+		if arg.begins_with("--home-after="):
+			gs.current_region = "qingshi_village"
+			gs.player.field_plots["qingshi_village:Spirit Field"] = {"crops": [{"item": "spirit_grass", "days_left": 0}]}
+			gs.world_flags["home_left_day"] = gs.get_node("/root/GameClock").total_days - int(arg.substr(13))
+			gs.call("_note_home_lines")
 	if OS.get_cmdline_user_args().has("--arrival-card"):
 		gs.arrival_banner_pending = true  # GFX-065: as a new game from the title screen sets it
 	var party := OS.get_cmdline_user_args().has("--celebration")

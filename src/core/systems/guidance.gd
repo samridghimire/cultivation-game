@@ -7855,3 +7855,44 @@ static func _workshop_name(data: GameData, region_id: String) -> String:
 			if String(place.get("type", "")) == "workshop":
 				return String(place.get("display_name", "the workshop"))
 	return found
+
+
+## WU-644: days away from Qingshi before the arrival banner lists what waits there.
+const HOME_AWAY_MIN_DAYS := 30
+const HOME_LINES_MAX := 3
+
+
+## WU-644: up to three short lines of what waits in Qingshi after `away_days` away (friends with news, open
+## season tasks, ripe field plots). Empty after a short trip or when nothing waits.
+static func home_waiting_lines(c: CharacterData, data: GameData, people: Dictionary, today: int, away_days: int) -> PackedStringArray:
+	var out := PackedStringArray()
+	if c == null or away_days < HOME_AWAY_MIN_DAYS:
+		return out
+	var news: Array[Dictionary] = []
+	for row: Dictionary in FolkNews.journal_rows(c, data, people, today):
+		if String(row["region"]) == SeasonTasks.REGION and FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
+			news.append(row)
+	if not news.is_empty():
+		out.append("%s has news (%d days left to congratulate)" % [news[0]["name"], int(news[0]["days_left"])] if news.size() == 1
+			else "%d friends have news to congratulate" % news.size())
+	var open := 0
+	var total := 0
+	for t: Dictionary in SeasonTasks.list(c, data, today):
+		total += 1
+		if not bool(t["done"]):
+			open += 1
+	if open > 0:
+		out.append("Season tasks %d/%d done" % [total - open, total])
+	var ripe := 0
+	for key: String in c.field_plots:
+		if not key.begins_with(SeasonTasks.REGION + ":"):
+			continue
+		for crop: Dictionary in c.field_plots[key].get("crops", []):
+			if int(crop.get("days_left", 1)) <= 0:
+				ripe += 1
+	if ripe > 0:
+		out.append("%d %s ripe in your field" % [ripe, "crop" if ripe == 1 else "crops"])
+	while out.size() > HOME_LINES_MAX:
+		out.remove_at(out.size() - 1)
+	return out
+

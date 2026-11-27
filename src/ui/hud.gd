@@ -2515,6 +2515,16 @@ static func arrival_extra(flags: Dictionary, region_id: String) -> String:
 	return String(flags.get("arrival_line", ""))
 
 
+## WU-644: what waits at home (flags["home_lines"], set on arrival), "" when none or not this region.
+static func home_lines_text(flags: Dictionary, region_id: String) -> String:
+	if region_id != SeasonTasks.REGION or not flags.has("home_lines"):
+		return ""
+	var lines: PackedStringArray = []
+	for l in flags["home_lines"]:
+		lines.append(String(l))
+	return "\n".join(lines.slice(0, Guidance.HOME_LINES_MAX))
+
+
 ## Arrival card: region name with qi density and danger, shown on real travel.
 func _on_arrival(region_id: String) -> void:
 	if is_instance_valid(RoadCard.current):
@@ -2561,6 +2571,9 @@ func _show_arrival(region_id: String) -> void:
 		var teach := Npcs.region_teaching_lines(Npcs.region_teachings(GameState.player, data, GameState.npc_favor, region_id))
 		if not teach.is_empty():
 			sub += "\n" + "\n".join(teach)
+	var home := home_lines_text(GameState.world_flags, region_id)  # WU-644
+	if home != "":
+		sub += "\n" + home
 	# WU-514: today's line is in the message log and Next steps, not repeated on the banner.
 	var hold := Banner.SLIM_HOLD_SECONDS  # WU-510: a slim banner that leaves the village visible
 	_arrival_title = Exploration.region_name(data, region_id)
