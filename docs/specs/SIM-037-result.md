@@ -58,3 +58,35 @@ Summary: the two stretches that recur most across 6 seeds (by median length, see
 
 Days are stamped at the first clock jump that shows them, so the day-0 talk and chores read as day 3. The two longest dead stretches (median 39 and 38 days) are days 0-45, where the sim spends its time on missions and meditation and a breakthrough attempt, and days 60-90, where it meditates almost the whole stretch (24-37 days of meditation, a mission or two, lend-a-hand). Both end only when a stage up or the sect join lands. Five firsts are never reached in 6 months by the hints player: first technique, first lecture, first congratulation, first shared meditation and first season task. The first Acquaintance and Friend come late (median day 112 and 142), which leaves days 90-170 as a meditation-only stretch. GUIDE-295 should look at the sect-lecture and technique firsts, since the sim never takes them.
 
+
+## After GUIDE-295..297 (SIM-038, 2026-11-27)
+
+`--firsts 6 6` and `--firsts 6 12` on main (hints policy, Qingshi start, 6 seeds). Medians; the run itself is unchanged by this task.
+
+| first | median day | note |
+|---|---|---|
+| talk to Elder Mo / first chore / first fight | 3 / 3 / 6 | all seeds |
+| first technique | 15 | all seeds (was never in 6 months) |
+| first Acquaintance | 16 | seed 1 day 27, others 16 (was 112 in SIM-037) |
+| first stage up | 32 | 25-45 |
+| sect joined | 35 | 28-48 |
+| first lecture | 48 | 44-57, i.e. 13-16 days after joining (target 45 met) |
+| first season task (seen) | 24 | 18-28 |
+| first Friend | never | seed 5 day 45; seed 6 day 322 (12 months) |
+| first congratulation | never | 0/6 even in 12 months |
+| first shared meditation | never | 0/6 |
+| first season task done | never | 0/6 |
+
+Five longest dead stretches (12 months):
+
+| seed | days | length | sim did |
+|---|---|---|---|
+| 4 | 69-199 | 130 | practice_technique 84d, meditation 35d, missions 10d |
+| 6 | 76-199 | 123 | practice_technique 35d, meditation 35d, missions 20d |
+| 1 | 68-180 | 112 | practice_technique 70d, meditation 31d, missions 10d |
+| 3 | 66-171 | 105 | practice_technique 70d, meditation 24d, missions 10d |
+| 2 | 68-157 | 89 | practice_technique 63d, meditation 13d, missions 12d |
+
+Reading: GUIDE-295 and GUIDE-297 worked (first technique day 15, first lecture within about two weeks of joining), and the first Acquaintance is now day 16, not 112: GUIDE-282's 41-50 was measured before the sect move, but here the Acquaintance comes before the sect (day 28-48), so joining and leaving Qingshi is not what delayed it; the earlier 112 was the old policy. The new hole is days ~68-200 in five of six seeds: after the sect lecture the sim spends 35-84 days in practice_technique, which gives none of the tracked firsts. Practising looks like a policy loop (the technique keeps being chosen after mastery or cap), not a game gap. The three firsts that still never happen (congratulation, shared meditation, season task done) all need a Friend or a Qingshi return, and the sim has left Qingshi by day 35.
+
+Follow-ups: GUIDE-298 should target the days 68-200 stretch: first check why `practice_technique` is picked for 35-84 days (cap reached? no better action ranked?) and fix in `_run_firsts` or the hint ranking. Then the sim should go back to Qingshi for the season task / Friend firsts after joining.
