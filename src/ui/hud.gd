@@ -1957,7 +1957,7 @@ static func mastery_banner(data: GameData, region_id: String) -> PackedStringArr
 ## A friend's letter arrived (WU-081): a banner and a chime.
 func _on_letter_arrived(npc_name: String, text: String = "", npc_id: String = "") -> void:
 	Audio.play("chime_progress")
-	if text == "":
+	if text == "" or Settings.get_value("letters_quiet") == true:  # WU-646: quiet letters keep the banner
 		var lines := letter_banner(npc_name)
 		_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
 		return

@@ -27,6 +27,7 @@ var _reduce_motion: CheckButton
 var _auto_cast: CheckButton
 var _show_all_labels: CheckButton
 var _key_help: CheckButton
+var _letters: OptionButton  # WU-646: 0 = open a card, 1 = note in the log
 var _wake_events: CheckButton
 var _sliders: Dictionary = {}  # setting key -> HSlider
 var _value_labels: Dictionary = {}  # setting key -> Label
@@ -104,6 +105,13 @@ func _init() -> void:
 	_reduce_motion.add_theme_font_size_override("font_size", 18)
 	_reduce_motion.toggled.connect(func(on: bool): Settings.set_value("reduce_motion", on))
 	box.add_child(_reduce_motion)
+	hints_row.add_child(UIStyle.label("   Letters", 18))
+	_letters = OptionButton.new()
+	_letters.add_theme_font_size_override("font_size", 18)
+	_letters.add_item("Open a card", 0)
+	_letters.add_item("Note in the log", 1)
+	_letters.item_selected.connect(func(i: int): Settings.set_value("letters_quiet", i == 1))
+	hints_row.add_child(_letters)
 	_auto_cast = CheckButton.new()
 	_auto_cast.text = "Auto fishing (skip the timing bar)"
 	_auto_cast.add_theme_font_size_override("font_size", 18)
@@ -323,6 +331,7 @@ func _sync() -> void:
 	_animate_fights.set_pressed_no_signal(Settings.get_value("animate_fights"))
 	_ambient.set_pressed_no_signal(Settings.get_value("ambient_effects"))
 	_reduce_motion.set_pressed_no_signal(Settings.get_value("reduce_motion"))
+	_letters.select(1 if Settings.get_value("letters_quiet") == true else 0)
 	_auto_cast.set_pressed_no_signal(Settings.get_value("auto_cast"))
 	_show_all_labels.set_pressed_no_signal(Settings.get_value("show_all_labels"))
 	_key_help.set_pressed_no_signal(Settings.get_value("key_help"))

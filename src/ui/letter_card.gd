@@ -96,9 +96,16 @@ func _slide() -> void:
 	modulate.a = 1.0
 	if not visible:
 		return
-	var rest := position.y
-	position.y = rest + SLIDE_PX
-	create_tween().tween_property(self, "position:y", rest, SLIDE_SECONDS)
+	# The container's layout may still settle while sliding, so aim at the live centre each step (WU-646).
+	create_tween().tween_method(_slide_step, 1.0, 0.0, SLIDE_SECONDS)
+	_slide_step(1.0)
+
+
+func _slide_step(remaining: float) -> void:
+	var parent := get_parent() as Control
+	if parent == null or not visible:
+		return
+	position.y = (parent.size.y - size.y) / 2.0 + SLIDE_PX * remaining
 
 
 func close() -> void:

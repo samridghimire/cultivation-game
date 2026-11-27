@@ -330,6 +330,31 @@ func test_letter_card() -> void:
 	gs.end_session()
 
 
+## WU-646: with letters_quiet on, a letter only banners; no card opens.
+func test_letter_quiet_setting_skips_card() -> void:
+	var gs := _start()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: LetterCard = hud.get("_letter_card")
+	hud.get("_dialogue").visible = false
+	var bus: Node = gs.get_node("/root/EventBus")
+	var was: Variant = Settings.get_value("letters_quiet")
+	Settings.set_value("letters_quiet", true)
+	bus.letter_arrived.emit("Xiao Ling", "Come see me.", "xiao_ling")
+	assert_false(card.visible, "quiet: no card")
+	assert_false(hud.call("_is_blocking"))
+	Settings.set_value("letters_quiet", false)
+	bus.letter_arrived.emit("Xiao Ling", "Come see me.", "xiao_ling")
+	assert_true(card.visible, "default: card")
+	card.close()
+	Settings.set_value("letters_quiet", was)
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()
+
+
 ## REVIEW: the slide-in ends where the CenterContainer puts the card (it once parked at y=0 on the first open).
 func test_letter_card_slides_to_center() -> void:
 	var gs := _start()
