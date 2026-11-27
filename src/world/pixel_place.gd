@@ -248,7 +248,28 @@ static func rows(kind: String, horizontal: bool = true, active: bool = false, co
 
 ## GFX-114: kinds whose picture changes in a snowy winter: tree crowns and the living gather beds.
 static func winter_kind(kind: String) -> bool:
-	return kind in ["explore_woods", "explore_woods_herbs", "gather", "gather_terrace", "gather_bog"]
+	return kind in ["explore_woods", "explore_woods_herbs", "gather", "gather_terrace", "gather_bog"] or roof_kind(kind)
+
+
+## GFX-270: kinds whose template is a hip roof; a snowy winter lays snow along the roof's top rows.
+static func roof_kind(kind: String) -> bool:
+	return kind in ["shop", "shop_smithy", "shop_scrolls", "workshop", "sect_hall", "clinic", "orphanage", "family_home", "auction", "coop"]
+
+
+## GFX-270: snow on a roof: in every column the top roof pixel (and a second one below a tall roof) turns snow-white.
+static func snow_roof(c: Array) -> void:
+	var w: int = c[0].size()
+	for x in w:
+		var top := -1
+		for y in c.size():
+			if c[y][x] in ["h", "r", "R"]:
+				top = y
+				break
+		if top < 0:
+			continue
+		c[top][x] = "n"
+		if top + 1 < c.size() and c[top + 1][x] in ["h", "r"] and x % 3 != 0:
+			c[top + 1][x] = "n"
 
 
 ## GFX-114, GFX-189: the crown colour of a woods site in winter: greyer, never darker than the region's own pines.
@@ -260,6 +281,9 @@ static func winter_crown(c: Color) -> Color:
 ## GFX-114: winter edits on template rows. Woods: a 2 px snow cap on top of every crown column with a pale underside
 ## pixel. Gather beds: living greens (v, r, h) become dormant brown stubs ("t", "e") with snow pixels ("n").
 static func winterize(kind: String, c: Array) -> void:
+	if roof_kind(kind):
+		snow_roof(c)
+		return
 	if kind.begins_with("explore_woods"):
 		return  # GFX-189: the winter grove is its own template (_winter_woods)
 	for y in c.size():

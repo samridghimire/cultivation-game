@@ -422,3 +422,14 @@ func test_ground_decal_places_are_not_plain_ellipses() -> void:
 	for kind in ["gather", "gather_rubble", "gather_bog", "abode"]:
 		var rows := PixelPlace.rows(kind)
 		assert_true(rows.size() > 0, kind + " has rows")
+
+
+func test_winter_roofs_carry_snow() -> void:  # GFX-270
+	for kind in ["shop", "workshop", "sect_hall", "clinic", "family_home", "auction"]:
+		var summer := PixelPlace.rows(kind)
+		var winter := PixelPlace.rows(kind, true, false, false, "thatch", true)
+		assert_true(winter.size() == summer.size(), kind + " keeps its size")
+		var n_summer := "".join(summer).count("n")
+		var n_winter := "".join(winter).count("n")
+		assert_true(n_winter > n_summer + 10, kind + " has snow on the roof in winter")
+	assert_true(PixelPlace.rows("bounty_board", true, false, false, "thatch", true) == PixelPlace.rows("bounty_board"), "non-roof kinds do not change")
