@@ -833,7 +833,7 @@ func _build_log() -> void:
 	# Seed from the history so the log survives a world reload (travel, respawn).
 	var recent: Array = EventBus.history.slice(maxi(0, EventBus.history.size() - MAX_LOG_LINES))
 	for e: Dictionary in recent:
-		_on_message(String(e.get("text", "")), String(e.get("category", "info")), int(e.get("id", -1)))
+		_on_message(String(e.get("text", "")), String(e.get("category", "info")), int(e.get("id", -1)), String(e.get("npc", "")))
 
 
 ## Anchors and offsets as (left, top, right, bottom).
@@ -1476,10 +1476,10 @@ func _on_message_replaced(text: String, category: String) -> void:
 	_repeat = 1
 	_last_text = text
 	_last_category = category
-	_log_lines[-1] = _log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text)
+	_log_lines[-1] = LogFace.encode(String(LogFace.decode(_log_lines[-1])["npc"]), _log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text))
 	_log.clear()
 	for line: String in _log_lines:
-		_log.append_text(line)
+		LogFace.append(_log, line)
 	_fit_log_card.call_deferred()
 
 
@@ -1488,52 +1488,55 @@ func _on_message_folded(text: String, category: String, id: int) -> void:
 	var i := _log_ids.find(id)  # LOG-007: by id, since collapsed "(x2)" rows make positions differ from the history
 	if i < 0:
 		return
+	var moved_npc := String(LogFace.decode(_log_lines[i])["npc"])
 	_log_lines.remove_at(i)
 	_log_ids.remove_at(i)
 	_log_ids.append(id)
-	_log_lines.append(_log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text))
+	_log_lines.append(LogFace.encode(moved_npc, _log_line(UIStyle.CATEGORY_COLORS.get(category, Color.WHITE), text)))
 	_repeat = 1
 	_last_text = text
 	_last_category = category
 	_log.clear()
 	for line: String in _log_lines:
-		_log.append_text(line)
+		LogFace.append(_log, line)
 	_fit_log_card.call_deferred()
 
 
 func _on_message_posted(text: String, category: String) -> void:
 	var id := -1
+	var npc := ""
 	if not EventBus.history.is_empty():
 		id = int(EventBus.history[-1].get("id", -1))
-	_on_message(text, category, id)
+		npc = String(EventBus.history[-1].get("npc", ""))
+	_on_message(text, category, id, npc)
 
 
-func _on_message(text: String, category: String, id: int = -1) -> void:
+func _on_message(text: String, category: String, id: int = -1, npc: String = "") -> void:
 	_last_message_msec = Time.get_ticks_msec()
 	var color: Color = UIStyle.CATEGORY_COLORS.get(category, Color.WHITE)
 	if _repeat > 0 and text == _last_text and category == _last_category and not _log_lines.is_empty():
 		_repeat += 1
-		_log_lines[-1] = _log_line(color, collapsed_line(text, _repeat))
+		_log_lines[-1] = LogFace.encode(String(LogFace.decode(_log_lines[-1])["npc"]), _log_line(color, collapsed_line(text, _repeat)))
 		_log_ids[-1] = id
 		# Rewriting the last paragraph in place is unreliable (trailing "\n"); the log is short, so rebuild it.
 		_log.clear()
 		for line: String in _log_lines:
-			_log.append_text(line)
+			LogFace.append(_log, line)
 		_fit_log_card.call_deferred()
 		return
 	_repeat = 1
 	_last_text = text
 	_last_category = category
-	var line := _log_line(color, text)
+	var line := LogFace.encode(npc, _log_line(color, text))
 	_log_lines.append(line)
 	_log_ids.append(id)
 	if _log_truncated:
 		_log_truncated = false
 		_log.clear()
 		for l: String in _log_lines:
-			_log.append_text(l)
+			LogFace.append(_log, l)
 	else:
-		_log.append_text(line)
+		LogFace.append(_log, line)
 	if _log_lines.size() > MAX_LOG_LINES:
 		_log_lines.pop_front()
 		_log_ids.pop_front()
@@ -1567,7 +1570,7 @@ func _fit_log_card() -> void:
 		_log_truncated = false
 		_log.clear()
 		for line: String in _log_lines:
-			_log.append_text(line)
+			LogFace.append(_log, line)
 	var room := float(LOG_CARD_MAX_LINES * LOG_CARD_MIN_LINE_PX)
 	var count := _log_lines.size()
 	var total := float(_log.get_content_height())
@@ -1604,7 +1607,7 @@ func _fit_log_card() -> void:
 		_log_truncated = true
 		_log.clear()
 		for i in range(count - fit, count):
-			_log.append_text(_log_lines[i])
+			LogFace.append(_log, _log_lines[i])
 	var h := log_card_height(_log.get_content_height())
 	_log.custom_minimum_size.y = h
 	_log_panel.offset_top = -16.0 - h - LOG_CARD_PADDING
@@ -1616,7 +1619,7 @@ func _fit_log_card() -> void:
 static func _log_plain(line: String) -> String:
 	var re := RegEx.new()
 	re.compile("\\[/?[a-z]+(=[^\\]]*)?\\]")
-	return re.sub(line, "", true).strip_edges()
+	return re.sub(String(LogFace.decode(line)["text"]), "", true).strip_edges()
 
 
 func _log_line(color: Color, text: String) -> String:

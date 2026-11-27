@@ -154,10 +154,12 @@ var topic := ""
 const TOPICS: Array[String] = ["combat", "cultivation", "family", "sect", "trade", "world"]
 
 
-func post(text: String, category: String = "info", topic_override: String = "", dawn: bool = false) -> void:
+func post(text: String, category: String = "info", topic_override: String = "", dawn: bool = false, npc_id: String = "") -> void:
 	posted_count += 1
 	var row := {"text": text, "category": category, "day": GameClock.total_days, "topic": topic_override if topic_override != "" else topic, "id": _next_id}
 	_next_id += 1
+	if npc_id != "":
+		row["npc"] = npc_id  # WU-650: the log row shows this villager's face
 	if dawn:
 		row["dawn"] = true  # LOG-005: a day-start line; a practice summary may fold across it
 	history.append(row)

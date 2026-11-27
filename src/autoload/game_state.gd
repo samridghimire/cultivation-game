@@ -3961,7 +3961,7 @@ func attend_lecture() -> void:
 		var mate_line := String(data.lecture_mate.get("line", ""))
 		if not mate_lines.is_empty():
 			mate_line = String(mate_lines[hash("%s/%d" % [mate_id, GameClock.total_days]) % mate_lines.size()])
-		EventBus.post(mate_line.replace("{name}", npcs[mate_id].name).replace("{elder}", elder), "progress")
+		EventBus.post(mate_line.replace("{name}", npcs[mate_id].name).replace("{elder}", elder), "progress", "", false, mate_id)
 		EventBus.lecture_mate.emit(mate_id)
 	_pass_time(int(result["days"]), "Attending a lecture")
 	var lecture_result: Dictionary = result.duplicate()
@@ -5819,7 +5819,7 @@ func _on_days_advanced(days: int) -> void:
 			var friend_name := String(npcs[String(event["npc_id"])].name)  # FOLK-050
 			player.friend_news_realm[String(event["npc_id"])] = npcs[String(event["npc_id"])].realm_index  # FOLK-053
 			EventBus.friend_rose.emit(String(event["npc_id"]), String(event["kind"]), String(event.get("realm", "")))  # GFX-262
-			EventBus.post(("%s has begun Qi Refining." if event["kind"] == "qi_start" else "%s has broken through.") % friend_name + " Visit to congratulate %s." % friend_name, "info")
+			EventBus.post(("%s has begun Qi Refining." if event["kind"] == "qi_start" else "%s has broken through.") % friend_name + " Visit to congratulate %s." % friend_name, "info", "", false, String(event["npc_id"]))
 			continue
 		# News about generated strangers is noise; only report people the player knows.
 		if not Npcs.is_newsworthy(String(event["npc_id"]), player, npc_favor):
@@ -5900,7 +5900,7 @@ func _on_days_advanced(days: int) -> void:
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
 			Letters.remember(player, data, line, GameClock.total_days)
 			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name, String(letter["text"]), String(letter["npc_id"]))
-			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress")
+			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress", "", false, String(letter["npc_id"]))
 	EventBus.topic = "world"
 	for i in months:
 		var asked := Folk.monthly_request(player, npcs, data, rng, current_region, npc_favor, GameClock.total_days)

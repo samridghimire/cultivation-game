@@ -135,3 +135,22 @@ func test_artifact_filter_button_and_category() -> void:  # WU-527
 	assert_true(cats.has("artifact"), "feeding posts under artifact: " + str(cats))
 	assert_false(cats.has("progress"))
 	bus.clear_history()
+
+
+func test_post_with_npc_id_keeps_text_and_records_id() -> void:
+	var bus := _root().get_node("EventBus")
+	bus.clear_history()
+	bus.post("Wen waves.", "people", "", false, "wen")
+	bus.post("Plain.", "info")
+	assert_eq(bus.history[0]["text"], "Wen waves.")
+	assert_eq(bus.history[0]["npc"], "wen")
+	assert_false(bus.history[1].has("npc"), "no npc key without an id")
+	bus.clear_history()
+
+
+func test_log_face_encode_decode_round_trip() -> void:
+	assert_eq(LogFace.encode("", "x"), "x")
+	var d := LogFace.decode(LogFace.encode("wen", "[color=#fff]hi[/color]\n"))
+	assert_eq(d["npc"], "wen")
+	assert_eq(d["text"], "[color=#fff]hi[/color]\n")
+	assert_eq(LogFace.decode("plain")["npc"], "")

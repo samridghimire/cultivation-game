@@ -164,7 +164,7 @@ static func format_entries(entries: Array) -> String:
 			out.append("[color=#%s]%s[/color]" % [DATE_COLOR.to_html(false), Calendar.format_date(day)])
 			last_day = day
 		var color: Color = UIStyle.CATEGORY_COLORS.get(e.get("category", "info"), Color.WHITE)
-		out.append("  [color=#%s]%s[/color]" % [color.to_html(false), String(e.get("text", "")).replace("[", "[lb]") + (" (x%d)" % int(e["count"]) if int(e["count"]) > 1 else "")])
+		out.append(LogFace.encode(String(e.get("npc", "")), "  [color=#%s]%s[/color]" % [color.to_html(false), String(e.get("text", "")).replace("[", "[lb]") + (" (x%d)" % int(e["count"]) if int(e["count"]) > 1 else "")]))
 	return "\n".join(out)
 
 
@@ -184,7 +184,11 @@ func _rebuild() -> void:
 	if entries.is_empty():
 		_text.append_text("[color=#%s]Nothing to show yet.[/color]" % DATE_COLOR.to_html(false))
 	else:
-		_text.append_text(format_entries(entries))
+		var rows := format_entries(entries).split("\n")
+		for i in rows.size():
+			LogFace.append(_text, rows[i])
+			if i < rows.size() - 1:
+				_text.append_text("\n")
 	_count.text = "%d of %d messages" % [entries.size(), EventBus.history.size()]
 	_scroll_to_end.call_deferred()
 
