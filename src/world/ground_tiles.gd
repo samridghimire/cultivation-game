@@ -1037,6 +1037,7 @@ static func _fill_clipped(img: Image, r: Rect2i, c: Color) -> void:
 
 
 const OCHRE := Color("b59a4a")
+const AUTUMN_TINT := 0.4
 const SNOW := Color("dfe6ee")
 const PATH_SNOW := Color("cfd6de")
 const WINTER_SNOW := 0.7  ## how far winter ground is tinted toward SNOW
@@ -1069,7 +1070,7 @@ static func _apply_season(img: Image, rid: String, season: String, snow_amount: 
 					if x < w and y < h:
 						img.set_pixel(x, y, FLOWER_COLORS[(roll / 512) % FLOWER_COLORS.size()])
 		"Autumn":
-			_tint_image(img, OCHRE, 0.25)
+			_tint_image(img, OCHRE, AUTUMN_TINT)  # GFX-269: stronger, so the grass reads as straw
 			for cy in ceili(float(h) / SIZE):
 				for cx in ceili(float(w) / SIZE):
 					var roll := absi(hash("%s|%d|%d|autumn" % [rid, cx, cy]))

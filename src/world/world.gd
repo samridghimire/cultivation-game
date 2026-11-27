@@ -3007,6 +3007,11 @@ func _draw_scarecrow(base: Vector2) -> void:
 	draw_circle(base + Vector2(0, -30), 5.0, Color("e0c27a"))
 	draw_rect(Rect2(base + Vector2(-8, -36), Vector2(17, 3)), Color("8a6a3a"))
 	draw_rect(Rect2(base + Vector2(-4, -41), Vector2(9, 5)), Color("8a6a3a"))
+	if Scenery.is_snowy(_season) and not bool(_region.get("map", {}).get("no_snow", false)):  # GFX-269: snow on hat and crossbar
+		var snow := Color(0.92, 0.96, 1.0, 0.95)
+		draw_rect(Rect2(base + Vector2(-8, -37), Vector2(17, 2)), snow)
+		draw_rect(Rect2(base + Vector2(-4, -42), Vector2(9, 2)), snow)
+		draw_rect(Rect2(base + Vector2(-11, -21), Vector2(23, 2)), snow)
 
 
 ## GFX-046: the jetty runs out from the shore into its pond (Scenery.jetty_layout); darker posts stand in the water.
