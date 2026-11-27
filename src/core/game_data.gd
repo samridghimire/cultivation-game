@@ -1429,6 +1429,9 @@ func _validate_folk_news() -> void:
 			load_errors.append("family.folk_news.%s must be an int > 0" % key)
 	_validate_own_lines(cfg.get("own_fallback", {}), "family.folk_news.own_fallback", true)
 	for id: String in npcs:
+		var tl: Variant = npcs[id].get("thanks_line", "")  # WU-642
+		if not tl is String or String(tl).length() > 120:
+			load_errors.append("npcs.%s.thanks_line must be a string of at most 120 chars" % id)
 		_validate_own_lines(npcs[id].get("own_news_lines", {}), "npcs.%s.own_news_lines" % id, false)
 	for kind in ["sect_join_demonic", "promotion_demonic", "contest_demonic"]:  # FOLK-048: optional wary lines for a demonic sect
 		var dpool: Variant = cfg.get("lines", {}).get(kind, [])

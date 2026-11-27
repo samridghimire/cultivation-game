@@ -237,3 +237,37 @@ func test_thanks_delivery_integration() -> void:
 		held += gs.player.item_count(gift)
 	assert_true(held >= 1, "the gift arrived")
 	gs.end_session()
+
+
+## WU-642: the thanks card opens on the signal, is modal, queues behind another moment, and closes with cancel/Continue.
+func test_thanks_card_modal_and_queued() -> void:
+	var gs := _start()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: FriendThanksCard = hud.get("_friend_thanks_card")
+	hud.get("_dialogue").visible = false
+	assert_eq(FriendThanksCard.line_for(gs.data, "no_such_npc"), FriendThanksCard.FALLBACK_LINE)
+	assert_true(FriendThanksCard.line_for(gs.data, "xiao_ling") != FriendThanksCard.FALLBACK_LINE, "own line")
+	assert_false(hud.call("_is_blocking"))
+	gs.get_node("/root/EventBus").friend_thanks.emit("xiao_ling", "Xiao Ling", "spirit_herb")
+	assert_true(card.visible)
+	assert_true(hud.call("_is_blocking"))
+	assert_true(card.item_text() != "")
+	card.continue_button().pressed.emit()
+	assert_false(card.visible)
+	assert_false(hud.call("_is_blocking"))
+	# queued while another moment is up
+	hud.get("_friend_aid_card").open("xiao_ling", "Xiao Ling", "Pill", false)
+	gs.get_node("/root/EventBus").friend_thanks.emit("xiao_ling", "Xiao Ling", "spirit_herb")
+	assert_false(card.visible, "waits")
+	assert_eq(hud.get("_pending_moments").size(), 1)
+	hud.get("_friend_aid_card").close()
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(card.visible, "plays after")
+	card.close()
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()
