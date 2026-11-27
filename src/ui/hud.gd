@@ -221,6 +221,7 @@ var _friend_card: FriendSceneCard  # WU-467
 var _friend_med_card: FriendMeditationCard  # WU-635
 var _friend_aid_card: FriendAidCard  # WU-637
 var _friend_thanks_card: FriendThanksCard  # WU-642
+var _letter_card: LetterCard  # WU-643
 var _season_card: SeasonCard  # WU-495
 var _sect_card: SectCard  # WU-602
 var _trial_card: TrialCard  # WU-609
@@ -351,6 +352,9 @@ func _ready() -> void:
 	_friend_thanks_card.closed.connect(_update_modal)
 	add_child(UIStyle.centered(_friend_thanks_card))
 	EventBus.friend_thanks.connect(_on_friend_thanks)
+	_letter_card = LetterCard.new()  # WU-643
+	_letter_card.closed.connect(_update_modal)
+	add_child(UIStyle.centered(_letter_card))
 	_season_card = SeasonCard.new()
 	_season_card.closed.connect(_update_modal)
 	_season_card.closed.connect(_flush_year_review)
@@ -483,7 +487,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _choice_menu.visible or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _letter_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	if event.is_action_pressed("pause_menu"):
 		# Consumed here so the world's own Esc handling never runs mid-session.
@@ -1644,7 +1648,7 @@ func _refresh_key_hints() -> void:
 
 
 func _on_menu_requested(source: Node) -> void:
-	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
+	if _any_screen_open() or _dialogue.visible or _encounter.visible or _quarrel.visible or _cast_bar.visible or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _letter_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible:
 		return
 	_last_source = source
 	_choice_menu.open_for(source)
@@ -1951,10 +1955,23 @@ static func mastery_banner(data: GameData, region_id: String) -> PackedStringArr
 
 
 ## A friend's letter arrived (WU-081): a banner and a chime.
-func _on_letter_arrived(npc_name: String) -> void:
-	var lines := letter_banner(npc_name)
-	_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
+func _on_letter_arrived(npc_name: String, text: String = "", npc_id: String = "") -> void:
 	Audio.play("chime_progress")
+	if text == "":
+		var lines := letter_banner(npc_name)
+		_banner.announce(lines[0], lines[1], UIStyle.ACCENT, 2.5)
+		return
+	if _moments_must_wait():
+		_pending_moments.append({"kind": "letter", "npc_id": npc_id, "name": npc_name, "text": text})
+		return
+	_open_letter(npc_id, npc_name, text)
+
+
+## WU-643: the letter card, with the request line when the writer has an open request.
+func _open_letter(npc_id: String, npc_name: String, text: String) -> void:
+	var today: int = GameClock.total_days
+	_letter_card.open(npc_id, npc_name, text, Letters.open_request(GameState.player, npc_id, today), today)
+	_update_modal()
 
 
 ## A villager became a closer friend (WU-418): a banner with their portrait.
@@ -2002,6 +2019,8 @@ func _drain_moments() -> void:
 			_play_oath(String(m["npc_id"]))
 		"tend":
 			_play_tend(String(m["npc_id"]), int(m["days_healed"]), String(m.get("line", "")))
+		"letter":
+			_open_letter(String(m["npc_id"]), String(m["name"]), String(m["text"]))
 		"thanks":
 			_friend_thanks_card.open(String(m["npc_id"]), String(m["name"]), String(m["item_id"]))
 			_update_modal()
@@ -2867,7 +2886,7 @@ func _is_blocking() -> bool:
 
 
 func _blocking_except_encounter() -> bool:
-	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
+	return _choice_menu.visible or _dialogue.visible or _quarrel.visible or _cast_bar.visible or _any_screen_open() or _combat_report.visible or _tribulation.visible or _respawn.visible or _realm_card.visible or _contest_card.visible or _friend_card.visible or _friend_med_card.visible or _friend_aid_card.visible or _friend_thanks_card.visible or _letter_card.visible or _season_card.visible or _sect_card.visible or _trial_card.visible or _sect_contest_card.visible or _season_board.visible or _pause_menu.visible or _up(_settings) or _up(_help) or _up(_load_screen) or _death_screen.visible
 
 
 func _update_modal() -> void:

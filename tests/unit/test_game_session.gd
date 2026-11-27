@@ -1512,7 +1512,7 @@ func test_monthly_letter_and_visit_bonus() -> void:
 	rules["kinds"] = [saved["kinds"][2]]
 	c.realm_index = 1
 	var seen: Array[String] = []
-	var on_letter := func(n: String) -> void: seen.append(n)
+	var on_letter := func(n: String, _t: String, _i: String) -> void: seen.append(n)
 	EventBus.letter_arrived.connect(on_letter)
 	gs.cultivate(Calendar.DAYS_PER_MONTH)
 	EventBus.letter_arrived.disconnect(on_letter)

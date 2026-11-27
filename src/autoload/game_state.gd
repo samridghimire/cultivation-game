@@ -5867,7 +5867,7 @@ func _on_days_advanced(days: int) -> void:
 		if not letter.is_empty():
 			var line := "A letter from %s: %s" % [npcs[letter["npc_id"]].name, letter["text"]]
 			Letters.remember(player, data, line, GameClock.total_days)
-			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name)
+			EventBus.letter_arrived.emit(npcs[letter["npc_id"]].name, String(letter["text"]), String(letter["npc_id"]))
 			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress")
 	EventBus.topic = "world"
 	for i in months:

@@ -290,3 +290,41 @@ func test_thanks_card_modal_and_queued() -> void:
 	_root().remove_child(hud)
 	hud.free()
 	gs.end_session()
+
+
+## WU-643: a letter opens the LetterCard (modal, with its text), a request letter shows the item line, and it queues.
+func test_letter_card() -> void:
+	var gs := _start()
+	var hud: CanvasLayer = load("res://src/ui/hud.tscn").instantiate()
+	_root().add_child(hud)
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	var card: LetterCard = hud.get("_letter_card")
+	hud.get("_dialogue").visible = false
+	var bus: Node = gs.get_node("/root/EventBus")
+	assert_false(hud.call("_is_blocking"))
+	bus.letter_arrived.emit("Xiao Ling", "Come see me.", "xiao_ling")
+	assert_true(card.visible)
+	assert_true(hud.call("_is_blocking"))
+	assert_eq(card.text_value(), "Come see me.")
+	assert_eq(card.ask_text(), "", "no request, no item line")
+	card.later_button().pressed.emit()
+	assert_false(card.visible)
+	assert_false(hud.call("_is_blocking"))
+	gs.player.letter_requests.append({"npc_id": "xiao_ling", "item": "spirit_herb", "count": 2, "until": GameClock.total_days + 5, "favor": 1, "effects": {}})
+	bus.letter_arrived.emit("Xiao Ling", "I need herbs.", "xiao_ling")
+	assert_true(card.ask_text().contains("5 days"), card.ask_text())
+	# queued behind another moment
+	card.close()
+	hud.get("_friend_aid_card").open("xiao_ling", "Xiao Ling", "Pill", false)
+	bus.letter_arrived.emit("Xiao Ling", "Later.", "xiao_ling")
+	assert_false(card.visible, "waits")
+	hud.get("_friend_aid_card").close()
+	for i in 3:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	assert_true(card.visible, "plays after")
+	card.close()
+	assert_eq(LetterCard.ask_line("Herb", 1, 1), "Hopes for Herb within 1 day.")
+	_root().remove_child(hud)
+	hud.free()
+	gs.end_session()

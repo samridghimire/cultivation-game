@@ -13,6 +13,7 @@ extends SceneTree
 ## WU-639: `-- --season-tasks` day 3 with one task done: world leaf markers and the HUD's season line: season_tasks.png.
 ## WU-640: `-- --reduce-motion` turns the reduce_motion setting on for any shot.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
+## WU-643: `-- --letter=<greeting|request>` opens the letter card: letter.png.
 ## WU-642: `-- --friend-thanks=<npc_id>` opens the thank-you gift card: friend_thanks.png.
 ## WU-637: `-- --friend-aid=<npc_id>` opens the friend's request card: friend_aid.png.
 ## WU-635: `-- --friend-meditation=<npc_id>` opens the sitting-together card: friend_meditation.png.
@@ -560,6 +561,16 @@ func _start() -> void:
 				hud.get("_banner").visible = false
 				(hud.get("_friend_thanks_card") as Control).call("open", tid, String(gs.data.npcs[tid].get("name", tid)), "spirit_herb")
 				hud.call("_update_modal"), "close": func() -> void: (hud.get("_friend_thanks_card") as Control).visible = false})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-643: a letter on paper
+		if a.begins_with("--letter="):
+			var kind := a.substr(9)
+			shots.append({"name": "letter", "open": func() -> void:
+				hud.get("_banner").visible = false
+				var today: int = gs.get_node("/root/GameClock").total_days
+				var req: Dictionary = {"item": "spirit_herb", "count": 2, "until": today + 12} if kind == "request" else {}
+				(hud.get("_letter_card") as Control).call("open", "xiao_ling", "Xiao Ling", "The herbs are ripe by the stream. Come by when you can, and bring a friend.", req, today)
+				hud.call("_update_modal"), "close": func() -> void: (hud.get("_letter_card") as Control).visible = false})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-629: a friend's own pending news, then the congratulate card
 		if a.begins_with("--own-news="):

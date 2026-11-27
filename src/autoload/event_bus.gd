@@ -98,7 +98,7 @@ signal contest_finished(result: Dictionary)
 ## A bounty was paid out (WU-082); the HUD shows a banner.
 signal bounty_claimed(enemy_name: String, stones: int)
 ## A friend's letter arrived (WU-081); the HUD shows a banner.
-signal letter_arrived(npc_name: String)
+signal letter_arrived(npc_name: String, text: String, npc_id: String)  ## WU-643: text + id feed the LetterCard
 ## WU-418: a villager reached a new friendship tier (banner with their portrait).
 signal friendship_reached(npc_id: String, text: String)
 ## GFX-225: a villager crossed into friendship tier `tier` (index); the world plays hearts over them.
