@@ -212,3 +212,45 @@ func test_hunt_only_reason() -> void:
 		if String(t["kind"]) != "hunt":
 			c.season_tasks["progress"][String(t["id"])] = 0
 	assert_true(Guidance.home_call_hint(c, gs.data, gs.npcs, gs.world_flags, away, day).contains("task"), "count reason")
+
+
+## GUIDE-303: while the home call fires it leads the friend/season lines inserted at index 2-3.
+func test_home_call_ranks_near_top_in_hints() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(40)
+	_news(c, day)
+	gs.npc_favor["xiao_ling"] = 50
+	var lines: PackedStringArray = Guidance.hints(c, gs.data, 1.0, 12, gs.npcs, gs.world_flags, away, day, gs.npc_favor)
+	var at := -1
+	for i in lines.size():
+		if lines[i].begins_with("Home to Qingshi ("):
+			at = i
+			break
+	assert_true(at >= 0, str(lines))
+	for i in range(at + 1, lines.size()):
+		assert_false(lines[i].begins_with("Tea at") or lines[i].begins_with("Help "), "tea/lend line below the home call: %s" % str(lines))
+	for i in at:
+		assert_false(lines[i].begins_with("Tea at") or lines[i].begins_with("Help "), str(lines))
+
+
+func test_breakthrough_line_still_before_home_call() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(40)
+	_news(c, day)
+	c.qi = 1.0e9
+	if not Cultivation.can_attempt_breakthrough(c, gs.data):
+		return
+	var lines: PackedStringArray = Guidance.hints(c, gs.data, 1.0, 12, gs.npcs, gs.world_flags, away, day, gs.npc_favor)
+	var home := -1
+	var brk := -1
+	for i in lines.size():
+		if home < 0 and lines[i].begins_with("Home to Qingshi ("):
+			home = i
+		if brk < 0 and lines[i].begins_with("You are ready to break through"):
+			brk = i
+	if home >= 0:
+		assert_true(brk >= 0 and brk < home, str(lines))

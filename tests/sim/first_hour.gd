@@ -2530,6 +2530,23 @@ static func _buy_needed_items(gs: Node, c: CharacterData, done: Dictionary, line
 	return ""
 
 
+## GUIDE-303: the region a "Goal: <stage> in about <time> at <place> (xN)" line names (a region or one of its places), else "".
+static func _goal_region(data: GameData, line: String) -> String:
+	var at := line.rfind(" at ")
+	var open := line.rfind(" (x")
+	if at < 0 or open < at:
+		return ""
+	var place := line.substr(at + 4, open - at - 4)
+	for id: String in data.regions:
+		var region: Dictionary = data.regions[id]
+		if String(region.get("name", "")) == place:
+			return id
+		for pl: Dictionary in region.get("places", []):
+			if String(pl.get("display_name", pl.get("name", ""))) == place:
+				return id
+	return ""
+
+
 ## SIM-010: acts on one Next-steps line when a known action fits it; returns the action's name, "" when none did anything.
 static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: String, day: int) -> String:
 	var kinds := {}
@@ -2688,6 +2705,27 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 		if c.alive and hall_home != "" and gs.current_region != hall_home:
 			_walk_to(gs, c, hall_home)
 		return "home_call"
+	if line.begins_with("Goal: ") and line.contains(" in about ") and line.contains(" at ") and c.alive:
+		# GUIDE-303: the stage goal (GUIDE-301) names a place: go there, meditate in 7-day blocks until the stage changes
+		# or 30 days pass, then walk back to the sect hall.
+		var goal_home: String = gs.current_region
+		var goal_region := _goal_region(gs.data, line)
+		if goal_region == "":
+			return ""
+		if goal_region != gs.current_region:
+			_walk_to(gs, c, goal_region)
+			if gs.current_region != goal_region:
+				return ""
+		var stage_before := c.stage
+		var realm_before := c.realm_index
+		var spent := 0
+		while spent < 30 and c.alive and c.stage == stage_before and c.realm_index == realm_before:
+			gs.cultivate(7, gs.hint_density())
+			spent += 7
+		var hall_back := Sects.home_region(gs.data, String(c.sect["id"])) if not c.is_rogue() else goal_home
+		if c.alive and hall_back != "" and gs.current_region != hall_back:
+			_walk_to(gs, c, hall_back)
+		return "stage_goal"
 	if line.begins_with("Season task: "):
 		# GUIDE-296: the line names an open catch/gather task a Qingshi place serves; work at it for the week.
 		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):

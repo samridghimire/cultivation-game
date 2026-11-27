@@ -1174,10 +1174,13 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(thin)
 	if method_offer != "" and not method_leads:
 		out.append(method_offer)
+	var home_call := ""
+	var home_pre: PackedStringArray = []
 	if today >= 0:
 		# GUIDE-294: friends in the Next steps, below the sect/breakthrough lines and above the gathering/work lines.
-		var home_call := home_call_hint(c, data, people, flags, region_id, today)  # GUIDE-299
+		home_call = home_call_hint(c, data, people, flags, region_id, today)  # GUIDE-299
 		if home_call != "":
+			home_pre = out.duplicate()
 			out.append(home_call)
 		var congrats := congratulate_hint(c, data, people, region_id, today)
 		if congrats != "":
@@ -1325,6 +1328,17 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		if lecture_at > 1:
 			out.remove_at(lecture_at)
 			out.insert(mini(1 if report != "" else 0, out.size()), lecture_lead)
+	# GUIDE-303: the friend, season and lecture inserts above pushed the home call below the tea and lend lines; while it
+	# fires it sits right after the sect block (the lines that were above it) and any breakthrough line.
+	if home_call != "":
+		var call_at := out.find(home_call)
+		if call_at >= 0:
+			out.remove_at(call_at)
+			var at := 0
+			for i in out.size():
+				if home_pre.has(out[i]) or out[i].begins_with("You are ready to break through"):
+					at = i + 1
+			out.insert(at, home_call)
 	if home_gated:
 		out.append(home_hint)
 	if out.size() > limit:
