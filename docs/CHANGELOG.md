@@ -2,6 +2,16 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-27 [GUIDE-294] Next steps suggest congratulating a friend with news and meditating beside a cultivating friend.
+- 2026-11-27 [FOLK-054] A friend stuck at a breakthrough asks you for a pill once; giving it raises their favor and helps their breakthrough.
+- 2026-11-27 [QA-250] Balance tooling: the balance baseline is refreshed on current main.
+- 2026-11-27 [GFX-264] Friends who cultivate show a soft glow at their feet that grows with their realm.
+- 2026-11-27 [WU-635] Meditating with a friend opens a short scene of the two of you seated under the night sky.
+- 2026-11-27 [SIM-037] Balance tooling: the first season measured as a list of firsts and dead stretches.
+- 2026-11-27 [FOLK-053] Friends' news you missed before becoming friends now reaches you, so you can congratulate them.
+- 2026-11-27 [C-424] Every named cultivator speaks about their own progress in their own words.
+- 2026-11-27 [WU-631] Place names fade under a greeting bubble instead of being covered.
+- 2026-11-27 [WU-634] The village book shows your friends' cultivation realm and when they have news.
 - 2026-11-26 [SECT-053] Trial preparation suggests a meal only when you have or can buy one, and reminds you weekly instead of every day.
 - 2026-11-26 [WU-633] The Sect page shows your outer contest record next to the inner one.
 - 2026-11-26 [GUIDE-293] Friends' news shows in the journal with how many days are left to congratulate them.
