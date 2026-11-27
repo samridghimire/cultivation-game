@@ -367,6 +367,38 @@ static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 	return out
 
 
+## GFX-271: the band each place's name label covers (estimated from the name), grown by a margin; decor and forage keep clear of it.
+static func label_bands(region: Dictionary) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for p: Dictionary in region.get("places", []):
+		var name := String(p.get("display_name", ""))
+		if name == "":
+			continue
+		var pos: Array = p.get("pos", [0, 0])
+		var sz: Array = p.get("size", [64, 64])
+		var w := float(name.length()) * 9.0 + 20.0
+		var top := float(pos[1]) - float(sz[1]) / 2.0 - 8.0 - 18.0
+		var off: Array = p.get("label_offset", [0, 0])
+		out.append(Rect2(float(pos[0]) + float(off[0]) - w / 2.0, top + float(off[1]), w, 20.0).grow(4.0))
+	return out
+
+
+## GFX-271: decor whose canopy/body would cover a place label is dropped.
+static func filter_label_decor(region: Dictionary, decor: Array[Dictionary]) -> Array[Dictionary]:
+	var bands := label_bands(region)
+	var out: Array[Dictionary] = []
+	for d in decor:
+		var foot := Rect2(d["pos"] - Vector2(22, 90), Vector2(44, 106))
+		var hit := false
+		for b in bands:
+			if b.intersects(foot):
+				hit = true
+				break
+		if not hit:
+			out.append(d)
+	return out
+
+
 ## Landmark rects of a region: map.landmarks `pos` is the centre, like a place's.
 static func landmark_rects(region: Dictionary, solid_only: bool = false) -> Array[Rect2]:
 	var out: Array[Rect2] = []

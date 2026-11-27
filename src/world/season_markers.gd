@@ -64,7 +64,8 @@ func _draw() -> void:
 	for node in _nodes:
 		if not is_instance_valid(node) or not node.visible:
 			continue
-		var c := Vector2(node.position.x, node.position.y - node.size.y / 2.0 - 16.0 + bob)
+		# GFX-271: the leaf floats above the name label, never across it
+		var c := Vector2(node.position.x, node.label_rect().position.y - 14.0 + bob)
 		var leaf := PackedVector2Array([c + Vector2(0, 9), c + Vector2(-8, 0), c + Vector2(0, -10), c + Vector2(8, 0)])
 		var shadow := PackedVector2Array()
 		for p in leaf:

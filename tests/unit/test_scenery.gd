@@ -1113,3 +1113,14 @@ func test_canopy_masses_only_where_asked_and_validated() -> void:  # GFX-186
 	var errs := Scenery.validate(bad)
 	assert_eq(errs.size(), 1)
 	assert_true("canopy_masses" in errs[0])
+
+
+func test_label_filter_clears_place_labels() -> void:  # GFX-271
+	var region := {"places": [{"display_name": "Meditation Rock", "pos": [500, 300], "size": [60, 40]}]}
+	var bands := Scenery.label_bands(region)
+	assert_eq(bands.size(), 1)
+	var on_label := {"kind": "tree", "pos": Vector2(500, 290)}
+	var far := {"kind": "tree", "pos": Vector2(900, 700)}
+	var kept := Scenery.filter_label_decor(region, [on_label, far] as Array[Dictionary])
+	assert_eq(kept.size(), 1)
+	assert_eq(kept[0]["pos"], Vector2(900, 700))

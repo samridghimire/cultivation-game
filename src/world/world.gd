@@ -748,6 +748,7 @@ func _build_decor() -> void:
 	rng.seed = hash(GameState.current_region)
 	_decor = Scenery.place(_region, rng)
 	_decor = SectCourt.filter_decor(_region, _decor)  # GFX-071/082: nothing grows on the gate or a travel place
+	_decor = Scenery.filter_label_decor(_region, _decor)  # GFX-271: no tree on a place label
 	_relief = Scenery.relief_layout(_region)
 	_marsh = {}
 	_yards = Scenery.village_yards(_region, map_size)
@@ -771,6 +772,7 @@ func _build_decor() -> void:
 					return false
 			return true)
 	_undergrowth = Scenery.undergrowth(_region, _decor)
+	_undergrowth = Scenery.filter_label_decor(_region, _undergrowth)  # GFX-271
 	_undergrowth.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 	_decor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["pos"].y < b["pos"].y)
 
@@ -864,6 +866,7 @@ func _build_forage() -> void:
 	for p: Array in _region.get("map", {}).get("paths", []):
 		paths.append(Rect2(float(p[0]), float(p[1]), float(p[2]), float(p[3])))
 		blocked.erase(paths[-1])
+	blocked.append_array(Scenery.label_bands(_region))  # GFX-271: no herb on a place label
 	var trees: Array[Vector2] = []
 	for d in _decor:
 		if d["kind"] == "tree":
