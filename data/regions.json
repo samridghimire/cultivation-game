@@ -143,7 +143,7 @@
         {"type": "explore", "anchor_id": "fallen_star_alleys", "look": "ruins", "display_name": "Back Alleys", "pos": [570, 120], "size": [120, 80], "color": "4a4438"},
         {"type": "bounty_board", "display_name": "Hunters' Bounty Board", "pos": [300, 480], "size": [70, 60], "color": "9c7a4a"},
         {"type": "inheritance", "display_name": "Sealed Vault Door", "pos": [690, 630], "size": [100, 60], "color": "6b2a2a"},
-        {"type": "secret_realm", "look": "seal", "display_name": "Crater Vault Seal", "pos": [1180, 900], "size": [90, 70], "color": "c0a060"},
+        {"type": "secret_realm", "look": "seal", "display_name": "Crater Vault Seal", "pos": [1260, 900], "size": [90, 70], "color": "c0a060"},
         {"type": "deed_giver", "display_name": "Auction Ledger Copyist", "activity": "read", "pos": [900, 640], "size": [30, 30], "color": "8a5a2b", "look": {"robe": "8a5a2b", "hair": "grey"}, "deed_context": "auction_copyist"},
         {"type": "deed_giver", "display_name": "Lantern-Hanger", "activity": "sweep", "pos": [1180, 520], "size": [30, 30], "color": "7a4fa0", "look": {"style": "hood", "robe": "7a4fa0"}, "deed_context": "stall_lantern_hanger"},
         {"type": "deed_giver", "display_name": "Porters' Foreman", "activity": "sit", "pos": [680, 900], "size": [30, 30], "color": "7a6a52", "look": {"style": "hood", "robe": "7a6a52"}, "deed_context": "porter_foreman"},
