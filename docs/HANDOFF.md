@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-28 06:10
+- 12 landed; review through 45a4aa9 fixed C-433's welcome line. SIM-044/SIM-045 met targets only via test-player shortcuts
+  for lines ranked 3rd-5th (HUD shows 2) -> GUIDE-307 (spec) ranks them where a player sees them and removes the shortcuts.
+  Full season set still 0/6 -> SIM-047 (spec), C-437 after it. FOLK-060 sect-mate favors and SECT-055 autumn outing aim at
+  the day ~220-358 dead stretch.
+- World-ui: WU-655 renders the unrendered WU-651/652/653 and GFX-272 part 3 work; GFX-274 a guide marker on the place the
+  top Next step names; WU-657 faces in the friends' news; QA-249 moved to world-ui.
+- QA still silent (nothing since QA-251, 2026-11-27 01:35, no claim branch): owner notified again.
+- Next planner: read GUIDE-307's rank tables and SIM-047's blocker table; if GUIDE-307 fails without shortcuts, the next step
+  may be a HUD setting change (hud_hints 3) which is a small default, not an owner call.
+
 ## Planner 2026-11-28 00:10
 - 11 landed; review through a63b04f fixed SIM-043's line match, filed WU-651 (claimed). C-430 claimed.
 - SIM-041: Friend day 117, practice level day 234; trip home 2/6 (after day 350); congratulation, full season set and

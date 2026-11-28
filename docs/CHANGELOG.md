@@ -2,6 +2,18 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-28 [WU-653] The journal's friends' news has a "Send congratulations" button for friends far away.
+- 2026-11-28 [GUIDE-305] Once the first stage goal is met, Next steps name the next sect rank as the goal for the rest of the year.
+- 2026-11-28 [SIM-045] Balance tooling: the test player meditates beside a sect-mate.
+- 2026-11-28 [C-433] Qingshi friends greet you home in their own voice.
+- 2026-11-28 [GFX-272] On Azure Peak the lecture rows sit beside the hall, clear of the key bar.
+- 2026-11-28 [WU-654] The faces in the log checked at Steam Deck and 720p sizes.
+- 2026-11-28 [FOLK-059] Congratulate a far-away friend on their news by letter.
+- 2026-11-28 [SIM-044] Balance tooling: the test player answers the season call home.
+- 2026-11-28 [WU-651] A sect-mate seated at the lecture is no longer drawn twice.
+- 2026-11-28 [WU-652] A letter from home has a "Travel home" button.
+- 2026-11-28 [C-434] More friends speak in their own voice beside you at the sect lecture.
+- 2026-11-28 [C-430] Friends who joined your sect greet you like sect-mates.
 - 2026-11-28 [SIM-041] Balance tooling: the first year measured again; the trip home and the season set still come late or never.
 - 2026-11-27 [WU-650] The message log shows the face of the villager who spoke.
 - 2026-11-27 [GUIDE-304] Coming home to Qingshi after a respawn or a teleport also tells you what waits there.
