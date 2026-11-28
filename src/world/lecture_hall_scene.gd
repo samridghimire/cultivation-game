@@ -6,7 +6,8 @@ extends Node2D
 
 const MAT_SIZE := Vector2(84.0, 26.0)
 const SEATS := 4
-const EDGE_CLEAR := 72.0  # WU-648: seats stay this far above the map's bottom edge
+const EDGE_CLEAR := 72.0  # WU-648: side seats stay this far above the map's bottom edge
+const BAR_CLEAR := 200.0  # GFX-272: front rows closer than this to the bottom edge sit under the HUD key bar, so they go beside the hall
 const BLOCKER_CLEAR := 22.0
 const GOLD := Color("d8b04a")
 
@@ -37,7 +38,7 @@ static func staged(c: CharacterData, data: GameData, region_id: String, total_da
 static func layout(hall: Rect2, map_size: Vector2, blockers: Array[Vector2] = []) -> Dictionary:
 	var bounds := Rect2(Vector2.ZERO, map_size).grow(-12.0)
 	var centre := Vector2(hall.get_center().x, hall.end.y + 16.0 + MAT_SIZE.y / 2.0)
-	if centre.y + MAT_SIZE.y / 2.0 + 26.0 > map_size.y - EDGE_CLEAR:  # WU-648: too near the bottom edge, sit beside the hall
+	if centre.y + MAT_SIZE.y / 2.0 + 26.0 > map_size.y - BAR_CLEAR:  # WU-648 / GFX-272: too near the bottom edge, sit beside the hall
 		var side_y := minf(centre.y, map_size.y - EDGE_CLEAR - 26.0 - MAT_SIZE.y / 2.0)
 		for sx in [hall.position.x - 16.0 - MAT_SIZE.x / 2.0 - 54.0, hall.end.x + 16.0 + MAT_SIZE.x / 2.0 + 54.0]:
 			var sc := Vector2(sx, side_y)
@@ -131,7 +132,7 @@ func _draw() -> void:
 		_draw_person(p, _looks[i], "up", 7.0)
 		if i == _mate_seat:
 			var font := ThemeDB.fallback_font
-			var at := p + Vector2(-60.0, 22.0)
+			var at := p + Vector2(-60.0, 12.0)  # GFX-272: clear of the mat strip
 			draw_string(font, at + Vector2(1, 1), _mate_name, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color(0, 0, 0, 0.8))
 			draw_string(font, at, _mate_name, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 14, Color("f2e3b8"))
 	var bob := sin(_clock * 2.4) * 2.0 if _moving else 0.0

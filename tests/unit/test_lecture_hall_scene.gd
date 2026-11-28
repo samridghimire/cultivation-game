@@ -103,3 +103,12 @@ func test_lecture_mate_node_hidden_until_attended() -> void:  # WU-651
 		assert_true(node.visible, "visible again after the lecture")
 	world.free()
 	gs.end_session()
+
+
+func test_layout_hall_160_above_bottom_goes_beside() -> void:  # GFX-272: Azure Peak's case, rows would sit under the key bar
+	var map := Vector2(1000, 800)
+	var hall := Rect2(400, map.y - 160.0 - 50.0, 180, 50)
+	var lay := LectureHallScene.layout(hall, map, [])
+	var mat: Rect2 = lay["mat"]
+	assert_true(mat.end.x <= hall.position.x or mat.position.x >= hall.end.x, "mat beside the hall")
+	assert_true((lay["seats"] as Array).size() >= 3)
