@@ -2670,8 +2670,10 @@ static func season_task_hint(c: CharacterData, data: GameData, region_id: String
 		var where := SeasonTasks.where(t, c, data, today)
 		if where.begins_with("at ") and not where.contains(" in "):
 			return "Season task: %s %s (%d/%d)%s" % [t["text"], where, n, int(t["count"]), tail]
-	if hunt.is_empty() or SeasonTasks.has_open(c, data, today, "catch") or SeasonTasks.has_open(c, data, today, "gather"):
+	if SeasonTasks.has_open(c, data, today, "catch") or SeasonTasks.has_open(c, data, today, "gather"):
 		return ""
+	if hunt.is_empty():
+		return _season_other_hint(c, data, today, progress, tail)
 	var rating := open_hunt_rating(c, data, today)
 	if rating.is_empty():
 		return ""
@@ -2683,6 +2685,20 @@ static func season_task_hint(c: CharacterData, data: GameData, region_id: String
 	var where := SeasonTasks.where(hunt, c, data, today)
 	var place := "" if where == "" else " " + where
 	return "Season task: %s%s, %s (%d in 100) (%d/%d)%s" % [text, place, Combat.odds_word(chance), roundi(chance * 100.0), done, int(hunt["count"]), tail]
+
+
+## SIM-047: the first open contest or sell_wanted season task with where it is served ("Season task: Join the Qingming
+## Festival contest at the Qingming Festival in Qingshi Village, month 3 (0/1)"), "" when neither is open or nowhere serves it.
+static func _season_other_hint(c: CharacterData, data: GameData, today: int, progress: Dictionary, tail: String) -> String:
+	for t: Dictionary in SeasonTasks.tasks_for(data, today):
+		var n := int(progress.get(String(t["id"]), 0))
+		if n >= int(t["count"]) or not ["contest", "sell_wanted"].has(String(t["kind"])):
+			continue
+		var where := SeasonTasks.where(t, c, data, today)
+		if where == "":
+			continue
+		return "Season task: %s %s (%d/%d)%s" % [String(t["text"]).trim_suffix("."), where, n, int(t["count"]), tail]
+	return ""
 
 
 ## GUIDE-294: "Meditate beside <name> at <spot>: +N% qi for D days" when a friend here can sit with you.

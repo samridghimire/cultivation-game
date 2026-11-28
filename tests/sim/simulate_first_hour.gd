@@ -655,6 +655,43 @@ func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary
 	}
 
 
+## SIM-047: remember the best progress of each season task seen so far (tasks: season key -> task id -> [best, count, kind, text]).
+func _note_season_progress(gs: Node, c: CharacterData, tasks: Dictionary) -> void:
+	var today: int = gs.get_node("/root/GameClock").total_days
+	var key := SeasonTasks.season_key(today)
+	var progress: Dictionary = c.season_tasks.get("progress", {}) if String(c.season_tasks.get("season_key", "")) == key else {}
+	if not tasks.has(key):
+		tasks[key] = {}
+	for t: Dictionary in SeasonTasks.tasks_for(gs.data, today):
+		var id := String(t["id"])
+		var row: Array = tasks[key].get(id, [0, int(t["count"]), String(t["kind"])])
+		row[0] = maxi(int(row[0]), int(progress.get(id, 0)))
+		tasks[key][id] = row
+
+
+## SIM-047: per season task, in how many seeds it was finished (best count reached the target).
+func _season_task_table(task_seeds: Array) -> Array[String]:
+	var order: Array[String] = []
+	var total := {}
+	for seed_tasks: Dictionary in task_seeds:
+		for key: String in seed_tasks:
+			for id: String in seed_tasks[key]:
+				var k := "%s|%s" % [key, id]
+				if not total.has(k):
+					total[k] = {"kind": seed_tasks[key][id][2], "count": seed_tasks[key][id][1], "done": 0, "best": []}
+					order.append(k)
+				var row: Array = seed_tasks[key][id]
+				if int(row[0]) >= int(row[1]):
+					total[k]["done"] = int(total[k]["done"]) + 1
+				total[k]["best"].append(int(row[0]))
+	var out: Array[String] = ["# SIM-047: season tasks finished per seed", "", "| season | task | kind | count | seeds done | best count per seed |", "|---|---|---|---|---|---|"]
+	for k in order:
+		var parts := k.split("|")
+		out.append("| %s | %s | %s | %d | %d/%d | %s |" % [parts[0], parts[1], total[k]["kind"], int(total[k]["count"]), int(total[k]["done"]), task_seeds.size(), str(total[k]["best"])])
+	out.append("")
+	return out
+
+
 ## SIM-037: --firsts [seeds] [months]: the day of each first per seed (hints policy, Qingshi start), then dead stretches.
 ## GUIDE-294: --friends [seeds] [months]: per seed the day of the first congratulation and the number of shared meditations (hints policy).
 func _run_friends(args: Array) -> void:
@@ -700,9 +737,10 @@ func _run_firsts(args: Array) -> void:
 	for f in FIRSTS:
 		table[f] = []
 	var stretch_rows: Array = []  # {seed, start, end, kinds}
+	var task_seeds: Array = []  # SIM-047: per seed {season key: {task id: [best count, target count, kind]}}
 	var sorted_all: Array = []
 	for s in range(1, seeds + 1):
-		var st := {"day0": -1, "start_stage": -1, "found": {}, "events": [0], "last": {}, "acts": []}
+		var st := {"day0": -1, "start_stage": -1, "found": {}, "events": [0], "last": {}, "acts": [], "tasks": {}}
 		var flags := {}
 		FirstHour.home_trips = {"first": -1, "count": 0}
 		var on_congrat := func(_id: String, _n: String, _t: String) -> void: flags["congrat"] = true
@@ -720,6 +758,7 @@ func _run_firsts(args: Array) -> void:
 			st["acts"].append([rel - n, rel, FirstHour._activity_of(get_stack())])
 			var now := _firsts_now(gs, c, int(st["start_stage"]), flags)
 			var new_event := false
+			_note_season_progress(gs, c, st["tasks"])  # SIM-047
 			if trace_favor:
 				# FOLK-057: favor with every named NPC the day the sect is joined and on day 120, plus the make-a-friend line then.
 				for snap: Array in [[FIRSTS[7], "join"], ["", "day120"]]:
@@ -764,6 +803,7 @@ func _run_firsts(args: Array) -> void:
 				print("day %3d | %-10s | %s || %s" % [w["day"], w["acted"], str(w["line"]).substr(0, 40), " | ".join(w["top"]).substr(0, 260)])
 		bus.friend_congratulated.disconnect(on_congrat)
 		bus.season_tasks_done.disconnect(on_season)
+		task_seeds.append(st["tasks"])
 		var end_day: int = clock.total_days - int(st["day0"])
 		var events: Array = st["events"]
 		events.append(end_day)
@@ -785,6 +825,7 @@ func _run_firsts(args: Array) -> void:
 			table[f].append(int(st["found"].get(f, -1)))
 		gs.end_session()
 	var lines: Array[String] = []
+	lines.append_array(_season_task_table(task_seeds))
 	lines.append("# SIM-037: the first season as a list of firsts")
 	lines.append("")
 	lines.append("Hints policy, Qingshi start, %d seeds, %d months. Days are counted from day 0; `never` means the sim did not reach it." % [seeds, months])

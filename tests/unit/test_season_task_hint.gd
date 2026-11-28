@@ -90,3 +90,35 @@ func test_days_left_suffix_near_season_end() -> void:
 	_finish_gathers(c, late)
 	var line := Guidance.season_task_hint(c, gs.data, "qingshi_village", late)
 	assert_true(line.ends_with("%d days left in %s" % [left, Calendar.season_of(late).to_lower()]) or line == "", line)
+
+
+func _day_of(season: String) -> int:
+	for d in range(0, 400):
+		if Calendar.season_of(d) == season and Calendar.year_of(d) == Calendar.year_of(3):
+			return d + 10
+	return -1
+
+
+## SIM-047: with catch/gather/hunt done, an open contest or sell_wanted task is named with where it is served.
+func test_contest_and_sell_wanted_tasks_are_named() -> void:
+	var gs := _gs()
+	for season: String in ["Summer", "Autumn", "Winter"]:
+		var c := _start()
+		var day := _day_of(season)
+		var other := ""
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
+			if ["contest", "sell_wanted"].has(String(t["kind"])):
+				other = String(t["kind"])
+			else:
+				SeasonTasks.note(c, gs.data, String(t["kind"]), String(t["target"]), int(t["count"]), day)
+		if other == "":
+			continue
+		var line := Guidance.season_task_hint(c, gs.data, "qingshi_village", day)
+		var where := ""
+		for t: Dictionary in SeasonTasks.tasks_for(gs.data, day):
+			if String(t["kind"]) == other:
+				where = SeasonTasks.where(t, c, gs.data, day)
+		if where == "":
+			assert_eq(line, "", "%s: no place serves it, no line" % season)
+		else:
+			assert_true(line.begins_with("Season task: ") and line.contains(where) and line.contains("(0/"), line)

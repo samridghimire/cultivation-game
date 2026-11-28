@@ -106,3 +106,30 @@ Fix: the hints sim, after a 1-day kindness or hall errand, also takes the "Medit
 Without the SIM-044/SIM-045 shortcuts and with the ordering fix: Home 86% / Meditate 96% rank 1-2, first trip home 6/6 before day 200,
 but the test player (which acts on its own Goal / fight / friend lines first) delayed first Friend to day ~230 and shared meditation never
 happened, so the shortcuts stay in `first_hour.gd` for now. The sim's prepended head lines (friend, Goal, Easy fight) are not what the HUD shows.
+
+## SIM-047
+
+`--firsts 6 12` on main (after SIM-045): best count per season task over 6 seeds. Only seasons the sim reached are listed (the sim ends after the sect has been joined for most of the run).
+
+| season | task | kind | count | seeds done | best count per seed |
+|---|---|---|---|---|---|
+| 1-spring | spring_bream | catch | 1 | 6/6 | [1, 1, 1, 1, 1, 1] |
+| 1-spring | spring_petals | gather | 3 | 0/6 | [0, 0, 0, 0, 1, 0] |
+| 1-spring | spring_stag | hunt | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-summer | summer_bass | catch | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-summer | summer_grass | gather | 2 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-summer | summer_boats | contest | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-autumn | autumn_roach | catch | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-autumn | autumn_fox | hunt | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-autumn | autumn_market | sell_wanted | 2 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-winter | winter_perch | catch | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-winter | winter_wolf | hunt | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 1-winter | winter_lanterns | contest | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 2-spring | spring_carp | catch | 2 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 2-spring | spring_mugwort | gather | 4 | 0/6 | [0, 0, 0, 0, 0, 0] |
+| 2-spring | spring_qingming | contest | 1 | 0/6 | [0, 0, 0, 0, 0, 0] |
+
+Blockers, per season (for C-437):
+- **Spring y1** (bream, petals, boar): bream done 6/6 (day <= 24). `spring_petals` (gather 3) reached 1 in one seed only: the sect is joined around day 28-35 and the player leaves Qingshi. `spring_stag` (hunt wild_boar): not rated 40+ in 100 in time, case (c).
+- **Summer y1 to winter y1**: 0 progress in every seed. After joining the sect the hints player lives at the sect hall. `Guidance.season_task_hint` shows only in Qingshi, and the "Home to Qingshi" line names catch/gather counts and fair-odds hunts only (case (a)); the season's contest (summer_boats, winter_lanterns, spring_qingming) and sell_wanted (autumn_market, winter_market) tasks were never named anywhere. SIM-047 now names them in Qingshi (contest: place and month; sell_wanted: where a stall wants goods today).
+- **(c) content follow-ups**: every year-1 set holds a hunt (spring_stag, autumn_fox, winter_wolf all `wild_boar`) that a Qi Refining newcomer rates under 40 in 100, plus a contest or sell_wanted task that needs a trip to a festival region or stall. C-437 should make one task per set doable inside Qingshi (a catch or gather that Qingshi places serve in season) and drop the boar hunts to count 1 at an easier foe, or move festival contests into Qingshi.
