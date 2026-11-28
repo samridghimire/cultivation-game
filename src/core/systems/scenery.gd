@@ -367,6 +367,16 @@ static func blocked_rects(region: Dictionary) -> Array[Rect2]:
 	return out
 
 
+## GFX-273: the measured width of a place label (14 px label font; falls back to 9 px a letter without a font).
+static func label_text_width(text: String) -> float:
+	var font := ThemeDB.fallback_font
+	if font != null:
+		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		if w > 0.0:
+			return w
+	return float(text.length()) * 9.0
+
+
 ## GFX-271: the band each place's name label covers (estimated from the name), grown by a margin; decor and forage keep clear of it.
 static func label_bands(region: Dictionary) -> Array[Rect2]:
 	var out: Array[Rect2] = []
@@ -376,7 +386,7 @@ static func label_bands(region: Dictionary) -> Array[Rect2]:
 			continue
 		var pos: Array = p.get("pos", [0, 0])
 		var sz: Array = p.get("size", [64, 64])
-		var w := float(name.length()) * 9.0 + 20.0
+		var w := label_text_width(name) + 20.0
 		var top := float(pos[1]) - float(sz[1]) / 2.0 - 8.0 - 18.0
 		var off: Array = p.get("label_offset", [0, 0])
 		out.append(Rect2(float(pos[0]) + float(off[0]) - w / 2.0, top + float(off[1]), w, 20.0).grow(4.0))

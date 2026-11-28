@@ -1124,3 +1124,12 @@ func test_label_filter_clears_place_labels() -> void:  # GFX-271
 	var kept := Scenery.filter_label_decor(region, [on_label, far] as Array[Dictionary])
 	assert_eq(kept.size(), 1)
 	assert_eq(kept[0]["pos"], Vector2(900, 700))
+
+
+func test_label_band_width_is_measured() -> void:  # GFX-273
+	var short := {"places": [{"display_name": "Inn", "pos": [500, 300], "size": [60, 40]}]}
+	var long := {"places": [{"display_name": "Grand Meditation Rock Pavilion", "pos": [500, 300], "size": [60, 40]}]}
+	var ws := Scenery.label_bands(short)[0].size.x
+	var wl := Scenery.label_bands(long)[0].size.x
+	assert_gt(wl, ws + 60.0, "a long name gets a much wider band")
+	assert_almost_eq(wl, Scenery.label_text_width("Grand Meditation Rock Pavilion") + 28.0, 0.01)
