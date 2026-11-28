@@ -1199,6 +1199,8 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		out.append(idle_nudge)
 	elif today >= 0:
 		var stage_goal := stage_goal_hint(c, data, region_id, flags)
+		if stage_goal == "":
+			stage_goal = sect_rank_goal_hint(c, data, flags)  # GUIDE-305: the second half-year's goal
 		if stage_goal != "":
 			out.append(stage_goal)
 	var buy := buy_ingredient_hint(c, data, region_id, Calendar.season_of(today) if today >= 0 else "", today)
@@ -2061,6 +2063,30 @@ static func stage_goal_hint(c: CharacterData, data: GameData, region_id: String,
 	if place == "":
 		place = String(data.regions.get(String(best["region"]), {}).get("name", "a meditation spot"))
 	return "Goal: %s in about %s at %s (x%s)" % [target, Calendar.format_duration(days), place, String.num(float(best["density"]), 1)]
+
+
+## GUIDE-305: "Goal: Rank 2 (Inner Disciple) in the Azure Cloud Sect: 140/300 contribution, ~40 days of missions" for a
+## sect member short of the next rank's contribution; the days assume the best contribution-per-day mission the
+## sect offers at this rank. "" for rogues, the top rank, or when the contribution is already there. Pure.
+static func sect_rank_goal_hint(c: CharacterData, data: GameData, flags: Dictionary = {}) -> String:
+	if c.is_rogue() or c.realm_index < 1:
+		return ""
+	var sect: SectDef = data.sects[c.sect["id"]]
+	var rank := int(c.sect["rank"])
+	if rank + 1 >= sect.ranks.size():
+		return ""
+	var need := int(sect.ranks[rank + 1].get("contribution", 0))
+	var have := int(c.sect["contribution"])
+	if need <= have:
+		return ""
+	var rate := 0.0
+	for id: String in Sects.available_missions(c, data, flags):
+		var m: Dictionary = data.sect_missions[id]
+		rate = maxf(rate, float(m.get("contribution", 0)) / float(maxi(int(m.get("days", 1)), 1)))
+	var line := "Goal: Rank %d (%s) in %s: %d/%d contribution" % [rank + 1, sect.rank_name(rank + 1), sect.name, have, need]
+	if rate > 0.0:
+		line += ", ~%s of missions" % Calendar.format_duration(ceili(float(need - have) / rate))
+	return line
 
 
 ## GUIDE-103: what the next qi goal is called: "the next layer" (or `plain`), or at a realm's last

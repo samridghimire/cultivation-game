@@ -8123,3 +8123,20 @@ func test_trial_preview_empty_for_rogues_and_open_trial() -> void:
 	c = _preview_member()
 	c.sect["contribution"] = 99999
 	assert_true(Guidance.trial_preview(c, d).is_empty())
+
+
+## GUIDE-305: the sect-rank goal line with a number to watch.
+func test_sect_rank_goal_hint() -> void:
+	var d := data()
+	var c := new_character()
+	assert_eq(Guidance.sect_rank_goal_hint(c, d), "", "a rogue has no rank goal")
+	c.realm_index = 1
+	c.sect = {"id": "azure_cloud_sect", "rank": 0, "contribution": 20}
+	var need := int((d.sects["azure_cloud_sect"] as SectDef).ranks[1]["contribution"])
+	var line := Guidance.sect_rank_goal_hint(c, d)
+	assert_true(line.begins_with("Goal: Rank 1 (Inner Disciple)") or line.begins_with("Goal: Rank 1 ("), line)
+	assert_true(line.contains("20/%d contribution" % need), line)
+	c.sect["contribution"] = need
+	assert_eq(Guidance.sect_rank_goal_hint(c, d), "", "contribution met: the promotion hint speaks")
+	c.sect["rank"] = (d.sects["azure_cloud_sect"] as SectDef).ranks.size() - 1
+	assert_eq(Guidance.sect_rank_goal_hint(c, d), "", "top rank")
