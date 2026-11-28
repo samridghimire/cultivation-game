@@ -35,6 +35,8 @@ const DEFAULTS := {
 	"reduce_motion": false,
 	# Skip the fishing timing bar: every cast is an ordinary one (WU-412).
 	"auto_cast": false,
+	# The gold "!" over the place your first next step names (GFX-274).
+	"guide_marker": true,
 	# Every place name at full strength instead of fading with distance (GFX-025).
 	"show_all_labels": false,
 	# Banner card with the year's review on each new year (WU-031).
@@ -89,7 +91,7 @@ static func sanitize(key: String, value: Variant) -> Variant:
 			return clampf(float(value), UI_SCALE_RANGE.x, UI_SCALE_RANGE.y)
 		"hud_hints":
 			return clampi(int(value), 0, 3) if value is int or value is float else DEFAULTS["hud_hints"]
-		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion", "show_all_labels", "auto_cast", "wake_for_events", "letters_quiet":
+		"autosave", "yearly_recap", "animate_fights", "ambient_effects", "key_help", "reduce_motion", "show_all_labels", "auto_cast", "wake_for_events", "letters_quiet", "guide_marker":
 			return value if value is bool else DEFAULTS[key]
 		"fast_time_skips":
 			return (value is bool and value) or str(value).to_lower() == "true"

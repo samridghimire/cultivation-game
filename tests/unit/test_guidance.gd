@@ -8140,3 +8140,15 @@ func test_sect_rank_goal_hint() -> void:
 	assert_eq(Guidance.sect_rank_goal_hint(c, d), "", "contribution met: the promotion hint speaks")
 	c.sect["rank"] = (d.sects["azure_cloud_sect"] as SectDef).ranks.size() - 1
 	assert_eq(Guidance.sect_rank_goal_hint(c, d), "", "top rank")
+
+
+func test_hint_place_names_a_place_in_the_region() -> void:  # GFX-274
+	var data := GameData.new()
+	data.regions = {
+		"a": {"places": [{"display_name": "Clinic"}, {"display_name": "Village Clinic"}]},
+		"b": {"places": [{"display_name": "Azure Cloud Hall"}]},
+	}
+	assert_eq(Guidance.hint_place("Visit the Village Clinic today.", data, "a"), "Village Clinic")
+	assert_eq(Guidance.hint_place("Try the Clinic.", data, "a"), "Clinic")
+	assert_eq(Guidance.hint_place("Lecture at the Azure Cloud Hall.", data, "a"), "")
+	assert_eq(Guidance.hint_place("Lecture at the Azure Cloud Hall.", data, "b"), "Azure Cloud Hall")

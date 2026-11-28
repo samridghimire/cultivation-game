@@ -57,6 +57,9 @@ static var ground_style := "grass"
 var _label_node: Node2D
 ## The top hint names this place: a gold "!" is drawn above its label (WU-280).
 var hinted := false
+## GFX-274: the player stands within GUIDE_NEAR px, so the guide marker hides.
+var guide_near := false
+const GUIDE_NEAR := 48.0
 ## Added to the label's y (and badge) by spread_on_screen when the screen-edge clamp made it overlap (WU-281).
 var screen_lift := 0.0
 ## Fade of the name label by distance to the player (GFX-015); 0 hides it and frees its spot.
@@ -253,7 +256,12 @@ static func region_marker_names(data: GameData, npcs: Dictionary, region_id: Str
 
 ## Whether the gold "!" badge shows above the label: hinted places, and NPCs who need you (WU-402).
 func shows_badge() -> bool:
-	return hinted
+	return guide_shown()
+
+
+## GFX-274: the hinted marker shows unless the player stands on the place or the "Guide marker" setting is off.
+func guide_shown() -> bool:
+	return hinted and not guide_near and Settings.get_value("guide_marker") == true
 
 
 ## Sets or clears `hinted`, redrawing only when it changed.
@@ -461,6 +469,10 @@ static func proximity_alpha(dist: float, near: float, far: float) -> float:
 
 ## Updates `label_fade` for the player's position and redraws the label if it changed.
 func refresh_label_alpha(player_pos: Vector2) -> void:
+	var near := hinted and position.distance_to(player_pos) <= GUIDE_NEAR
+	if near != guide_near:
+		guide_near = near
+		_redraw_label()
 	var a := label_alpha(player_pos)
 	if not is_equal_approx(a, label_fade):
 		label_fade = a

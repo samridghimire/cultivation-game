@@ -26,6 +26,7 @@ var _ambient: CheckButton
 var _reduce_motion: CheckButton
 var _auto_cast: CheckButton
 var _show_all_labels: CheckButton
+var _guide_marker: CheckButton
 var _key_help: CheckButton
 var _letters: OptionButton  # WU-646: 0 = open a card, 1 = note in the log
 var _wake_events: CheckButton
@@ -49,7 +50,7 @@ func _init() -> void:
 	add_child(outer)
 	outer.add_child(UIStyle.label("Settings", 26, UIStyle.ACCENT))
 	_general = VBoxContainer.new()
-	_general.add_theme_constant_override("separation", 3)
+	_general.add_theme_constant_override("separation", 0)
 	outer.add_child(_general)
 	var box := _general
 	_build_controls(outer)
@@ -122,6 +123,11 @@ func _init() -> void:
 	_show_all_labels.add_theme_font_size_override("font_size", 18)
 	_show_all_labels.toggled.connect(func(on: bool): Settings.set_value("show_all_labels", on))
 	box.add_child(_show_all_labels)
+	_guide_marker = CheckButton.new()
+	_guide_marker.text = "Guide marker over your next-step place"
+	_guide_marker.add_theme_font_size_override("font_size", 18)
+	_guide_marker.toggled.connect(func(on: bool): Settings.set_value("guide_marker", on))
+	box.add_child(_guide_marker)
 	_key_help = CheckButton.new()
 	_key_help.text = "Key help on the HUD"
 	_key_help.add_theme_font_size_override("font_size", 18)
@@ -334,6 +340,7 @@ func _sync() -> void:
 	_letters.select(1 if Settings.get_value("letters_quiet") == true else 0)
 	_auto_cast.set_pressed_no_signal(Settings.get_value("auto_cast"))
 	_show_all_labels.set_pressed_no_signal(Settings.get_value("show_all_labels"))
+	_guide_marker.set_pressed_no_signal(Settings.get_value("guide_marker"))
 	_key_help.set_pressed_no_signal(Settings.get_value("key_help"))
 	for key in _sliders:
 		_sliders[key].set_value_no_signal(Settings.get_value(key))

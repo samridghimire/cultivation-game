@@ -1997,6 +1997,21 @@ static func hinted_item_ids(data: GameData, hint: String) -> Array:
 	return out
 
 
+## GFX-274: the display name of the first place of `region_id` (regions.json places have no ids) that `line` names, longest
+## name first so "Village Clinic" beats "Clinic"; "" when it names none there.
+static func hint_place(line: String, data: GameData, region_id: String) -> String:
+	var names: Array = []
+	for place: Dictionary in data.regions.get(region_id, {}).get("places", []):
+		var n := String(place.get("display_name", ""))
+		if n != "" and not names.has(n):
+			names.append(n)
+	names.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	for n: String in names:
+		if line.contains(n):
+			return n
+	return ""
+
+
 ## GUIDE-098: the id of the region whose name appears in `hint` (longest name first), skipping `current_id`; "" when none.
 static func hinted_region(data: GameData, hint: String, current_id: String) -> String:
 	var ids: Array = data.regions.keys()

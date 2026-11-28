@@ -656,6 +656,10 @@ func _on_setting_changed(key: String, _value: Variant) -> void:
 				node.visible = bool(_value)
 		if _foliage != null:
 			_foliage.set_enabled(bool(Settings.get_value("ambient_effects")), _season, _region.get("map", {}))
+	elif key == "guide_marker":
+		for node in get_children():
+			if node is Interactable:
+				(node as Interactable)._redraw_label()
 	elif key == "show_all_labels" and player != null:
 		for node in get_children():
 			if node is Interactable:
@@ -1167,6 +1171,8 @@ func _mark_hinted(hud: Node) -> void:
 		if "hint_region" in node:
 			node.hint_region = region
 		node.set_hinted(hit.has(node) or _tip_target(node))
+		if player != null:
+			node.refresh_label_alpha(player.position)  # GFX-274: hides the marker when the player is already there
 
 
 ## Whether `node` is a gather site the friend's active tip points at (WU-407).

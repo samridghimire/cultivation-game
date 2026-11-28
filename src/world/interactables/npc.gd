@@ -784,7 +784,7 @@ func label_color() -> Color:
 
 
 func shows_badge() -> bool:
-	return hinted or _asking
+	return guide_shown() or _asking
 
 
 ## Re-reads whether this villager has an open folk request, redrawing the label when that changed.

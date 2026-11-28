@@ -421,3 +421,17 @@ func _place(label: String, pos: Vector2) -> Interactable:
 	n.position = pos
 	n.size = Vector2(28, 28)
 	return n
+
+
+func test_guide_marker_hides_near_the_player_and_with_the_setting_off() -> void:
+	var n := _npc("Aa", Vector2(100, 100))
+	n.set_hinted(true)
+	assert_true(n.shows_badge())
+	n.refresh_label_alpha(Vector2(120, 100))  # GFX-274: within 48 px
+	assert_false(n.shows_badge())
+	n.refresh_label_alpha(Vector2(400, 100))
+	assert_true(n.shows_badge())
+	Settings.set_value("guide_marker", false)
+	assert_false(n.shows_badge())
+	Settings.set_value("guide_marker", true)
+	n.queue_free()
