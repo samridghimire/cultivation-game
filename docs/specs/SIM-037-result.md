@@ -9,96 +9,87 @@ Hints policy, Qingshi start, 6 seeds, 12 months. Days are counted from day 0; `n
 | first fight won | 6 | 6 | 6 | 6 | 6 | 6 | 6 |
 | first technique | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
 | first Acquaintance | 16 | 16 | 16 | 16 | 16 | 16 | 16 |
-| first Friend | 221 | 220 | 206 | 221 | 37 | 259 | 221 |
+| first Friend | 153 | 157 | 150 | 150 | 37 | 184 | 153 |
 | first stage up | 25 | 32 | 25 | 25 | 54 | 32 | 32 |
 | sect joined | 28 | 35 | 28 | 28 | 57 | 35 | 35 |
-| first lecture | 49 | 44 | 48 | 48 | 97 | 44 | 48 |
+| first lecture | 49 | 44 | 48 | 48 | 77 | 44 | 48 |
 | first congratulation | never | never | never | never | never | never | never |
-| first shared meditation | never | never | never | never | never | never | never |
+| first shared meditation | 201 | 202 | 212 | 205 | never | 205 | 205 |
 | first full season set | never | never | never | never | never | never | never |
 | first season task | 18 | 24 | 18 | 18 | 28 | 24 | 24 |
-| first trip home | 69 | 68 | 68 | 69 | 77 | 68 | 69 |
-| first practice level | 234 | 219 | 177 | 288 | 285 | 308 | 285 |
+| first trip home | 83 | 82 | 82 | 82 | 90 | 82 | 82 |
+| first practice level | 223 | 218 | 233 | 275 | 280 | 244 | 244 |
 
 ## Dead stretches (14+ days with no first and no stage change)
 
 | seed | days | length | top action kinds |
 |---|---|---|---|
-| 6 | 122-231 | 109 | travel 40d, meditation 26d, other:practice_technique 21d |
-| 4 | 115-216 | 101 | travel 40d, other:practice_technique 28d, meditation 22d |
-| 5 | 310-400 | 90 | travel 41d, other:practice_technique 21d, meditation 20d |
-| 1 | 110-199 | 89 | travel 40d, other:practice_technique 21d, meditation 16d |
-| 6 | 328-414 | 86 | meditation 41d, travel 22d, other:practice_technique 7d |
-| 4 | 309-394 | 85 | meditation 44d, travel 22d, other:call_on 8d |
-| 4 | 394-477 | 83 | travel 40d, missions 24d, meditation 12d |
-| 1 | 404-483 | 79 | travel 40d, missions 16d, meditation 11d |
-| 1 | 295-373 | 78 | meditation 35d, travel 22d, other:practice_technique 7d |
-| 5 | 400-475 | 75 | travel 40d, other:practice_technique 14d, meditation 11d |
-| 3 | 302-373 | 71 | meditation 35d, travel 22d, other:call_on 6d |
-| 3 | 233-302 | 69 | meditation 30d, travel 20d, other:practice_technique 7d |
-| 3 | 109-177 | 68 | other:practice_technique 28d, travel 20d, meditation 12d |
-| 4 | 221-288 | 67 | travel 40d, meditation 16d, other:practice_technique 7d |
-| 2 | 330-397 | 67 | meditation 25d, travel 22d, other:practice_technique 7d |
-| 5 | 223-285 | 62 | travel 40d, other:practice_technique 14d, meditation 6d |
-| 1 | 234-295 | 61 | travel 40d, meditation 10d, other:practice_technique 7d |
-| 2 | 397-455 | 58 | travel 40d, meditation 16d, other:call_on 2d |
-| 2 | 226-281 | 55 | travel 20d, meditation 19d, other:practice_technique 7d |
-| 6 | 68-122 | 54 | travel 27d, missions 17d, meditation 5d |
-| 6 | 414-468 | 54 | travel 40d, meditation 6d, missions 5d |
-| 5 | 143-195 | 52 | travel 20d, missions 18d, meditation 9d |
-| 2 | 281-330 | 49 | meditation 32d, other:practice_technique 7d, other:call_on 4d |
-| 6 | 259-308 | 49 | meditation 30d, other:practice_technique 7d, lectures 6d |
-| 2 | 68-116 | 48 | travel 27d, missions 10d, meditation 6d |
-| 4 | 69-115 | 46 | travel 27d, missions 14d, fights 2d |
-| 3 | 373-415 | 42 | meditation 22d, missions 8d, other:practice_technique 7d |
-| 1 | 69-110 | 41 | travel 27d, missions 10d, fights 2d |
-| 3 | 68-109 | 41 | travel 27d, missions 10d, fights 2d |
-| 2 | 150-191 | 41 | travel 20d, meditation 8d, other:practice_technique 7d |
-| 5 | 105-143 | 38 | missions 15d, meditation 13d, other:practice_technique 7d |
-| 2 | 116-150 | 34 | missions 13d, meditation 9d, other:practice_technique 7d |
-| 1 | 373-404 | 31 | meditation 27d, other:call_on 2d, lectures 2d |
-| 6 | 231-259 | 28 | travel 20d, meditation 6d, fights 1d |
-| 5 | 195-223 | 28 | meditation 17d, other:practice_technique 7d, lectures 2d |
-| 2 | 191-219 | 28 | other:practice_technique 14d, meditation 12d, other:lend_a_hand 2d |
-| 3 | 206-233 | 27 | meditation 16d, other:practice_technique 7d, other:call_on 2d |
-| 5 | 285-310 | 25 | travel 23d, lectures 2d |
-| 6 | 44-68 | 24 | travel 13d, missions 10d, fights 1d |
-| 2 | 44-68 | 24 | travel 13d, missions 10d, fights 1d |
-| 1 | 199-221 | 22 | meditation 10d, other:practice_technique 7d, other:lend_a_hand 3d |
-| 3 | 184-206 | 22 | meditation 10d, other:practice_technique 7d, other:lend_a_hand 3d |
+| 3 | 294-408 | 114 | meditation 33d, other:practice_technique 28d, travel 21d |
+| 1 | 235-345 | 110 | meditation 43d, other:practice_technique 21d, travel 20d |
+| 4 | 290-392 | 102 | meditation 37d, travel 20d, missions 17d |
+| 2 | 293-378 | 85 | meditation 35d, travel 21d, missions 10d |
+| 6 | 285-369 | 84 | meditation 45d, travel 20d, other:practice_technique 7d |
+| 5 | 335-418 | 83 | other:practice_technique 21d, travel 20d, meditation 17d |
+| 2 | 225-293 | 68 | meditation 23d, travel 20d, other:practice_technique 14d |
+| 4 | 212-275 | 63 | meditation 21d, travel 20d, other:practice_technique 14d |
+| 1 | 345-407 | 62 | travel 20d, meditation 18d, missions 11d |
+| 3 | 233-294 | 61 | meditation 24d, travel 20d, other:practice_technique 7d |
+| 4 | 82-142 | 60 | meditation 26d, missions 10d, travel 7d |
+| 5 | 151-210 | 59 | travel 20d, missions 18d, meditation 14d |
+| 4 | 150-205 | 55 | meditation 21d, travel 20d, other:practice_technique 7d |
+| 5 | 280-335 | 55 | travel 24d, other:practice_technique 14d, missions 8d |
+| 1 | 83-134 | 51 | meditation 18d, missions 10d, travel 7d |
+| 1 | 153-201 | 48 | travel 20d, meditation 15d, other:practice_technique 7d |
+| 6 | 369-416 | 47 | other:practice_technique 14d, meditation 13d, travel 10d |
+| 6 | 101-143 | 42 | meditation 22d, other:practice_technique 7d, missions 4d |
+| 5 | 238-280 | 42 | travel 20d, other:practice_technique 14d, meditation 5d |
+| 6 | 143-184 | 41 | travel 20d, meditation 10d, other:practice_technique 7d |
+| 6 | 244-285 | 41 | travel 20d, meditation 8d, other:practice_technique 7d |
+| 5 | 111-151 | 40 | missions 17d, meditation 10d, other:practice_technique 7d |
+| 2 | 378-417 | 39 | missions 16d, meditation 12d, other:practice_technique 7d |
+| 3 | 82-121 | 39 | meditation 16d, missions 10d, travel 7d |
+| 2 | 163-202 | 39 | travel 20d, meditation 8d, other:practice_technique 7d |
+| 6 | 44-82 | 38 | missions 17d, travel 13d, fights 3d |
+| 3 | 150-186 | 36 | travel 20d, meditation 10d, lectures 4d |
+| 6 | 212-244 | 32 | meditation 18d, other:practice_technique 7d, other:call_on 3d |
+| 2 | 82-114 | 32 | missions 14d, travel 7d, meditation 6d |
+| 3 | 121-150 | 29 | other:practice_technique 14d, meditation 10d, other:lend_a_hand 3d |
+| 3 | 186-212 | 26 | meditation 17d, other:practice_technique 7d, fights 1d |
+| 2 | 44-68 | 24 | missions 17d, fights 3d, meditation 2d |
+| 2 | 135-157 | 22 | meditation 12d, other:practice_technique 7d, other:lend_a_hand 3d |
+| 1 | 201-223 | 22 | meditation 13d, other:practice_technique 7d, fights 1d |
+| 6 | 184-205 | 21 | meditation 11d, other:practice_technique 7d, lectures 2d |
+| 5 | 90-111 | 21 | missions 10d, travel 7d, fights 2d |
+| 2 | 114-135 | 21 | meditation 10d, other:practice_technique 7d, other:lend_a_hand 2d |
+| 4 | 48-69 | 21 | missions 9d, meditation 8d, fights 2d |
 | 1 | 28-49 | 21 | missions 10d, travel 7d, lectures 2d |
-| 4 | 48-69 | 21 | travel 13d, missions 4d, meditation 2d |
-| 4 | 288-309 | 21 | meditation 16d, other:call_on 3d, lectures 2d |
-| 3 | 48-68 | 20 | travel 13d, missions 4d, meditation 2d |
-| 3 | 28-48 | 20 | missions 10d, travel 7d, lectures 2d |
-| 5 | 77-97 | 20 | missions 10d, travel 7d, lectures 2d |
+| 5 | 57-77 | 20 | missions 10d, travel 7d, lectures 2d |
 | 4 | 28-48 | 20 | missions 10d, travel 7d, lectures 2d |
-| 6 | 308-328 | 20 | meditation 12d, other:practice_technique 7d, other:call_on 1d |
-| 1 | 49-69 | 20 | travel 13d, missions 4d, meditation 2d |
-| 5 | 57-77 | 20 | travel 20d |
+| 3 | 28-48 | 20 | missions 10d, travel 7d, lectures 2d |
+| 5 | 418-438 | 20 | travel 10d, other:_die_violently 7d, lectures 2d |
+| 3 | 212-231 | 19 | meditation 8d, other:practice_technique 7d, other:call_on 2d |
+| 1 | 134-153 | 19 | meditation 10d, other:practice_technique 7d, other:lend_a_hand 2d |
+| 6 | 82-101 | 19 | missions 10d, travel 7d, fights 2d |
+| 1 | 49-67 | 18 | missions 9d, meditation 5d, fights 2d |
+| 3 | 48-66 | 18 | missions 9d, meditation 5d, fights 2d |
 | 5 | 37-54 | 17 | meditation 8d, other:attempt_breakthrough 7d, other:call_on 1d |
+| 1 | 67-83 | 16 | travel 13d, meditation 3d |
+| 5 | 210-226 | 16 | other:practice_technique 7d, meditation 7d, lectures 2d |
+| 3 | 66-82 | 16 | travel 13d, meditation 3d |
+| 2 | 202-218 | 16 | meditation 8d, other:practice_technique 7d, other:call_on 1d |
+| 4 | 275-290 | 15 | meditation 11d, other:call_on 2d, lectures 2d |
+| 2 | 68-82 | 14 | travel 13d, meditation 1d |
 
 Summary: the two stretches that recur most across 6 seeds (by median length, seeds hit):
-- starting around day 300-329: median 85 days in 5 seeds; the sim was doing: travel 41d, other:practice_technique 21d, meditation 20d / meditation 41d, travel 22d, other:practice_technique 7d.
-- starting around day 390-419: median 75 days in 5 seeds; the sim was doing: travel 40d, missions 24d, meditation 12d / travel 40d, missions 16d, meditation 11d.
+- starting around day 270-299: median 85 days in 6 seeds; the sim was doing: meditation 33d, other:practice_technique 28d, travel 21d / meditation 37d, travel 20d, missions 17d.
+- starting around day 210-239: median 61 days in 8 seeds; the sim was doing: meditation 43d, other:practice_technique 21d, travel 20d / meditation 23d, travel 20d, other:practice_technique 14d.
 
-## SIM-044: the season window and the road home
+## SIM-045: meditating with a sect-mate
 
-Diagnosis (`--firsts 1 12 --firsts-trace`, seeds 1 and 4; seasons are 90 days, so the 21-day window is a quarter of a season):
+Diagnosis (`--firsts 6 12 --firsts-trace`, days 120/180/240/300): the friend with the highest favor is Hunter Ma (Qingshi, still mortal: "does not cultivate yet") before the hall, then Yun Feng at the hall (Qi Refining, favor 42-75, no block) from day ~180 in seeds 1-4 and 6; `friend_meditation_hint` shows "Meditate beside Yun Feng at Cloud-Sea Cliff" from day ~190, but ranked 5th or lower, so the weekly tea/lend errand always won and the sim never acted. Seed 5's closest friend stays Hunter Ma in Qingshi (never joins the sect, mortal). Joining requires the sect's min realm, so no game fix was needed.
 
-| seed 1 day | season days left | route days | home line shown | rank | sim did instead |
-|---|---|---|---|---|---|
-| 165 | 14 | 10 | "Home to Qingshi (10 days): 2 summer tasks left" | 6th | tea at Yun Feng's |
-| 249 | 20 | 10 | "1 autumn task left" | 5th | tea |
-| 256 | 13 | 10 | "1 autumn task left" | 5th | tea |
-| 344 | 15 | 10 | "1 winter task left" | 4th | heal |
-
-The line shows in time; the hints player takes the first line it can act on, and the weekly tea/lend/heal errands always rank above it. Raising `home_call.season_days_left` to 35 or 45 changed nothing for the trips (2/6 -> 2/6 and 1/6) and, with the sim fix, lengthened dead stretches (travel 40d), so the data stays at 21. Fix (b): the sim takes a "Home to Qingshi (" line that names a task ahead of the weekly errands.
+Fix: the hints sim, after a 1-day kindness or hall errand, also takes the "Meditate beside" line (like the lecture line).
 
 | `--firsts 6 12` | before | after |
 |---|---|---|
-| first trip home | 2/6, days 352 and 358 | 6/6, days 82-90 |
-| first full season set | 0/6 | 0/6 |
-| longest dead stretch | 97 days (5 seeds >= 80) | 90 days (1 seed >= 85) |
-
-The trip now happens, but no seed completes all three tasks of a season: a set always holds a task the sim does not do (hunt/contest/sell_wanted beside the catch/gather ones); see Follow-ups of the commit.
+| first shared meditation | 0/6 | 5/6, days 201-212 |

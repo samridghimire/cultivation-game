@@ -2359,7 +2359,7 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 			var at_hall: bool = not c.is_rogue() and gs.current_region == Sects.home_region(gs.data, String(c.sect["id"]))
 			if weekly_extras and c.alive and (acted == "lend" or acted == "tea" or (at_hall and (acted == "mission" or acted == "sect_report"))):
 				for extra: String in steps:
-					if extra.begins_with("Lecture at ") or extra.contains("can teach you") or extra.begins_with("Season task: "):
+					if extra.begins_with("Lecture at ") or extra.contains("can teach you") or extra.begins_with("Season task: ") or extra.begins_with("Meditate beside "):  # SIM-045: also the sect-mate sitting line
 						var extra_kind := _act_on_hint(gs, c, done, extra, gs.get_node("/root/GameClock").total_days)
 						if extra_kind != "":
 							kinds[extra_kind] = true

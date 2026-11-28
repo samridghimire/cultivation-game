@@ -731,6 +731,19 @@ func _run_firsts(args: Array) -> void:
 							if int(gs.npc_favor[nid]) > 0:
 								fav[nid] = int(gs.npc_favor[nid])
 						print("favor seed %d %s day %d in %s: %s | hint: %s" % [s, key, rel, gs.current_region, str(fav), Guidance.make_friend_hint(c, gs.data, gs.npcs, gs.world_flags, gs.current_region, clock.total_days, gs.npc_favor)])
+			if trace_favor:
+				# SIM-045: the friend with the highest favor at days 120/180/240/300, with the meditation block and the hint.
+				for mark: int in [120, 180, 240, 300]:
+					if rel >= mark and not st.has("med_%d" % mark):
+						st["med_%d" % mark] = true
+						var best_id := ""
+						for nid: String in gs.npc_favor:
+							if gs.npcs.has(nid) and (best_id == "" or int(gs.npc_favor[nid]) > int(gs.npc_favor[best_id])):
+								best_id = nid
+						if best_id != "":
+							var bn: CharacterData = gs.npcs[best_id]
+							var hint: String = Guidance.friend_meditation_hint(c, gs.data, gs.npcs, gs.npc_favor, gs.world_flags, gs.current_region, clock.total_days)
+							print("meditation seed %d day %d: %s in %s realm %d favor %d block '%s' | player in %s | hint: %s" % [s, rel, best_id, Npcs.region_of(bn, gs.data), bn.realm_index, int(gs.npc_favor[best_id]), Folk.meditation_block(c, gs.data, bn, int(gs.npc_favor[best_id]), gs.world_flags, Npcs.region_of(bn, gs.data), clock.total_days), gs.current_region, hint])
 			for f: String in now:
 				if now[f] and not st["found"].has(f):
 					st["found"][f] = rel
