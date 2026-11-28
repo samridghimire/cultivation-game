@@ -100,14 +100,28 @@ static func home_news(c: CharacterData, npcs: Dictionary, data: GameData, flags:
 		if flags.has(flag):
 			continue
 		flags[flag] = true
-		var news := "I began Qi Refining." if String(entry.get("kind", "")) == "qi_start" else "I broke through to %s." % String(entry.get("realm", "a new realm"))
-		var region := String(data.regions.get(SeasonTasks.REGION, {}).get("name", "home"))
-		var own: Array = data.npcs.get(id, {}).get("home_news_lines", [])  # C-429: stable pick, no rng draw
-		var text := String(rules(data).get("home_news_text", "{name} writes from {region}: \"{news} Come by when the sect lets you go.\"")).replace("{name}", String(row["name"])).replace("{region}", region).replace("{news}", news)
-		if not own.is_empty():
-			text = String(own[hash("%s_%d" % [id, int(entry.get("day", 0))]) % own.size()]).replace("{region}", region).replace("{news}", news)
+		var text := _home_news_text(data, id, String(row["name"]), entry)
 		return {"npc_id": id, "text": text, "notes": [], "request": false}
 	return {}
+
+
+## The text of `id`'s home-news letter for their friend_news `entry` (stable per entry, no rng).
+static func _home_news_text(data: GameData, id: String, name: String, entry: Dictionary) -> String:
+	var news := "I began Qi Refining." if String(entry.get("kind", "")) == "qi_start" else "I broke through to %s." % String(entry.get("realm", "a new realm"))
+	var region := String(data.regions.get(SeasonTasks.REGION, {}).get("name", "home"))
+	var own: Array = data.npcs.get(id, {}).get("home_news_lines", [])  # C-429
+	var text := String(rules(data).get("home_news_text", "{name} writes from {region}: \"{news} Come by when the sect lets you go.\"")).replace("{name}", name).replace("{region}", region).replace("{news}", news)
+	if not own.is_empty():
+		text = String(own[hash("%s_%d" % [id, int(entry.get("day", 0))]) % own.size()]).replace("{region}", region).replace("{news}", news)
+	return text
+
+
+## WU-652: true when `text` is the home-news letter `npc_id` writes for their current news (so the letter card can
+## offer the road home).
+static func is_home_news(c: CharacterData, data: GameData, npcs: Dictionary, npc_id: String, text: String) -> bool:
+	if c == null or not c.friend_news.has(npc_id) or not npcs.has(npc_id):
+		return false
+	return _home_news_text(data, npc_id, String(npcs[npc_id].name), c.friend_news[npc_id]) == text
 
 
 static func _write(c: CharacterData, npcs: Dictionary, favor: Dictionary, data: GameData, rng: RandomNumberGenerator, flags: Dictionary, today: int, id: String, from: String) -> Dictionary:

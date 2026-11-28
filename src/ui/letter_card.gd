@@ -19,6 +19,8 @@ var _text: Label
 var _ask: Label
 var _later: Button
 var _continue: Button
+var _travel: Button  # WU-652
+var _travel_to := ""
 
 
 func _init() -> void:
@@ -55,6 +57,10 @@ func _init() -> void:
 	_later = UIStyle.button("Read later", close)
 	_later.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_later)
+	_travel = UIStyle.button("Travel home", _on_travel)
+	_travel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_travel.visible = false
+	row.add_child(_travel)
 	_continue = UIStyle.button("Continue", close)
 	_continue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_continue)
@@ -71,7 +77,7 @@ static func slides() -> bool:
 
 
 ## `request` is {} or {item, count, until} (a Letters request); `today` the current day.
-func open(npc_id: String, npc_name: String, text: String, request: Dictionary = {}, today: int = 0) -> void:
+func open(npc_id: String, npc_name: String, text: String, request: Dictionary = {}, today: int = 0, travel_to: String = "", travel_days: int = 0) -> void:
 	_title.text = "A letter from %s" % npc_name
 	var look: Dictionary = preload("res://src/world/interactables/npc.gd").look_of(npc_id, Color("9a8f7a"))
 	_figure.texture = PixelFigure.frame(look if look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}, "down", 0)
@@ -82,6 +88,9 @@ func open(npc_id: String, npc_name: String, text: String, request: Dictionary = 
 		var iid := String(request.get("item", ""))
 		var nm := String(data.items[iid].get("name", iid)) if data != null and data.items.has(iid) else iid
 		_ask.text = ask_line(nm, int(request.get("count", 1)), maxi(0, int(request.get("until", today)) - today))
+	_travel_to = travel_to
+	_travel.visible = travel_to != "" and travel_days > 0
+	_travel.text = "Travel home (%d %s)" % [travel_days, "day" if travel_days == 1 else "days"]
 	visible = true
 	_continue.grab_focus.call_deferred()
 	if slides():
@@ -113,6 +122,18 @@ func close() -> void:
 		return
 	visible = false
 	closed.emit()
+
+
+## WU-652: close the card, then take the road (the same GameState.travel the road signs use).
+func _on_travel() -> void:
+	var to := _travel_to
+	close()
+	if to != "":
+		GameState.travel(to)
+
+
+func travel_button() -> Button:
+	return _travel
 
 
 func continue_button() -> Button:

@@ -1973,7 +1973,14 @@ func _on_letter_arrived(npc_name: String, text: String = "", npc_id: String = ""
 ## WU-643: the letter card, with the request line when the writer has an open request.
 func _open_letter(npc_id: String, npc_name: String, text: String) -> void:
 	var today: int = GameClock.total_days
-	_letter_card.open(npc_id, npc_name, text, Letters.open_request(GameState.player, npc_id, today), today)
+	var home := ""
+	var days := 0
+	var data: GameData = GameState.data
+	if GameState.current_region != SeasonTasks.REGION and Letters.is_home_news(GameState.player, data, GameState.npcs, npc_id, text):  # WU-652
+		days = Guidance.route_days(GameState.player, data, GameState.current_region, SeasonTasks.REGION)
+		if days >= 1 and days <= int(data.family.get("home_call", {}).get("max_route_days", 12)):
+			home = SeasonTasks.REGION
+	_letter_card.open(npc_id, npc_name, text, Letters.open_request(GameState.player, npc_id, today), today, home, days if home != "" else 0)
 	_update_modal()
 
 
