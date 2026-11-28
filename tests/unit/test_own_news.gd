@@ -291,3 +291,46 @@ func test_journal_row_names_current_region() -> void:  # FOLK-053
 	xl.home_region = other
 	var rows := FolkNews.journal_rows(c, gs.data, gs.npcs, 12)
 	assert_eq(String(rows[0]["region"]), Npcs.region_of(xl, gs.data))
+
+
+func test_letter_favor_and_rows() -> void:
+	var c := _start()
+	var gs := _gs()
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", 10)
+	assert_eq(FolkNews.letter_rows(c, gs.data, gs.npcs, "qingshi_village", 12).size(), 0, "friend is in this region")
+	assert_eq(FolkNews.letter_rows(c, gs.data, gs.npcs, "elsewhere", 12).size(), 1)
+	assert_eq(FolkNews.congratulate_by_letter(c, gs.data, "xiao_ling", 12), 2, "letter favor")
+	assert_false(c.friend_news.has("xiao_ling"), "entry erased")
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", 10)
+	assert_eq(FolkNews.congratulate_by_letter(c, gs.data, "xiao_ling", 10 + 31), 0, "stale")
+
+
+func test_send_congratulations_integration() -> void:
+	var c := _start()
+	var gs := _gs()
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	gs.npc_favor["xiao_ling"] = 50
+	gs.send_congratulations("xiao_ling")
+	assert_eq(int(gs.npc_favor["xiao_ling"]), 50, "refused in the same region")
+	assert_true(c.friend_news.has("xiao_ling"), "news kept")
+	gs.current_region = "withered_bone_marsh"
+	gs.send_congratulations("xiao_ling")
+	assert_eq(int(gs.npc_favor["xiao_ling"]), 52)
+	assert_false(c.friend_news.has("xiao_ling"))
+
+
+func test_letter_hint() -> void:
+	var c := _start()
+	var gs := _gs()
+	var today := 100
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", today - 22)  # 8 days left
+	assert_eq(Guidance.congratulate_letter_hint(c, gs.data, gs.npcs, "qingshi_village", today), "", "friend is here")
+	var far := ""
+	for id: String in gs.data.regions.keys():
+		if id != "qingshi_village" and Guidance.route_days(c, gs.data, id, "qingshi_village") > int(gs.data.family["home_call"]["max_route_days"]):
+			far = id
+	if far != "":
+		var line := Guidance.congratulate_letter_hint(c, gs.data, gs.npcs, far, today)
+		assert_true(line.begins_with("Write to Xiao Ling: congratulations on Qi Refining (8 days left)"), line)
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", today - 5)  # 25 left
+	assert_eq(Guidance.congratulate_letter_hint(c, gs.data, gs.npcs, "withered_bone_marsh", today), "", "too many days left")

@@ -2740,6 +2740,23 @@ func congratulate(npc_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## FOLK-059: congratulate a friend who is in another region by letter: no time passes, a little less favor.
+func send_congratulations(npc_id: String) -> void:
+	EventBus.topic = "family"
+	if not _can_act() or not npcs.has(npc_id):
+		return
+	var npc: CharacterData = npcs[npc_id]
+	if Npcs.region_of(npc, data) == current_region:
+		EventBus.post("%s is here: congratulate them in person." % npc.name, "family")
+		return
+	var gain := FolkNews.congratulate_by_letter(player, data, npc_id, GameClock.total_days)
+	if gain <= 0:
+		return
+	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
+	EventBus.post("You send a note of congratulations to %s. (%s)" % [npc.name, _favor_text(npc_id)], "progress", "", false, npc_id)
+	EventBus.player_changed.emit()
+
+
 ## C-425: the friend's own thanks (stable pick by npc and day, no rng), else the generic sentence.
 func _congrats_reply(npc_id: String) -> String:
 	var pool: Array = data.npcs.get(npc_id, {}).get("congrats_reply", [])

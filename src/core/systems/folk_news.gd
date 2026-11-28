@@ -174,6 +174,23 @@ static func congratulate(player: CharacterData, data: GameData, npc_id: String, 
 	return int(data.family.get("folk_news", {}).get("congratulate_favor", 3))
 
 
+## FOLK-059: congratulate by letter: same as `congratulate` (erases the entry) but returns the smaller letter_favor.
+static func congratulate_by_letter(player: CharacterData, data: GameData, npc_id: String, day: int) -> int:
+	if not can_congratulate(player, data, npc_id, day):
+		return 0
+	player.friend_news.erase(npc_id)
+	return int(data.family.get("folk_news", {}).get("letter_favor", 2))
+
+
+## FOLK-059: `journal_rows` of the friends NOT in `region_id` (those who can only be written to).
+static func letter_rows(player: CharacterData, data: GameData, npcs: Dictionary, region_id: String, day: int) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for row: Dictionary in journal_rows(player, data, npcs, day):
+		if String(row["region"]) != region_id:
+			rows.append(row)
+	return rows
+
+
 ## Drops every expired entry (call on month change).
 static func prune_own(player: CharacterData, data: GameData, day: int) -> void:
 	for id: String in player.friend_news.keys():

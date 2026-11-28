@@ -1468,6 +1468,8 @@ func _validate_folk_news() -> void:
 	for key in ["own_days", "congratulate_favor"]:  # FOLK-050
 		if cfg.has(key) and (not (cfg[key] is int or cfg[key] is float) or int(cfg[key]) <= 0):
 			load_errors.append("family.folk_news.%s must be an int > 0" % key)
+	if cfg.has("letter_favor") and (not (cfg["letter_favor"] is int or cfg["letter_favor"] is float) or int(cfg["letter_favor"]) < 0 or int(cfg["letter_favor"]) > 10):  # FOLK-059
+		load_errors.append("family.folk_news.letter_favor must be an int 0-10")
 	_validate_own_lines(cfg.get("own_fallback", {}), "family.folk_news.own_fallback", true)
 	for id: String in npcs:
 		var tl: Variant = npcs[id].get("thanks_line", "")  # WU-642

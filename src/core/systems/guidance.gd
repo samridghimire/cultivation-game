@@ -1185,6 +1185,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var congrats := congratulate_hint(c, data, people, region_id, today)
 		if congrats != "":
 			out.append(congrats)
+		var letter := congratulate_letter_hint(c, data, people, region_id, today)
+		if letter != "":
+			out.append(letter)
 		var sit := friend_meditation_hint(c, data, people, favor, flags, region_id, today)
 		if sit != "":
 			out.append(sit)
@@ -2497,6 +2500,25 @@ static func congratulate_hint(c: CharacterData, data: GameData, people: Dictiona
 		if realm == "":
 			realm = "Qi Refining"
 		return "Congratulate %s on %s (%d days left)" % [row["name"], realm, int(row["days_left"])]
+	return ""
+
+
+## FOLK-059: "Write to <name>: congratulations on <realm> (N days left)" for a friend elsewhere whose news ends within
+## 10 days, unless the home call would already name them. "" otherwise. Pure.
+static func congratulate_letter_hint(c: CharacterData, data: GameData, people: Dictionary, region_id: String, today: int) -> String:
+	if c == null or region_id == "" or today < 0:
+		return ""
+	var cfg: Dictionary = data.family.get("home_call", {})
+	for row: Dictionary in FolkNews.letter_rows(c, data, people, region_id, today):
+		var left := int(row["days_left"])
+		if left > 10 or not FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
+			continue
+		if region_id != SeasonTasks.REGION and String(row["region"]) == SeasonTasks.REGION:
+			var days := route_days(c, data, region_id, SeasonTasks.REGION)
+			if days >= 1 and days <= int(cfg.get("max_route_days", 12)) and left >= days + 2:
+				continue  # the home call names this friend
+		var realm := String(c.friend_news[String(row["npc_id"])].get("realm", ""))
+		return "Write to %s: congratulations on %s (%d days left)" % [row["name"], realm if realm != "" else "Qi Refining", left]
 	return ""
 
 

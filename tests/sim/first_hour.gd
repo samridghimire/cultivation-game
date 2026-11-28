@@ -2788,6 +2788,16 @@ static func _act_on_hint(gs: Node, c: CharacterData, done: Dictionary, line: Str
 					friend_tally["first_congrat"] = day
 				return "congratulate"
 		return ""
+	if line.begins_with("Write to ") and line.contains(": congratulations"):
+		# FOLK-059: congratulate a friend in another region by letter.
+		for id: String in gs.data.npcs:
+			var npc: CharacterData = gs.npcs.get(id)
+			if npc != null and line.begins_with("Write to %s: congratulations" % npc.name) and gs.can_congratulate(id):
+				gs.send_congratulations(id)
+				if friend_tally["first_congrat"] < 0:
+					friend_tally["first_congrat"] = day
+				return "congratulate"
+		return ""
 	if line.begins_with("Meditate beside "):
 		# GUIDE-294: take the "Meditate with <friend>" option the line names.
 		for id: String in gs.data.npcs:
