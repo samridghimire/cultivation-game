@@ -1164,6 +1164,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	var lecture_lead := lecture_here  # GUIDE-297: the lecture line that must stay in the first 2 (here, or in reach)
 	if lecture_here != "":
 		out.append(lecture_here)
+	var outing_line := Sects.outing_line(c, data, today) if today >= 0 else ""  # SECT-055
+	if outing_line != "":
+		out.append(outing_line)
 	var thin := thin_defence_hint(c, data, region_id, flags)
 	var method_offer := sect_method_hint(c, data)
 	# GUIDE-196: a claimable method that nearly doubles qi leads the thin-defence line.

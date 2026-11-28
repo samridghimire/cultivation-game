@@ -478,6 +478,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 			c.sect["month_earned"] = int(s["month_earned"])
 		if s.has("lecture_month"):
 			c.sect["lecture_month"] = int(s["lecture_month"])
+		if s.has("outing_year"):
+			c.sect["outing_year"] = int(s["outing_year"])
 		if s.has("reported"):
 			c.sect["reported"] = bool(s["reported"])
 		if s.has("duty_grace"):

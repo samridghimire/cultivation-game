@@ -163,6 +163,27 @@ func _collect_lecture(_sect_id: String, result: Dictionary) -> void:
 	_lecture_events.append(result)
 
 
+func test_join_outing() -> void:
+	var c := _start()
+	var gs := _game_state()
+	var clock := _root().get_node("GameClock")
+	c.alignment = 0
+	gs.join_sect("blood_lotus_sect")
+	gs.current_region = "withered_bone_marsh"
+	gs.join_outing()  # day 0: not open yet
+	assert_eq(clock.total_days, 0)
+	clock.total_days = 250
+	var before := Sects.contribution_balance(c)
+	gs.join_outing()
+	assert_eq(gs.current_region, "withered_bone_marsh", "back at the hall")
+	assert_true(clock.total_days >= 254)
+	assert_eq(Sects.contribution_balance(c), before + int(Sects.outing_def(c, gs.data)["contribution"]))
+	var day: int = clock.total_days
+	gs.join_outing()  # once a year
+	assert_eq(clock.total_days, day)
+	gs.end_session()
+
+
 func test_attend_lecture_once_a_month() -> void:
 	var c := _start()
 	var gs := _game_state()

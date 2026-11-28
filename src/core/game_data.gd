@@ -542,6 +542,7 @@ func _validate() -> void:
 	load_errors.append_array(Sects.validate_shops(self))
 	load_errors.append_array(Sects.validate_ranks(self))
 	load_errors.append_array(Sects.validate_lectures(self))
+	load_errors.append_array(Sects.validate_outings(self))
 	load_errors.append_array(Sects.validate_contests(self))
 	load_errors.append_array(SectFactions.validate(self))
 	load_errors.append_array(Auctions.validate(self))

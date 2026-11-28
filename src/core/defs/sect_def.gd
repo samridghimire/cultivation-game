@@ -25,6 +25,8 @@ var lecture: Dictionary = {}
 var contest: Dictionary = {}
 ## SECT-045: the yearly inner-sect contest for ranks 2+, same shape as `contest`; {} = none.
 var inner_contest: Dictionary = {}
+## SECT-055: the yearly autumn outing {day_min, day_max, days, contribution, favor, region_pool}; {} = none.
+var outing: Dictionary = {}
 ## Region the sect calls home (TRAV-004); "" = none (any hall serves).
 var home_region := ""
 ## GFX-241: {count, form} of disciples drilling on the hall court; {} = none.
@@ -54,6 +56,7 @@ static func from_dict(d: Dictionary) -> SectDef:
 	s.lecture = d.get("lecture", {})
 	s.contest = d.get("contest", {})
 	s.inner_contest = d.get("inner_contest", {})
+	s.outing = d.get("outing", {})
 	s.home_region = String(d.get("home_region", ""))
 	s.welcome = d.get("welcome", {})
 	return s

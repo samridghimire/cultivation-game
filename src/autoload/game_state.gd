@@ -3957,6 +3957,37 @@ func buy_with_contribution(item_id: String) -> void:
 	EventBus.player_changed.emit()
 
 
+## SECT-055: join the sect's autumn outing (sects.json `outing`): travel out, one exploration roll there, and home.
+func join_outing() -> void:
+	EventBus.topic = "sect"
+	if not _can_act():
+		return
+	var reason := Sects.check_outing(player, data, GameClock.total_days, current_region)
+	if reason != "":
+		EventBus.post(reason, "warning")
+		return
+	var def := Sects.outing_def(player, data)
+	var dest := Sects.outing_region(player, data, GameClock.total_days)
+	var home := current_region
+	_start_time_skip()
+	var pay := Sects.take_outing(player, data, GameClock.total_days)
+	var place := Exploration.region_name(data, dest)
+	EventBus.post("You set out with the sect's disciples for %s." % place, "progress")
+	var mate_id := Sects.lecture_mate(player, data, npcs, world_flags)
+	if mate_id != "":
+		npc_favor[mate_id] = clampi(int(npc_favor.get(mate_id, 0)) + int(def.get("favor", 0)), 0, 100)
+		EventBus.post("%s walks the road beside you and shares the sect's rice cakes." % npcs[mate_id].name, "progress", "", false, mate_id)
+	_set_region(dest)
+	Exploration.visit(player, dest)
+	_explore_day([], false)
+	if _can_act():
+		_set_region(home)
+		_pass_time(maxi(0, int(def["days"]) - 1), "The sect outing to %s" % place)
+		EventBus.post("You return to the hall from %s. (+%d contribution)" % [place, pay], "progress")
+	EventBus.player_changed.emit()
+	SaveManager.autosave()
+
+
 ## Attend the sect elder's monthly lecture (sects.json `lecture`): qi, maybe a Dao glimpse.
 func attend_lecture() -> void:
 	EventBus.topic = "sect"
@@ -5789,6 +5820,10 @@ func _on_days_advanced(days: int) -> void:
 	if not _can_act():
 		return
 	_review_season_if_changed()
+	var outing_notice := Sects.outing_line(player, data, GameClock.total_days)  # SECT-055: once a year
+	if outing_notice != "" and int(world_flags.get("outing_noted_year", -1)) != Calendar.year_of(GameClock.total_days):
+		world_flags["outing_noted_year"] = Calendar.year_of(GameClock.total_days)
+		EventBus.post("A notice from the sect: " + outing_notice, "info", "sect")
 	var action_topic := EventBus.topic
 	EventBus.topic = "cultivation"
 	var age_before := player.age_days

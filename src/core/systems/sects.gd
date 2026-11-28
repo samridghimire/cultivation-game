@@ -802,6 +802,112 @@ static func buy_with_contribution(c: CharacterData, data: GameData, item_id: Str
 	return {"ok": true, "reason": "", "cost": cost}
 
 
+# --- The autumn outing (SECT-055) -------------------------------------------
+
+## The sect's yearly outing {day_min, day_max, days, contribution, favor, region_pool}; {} = none (rogues, sects without one).
+static func outing_def(c: CharacterData, data: GameData) -> Dictionary:
+	if c.is_rogue() or not data.sects.has(String(c.sect["id"])):
+		return {}
+	return (data.sects[c.sect["id"]] as SectDef).outing
+
+
+## Days of the year [0, 360) of `total_days`.
+static func _year_day(total_days: int) -> int:
+	return total_days % Calendar.DAYS_PER_YEAR
+
+
+## "" with no outing, "wait" before the notice, "notice" (announced, not yet open), "open", or "done" (taken this year / window over).
+static func outing_phase(c: CharacterData, data: GameData, total_days: int) -> String:
+	var def := outing_def(c, data)
+	if def.is_empty():
+		return ""
+	if int(c.sect.get("outing_year", -1)) == Calendar.year_of(total_days):
+		return "done"
+	var day := _year_day(total_days)
+	if day > int(def["day_max"]):
+		return "done"
+	if day >= int(def["day_min"]):
+		return "open"
+	if day >= int(def["day_min"]) - OUTING_NOTICE_DAYS:
+		return "notice"
+	return "wait"
+
+
+const OUTING_NOTICE_DAYS := 14
+
+
+## The region this year's outing visits (a stable pick from region_pool by year and sect, never rng).
+static func outing_region(c: CharacterData, data: GameData, total_days: int) -> String:
+	var pool: Array = outing_def(c, data).get("region_pool", [])
+	if pool.is_empty():
+		return ""
+	return String(pool[absi(("%s|outing|%d" % [c.sect["id"], Calendar.year_of(total_days)]).hash()) % pool.size()])
+
+
+## Why `c` cannot go on the outing now, or "".
+static func check_outing(c: CharacterData, data: GameData, total_days: int, region_id: String) -> String:
+	var phase := outing_phase(c, data, total_days)
+	if phase == "":
+		return "Your sect holds no outings."
+	if phase == "done":
+		return "This year's outing is over."
+	if phase != "open":
+		return "The outing has not set out yet (%d days)." % (int(outing_def(c, data)["day_min"]) - _year_day(total_days))
+	var home := home_region(data, String(c.sect["id"]))
+	if home != "" and region_id != home:
+		return "The outing leaves from the sect's home region."
+	return ""
+
+
+## The Next steps / notice line for the outing, or "" when there is nothing to announce now.
+static func outing_line(c: CharacterData, data: GameData, total_days: int) -> String:
+	var phase := outing_phase(c, data, total_days)
+	if phase != "notice" and phase != "open":
+		return ""
+	var def := outing_def(c, data)
+	var place := Exploration.region_name(data, outing_region(c, data, total_days))
+	if phase == "notice":
+		return "The hall posts an autumn outing to %s in %d days (%s)." % [place, int(def["day_min"]) - _year_day(total_days), Calendar.format_duration(int(def["days"]))]
+	return "Autumn outing to %s: join at the hall (%s, %d days left)." % [place, Calendar.format_duration(int(def["days"])), int(def["day_max"]) - _year_day(total_days) + 1]
+
+
+## Marks the outing taken this year and pays its contribution.
+static func take_outing(c: CharacterData, data: GameData, total_days: int) -> int:
+	var def := outing_def(c, data)
+	c.sect["outing_year"] = Calendar.year_of(total_days)
+	var pay := int(def.get("contribution", 0))
+	add_contribution(c, data, pay)
+	return pay
+
+
+## Load errors for the sects.json `outing` blocks.
+static func validate_outings(data: GameData) -> PackedStringArray:
+	var errors := PackedStringArray()
+	for sect_id: String in data.sects:
+		var o: Dictionary = (data.sects[sect_id] as SectDef).outing
+		if o.is_empty():
+			continue
+		var label := "Sect '%s' outing" % sect_id
+		var lo := int(o.get("day_min", -1))
+		var hi := int(o.get("day_max", -1))
+		if lo < OUTING_NOTICE_DAYS or hi < lo or hi >= Calendar.DAYS_PER_YEAR:
+			errors.append("%s needs %d <= day_min <= day_max < %d" % [label, OUTING_NOTICE_DAYS, Calendar.DAYS_PER_YEAR])
+		if int(o.get("days", 0)) < 1 or int(o.get("days", 0)) > 30:
+			errors.append("%s needs days 1..30" % label)
+		if int(o.get("contribution", -1)) < 0:
+			errors.append("%s needs contribution >= 0" % label)
+		if int(o.get("favor", -1)) < 0 or int(o.get("favor", 0)) > 10:
+			errors.append("%s needs favor 0..10" % label)
+		var pool: Variant = o.get("region_pool", [])
+		if not (pool is Array) or (pool as Array).is_empty():
+			errors.append("%s needs a region_pool" % label)
+		else:
+			for r: Variant in pool:
+				if not data.regions.has(String(r)):
+					errors.append("%s lists unknown region '%s'" % [label, r])
+	return errors
+
+
 # --- The elder's monthly lecture (SECT-005) ----------------------------------
 
 ## year * 12 + month index of `total_days`, for once-a-month checks.

@@ -38,6 +38,9 @@ func get_options() -> Array[Dictionary]:
 		var lecture := lecture_option()
 		if not lecture.is_empty():
 			options.append(lecture)
+		if Sects.outing_phase(player, GameState.data, GameClock.total_days) in ["notice", "open"]:  # SECT-055
+			var outing_reason := Sects.check_outing(player, GameState.data, GameClock.total_days, GameState.current_region)
+			options.append({"label": "Join the autumn outing to %s (%s)" % [Exploration.region_name(GameState.data, Sects.outing_region(player, GameState.data, GameClock.total_days)), Calendar.format_duration(int(Sects.outing_def(player, GameState.data)["days"]))], "action": GameState.join_outing, "disabled": outing_reason != "", "reason": outing_reason, "keep_open": true})
 		if not Sects.contest_def(player, GameState.data).is_empty():
 			var contest_reason := Sects.check_contest(player, GameState.data, GameClock.total_days)
 			options.append({"label": "Enter the %s" % Sects.contest_name(player, GameState.data), "action": GameState.offer_sect_contest, "disabled": contest_reason != "", "reason": contest_reason})
