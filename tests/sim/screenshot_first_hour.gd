@@ -13,6 +13,7 @@ extends SceneTree
 ## WU-639: `-- --season-tasks` day 3 with one task done: world leaf markers and the HUD's season line: season_tasks.png.
 ## WU-640: `-- --reduce-motion` turns the reduce_motion setting on for any shot.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
+## WU-655: `--friend-news-far=<npc_id>` queues that friend's news and opens the journal page from azure_peak: friend_news_far.png.
 ## WU-654: `--log-faces` posts face and no-face log rows (one wrapped) and renders log_faces_hud.png and log_faces_screen.png.
 ## WU-652: `--home-letter` shows a home-news letter with "Travel home (10 days)": letter_home.png.
 ## WU-643: `-- --letter=<greeting|request>` opens the letter card: letter.png.
@@ -634,6 +635,29 @@ func _start() -> void:
 				var pbook: Control = hud.get("_village_book")
 				pbook.open()
 				pbook.call("set_page", "people"), "close": func() -> void: (hud.get("_village_book") as Control).call("close")})
+			special = true
+	for a in OS.get_cmdline_user_args():  # WU-655: a friend's own news while the player is far away: the journal's Today page
+		if a.begins_with("--friend-news-far="):
+			var fid := a.substr(18)
+			var fscreen: Control = hud.get("_screens")["toggle_journal"]
+			shots.append({"name": "friend_news_far", "open": func() -> void:
+				hud.get("_banner").visible = false
+				(hud.get("_pending_moments") as Array).clear()
+				gs.npc_favor[fid] = 60
+				var today: int = Engine.get_main_loop().root.get_node("GameClock").total_days
+				FolkNews.queue_own(c, gs.data, gs.npc_favor, gs.npcs[fid], "qi_start", "Qi Refining", today)
+				gs.current_region = "azure_peak"
+				Engine.get_main_loop().root.get_node("EventBus").player_changed.emit()
+				fscreen.open()
+				fscreen.set_page("journal")
+				for _i in 3:
+					await process_frame
+				var send_btn := fscreen.find_child("Send_" + fid, true, false) as Control
+				if send_btn == null:
+					print("friend-news-far: no Send button (is the friend in another region?)")
+				else:
+					(fscreen.get("_scroll") as ScrollContainer).ensure_control_visible(send_btn)
+					send_btn.grab_focus(), "close": fscreen.close})
 			special = true
 	for a in OS.get_cmdline_user_args():  # WU-609: the staged promotion trial card
 		if a.begins_with("--sect-trial="):

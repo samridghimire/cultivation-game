@@ -433,3 +433,12 @@ func test_winter_roofs_carry_snow() -> void:  # GFX-270
 		var n_winter := "".join(winter).count("n")
 		assert_true(n_winter > n_summer + 10, kind + " has snow on the roof in winter")
 	assert_true(PixelPlace.rows("bounty_board", true, false, false, "thatch", true) == PixelPlace.rows("bounty_board"), "non-roof kinds do not change")
+
+
+## WU-655: a tiered roof carries snow on every tier, a plain one only on top.
+func test_snow_roof_covers_each_tier() -> void:
+	var c: Array = [["h"], ["h"], ["w"], ["h"], ["h"], ["w"]]
+	PixelPlace.snow_roof(c)
+	assert_eq(c[0][0], "n", "top tier snowed")
+	assert_eq(c[3][0], "n", "lower tier snowed")
+	assert_eq(c[5][0], "w", "walls untouched")

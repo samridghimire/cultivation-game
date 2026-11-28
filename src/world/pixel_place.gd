@@ -257,19 +257,20 @@ static func roof_kind(kind: String) -> bool:
 
 
 ## GFX-270: snow on a roof: in every column the top roof pixel (and a second one below a tall roof) turns snow-white.
+## WU-655: every separate roof run in a column gets it, so a tiered hall carries snow on each tier.
 static func snow_roof(c: Array) -> void:
 	var w: int = c[0].size()
 	for x in w:
-		var top := -1
+		var in_roof := false
 		for y in c.size():
-			if c[y][x] in ["h", "r", "R"]:
-				top = y
-				break
-		if top < 0:
-			continue
-		c[top][x] = "n"
-		if top + 1 < c.size() and c[top + 1][x] in ["h", "r"] and x % 3 != 0:
-			c[top + 1][x] = "n"
+			var is_roof: bool = c[y][x] in ["h", "r", "R"]
+			if is_roof and not in_roof:
+				c[y][x] = "n"
+				if y + 1 < c.size() and c[y + 1][x] in ["h", "r"] and x % 3 != 0:
+					c[y + 1][x] = "n"
+				in_roof = true
+			elif not is_roof and c[y][x] != "n":
+				in_roof = false
 
 
 ## GFX-114, GFX-189: the crown colour of a woods site in winter: greyer, never darker than the region's own pines.
