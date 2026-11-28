@@ -903,17 +903,20 @@ static func request_rules(data: GameData) -> Dictionary:
 
 ## FOLK-001: this month's favour a villager of `region_id` asks of the player, stored as a letter request with
 ## source "folk" and returned ({} when nobody asks). The chance is rolled first, so a closed door costs one draw.
-static func monthly_request(c: CharacterData, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, region_id: String, favor: Dictionary, today: int) -> Dictionary:
+static func monthly_request(c: CharacterData, npcs: Dictionary, data: GameData, rng: RandomNumberGenerator, region_id: String, favor: Dictionary, today: int, flags: Dictionary = {}) -> Dictionary:
 	var r := request_rules(data)
 	if r.is_empty() or rng.randf() >= float(r.get("monthly_chance", 0.0)):
 		return {}
 	var open := 0
 	for req: Dictionary in c.letter_requests:
-		if String(req.get("source", "letter")) == "folk" and int(req["until"]) >= today:
+		if is_folk_source(String(req.get("source", "letter"))) and int(req["until"]) >= today:
 			open += 1
 	if open >= int(r.get("max_open", 1)):
 		return {}
 	var min_favor := int(r.get("min_favor", 0))
+	var mates := sect_mate_askers(c, npcs, data, flags, favor, today, min_favor)  # FOLK-060
+	if not mates.is_empty() and rng.randf() < float(r.get("sect_mate_chance", 0.5)):
+		return _sect_mate_request(c, mates[rng.randi_range(0, mates.size() - 1)], data, rng, today, r)
 	var villagers: Array[CharacterData] = []
 	for npc in candidates(npcs, data, c, region_id):
 		if int(favor.get(npc.id, 0)) >= min_favor and Letters.open_request(c, npc.id, today).is_empty():
@@ -940,6 +943,39 @@ static func monthly_request(c: CharacterData, npcs: Dictionary, data: GameData, 
 	return entry
 
 
+## FOLK-060: "folk" (a villager) and "sect_mate" (a friend of your sect) requests both count as favours asked in person.
+static func is_folk_source(source: String) -> bool:
+	return source == "folk" or source == "sect_mate"
+
+
+## FOLK-060: living sect-mate friends standing in the sect's home region with no open request, by id.
+static func sect_mate_askers(c: CharacterData, npcs: Dictionary, data: GameData, flags: Dictionary, favor: Dictionary, today: int, min_favor: int) -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	if c == null or c.is_rogue() or flags.is_empty():
+		return out
+	var home := Sects.home_region(data, String(c.sect.get("id", "")))
+	for m in FriendInvite.sect_mates(c, npcs, data, flags):
+		var npc: CharacterData = npcs[m["id"]]
+		if Npcs.region_of(npc, data) == home and int(favor.get(npc.id, 0)) >= min_favor and Letters.open_request(c, npc.id, today).is_empty():
+			out.append(npc)
+	out.sort_custom(func(a: CharacterData, b: CharacterData) -> bool: return a.id < b.id)
+	return out
+
+
+static func _sect_mate_request(c: CharacterData, npc: CharacterData, data: GameData, rng: RandomNumberGenerator, today: int, r: Dictionary) -> Dictionary:
+	var asks: Array = r.get("sect_mate_asks", r.get("asks", []))
+	if asks.is_empty():
+		return {}
+	var ask: Dictionary = asks[rng.randi_range(0, asks.size() - 1)]
+	var count := rng.randi_range(int(ask["count"][0]), int(ask["count"][1]))
+	var stones := rng.randi_range(int(ask["stones"][0]), int(ask["stones"][1]))
+	var text := String(ask["text"]).replace(VILLAGER, npc.name).replace("{count}", str(count)).replace("{item}", Items.item_plural(data, String(ask["item"]), count))
+	var entry := {"npc_id": npc.id, "item": String(ask["item"]), "count": count, "until": today + int(r.get("days", 20)),
+		"favor": int(ask["favor"]), "effects": {"items": {"spirit_stone": stones}} if stones > 0 else {}, "source": "sect_mate", "text": text}
+	c.letter_requests.append(entry)
+	return entry
+
+
 static func validate_requests(data: GameData) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var r := request_rules(data)
@@ -951,9 +987,20 @@ static func validate_requests(data: GameData) -> PackedStringArray:
 	if not (r.get("asks") is Array) or r["asks"].is_empty():
 		errors.append("family.json folk_requests.asks must be a non-empty list")
 		return errors
-	for i in r["asks"].size():
-		var ask: Dictionary = r["asks"][i]
-		var where := "family.json folk_requests ask %d" % i
+	var mate_chance := float(r.get("sect_mate_chance", 0.5))
+	if mate_chance < 0.0 or mate_chance > 1.0:
+		errors.append("family.json folk_requests.sect_mate_chance must be 0..1")
+	if r.has("sect_mate_asks") and (not (r["sect_mate_asks"] is Array) or r["sect_mate_asks"].is_empty()):
+		errors.append("family.json folk_requests.sect_mate_asks must be a non-empty list")
+		return errors
+	var all_asks: Array = []
+	for a: Dictionary in r["asks"]:
+		all_asks.append([a, "ask"])
+	for a: Dictionary in r.get("sect_mate_asks", []):
+		all_asks.append([a, "sect_mate_ask"])
+	for i in all_asks.size():
+		var ask: Dictionary = all_asks[i][0]
+		var where := "family.json folk_requests %s %d" % [all_asks[i][1], i]
 		if not data.items.is_empty() and not data.items.has(String(ask.get("item", ""))):
 			errors.append("%s names unknown item %s" % [where, ask.get("item", "?")])
 		for key: String in ["count", "stones"]:

@@ -27,7 +27,7 @@ static func pick(candidates: Array, player_pos: Vector2, greeted: Dictionary, da
 
 ## WU-402: whether `req` (Letters.open_request, maybe {}) is a neighbour's folk request.
 static func is_folk_request(req: Dictionary) -> bool:
-	return not req.is_empty() and String(req.get("source", "letter")) == "folk"
+	return not req.is_empty() and Folk.is_folk_source(String(req.get("source", "letter")))
 
 
 ## The greeting with " Did you bring the <item>?" appended when `req` is a folk request the player

@@ -252,7 +252,7 @@ static func request_lines(c: CharacterData, data: GameData, npcs: Dictionary, to
 		if npc == null or not npc.alive or int(req["until"]) < today:
 			continue
 		var region: Dictionary = data.regions.get(Npcs.region_of(npc, data), {})
-		if String(req.get("source", "letter")) == "folk":
+		if Folk.is_folk_source(String(req.get("source", "letter"))):
 			out.append("%s asked you for %d %s (%d days left; they are in %s)." % [npc.name, int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), int(req["until"]) - today, String(region.get("name", "their home"))])
 			continue
 		out.append("%s asked for %d %s in a letter (%d days left; give it in person in %s)." % [npc.name, int(req["count"]), _item_name(data, String(req["item"])), int(req["until"]) - today, String(region.get("name", "their home"))])

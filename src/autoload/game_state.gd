@@ -5401,7 +5401,7 @@ func answer_letter_request(npc_id: String) -> void:
 	_post_attitude_change(before)
 	var notes: PackedStringArray = [_favor_text(npc_id)]
 	notes.append_array(result["notes"])
-	if String(req.get("source", "letter")) == "folk":
+	if Folk.is_folk_source(String(req.get("source", "letter"))):
 		EventBus.post("You give %s %d %s. (%s)" % [npcs[npc_id].name, int(req["count"]), Items.item_plural(data, String(req["item"]), int(req["count"])), ", ".join(notes)], "progress")
 	else:
 		EventBus.post("You give %s the %s they asked for. (%s)" % [npcs[npc_id].name, item_name, ", ".join(notes)], "progress")
@@ -5931,7 +5931,7 @@ func _on_days_advanced(days: int) -> void:
 			EventBus.post(line + (" (%s)" % ", ".join(letter["notes"]) if not letter["notes"].is_empty() else "") + (" They hope you will bring it when you pass." if letter["request"] else ""), "progress", "", false, String(letter["npc_id"]))
 	EventBus.topic = "world"
 	for i in months:
-		var asked := Folk.monthly_request(player, npcs, data, rng, current_region, npc_favor, GameClock.total_days)
+		var asked := Folk.monthly_request(player, npcs, data, rng, current_region, npc_favor, GameClock.total_days, world_flags)
 		if not asked.is_empty():
 			EventBus.post(String(asked["text"]) + " (Give it to them in person within %d days.)" % int(Folk.request_rules(data).get("days", 20)), "info")
 		var quarrel := Folk.monthly_quarrel(player, npcs, data, rng, current_region, GameClock.total_days, world_flags)
@@ -5944,7 +5944,7 @@ func _on_days_advanced(days: int) -> void:
 	Letters.expire_deals(player, GameClock.total_days)
 	EventBus.topic = "family"
 	for gone in Letters.expire_requests(player, GameClock.total_days):
-		if String(gone.get("source", "letter")) != "folk":
+		if not Folk.is_folk_source(String(gone.get("source", "letter"))):
 			EventBus.post("%s no longer waits for your answer." % npcs[gone["npc_id"]].name, "normal")
 	if clan != null:
 		_advance_estate(days, months)
