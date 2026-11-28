@@ -125,3 +125,21 @@ func test_welcome_home_lines_validation() -> void:
 	d.load_errors.clear()
 	assert_true(text.contains("'elder_mo' welcome_home_lines needs 1-2"), text)
 	assert_true(text.contains("'hunter_ma' welcome_home_lines entries"), text)
+
+
+## C-433 review: a friend who no longer lives in Qingshi (moved to your sect) or has died does not welcome you home.
+func test_welcome_home_skips_friends_who_moved_or_died() -> void:
+	var gs := _gs()
+	_start()
+	gs.npc_favor.clear()
+	gs.npc_favor["hunter_ma"] = 30
+	gs.npc_favor["xiao_ling"] = 60
+	var ling: CharacterData = gs.npcs["xiao_ling"]
+	ling.home_region = "azure_peak"
+	var line := Folk.welcome_home_line(gs.data, gs.npc_favor, "P", 5, 40, gs.npcs)
+	assert_true(line != "" and line in Array(gs.data.npcs["hunter_ma"]["welcome_home_lines"]).map(func(l: String) -> String: return l.replace("{player}", "P").replace("{days}", "40")), line)
+	gs.npcs["hunter_ma"].alive = false
+	ling.home_region = ""
+	var back := Folk.welcome_home_line(gs.data, gs.npc_favor, "P", 5, 40, gs.npcs)
+	assert_true(back in Array(gs.data.npcs["xiao_ling"]["welcome_home_lines"]).map(func(l: String) -> String: return l.replace("{player}", "P").replace("{days}", "40")), back)
+	gs.npcs["hunter_ma"].alive = true

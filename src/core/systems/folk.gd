@@ -2371,11 +2371,15 @@ static func meditation_block(player: CharacterData, data: GameData, npc: Charact
 
 
 ## C-433: the welcome-home line of the highest-favor Qingshi friend (favor >= 25), "" when none. Stable pick, no rng.
-static func welcome_home_line(data: GameData, favors: Dictionary, player_name: String, today: int, away_days: int) -> String:
+## Only friends alive and still living in Qingshi welcome you (one who joined your sect lives at the sect home).
+static func welcome_home_line(data: GameData, favors: Dictionary, player_name: String, today: int, away_days: int, people: Dictionary = {}) -> String:
 	var best := ""
 	var best_favor := 24
 	for id: String in data.npcs:
 		var f := int(favors.get(id, 0))
+		var npc: CharacterData = people.get(id)
+		if npc != null and (not npc.alive or Npcs.region_of(npc, data) != SeasonTasks.REGION):
+			continue
 		if data.npcs[id].has("welcome_home_lines") and (f > best_favor or (f == best_favor and best != "" and id < best)):
 			best = id
 			best_favor = f

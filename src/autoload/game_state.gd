@@ -981,7 +981,7 @@ func _note_home_lines() -> void:
 	world_flags.erase("home_left_day")
 	var lines := Guidance.home_waiting_lines(player, data, npcs, GameClock.total_days, away)
 	if away >= Guidance.HOME_AWAY_MIN_DAYS:  # C-433: a friend's welcome leads the banner
-		var welcome := Folk.welcome_home_line(data, npc_favor, player.name, GameClock.total_days, away)
+		var welcome := Folk.welcome_home_line(data, npc_favor, player.name, GameClock.total_days, away, npcs)
 		if welcome != "":
 			lines.insert(0, welcome)
 	if not lines.is_empty():

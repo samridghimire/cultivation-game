@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: a63b04f
+Last reviewed commit: 45a4aa9
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2658,3 +2658,21 @@ Last reviewed commit: a63b04f
     helper (small, deterministic hash of id and day). GFX-271's label bands drop some decor in every region, not just
     Qingshi (worker Follow-up). GUIDE-301's/GUIDE-303's before/after `--firsts` measurements were not run by their workers.
     GFX-270/GFX-271/WU-648 renders not re-viewed by me.
+- 2026-11-28 (reviewer): reviewed a63b04f..45a4aa9 (GUIDE-304, WU-650, SIM-041, C-430, C-434, WU-652, WU-651, SIM-044,
+  FOLK-059, WU-654, GFX-272, C-433, SIM-045; [PLAN]/[REVIEW] skipped; GUIDE-304 landed just before the last review commit).
+  Main green (4926 tests). No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change (WU-650's
+  optional `npc` key on log rows, FOLK-059/C-430/C-433 data fields all optional with defaults).
+  - C-433 fix: `Folk.welcome_home_line` picked the highest-favor friend with welcome lines without checking they still live
+    in Qingshi or are alive, so after inviting Xiao Ling to your sect (FOLK-055 moves her `home_region` to the sect home) the
+    Qingshi arrival banner opened with her welcome while she was at the hall. It now takes the npcs and skips friends who
+    are dead or whose `Npcs.region_of` is not Qingshi; test added.
+  - Notes (not filed): FOLK-059's "Write to <name>: congratulations" hint has no UI to act on until WU-653 (queued) lands;
+    its GameState test went into test_own_news.gd, not test_game_session.gd, and its `--firsts` acceptance was not measured
+    (worker defers to SIM-046). SIM-044 and SIM-045 met their targets by giving the sim bot priority for lines the game
+    ranks low (home call, sect-mate meditation) rather than changing the game's ranking; a real player may not see them
+    either, worth a look in SIM-046/GUIDE work. C-430's sect-mate greeting now always wins over the normal greeting for a
+    sect-mate friend. LogFace builds a fresh head texture for every log row on each rebuild (cheap at 16x16, but could be
+    cached). Rendered `--member=azure_cloud_sect --lecture-day --friend-joined`: WU-651 works (only the seated Xiao Ling);
+    the front rows still touch the key bar in the arrival framing because the camera starts at the map top and the rows
+    sit ~240 px above Azure Peak's 1000 px bottom edge (GFX-272's 200 px rule); clear once the camera follows the player.
+    WU-650/WU-652/WU-654 renders not re-viewed by me.
