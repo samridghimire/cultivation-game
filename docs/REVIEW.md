@@ -3,7 +3,7 @@
 The reviewer agent appends one entry per run. **Last reviewed commit** is where the next review starts
 (`git log <sha>..origin/main`).
 
-Last reviewed commit: 45a4aa9
+Last reviewed commit: 50dd5d1
 
 ## Entries
 - 2026-10-07: baseline set by the owner's session after the switch to planner/worker/reviewer. Main green (890 tests).
@@ -2676,3 +2676,17 @@ Last reviewed commit: 45a4aa9
     the front rows still touch the key bar in the arrival framing because the camera starts at the map top and the rows
     sit ~240 px above Azure Peak's 1000 px bottom edge (GFX-272's 200 px rule); clear once the camera follows the player.
     WU-650/WU-652/WU-654 renders not re-viewed by me.
+- 2026-11-28 (reviewer, 2nd run): reviewed 45a4aa9..50dd5d1 (GUIDE-305, WU-653, GFX-273, WU-655, GUIDE-306, GUIDE-307, C-435,
+  SIM-047, WU-657, GFX-274; [PLAN]/[REVIEW] skipped; GUIDE-305 landed just before the last review commit). Main green
+  (4940 tests). No BACKLOG/CHANGELOG edits by workers; no new binary assets; no SAVE_VERSION change (GFX-274's
+  `guide_marker` is a Settings default, C-435's `letter_thanks_lines` optional and validated). Nothing fixed or filed.
+  - Notes (not filed): GFX-274 adds `Guidance.hint_place` (tested) but world.gd does not use it; the marker is still
+    WU-280's existing `hinted` badge, now hidden within 48 px and behind the setting. The spec's bobbing marker and
+    off-screen edge chevron are not done (worker Follow-up), and no world test checks the toggle hides the marker.
+    GUIDE-307's leader placement matches the sitting line by its text before ":" when `_merge_better_qi` rewrote it; a
+    short head could match another line, fine for today's lines. GUIDE-306's spar line can show twice if `_untried_hint`
+    ever decorates it (dedup is exact-match). GFX-273 makes Scenery (src/core) read `ThemeDB.fallback_font`, the same
+    font interactable labels draw with; engine singleton, not an autoload, deterministic. GUIDE-305's `--firsts`
+    acceptance and GFX-274's renders were not run by their workers; GUIDE-307 could not drop the SIM-044/045 sim
+    shortcuts (head-line policy rewrite needed, worker Follow-up). WU-657 adds the LogFace texture cache I noted last run.
+    Renders not re-viewed by me.
