@@ -2758,6 +2758,10 @@ func send_congratulations(npc_id: String) -> void:
 		return
 	npc_favor[npc_id] = clampi(int(npc_favor.get(npc_id, 0)) + gain, 0, 100)
 	EventBus.post("You send a note of congratulations to %s. (%s)" % [npc.name, _favor_text(npc_id)], "progress", "", false, npc_id)
+	var thanks: Array = data.npcs.get(npc_id, {}).get("letter_thanks_lines", [])  # C-435: their reply, stable pick (never rng)
+	if not thanks.is_empty():
+		var line := String(thanks[absi(("%s|letter_thanks|%d" % [npc_id, GameClock.total_days]).hash()) % thanks.size()])
+		EventBus.post("%s: \"%s\"" % [npc.name, line.replace("{player}", player.name)], "progress", "", false, npc_id)
 	EventBus.player_changed.emit()
 
 

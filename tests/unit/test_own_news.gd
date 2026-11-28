@@ -314,9 +314,30 @@ func test_send_congratulations_integration() -> void:
 	assert_eq(int(gs.npc_favor["xiao_ling"]), 50, "refused in the same region")
 	assert_true(c.friend_news.has("xiao_ling"), "news kept")
 	gs.current_region = "withered_bone_marsh"
+	var seen: Array = []
+	var cb := func(t: String, _cat: String) -> void: seen.append(t)
+	EventBus.message_posted.connect(cb)
 	gs.send_congratulations("xiao_ling")
+	EventBus.message_posted.disconnect(cb)
 	assert_eq(int(gs.npc_favor["xiao_ling"]), 52)
 	assert_false(c.friend_news.has("xiao_ling"))
+	var posted := false  # C-435: the reply is one of her lines
+	for t: String in seen:
+		for l: String in gs.data.npcs["xiao_ling"]["letter_thanks_lines"]:
+			if t.contains(l.replace("{player}", c.name)):
+				posted = true
+	assert_true(posted, "reply posted")
+
+
+func test_letter_thanks_lines_validation() -> void:
+	var d := data()
+	var orig: Array = d.npcs["xiao_ling"]["letter_thanks_lines"]
+	d.npcs["xiao_ling"]["letter_thanks_lines"] = ["x".repeat(141)]
+	d.load_errors.clear()
+	d._validate()
+	assert_true("\n".join(d.load_errors).contains("'xiao_ling' letter_thanks_lines entries"))
+	d.npcs["xiao_ling"]["letter_thanks_lines"] = orig
+	d.load_errors.clear()
 
 
 func test_letter_hint() -> void:
