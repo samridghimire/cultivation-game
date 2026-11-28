@@ -656,7 +656,20 @@ func _row(e: Dictionary) -> Control:
 	text.add_theme_color_override("default_color", color)
 	text.text = String(goal["text"]) if not goal.is_empty() else String(e["text"])
 	row.add_child(text)
+	if String(e.get("write_to", "")) != "":  # WU-653: a friend far away can only be written to
+		var id := String(e["write_to"])
+		var send := UIStyle.button("Send congratulations", func() -> void: _send_congratulations(id))
+		send.name = "Send_" + id
+		send.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(send)
 	return row
+
+
+## WU-653: write to a far friend, then rebuild the cards (the row is gone) and keep the focus on a tab.
+func _send_congratulations(npc_id: String) -> void:
+	GameState.send_congratulations(npc_id)
+	_build_cards(entries())
+	focus_page()
 
 
 ## A 14 px pixel box, ticked when done.

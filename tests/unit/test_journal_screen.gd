@@ -272,3 +272,27 @@ func test_sect_page_trial_preview_row() -> void:
 	journal.open()
 	assert_true(journal._sect.find_child("TrialPreview", true, false) == null)
 	hud.queue_free()
+
+
+## WU-653: a far friend's news row has a "Send congratulations" button; a friend here keeps the plain text.
+func test_far_friend_news_row_has_send_button() -> void:
+	var root: Node = Engine.get_main_loop().root
+	var gs: Node = root.get_node("GameState")
+	gs.start_session(new_character())
+	gs.pending_event = ""
+	FolkNews.queue_own(gs.player, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", GameClock.total_days)
+	gs.npc_favor["xiao_ling"] = 50
+	var journal := JournalScreen.new()
+	root.add_child(journal)
+	await root.get_tree().process_frame
+	gs.current_region = "qingshi_village"
+	journal.open()
+	assert_true(journal.find_child("Send_xiao_ling", true, false) == null, "friend is here: congratulate in person")
+	gs.current_region = "withered_bone_marsh"
+	journal.open()
+	var btn := journal.find_child("Send_xiao_ling", true, false) as Button
+	assert_true(btn != null, "far friend gets a button")
+	btn.pressed.emit()
+	assert_false(gs.player.friend_news.has("xiao_ling"), "the note was sent")
+	assert_true(journal.find_child("Send_xiao_ling", true, false) == null, "row removed")
+	journal.queue_free()
