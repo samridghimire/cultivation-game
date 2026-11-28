@@ -980,8 +980,12 @@ func _note_home_lines() -> void:
 	var away := GameClock.total_days - int(world_flags["home_left_day"])
 	world_flags.erase("home_left_day")
 	var lines := Guidance.home_waiting_lines(player, data, npcs, GameClock.total_days, away)
+	if away >= Guidance.HOME_AWAY_MIN_DAYS:  # C-433: a friend's welcome leads the banner
+		var welcome := Folk.welcome_home_line(data, npc_favor, player.name, GameClock.total_days, away)
+		if welcome != "":
+			lines.insert(0, welcome)
 	if not lines.is_empty():
-		world_flags["home_lines"] = Array(lines)
+		world_flags["home_lines"] = Array(lines).slice(0, Guidance.HOME_LINES_MAX)
 
 
 ## WU-607: once per sect, the first arrival at a member's sect home says where the hall stands.

@@ -2368,3 +2368,18 @@ static func meditation_block(player: CharacterData, data: GameData, npc: Charact
 	if wait > 0:
 		return "You sat together %d days ago; again in %d days." % [today - last, wait]
 	return ""
+
+
+## C-433: the welcome-home line of the highest-favor Qingshi friend (favor >= 25), "" when none. Stable pick, no rng.
+static func welcome_home_line(data: GameData, favors: Dictionary, player_name: String, today: int, away_days: int) -> String:
+	var best := ""
+	var best_favor := 24
+	for id: String in data.npcs:
+		var f := int(favors.get(id, 0))
+		if data.npcs[id].has("welcome_home_lines") and (f > best_favor or (f == best_favor and best != "" and id < best)):
+			best = id
+			best_favor = f
+	if best == "":
+		return ""
+	var pool: Array = data.npcs[best]["welcome_home_lines"]
+	return String(pool[hash("%s/%d" % [best, today]) % pool.size()]).replace("{player}", player_name).replace("{days}", str(away_days))

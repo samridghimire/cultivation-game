@@ -88,3 +88,40 @@ func test_waiting_season_line_names_days_left() -> void:
 			found = true
 			assert_true(String(l).ends_with("(%d %s left)" % [left, "day" if left == 1 else "days"]), l)
 	assert_true(found, str(lines))
+
+
+## C-433: a friend with favor >= 25 welcomes you home first; none below 25; the line is in their voice.
+func test_welcome_home_line_comes_from_the_best_friend() -> void:
+	var gs := _gs()
+	_start()
+	gs.current_region = SeasonTasks.REGION
+	gs.npc_favor.clear()
+	gs.world_flags["home_left_day"] = GameClock.total_days - 40
+	gs._note_home_lines()
+	assert_eq(Folk.welcome_home_line(gs.data, gs.npc_favor, "P", 5, 40), "", "nobody fond enough")
+	gs.npc_favor["hunter_ma"] = 30
+	gs.npc_favor["xiao_ling"] = 60
+	gs.world_flags["home_left_day"] = GameClock.total_days - 40
+	gs._note_home_lines()
+	var first := String(gs.world_flags["home_lines"][0])
+	var ok := false
+	for l: String in gs.data.npcs["xiao_ling"]["welcome_home_lines"]:
+		ok = ok or first == l.replace("{player}", gs.player.name).replace("{days}", "40")
+	assert_true(ok, first)
+	assert_true(gs.world_flags["home_lines"].size() <= Guidance.HOME_LINES_MAX)
+
+
+func test_welcome_home_lines_validation() -> void:
+	var d := data()
+	var mo: Array = d.npcs["elder_mo"]["welcome_home_lines"]
+	var ma: Array = d.npcs["hunter_ma"]["welcome_home_lines"]
+	d.npcs["elder_mo"]["welcome_home_lines"] = ["a", "b", "c"]
+	d.npcs["hunter_ma"]["welcome_home_lines"] = ["x".repeat(121)]
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	d.npcs["elder_mo"]["welcome_home_lines"] = mo
+	d.npcs["hunter_ma"]["welcome_home_lines"] = ma
+	d.load_errors.clear()
+	assert_true(text.contains("'elder_mo' welcome_home_lines needs 1-2"), text)
+	assert_true(text.contains("'hunter_ma' welcome_home_lines entries"), text)
