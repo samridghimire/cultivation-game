@@ -82,6 +82,13 @@ func open(npc_id: String, npc_name: String, text: String, request: Dictionary = 
 	var look: Dictionary = preload("res://src/world/interactables/npc.gd").look_of(npc_id, Color("9a8f7a"))
 	_figure.texture = PixelFigure.frame(look if look.size() > 0 else {"robe": Color(0.8, 0.8, 0.75)}, "down", 0)
 	_text.text = text
+	var old_face := _title.get_node_or_null("Face")  # WU-657
+	if old_face != null:
+		old_face.free()
+	var face := LogFace.face_rect(npc_id)
+	if face != null:
+		face.position = Vector2(0, 3)
+		_title.add_child(face)
 	var data: GameData = GameState.data
 	_ask.visible = not request.is_empty()
 	if not request.is_empty():

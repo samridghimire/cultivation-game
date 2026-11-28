@@ -6402,6 +6402,7 @@ static func journal(c: CharacterData, data: GameData, flags: Dictionary, today: 
 		_add(out, "Opportunities", "%s (%s)" % [row["text"], _region_name(data, String(row["region"]))], "normal")
 	for row in FolkNews.journal_rows(c, data, people, today):  # GUIDE-293
 		_add(out, "Opportunities", "%s (%s)" % [row["text"], _region_name(data, String(row["region"]))], "normal")
+		out[-1]["face"] = String(row["npc_id"])  # WU-657: the journal draws their face
 		if String(row["region"]) != region_id and FolkNews.can_congratulate(c, data, String(row["npc_id"]), today):
 			out[-1]["write_to"] = String(row["npc_id"])  # WU-653: the journal offers "Send congratulations"
 	_fair_fight_entries(out, fights, c, data, region_id, today, flags)

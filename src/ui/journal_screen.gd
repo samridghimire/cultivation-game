@@ -647,6 +647,10 @@ func _row(e: Dictionary) -> Control:
 		mark = CheckBox_pixel.new(goal["done"])
 	mark.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(mark)
+	if String(e.get("face", "")) != "":  # WU-657
+		var face := LogFace.face_rect(String(e["face"]))
+		if face != null:
+			row.add_child(face)
 	var text := RichTextLabel.new()
 	text.bbcode_enabled = false
 	text.fit_content = true

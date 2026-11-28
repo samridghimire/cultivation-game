@@ -355,3 +355,21 @@ func test_letter_hint() -> void:
 		assert_true(line.begins_with("Write to Xiao Ling: congratulations on Qi Refining (8 days left)"), line)
 	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", today - 5)  # 25 left
 	assert_eq(Guidance.congratulate_letter_hint(c, gs.data, gs.npcs, "withered_bone_marsh", today), "", "too many days left")
+
+
+func test_face_cache_and_journal_row_face() -> void:  # WU-657
+	var c := _start()
+	var gs := _gs()
+	LogFace.clear_cache()
+	var t1 := LogFace.texture("xiao_ling")
+	assert_true(t1 != null)
+	assert_true(LogFace.texture("xiao_ling") == t1, "same id, same texture")
+	FolkNews.queue_own(c, gs.data, {"xiao_ling": 50}, gs.npcs["xiao_ling"], "qi_start", "Qi Refining", int(Engine.get_main_loop().root.get_node("GameClock").total_days))
+	var found := false
+	for e: Dictionary in gs.journal_entries():
+		if String(e.get("face", "")) == "xiao_ling":
+			found = true
+			var row: Control = preload("res://src/ui/journal_screen.gd").new()._row(e)
+			assert_true(row.find_child("Face", true, false) != null, "row has a face node")
+			row.free()
+	assert_true(found, "journal entry carries the friend's face")
