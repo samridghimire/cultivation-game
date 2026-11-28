@@ -690,6 +690,7 @@ func _run_firsts(args: Array) -> void:
 	FirstHour.start_region = ""
 	FirstHour.sect_report = true
 	FirstHour.record_weeks = args.has("--firsts-trace")  # GUIDE-296: print each week's top lines and action (seed 1 only)
+	FirstHour.hint_rank = args.has("--hint-rank")  # GUIDE-307
 	FirstHour.weekly_extras = true  # GUIDE-295: a player who reads the style / lecture line acts on it in a free part of the week
 	var gs: Node = root.get_node("GameState")
 	var clock: Node = root.get_node("GameClock")
@@ -816,6 +817,13 @@ func _run_firsts(args: Array) -> void:
 		lines.append("| - | - | - | none |")
 	lines.append("")
 	lines.append("%s" % "\n".join(_firsts_summary(stretch_rows, seeds)))
+	if FirstHour.hint_rank:
+		lines.append("")
+		lines.append("| line | days shown | rank 1 | rank 2 | rank 3+ | rank 1-2 |")
+		lines.append("|---|---|---|---|---|---|")
+		for prefix: String in FirstHour.HINT_RANK_PREFIXES:
+			var row: Array = FirstHour.hint_rank_log.get(prefix, [0, 0, 0, 0])
+			lines.append("| %s | %d | %d | %d | %d | %d%% |" % [prefix, row[0], row[1], row[2], row[3], 100 * (int(row[1]) + int(row[2])) / maxi(1, int(row[0]))])
 	var text := "\n".join(lines) + "\n"
 	print(text)
 	var f := FileAccess.open("res://docs/specs/SIM-037-result.md", FileAccess.WRITE)

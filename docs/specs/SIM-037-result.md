@@ -93,3 +93,16 @@ Fix: the hints sim, after a 1-day kindness or hall errand, also takes the "Medit
 | `--firsts 6 12` | before | after |
 |---|---|---|
 | first shared meditation | 0/6 | 5/6, days 201-212 |
+
+## GUIDE-307
+
+`--firsts 6 12 --hint-rank` (rank in `Guidance.hints`; days = weekly samples; "Write to" / "Congratulate" never showed in these runs):
+
+| line | days shown | rank 1 | rank 2 | rank 3+ | rank 1-2 |
+|---|---|---|---|---|---|
+| Home to Qingshi ( | 75 | 28 | 12 | 35 | 53% |
+| Meditate beside | 125 | 25 | 30 | 70 | 44% |
+
+Without the SIM-044/SIM-045 shortcuts and with the ordering fix: Home 86% / Meditate 96% rank 1-2, first trip home 6/6 before day 200,
+but the test player (which acts on its own Goal / fight / friend lines first) delayed first Friend to day ~230 and shared meditation never
+happened, so the shortcuts stay in `first_hour.gd` for now. The sim's prepended head lines (friend, Goal, Easy fight) are not what the HUD shows.

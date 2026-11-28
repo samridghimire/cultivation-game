@@ -1175,20 +1175,22 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if method_offer != "" and not method_leads:
 		out.append(method_offer)
 	var home_call := ""
+	var sit := ""
+	var letter := ""
 	var home_pre: PackedStringArray = []
 	if today >= 0:
 		# GUIDE-294: friends in the Next steps, below the sect/breakthrough lines and above the gathering/work lines.
 		home_call = home_call_hint(c, data, people, flags, region_id, today)  # GUIDE-299
+		home_pre = out.duplicate()
 		if home_call != "":
-			home_pre = out.duplicate()
 			out.append(home_call)
 		var congrats := congratulate_hint(c, data, people, region_id, today)
 		if congrats != "":
 			out.append(congrats)
-		var letter := congratulate_letter_hint(c, data, people, region_id, today)
+		letter = congratulate_letter_hint(c, data, people, region_id, today)
 		if letter != "":
 			out.append(letter)
-		var sit := friend_meditation_hint(c, data, people, favor, flags, region_id, today)
+		sit = friend_meditation_hint(c, data, people, favor, flags, region_id, today)
 		if sit != "":
 			out.append(sit)
 		var bout := first_spar_hint(c, data, people, favor, region_id, today, flags)  # GUIDE-306
@@ -1336,22 +1338,51 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		if lecture_at > 1:
 			out.remove_at(lecture_at)
 			out.insert(mini(1 if report != "" else 0, out.size()), lecture_lead)
-	# GUIDE-303: the friend, season and lecture inserts above pushed the home call below the tea and lend lines; while it
-	# fires it sits right after the sect block (the lines that were above it) and any breakthrough line.
-	if home_call != "":
-		var call_at := out.find(home_call)
-		if call_at >= 0:
-			out.remove_at(call_at)
-			var at := 0
+	# GUIDE-303/307: the friend, season and lecture inserts above pushed the home call, the sect-mate sitting line and a
+	# nearly-closed "Write to" line below the tea and lend lines; while they fire they sit right after the urgent block
+	# (the lines that were above them) and any breakthrough line, so they show in the first 2 whenever no urgent line does.
+	var leaders: PackedStringArray = []
+	for lead: String in [home_call, sit]:
+		if lead != "":
+			leaders.append(lead)
+	if letter != "" and _letter_days_left(letter) <= LETTER_LEAD_DAYS:
+		leaders.append(letter)
+	var placed := 0
+	for lead: String in leaders:
+		var lead_at := out.find(lead)
+		if lead_at < 0:
+			# _merge_better_qi adds "(5x qi)" to the sitting line: match it by its head ("Meditate beside <name> at <spot>").
+			var head := lead.get_slice(":", 0)
 			for i in out.size():
-				if home_pre.has(out[i]) or out[i].begins_with("You are ready to break through"):
-					at = i + 1
-			out.insert(at, home_call)
+				if out[i].begins_with(head):
+					lead_at = i
+					break
+		if lead_at < 0:
+			continue
+		var moved := out[lead_at]
+		out.remove_at(lead_at)
+		var at := 0
+		for i in out.size():
+			# GUIDE-307: the unseal line never expires, so the time-bound friend lines go before it.
+			if (home_pre.has(out[i]) and not out[i].begins_with("Unseal ")) or out[i] == lecture_lead or out[i].begins_with("You are ready to break through"):
+				at = i + 1
+		out.insert(mini(at + placed, out.size()), moved)
+		placed += 1
 	if home_gated:
 		out.append(home_hint)
 	if out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## GUIDE-307: a "Write to <name>: ... (N days left)" line leads once N is at most this.
+const LETTER_LEAD_DAYS := 5
+
+
+## GUIDE-307: the N of "(N days left)" in a congratulation letter line, 999 when absent.
+static func _letter_days_left(line: String) -> int:
+	var m := RegEx.create_from_string("\\((\\d+) days? left\\)").search(line)
+	return int(m.get_string(1)) if m != null else 999
 
 
 ## GUIDE-279: until the first fight is won, an Easy fight line in reach outranks the make-friend / grow-closer lines (the

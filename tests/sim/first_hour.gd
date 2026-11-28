@@ -19,6 +19,10 @@ const SPRING_DENSITY := 2.0  # Spirit Spring, see data/regions.json
 ## QA-076: `wait_for_pill` > 0 makes a player at the Foundation bottleneck without a pill keep earning for up to that
 ## many days (out["waited_days"]) before attempting, as long as a merchant-sold pill exists to save for.
 ## QA-091: what the policy is doing now ("mission", "deed", "bounty" or "other"); the sims read it when a fight starts.
+## GUIDE-307: --hint-rank: per tracked line prefix, days shown and how often it ranked 1st, 2nd, 3rd or lower in Guidance.hints.
+static var hint_rank := false
+static var hint_rank_log := {}
+const HINT_RANK_PREFIXES: Array[String] = ["Home to Qingshi (", "Meditate beside ", "Write to ", "Congratulate "]
 static var fight_origin := "other"
 ## QA-116: the curious player follows GUIDE-065's thin-defence hint (see _follow_defence_hint).
 static var follow_defence := false
@@ -2496,8 +2500,17 @@ static func _next_steps(gs: Node, c: CharacterData, day: int) -> Array[String]:
 	# GUIDE-279: until the first win, the Easy fight in reach goes before the friend and manual lines (as Guidance.hints orders them).
 	if LifeStats.get_stat(c, "fights_won") < 1 and lines.size() > 0 and lines[-1].begins_with("Easy fight:"):
 		lines.insert(0, lines.pop_back())
-	for h: String in Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor):
+	var ranked := Guidance.hints(c, gs.data, gs.hint_density(), 5, gs.npcs, gs.world_flags, gs.current_region, day, gs.npc_favor)
+	for h: String in ranked:
 		lines.append(h)
+	if hint_rank:
+		for prefix: String in HINT_RANK_PREFIXES:
+			for i in ranked.size():
+				if ranked[i].begins_with(prefix):
+					var row: Array = hint_rank_log.get_or_add(prefix, [0, 0, 0, 0])
+					row[0] += 1
+					row[mini(i, 2) + 1] += 1
+					break
 	var t4 := Time.get_ticks_usec()
 	for pair: Array in [["make_friend_hint", t1 - t0], ["hud_goal_text", t2 - t1], ["fair_fights", t3 - t2], ["hints", t4 - t3]]:
 		step_usec[pair[0]] = int(step_usec.get(pair[0], 0)) + int(pair[1])

@@ -254,3 +254,40 @@ func test_breakthrough_line_still_before_home_call() -> void:
 			brk = i
 	if home >= 0:
 		assert_true(brk >= 0 and brk < home, str(lines))
+
+
+## GUIDE-307: with a news call open the home line is in the first 2 of the Next steps.
+func test_home_call_in_first_two_lines() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(40)
+	_news(c, day)
+	gs.npc_favor["xiao_ling"] = 50
+	var lines: PackedStringArray = Guidance.hints(c, gs.data, 1.0, 12, gs.npcs, gs.world_flags, away, day, gs.npc_favor)
+	var at := -1
+	for i in lines.size():
+		if lines[i].begins_with("Home to Qingshi ("):
+			at = i
+			break
+	if at >= 0:
+		assert_true(at <= 1, str(lines))
+
+
+## GUIDE-307: an injury line stays first even while the home call fires.
+func test_injury_line_stays_before_home_call() -> void:
+	var c := _start()
+	var gs := _gs()
+	var away := _away(c, gs.data)
+	var day := _day_with_left(40)
+	_news(c, day)
+	gs.npc_favor["xiao_ling"] = 50
+	Injuries.inflict(c, gs.data, String(gs.data.injuries.keys()[0]))
+	var lines: PackedStringArray = Guidance.hints(c, gs.data, 1.0, 12, gs.npcs, gs.world_flags, away, day, gs.npc_favor)
+	assert_true(lines.size() > 0 and lines[0].begins_with("Treat your injuries"), str(lines))
+
+
+func test_letter_days_left_parses_line() -> void:
+	assert_eq(Guidance._letter_days_left("Write to Xiao Ling: congratulations on Qi Refining (4 days left)"), 4)
+	assert_eq(Guidance._letter_days_left("Write to Xiao Ling: congratulations on Qi Refining (1 day left)"), 1)
+	assert_eq(Guidance._letter_days_left("Something else"), 999)
