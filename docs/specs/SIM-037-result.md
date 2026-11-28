@@ -125,3 +125,39 @@ Follow-ups: propose task SIM-040 (systems): find why `--firsts` never takes the 
 | first shared meditation | never (1/6) | never (1/6) |
 
 Dead stretches unchanged (longest 98 days, seed 4, days 216-314). The home line sits below lend/tea/trial lines that the first-actionable-line policy takes every week, so the sim never leaves the hall for it. Target (>= 3/6 seeds congratulating or finishing a set) **missed**.
+
+## After SIM-040..GUIDE-301 (SIM-041, 2026-11-28)
+
+`--firsts 6 6` and `--firsts 6 12` on main after GUIDE-302, GUIDE-303, GUIDE-304, SIM-042 and SIM-043 (hints policy, Qingshi start, 6 seeds). The 6-month run is the first half of the 12-month one (same seeds, same days); in 6 months only "first trip home" and "first practice level" differ from the 12-month table because they happen after day 180. Docs only, no game change.
+
+| first | before (SIM-040 section) | median day now | per-seed range now | note |
+|---|---|---|---|---|
+| talk to Elder Mo / first chore / first fight | 3 / 3 / 6 | 3 / 3 / 6 | all seeds | unchanged |
+| first technique | 15 | 15 | 15 in 6/6 | unchanged |
+| first Acquaintance | 16 | 16 | 16 in 6/6 | was 16-27 |
+| first Friend | 151 | 117 | 37-137 (6/6) | 34 days sooner; target day 90 still met only by seed 5 (day 37) |
+| first stage up | 32 | 32 | 25-54 | seed 5 slower (45 -> 54) |
+| sect joined | 35 | 35 | 28-57 | seed 5 slower (48 -> 57) |
+| first lecture | 48 | 48 | 44-77 | seed 5 slower (57 -> 77) |
+| first season task (seen) | 24 | 24 | 18-28 | unchanged |
+| first congratulation | never | never | 0/6 | still never |
+| first shared meditation | never (1/6, day 326) | never | 0/6 | lost the one seed that had it |
+| first full season set | never | never | 0/6 | still never |
+| first trip home | never (1/6, day 354) | never | 2/6 (days 352, 358) | only after day 350 |
+| first practice level | never | 234 | 200-269 (6/6) | SIM-042 fix works |
+
+Five longest dead stretches (12 months):
+
+| seed | days | length | sim did |
+|---|---|---|---|
+| 6 | 255-352 | 97 | meditation 41d, missions 16d, practice_technique 14d |
+| 4 | 262-358 | 96 | meditation 30d, missions 27d, practice_technique 14d |
+| 3 | 269-350 | 81 | meditation 39d, missions 14d, practice_technique 14d |
+| 1 | 217-298 | 81 | meditation 47d, practice_technique 14d, missions 8d |
+| 5 | 260-340 | 80 | travel 23d, meditation 21d, practice_technique 21d |
+
+Compared with before: the longest stretch is still 97 days (was 98), but stretches of 80+ days fell from 6 seeds to 5, and the early 42-56 day stretches are shorter (the day-60-90 one is still 42 days in 6 seeds). Practice levels (days 200-269) now fall inside the late stretches, yet `first practice level` is not counted as a break in them only because its day is listed as a first; the stretch tables still show practice_technique as filler.
+
+Biggest hole: the days ~220-358 stretch. The sim meditates 30-47 days and does missions, gets no stage change, and the season-set and congratulation firsts still never happen: the sim goes home in only 2/6 seeds and only at day 352-358, i.e. after the second year's first season has not even been completed. GUIDE-303 raised the home line, but the first season window the sim sees (day ~70, ~160) still produces no trip in 4 seeds, so either the home route (10 days each way from the Azure hall) is too expensive for the sim's rule "go if route <= N days and the window has days left" or the "(N days left)" is too short to make the trip; this report did not check which.
+
+Follow-ups: propose task SIM-044 (systems): run `--firsts 6 12 --firsts-trace` for seed 1 and print, for each season window (days 60-90, 150-180), the home line, the days left in the window and the route days; if the window is shorter than the round trip, lengthen the season window or let the home line show only when the round trip fits; otherwise make the sim take the trip. Target: first congratulation or full season set in >= 3/6 seeds by day 365.
