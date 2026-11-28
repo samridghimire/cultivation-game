@@ -185,3 +185,10 @@ func test_sect_mate_greeting_and_validation() -> void:
 	d.npcs["xiao_ling"]["sect_mate_lines"] = old
 	d.load_errors.clear()
 	assert_true(text.contains("'xiao_ling' sect_mate_lines entries"), text)
+
+
+## C-434: every cultivating named friend has a lecture voice of their own.
+func test_every_cultivating_friend_has_lecture_mate_lines() -> void:
+	var d := data()
+	for id: String in ["blood_lotus_xue", "broker_shen", "patriarch_lin", "old_monster_gui", "alchemist_ye", "lord_xuan", "saint_lan", "sage_wen"]:
+		assert_eq((d.npcs[id].get("lecture_mate_lines", []) as Array).size(), 2, id)
