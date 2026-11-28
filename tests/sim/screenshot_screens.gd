@@ -520,8 +520,9 @@ func _start_breakthrough_shots(gs: Node) -> void:
 		hide_banner.call()
 		card.call("open", "Foundation Establishment", gs.data.realms[2].description, "Lifespan +50 years", ["Alchemy is open to you."], "", PlayerLook.of(c, gs.data), 1), "close": card.close})
 	shots.append({"name": "breakthrough_failed", "open": func() -> void:
+		c.breakthrough_failures = 1  # QA-249: the real FOUND-003 lesson line, not a hard-coded one
 		hide_banner.call()
-		card.call("open_failed", "Foundation Establishment", ["Qi lost: 400 of 1000.", "Injury: Qi Deviation.", "The lessons stay with you: +5 percent on your next attempt."], PlayerLook.of(c, gs.data), 2), "close": card.close})
+		card.call("open_failed", "Foundation Establishment", ["Qi lost: 400 of 1000.", "Injury: Qi Deviation.", gs._failure_lesson_line()], PlayerLook.of(c, gs.data), 2), "close": card.close})
 	# WU-400: the heart vision above the Attempt button.
 	shots.append({"name": "breakthrough_vision", "open": func() -> void:
 		c.add_item("spirit_stone", 0)
