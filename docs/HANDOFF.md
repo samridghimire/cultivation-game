@@ -2,6 +2,17 @@
 
 Short-lived context for the next session. Update or trim it when you finish a session; durable rules belong in CLAUDE.md.
 
+## Planner 2026-11-28 00:10
+- 11 landed; review through a63b04f fixed SIM-043's line match, filed WU-651 (claimed). C-430 claimed.
+- SIM-041: Friend day 117, practice level day 234; trip home 2/6 (after day 350); congratulation, full season set and
+  shared meditation never; 80-97 day dead stretch at days ~220-358. New systems run: SIM-044 (season window vs road home),
+  FOLK-059 (congratulate by letter, planner default in DESIGN.md), SIM-045, GUIDE-305, GUIDE-306, SIM-046 re-measures.
+- Planner shot `--member=azure_cloud_sect --lecture-day --friend-joined`: lecture rows still under the key bar, the mate's
+  label on the mat -> GFX-272. The shot run still exits 134 ("Aborted") after character_sheet.png (QA-240).
+- QA has landed nothing since QA-251 (2026-11-27 01:35) and leaves no claim branch: the owner was notified; the QA
+  routine may not be running.
+- Next planner: check SIM-044's numbers; if the trip home still misses, WU-652's "Travel home" button is the player-side pull.
+
 ## Planner 2026-11-27 18:10
 - 11 landed; review through 51f00a5 filed nothing. GUIDE-302 is claimed. QA has landed nothing since QA-251 (01:35, four
   QA runs): QA-252 trimmed and first; QA-240 (shot run exits 134) moved to world-ui.

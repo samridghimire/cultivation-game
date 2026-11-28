@@ -2,6 +2,17 @@
 
 One line per merged change, newest first: `YYYY-MM-DD [task-id] summary`.
 
+- 2026-11-28 [SIM-041] Balance tooling: the first year measured again; the trip home and the season set still come late or never.
+- 2026-11-27 [WU-650] The message log shows the face of the villager who spoke.
+- 2026-11-27 [GUIDE-304] Coming home to Qingshi after a respawn or a teleport also tells you what waits there.
+- 2026-11-27 [SIM-043] Balance tooling: the test player hunts the season's beast.
+- 2026-11-27 [GFX-271] Qingshi's place labels stay readable in winter: no trees or herbs under them.
+- 2026-11-27 [GFX-270] Roofs carry snow in winter.
+- 2026-11-27 [SIM-042] Balance tooling: the test player practises its fighting style, so practice levels show up in the measurements.
+- 2026-11-27 [C-432] A friend beside you at the sect lecture speaks in their own voice.
+- 2026-11-27 [GUIDE-303] The call home for season tasks and friends' news ranks higher in Next steps.
+- 2026-11-27 [WU-648] The lecture mat and seated disciples move beside the hall when the map edge would hide them.
+- 2026-11-27 [GUIDE-302] Next steps call you home for a season hunt you can win.
 - 2026-11-27 [WU-647] A friend in your sect sits in the lecture's front row, named.
 - 2026-11-27 [SECT-054] A friend who joined your sect attends the monthly lecture beside you, and you grow closer.
 - 2026-11-27 [GUIDE-301] Next steps name a qi goal and a better place to meditate when the next layer is a month or more away.
