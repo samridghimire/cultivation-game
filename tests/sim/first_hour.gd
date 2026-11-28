@@ -2273,6 +2273,16 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 		var steps: Array[String] = []
 		if acted == "":
 			steps = _next_steps(gs, c, day)
+		# SIM-044: a "Home to Qingshi" line that names a season task beats the weekly tea/lend errands ranked above it:
+		# the season window is short and the road home takes ~10 days, so a player who sees it goes at once.
+		if acted == "":
+			for line: String in steps:
+				if line.begins_with("Home to Qingshi (") and line.contains(" task") and int(tries.get(line, 0)) < HINT_MAX_TRIES:
+					acted = _act_on_hint(gs, c, done, line, day)
+					tries[line] = int(tries.get(line, 0)) + 1
+					if acted != "":
+						acted_line = line
+					break
 		# SIM-042: the practice line sits mid-list behind errands the sim always takes first (case (a): it never practised, so
 		# no style ever levelled). A player who reads it practises that style, at most once per 3 weeks, from day 120 on, after the early
 		# friend and sect errands (practising from day 15 delayed the first Friend by ~55 days).

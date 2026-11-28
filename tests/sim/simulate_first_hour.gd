@@ -744,8 +744,8 @@ func _run_firsts(args: Array) -> void:
 		gs.get_node("/root/GameClock").days_advanced.connect(on_days)
 		var out: Dictionary = FirstHour.play(gs, clock, s, months, false)
 		gs.get_node("/root/GameClock").days_advanced.disconnect(on_days)
-		if FirstHour.record_weeks and s == 1:
-			for w: Dictionary in FirstHour.week_trace.slice(0, 30):
+		if FirstHour.record_weeks:
+			for w: Dictionary in FirstHour.week_trace.slice(0, 60):
 				print("day %3d | %-10s | %s || %s" % [w["day"], w["acted"], str(w["line"]).substr(0, 40), " | ".join(w["top"]).substr(0, 260)])
 		bus.friend_congratulated.disconnect(on_congrat)
 		bus.season_tasks_done.disconnect(on_season)
