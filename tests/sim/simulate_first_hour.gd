@@ -604,7 +604,7 @@ func _run() -> void:
 	quit()
 
 
-const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first full season set", "first season task", "first trip home", "first practice level"]
+const FIRSTS: Array[String] = ["talk to Elder Mo", "first chore paid", "first fight won", "first technique", "first Acquaintance", "first Friend", "first stage up", "sect joined", "first lecture", "first congratulation", "first shared meditation", "first full season set", "first season task", "first trip home", "first practice level", "first spar"]
 const DEAD_DAYS := 14
 
 
@@ -651,6 +651,7 @@ func _firsts_now(gs: Node, c: CharacterData, start_stage: int, flags: Dictionary
 		FIRSTS[12]: _any_season_task_done(gs, c),
 		FIRSTS[13]: int(FirstHour.home_trips["first"]) >= 0,
 		FIRSTS[14]: _practice_level_up(c),
+		FIRSTS[15]: Guidance._has_sparred(c),
 	}
 
 

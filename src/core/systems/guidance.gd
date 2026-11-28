@@ -1191,6 +1191,9 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 		var sit := friend_meditation_hint(c, data, people, favor, flags, region_id, today)
 		if sit != "":
 			out.append(sit)
+		var bout := first_spar_hint(c, data, people, favor, region_id, today, flags)  # GUIDE-306
+		if bout != "":
+			out.append(bout)
 	var mortal_nudge := mortal_crafter_hint(c, data, region_id, today, flags)
 	if mortal_nudge != "":
 		out.append(mortal_nudge)
@@ -1218,7 +1221,7 @@ static func hints(c: CharacterData, data: GameData, density: float = 1.0, limit:
 	if pointers != "":
 		out.append(pointers)
 	var untried := _untried_hint(c, data, today, people, favor, region_id, flags)
-	if untried != "":
+	if untried != "" and not out.has(untried):
 		out.append(untried)
 	var herb := herb_here_hint(c, data, region_id, today)
 	if herb != "" and not out.has(herb):
@@ -3061,19 +3064,26 @@ static func _untried_feature_hint(c: CharacterData, data: GameData, today: int, 
 				var line := _secret_realm_line(c, data, def, region_id, today)
 				if line != "":
 					return line
-	if not _has_sparred(c):
-		var partner := _region_people(c, data, people, favor, region_id, today, "spar", flags)
-		if not partner.is_empty():
-			var npc: CharacterData = partner[0]
-			var style := _best_unmastered_combat(c, data)
-			var terms := Mentorship.spar_terms(data)
-			if style != "" and int(terms["practice_days"]) > 0:
-				var again := ", every %s" % Calendar.format_duration(int(terms["cooldown_days"]))
-				if int(terms["cooldown_days"]) == 7:
-					again = ", once a week"
-				return "%s (%s) here would spar with you: a %s bout trains %s like %s of practice%s." % [npc.name, data.realms[npc.realm_index].name, Calendar.format_duration(int(terms["days"])), data.techniques[style].name, Calendar.format_duration(int(terms["practice_days"])), again]
-			return "%s (%s) here would spar with you: a friendly bout trains your techniques." % [npc.name, data.realms[npc.realm_index].name]
-	return ""
+	return first_spar_hint(c, data, people, favor, region_id, today, flags)
+
+
+## GUIDE-306: "<Name> (<realm>) here would spar with you: ..." for the first bout, when someone here (a friend or sect-mate at
+## the hall, within a realm of you) passes Mentorship.check_spar. "" once the player has sparred, or with nobody here.
+static func first_spar_hint(c: CharacterData, data: GameData, people: Dictionary, favor: Dictionary, region_id: String, today: int, flags: Dictionary = {}) -> String:
+	if _has_sparred(c):
+		return ""
+	var partner := _region_people(c, data, people, favor, region_id, today, "spar", flags)
+	if partner.is_empty():
+		return ""
+	var npc: CharacterData = partner[0]
+	var style := _best_unmastered_combat(c, data)
+	var terms := Mentorship.spar_terms(data)
+	if style != "" and int(terms["practice_days"]) > 0:
+		var again := ", every %s" % Calendar.format_duration(int(terms["cooldown_days"]))
+		if int(terms["cooldown_days"]) == 7:
+			again = ", once a week"
+		return "%s (%s) here would spar with you: a %s bout trains %s like %s of practice%s." % [npc.name, data.realms[npc.realm_index].name, Calendar.format_duration(int(terms["days"])), data.techniques[style].name, Calendar.format_duration(int(terms["practice_days"])), again]
+	return "%s (%s) here would spar with you: a friendly bout trains your techniques." % [npc.name, data.realms[npc.realm_index].name]
 
 
 ## Recipe ids (data order) the character could refine this moment (GUIDE-017).

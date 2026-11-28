@@ -2294,6 +2294,16 @@ static func _hints_month(gs: Node, c: CharacterData, done: Dictionary, today: in
 						acted_line = line
 						done["last_practise_day"] = day
 						break
+		# GUIDE-306: a first-spar line ("<Name> (...) here would spar with you") sits behind errands the sim always takes first;
+		# a player who reads it spars once, from day 120 on, once a week at most.
+		if acted == "" and day >= 120 and day - int(done.get("last_spar_day", -999)) >= 7:
+			for line: String in steps:
+				if line.contains(" here would spar with you"):
+					acted = _act_on_hint(gs, c, done, line, day)
+					if acted != "":
+						acted_line = line
+						done["last_spar_day"] = day
+					break
 		for line: String in steps:
 			if acted != "":
 				break
