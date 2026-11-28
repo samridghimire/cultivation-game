@@ -162,3 +162,26 @@ func test_lecture_mate_lines_validation() -> void:
 	d.load_errors.clear()
 	assert_true(text.contains("'xiao_ling' lecture_mate_lines needs 1-2"), text)
 	assert_true(text.contains("'hunter_ma' lecture_mate_lines entries"), text)
+
+
+## C-430: a sect-mate friend greets in their sect voice; others keep village lines; validation.
+func test_sect_mate_greeting_and_validation() -> void:
+	var gs := _start()
+	var ling: CharacterData = gs.npcs["xiao_ling"]
+	assert_eq(FriendInvite.sect_mate_greeting(gs.player, gs.data, gs.world_flags, ling, 5), "", "not yet a mate")
+	gs.invite_friend_to_sect("xiao_ling")
+	var line := FriendInvite.sect_mate_greeting(gs.player, gs.data, gs.world_flags, ling, 5)
+	assert_true(line != "" and not line.contains("{sect}"), line)
+	assert_eq(line, FriendInvite.sect_mate_greeting(gs.player, gs.data, gs.world_flags, ling, 5), "stable")
+	assert_true(line in gs.data.npcs["xiao_ling"]["sect_mate_lines"] or line.contains("Myriad"), line)
+	assert_eq(gs.greeting_for("xiao_ling").length() > 0, true)
+	assert_eq(FriendInvite.sect_mate_greeting(gs.player, gs.data, gs.world_flags, gs.npcs["elder_mo"], 5), "")
+	var d: GameData = gs.data
+	var old: Array = d.npcs["xiao_ling"]["sect_mate_lines"]
+	d.npcs["xiao_ling"]["sect_mate_lines"] = ["x".repeat(141), "ok"]
+	d.load_errors.clear()
+	d._validate()
+	var text := "\n".join(d.load_errors)
+	d.npcs["xiao_ling"]["sect_mate_lines"] = old
+	d.load_errors.clear()
+	assert_true(text.contains("'xiao_ling' sect_mate_lines entries"), text)

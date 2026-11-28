@@ -874,6 +874,14 @@ func _validate_world() -> void:
 				for l in lm:
 					if not l is String or String(l) == "" or String(l).length() > 160:
 						load_errors.append("NPC '%s' lecture_mate_lines entries must be strings of 1-160 chars" % npc["id"])
+		if npc.has("sect_mate_lines"):  # C-430
+			var sm: Variant = npc["sect_mate_lines"]
+			if not (sm is Array) or (sm as Array).size() < 2 or (sm as Array).size() > 3:
+				load_errors.append("NPC '%s' sect_mate_lines needs 2-3 strings" % npc["id"])
+			else:
+				for l in sm:
+					if not l is String or String(l) == "" or String(l).length() > 140:
+						load_errors.append("NPC '%s' sect_mate_lines entries must be strings of 1-140 chars" % npc["id"])
 		if npc.has("home_news_lines"):  # C-429
 			var hn: Variant = npc["home_news_lines"]
 			if not (hn is Array) or (hn as Array).is_empty() or (hn as Array).size() > 2:

@@ -2281,6 +2281,9 @@ func greeting_for(npc_id: String) -> String:
 		news = FolkNews.take_own(player, data, npc_id, GameClock.total_days)  # FOLK-050
 	if news != "":
 		return news
+	var mate := FriendInvite.sect_mate_greeting(player, data, world_flags, npc, GameClock.total_days)  # C-430
+	if mate != "":
+		return mate.replace("{player}", player.name)
 	var line := Folk.greeting(npc, int(npc_favor.get(npc_id, 0)), GameClock.total_days, data, world_flags, Weather.of(data, current_region, GameClock.total_days), current_region, rng, Almanac.salt_of(player)).replace("{player}", player.name)
 	if line.contains("{partner}"):
 		line = line.replace("{partner}", String(npcs[npc.spouses.back()].name) if not npc.spouses.is_empty() and npcs.has(npc.spouses.back()) else "my beloved")

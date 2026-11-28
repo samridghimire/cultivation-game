@@ -77,3 +77,15 @@ static func sect_mates_line(mates: Array[Dictionary]) -> String:
 	for m in mates:
 		parts.append("%s (%s)" % [m["name"], m["realm"]])
 	return "Sect-mates you know: " + ", ".join(parts)
+
+
+## C-430: a friend who joined the player's sect greets them in their sect_mate_lines voice ("" when they have none or
+## are not a sect-mate). Stable pick by npc id and day, never rng; `{sect}` is the sect's name, `{player}` is left alone.
+static func sect_mate_greeting(player: CharacterData, data: GameData, flags: Dictionary, npc: CharacterData, day: int) -> String:
+	if player == null or npc == null or player.is_rogue() or not flags.get(flag_key(npc.id), false):
+		return ""
+	var sect_id := String(player.sect.get("id", ""))
+	var lines: Array = data.npcs.get(npc.id, {}).get("sect_mate_lines", [])
+	if lines.is_empty() or String(npc.sect.get("id", "")) != sect_id or not data.sects.has(sect_id):
+		return ""
+	return String(lines[hash("%s/%d" % [npc.id, day]) % lines.size()]).replace("{sect}", data.sects[sect_id].name)
