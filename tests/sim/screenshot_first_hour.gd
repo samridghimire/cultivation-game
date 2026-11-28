@@ -13,6 +13,7 @@ extends SceneTree
 ## WU-639: `-- --season-tasks` day 3 with one task done: world leaf markers and the HUD's season line: season_tasks.png.
 ## WU-640: `-- --reduce-motion` turns the reduce_motion setting on for any shot.
 ## GFX-262: `-- --friend-rose=<npc_id>` plays the friend's light column in their region: friend_rose.png.
+## WU-654: `--log-faces` posts face and no-face log rows (one wrapped) and renders log_faces_hud.png and log_faces_screen.png.
 ## WU-652: `--home-letter` shows a home-news letter with "Travel home (10 days)": letter_home.png.
 ## WU-643: `-- --letter=<greeting|request>` opens the letter card: letter.png.
 ## WU-642: `-- --friend-thanks=<npc_id>` opens the thank-you gift card: friend_thanks.png.
@@ -571,6 +572,21 @@ func _start() -> void:
 				(hud.get("_friend_thanks_card") as Control).call("open", tid, String(gs.data.npcs[tid].get("name", tid)), "spirit_herb")
 				hud.call("_update_modal"), "close": func() -> void: (hud.get("_friend_thanks_card") as Control).visible = false})
 			special = true
+	if OS.get_cmdline_user_args().has("--log-faces"):  # WU-654: face rows in the HUD log and the message log
+		var lscreen: Control = hud.get("_screens")["toggle_message_log"]
+		var post_rows: Callable = func() -> void:
+			hud.get("_banner").visible = false
+			var bus: Node = Engine.get_main_loop().root.get_node("EventBus")
+			bus.post("You rest by the well.", "info")
+			bus.post("Xiao Ling waves: \"Grandmother says do not shout, so I am writing it LOUDLY. Qingshi misses you, come home and be teased by the whole well!\"", "social", "", false, "xiao_ling")
+			bus.post("A short line with a face.", "social", "", false, "xiao_ling")
+			bus.post("Plain row again, no face, keeps its old indent.", "info")
+		shots.append({"name": "log_faces_hud", "open": post_rows, "close": func() -> void: pass})
+		shots.append({"name": "log_faces_screen", "open": func() -> void:
+			hud.get("_banner").visible = false
+			lscreen.open()
+			hud.call("_update_modal"), "close": lscreen.close})
+		special = true
 	if OS.get_cmdline_user_args().has("--home-letter"):  # WU-652: a home-news letter with the road home
 		shots.append({"name": "letter_home", "open": func() -> void:
 			hud.get("_banner").visible = false
