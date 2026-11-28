@@ -428,6 +428,8 @@ func _refresh_lecture_scene() -> void:
 				break
 	if place.is_empty():
 		_lecture_scene.setup(false, null, Rect2(), [], map_size, false)
+		_lecture_mate_id = ""
+		_sync_lecture_mate_node()
 		return
 	var hall := Rect2(_vec(place["pos"]) - _vec(place.get("size", [64, 64])) / 2.0, _vec(place.get("size", [64, 64])))
 	var blockers: Array[Vector2] = []
@@ -439,6 +441,21 @@ func _refresh_lecture_scene() -> void:
 	var mate_id := Sects.lecture_mate(GameState.player, GameState.data, GameState.npcs, GameState.world_flags)
 	var mate_name: String = GameState.npcs[mate_id].name if mate_id != "" else ""
 	_lecture_scene.setup(true, GameState.data.sects[String(GameState.player.sect["id"])], hall, blockers, map_size, not MotionFx.reduced() and bool(Settings.get_value("ambient_effects")), mate_id, mate_name)
+	_lecture_mate_id = mate_id
+	_sync_lecture_mate_node()
+
+
+var _lecture_mate_id := ""  ## WU-651: the sect-mate seated in the lecture; their walking node is hidden meanwhile
+
+
+## WU-651: the seated lecture-mate is drawn by the scene, so their walking NPC node hides (and stops being talkable).
+func _sync_lecture_mate_node() -> void:
+	for node in get_children():
+		if node is Interactable and node.get("npc_id") != null:
+			var seated: bool = _lecture_mate_id != "" and node.npc_id == _lecture_mate_id
+			node.visible = not seated
+			node.set_deferred("monitorable", not seated)
+			node.set_deferred("monitoring", not seated)
 
 
 ## GFX-119: awning stalls, carts, lantern strings and shoppers of a map.market region.
@@ -1131,6 +1148,7 @@ func _build_npcs() -> void:
 		add_child(node)
 		move_child(node, player.get_index())
 	_build_generated_npcs()
+	_sync_lecture_mate_node()
 	var all: Array = get_children().filter(func(n: Node) -> bool: return n is Interactable)
 	Interactable.clear_person_labels(all)  # WU-511
 	Interactable.spread_labels(all)

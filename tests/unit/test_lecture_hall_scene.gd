@@ -74,3 +74,32 @@ func test_layout_near_bottom_edge_sits_beside_hall() -> void:  # WU-648
 		assert_true(s.y <= map.y - 72.0)
 		assert_true(Rect2(Vector2.ZERO, map).has_point(s))
 	assert_false((lay["mat"] as Rect2).intersects(hall))
+
+
+func test_lecture_mate_node_hidden_until_attended() -> void:  # WU-651
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var gs := root.get_node("GameState")
+	var p := new_character()
+	p.realm_index = 1
+	p.sect = {"id": "myriad_treasure_pavilion", "rank": 1, "contribution": 300}
+	gs.start_session(p)
+	gs.npc_favor["xiao_ling"] = 60
+	gs.npcs["xiao_ling"].realm_index = 1
+	gs.npcs["xiao_ling"].alignment = 0
+	gs.invite_friend_to_sect("xiao_ling")
+	gs.current_region = Sects.home_region(gs.data, "myriad_treasure_pavilion")
+	var world: Node = load("res://src/world/world.tscn").instantiate()
+	root.add_child(world)
+	var node: Node = null
+	for n in world.get_children():
+		if n is Interactable and n.get("npc_id") == "xiao_ling":
+			node = n
+	assert_true(node != null, "xiao ling walks the hall region")
+	if node != null:
+		assert_false(node.visible, "seated in the lecture, so the walking node hides")
+		assert_eq(world._lecture_scene.mate_name(), "Xiao Ling")
+		gs.attend_lecture()
+		world._refresh_lecture_scene()
+		assert_true(node.visible, "visible again after the lecture")
+	world.free()
+	gs.end_session()
